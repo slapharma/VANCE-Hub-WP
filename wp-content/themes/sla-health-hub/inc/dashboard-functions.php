@@ -678,10 +678,18 @@ function vance_rest_ai_chat( $request ) {
         }
     }
 
-    // Updated to OpenRouter as requested. Split string to prevent strict WAF 409 blocks
-    $key_part_1 = 'sk-or-v1-';
-    $key_part_2 = '7278a92f426edb19fbffe0bb4c71878e15e0da1c934b73e8177df6a66f8afb60';
-    $api_key = $key_part_1 . $key_part_2;
+    // OpenRouter API key — read from Customizer (Appearance → Customize → Ask AI Configuration → AI API Key).
+    // Do NOT hardcode keys here; they end up in public git history and on the deployed web server.
+    $api_key = function_exists( 'vance_get_theme_mod' )
+        ? vance_get_theme_mod( 'vance_askai_api_key', '' )
+        : get_theme_mod( 'vance_askai_api_key', '' );
+    if ( empty( $api_key ) ) {
+        return new WP_Error(
+            'ai_api_key_missing',
+            __( 'AI API key is not configured. Site admin: set it in Appearance → Customize → Ask AI Configuration.', 'sla-health-hub' ),
+            array( 'status' => 503 )
+        );
+    }
     $url = 'https://openrouter.ai/api/v1/chat/completions';
     
     $system_instruction = 'You are an AI assistant, an expert IBD (Inflammatory Bowel Disease) clinical assistant for the Vance Medical IBD Research Centre platform. Your intelligence and responses MUST be strictly restricted to IBD-related content, clinical reviews, gastrointestinal health, and clinical nutrition guidelines provided within the Vance Medical Hub (gastrohealthhub.com). 
