@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vance Medical - My Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #008080;
+            --primary-hover: #e65100;
+            --secondary-color: #0A1929;
+            --bg-body: #F0F4F8;
+            /* Light blue-grey background typical of admin dashboards */
+            --bg-surface: #FFFFFF;
+            --border-color: #E2E8F0;
+            --text-primary: #1F2937;
+            --text-secondary: #64748B;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--secondary-color);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--primary-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .nav-menu {
+            padding: 16px 12px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: #F1F5F9;
+            color: var(--secondary-color);
+        }
+
+        .nav-item.active {
+            background-color: #def4f4;
+            /* Light orange tint */
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* --- MAIN CONTENT WRAPPER --- */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        .top-header {
+            height: var(--header-height);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .page-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-bar input {
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            width: 300px;
+            background: #F8FAFC;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .action-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 10px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* --- DASHBOARD CONTENT --- */
+        .content-area {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .welcome-banner {
+            margin-bottom: 32px;
+        }
+
+        .welcome-banner h1 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            color: var(--secondary-color);
+        }
+
+        .welcome-banner p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* CARD GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        /* Specific spanning rules for a "masonry-like" feel or just organized grid */
+        .card-wide {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1100px) {
+            .card-wide {
+                grid-column: span 1;
+            }
+        }
+
+        /* CARD STYLES */
+        .dash-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .dash-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .card-title-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: #F1F5F9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary-color);
+            font-size: 18px;
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .card-action-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        /* LIST ITEMS */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item-main {
+            font-size: 14px;
+            color: var(--secondary-color);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .list-item-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* PROGRESS BAR */
+        .progress-container {
+            margin-top: 10px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: #F1F5F9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0;
+            transition: width 0.5s ease;
+        }
+
+        /* STATS */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .stat-box {
+            background: #F8FAFC;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">S</div> Vance HEALTH
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">🏠</span> Dashboard
+            </a>
+            <div
+                style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin: 20px 0 10px 12px; letter-spacing: 0.5px;">
+                My Health</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🩺</span> Medical Records
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📝</span> My Notes
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📊</span> Results
+            </a>
+
+            <div
+                style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin: 20px 0 10px 12px; letter-spacing: 0.5px;">
+                Learning</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📚</span> Reading List
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🎓</span> Courses
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔖</span> Saved Content
+            </a>
+
+            <div
+                style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin: 20px 0 10px 12px; letter-spacing: 0.5px;">
+                Account</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">👤</span> Profile
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">⚙️</span> Settings
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🚪</span> Log Out
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+
+        <!-- TOP HEADER -->
+        <header class="top-header">
+            <div class="page-title">Overview</div>
+
+            <div class="header-actions">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search resources, records...">
+                </div>
+
+                <button class="action-icon-btn">
+                    🔔
+                    <span class="badge">3</span>
+                </button>
+
+                <div class="user-profile">
+                    <div class="avatar">JS</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--secondary-color);">John Smith</div>
+                    <span style="font-size: 10px; margin-left: 4px;">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="content-area">
+
+            <div class="welcome-banner">
+                <h1>Good Morning, John</h1>
+                <p>Here's what's happening with your health journey today.</p>
+            </div>
+
+            <div class="dashboard-grid">
+
+                <!-- 1. ACTIVE COURSES (Wide) -->
+                <div class="dash-card card-wide">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">🎓</div>
+                            <h3 class="card-title">Active Learning</h3>
+                        </div>
+                        <a href="#" class="card-action-link">View All</a>
+                    </div>
+                    <div class="card-content">
+                        <div style="margin-bottom: 20px;">
+                            <div class="progress-info">
+                                <span>Advanced Gut Health Protocol</span>
+                                <span>75%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: 75%;"></div>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">Next up: Module
+                                4 - Probiotics vs Prebiotics</div>
+                        </div>
+
+                        <div>
+                            <div class="progress-info">
+                                <span>Longevity & Fasting Basics</span>
+                                <span>30%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: 30%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. RECENT NOTES -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">📝</div>
+                            <h3 class="card-title">Recent Notes</h3>
+                        </div>
+                        <a href="#" class="card-action-link">+ New</a>
+                    </div>
+                    <div class="card-content">
+                        <div class="list-item">
+                            <div>
+                                <div class="list-item-main">Dietary Changes Log</div>
+                                <div class="list-item-sub">Oct 24, 2024 • Private</div>
+                            </div>
+                            <button style="border:none; background:none; cursor:pointer;">✏️</button>
+                        </div>
+                        <div class="list-item">
+                            <div>
+                                <div class="list-item-main">Questions for Dr. Mike</div>
+                                <div class="list-item-sub">Oct 20, 2024 • Private</div>
+                            </div>
+                            <button style="border:none; background:none; cursor:pointer;">✏️</button>
+                        </div>
+                        <div class="list-item">
+                            <div>
+                                <div class="list-item-main">Sleep Pattern Observation</div>
+                                <div class="list-item-sub">Oct 15, 2024 • Shared</div>
+                            </div>
+                            <button style="border:none; background:none; cursor:pointer;">✏️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. READING LIST -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">📚</div>
+                            <h3 class="card-title">Reading List</h3>
+                        </div>
+                        <a href="#" class="card-action-link">Library</a>
+                    </div>
+                    <div class="card-content">
+                        <div class="list-item">
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <div
+                                    style="width:40px; height:40px; background:#e2e8f0; border-radius:6px; flex-shrink:0;">
+                                </div>
+                                <div>
+                                    <div class="list-item-main">mitochondrial Function...</div>
+                                    <div class="list-item-sub">Research Review</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-item">
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <div
+                                    style="width:40px; height:40px; background:#e2e8f0; border-radius:6px; flex-shrink:0;">
+                                </div>
+                                <div>
+                                    <div class="list-item-main">The Blue Zone Diet</div>
+                                    <div class="list-item-sub">Article</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#"
+                            style="display:block; margin-top:12px; font-size:13px; text-align:center; color:var(--text-secondary); text-decoration:none;">View
+                            5 more items</a>
+                    </div>
+                </div>
+
+                <!-- 4. HEALTH RECORDS SUMMARY -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">🩺</div>
+                            <h3 class="card-title">Health Data</h3>
+                        </div>
+                        <a href="#" class="card-action-link">Upload</a>
+                    </div>
+                    <div class="card-content">
+                        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-top:0;">Your
+                            latest blood panel results are in. Everything looks normal except Vitamin D levels.</p>
+
+                        <div class="stat-grid">
+                            <div class="stat-box">
+                                <div class="stat-val">12</div>
+                                <div class="stat-label">Records</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-val">2</div>
+                                <div class="stat-label">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. NEWS / ALERTS -->
+                <div class="dash-card card-wide">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">📢</div>
+                            <h3 class="card-title">Latest Updates</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div
+                            style="background: #def4f4; border-left: 4px solid var(--primary-color); padding: 12px; border-radius: 4px; margin-bottom: 12px;">
+                            <h4 style="margin: 0 0 4px 0; font-size: 14px; color: #9A3412;">Webinar Starting Soon</h4>
+                            <p style="margin: 0; font-size: 13px; color: #C2410C;">"Longevity Science 101" starts in 30
+                                minutes. <a href="#" style="color: #9A3412; font-weight: 700;">Join Now</a></p>
+                        </div>
+                        <div style="display: flex; gap: 16px;">
+                            <img src="https://images.unsplash.com/photo-1576091160550-217359f4ecf8?auto=format&fit=crop&q=80&w=200"
+                                style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px;">
+                            <div>
+                                <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--secondary-color);">New Study
+                                    Released</h4>
+                                <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">A comprehensive
+                                    review of NAD+ boosters and their effect on aging markers in human trials.</p>
+                                <a href="#"
+                                    style="display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--primary-color);">Read
+                                    Full Article</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

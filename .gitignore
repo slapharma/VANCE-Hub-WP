@@ -1,0 +1,40 @@
+# Local-only helpers (one-shot transformer scripts + dev utilities)
+# Kept on disk for reference but not deployed or shared.
+LOCAL/
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Pre-rebrand backups and dev-machine artifacts
+# (duplicates the tar deploy excludes from REBRAND-HANDOVER.md §5)
+**/functions.php.bak
+**/functions.php.bak2
+**/front-page-original.php
+**/dashboard-functions-backup.txt
+**/screenshot.png
+**/check.py
+**/debug_quote.py
+**/Documents - Shortcut.lnk
+**/.claude/
+
+# One-shot transformer scripts (per handover §4 — kept local in LOCAL/)
+**/vance_rebrand.py
+**/vance_color_swap.py
+**/vance_ai_rename.py
+
+# Build artifacts / packaging
+*.zip
+*.tar.gz
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Node (if build tooling is ever added for the tool bundles)
+node_modules/
+dist/
+.cache/

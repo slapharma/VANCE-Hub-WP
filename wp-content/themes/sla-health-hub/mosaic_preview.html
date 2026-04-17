@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vance Medical - Mosaic Design Visualization</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            /* Copied from main.css */
+            --primary-color: #008080;
+            --secondary-color: #0A1929;
+            --accent-color: #F3F4F6;
+            --text-main: #1F2937;
+            --text-light: #6B7280;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background-color: #F8FAFC;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .preview-header {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        
+        .preview-header h1 {
+            font-family: var(--font-heading);
+            color: var(--secondary-color);
+        }
+
+        /* --- BENTO GRID STYLES (NEW) --- */
+        
+        .bento-grid-news {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: repeat(2, 200px);
+            gap: 24px;
+        }
+
+        .bento-cell-featured {
+            grid-row: 1 / -1; /* Spans both rows */
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: #0A1929;
+            color: white;
+            display: flex;
+            align-items: flex-end;
+            text-decoration: none;
+        }
+
+        .bento-cell-featured img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            transition: transform 0.4s;
+        }
+        
+        .bento-cell-featured:hover img {
+            transform: scale(1.05);
+        }
+
+        .bento-content-overlay {
+            position: relative;
+            z-index: 2;
+            padding: 40px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            width: 100%;
+        }
+
+        .tag {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .bento-cell-side {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .bento-cell-side:hover {
+            border-color: var(--primary-color);
+            transform: translateX(4px);
+        }
+
+        /* Reviews Asymmetric Grid */
+        .bento-grid-reviews {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .review-card-wide {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .review-card-wide .review-img {
+            height: 200px;
+            background: #e2e8f0;
+            position: relative;
+        }
+
+        .review-card-standard {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Expert Opinions "Poster" Grid */
+        .bento-grid-opinions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .opinion-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .opinion-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-color);
+        }
+
+        .author-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            margin: 0 auto 20px;
+            border: 4px solid #f8fafc;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Utility Text */
+        h2 { margin: 0 0 8px 0; font-family: var(--font-heading); color: var(--secondary-color); }
+        h3 { margin: 0 0 12px 0; font-size: 18px; line-height: 1.4; color: var(--secondary-color); font-weight: 700; }
+        h4 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: var(--secondary-color); }
+        p { margin: 0 0 16px 0; font-size: 14px; color: var(--text-light); line-height: 1.5; }
+        .meta { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+        /* Section Headers */
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            margin-top: 60px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 16px;
+        }
+        
+        .section-label h2 { margin: 0; font-size: 24px; }
+        .color-bar { width: 6px; height: 24px; border-radius: 4px; }
+        
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="preview-header">
+        <span class="tag" style="background:none; color:var(--text-light); border:1px solid #cbd5e1;">Design Preview</span>
+        <h1>Mosaic Dashboard Layout</h1>
+        <p>A high-density, asymmetrical grid system for maximum visual impact.</p>
+    </div>
+
+    <!-- 1. HEALTHCARE NEWS (Bento) -->
+    <div class="section-label">
+        <div class="color-bar" style="background:#f59e0b"></div>
+        <h2>Healthcare News</h2>
+    </div>
+    
+    <div class="bento-grid-news">
+        <!-- Main Feature -->
+        <a href="#" class="bento-cell-featured">
+            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" alt="News">
+            <div class="bento-content-overlay">
+                <span class="tag" style="background:#f59e0b">Breaking News</span>
+                <h3 style="font-size: 28px; color: white; margin-bottom: 12px;">FDA Approves New Guidelines for Omega-3 FSMPs in IBS Management</h3>
+                <div class="meta" style="color: rgba(255,255,255,0.8);">By Dr. Sarah Jenkins • Jan 9, 2026</div>
+            </div>
+        </a>
+
+        <!-- Side Item 1 -->
+        <a href="#" class="bento-cell-side">
+            <span class="meta" style="color:#f59e0b; margin-bottom:8px;">Clinical Trials</span>
+            <h4>Phase III Results Show Promising Data for Lipid Absorption</h4>
+            <p>New study data released this morning suggests a 40% improvement.</p>
+            <div class="meta">4 hours ago</div>
+        </a>
+        
+        <!-- Side Item 2 -->
+        <a href="#" class="bento-cell-side">
+            <span class="meta" style="color:#f59e0b; margin-bottom:8px;">Industry Updates</span>
+            <h4>Global Supply Chain Shifts for Marine Ingredients</h4>
+            <p>How recent environmental regulations are impacting cost.</p>
+            <div class="meta">Yesterday</div>
+        </a>
+    </div>
+
+    <!-- 2. CLINICAL REVIEWS (Asymmetric) -->
+    <div class="section-label">
+        <div class="color-bar" style="background:#0ea5e9"></div>
+        <h2>Clinical Reviews</h2>
+    </div>
+
+    <div class="bento-grid-reviews">
+        <div class="review-card-wide">
+            <div class="review-img" style="background: url('https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80') center/cover;"></div>
+            <div style="padding:24px;">
+                <span class="tag" style="background:#0ea5e9">Deep Dive</span>
+                <h3>Systematic Review: EPA vs DHA in Inflammatory Bowel Disease</h3>
+                <p>A comprehensive analysis of 45 studies over the last decade reveals distinct mechanisms of action.</p>
+                <div class="meta">Read Full Review →</div>
+            </div>
+        </div>
+        
+        <div class="review-card-standard">
+            <div class="review-img" style="height:140px; background: url('https://images.unsplash.com/photo-1581093458891-8f3086c858ec?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80') center/cover;"></div>
+            <div style="padding:20px;">
+                <h4>Microbiome Interactions</h4>
+                <p>Impact of high-dose Omega-3 on gut diversity.</p>
+                <div class="meta">Clinical Review</div>
+            </div>
+        </div>
+
+        <div class="review-card-standard">
+            <div class="review-img" style="height:140px; background: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80') center/cover;"></div>
+            <div style="padding:20px;">
+                <h4>Pediatric Protocols</h4>
+                <p>Safety profiles for FSMP use in adolescents.</p>
+                <div class="meta">Clinical Review</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. EXPERT OPINIONS (Posters) -->
+    <div class="section-label">
+        <div class="color-bar" style="background:var(--primary-color)"></div>
+        <h2>Expert Opinions</h2>
+    </div>
+
+    <div class="bento-grid-opinions">
+        <div class="opinion-card">
+            <img src="https://randomuser.me/api/portraits/men/32.jpg" class="author-avatar">
+            <h4>Prof. James Wilson</h4>
+            <div class="meta" style="margin-bottom:16px;">Gastroenterologist</div>
+            <h3 style="font-size:20px;">"Why we need to rethink standard of care for mild to moderate UC"</h3>
+            <p>The gap between guidelines and practice is widening.</p>
+            <a href="#" style="color:var(--primary-color); font-weight:600; font-size:14px;">Read Op-Ed</a>
+        </div>
+
+        <div class="opinion-card">
+            <img src="https://randomuser.me/api/portraits/women/44.jpg" class="author-avatar">
+            <h4>Dr. Emily Chen</h4>
+            <div class="meta" style="margin-bottom:16px;">Clinical Nutritionist</div>
+            <h3 style="font-size:20px;">"The ignored role of specialized nutrition in surgical recovery"</h3>
+            <p>Data from the latest multi-center trial.</p>
+            <a href="#" style="color:var(--primary-color); font-weight:600; font-size:14px;">Read Op-Ed</a>
+        </div>
+        
+        <div class="opinion-card" style="background:#0A1929; color:white; border:none;">
+            <div style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <h3 style="color:white; margin-bottom:16px;">Submit an Opinion</h3>
+                <p style="color:#94a3b8;">Are you a thought leader in this space? We want to hear from you.</p>
+                <button style="background:var(--primary-color); border:none; color:white; padding:12px 24px; border-radius:6px; font-weight:600; cursor:pointer;">Contribution Guidelines</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
