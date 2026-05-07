@@ -27,10 +27,6 @@ $hero_title_color     = vance_get_theme_mod( 'vance_edu_hero_title_color', '#fff
 $tracks_bg          = vance_get_theme_mod( 'vance_edu_tracks_bg',          'var(--accent-color)' );
 $tracks_title_color = vance_get_theme_mod( 'vance_edu_tracks_title_color', '' );
 $tracks_text_color  = vance_get_theme_mod( 'vance_edu_tracks_text_color',  '' );
-$tracks_eyebrow     = vance_get_theme_mod( 'vance_edu_tracks_eyebrow',     'Two Tracks. One Standard.' );
-$tracks_heading     = vance_get_theme_mod( 'vance_edu_tracks_heading',     'Built for the people who need it most' );
-$tracks_desc        = vance_get_theme_mod( 'vance_edu_tracks_desc',        'Every course is co-developed with practising clinicians and reviewed by patient advisors before release.' );
-
 // ── Waitlist ────────────────────────────────────────────────────────────────
 $wl_action      = vance_get_theme_mod( 'vance_edu_waitlist_action', '' );
 $wl_heading     = vance_get_theme_mod( 'vance_edu_waitlist_heading', 'Join the Waitlist' );
@@ -93,11 +89,6 @@ $track_icons = array(
     <!-- COURSE TRACKS — clickable cards open the waitlist popup -->
     <section id="tracks" class="section-padding edu-tracks-section" style="background: <?php echo esc_attr( $tracks_bg ); ?>;">
         <div class="container">
-            <div class="text-center max-600 margin-b-60">
-                <span class="tag-section"><?php echo esc_html( $tracks_eyebrow ); ?></span>
-                <h2 style="<?php echo $tracks_title_color ? 'color:' . esc_attr( $tracks_title_color ) . ';' : 'color: var(--secondary-color);'; ?>"><?php echo esc_html( $tracks_heading ); ?></h2>
-                <p style="<?php echo $tracks_text_color ? 'color:' . esc_attr( $tracks_text_color ) . ';' : 'color: var(--text-light);'; ?>"><?php echo esc_html( $tracks_desc ); ?></p>
-            </div>
             <div class="grid-2 edu-track-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px;">
                 <?php for ( $i = 1; $i <= 2; $i++ ) :
                     $t_title = vance_get_theme_mod( "vance_edu_track{$i}_title", $track_defaults[ $i ][0] );

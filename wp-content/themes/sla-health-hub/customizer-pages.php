@@ -895,12 +895,6 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // Education Tracks
     $wp_customize->add_section( "vance_edu_tracks", array( "title" => "Course Tracks", "panel" => "vance_edu_panel" ) );
-    $wp_customize->add_setting( "vance_edu_tracks_eyebrow", array( "default" => "Two Tracks. One Standard.", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_edu_tracks_eyebrow", array( "label" => "Section Eyebrow", "section" => "vance_edu_tracks", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_edu_tracks_heading", array( "default" => "Built for the people who need it most", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_edu_tracks_heading", array( "label" => "Section Heading", "section" => "vance_edu_tracks", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_edu_tracks_desc",    array( "default" => "Every course is co-developed with practising clinicians and reviewed by patient advisors before release.", "sanitize_callback" => "sanitize_textarea_field" ) );
-    $wp_customize->add_control( "vance_edu_tracks_desc",    array( "label" => "Section Description", "section" => "vance_edu_tracks", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_edu_tracks_bg",          array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_tracks_bg",          array( "label" => "Section Background Colour",     "section" => "vance_edu_tracks" ) ) );
     $wp_customize->add_setting( "vance_edu_tracks_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
