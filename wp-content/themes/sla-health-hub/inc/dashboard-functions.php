@@ -547,6 +547,197 @@ function vance_save_note() {
 add_action( 'wp_ajax_vance_save_note', 'vance_save_note' );
 
 /**
+ * Append excerpt / content to an existing note (or create new).
+ * Used by Reading List "Add to Note" flow.
+ */
+function vance_append_to_note() {
+    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( 'Invalid nonce' );
+    }
+
+    $user_id   = get_current_user_id();
+    $target_id = isset( $_POST['target_id'] ) ? sanitize_text_field( $_POST['target_id'] ) : '';
+    $new_title = isset( $_POST['new_title'] ) ? sanitize_text_field( $_POST['new_title'] ) : 'Untitled Note';
+    $content   = isset( $_POST['content'] ) ? wp_kses_post( $_POST['content'] ) : '';
+
+    if ( $content === '' ) { wp_send_json_error( 'Empty content' ); }
+
+    $notes = get_user_meta( $user_id, '_sla_user_notes', true ) ?: array();
+    if ( ! is_array( $notes ) ) { $notes = array(); }
+
+    $saved_id = '';
+    $found    = false;
+
+    if ( $target_id ) {
+        foreach ( $notes as &$n ) {
+            if ( isset( $n['id'] ) && $n['id'] === $target_id ) {
+                $n['content'] = ( isset( $n['content'] ) ? $n['content'] : '' ) . "\n" . $content;
+                $n['date']    = current_time( 'mysql' );
+                $saved_id     = $n['id'];
+                $found        = true;
+                break;
+            }
+        }
+        unset( $n );
+    }
+
+    if ( ! $found ) {
+        $saved_id = uniqid( 'note_' );
+        $notes[]  = array(
+            'id'      => $saved_id,
+            'title'   => $new_title,
+            'content' => $content,
+            'date'    => current_time( 'mysql' ),
+        );
+    }
+
+    update_user_meta( $user_id, '_sla_user_notes', $notes );
+    wp_send_json_success( array( 'id' => $saved_id, 'created' => ! $found ) );
+}
+add_action( 'wp_ajax_vance_append_to_note', 'vance_append_to_note' );
+
+/**
+ * Save / update practitioner profile (specialty, bio, availability, calendar slots).
+ * Meta key: _sla_practitioner_profile
+ */
+function vance_save_practitioner_profile() {
+    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( 'Invalid nonce' );
+    }
+
+    $user_id = get_current_user_id();
+    $fields  = array(
+        'specialty'            => 'sanitize_text_field',
+        'role_title'           => 'sanitize_text_field',
+        'qualifications'       => 'sanitize_textarea_field',
+        'gmc_number'           => 'sanitize_text_field',
+        'years_experience'     => 'intval',
+        'areas_of_expertise'   => 'sanitize_textarea_field',
+        'bio'                  => 'wp_kses_post',
+        'consultation_fee'     => 'sanitize_text_field',
+        'consultation_length'  => 'sanitize_text_field',
+        'languages'            => 'sanitize_text_field',
+        'clinic_location'      => 'sanitize_text_field',
+    );
+
+    $profile = get_user_meta( $user_id, '_sla_practitioner_profile', true );
+    if ( ! is_array( $profile ) ) { $profile = array(); }
+
+    foreach ( $fields as $key => $fn ) {
+        if ( isset( $_POST[ $key ] ) ) {
+            $profile[ $key ] = call_user_func( $fn, wp_unslash( $_POST[ $key ] ) );
+        }
+    }
+    $profile['available_for_consultation'] = ! empty( $_POST['available_for_consultation'] ) ? 1 : 0;
+
+    // Calendar slots: JSON string → array of { day: 'Mon', time: '09:00' }
+    if ( isset( $_POST['calendar_slots'] ) ) {
+        $raw = json_decode( wp_unslash( $_POST['calendar_slots'] ), true );
+        $slots = array();
+        if ( is_array( $raw ) ) {
+            foreach ( $raw as $s ) {
+                if ( is_array( $s ) && isset( $s['day'], $s['time'] ) ) {
+                    $slots[] = array(
+                        'day'  => sanitize_text_field( $s['day'] ),
+                        'time' => sanitize_text_field( $s['time'] ),
+                    );
+                }
+            }
+        }
+        $profile['calendar_slots'] = $slots;
+    }
+
+    update_user_meta( $user_id, '_sla_practitioner_profile', $profile );
+    wp_send_json_success( array( 'saved' => true ) );
+}
+add_action( 'wp_ajax_vance_save_practitioner_profile', 'vance_save_practitioner_profile' );
+
+/**
+ * Patient requests a consultation with a practitioner.
+ * Stored on the practitioner as _sla_consult_requests (appended), and
+ * on the patient as _sla_my_consult_requests.
+ */
+function vance_request_consultation() {
+    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( 'Invalid nonce' );
+    }
+
+    $patient_id      = get_current_user_id();
+    $practitioner_id = isset( $_POST['practitioner_id'] ) ? intval( $_POST['practitioner_id'] ) : 0;
+    $slot_day        = isset( $_POST['slot_day'] ) ? sanitize_text_field( $_POST['slot_day'] ) : '';
+    $slot_time       = isset( $_POST['slot_time'] ) ? sanitize_text_field( $_POST['slot_time'] ) : '';
+    $message         = isset( $_POST['message'] ) ? sanitize_textarea_field( $_POST['message'] ) : '';
+
+    if ( ! $practitioner_id ) { wp_send_json_error( 'Practitioner not specified' ); }
+
+    $req = array(
+        'id'              => uniqid( 'cr_' ),
+        'patient_id'      => $patient_id,
+        'practitioner_id' => $practitioner_id,
+        'slot_day'        => $slot_day,
+        'slot_time'       => $slot_time,
+        'message'         => $message,
+        'status'          => 'pending',
+        'date'            => current_time( 'mysql' ),
+    );
+
+    $pr_reqs = get_user_meta( $practitioner_id, '_sla_consult_requests', true ) ?: array();
+    $my_reqs = get_user_meta( $patient_id, '_sla_my_consult_requests', true ) ?: array();
+    array_unshift( $pr_reqs, $req );
+    array_unshift( $my_reqs, $req );
+    update_user_meta( $practitioner_id, '_sla_consult_requests', array_slice( $pr_reqs, 0, 100 ) );
+    update_user_meta( $patient_id,      '_sla_my_consult_requests', array_slice( $my_reqs, 0, 100 ) );
+
+    wp_send_json_success( array( 'id' => $req['id'] ) );
+}
+add_action( 'wp_ajax_vance_request_consultation', 'vance_request_consultation' );
+
+/**
+ * Save a meal plan saved from the IBD Recipes app (postMessage).
+ * Meta key: _sla_meal_plans
+ */
+function vance_save_meal_plan() {
+    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( 'Invalid nonce' );
+    }
+
+    $user_id = get_current_user_id();
+    $entry = array(
+        'id'     => sanitize_text_field( isset( $_POST['plan_id'] ) ? $_POST['plan_id'] : uniqid( 'mp_' ) ),
+        'title'  => sanitize_text_field( isset( $_POST['title'] ) ? $_POST['title'] : 'Meal Plan' ),
+        'days'   => isset( $_POST['days'] ) ? intval( $_POST['days'] ) : 0,
+        'data'   => isset( $_POST['data'] ) ? wp_kses_post( wp_unslash( $_POST['data'] ) ) : '',
+        'date'   => current_time( 'c' ),
+    );
+
+    $plans = get_user_meta( $user_id, '_sla_meal_plans', true ) ?: array();
+    if ( ! is_array( $plans ) ) { $plans = array(); }
+    array_unshift( $plans, $entry );
+    $plans = array_slice( $plans, 0, 50 );
+    update_user_meta( $user_id, '_sla_meal_plans', $plans );
+
+    wp_send_json_success( array( 'saved' => true, 'id' => $entry['id'] ) );
+}
+add_action( 'wp_ajax_vance_save_meal_plan', 'vance_save_meal_plan' );
+
+/**
+ * List user's saved meal plans.
+ */
+function vance_get_meal_plans() {
+    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( 'Invalid nonce' );
+    }
+    $plans = get_user_meta( get_current_user_id(), '_sla_meal_plans', true ) ?: array();
+    wp_send_json_success( is_array( $plans ) ? $plans : array() );
+}
+add_action( 'wp_ajax_vance_get_meal_plans', 'vance_get_meal_plans' );
+
+/**
  * Handle Note Deletion AJAX
  */
 function vance_delete_note() {
@@ -571,49 +762,6 @@ function vance_delete_note() {
     wp_send_json_success( 'Note deleted' );
 }
 add_action( 'wp_ajax_vance_delete_note', 'vance_delete_note' );
-
-
-/**
- * Handle Game Score Saving AJAX
- */
-function vance_save_game_score() {
-    check_ajax_referer( 'vance_dashboard_nonce', 'nonce' );
-
-    if ( ! is_user_logged_in() ) {
-        wp_send_json_error( 'Not logged in' );
-    }
-
-    $score = isset( $_POST['score'] ) ? intval( $_POST['score'] ) : 0;
-    $user_id = get_current_user_id();
-
-    // Update Personal High Score
-    $current_high = get_user_meta( $user_id, '_sla_high_score', true ) ?: 0;
-    if ( $score > $current_high ) {
-        update_user_meta( $user_id, '_sla_high_score', $score );
-    }
-
-    // Update Global Leaderboard (stored in an option array for simplicity)
-    $leaderboard = get_option( 'vance_game_leaderboard', array() );
-    
-    // Add new score
-    $leaderboard[] = array(
-        'user'   => get_the_author_meta( 'display_name', $user_id ),
-        'score'  => $score,
-        'date'   => current_time( 'mysql' )
-    );
-
-    // Sort by score desc
-    usort( $leaderboard, function($a, $b) {
-        return $b['score'] - $a['score'];
-    });
-
-    // Keep top 50
-    $leaderboard = array_slice( $leaderboard, 0, 50 );
-    update_option( 'vance_game_leaderboard', $leaderboard );
-
-    wp_send_json_success( 'Score saved' );
-}
-add_action( 'wp_ajax_vance_save_game_score', 'vance_save_game_score' );
 
 
 /**
@@ -841,3 +989,217 @@ function vance_dashboard_rename_chat() {
     }
 }
 add_action( 'wp_ajax_vance_rename_chat', 'vance_dashboard_rename_chat' );
+
+
+/* ============================================================================
+ * QUICK-REGISTER FROM TOOL PAGES
+ * ----------------------------------------------------------------------------
+ * Powers the "Save your result" → modal flow on per-tool pages
+ * (/omega-3-calculator/, /malnutrition-calculator/, /blood-test/,
+ * /ibd-recipes/). Anonymous user submits email + password + role, we create
+ * the user, auto-log-in, and stash the pending tool result against
+ * `_sla_<tool>_history` user meta so it appears in the dashboard.
+ *
+ * Per CLAUDE.md constraint #2: meta keys MUST stay `_sla_*` (never rename) —
+ * matches the existing dashboard read paths.
+ * Per constraint #5: action name `vance_quick_register` is paired with the
+ * `vance_quick_register` nonce checked below; rename in lockstep.
+ * ============================================================================ */
+
+/**
+ * Sanitised tool slug allowlist. Keep in sync with the per-tool wrapper page
+ * templates so we never write history under an unknown tool key.
+ *
+ * @return string[]
+ */
+function vance_known_tool_slugs() {
+    return array( 'omega-3-calculator', 'malnutrition-calculator', 'blood-test', 'ibd-recipes' );
+}
+
+/**
+ * Append a result entry to a user's tool history meta. Keeps the most recent
+ * 50 entries. Each entry is a {ts, payload} dict — `_sla_<tool>_history` is
+ * a JSON-serializable PHP array stored via update_user_meta (WP auto-serializes).
+ *
+ * @param int    $user_id
+ * @param string $tool_slug  Must be one of vance_known_tool_slugs().
+ * @param array  $payload    Free-form result payload from the tool iframe.
+ * @return bool true on write, false on invalid slug or empty payload.
+ */
+function vance_append_tool_history( $user_id, $tool_slug, $payload ) {
+    $user_id = (int) $user_id;
+    if ( $user_id <= 0 ) {
+        return false;
+    }
+    if ( ! in_array( $tool_slug, vance_known_tool_slugs(), true ) ) {
+        return false;
+    }
+    if ( empty( $payload ) || ! is_array( $payload ) ) {
+        return false;
+    }
+
+    $meta_key = '_sla_' . str_replace( '-', '_', $tool_slug ) . '_history';
+    $existing = get_user_meta( $user_id, $meta_key, true );
+    if ( ! is_array( $existing ) ) {
+        $existing = array();
+    }
+
+    // Newest first; keep last 50 entries.
+    array_unshift( $existing, array(
+        'ts'      => time(),
+        'payload' => wp_unslash( $payload ),
+    ) );
+    if ( count( $existing ) > 50 ) {
+        $existing = array_slice( $existing, 0, 50 );
+    }
+
+    update_user_meta( $user_id, $meta_key, $existing );
+    return true;
+}
+
+/**
+ * AJAX: anonymous quick-register from a tool page.
+ *
+ * Expects POST: nonce, email, password, role, tool (optional), payload (optional JSON).
+ * On success: user is created, signed in, and any pending tool payload is
+ * stored under `_sla_<tool>_history`. Responds with redirect URL.
+ */
+function vance_ajax_quick_register() {
+    // Nonce (paired with wp_create_nonce('vance_quick_register') in the modal partial).
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_quick_register' ) ) {
+        wp_send_json_error( array( 'message' => 'Security check failed — please refresh the page and try again.' ), 403 );
+    }
+
+    // Honeypot — bots tend to fill any non-empty input. Real users can't see it.
+    if ( ! empty( $_POST['vance_hp'] ) ) {
+        wp_send_json_error( array( 'message' => 'Submission rejected.' ), 400 );
+    }
+
+    // Don't let logged-in users hit this path — would create a duplicate account.
+    if ( is_user_logged_in() ) {
+        wp_send_json_success( array(
+            'redirect' => '/dashboard/?vance_welcome=1',
+            'message'  => 'Already signed in.',
+        ) );
+    }
+
+    $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $password = isset( $_POST['password'] ) ? (string) $_POST['password'] : '';
+    $role_in  = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'patient';
+    $tool     = isset( $_POST['tool'] ) ? sanitize_key( wp_unslash( $_POST['tool'] ) ) : '';
+    $payload  = array();
+
+    if ( isset( $_POST['payload'] ) && $_POST['payload'] !== '' ) {
+        $decoded = json_decode( wp_unslash( $_POST['payload'] ), true );
+        if ( is_array( $decoded ) ) {
+            $payload = $decoded;
+        }
+    }
+
+    // Validation.
+    if ( ! is_email( $email ) ) {
+        wp_send_json_error( array( 'message' => 'That email address looks invalid — please double-check.' ) );
+    }
+    if ( strlen( $password ) < 8 ) {
+        wp_send_json_error( array( 'message' => 'Please choose a password of at least 8 characters.' ) );
+    }
+    if ( email_exists( $email ) ) {
+        wp_send_json_error( array(
+            'message' => 'An account already exists for that email — please sign in instead.',
+            'exists'  => true,
+        ) );
+    }
+
+    // Create user. Username is derived from the email local-part, with a numeric
+    // suffix on collision (rarely needed because email_exists already gates).
+    $base_login = sanitize_user( current( explode( '@', $email ) ), true );
+    if ( empty( $base_login ) ) {
+        $base_login = 'user';
+    }
+    $login = $base_login;
+    $suffix = 1;
+    while ( username_exists( $login ) ) {
+        $login = $base_login . $suffix;
+        $suffix++;
+        if ( $suffix > 99 ) { // belt-and-braces escape hatch
+            $login = $base_login . wp_generate_password( 4, false, false );
+            break;
+        }
+    }
+
+    $user_id = wp_create_user( $login, $password, $email );
+    if ( is_wp_error( $user_id ) ) {
+        wp_send_json_error( array( 'message' => $user_id->get_error_message() ?: 'Could not create your account.' ) );
+    }
+
+    // Default WP role stays 'subscriber'; we surface the user-stated audience role
+    // under our own meta key (consistent with existing `_sla_*` user meta).
+    $allowed_roles = array( 'patient', 'caregiver', 'hcp', 'researcher', 'other' );
+    if ( ! in_array( $role_in, $allowed_roles, true ) ) {
+        $role_in = 'patient';
+    }
+    update_user_meta( $user_id, '_sla_audience_role', $role_in );
+    update_user_meta( $user_id, '_sla_signup_source', 'tool_page:' . ( $tool ?: 'unknown' ) );
+    update_user_meta( $user_id, '_sla_signup_ts',     time() );
+
+    // Stash the pending tool payload (if any).
+    if ( $tool && ! empty( $payload ) ) {
+        vance_append_tool_history( $user_id, $tool, $payload );
+    }
+
+    // Auto-login.
+    wp_set_current_user( $user_id );
+    wp_set_auth_cookie( $user_id, true ); // remember-me on
+    do_action( 'wp_login', $login, get_userdata( $user_id ) );
+
+    wp_send_json_success( array(
+        'redirect' => '/dashboard/?vance_welcome=1' . ( $tool ? '&from_tool=' . rawurlencode( $tool ) : '' ),
+        'message'  => 'Account created.',
+        'user_id'  => $user_id,
+    ) );
+}
+add_action( 'wp_ajax_nopriv_vance_quick_register', 'vance_ajax_quick_register' );
+add_action( 'wp_ajax_vance_quick_register',        'vance_ajax_quick_register' ); // logged-in fallback (returns redirect)
+
+/**
+ * AJAX: logged-in save of a tool result. Used by the same Save button on the
+ * tool wrapper page when the user is already authenticated — bypasses the
+ * register modal entirely.
+ *
+ * Expects POST: nonce ('vance_tool_save_<slug>'), tool, payload (JSON).
+ */
+function vance_ajax_save_tool_result() {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Please sign in first.' ), 401 );
+    }
+
+    $tool = isset( $_POST['tool'] ) ? sanitize_key( wp_unslash( $_POST['tool'] ) ) : '';
+    if ( ! in_array( $tool, vance_known_tool_slugs(), true ) ) {
+        wp_send_json_error( array( 'message' => 'Unknown tool.' ), 400 );
+    }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_tool_save_' . $tool ) ) {
+        wp_send_json_error( array( 'message' => 'Security check failed.' ), 403 );
+    }
+
+    $payload = array();
+    if ( isset( $_POST['payload'] ) && $_POST['payload'] !== '' ) {
+        $decoded = json_decode( wp_unslash( $_POST['payload'] ), true );
+        if ( is_array( $decoded ) ) {
+            $payload = $decoded;
+        }
+    }
+    if ( empty( $payload ) ) {
+        wp_send_json_error( array( 'message' => 'No result to save yet — please complete the tool first.' ) );
+    }
+
+    $ok = vance_append_tool_history( get_current_user_id(), $tool, $payload );
+    if ( ! $ok ) {
+        wp_send_json_error( array( 'message' => 'Could not save — please try again.' ) );
+    }
+
+    wp_send_json_success( array(
+        'message'       => 'Saved to your dashboard.',
+        'dashboard_url' => '/dashboard/?vance_saved=' . rawurlencode( $tool ),
+    ) );
+}
+add_action( 'wp_ajax_vance_save_tool_result', 'vance_ajax_save_tool_result' );

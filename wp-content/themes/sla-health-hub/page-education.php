@@ -16,25 +16,33 @@ get_header(); ?>
 
 <main id="main-content">
 
-    <!-- HERO -->
+    <!-- HERO (category-style: 350px banner with eyebrow tagline + H1, matching archive.php) -->
     <?php
-    $hero_bg      = vance_get_theme_mod( 'vance_edu_hero_bg', get_template_directory_uri() . '/assets/img/hcp_hero.png' );
-    $hero_tag     = vance_get_theme_mod( 'vance_edu_hero_tag',   'Education' );
-    $hero_title   = vance_get_theme_mod( 'vance_edu_hero_title', 'Courses are <span class="highlight">Coming Soon</span>' );
-    $hero_desc    = vance_get_theme_mod( 'vance_edu_hero_desc',  "We're building self-paced courses for patients and CPD-accredited modules for practitioners. Join the waitlist to be the first to know when enrolment opens." );
+    $hero_bg      = vance_get_theme_mod( 'vance_edu_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
+    $hero_tag     = vance_get_theme_mod( 'vance_edu_hero_tag',   'Elevate Your Expertise' );
+    $hero_title   = vance_get_theme_mod( 'vance_edu_hero_title', 'Education &amp; Courses' );
     $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_edu_hero_overlay', 75 ) ) ) ) / 100;
-    $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
+    $hero_overlay_bottom = min( 1, $hero_overlay + 0.10 );
+    $title_color = vance_get_theme_mod( 'vance_hero_title_color', '#ffffff' );
     ?>
-    <section class="hero edu-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
-        <div class="container">
-            <div class="hero-content">
-                <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
-                <h1><?php echo wp_kses_post( $hero_title ); ?></h1>
-                <p><?php echo esc_html( $hero_desc ); ?></p>
-                <div class="hero-actions" style="margin-top: 24px;">
-                    <a href="#waitlist" class="btn btn-primary">Join the Waitlist</a>
-                    <a href="#tracks" class="btn btn-outline">See What's Coming</a>
-                </div>
+    <section class="hero edu-hero" style="height: 350px; min-height: 0; display: flex; align-items: center; padding: 0; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(20,40,70,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>'); background-position: center center; background-size: cover; background-repeat: no-repeat; z-index: 1;"></div>
+        <div class="container" style="position: relative; z-index: 2; width: 100%;">
+            <div class="hero-content" style="max-width: 800px;">
+                <span class="eyebrow" style="color: #008080; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-size: 14px; display: block; margin-bottom: 10px;"><?php echo esc_html( $hero_tag ); ?></span>
+                <h1 class="entry-title" style="font-size: 56px; color: <?php echo esc_attr( $title_color ); ?>; font-weight: 700; margin: 0; line-height: 1.1;"><?php echo wp_kses_post( $hero_title ); ?></h1>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTRO ROW (replaces the big hero copy now that the banner is compact) -->
+    <?php $hero_desc = vance_get_theme_mod( 'vance_edu_hero_desc', "We're building self-paced courses for patients and CPD-accredited modules for practitioners. Join the waitlist to be the first to know when enrolment opens." ); ?>
+    <section class="section-padding edu-intro-section" style="background: white; padding: 60px 0 20px;">
+        <div class="container" style="max-width: 800px; text-align: center;">
+            <p style="font-size: 19px; color: var(--text-light); line-height: 1.7; margin: 0 0 24px;"><?php echo esc_html( $hero_desc ); ?></p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <a href="#waitlist" class="btn btn-primary">Join the Waitlist</a>
+                <a href="#tracks" class="btn btn-outline">See What's Coming</a>
             </div>
         </div>
     </section>
