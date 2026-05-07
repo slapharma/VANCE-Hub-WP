@@ -9,7 +9,7 @@ get_header();
 // Get customizer settings
 $hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri() . '/assets/img/about_hero.png');
 $hero_title = vance_get_theme_mod('vance_askai_hero_title', 'Ask AI');
-$hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Direct access to our IBD Research Centre. Ask anything about IBD, clinical nutrition, and gastrointestinal health.');
+$hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Direct access to our Gastro Health Hub. Ask anything about IBD, clinical nutrition, and gastrointestinal health.');
 $hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Clinical Assistant v1.0');
 $askai_overlay = max(0, min(100, absint(vance_get_theme_mod('vance_askai_hero_overlay', 85)))) / 100;
 $askai_overlay_bottom = min(1, $askai_overlay + 0.05);
@@ -19,7 +19,7 @@ $agent_data = array(
     'name' => 'AI Clinical Assistant',
     'icon' => '🤖',
     'color' => '#fd4f00',
-    'description' => 'Your IBD Research Centre assistant. Ask anything about IBD, gut health, or clinical nutrition.',
+    'description' => 'Your Gastro Health Hub assistant. Ask anything about IBD, gut health, or clinical nutrition.',
     'training' => 'Trained on peer-reviewed IBD research, clinical guidelines, and gastrointestinal science datasets.',
     'abilities' => 'Evidence-based analysis, research synthesis, and clinical protocol insights.',
     'limitations' => 'Informational only. Not medical advice.',

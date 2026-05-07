@@ -3,7 +3,7 @@
  * Admin Messages — broadcast tool for sending dashboard messages to users.
  *
  * What this gives you:
- *   - A new admin page under "IBD Research Centre" → "User Messages"
+ *   - A new admin page under "Gastro Health Hub" → "User Messages"
  *     (positioned just under "AI Visibility").
  *   - Ability to send a message to ALL users, a multi-select user list, or
  *     all users with a given audience role (`_sla_audience_role` meta).
@@ -222,14 +222,22 @@ function vance_render_admin_messages_page() {
         );
     }
 
-    $action = isset( $_GET['vance_action'] ) ? sanitize_key( $_GET['vance_action'] ) : '';
-    $msg_id = isset( $_GET['msg_id'] ) ? absint( $_GET['msg_id'] ) : 0;
+    $action   = isset( $_GET['vance_action'] ) ? sanitize_key( $_GET['vance_action'] ) : '';
+    $msg_id   = isset( $_GET['msg_id'] )       ? absint( $_GET['msg_id'] )           : 0;
+    $reply_id = isset( $_GET['reply_id'] )     ? absint( $_GET['reply_id'] )         : 0;
 
-    // Inline GET-actions. Resend / soft-trash / restore / hard-delete + admin-reply.
+    // Inline GET-actions on a parent message (resend/trash/restore/force_delete/archive).
+    // 'archive' is a UI-only alias for 'delete' (wp_trash_post) — kept distinct so the
+    // notice copy reads naturally on the Replies tab ("Thread archived").
     if ( $action && $msg_id && check_admin_referer( 'vance_msg_action_' . $msg_id ) ) {
         if ( $action === 'delete' ) {
             wp_trash_post( $msg_id );
             wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_notice' => 'deleted' ), admin_url( 'admin.php' ) ) );
+            exit;
+        }
+        if ( $action === 'archive' ) {
+            wp_trash_post( $msg_id );
+            wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_tab' => 'replies', 'vance_notice' => 'archived' ), admin_url( 'admin.php' ) ) );
             exit;
         }
         if ( $action === 'restore' ) {
@@ -248,6 +256,16 @@ function vance_render_admin_messages_page() {
             wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_notice' => 'resent' ), admin_url( 'admin.php' ) ) );
             exit;
         }
+    }
+
+    // Inline GET-action on a single reply (delete_reply). Separate nonce because
+    // the resource is the reply post itself, not its parent.
+    if ( $action === 'delete_reply' && $reply_id && check_admin_referer( 'vance_reply_action_' . $reply_id ) ) {
+        if ( get_post_type( $reply_id ) === 'vance_message_reply' ) {
+            wp_delete_post( $reply_id, true );
+        }
+        wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_tab' => 'replies', 'vance_notice' => 'reply_deleted' ), admin_url( 'admin.php' ) ) );
+        exit;
     }
 
     // Admin reply submission (from the Replies tab).
@@ -320,8 +338,10 @@ function vance_render_admin_messages_page() {
             <div class="notice notice-success is-dismissible"><p><?php
                 $n = $_GET['vance_notice'];
                 if ( $n === 'deleted' )           echo 'Message moved to trash.';
+                elseif ( $n === 'archived' )      echo 'Thread archived (moved to trash). Restore from the Deleted tab if needed.';
                 elseif ( $n === 'restored' )      echo 'Message restored.';
                 elseif ( $n === 'force_deleted' ) echo 'Message permanently deleted.';
+                elseif ( $n === 'reply_deleted' ) echo 'Reply deleted.';
                 elseif ( $n === 'resent' )        echo 'Message resent — read receipts cleared.';
                 else                              echo 'Done.';
             ?></p></div>
@@ -481,6 +501,17 @@ function vance_render_admin_messages_page() {
                     $is_admin    = $author && in_array( 'administrator', (array) $author->roles, true );
                     $admin_reply_nonce = wp_create_nonce( 'vance_admin_reply_' . $parent_id );
             ?>
+                <?php
+                // Per-reply action URLs (delete this reply, archive parent thread).
+                $reply_delete_url = wp_nonce_url(
+                    admin_url( 'admin.php?page=vance-user-messages&vance_action=delete_reply&reply_id=' . $reply->ID ),
+                    'vance_reply_action_' . $reply->ID
+                );
+                $thread_archive_url = $parent_id ? wp_nonce_url(
+                    admin_url( 'admin.php?page=vance-user-messages&vance_action=archive&msg_id=' . $parent_id ),
+                    'vance_msg_action_' . $parent_id
+                ) : '';
+                ?>
                 <div style="background: white; border: 1px solid #c3c4c7; padding: 16px 20px; margin-top: 16px;">
                     <div style="display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; align-items: baseline;">
                         <div>
@@ -495,13 +526,26 @@ function vance_render_admin_messages_page() {
                     <div style="font-size: 14px; line-height: 1.6; padding: 10px 14px; background: <?php echo $is_admin ? '#def4f4' : '#f8fafc'; ?>; border-left: 3px solid <?php echo $is_admin ? '#008080' : '#94a3b8'; ?>;">
                         <?php echo wpautop( wp_kses_post( $reply->post_content ) ); ?>
                     </div>
-                    <?php if ( $parent && ! $is_admin ) : ?>
-                        <details style="margin-top: 10px;">
-                            <summary style="cursor: pointer; font-size: 12px; font-weight: 600; color: #008080;">Reply as admin</summary>
+
+                    <!-- Per-reply action row: Delete this reply / Archive thread -->
+                    <div style="display: flex; gap: 14px; margin-top: 8px; font-size: 12px;">
+                        <a href="<?php echo esc_url( $reply_delete_url ); ?>" onclick="return confirm('Permanently delete this reply? This cannot be undone.');" style="color: #b32d2e;">Delete this reply</a>
+                        <?php if ( $thread_archive_url ) : ?>
+                            <a href="<?php echo esc_url( $thread_archive_url ); ?>" onclick="return confirm('Archive this entire thread? It will move to the Deleted tab where you can restore it.');" style="color: #94a3b8;">Archive thread</a>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ( $parent ) : ?>
+                        <!-- Always show the admin reply form so admins can post follow-ups
+                             even after they've already replied (no `! $is_admin` gate). -->
+                        <details style="margin-top: 10px;" <?php echo ! $is_admin ? 'open' : ''; ?>>
+                            <summary style="cursor: pointer; font-size: 12px; font-weight: 600; color: #008080;">
+                                <?php echo $is_admin ? 'Add another admin reply' : 'Reply as admin'; ?>
+                            </summary>
                             <form method="post" style="margin-top: 8px;">
                                 <?php wp_nonce_field( 'vance_admin_reply_' . $parent_id, 'vance_admin_reply_nonce' ); ?>
                                 <input type="hidden" name="reply_msg_id" value="<?php echo (int) $parent_id; ?>">
-                                <textarea name="reply_body" rows="3" required minlength="3" maxlength="4000" style="width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px;" placeholder="Reply to this user…"></textarea>
+                                <textarea name="reply_body" rows="3" required minlength="3" maxlength="4000" style="width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px;" placeholder="Reply to this thread…"></textarea>
                                 <button type="submit" class="button button-primary" style="margin-top: 6px;">Send admin reply</button>
                             </form>
                         </details>

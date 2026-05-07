@@ -198,8 +198,8 @@ add_action( 'after_switch_theme', 'vance_flush_rewrite_rules' );
 // Create Content Hub Menu
 function vance_register_content_hub_menu() {
     add_menu_page(
-        'GastroHealthHub Tools',
-        'GastroHealthHub Tools',
+        'Gastro Health Hub',
+        'Gastro Health Hub',
         'manage_options',
         'vance-content-hub',
         'vance_render_content_hub_dashboard',

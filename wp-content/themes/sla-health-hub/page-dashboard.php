@@ -282,12 +282,13 @@ get_header();
                     <p style="color:#64748B; margin:0;">
                         <?php 
                         switch($current_tab) {
-                            case 'home': echo $is_practitioner ? 'You have 3 patient updates pending review.' : "Hi {$first_name}, welcome back to your IBD Research Centre."; break;
+                            case 'home': echo $is_practitioner ? 'You have 3 patient updates pending review.' : "Hi {$first_name}, welcome back to your Gastro Health Hub."; break;
                             case 'clinical-profile': echo 'View your health discovery results and update your clinical profile details.'; break;
                             case 'records': echo 'Access and manage your uploaded health records and posters.'; break;
                             case 'notes': echo 'Your private clinical and personal notes.'; break;
                             case 'ai-chats': echo 'History of your consultations with Vance AI.'; break;
-                            default: echo 'Manage your personalized hub content.';
+                            case 'high-score': echo ''; break; // Play to Win — no subtitle
+                            default: echo '';
                         }
                         ?>
                     </p>

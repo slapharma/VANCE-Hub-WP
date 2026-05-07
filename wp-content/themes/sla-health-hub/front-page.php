@@ -669,6 +669,33 @@ body {
     // Customisation for Ask AI
     $askai_text_size  = (int) vance_get_theme_mod('vance_askai_text_size', 13);
     $askai_text_color = vance_get_theme_mod('vance_askai_text_color', '#ffffff');
+
+    // ---- Extra discovery customizer mods (added round 11) ----
+    // Subtitle colour for the H2-description paragraph.
+    $disc_subtitle_color   = vance_get_theme_mod('vance_discovery_subtitle_color', 'rgba(255,255,255,0.55)');
+    // Panel header labels ("Discovery Filters" / "AI Clinical Intelligence").
+    $disc_filters_text     = vance_get_theme_mod('vance_discovery_filters_label_text', 'Discovery Filters');
+    $disc_filters_size     = (int) vance_get_theme_mod('vance_discovery_filters_label_size', 12);
+    $disc_filters_color    = vance_get_theme_mod('vance_discovery_filters_label_color', '') ?: $border_color;
+    $disc_ai_text          = vance_get_theme_mod('vance_discovery_ai_label_text', 'AI Clinical Intelligence');
+    $disc_ai_size          = (int) vance_get_theme_mod('vance_discovery_ai_label_size', 12);
+    $disc_ai_color         = vance_get_theme_mod('vance_discovery_ai_label_color', '') ?: '#ffffff';
+    // Toggle on/off colours.
+    $disc_toggle_off_bg    = vance_get_theme_mod('vance_discovery_toggle_off_bg',  'rgba(255,255,255,0.10)');
+    $disc_toggle_off_dot   = vance_get_theme_mod('vance_discovery_toggle_off_dot', 'rgba(255,255,255,0.60)');
+    $disc_toggle_on_bg     = vance_get_theme_mod('vance_discovery_toggle_on_bg',   '#008080');
+    $disc_toggle_on_dot    = vance_get_theme_mod('vance_discovery_toggle_on_dot',  '#ffffff');
+    // Chip colours.
+    $disc_chip_off_bg      = vance_get_theme_mod('vance_discovery_chip_off_bg',     'rgba(255,255,255,0.06)');
+    $disc_chip_off_border  = vance_get_theme_mod('vance_discovery_chip_off_border', 'rgba(255,255,255,0.12)');
+    $disc_chip_off_text    = vance_get_theme_mod('vance_discovery_chip_off_text',   'rgba(255,255,255,0.75)');
+    $disc_chip_on_bg       = vance_get_theme_mod('vance_discovery_chip_on_bg',      'rgba(0,128,128,0.20)');
+    $disc_chip_on_border   = vance_get_theme_mod('vance_discovery_chip_on_border',  '#008080');
+    $disc_chip_on_text     = vance_get_theme_mod('vance_discovery_chip_on_text',    '#ffffff');
+    // Ask AI input.
+    $askai_input_bg        = vance_get_theme_mod('vance_discovery_askai_input_bg',     'rgba(255,255,255,0.06)');
+    $askai_input_color     = vance_get_theme_mod('vance_discovery_askai_input_color',  '#ffffff');
+    $askai_input_border    = vance_get_theme_mod('vance_discovery_askai_input_border', 'rgba(255,255,255,0.12)');
     ?>
     <section id="discovery-suite" class="discovery-suite-section" style="padding: 60px 0 60px; background: <?php echo esc_attr($section_bg); ?>; position: relative; overflow: hidden;">
         <!-- Background shimmer effects -->
@@ -679,7 +706,7 @@ body {
 
             <header style="margin-bottom: 36px; text-align: <?php echo esc_attr($disc_align); ?>;">
                 <h2 style="font-family: 'Outfit', sans-serif; font-size: <?php echo esc_attr($disc_size); ?>px; font-weight: 900; margin: 0 0 10px; color: <?php echo esc_attr($disc_color); ?>; letter-spacing: -0.5px; line-height: 1.15;"><?php echo esc_html($disc_title); ?></h2>
-                <p style="color: rgba(255,255,255,0.55); font-size: 15px; margin: 0; max-width: 680px; line-height: 1.6; <?php echo $disc_align === 'center' ? 'margin: 0 auto;' : ''; ?>"><?php echo esc_html($disc_sub); ?></p>
+                <p style="color: <?php echo esc_attr($disc_subtitle_color); ?>; font-size: 15px; margin: 0; max-width: 680px; line-height: 1.6; <?php echo $disc_align === 'center' ? 'margin: 0 auto;' : ''; ?>"><?php echo esc_html($disc_sub); ?></p>
             </header>
 
             <div class="discovery-panel" style="background: <?php echo esc_attr($panel_bg); ?>; border-radius: 0; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08); overflow: hidden; backdrop-filter: blur(20px);">
@@ -698,7 +725,7 @@ body {
                                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
                                     </div>
                                     <div>
-                                        <div style="font-size: 12px; font-weight: 700; color: <?php echo esc_attr($border_color); ?>; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">Discovery Filters</div>
+                                        <div style="font-size: <?php echo (int) $disc_filters_size; ?>px; font-weight: 700; color: <?php echo esc_attr($disc_filters_color); ?>; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;"><?php echo esc_html($disc_filters_text); ?></div>
                                         <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 1px;"><span style="display:inline-block; width:6px; height:6px; background:#22c55e; border-radius:50%; margin-right:4px; vertical-align:middle;"></span>Active</div>
                                     </div>
                                 </div>
@@ -818,7 +845,7 @@ body {
                                         </svg>
                                     </div>
                                     <div>
-                                        <div class="agent-name" style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">AI Clinical Intelligence</div>
+                                        <div class="agent-name" style="font-size: <?php echo (int) $disc_ai_size; ?>px; font-weight: 700; color: <?php echo esc_attr($disc_ai_color); ?>; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;"><?php echo esc_html($disc_ai_text); ?></div>
                                         <div class="agent-status" style="font-size: 10px; margin-top: 1px;"><span class="status-dot"></span> Online</div>
                                     </div>
                                 </div>
@@ -911,59 +938,59 @@ body {
         /* --- Reading Level Toggles --- */
         .toggle-row { display: flex; gap: 16px; flex-wrap: wrap; }
         .toggle-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .toggle-switch { 
-            width: 40px; height: 22px; 
-            background: rgba(255,255,255,0.1); 
+        .toggle-switch {
+            width: 40px; height: 22px;
+            background: <?php echo esc_attr($disc_toggle_off_bg); ?>;
             border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 0; 
-            position: relative; 
-            transition: 0.3s; 
+            border-radius: 0;
+            position: relative;
+            transition: 0.3s;
             flex-shrink: 0;
         }
-        .toggle-switch::after { 
-            content: ''; position: absolute; 
-            top: 2px; left: 2px; 
-            width: 16px; height: 16px; 
-            background: rgba(255,255,255,0.6); 
-            border-radius: 0; 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.3); 
-            transition: 0.3s; 
+        .toggle-switch::after {
+            content: ''; position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px;
+            background: <?php echo esc_attr($disc_toggle_off_dot); ?>;
+            border-radius: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            transition: 0.3s;
         }
-        .toggle-item.active .toggle-switch { background: #008080; border-color: #008080; }
-        .toggle-item.active .toggle-switch::after { transform: translateX(18px); background: white; }
+        .toggle-item.active .toggle-switch { background: <?php echo esc_attr($disc_toggle_on_bg); ?>; border-color: <?php echo esc_attr($disc_toggle_on_bg); ?>; }
+        .toggle-item.active .toggle-switch::after { transform: translateX(18px); background: <?php echo esc_attr($disc_toggle_on_dot); ?>; }
         .toggle-label { font-size: <?php echo $disc_item_label_size; ?>px; font-weight: 600; color: <?php echo esc_attr($disc_item_label_color); ?>; }
 
         /* --- Text Chips (Pathway & Type) --- */
         .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-        .text-chip { 
+        .text-chip {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             min-width: 140px;
-            padding: 8px 16px; 
-            background: rgba(255,255,255,0.06); 
-            border: 1px solid rgba(255,255,255,0.12); 
-            border-radius: 0; 
-            font-size: <?php echo $disc_item_label_size; ?>px; 
-            font-weight: 700; 
-            color: <?php echo esc_attr($disc_item_label_color); ?>; 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-            text-align: center; 
+            padding: 8px 16px;
+            background: <?php echo esc_attr($disc_chip_off_bg); ?>;
+            border: 1px solid <?php echo esc_attr($disc_chip_off_border); ?>;
+            border-radius: 0;
+            font-size: <?php echo $disc_item_label_size; ?>px;
+            font-weight: 700;
+            color: <?php echo esc_attr($disc_chip_off_text); ?>;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
             letter-spacing: 0.3px;
             user-select: none;
         }
-        .text-chip:hover { 
-            border-color: rgba(255,255,255,0.3); 
-            background: rgba(255,255,255,0.1); 
+        .text-chip:hover {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
             color: white;
-            transform: translateY(-1px); 
+            transform: translateY(-1px);
         }
-        .text-chip.selected { 
-            background: rgba(0,128,128,0.2); 
-            border-color: #008080; 
-            color: #FF8040; 
-            box-shadow: 0 0 0 1px rgba(0,128,128,0.3), 0 4px 12px rgba(0,128,128,0.15); 
+        .text-chip.selected {
+            background: <?php echo esc_attr($disc_chip_on_bg); ?>;
+            border-color: <?php echo esc_attr($disc_chip_on_border); ?>;
+            color: <?php echo esc_attr($disc_chip_on_text); ?>;
+            box-shadow: 0 0 0 1px rgba(0,128,128,0.3), 0 4px 12px rgba(0,128,128,0.15);
         }
 
         /* --- Keyword Input --- */
@@ -1049,7 +1076,7 @@ body {
         .mode-btn.active { background: rgba(0,128,128,0.2); border-color: #008080; color: #FF8040; box-shadow: 0 0 0 1px rgba(0,128,128,0.3); }
 
         .chat-input-bar { padding: 14px 0 0 0; border-top: 1px solid rgba(255,255,255,0.07); background: transparent; display: flex; gap: 10px; }
-        .chat-input { flex: 1; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.12); border-radius: 0; font-size: 13px; outline: none; background: rgba(255,255,255,0.06); color: white; transition: border-color 0.2s; }
+        .chat-input { flex: 1; padding: 10px 14px; border: 1px solid <?php echo esc_attr($askai_input_border); ?>; border-radius: 0; font-size: 13px; outline: none; background: <?php echo esc_attr($askai_input_bg); ?>; color: <?php echo esc_attr($askai_input_color); ?>; transition: border-color 0.2s; }
         .chat-input::placeholder { color: rgba(255,255,255,0.3); }
         .chat-input:focus { border-color: rgba(0,128,128,0.5); }
         .chat-send { padding: 10px 18px; background: linear-gradient(135deg, #008080, #FF8500); color: white; border: none; border-radius: 0; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
@@ -1334,31 +1361,72 @@ body {
 <!-- Modals & Scripts -->
 
     <!-- PREMIUM SUBSCRIBE SECTION -->
-    <section class="premium-subscribe-section" style="background: #0f172a; padding: 100px 0; color: white;">
+    <?php
+    $prem_section_bg     = vance_get_theme_mod('vance_premium_section_bg',     '#0f172a');
+    $prem_pad_top        = absint( vance_get_theme_mod('vance_premium_pad_top',    100) );
+    $prem_pad_bot        = absint( vance_get_theme_mod('vance_premium_pad_bottom', 100) );
+    $prem_eyebrow        = vance_get_theme_mod('vance_premium_eyebrow',        'Join the Inner Circle');
+    $prem_eyebrow_color  = vance_get_theme_mod('vance_premium_eyebrow_color',  '#008080');
+    $prem_heading        = vance_get_theme_mod('vance_premium_heading',        'Access <span class="highlight">IBD Clinical Resources</span>');
+    $prem_heading_color  = vance_get_theme_mod('vance_premium_heading_color',  '#ffffff');
+    $prem_heading_size   = absint( vance_get_theme_mod('vance_premium_heading_size', 42) );
+    $prem_highlight      = vance_get_theme_mod('vance_premium_highlight_color', '#008080');
+    $prem_desc           = vance_get_theme_mod('vance_premium_desc',           'Gain access to premium articles, monthly masterclasses, and a personalized health dashboard. Join 50,000+ members on the path to better living.');
+    $prem_desc_color     = vance_get_theme_mod('vance_premium_desc_color',     '#94a3b8');
+    $prem_desc_size      = absint( vance_get_theme_mod('vance_premium_desc_size', 18) );
+    $prem_pill_1         = vance_get_theme_mod('vance_premium_pill_1',         'Expert Reviews');
+    $prem_pill_2         = vance_get_theme_mod('vance_premium_pill_2',         'Weekly Digests');
+    $prem_pill_text      = vance_get_theme_mod('vance_premium_pill_text_color', '#cbd5e1');
+    $prem_pill_check     = vance_get_theme_mod('vance_premium_pill_check_color', '#008080');
+    $prem_card_bg        = vance_get_theme_mod('vance_premium_card_bg',        'rgba(255,255,255,0.05)');
+    $prem_card_border    = vance_get_theme_mod('vance_premium_card_border',    'rgba(255,255,255,0.10)');
+    $prem_card_heading   = vance_get_theme_mod('vance_premium_card_heading',   'Start Your Journey');
+    $prem_card_heading_color = vance_get_theme_mod('vance_premium_card_heading_color', '#ffffff');
+    $prem_card_subhead   = vance_get_theme_mod('vance_premium_card_subheading', '');
+    $prem_input_bg       = vance_get_theme_mod('vance_premium_input_bg',       'rgba(0,0,0,0.20)');
+    $prem_input_color    = vance_get_theme_mod('vance_premium_input_color',    '#ffffff');
+    $prem_input_ph       = vance_get_theme_mod('vance_premium_input_placeholder', 'Enter your email address');
+    $prem_button_label   = vance_get_theme_mod('vance_premium_button_label',   'Get Started Now →');
+    $prem_button_link    = vance_get_theme_mod('vance_premium_button_link',    '');
+    $prem_button_bg      = vance_get_theme_mod('vance_premium_button_bg',      '#008080');
+    $prem_button_color   = vance_get_theme_mod('vance_premium_button_color',   '#ffffff');
+    $prem_card_footnote  = vance_get_theme_mod('vance_premium_card_footnote',  '');
+    $prem_form_action    = $prem_button_link ?: wp_registration_url();
+    ?>
+    <style>
+        .premium-subscribe-section .highlight { color: <?php echo esc_attr($prem_highlight); ?>; }
+        .premium-subscribe-section .premium-pill-check { background: rgba(255,255,255,0.10); width: 24px; height: 24px; border-radius: 0; display: flex; align-items: center; justify-content: center; color: <?php echo esc_attr($prem_pill_check); ?>; }
+        .premium-subscribe-section .premium-pill { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: <?php echo esc_attr($prem_pill_text); ?>; }
+        .premium-subscribe-section .premium-input::placeholder { color: rgba(255,255,255,0.55); }
+    </style>
+    <section class="premium-subscribe-section" style="background: <?php echo esc_attr($prem_section_bg); ?>; padding: <?php echo $prem_pad_top; ?>px 0 <?php echo $prem_pad_bot; ?>px; color: <?php echo esc_attr($prem_heading_color); ?>;">
         <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: 60px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 300px;">
-                <span style="color: var(--primary-color); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; margin-bottom: 16px; display: block;">Join the Inner Circle</span>
-                <h2 style="font-family: 'Outfit', sans-serif; font-size: 42px; font-weight: 800; line-height: 1.1; margin-bottom: 24px;">Access <span style="color: var(--primary-color);">IBD Clinical Resources</span></h2>
-                <p style="font-size: 18px; color: #94a3b8; line-height: 1.6; margin-bottom: 32px; max-width: 500px;">
-                    Gain access to premium articles, monthly masterclasses, and a personalized health dashboard. Join 50,000+ members on the path to better living.
+                <span style="color: <?php echo esc_attr($prem_eyebrow_color); ?>; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; margin-bottom: 16px; display: block;"><?php echo esc_html($prem_eyebrow); ?></span>
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: <?php echo $prem_heading_size; ?>px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; color: <?php echo esc_attr($prem_heading_color); ?>;"><?php echo wp_kses_post($prem_heading); ?></h2>
+                <p style="font-size: <?php echo $prem_desc_size; ?>px; color: <?php echo esc_attr($prem_desc_color); ?>; line-height: 1.6; margin-bottom: 32px; max-width: 500px;">
+                    <?php echo esc_html($prem_desc); ?>
                 </p>
-                <div style="display: flex; gap: 24px; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: #cbd5e1;">
-                        <span style="background: rgba(255,255,255,0.1); width: 24px; height: 24px; border-radius: 0; display: flex; align-items: center; justify-content: center; color: var(--primary-color);">✓</span> Expert Reviews
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: #cbd5e1;">
-                        <span style="background: rgba(255,255,255,0.1); width: 24px; height: 24px; border-radius: 0; display: flex; align-items: center; justify-content: center; color: var(--primary-color);">✓</span> Weekly Digests
-                    </div>
+                <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+                    <?php if ( $prem_pill_1 ) : ?>
+                        <div class="premium-pill"><span class="premium-pill-check">✓</span> <?php echo esc_html($prem_pill_1); ?></div>
+                    <?php endif; ?>
+                    <?php if ( $prem_pill_2 ) : ?>
+                        <div class="premium-pill"><span class="premium-pill-check">✓</span> <?php echo esc_html($prem_pill_2); ?></div>
+                    <?php endif; ?>
                 </div>
             </div>
-            <div style="flex-shrink: 0; background: rgba(255,255,255,0.05); padding: 40px; border-radius: 0; border: 1px solid rgba(255,255,255,0.1); max-width: 400px; width: 100%;">
-                <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Start Your Journey</h3>
-                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 24px;"></p>
-                
-                <form action="<?php echo wp_registration_url(); ?>" method="get" style="display: flex; flex-direction: column; gap: 16px;">
-                    <input type="email" name="user_email" placeholder="Enter your email address" required style="width: 100%; padding: 16px; border-radius: 0; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 16px;">
-                    <button type="submit" style="width: 100%; padding: 16px; border-radius: 0; border: none; background: var(--primary-color); color: white; font-weight: 700; font-size: 16px; cursor: pointer; transition: background 0.2s;">Get Started Now →</button>
-                    <p style="text-align: center; font-size: 12px; color: #64748b; margin: 0;"></p>
+            <div style="flex-shrink: 0; background: <?php echo esc_attr($prem_card_bg); ?>; padding: 40px; border-radius: 0; border: 1px solid <?php echo esc_attr($prem_card_border); ?>; max-width: 400px; width: 100%;">
+                <h3 style="font-size: 24px; font-weight: 700; margin-bottom: <?php echo $prem_card_subhead ? '8' : '24'; ?>px; color: <?php echo esc_attr($prem_card_heading_color); ?>;"><?php echo esc_html($prem_card_heading); ?></h3>
+                <?php if ( $prem_card_subhead ) : ?>
+                    <p style="color: <?php echo esc_attr($prem_desc_color); ?>; font-size: 14px; margin-bottom: 24px;"><?php echo esc_html($prem_card_subhead); ?></p>
+                <?php endif; ?>
+                <form action="<?php echo esc_url($prem_form_action); ?>" method="get" style="display: flex; flex-direction: column; gap: 16px;">
+                    <input type="email" name="user_email" placeholder="<?php echo esc_attr($prem_input_ph); ?>" required class="premium-input" style="width: 100%; padding: 16px; border-radius: 0; border: 1px solid rgba(255,255,255,0.2); background: <?php echo esc_attr($prem_input_bg); ?>; color: <?php echo esc_attr($prem_input_color); ?>; font-size: 16px;">
+                    <button type="submit" style="width: 100%; padding: 16px; border-radius: 0; border: none; background: <?php echo esc_attr($prem_button_bg); ?>; color: <?php echo esc_attr($prem_button_color); ?>; font-weight: 700; font-size: 16px; cursor: pointer; transition: background 0.2s;"><?php echo esc_html($prem_button_label); ?></button>
+                    <?php if ( $prem_card_footnote ) : ?>
+                        <p style="text-align: center; font-size: 12px; color: #64748b; margin: 0;"><?php echo esc_html($prem_card_footnote); ?></p>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>

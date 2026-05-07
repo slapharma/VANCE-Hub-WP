@@ -25,7 +25,7 @@
                 <div class="footer-brand">
                     <?php
                     $f_logo = vance_get_theme_mod('vance_footer_logo');
-                    $f_text = vance_get_theme_mod('vance_footer_brand_text', 'Your IBD Research Centre. Curated clinical research, latest news, health trackers and downloadable resources for both patients and practitioners.');
+                    $f_text = vance_get_theme_mod('vance_footer_brand_text', 'Your Gastro Health Hub. Curated clinical research, latest news, health trackers and downloadable resources for both patients and practitioners.');
                     ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:block; margin-bottom: 24px;">
                         <?php if($f_logo): ?>
