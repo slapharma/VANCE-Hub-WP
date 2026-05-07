@@ -67,6 +67,29 @@ $track_icons = array(
         </div>
     </section>
 
+    <!-- INTRO — cloned from page-tools-resources.php, same shape + 64px padding -->
+    <?php
+    $intro_title    = vance_get_theme_mod( 'vance_edu_intro_title',         'Courses crafted by clinicians, for life with IBD' );
+    $intro_desc     = vance_get_theme_mod( 'vance_edu_intro_desc',          'Self-paced patient courses and CPD-accredited practitioner modules — written, reviewed, and field-tested by gastroenterologists and dietitians. Pick a track below to be notified when enrolment opens.' );
+    $intro_eyebrow  = vance_get_theme_mod( 'vance_edu_intro_eyebrow',       'Coming Soon' );
+    $intro_bg       = vance_get_theme_mod( 'vance_edu_intro_bg_color',      '#ffffff' );
+    $intro_text_col = vance_get_theme_mod( 'vance_edu_intro_text_color',    '' ); // empty → use theme defaults
+    $intro_eyb_bg   = vance_get_theme_mod( 'vance_edu_intro_eyebrow_bg',    'rgba(0,128,128,0.08)' );
+    $intro_eyb_col  = vance_get_theme_mod( 'vance_edu_intro_eyebrow_color', '#008080' );
+    // 64px padding = 20% less than the standard `.section-padding` (80px) — same as tools-resources.
+    ?>
+    <section class="edu-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: 64px 0;">
+        <div class="container">
+            <div class="text-center max-600 edu-intro-inner" style="margin: 0 auto 0;">
+                <span class="edu-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: 0;">
+                    <?php echo esc_html( $intro_eyebrow ); ?>
+                </span>
+                <h2 class="edu-intro-title" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . ';' : 'color: var(--secondary-color);'; ?> margin: 0 0 12px;"><?php echo esc_html( $intro_title ); ?></h2>
+                <p class="edu-intro-desc" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . '; opacity: 0.85;' : 'color: var(--text-light);'; ?> margin: 0;"><?php echo esc_html( $intro_desc ); ?></p>
+            </div>
+        </div>
+    </section>
+
     <!-- COURSE TRACKS — clickable cards open the waitlist popup -->
     <section id="tracks" class="section-padding edu-tracks-section" style="background: <?php echo esc_attr( $tracks_bg ); ?>;">
         <div class="container">

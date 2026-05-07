@@ -870,6 +870,29 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_edu_hero_title_color",   array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_hero_title_color",   array( "label" => "Hero Title Colour",         "section" => "vance_edu_hero" ) ) );
 
+    // ── Education Intro Section (cloned from tools-resources intro, same shape) ──
+    // 64px padding (20% less than the standard .section-padding's 80px). Eyebrow
+    // pill above an H2 + description paragraph. Identical Customizer fields to
+    // vance_tools_intro_* but in the vance_edu_intro_* namespace with course-
+    // flavoured copy defaults.
+    $wp_customize->add_section( "vance_edu_intro", array( "title" => "Intro Section", "panel" => "vance_edu_panel" ) );
+    $wp_customize->add_setting( "vance_edu_intro_eyebrow", array( "default" => "Coming Soon", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_intro_eyebrow", array( "label" => "Eyebrow / tag label", "section" => "vance_edu_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_intro_title", array( "default" => "Courses crafted by clinicians, for life with IBD", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_intro_title", array( "label" => "Section Title", "section" => "vance_edu_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_intro_desc",  array( "default" => "Self-paced patient courses and CPD-accredited practitioner modules — written, reviewed, and field-tested by gastroenterologists and dietitians. Pick a track below to be notified when enrolment opens.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_edu_intro_desc",  array( "label" => "Description", "section" => "vance_edu_intro", "type" => "textarea" ) );
+    // Section background + body text colour (controls colour of H2 + paragraph; eyebrow has its own pair).
+    $wp_customize->add_setting( "vance_edu_intro_bg_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_bg_color", array( "label" => "Section Background Colour", "section" => "vance_edu_intro" ) ) );
+    $wp_customize->add_setting( "vance_edu_intro_text_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_text_color", array( "label" => "Title + Body Font Colour (blank = theme defaults)", "section" => "vance_edu_intro" ) ) );
+    // Eyebrow pill colours.
+    $wp_customize->add_setting( "vance_edu_intro_eyebrow_bg",    array( "default" => "rgba(0,128,128,0.08)", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_intro_eyebrow_bg",    array( "label" => "Eyebrow Background (hex or rgba)", "section" => "vance_edu_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_intro_eyebrow_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_eyebrow_color", array( "label" => "Eyebrow Font Colour", "section" => "vance_edu_intro" ) ) );
+
     // Education Tracks
     $wp_customize->add_section( "vance_edu_tracks", array( "title" => "Course Tracks", "panel" => "vance_edu_panel" ) );
     $wp_customize->add_setting( "vance_edu_tracks_eyebrow", array( "default" => "Two Tracks. One Standard.", "sanitize_callback" => "sanitize_text_field" ) );
