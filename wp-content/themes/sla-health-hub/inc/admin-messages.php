@@ -75,22 +75,57 @@ function vance_msg_legacy_url_redirect() {
 }
 
 // ─── Admin menu ──────────────────────────────────────────────────────────────
+//
+// Access policy: visible to any user who has the 'administrator' role anywhere
+// in their role array, even if they have additional secondary roles (e.g.
+// administrator + patient). We register the page with a permissive 'read' cap
+// (held by every logged-in user) so the menu rendering machinery doesn't
+// reject before our render function runs, then enforce the actual role check
+// inline. This bypasses any user_has_cap filter / capability arithmetic that
+// might silently strip caps from secondary role assignments.
+//
+// We also add a `parent_file` filter so the menu item only APPEARS in the
+// sidebar for users who pass the role check — non-admins never see it.
+//
 add_action( 'admin_menu', 'vance_register_admin_messages_menu', 25 );
 function vance_register_admin_messages_menu() {
+    if ( ! vance_msg_user_is_admin() ) {
+        return; // hide menu item entirely for non-admins
+    }
     add_submenu_page(
         'vance-content-hub',
         'User Messages',
         'User Messages',
-        'administrator',
+        'read',
         'vance-user-messages',
         'vance_render_admin_messages_page'
     );
 }
 
+/**
+ * Returns true if the current user has the 'administrator' role anywhere in
+ * their role array. Multi-role users (admin + patient, etc.) pass.
+ *
+ * @param int|null $user_id  Optional user ID; defaults to current.
+ */
+function vance_msg_user_is_admin( $user_id = null ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+    if ( ! $user || empty( $user->ID ) ) {
+        return false;
+    }
+    return in_array( 'administrator', (array) $user->roles, true );
+}
+
 // ─── Admin page renderer ─────────────────────────────────────────────────────
 function vance_render_admin_messages_page() {
-    if ( ! current_user_can( 'administrator' ) ) {
-        wp_die( 'Insufficient permissions.' );
+    if ( ! vance_msg_user_is_admin() ) {
+        $cu = wp_get_current_user();
+        $roles = $cu && ! empty( $cu->roles ) ? implode( ', ', $cu->roles ) : '(none)';
+        wp_die(
+            'Insufficient permissions — administrator role required. Your current roles: <code>' . esc_html( $roles ) . '</code>',
+            'Access denied',
+            array( 'response' => 403 )
+        );
     }
 
     $action = isset( $_GET['vance_action'] ) ? sanitize_key( $_GET['vance_action'] ) : '';
