@@ -771,6 +771,11 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_contact_hero_img", array( "label" => "Background Image", "section" => "vance_contact_hero" ) ) );
     $wp_customize->add_setting( "vance_contact_hero_bg_color", array( "default" => "",                         "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_contact_hero_bg_color", array( "label" => "Solid Background Color (overrides image)", "section" => "vance_contact_hero" ) ) );
+    // Tag-label colours (rendered as the small "Get in Touch" pill above the H1).
+    $wp_customize->add_setting( "vance_contact_hero_tag_bg",    array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_contact_hero_tag_bg",    array( "label" => "Tag Label Background Colour", "section" => "vance_contact_hero" ) ) );
+    $wp_customize->add_setting( "vance_contact_hero_tag_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_contact_hero_tag_color", array( "label" => "Tag Label Font Colour",       "section" => "vance_contact_hero" ) ) );
 
     // ── Contact Info ──────────────────────────────────────────
     $wp_customize->add_section( "vance_contact_info", array( "title" => "Contact Information", "panel" => "vance_contact_panel" ) );
@@ -908,10 +913,165 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // Tools Intro
     $wp_customize->add_section( "vance_tools_intro", array( "title" => "Intro Section", "panel" => "vance_tools_panel" ) );
+    $wp_customize->add_setting( "vance_tools_intro_eyebrow", array( "default" => "Open Access", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_tools_intro_eyebrow", array( "label" => "Eyebrow / tag label", "section" => "vance_tools_intro", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_intro_title", array( "default" => "Clinical-grade calculators, free for everyone", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_tools_intro_title", array( "label" => "Section Title", "section" => "vance_tools_intro", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_intro_desc",  array( "default" => "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them — register if you want to save results to your dashboard.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_tools_intro_desc",  array( "label" => "Description", "section" => "vance_tools_intro", "type" => "textarea" ) );
+    // Section background + text colour (controls colour of H2 + paragraph; eyebrow has its own pair).
+    $wp_customize->add_setting( "vance_tools_intro_bg_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_tools_intro_bg_color", array( "label" => "Section Background Colour", "section" => "vance_tools_intro" ) ) );
+    $wp_customize->add_setting( "vance_tools_intro_text_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_tools_intro_text_color", array( "label" => "Title + Body Font Colour (blank = theme defaults)", "section" => "vance_tools_intro" ) ) );
+    // Eyebrow pill colours.
+    $wp_customize->add_setting( "vance_tools_intro_eyebrow_bg",    array( "default" => "rgba(0,128,128,0.08)", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_tools_intro_eyebrow_bg",    array( "label" => "Eyebrow Background (hex or rgba)", "section" => "vance_tools_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_tools_intro_eyebrow_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_tools_intro_eyebrow_color", array( "label" => "Eyebrow Font Colour", "section" => "vance_tools_intro" ) ) );
+
+    // ============================================================
+    // TURN EVIDENCE INTO ACTION — full content + styling controls
+    // (gap flagged in CLAUDE.md §6.5; mirrors the mods read by
+    //  page-turn-evidence-into-action.php, no parallel naming)
+    // ============================================================
+    $wp_customize->add_panel( "vance_evidence_panel", array(
+        "title"    => __( "Turn Evidence into Action", "sla-health-hub" ),
+        "priority" => 52,
+    ) );
+
+    // ─── Hero ──────────────────────────────────────────────────────
+    $wp_customize->add_section( "vance_evidence_hero", array( "title" => "Hero Section", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_tag",   array( "default" => "Evidence to Practice", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_hero_tag",   array( "label" => "Tag Label", "section" => "vance_evidence_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_title", array( "default" => "Turn <span class=\"highlight\">Evidence</span> into Action", "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_evidence_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_evidence_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_desc",  array( "default" => "Rigorous clinical research only matters when it reaches the patient. Vance Medical translates peer-reviewed science and real-world data into practical protocols that clinicians and patients can act on.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_evidence_hero_desc",  array( "label" => "Description", "section" => "vance_evidence_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_evidence_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_evidence_hero" ) ) );
+    // Buttons
+    $wp_customize->add_setting( "vance_evidence_hero_btn1_text", array( "default" => "Explore the Evidence Library", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_hero_btn1_text", array( "label" => "Primary Button Label", "section" => "vance_evidence_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_btn1_link", array( "default" => "#pillars", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_evidence_hero_btn1_link", array( "label" => "Primary Button Link", "section" => "vance_evidence_hero", "type" => "url" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_btn2_text", array( "default" => "Request a Clinical Consultation", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_hero_btn2_text", array( "label" => "Secondary Button Label", "section" => "vance_evidence_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_btn2_link", array( "default" => "/contact-us/", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_evidence_hero_btn2_link", array( "label" => "Secondary Button Link", "section" => "vance_evidence_hero", "type" => "url" ) );
+    // Hero overlay slider lives in this section so admins find it next to the bg image (was in "Hero Overlays (extra)" only)
+    $wp_customize->add_setting( "vance_evidence_hero_overlay_inline", array( "default" => 78, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_evidence_hero_overlay_inline", array(
+        "label"       => "Hero Overlay Opacity (%) — duplicates the slider in “Hero Overlays (extra)”",
+        "section"     => "vance_evidence_hero",
+        "type"        => "number",
+        "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
+        "description" => "Note: the canonical slider is `vance_evidence_hero_overlay`; this is a convenience duplicate.",
+    ) );
+
+    // ─── Pillars ───────────────────────────────────────────────────
+    $wp_customize->add_section( "vance_evidence_pillars", array( "title" => "Evidence Pillars", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_tag",   array( "default" => "Our Evidence Standards", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_pillars_tag",   array( "label" => "Section Tag Label", "section" => "vance_evidence_pillars", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_title", array( "default" => "Four Sources. One Standard.", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_pillars_title", array( "label" => "Section Title", "section" => "vance_evidence_pillars", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_desc",  array( "default" => "Every recommendation we publish is anchored in at least one of these evidence streams and graded against internationally-recognised quality criteria.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_evidence_pillars_desc",  array( "label" => "Section Description", "section" => "vance_evidence_pillars", "type" => "textarea" ) );
+
+    $pillar_defaults = array(
+        1 => array( "Clinical Trials",      "Randomised controlled trials and phase II–IV studies investigating medical food and nutritional interventions in IBD, SIBO, and related GI conditions." ),
+        2 => array( "Real-World Data",      "Longitudinal outcomes from registered patient cohorts, post-market surveillance, and anonymised dashboard analytics across thousands of IBD journeys." ),
+        3 => array( "Peer-Reviewed Science","Curated meta-analyses and systematic reviews from Gut, AJG, Lancet Gastro, JCN, and other indexed journals — summarised for bedside use." ),
+        4 => array( "Expert Consensus",     "Multidisciplinary panel statements from gastroenterologists, dietitians, and pharmacists who have validated the protocol pathways we publish." ),
+    );
+    for ( $i = 1; $i <= 4; $i++ ) {
+        $wp_customize->add_setting( "vance_evidence_pillar{$i}_title", array( "default" => $pillar_defaults[ $i ][0], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_evidence_pillar{$i}_title", array( "label" => "Pillar {$i} Title", "section" => "vance_evidence_pillars", "type" => "text" ) );
+        $wp_customize->add_setting( "vance_evidence_pillar{$i}_desc",  array( "default" => $pillar_defaults[ $i ][1], "sanitize_callback" => "sanitize_textarea_field" ) );
+        $wp_customize->add_control( "vance_evidence_pillar{$i}_desc",  array( "label" => "Pillar {$i} Description", "section" => "vance_evidence_pillars", "type" => "textarea" ) );
+    }
+
+    // ─── Process (Insight to Practice) ────────────────────────────
+    $wp_customize->add_section( "vance_evidence_proc", array( "title" => "From Insight to Practice", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_proc_title", array( "default" => "From Insight to Practice", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_proc_title", array( "label" => "Section Title", "section" => "vance_evidence_proc", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_proc_desc",  array( "default" => "The journey every piece of evidence takes before it reaches a clinician protocol or a patient-facing recommendation.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_evidence_proc_desc",  array( "label" => "Section Description", "section" => "vance_evidence_proc", "type" => "textarea" ) );
+
+    $proc_defaults = array(
+        1 => array( "Synthesise", "Our medical writing team combines primary studies, guidelines, and registry data into a single graded position — with conflicts of interest and limitations flagged openly." ),
+        2 => array( "Translate",  "We convert each position into two companion artefacts: a clinician-facing protocol card and a plain-language patient brief vetted by a patient advisory panel." ),
+        3 => array( "Apply",      "Protocols feed the Vance Medical dashboard, the Ask AI assistant, and downloadable handouts — so evidence becomes a concrete decision at the point of care." ),
+    );
+    for ( $i = 1; $i <= 3; $i++ ) {
+        $wp_customize->add_setting( "vance_evidence_proc{$i}_title", array( "default" => $proc_defaults[ $i ][0], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_evidence_proc{$i}_title", array( "label" => "Step {$i} Title", "section" => "vance_evidence_proc", "type" => "text" ) );
+        $wp_customize->add_setting( "vance_evidence_proc{$i}_desc",  array( "default" => $proc_defaults[ $i ][1], "sanitize_callback" => "sanitize_textarea_field" ) );
+        $wp_customize->add_control( "vance_evidence_proc{$i}_desc",  array( "label" => "Step {$i} Description", "section" => "vance_evidence_proc", "type" => "textarea" ) );
+    }
+
+    // ─── Featured Evidence (post query) ───────────────────────────
+    $wp_customize->add_section( "vance_evidence_feat", array( "title" => "Featured Evidence (post grid)", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_feat_title", array( "default" => "Latest Evidence in Focus", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_feat_title", array( "label" => "Section Title", "section" => "vance_evidence_feat", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_feat_desc",  array( "default" => "Recent reviews, trial readouts, and protocol updates published by the Vance Medical editorial team.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_evidence_feat_desc",  array( "label" => "Section Description", "section" => "vance_evidence_feat", "type" => "textarea" ) );
+    // Category selector (uses dropdown-pages style → category dropdown).
+    $cat_choices = array( 0 => '— All categories —' );
+    $all_cats = get_categories( array( 'hide_empty' => false ) );
+    if ( is_array( $all_cats ) ) {
+        foreach ( $all_cats as $cat ) {
+            $cat_choices[ (int) $cat->term_id ] = $cat->name;
+        }
+    }
+    $wp_customize->add_setting( "vance_evidence_feat_category", array( "default" => 0, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_evidence_feat_category", array(
+        "label"   => "Filter by Category",
+        "section" => "vance_evidence_feat",
+        "type"    => "select",
+        "choices" => $cat_choices,
+    ) );
+    $wp_customize->add_setting( "vance_evidence_feat_count", array( "default" => 3, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_evidence_feat_count", array(
+        "label"       => "Posts to Show",
+        "section"     => "vance_evidence_feat",
+        "type"        => "number",
+        "input_attrs" => array( "min" => 1, "max" => 12, "step" => 1 ),
+    ) );
+
+    // ─── Final CTA ────────────────────────────────────────────────
+    $wp_customize->add_section( "vance_evidence_cta", array( "title" => "Final CTA Section", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_title", array( "default" => "Put Evidence to Work for Your Patients", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_cta_title", array( "label" => "Title", "section" => "vance_evidence_cta", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_desc",  array( "default" => "Free registration unlocks the full protocol library, the Ask AI clinical assistant, and printable patient handouts branded to your practice.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_evidence_cta_desc",  array( "label" => "Description", "section" => "vance_evidence_cta", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_btn1_text", array( "default" => "Register Free", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_cta_btn1_text", array( "label" => "Primary Button Label", "section" => "vance_evidence_cta", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_btn1_link", array( "default" => "/register/", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_evidence_cta_btn1_link", array( "label" => "Primary Button Link", "section" => "vance_evidence_cta", "type" => "url" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_btn2_text", array( "default" => "Talk to Our Team", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_evidence_cta_btn2_text", array( "label" => "Secondary Button Label", "section" => "vance_evidence_cta", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_btn2_link", array( "default" => "/contact-us/", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_evidence_cta_btn2_link", array( "label" => "Secondary Button Link", "section" => "vance_evidence_cta", "type" => "url" ) );
+
+    // ─── Styling (page-wide overrides) ────────────────────────────
+    $wp_customize->add_section( "vance_evidence_styling", array( "title" => "Page Styling", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_bg",     array( "label" => "Pillars Section Background", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_proc_bg",        array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_proc_bg",        array( "label" => "Process Section Background", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_feat_bg",        array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_feat_bg",        array( "label" => "Featured-Evidence Background", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_cta_bg_from",    array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_bg_from",    array( "label" => "CTA Gradient — From", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_cta_bg_to",      array( "default" => "#006666", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_bg_to",      array( "label" => "CTA Gradient — To",   "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_heading_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_heading_color",  array( "label" => "Section Heading Colour", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_body_color",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_body_color",     array( "label" => "Body Text Colour", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_setting( "vance_evidence_pillar_card_bg", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillar_card_bg", array( "label" => "Pillar / Process Card Background", "section" => "vance_evidence_styling" ) ) );
 
 }
 add_action( 'customize_register', 'vance_pages_customize_register', 20 );

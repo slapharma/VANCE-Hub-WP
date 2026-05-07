@@ -12,7 +12,21 @@
  * `vance_evidence_*` naming used in this file (mirror the pattern in
  * customizer-pages.php when you wire them up).
  */
-get_header(); ?>
+get_header();
+
+// ── Page-wide styling overrides (registered in customizer-pages.php § Page Styling) ──
+$evd_pillars_bg     = vance_get_theme_mod( 'vance_evidence_pillars_bg', '' );
+$evd_proc_bg        = vance_get_theme_mod( 'vance_evidence_proc_bg',    '' );
+$evd_feat_bg        = vance_get_theme_mod( 'vance_evidence_feat_bg',    '' );
+$evd_cta_from       = vance_get_theme_mod( 'vance_evidence_cta_bg_from', '#008080' );
+$evd_cta_to         = vance_get_theme_mod( 'vance_evidence_cta_bg_to',   '#006666' );
+$evd_heading_color  = vance_get_theme_mod( 'vance_evidence_heading_color', '' );
+$evd_body_color     = vance_get_theme_mod( 'vance_evidence_body_color',    '' );
+$evd_card_bg        = vance_get_theme_mod( 'vance_evidence_pillar_card_bg', '#ffffff' );
+// Resolve back to CSS-friendly values with fallbacks to existing theme tokens.
+$_h_color = $evd_heading_color ?: 'var(--secondary-color)';
+$_b_color = $evd_body_color    ?: 'var(--text-light)';
+?>
 
 <main id="main-content">
 
@@ -70,25 +84,25 @@ get_header(); ?>
         4 => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>',
     );
     ?>
-    <section id="pillars" class="section-padding" style="background: var(--accent-color);">
+    <section id="pillars" class="section-padding" style="background: <?php echo esc_attr( $evd_pillars_bg ?: 'var(--accent-color)' ); ?>;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
                 <span class="tag-section"><?php echo esc_html( $pillars_tag ); ?></span>
-                <h2 style="color: var(--secondary-color);"><?php echo esc_html( $pillars_title ); ?></h2>
-                <p style="color: var(--text-light);"><?php echo esc_html( $pillars_desc ); ?></p>
+                <h2 style="color: <?php echo esc_attr( $_h_color ); ?>;"><?php echo esc_html( $pillars_title ); ?></h2>
+                <p style="color: <?php echo esc_attr( $_b_color ); ?>;"><?php echo esc_html( $pillars_desc ); ?></p>
             </div>
             <div class="grid-2 resource-grid">
                 <?php for ( $i = 1; $i <= 4; $i++ ) :
                     $card_title = vance_get_theme_mod( "vance_evidence_pillar{$i}_title", $pillar_defaults[ $i ][0] );
                     $card_desc  = vance_get_theme_mod( "vance_evidence_pillar{$i}_desc",  $pillar_defaults[ $i ][1] );
                 ?>
-                <div class="evidence-pillar-card" style="display: flex; gap: 20px; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+                <div class="evidence-pillar-card" style="display: flex; gap: 20px; padding: 32px; background: <?php echo esc_attr( $evd_card_bg ); ?>; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
                     <div class="evidence-pillar-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $pillar_colors[ $i ][0] ); ?>, <?php echo esc_attr( $pillar_colors[ $i ][1] ); ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                         <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $pillar_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $pillar_icons[ $i ]; ?></svg>
                     </div>
                     <div>
-                        <h4 style="font-size: 18px; color: var(--secondary-color); margin-bottom: 8px;"><?php echo esc_html( $card_title ); ?></h4>
-                        <p style="color: var(--text-light); font-size: 14px; margin: 0;"><?php echo esc_html( $card_desc ); ?></p>
+                        <h4 style="font-size: 18px; color: <?php echo esc_attr( $_h_color ); ?>; margin-bottom: 8px;"><?php echo esc_html( $card_title ); ?></h4>
+                        <p style="color: <?php echo esc_attr( $_b_color ); ?>; font-size: 14px; margin: 0;"><?php echo esc_html( $card_desc ); ?></p>
                     </div>
                 </div>
                 <?php endfor; ?>
@@ -107,21 +121,21 @@ get_header(); ?>
         3 => array( 'Apply',      'Protocols feed the Vance Medical dashboard, the Ask AI assistant, and downloadable handouts — so evidence becomes a concrete decision at the point of care.' ),
     );
     ?>
-    <section class="section-padding" style="background: white;">
+    <section class="section-padding" style="background: <?php echo esc_attr( $evd_proc_bg ?: 'white' ); ?>;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <h2 style="color: var(--secondary-color);"><?php echo esc_html( $proc_title ); ?></h2>
-                <p style="color: var(--text-light);"><?php echo esc_html( $proc_desc ); ?></p>
+                <h2 style="color: <?php echo esc_attr( $_h_color ); ?>;"><?php echo esc_html( $proc_title ); ?></h2>
+                <p style="color: <?php echo esc_attr( $_b_color ); ?>;"><?php echo esc_html( $proc_desc ); ?></p>
             </div>
             <div class="grid-3" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
                 <?php for ( $i = 1; $i <= 3; $i++ ) :
                     $step_title = vance_get_theme_mod( "vance_evidence_proc{$i}_title", $proc_defaults[ $i ][0] );
                     $step_desc  = vance_get_theme_mod( "vance_evidence_proc{$i}_desc",  $proc_defaults[ $i ][1] );
                 ?>
-                <div style="position: relative; padding: 40px 28px; background: var(--accent-color); border-radius: var(--radius-lg); border-top: 4px solid var(--primary-color);">
+                <div style="position: relative; padding: 40px 28px; background: <?php echo esc_attr( $evd_card_bg ); ?>; border-radius: var(--radius-lg); border-top: 4px solid var(--primary-color);">
                     <div style="position: absolute; top: -20px; left: 28px; width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px;"><?php echo $i; ?></div>
-                    <h3 style="font-size: 20px; color: var(--secondary-color); margin: 12px 0;"><?php echo esc_html( $step_title ); ?></h3>
-                    <p style="font-size: 14px; color: var(--text-light); margin: 0; line-height: 1.6;"><?php echo esc_html( $step_desc ); ?></p>
+                    <h3 style="font-size: 20px; color: <?php echo esc_attr( $_h_color ); ?>; margin: 12px 0;"><?php echo esc_html( $step_title ); ?></h3>
+                    <p style="font-size: 14px; color: <?php echo esc_attr( $_b_color ); ?>; margin: 0; line-height: 1.6;"><?php echo esc_html( $step_desc ); ?></p>
                 </div>
                 <?php endfor; ?>
             </div>
@@ -146,11 +160,11 @@ get_header(); ?>
     $feat_query = new WP_Query( $feat_args );
     ?>
     <?php if ( $feat_query->have_posts() ) : ?>
-    <section class="section-padding" style="background: var(--accent-color);">
+    <section class="section-padding" style="background: <?php echo esc_attr( $evd_feat_bg ?: 'var(--accent-color)' ); ?>;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <h2 style="color: var(--secondary-color);"><?php echo esc_html( $feat_title ); ?></h2>
-                <p style="color: var(--text-light);"><?php echo esc_html( $feat_desc ); ?></p>
+                <h2 style="color: <?php echo esc_attr( $_h_color ); ?>;"><?php echo esc_html( $feat_title ); ?></h2>
+                <p style="color: <?php echo esc_attr( $_b_color ); ?>;"><?php echo esc_html( $feat_desc ); ?></p>
             </div>
             <div class="grid-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
                 <?php while ( $feat_query->have_posts() ) : $feat_query->the_post(); ?>
@@ -189,7 +203,7 @@ get_header(); ?>
     $cta_btn2  = vance_get_theme_mod( 'vance_evidence_cta_btn2_text', 'Talk to Our Team' );
     $cta_btn2_link = vance_get_theme_mod( 'vance_evidence_cta_btn2_link', '/contact-us/' );
     ?>
-    <section class="section-padding evidence-cta-section" style="background: linear-gradient(135deg, #008080, #006666);">
+    <section class="section-padding evidence-cta-section" style="background: linear-gradient(135deg, <?php echo esc_attr( $evd_cta_from ); ?>, <?php echo esc_attr( $evd_cta_to ); ?>);">
         <div class="container" style="text-align: center; color: white;">
             <h2 style="color: white; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
             <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: rgba(255,255,255,0.85);"><?php echo esc_html( $cta_desc ); ?></p>

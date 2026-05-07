@@ -1188,8 +1188,15 @@ function vance_ajax_save_tool_result() {
             $payload = $decoded;
         }
     }
+    // We accept any non-empty payload — even a "placeholder" snapshot from the
+    // wrapper page indicates the user explicitly clicked save with an open tool.
+    // Filter out genuinely-empty submissions so we don't write empty rows.
     if ( empty( $payload ) ) {
-        wp_send_json_error( array( 'message' => 'No result to save yet — please complete the tool first.' ) );
+        $payload = array(
+            'kind'       => 'placeholder',
+            'note'       => 'Saved without a captured result',
+            'capturedAt' => gmdate( 'c' ),
+        );
     }
 
     $ok = vance_append_tool_history( get_current_user_id(), $tool, $payload );

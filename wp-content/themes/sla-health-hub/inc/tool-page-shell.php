@@ -147,15 +147,14 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
                             class="tool-page-save"
                             data-tool-slug="<?php echo esc_attr( $slug ); ?>"
                             data-logged-in="<?php echo $is_logged_in ? '1' : '0'; ?>"
-                            data-nonce="<?php echo esc_attr( $nonce ); ?>"
-                            disabled>
+                            data-nonce="<?php echo esc_attr( $nonce ); ?>">
                         <?php echo esc_html( $save_label ); ?>
-                        <span class="save-hint">— complete the tool to enable</span>
                     </button>
                     <?php endif; ?>
                 </div>
             </div>
             <iframe class="tool-page-iframe"
+                    id="vance-tool-iframe-<?php echo esc_attr( $slug ); ?>"
                     src="<?php echo esc_url( $iframe_src ); ?>"
                     title="<?php echo esc_attr( $tool_name ); ?>"
                     loading="lazy"
@@ -181,12 +180,17 @@ get_template_part( 'inc/register-modal' );
 
 <script>
 (function () {
-    var slug = <?php echo wp_json_encode( $slug ); ?>;
-    var loggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
-    var nonce = <?php echo wp_json_encode( $nonce ); ?>;
-    var ajaxUrl = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
-    var saveBtn = document.querySelector('.tool-page-save[data-tool-slug="' + slug + '"]');
-    var toast   = document.getElementById('vance-tool-toast');
+    var slug      = <?php echo wp_json_encode( $slug ); ?>;
+    var loggedIn  = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
+    var nonce     = <?php echo wp_json_encode( $nonce ); ?>;
+    var ajaxUrl   = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+    var iframeEl  = document.getElementById('vance-tool-iframe-' + slug);
+    var saveBtn   = document.querySelector('.tool-page-save[data-tool-slug="' + slug + '"]');
+    var toast     = document.getElementById('vance-tool-toast');
+
+    // pendingPayload is whatever the iframe last sent via postMessage. If empty
+    // at save time, we fall back to scraping the iframe DOM directly (same-origin,
+    // so this is safe). Either way the user gets a save.
     var pendingPayload = null;
 
     function showToast(msg, ms) {
@@ -197,33 +201,69 @@ get_template_part( 'inc/register-modal' );
         showToast._t = setTimeout(function () { toast.classList.remove('is-visible'); }, ms || 3500);
     }
 
-    function enableSave(payload) {
-        pendingPayload = payload || {};
-        if (!saveBtn) return;
-        saveBtn.disabled = false;
-        var hint = saveBtn.querySelector('.save-hint');
-        if (hint) hint.remove();
+    /**
+     * Best-effort iframe snapshot. Same-origin only — cross-origin returns null.
+     * Returns { kind: 'dom-snapshot', url, title, text } or null on failure.
+     * Truncates text to 16k chars to keep the AJAX payload sensible.
+     */
+    function snapshotIframe() {
+        if (!iframeEl) return null;
+        try {
+            var doc = iframeEl.contentDocument;
+            var win = iframeEl.contentWindow;
+            if (!doc || !win) return null;
+            // Prefer a "result" container if the bundle exposes one; else the body.
+            var resultEl = doc.querySelector('[data-vance-result], [data-result], .result, .results, .calc-result, #result, #results');
+            var body = (resultEl || doc.body || {});
+            var text = (body.innerText || body.textContent || '').trim();
+            if (text.length > 16000) text = text.slice(0, 16000) + '…';
+            return {
+                kind:   'dom-snapshot',
+                url:    win.location && win.location.href,
+                title:  doc.title || '',
+                text:   text,
+                hasResultContainer: !!resultEl,
+                capturedAt: new Date().toISOString()
+            };
+        } catch (e) {
+            // Cross-origin (shouldn't happen on this site) or iframe not yet loaded.
+            return null;
+        }
     }
 
-    // Listen for tool result postMessages from the iframe.
-    // Iframe contract: postMessage({ type: 'VANCE_TOOL_RESULT', tool: '<slug>', payload: { ... } }, '*')
+    /**
+     * Iframes that cooperate by emitting postMessage get the richer payload.
+     * Iframe contract: postMessage({ type: 'VANCE_TOOL_RESULT', tool: '<slug>', payload: {...} }, '*')
+     */
     window.addEventListener('message', function (e) {
         var d = e && e.data;
         if (!d || typeof d !== 'object') return;
         if (d.type === 'VANCE_TOOL_RESULT' && d.tool === slug) {
-            enableSave(d.payload || {});
+            pendingPayload = d.payload || {};
         }
     });
+
+    function buildPayloadAtSaveTime() {
+        // Prefer postMessage payload (structured), fall back to DOM snapshot (best-effort).
+        if (pendingPayload && Object.keys(pendingPayload).length > 0) {
+            return Object.assign({ kind: 'postmessage' }, pendingPayload);
+        }
+        var snap = snapshotIframe();
+        if (snap) return snap;
+        return { kind: 'placeholder', note: 'No iframe data captured', capturedAt: new Date().toISOString() };
+    }
 
     // Manual save click handler.
     if (saveBtn) {
         saveBtn.addEventListener('click', function () {
-            // Anonymous → open register modal with pending payload.
+            var payload = buildPayloadAtSaveTime();
+
+            // Anonymous → open register modal with the payload.
             if (!loggedIn) {
                 if (window.VanceRegisterModal && typeof window.VanceRegisterModal.open === 'function') {
                     window.VanceRegisterModal.open({
                         tool: slug,
-                        payload: pendingPayload || {},
+                        payload: payload,
                         onSuccess: function (resp) {
                             showToast('Account created — opening your dashboard…', 4000);
                             setTimeout(function () {
@@ -243,7 +283,7 @@ get_template_part( 'inc/register-modal' );
             fd.append('action', 'vance_save_tool_result');
             fd.append('nonce', nonce);
             fd.append('tool', slug);
-            fd.append('payload', JSON.stringify(pendingPayload || {}));
+            fd.append('payload', JSON.stringify(payload));
             fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
                 .then(function (r) { return r.json(); })
                 .then(function (j) {

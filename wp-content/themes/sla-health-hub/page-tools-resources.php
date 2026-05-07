@@ -36,15 +36,24 @@ get_header(); ?>
 
     <!-- INTRO -->
     <?php
-    $intro_title = vance_get_theme_mod( 'vance_tools_intro_title', 'Clinical-grade calculators, free for everyone' );
-    $intro_desc  = vance_get_theme_mod( 'vance_tools_intro_desc',  "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them — register if you want to save results to your dashboard." );
+    $intro_title     = vance_get_theme_mod( 'vance_tools_intro_title', 'Clinical-grade calculators, free for everyone' );
+    $intro_desc      = vance_get_theme_mod( 'vance_tools_intro_desc',  "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them — register if you want to save results to your dashboard." );
+    $intro_eyebrow   = vance_get_theme_mod( 'vance_tools_intro_eyebrow',   'Open Access' );
+    $intro_bg        = vance_get_theme_mod( 'vance_tools_intro_bg_color', '#ffffff' );
+    $intro_text_col  = vance_get_theme_mod( 'vance_tools_intro_text_color', '' ); // empty → use theme defaults
+    $intro_eyb_bg    = vance_get_theme_mod( 'vance_tools_intro_eyebrow_bg',    'rgba(0,128,128,0.08)' );
+    $intro_eyb_col   = vance_get_theme_mod( 'vance_tools_intro_eyebrow_color', '#008080' );
+    // Section padding is 20% less top/bottom than the standard `.section-padding`
+    // (which is 80px top/bottom in main.css) → 64px.
     ?>
-    <section class="section-padding tools-intro-section" style="background: white;">
+    <section class="tools-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: 64px 0;">
         <div class="container">
-            <div class="text-center max-600 margin-b-60">
-                <span class="tag-section">Open Access</span>
-                <h2 style="color: var(--secondary-color);"><?php echo esc_html( $intro_title ); ?></h2>
-                <p style="color: var(--text-light);"><?php echo esc_html( $intro_desc ); ?></p>
+            <div class="text-center max-600 tools-intro-inner" style="margin: 0 auto 0;">
+                <span class="tools-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: 0;">
+                    <?php echo esc_html( $intro_eyebrow ); ?>
+                </span>
+                <h2 class="tools-intro-title" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . ';' : 'color: var(--secondary-color);'; ?> margin: 0 0 12px;"><?php echo esc_html( $intro_title ); ?></h2>
+                <p class="tools-intro-desc" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . '; opacity: 0.85;' : 'color: var(--text-light);'; ?> margin: 0;"><?php echo esc_html( $intro_desc ); ?></p>
             </div>
         </div>
     </section>
