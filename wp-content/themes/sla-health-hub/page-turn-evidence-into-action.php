@@ -26,6 +26,25 @@ $evd_card_bg        = vance_get_theme_mod( 'vance_evidence_pillar_card_bg', '#ff
 // Resolve back to CSS-friendly values with fallbacks to existing theme tokens.
 $_h_color = $evd_heading_color ?: 'var(--secondary-color)';
 $_b_color = $evd_body_color    ?: 'var(--text-light)';
+
+// ── Per-section overrides (each falls back to the page-wide value above) ──
+// Hero: tag pill colours + title/body text.
+$evd_hero_tag_bg      = vance_get_theme_mod( 'vance_evidence_hero_tag_bg',    '' );
+$evd_hero_tag_color   = vance_get_theme_mod( 'vance_evidence_hero_tag_color', '' );
+$evd_hero_title_color = vance_get_theme_mod( 'vance_evidence_hero_title_color', '' );
+$evd_hero_text_color  = vance_get_theme_mod( 'vance_evidence_hero_text_color',  '' );
+// Pillars: tag pill colours + title/body overrides (fall through to page-wide).
+$evd_pil_tag_bg       = vance_get_theme_mod( 'vance_evidence_pillars_tag_bg',    '' );
+$evd_pil_tag_color    = vance_get_theme_mod( 'vance_evidence_pillars_tag_color', '' );
+$evd_pil_title_color  = vance_get_theme_mod( 'vance_evidence_pillars_title_color', '' ) ?: $_h_color;
+$evd_pil_text_color   = vance_get_theme_mod( 'vance_evidence_pillars_text_color',  '' ) ?: $_b_color;
+// Process / Featured / CTA per-section colour overrides.
+$evd_proc_title_color = vance_get_theme_mod( 'vance_evidence_proc_title_color', '' ) ?: $_h_color;
+$evd_proc_text_color  = vance_get_theme_mod( 'vance_evidence_proc_text_color',  '' ) ?: $_b_color;
+$evd_feat_title_color = vance_get_theme_mod( 'vance_evidence_feat_title_color', '' ) ?: $_h_color;
+$evd_feat_text_color  = vance_get_theme_mod( 'vance_evidence_feat_text_color',  '' ) ?: $_b_color;
+$evd_cta_title_color  = vance_get_theme_mod( 'vance_evidence_cta_title_color', '#ffffff' );
+$evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  'rgba(255,255,255,0.85)' );
 ?>
 
 <main id="main-content">
@@ -43,12 +62,20 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
     $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_evidence_hero_overlay', 78 ) ) ) ) / 100;
     $hero_overlay_bottom = min( 1, $hero_overlay + 0.14 );
     ?>
+    <?php
+    // Build conditional inline styles for hero tag + title + body.
+    $tag_inline_style = '';
+    if ( $evd_hero_tag_bg )    { $tag_inline_style .= 'background:' . esc_attr( $evd_hero_tag_bg ) . ';'; }
+    if ( $evd_hero_tag_color ) { $tag_inline_style .= 'color:' . esc_attr( $evd_hero_tag_color ) . ';'; }
+    $h1_inline_style  = $evd_hero_title_color ? 'color:' . esc_attr( $evd_hero_title_color ) . ';' : '';
+    $p_inline_style   = $evd_hero_text_color  ? 'color:' . esc_attr( $evd_hero_text_color )  . ';' : '';
+    ?>
     <section class="hero evidence-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
         <div class="container">
             <div class="hero-content">
-                <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
-                <h1><?php echo wp_kses_post( $hero_title ); ?></h1>
-                <p><?php echo esc_html( $hero_desc ); ?></p>
+                <span class="tag-label" style="<?php echo $tag_inline_style; ?>"><?php echo esc_html( $hero_tag ); ?></span>
+                <h1 style="<?php echo $h1_inline_style; ?>"><?php echo wp_kses_post( $hero_title ); ?></h1>
+                <p style="<?php echo $p_inline_style; ?>"><?php echo esc_html( $hero_desc ); ?></p>
                 <div class="hero-actions" style="margin-top: 24px;">
                     <a href="<?php echo esc_url( $hero_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $hero_btn1 ); ?></a>
                     <a href="<?php echo esc_url( $hero_btn2_link ); ?>" class="btn btn-outline"><?php echo esc_html( $hero_btn2 ); ?></a>
@@ -84,12 +111,18 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
         4 => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>',
     );
     ?>
+    <?php
+    // Pillars-section tag pill inline styles.
+    $pil_tag_style = '';
+    if ( $evd_pil_tag_bg )    { $pil_tag_style .= 'background:' . esc_attr( $evd_pil_tag_bg ) . ';'; }
+    if ( $evd_pil_tag_color ) { $pil_tag_style .= 'color:' . esc_attr( $evd_pil_tag_color ) . ';'; }
+    ?>
     <section id="pillars" class="section-padding" style="background: <?php echo esc_attr( $evd_pillars_bg ?: 'var(--accent-color)' ); ?>;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <span class="tag-section"><?php echo esc_html( $pillars_tag ); ?></span>
-                <h2 style="color: <?php echo esc_attr( $_h_color ); ?>;"><?php echo esc_html( $pillars_title ); ?></h2>
-                <p style="color: <?php echo esc_attr( $_b_color ); ?>;"><?php echo esc_html( $pillars_desc ); ?></p>
+                <span class="tag-section" style="<?php echo $pil_tag_style; ?>"><?php echo esc_html( $pillars_tag ); ?></span>
+                <h2 style="color: <?php echo esc_attr( $evd_pil_title_color ); ?>;"><?php echo esc_html( $pillars_title ); ?></h2>
+                <p style="color: <?php echo esc_attr( $evd_pil_text_color ); ?>;"><?php echo esc_html( $pillars_desc ); ?></p>
             </div>
             <div class="grid-2 resource-grid">
                 <?php for ( $i = 1; $i <= 4; $i++ ) :
@@ -101,8 +134,8 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
                         <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $pillar_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $pillar_icons[ $i ]; ?></svg>
                     </div>
                     <div>
-                        <h4 style="font-size: 18px; color: <?php echo esc_attr( $_h_color ); ?>; margin-bottom: 8px;"><?php echo esc_html( $card_title ); ?></h4>
-                        <p style="color: <?php echo esc_attr( $_b_color ); ?>; font-size: 14px; margin: 0;"><?php echo esc_html( $card_desc ); ?></p>
+                        <h4 style="font-size: 18px; color: <?php echo esc_attr( $evd_pil_title_color ); ?>; margin-bottom: 8px;"><?php echo esc_html( $card_title ); ?></h4>
+                        <p style="color: <?php echo esc_attr( $evd_pil_text_color ); ?>; font-size: 14px; margin: 0;"><?php echo esc_html( $card_desc ); ?></p>
                     </div>
                 </div>
                 <?php endfor; ?>
@@ -124,8 +157,8 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
     <section class="section-padding" style="background: <?php echo esc_attr( $evd_proc_bg ?: 'white' ); ?>;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <h2 style="color: <?php echo esc_attr( $_h_color ); ?>;"><?php echo esc_html( $proc_title ); ?></h2>
-                <p style="color: <?php echo esc_attr( $_b_color ); ?>;"><?php echo esc_html( $proc_desc ); ?></p>
+                <h2 style="color: <?php echo esc_attr( $evd_proc_title_color ); ?>;"><?php echo esc_html( $proc_title ); ?></h2>
+                <p style="color: <?php echo esc_attr( $evd_proc_text_color ); ?>;"><?php echo esc_html( $proc_desc ); ?></p>
             </div>
             <div class="grid-3" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
                 <?php for ( $i = 1; $i <= 3; $i++ ) :
@@ -134,8 +167,8 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
                 ?>
                 <div style="position: relative; padding: 40px 28px; background: <?php echo esc_attr( $evd_card_bg ); ?>; border-radius: var(--radius-lg); border-top: 4px solid var(--primary-color);">
                     <div style="position: absolute; top: -20px; left: 28px; width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px;"><?php echo $i; ?></div>
-                    <h3 style="font-size: 20px; color: <?php echo esc_attr( $_h_color ); ?>; margin: 12px 0;"><?php echo esc_html( $step_title ); ?></h3>
-                    <p style="font-size: 14px; color: <?php echo esc_attr( $_b_color ); ?>; margin: 0; line-height: 1.6;"><?php echo esc_html( $step_desc ); ?></p>
+                    <h3 style="font-size: 20px; color: <?php echo esc_attr( $evd_proc_title_color ); ?>; margin: 12px 0;"><?php echo esc_html( $step_title ); ?></h3>
+                    <p style="font-size: 14px; color: <?php echo esc_attr( $evd_proc_text_color ); ?>; margin: 0; line-height: 1.6;"><?php echo esc_html( $step_desc ); ?></p>
                 </div>
                 <?php endfor; ?>
             </div>
@@ -163,8 +196,8 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
     <section class="section-padding" style="background: <?php echo esc_attr( $evd_feat_bg ?: 'var(--accent-color)' ); ?>;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <h2 style="color: <?php echo esc_attr( $_h_color ); ?>;"><?php echo esc_html( $feat_title ); ?></h2>
-                <p style="color: <?php echo esc_attr( $_b_color ); ?>;"><?php echo esc_html( $feat_desc ); ?></p>
+                <h2 style="color: <?php echo esc_attr( $evd_feat_title_color ); ?>;"><?php echo esc_html( $feat_title ); ?></h2>
+                <p style="color: <?php echo esc_attr( $evd_feat_text_color ); ?>;"><?php echo esc_html( $feat_desc ); ?></p>
             </div>
             <div class="grid-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
                 <?php while ( $feat_query->have_posts() ) : $feat_query->the_post(); ?>
@@ -204,9 +237,9 @@ $_b_color = $evd_body_color    ?: 'var(--text-light)';
     $cta_btn2_link = vance_get_theme_mod( 'vance_evidence_cta_btn2_link', '/contact-us/' );
     ?>
     <section class="section-padding evidence-cta-section" style="background: linear-gradient(135deg, <?php echo esc_attr( $evd_cta_from ); ?>, <?php echo esc_attr( $evd_cta_to ); ?>);">
-        <div class="container" style="text-align: center; color: white;">
-            <h2 style="color: white; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
-            <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: rgba(255,255,255,0.85);"><?php echo esc_html( $cta_desc ); ?></p>
+        <div class="container" style="text-align: center; color: <?php echo esc_attr( $evd_cta_title_color ); ?>;">
+            <h2 style="color: <?php echo esc_attr( $evd_cta_title_color ); ?>; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
+            <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: <?php echo esc_attr( $evd_cta_text_color ); ?>;"><?php echo esc_html( $cta_desc ); ?></p>
             <div class="hero-actions" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
                 <a href="<?php echo esc_url( $cta_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $cta_btn1 ); ?></a>
                 <a href="<?php echo esc_url( $cta_btn2_link ); ?>" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;"><?php echo esc_html( $cta_btn2 ); ?></a>

@@ -328,15 +328,59 @@ $tool_url = get_template_directory_uri() . '/assets/tools/blood-test/index.html'
                     </a>
                 </div>
             </div>
-            <iframe 
-                class="calc-embed-iframe" 
-                src="<?php echo esc_url($tool_url); ?>" 
+            <iframe
+                id="vance-bt-iframe"
+                class="calc-embed-iframe"
+                src="<?php echo esc_url($tool_url); ?>"
                 loading="lazy"
-                title="IBD Malnutrition Calculator"
+                title="IBD Blood Test Analyser"
                 allow="clipboard-write"
+                scrolling="no"
             ></iframe>
         </div>
     </div>
+
+    <!-- Brand CSS injection + autoresize (parses iframe DOM, same-origin) -->
+    <?php require_once get_template_directory() . '/inc/tool-brand-css.php'; ?>
+    <script>
+    (function () {
+        var iframeEl = document.getElementById('vance-bt-iframe');
+        if (!iframeEl) return;
+        var brandCss = <?php echo wp_json_encode( function_exists( 'vance_tool_brand_css_calculator' ) ? vance_tool_brand_css_calculator() : '' ); ?>;
+        var minH = 720;
+
+        function inject() {
+            try {
+                var doc = iframeEl.contentDocument;
+                if (!doc) return;
+                if (!doc.getElementById('vance-tool-brand-css') && brandCss) {
+                    var s = doc.createElement('style');
+                    s.id = 'vance-tool-brand-css';
+                    s.textContent = brandCss;
+                    (doc.head || doc.documentElement).appendChild(s);
+                }
+                var h = Math.max(
+                    doc.documentElement ? doc.documentElement.scrollHeight : 0,
+                    doc.body ? doc.body.scrollHeight : 0,
+                    minH
+                );
+                var current = iframeEl.style.height ? parseInt(iframeEl.style.height, 10) : 0;
+                if (Math.abs(current - h) > 4) iframeEl.style.height = h + 'px';
+            } catch (e) { /* cross-origin guard, no-op */ }
+        }
+
+        iframeEl.addEventListener('load', function () {
+            inject();
+            var ticks = 0;
+            var fast = setInterval(function () {
+                ticks++; inject();
+                if (ticks >= 10) clearInterval(fast);
+            }, 500);
+            setInterval(inject, 2000);
+        });
+        window.addEventListener('resize', inject);
+    })();
+    </script>
 
     <!-- Info Cards -->
     <div class="calc-info-section">

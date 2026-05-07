@@ -90,7 +90,9 @@ get_header(); ?>
         ),
         array(
             'slug'     => 'ibd-recipes',
-            'page_url' => '/ibd-recipes/',
+            // Live WP page is /ibd-recipies/ (legacy slug typo, intentionally preserved
+            // to avoid breaking inbound links). Asset folder is /ibd-recipes/ (no typo).
+            'page_url' => '/ibd-recipies/',
             'name'     => 'IBD Recipes & Meal Planner',
             'tag'      => 'Meal Planning',
             'desc'     => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely — saving plans prompts a quick signup.',

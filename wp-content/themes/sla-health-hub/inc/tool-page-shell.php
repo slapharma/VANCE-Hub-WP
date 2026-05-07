@@ -17,6 +17,11 @@
  *   $vance_tool_iframe_height int     optional, px (default 720)
  *   $vance_tool_save_label    string  optional, 'Save my result' button label (default 'Save my result')
  *   $vance_tool_save_enabled  bool    optional, show the Save CTA (default true)
+ *   $vance_tool_autoresize    bool    optional, set iframe height to its scrollHeight on load (default false)
+ *   $vance_tool_brand_css     string  optional, raw CSS injected into the iframe contentDocument
+ *   $vance_tool_iframe_src    string  optional, override the auto-derived iframe URL
+ *                                     (use when the bundle lives somewhere other than
+ *                                     /assets/tools/<slug>/index.html)
  *
  * The iframe URL is derived as `assets/tools/<slug>/index.html` and gets a
  * `?public=1&parent_origin=<host>` query string appended so the iframe can
@@ -39,6 +44,8 @@ $overlay_pct   = isset( $vance_tool_hero_overlay ) ? max( 0, min( 100, absint( $
 $iframe_height = isset( $vance_tool_iframe_height ) ? absint( $vance_tool_iframe_height ) : 720;
 $save_label    = isset( $vance_tool_save_label ) ? $vance_tool_save_label : 'Save my result';
 $save_enabled  = isset( $vance_tool_save_enabled ) ? (bool) $vance_tool_save_enabled : true;
+$autoresize    = isset( $vance_tool_autoresize ) ? (bool) $vance_tool_autoresize : false;
+$brand_css     = isset( $vance_tool_brand_css ) ? (string) $vance_tool_brand_css : '';
 
 if ( ! $slug ) {
     return; // misconfigured caller — bail silently
@@ -49,13 +56,15 @@ $alpha_bottom = min( 1, $alpha_top + 0.05 );
 
 // Build iframe URL with public-mode flag and parent origin (so the iframe
 // can postMessage back without leaking to other origins if it ever upgrades).
-$origin     = isset( $_SERVER['HTTP_HOST'] ) ? esc_url_raw( ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] ) : home_url();
+$origin    = isset( $_SERVER['HTTP_HOST'] ) ? esc_url_raw( ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] ) : home_url();
+$iframe_default = get_template_directory_uri() . '/assets/tools/' . $slug . '/index.html';
+$iframe_base    = isset( $vance_tool_iframe_src ) && $vance_tool_iframe_src ? $vance_tool_iframe_src : $iframe_default;
 $iframe_src = add_query_arg(
     array(
         'public'        => is_user_logged_in() ? '0' : '1',
         'parent_origin' => $origin,
     ),
-    get_template_directory_uri() . '/assets/tools/' . $slug . '/index.html'
+    $iframe_base
 );
 
 $is_logged_in = is_user_logged_in();
@@ -153,12 +162,13 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
                     <?php endif; ?>
                 </div>
             </div>
-            <iframe class="tool-page-iframe"
+            <iframe class="tool-page-iframe<?php echo $autoresize ? ' tool-page-iframe--autoresize' : ''; ?>"
                     id="vance-tool-iframe-<?php echo esc_attr( $slug ); ?>"
                     src="<?php echo esc_url( $iframe_src ); ?>"
                     title="<?php echo esc_attr( $tool_name ); ?>"
                     loading="lazy"
-                    allow="clipboard-write"></iframe>
+                    allow="clipboard-write"
+                    <?php echo $autoresize ? 'scrolling="no"' : ''; ?>></iframe>
         </div>
 
         <p style="margin: 24px 0 0; font-size: 13px; color: var(--text-light); text-align: center;">
@@ -180,13 +190,85 @@ get_template_part( 'inc/register-modal' );
 
 <script>
 (function () {
-    var slug      = <?php echo wp_json_encode( $slug ); ?>;
-    var loggedIn  = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
-    var nonce     = <?php echo wp_json_encode( $nonce ); ?>;
-    var ajaxUrl   = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
-    var iframeEl  = document.getElementById('vance-tool-iframe-' + slug);
-    var saveBtn   = document.querySelector('.tool-page-save[data-tool-slug="' + slug + '"]');
-    var toast     = document.getElementById('vance-tool-toast');
+    var slug       = <?php echo wp_json_encode( $slug ); ?>;
+    var loggedIn   = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
+    var nonce      = <?php echo wp_json_encode( $nonce ); ?>;
+    var ajaxUrl    = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+    var iframeEl   = document.getElementById('vance-tool-iframe-' + slug);
+    var saveBtn    = document.querySelector('.tool-page-save[data-tool-slug="' + slug + '"]');
+    var toast      = document.getElementById('vance-tool-toast');
+    var brandCss   = <?php echo wp_json_encode( $brand_css ); ?>;
+    var autoresize = <?php echo $autoresize ? 'true' : 'false'; ?>;
+    var minIframeHeight = <?php echo (int) $iframe_height; ?>;
+
+    /**
+     * Same-origin iframe styling. Inject a stylesheet into the iframe's
+     * <head> so brand colours / chrome-hiding rules apply WITHOUT rebuilding
+     * the bundle. Idempotent: bails if already injected.
+     */
+    function injectBrandCss() {
+        if (!iframeEl || !brandCss) return;
+        try {
+            var doc = iframeEl.contentDocument;
+            if (!doc) return;
+            if (doc.getElementById('vance-tool-brand-css')) return; // already done
+            var style = doc.createElement('style');
+            style.id = 'vance-tool-brand-css';
+            style.textContent = brandCss;
+            (doc.head || doc.documentElement).appendChild(style);
+        } catch (e) {
+            // Cross-origin (shouldn't happen on this site) — silently no-op.
+        }
+    }
+
+    /**
+     * Auto-resize the iframe to its content's scrollHeight so the iframe
+     * itself never shows an internal scrollbar. The page can still scroll.
+     * Polls every 500ms for the first 5s after load, then on resize, then
+     * on a slower 2s interval (catches dynamic content rendered after
+     * initial paint without burning CPU).
+     */
+    function fitIframeToContent() {
+        if (!iframeEl || !autoresize) return;
+        try {
+            var doc = iframeEl.contentDocument;
+            if (!doc || !doc.documentElement) return;
+            var h = Math.max(
+                doc.documentElement.scrollHeight,
+                doc.body ? doc.body.scrollHeight : 0,
+                minIframeHeight
+            );
+            // Avoid layout thrash when the height is unchanged.
+            var current = iframeEl.style.height ? parseInt(iframeEl.style.height, 10) : 0;
+            if (Math.abs(current - h) > 4) {
+                iframeEl.style.height = h + 'px';
+            }
+        } catch (e) {
+            // Cross-origin — give up silently.
+        }
+    }
+
+    function onIframeReady() {
+        injectBrandCss();
+        fitIframeToContent();
+    }
+
+    if (iframeEl) {
+        iframeEl.addEventListener('load', function () {
+            onIframeReady();
+            // Poll for ~5s after load — catches React/Next hydration painting.
+            var ticks = 0;
+            var fast = setInterval(function () {
+                ticks++;
+                onIframeReady();
+                if (ticks >= 10) clearInterval(fast);
+            }, 500);
+            // Slow tick afterwards for late-rendered content.
+            setInterval(onIframeReady, 2000);
+        });
+        // Also re-fit when the parent window resizes (responsive bundles).
+        window.addEventListener('resize', fitIframeToContent);
+    }
 
     // pendingPayload is whatever the iframe last sent via postMessage. If empty
     // at save time, we fall back to scraping the iframe DOM directly (same-origin,

@@ -942,6 +942,17 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ─── Hero ──────────────────────────────────────────────────────
     $wp_customize->add_section( "vance_evidence_hero", array( "title" => "Hero Section", "panel" => "vance_evidence_panel" ) );
+    // Tag-label content + colours (the "Evidence to Practice" pill above the H1).
+    $wp_customize->add_setting( "vance_evidence_hero_tag_bg",    array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_hero_tag_bg",    array( "label" => "Tag Label Background Colour", "section" => "vance_evidence_hero" ) ) );
+    $wp_customize->add_setting( "vance_evidence_hero_tag_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_hero_tag_color", array( "label" => "Tag Label Font Colour",       "section" => "vance_evidence_hero" ) ) );
+    // Hero body-text + title colour overrides (apply to the H1 + paragraph).
+    $wp_customize->add_setting( "vance_evidence_hero_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_hero_title_color", array( "label" => "Hero Title Colour",     "section" => "vance_evidence_hero" ) ) );
+    $wp_customize->add_setting( "vance_evidence_hero_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_hero_text_color",  array( "label" => "Hero Body Text Colour", "section" => "vance_evidence_hero" ) ) );
+
     $wp_customize->add_setting( "vance_evidence_hero_tag",   array( "default" => "Evidence to Practice", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_hero_tag",   array( "label" => "Tag Label", "section" => "vance_evidence_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_hero_title", array( "default" => "Turn <span class=\"highlight\">Evidence</span> into Action", "sanitize_callback" => "wp_kses_post" ) );
@@ -971,6 +982,16 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ─── Pillars ───────────────────────────────────────────────────
     $wp_customize->add_section( "vance_evidence_pillars", array( "title" => "Evidence Pillars", "panel" => "vance_evidence_panel" ) );
+    // Pillars tag-label colours + per-section title/body colour overrides.
+    $wp_customize->add_setting( "vance_evidence_pillars_tag_bg",    array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_tag_bg",    array( "label" => "Tag Label Background Colour", "section" => "vance_evidence_pillars" ) ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_tag_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_tag_color", array( "label" => "Tag Label Font Colour",       "section" => "vance_evidence_pillars" ) ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_title_color", array( "label" => "Section Title Colour",     "section" => "vance_evidence_pillars" ) ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_text_color",  array( "label" => "Section Body Text Colour", "section" => "vance_evidence_pillars" ) ) );
+
     $wp_customize->add_setting( "vance_evidence_pillars_tag",   array( "default" => "Our Evidence Standards", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_pillars_tag",   array( "label" => "Section Tag Label", "section" => "vance_evidence_pillars", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_pillars_title", array( "default" => "Four Sources. One Standard.", "sanitize_callback" => "sanitize_text_field" ) );
@@ -993,6 +1014,12 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ─── Process (Insight to Practice) ────────────────────────────
     $wp_customize->add_section( "vance_evidence_proc", array( "title" => "From Insight to Practice", "panel" => "vance_evidence_panel" ) );
+    // Per-section colour overrides.
+    $wp_customize->add_setting( "vance_evidence_proc_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_proc_title_color", array( "label" => "Section Title Colour",     "section" => "vance_evidence_proc" ) ) );
+    $wp_customize->add_setting( "vance_evidence_proc_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_proc_text_color",  array( "label" => "Section Body Text Colour", "section" => "vance_evidence_proc" ) ) );
+
     $wp_customize->add_setting( "vance_evidence_proc_title", array( "default" => "From Insight to Practice", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_proc_title", array( "label" => "Section Title", "section" => "vance_evidence_proc", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_proc_desc",  array( "default" => "The journey every piece of evidence takes before it reaches a clinician protocol or a patient-facing recommendation.", "sanitize_callback" => "sanitize_textarea_field" ) );
@@ -1012,6 +1039,12 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ─── Featured Evidence (post query) ───────────────────────────
     $wp_customize->add_section( "vance_evidence_feat", array( "title" => "Featured Evidence (post grid)", "panel" => "vance_evidence_panel" ) );
+    // Per-section colour overrides.
+    $wp_customize->add_setting( "vance_evidence_feat_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_feat_title_color", array( "label" => "Section Title Colour",     "section" => "vance_evidence_feat" ) ) );
+    $wp_customize->add_setting( "vance_evidence_feat_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_feat_text_color",  array( "label" => "Section Body Text Colour", "section" => "vance_evidence_feat" ) ) );
+
     $wp_customize->add_setting( "vance_evidence_feat_title", array( "default" => "Latest Evidence in Focus", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_feat_title", array( "label" => "Section Title", "section" => "vance_evidence_feat", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_feat_desc",  array( "default" => "Recent reviews, trial readouts, and protocol updates published by the Vance Medical editorial team.", "sanitize_callback" => "sanitize_textarea_field" ) );
@@ -1041,6 +1074,12 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ─── Final CTA ────────────────────────────────────────────────
     $wp_customize->add_section( "vance_evidence_cta", array( "title" => "Final CTA Section", "panel" => "vance_evidence_panel" ) );
+    // Per-section colour overrides (default white-on-teal — leave blank to use defaults).
+    $wp_customize->add_setting( "vance_evidence_cta_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_title_color", array( "label" => "Title Colour",         "section" => "vance_evidence_cta" ) ) );
+    $wp_customize->add_setting( "vance_evidence_cta_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_text_color",  array( "label" => "Body Text Colour",     "section" => "vance_evidence_cta" ) ) );
+
     $wp_customize->add_setting( "vance_evidence_cta_title", array( "default" => "Put Evidence to Work for Your Patients", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_cta_title", array( "label" => "Title", "section" => "vance_evidence_cta", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_cta_desc",  array( "default" => "Free registration unlocks the full protocol library, the Ask AI clinical assistant, and printable patient handouts branded to your practice.", "sanitize_callback" => "sanitize_textarea_field" ) );
