@@ -23,14 +23,6 @@ $hero_overlay_bottom  = min( 1, $hero_overlay + 0.10 );
 $hero_eyebrow_color   = vance_get_theme_mod( 'vance_edu_hero_eyebrow_color', '#008080' );
 $hero_title_color     = vance_get_theme_mod( 'vance_edu_hero_title_color', '#ffffff' );
 
-// ── Intro (text + buttons) ─────────────────────────────────────────────────
-$hero_desc        = vance_get_theme_mod( 'vance_edu_hero_desc', "We're building self-paced courses for patients and CPD-accredited modules for practitioners. Join the waitlist to be the first to know when enrolment opens." );
-$intro_bg         = vance_get_theme_mod( 'vance_edu_intro_bg', '#ffffff' );
-$intro_text_color = vance_get_theme_mod( 'vance_edu_intro_text_color', '' );
-$intro_align      = vance_get_theme_mod( 'vance_edu_intro_align', 'center' ); // left / center / right
-$intro_pad_top    = absint( vance_get_theme_mod( 'vance_edu_intro_pad_top',    60 ) );
-$intro_pad_bottom = absint( vance_get_theme_mod( 'vance_edu_intro_pad_bottom', 20 ) );
-
 // ── Tracks ─────────────────────────────────────────────────────────────────
 $tracks_bg          = vance_get_theme_mod( 'vance_edu_tracks_bg',          'var(--accent-color)' );
 $tracks_title_color = vance_get_theme_mod( 'vance_edu_tracks_title_color', '' );
@@ -71,17 +63,6 @@ $track_icons = array(
             <div class="hero-content" style="max-width: 800px;">
                 <span class="eyebrow" style="color: <?php echo esc_attr( $hero_eyebrow_color ); ?>; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-size: 14px; display: block; margin-bottom: 10px;"><?php echo esc_html( $hero_tag ); ?></span>
                 <h1 class="entry-title" style="font-size: 56px; color: <?php echo esc_attr( $hero_title_color ); ?>; font-weight: 700; margin: 0; line-height: 1.1;"><?php echo wp_kses_post( $hero_title ); ?></h1>
-            </div>
-        </div>
-    </section>
-
-    <!-- INTRO -->
-    <section class="edu-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: <?php echo $intro_pad_top; ?>px 0 <?php echo $intro_pad_bottom; ?>px;">
-        <div class="container" style="max-width: 800px; text-align: <?php echo esc_attr( $intro_align ); ?>;">
-            <p style="font-size: 19px; <?php echo $intro_text_color ? 'color:' . esc_attr( $intro_text_color ) . ';' : 'color: var(--text-light);'; ?> line-height: 1.7; margin: 0 0 24px;"><?php echo esc_html( $hero_desc ); ?></p>
-            <div style="display: flex; gap: 12px; <?php echo $intro_align === 'center' ? 'justify-content: center;' : ( $intro_align === 'right' ? 'justify-content: flex-end;' : '' ); ?> flex-wrap: wrap;">
-                <button type="button" class="btn btn-primary" data-edu-waitlist-trigger>Join the Waitlist</button>
-                <a href="#tracks" class="btn btn-outline">See What's Coming</a>
             </div>
         </div>
     </section>

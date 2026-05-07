@@ -870,24 +870,6 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_edu_hero_title_color",   array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_hero_title_color",   array( "label" => "Hero Title Colour",         "section" => "vance_edu_hero" ) ) );
 
-    // Education Intro
-    $wp_customize->add_section( "vance_edu_intro", array( "title" => "Intro Section", "panel" => "vance_edu_panel" ) );
-    $wp_customize->add_setting( "vance_edu_intro_bg", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_bg", array( "label" => "Background Colour", "section" => "vance_edu_intro" ) ) );
-    $wp_customize->add_setting( "vance_edu_intro_text_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_text_color", array( "label" => "Text Colour (blank = theme defaults)", "section" => "vance_edu_intro" ) ) );
-    $wp_customize->add_setting( "vance_edu_intro_align", array( "default" => "center", "sanitize_callback" => "sanitize_key" ) );
-    $wp_customize->add_control( "vance_edu_intro_align", array(
-        "label"   => "Text Position",
-        "section" => "vance_edu_intro",
-        "type"    => "radio",
-        "choices" => array( "left" => "Left", "center" => "Centre", "right" => "Right" ),
-    ) );
-    $wp_customize->add_setting( "vance_edu_intro_pad_top",    array( "default" => 60, "sanitize_callback" => "absint" ) );
-    $wp_customize->add_control( "vance_edu_intro_pad_top",    array( "label" => "Padding Top (px)",    "section" => "vance_edu_intro", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 200, "step" => 5 ) ) );
-    $wp_customize->add_setting( "vance_edu_intro_pad_bottom", array( "default" => 20, "sanitize_callback" => "absint" ) );
-    $wp_customize->add_control( "vance_edu_intro_pad_bottom", array( "label" => "Padding Bottom (px)", "section" => "vance_edu_intro", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 200, "step" => 5 ) ) );
-
     // Education Tracks
     $wp_customize->add_section( "vance_edu_tracks", array( "title" => "Course Tracks", "panel" => "vance_edu_panel" ) );
     $wp_customize->add_setting( "vance_edu_tracks_eyebrow", array( "default" => "Two Tracks. One Standard.", "sanitize_callback" => "sanitize_text_field" ) );
