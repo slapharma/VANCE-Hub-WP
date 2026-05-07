@@ -38,52 +38,75 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 // ─── CPT registration ────────────────────────────────────────────────────────
+//
+// Two CPTs: top-level admin broadcasts (`vance_message`) and threaded user
+// replies (`vance_message_reply`). Replies use `post_parent` to link to the
+// original message — gives us threading for free via the standard WP query API.
+//
 add_action( 'init', 'vance_register_message_cpt' );
 function vance_register_message_cpt() {
     register_post_type( 'vance_message', array(
-        'labels' => array(
-            'name'          => 'User Messages',
-            'singular_name' => 'User Message',
-        ),
-        'public'              => false,
-        'publicly_queryable'  => false,
-        'show_ui'             => false,         // we provide our own admin UI
-        'show_in_menu'        => false,
-        'show_in_rest'        => false,
-        'has_archive'         => false,
-        'rewrite'             => false,
-        'query_var'           => false,
-        'capability_type'     => 'post',
-        'supports'            => array( 'title', 'editor', 'author' ),
+        'labels'             => array( 'name' => 'User Messages', 'singular_name' => 'User Message' ),
+        'public'             => false, 'publicly_queryable' => false, 'show_ui' => false,
+        'show_in_menu'       => false, 'show_in_rest' => false, 'has_archive' => false,
+        'rewrite'            => false, 'query_var'    => false,
+        'capability_type'    => 'post',
+        'supports'           => array( 'title', 'editor', 'author' ),
+    ) );
+    register_post_type( 'vance_message_reply', array(
+        'labels'             => array( 'name' => 'User Message Replies', 'singular_name' => 'Reply' ),
+        'public'             => false, 'publicly_queryable' => false, 'show_ui' => false,
+        'show_in_menu'       => false, 'show_in_rest' => false, 'has_archive' => false,
+        'rewrite'            => false, 'query_var'    => false,
+        'capability_type'    => 'post',
+        'hierarchical'       => true, // enables post_parent
+        'supports'           => array( 'title', 'editor', 'author', 'page-attributes' ),
     ) );
 }
 
-// ─── Diagnostic tracer ──────────────────────────────────────────────────────
-// TEMPORARY: log the current request's user state whenever someone hits the
-// User Messages URL. Writes to wp-content/uploads/vance-msg-debug.log so we
-// can read it via SSH and see exactly who/what WP is seeing on the request.
-// Removable once the access issue is resolved.
-add_action( 'init', 'vance_msg_debug_tracer', 0 );
-function vance_msg_debug_tracer() {
-    if ( empty( $_SERVER['REQUEST_URI'] ) ) return;
-    if ( strpos( $_SERVER['REQUEST_URI'], 'vance-user-messages' ) === false ) return;
-    $u = wp_get_current_user();
-    $entry = sprintf(
-        "[%s] uri=%s logged_in=%s user_id=%d login=%s roles=%s caps_admin=%s caps_mo=%s caps_read=%s caps_eu=%s remote=%s\n",
-        gmdate( 'c' ),
-        substr( $_SERVER['REQUEST_URI'], 0, 200 ),
-        is_user_logged_in() ? 'yes' : 'no',
-        $u ? (int) $u->ID : 0,
-        $u && ! empty( $u->user_login ) ? $u->user_login : '(none)',
-        $u && ! empty( $u->roles )      ? implode( ',', $u->roles ) : '(none)',
-        $u && ! empty( $u->allcaps['administrator'] ) ? '1' : '0',
-        $u && ! empty( $u->allcaps['manage_options'] ) ? '1' : '0',
-        $u && ! empty( $u->allcaps['read'] ) ? '1' : '0',
-        $u && ! empty( $u->allcaps['edit_users'] ) ? '1' : '0',
-        isset( $_SERVER['REMOTE_ADDR'] ) ? substr( $_SERVER['REMOTE_ADDR'], 0, 40 ) : '?'
-    );
-    $log = WP_CONTENT_DIR . '/uploads/vance-msg-debug.log';
-    @file_put_contents( $log, $entry, FILE_APPEND );
+/**
+ * Returns true if this user has soft-deleted a given message (per-user delete).
+ * Soft-deletes hide the message from THIS user's inbox without removing it
+ * from the admin's audit trail. Admin uses wp_trash_post for hard delete.
+ *
+ * @param int $message_id
+ * @param int $user_id
+ */
+function vance_msg_is_user_deleted( $message_id, $user_id ) {
+    $deleted = (array) get_post_meta( (int) $message_id, '_sla_msg_user_deleted', true );
+    return in_array( (int) $user_id, array_map( 'intval', $deleted ), true );
+}
+
+/**
+ * Add user to the per-user soft-delete list for a message.
+ */
+function vance_msg_mark_user_deleted( $message_id, $user_id ) {
+    $message_id = (int) $message_id;
+    $user_id    = (int) $user_id;
+    if ( $message_id <= 0 || $user_id <= 0 ) return false;
+    $deleted = (array) get_post_meta( $message_id, '_sla_msg_user_deleted', true );
+    if ( ! in_array( $user_id, array_map( 'intval', $deleted ), true ) ) {
+        $deleted[] = $user_id;
+        update_post_meta( $message_id, '_sla_msg_user_deleted', $deleted );
+    }
+    return true;
+}
+
+/**
+ * Get all replies for a message (oldest-first, like a chat transcript).
+ * @return WP_Post[]
+ */
+function vance_msg_get_replies( $message_id ) {
+    $message_id = (int) $message_id;
+    if ( $message_id <= 0 ) return array();
+    return get_posts( array(
+        'post_type'      => 'vance_message_reply',
+        'post_parent'    => $message_id,
+        'post_status'    => 'publish',
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+        'posts_per_page' => 100,
+    ) );
 }
 
 // ─── Friendly-URL redirect ───────────────────────────────────────────────────
@@ -180,7 +203,7 @@ function vance_msg_user_is_admin( $user_id = null ) {
     return false;
 }
 
-// ─── Admin page renderer ─────────────────────────────────────────────────────
+// ─── Admin page renderer (tabbed: Send New / Replies / Previous / Deleted) ──
 function vance_render_admin_messages_page() {
     if ( ! vance_msg_user_is_admin() ) {
         $cu = wp_get_current_user();
@@ -202,15 +225,24 @@ function vance_render_admin_messages_page() {
     $action = isset( $_GET['vance_action'] ) ? sanitize_key( $_GET['vance_action'] ) : '';
     $msg_id = isset( $_GET['msg_id'] ) ? absint( $_GET['msg_id'] ) : 0;
 
-    // Handle inline GET-actions (resend / delete) with nonce check.
+    // Inline GET-actions. Resend / soft-trash / restore / hard-delete + admin-reply.
     if ( $action && $msg_id && check_admin_referer( 'vance_msg_action_' . $msg_id ) ) {
         if ( $action === 'delete' ) {
-            wp_delete_post( $msg_id, true );
+            wp_trash_post( $msg_id );
             wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_notice' => 'deleted' ), admin_url( 'admin.php' ) ) );
             exit;
         }
+        if ( $action === 'restore' ) {
+            wp_untrash_post( $msg_id );
+            wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_tab' => 'previous', 'vance_notice' => 'restored' ), admin_url( 'admin.php' ) ) );
+            exit;
+        }
+        if ( $action === 'force_delete' ) {
+            wp_delete_post( $msg_id, true );
+            wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_tab' => 'deleted', 'vance_notice' => 'force_deleted' ), admin_url( 'admin.php' ) ) );
+            exit;
+        }
         if ( $action === 'resend' ) {
-            // Resend = clear read-by meta + republish (set publish date to now).
             update_post_meta( $msg_id, '_sla_msg_read_by', array() );
             wp_update_post( array( 'ID' => $msg_id, 'post_date' => current_time( 'mysql' ), 'post_date_gmt' => current_time( 'mysql', true ), 'post_status' => 'publish' ) );
             wp_safe_redirect( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_notice' => 'resent' ), admin_url( 'admin.php' ) ) );
@@ -218,7 +250,37 @@ function vance_render_admin_messages_page() {
         }
     }
 
-    // Handle send form submission.
+    // Admin reply submission (from the Replies tab).
+    $reply_error = ''; $reply_notice = '';
+    if ( isset( $_POST['vance_admin_reply_nonce'] ) ) {
+        $r_msg_id = isset( $_POST['reply_msg_id'] ) ? absint( $_POST['reply_msg_id'] ) : 0;
+        $r_body   = isset( $_POST['reply_body'] ) ? trim( wp_kses_post( wp_unslash( $_POST['reply_body'] ) ) ) : '';
+        if ( ! $r_msg_id || ! wp_verify_nonce( $_POST['vance_admin_reply_nonce'], 'vance_admin_reply_' . $r_msg_id ) ) {
+            $reply_error = 'Security check failed — please reload and retry.';
+        } elseif ( strlen( $r_body ) < 3 ) {
+            $reply_error = 'Reply body too short.';
+        } else {
+            $rid = wp_insert_post( array(
+                'post_type'    => 'vance_message_reply',
+                'post_status'  => 'publish',
+                'post_parent'  => $r_msg_id,
+                'post_author'  => get_current_user_id(),
+                'post_title'   => 'Re: ' . wp_trim_words( get_the_title( $r_msg_id ), 8, '…' ) . ' (admin reply)',
+                'post_content' => $r_body,
+            ), true );
+            if ( is_wp_error( $rid ) ) {
+                $reply_error = $rid->get_error_message();
+            } else {
+                update_post_meta( $rid, '_sla_reply_author_roles', array( 'administrator' ) );
+                update_post_meta( $rid, '_sla_reply_author_id',    get_current_user_id() );
+                $reply_notice = 'Reply sent.';
+                // Drop the new-reply-pending stamp now that the admin has responded.
+                delete_post_meta( $r_msg_id, '_sla_msg_has_new_reply' );
+            }
+        }
+    }
+
+    // Compose form submission.
     $send_error  = '';
     $send_notice = '';
     if ( isset( $_POST['vance_msg_send_nonce'] ) && wp_verify_nonce( $_POST['vance_msg_send_nonce'], 'vance_msg_send' ) ) {
@@ -230,187 +292,334 @@ function vance_render_admin_messages_page() {
         }
     }
 
+    $tab    = isset( $_GET['vance_tab'] )    ? sanitize_key( $_GET['vance_tab'] )       : 'send';
+    if ( ! in_array( $tab, array( 'send', 'replies', 'previous', 'deleted' ), true ) ) $tab = 'send';
     $search = isset( $_GET['vance_search'] ) ? sanitize_text_field( wp_unslash( $_GET['vance_search'] ) ) : '';
-    $messages = vance_admin_messages_list( $search );
 
-    // Build the user dropdown (limit to 500 to keep the page snappy; admins
-    // typing into a search box will be more efficient on larger sites).
-    $users = get_users( array( 'number' => 500, 'fields' => array( 'ID', 'user_email', 'display_name' ), 'orderby' => 'display_name' ) );
+    // Pending-reply count for the Replies tab badge (messages with admin
+    // reply pending = has new user reply since last admin response).
+    $pending_replies = (int) ( new WP_Query( array(
+        'post_type'      => 'vance_message',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'meta_key'       => '_sla_msg_has_new_reply',
+        'fields'         => 'ids',
+        'no_found_rows'  => false,
+    ) ) )->found_posts;
+
+    $tab_url = function( $t ) { return esc_url( add_query_arg( array( 'page' => 'vance-user-messages', 'vance_tab' => $t ), admin_url( 'admin.php' ) ) ); };
     ?>
     <div class="wrap" style="max-width: 1200px;">
         <h1 style="display: flex; align-items: center; gap: 12px;">
             <span class="dashicons dashicons-email-alt" style="font-size: 28px; width: 28px; height: 28px;"></span>
             User Messages
         </h1>
-        <p>Send a message to dashboard users. Messages appear at the top of <code>/dashboard/</code> and on the <em>My Messages</em> tab.</p>
+        <p>Two-way communication between admins and dashboard users. New broadcasts via <em>Send New</em>; user replies appear in <em>Replies</em>; full history in <em>Previous</em>; trashed messages in <em>Deleted</em>.</p>
 
         <?php if ( ! empty( $_GET['vance_notice'] ) ) : ?>
             <div class="notice notice-success is-dismissible"><p><?php
-                echo $_GET['vance_notice'] === 'deleted' ? 'Message deleted.' :
-                    ( $_GET['vance_notice'] === 'resent' ? 'Message resent — read receipts cleared.' : 'Done.' );
+                $n = $_GET['vance_notice'];
+                if ( $n === 'deleted' )           echo 'Message moved to trash.';
+                elseif ( $n === 'restored' )      echo 'Message restored.';
+                elseif ( $n === 'force_deleted' ) echo 'Message permanently deleted.';
+                elseif ( $n === 'resent' )        echo 'Message resent — read receipts cleared.';
+                else                              echo 'Done.';
             ?></p></div>
         <?php endif; ?>
-        <?php if ( $send_error )  : ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html( $send_error ); ?></p></div><?php endif; ?>
-        <?php if ( $send_notice ) : ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html( $send_notice ); ?></p></div><?php endif; ?>
+        <?php if ( $send_error )   : ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html( $send_error ); ?></p></div><?php endif; ?>
+        <?php if ( $send_notice )  : ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html( $send_notice ); ?></p></div><?php endif; ?>
+        <?php if ( $reply_error )  : ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html( $reply_error ); ?></p></div><?php endif; ?>
+        <?php if ( $reply_notice ) : ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html( $reply_notice ); ?></p></div><?php endif; ?>
 
-        <h2 style="margin-top: 32px;">Compose new message</h2>
-        <form method="post" style="background: white; padding: 20px 24px; border: 1px solid #c3c4c7; box-shadow: 0 1px 1px rgba(0,0,0,0.04); margin-bottom: 32px;">
-            <?php wp_nonce_field( 'vance_msg_send', 'vance_msg_send_nonce' ); ?>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="msg_title">Title</label></th>
-                    <td><input type="text" id="msg_title" name="msg_title" class="regular-text" required maxlength="120" style="width: 100%; max-width: 600px;"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="msg_body">Body</label></th>
-                    <td>
-                        <textarea id="msg_body" name="msg_body" rows="6" required style="width: 100%; max-width: 800px;"></textarea>
-                        <p class="description">Plain text. Line breaks preserved. <code>**bold**</code> and <code>*italic*</code> become HTML; URLs auto-link.</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="msg_severity">Severity</label></th>
-                    <td>
-                        <select id="msg_severity" name="msg_severity">
-                            <option value="info">Info (teal banner)</option>
-                            <option value="important">Important (amber banner)</option>
-                            <option value="announcement">Announcement (dark teal banner)</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">Audience</th>
-                    <td>
-                        <fieldset>
-                            <label><input type="radio" name="msg_audience" value="all" checked> All users</label><br>
-                            <label><input type="radio" name="msg_audience" value="users"> Selected users (multi-select below)</label><br>
-                            <label><input type="radio" name="msg_audience" value="role"> All users with a specific role</label>
-                        </fieldset>
-                    </td>
-                </tr>
-                <tr id="row_users" style="display: none;">
-                    <th scope="row"><label for="msg_user_ids">Pick users</label></th>
-                    <td>
-                        <select id="msg_user_ids" name="msg_user_ids[]" multiple size="8" style="width: 100%; max-width: 600px;">
-                            <?php foreach ( $users as $u ) : ?>
-                                <option value="<?php echo (int) $u->ID; ?>"><?php echo esc_html( $u->display_name . ' — ' . $u->user_email ); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="description">Hold ⌘/Ctrl to select multiple. Up to 500 users shown.</p>
-                    </td>
-                </tr>
-                <tr id="row_role" style="display: none;">
-                    <th scope="row"><label for="msg_role">Role filter</label></th>
-                    <td>
-                        <select id="msg_role" name="msg_role">
-                            <option value="patient">Patient</option>
-                            <option value="caregiver">Caregiver / Family</option>
-                            <option value="hcp">Healthcare Professional</option>
-                            <option value="researcher">Researcher</option>
-                            <option value="other">Other</option>
-                        </select>
-                        <p class="description">Matches the audience role users self-selected at signup (<code>_sla_audience_role</code>).</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="msg_cta_label">Call-to-action button (optional)</label></th>
-                    <td>
-                        <input type="text" id="msg_cta_label" name="msg_cta_label" class="regular-text" placeholder="e.g. Read the protocol" style="width: 280px;">
-                        <input type="url"  id="msg_cta_url"   name="msg_cta_url"   class="regular-text" placeholder="https://…" style="width: 320px;">
-                        <p class="description">Leave both blank to omit the button.</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="msg_expires">Expires</label></th>
-                    <td>
-                        <input type="date" id="msg_expires" name="msg_expires">
-                        <p class="description">Optional. After this date, message stops appearing on the dashboard. Blank = never expires.</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="msg_schedule">Schedule send</label></th>
-                    <td>
-                        <input type="datetime-local" id="msg_schedule" name="msg_schedule">
-                        <p class="description">Optional. If set in the future, the message stays scheduled until that time. Blank = send now.</p>
-                    </td>
-                </tr>
-            </table>
-            <p class="submit">
-                <button type="submit" class="button button-primary">Send message</button>
-            </p>
-        </form>
-
-        <h2 style="margin-top: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-            <span>Previous messages</span>
-            <form method="get" style="margin: 0;">
-                <input type="hidden" name="page" value="vance-user-messages">
-                <input type="search" name="vance_search" value="<?php echo esc_attr( $search ); ?>" placeholder="Search title or body…" style="width: 280px;">
-                <button class="button">Search</button>
-                <?php if ( $search ) : ?><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=vance-user-messages' ) ); ?>">Clear</a><?php endif; ?>
-            </form>
+        <h2 class="nav-tab-wrapper" style="margin-top: 28px;">
+            <a href="<?php echo $tab_url( 'send' );     ?>" class="nav-tab<?php echo $tab === 'send'     ? ' nav-tab-active' : ''; ?>">Send New</a>
+            <a href="<?php echo $tab_url( 'replies' );  ?>" class="nav-tab<?php echo $tab === 'replies'  ? ' nav-tab-active' : ''; ?>">Replies<?php if ( $pending_replies > 0 ) : ?> <span style="background: #008080; color: white; border-radius: 10px; padding: 1px 8px; font-size: 11px; margin-left: 4px;"><?php echo (int) $pending_replies; ?></span><?php endif; ?></a>
+            <a href="<?php echo $tab_url( 'previous' ); ?>" class="nav-tab<?php echo $tab === 'previous' ? ' nav-tab-active' : ''; ?>">Previous</a>
+            <a href="<?php echo $tab_url( 'deleted' );  ?>" class="nav-tab<?php echo $tab === 'deleted'  ? ' nav-tab-active' : ''; ?>">Deleted</a>
         </h2>
 
-        <table class="wp-list-table widefat fixed striped">
-            <thead>
-                <tr>
-                    <th style="width: 26%;">Title</th>
-                    <th style="width: 12%;">Severity</th>
-                    <th style="width: 18%;">Audience</th>
-                    <th style="width: 14%;">Sent</th>
-                    <th style="width: 10%;">Status</th>
-                    <th style="width: 10%;">Reads</th>
-                    <th style="width: 10%;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ( empty( $messages ) ) : ?>
-                    <tr><td colspan="7" style="padding: 20px; text-align: center; color: #666;">No messages yet — compose one above.</td></tr>
-                <?php else : foreach ( $messages as $m ) :
-                    $sev   = get_post_meta( $m->ID, '_sla_msg_severity', true ) ?: 'info';
-                    $aud   = get_post_meta( $m->ID, '_sla_msg_audience', true ) ?: 'all';
-                    $reads = (array) get_post_meta( $m->ID, '_sla_msg_read_by', true );
-                    $exp   = (int)  get_post_meta( $m->ID, '_sla_msg_expires', true );
-                    $aud_label = $aud === 'all' ? 'All users' : ( $aud === 'users' ? 'Selected users' : 'Role: ' . esc_html( get_post_meta( $m->ID, '_sla_msg_role', true ) ?: '—' ) );
-                    $resend_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=resend&msg_id=' . $m->ID ), 'vance_msg_action_' . $m->ID );
-                    $delete_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=delete&msg_id=' . $m->ID ), 'vance_msg_action_' . $m->ID );
-                    $is_expired = $exp && $exp < time();
-                ?>
+        <?php
+        // ───────── TAB: SEND NEW ─────────
+        if ( $tab === 'send' ) :
+            $users = get_users( array( 'number' => 500, 'fields' => array( 'ID', 'user_email', 'display_name' ), 'orderby' => 'display_name' ) );
+        ?>
+            <form method="post" style="background: white; padding: 20px 24px; border: 1px solid #c3c4c7; box-shadow: 0 1px 1px rgba(0,0,0,0.04); margin-top: 20px;">
+                <?php wp_nonce_field( 'vance_msg_send', 'vance_msg_send_nonce' ); ?>
+                <table class="form-table" role="presentation">
                     <tr>
-                        <td><strong><?php echo esc_html( $m->post_title ); ?></strong><br>
-                            <span style="color: #666; font-size: 12px;"><?php echo esc_html( wp_trim_words( $m->post_content, 18 ) ); ?></span></td>
-                        <td><span style="padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; background: <?php echo $sev === 'important' ? '#fff3cd; color: #856404' : ( $sev === 'announcement' ? '#0A1929; color: #fff' : '#def4f4; color: #008080' ); ?>;"><?php echo esc_html( ucfirst( $sev ) ); ?></span></td>
-                        <td><?php echo $aud_label; ?></td>
-                        <td><?php echo esc_html( get_the_date( 'M j, Y g:i a', $m ) ); ?></td>
-                        <td><?php
-                            if ( $m->post_status === 'future' ) echo '<span style="color: #b07d00;">Scheduled</span>';
-                            elseif ( $is_expired )              echo '<span style="color: #999;">Expired</span>';
-                            else                                echo '<span style="color: #008080;">Active</span>';
-                        ?></td>
-                        <td><?php echo (int) count( $reads ); ?></td>
+                        <th scope="row"><label for="msg_title">Title</label></th>
+                        <td><input type="text" id="msg_title" name="msg_title" class="regular-text" required maxlength="120" style="width: 100%; max-width: 600px;"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="msg_body">Body</label></th>
                         <td>
-                            <a href="<?php echo esc_url( $resend_url ); ?>">Resend</a> |
-                            <a href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('Delete this message?');" style="color: #b32d2e;">Delete</a>
+                            <textarea id="msg_body" name="msg_body" rows="6" required style="width: 100%; max-width: 800px;"></textarea>
+                            <p class="description">Plain text. Line breaks preserved. <code>**bold**</code> and <code>*italic*</code> become HTML; URLs auto-link.</p>
                         </td>
                     </tr>
-                <?php endforeach; endif; ?>
-            </tbody>
-        </table>
+                    <tr>
+                        <th scope="row"><label for="msg_severity">Severity</label></th>
+                        <td>
+                            <select id="msg_severity" name="msg_severity">
+                                <option value="info">Info (teal banner)</option>
+                                <option value="important">Important (amber banner)</option>
+                                <option value="announcement">Announcement (dark teal banner)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Audience</th>
+                        <td>
+                            <fieldset>
+                                <label><input type="radio" name="msg_audience" value="all" checked> All users</label><br>
+                                <label><input type="radio" name="msg_audience" value="users"> Selected users (multi-select below)</label><br>
+                                <label><input type="radio" name="msg_audience" value="role"> All users with a specific role</label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                    <tr id="row_users" style="display: none;">
+                        <th scope="row"><label for="msg_user_ids">Pick users</label></th>
+                        <td>
+                            <select id="msg_user_ids" name="msg_user_ids[]" multiple size="8" style="width: 100%; max-width: 600px;">
+                                <?php foreach ( $users as $u ) : ?>
+                                    <option value="<?php echo (int) $u->ID; ?>"><?php echo esc_html( $u->display_name . ' — ' . $u->user_email ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">Hold ⌘/Ctrl to select multiple. Up to 500 users shown.</p>
+                        </td>
+                    </tr>
+                    <tr id="row_role" style="display: none;">
+                        <th scope="row"><label for="msg_role">Role filter</label></th>
+                        <td>
+                            <select id="msg_role" name="msg_role">
+                                <option value="patient">Patient</option>
+                                <option value="caregiver">Caregiver / Family</option>
+                                <option value="hcp">Healthcare Professional</option>
+                                <option value="researcher">Researcher</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <p class="description">Matches the audience role users self-selected at signup (<code>_sla_audience_role</code>).</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="msg_cta_label">Call-to-action button (optional)</label></th>
+                        <td>
+                            <input type="text" id="msg_cta_label" name="msg_cta_label" class="regular-text" placeholder="e.g. Read the protocol" style="width: 280px;">
+                            <input type="url"  id="msg_cta_url"   name="msg_cta_url"   class="regular-text" placeholder="https://…" style="width: 320px;">
+                            <p class="description">Leave both blank to omit the button.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="msg_expires">Expires</label></th>
+                        <td>
+                            <input type="date" id="msg_expires" name="msg_expires">
+                            <p class="description">Optional. After this date, message stops appearing on the dashboard.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="msg_schedule">Schedule send</label></th>
+                        <td>
+                            <input type="datetime-local" id="msg_schedule" name="msg_schedule">
+                            <p class="description">Optional. Future-dated messages stay scheduled until that time. Blank = send now.</p>
+                        </td>
+                    </tr>
+                </table>
+                <p class="submit">
+                    <button type="submit" class="button button-primary">Send message</button>
+                </p>
+            </form>
+            <script>
+            (function () {
+                var radios = document.getElementsByName('msg_audience');
+                var rowUsers = document.getElementById('row_users');
+                var rowRole  = document.getElementById('row_role');
+                function update() {
+                    var v = document.querySelector('input[name="msg_audience"]:checked').value;
+                    rowUsers.style.display = v === 'users' ? '' : 'none';
+                    rowRole.style.display  = v === 'role'  ? '' : 'none';
+                }
+                for (var i = 0; i < radios.length; i++) radios[i].addEventListener('change', update);
+                update();
+            })();
+            </script>
 
-        <script>
-        (function () {
-            var radios = document.getElementsByName('msg_audience');
-            var rowUsers = document.getElementById('row_users');
-            var rowRole  = document.getElementById('row_role');
-            function update() {
-                var v = document.querySelector('input[name="msg_audience"]:checked').value;
-                rowUsers.style.display = v === 'users' ? '' : 'none';
-                rowRole.style.display  = v === 'role'  ? '' : 'none';
-            }
-            for (var i = 0; i < radios.length; i++) radios[i].addEventListener('change', update);
-            update();
-        })();
-        </script>
+        <?php
+        // ───────── TAB: REPLIES (chronological list of user replies) ─────────
+        elseif ( $tab === 'replies' ) :
+            // Pull all replies with parent message info; latest first.
+            $reply_q = new WP_Query( array(
+                'post_type'      => 'vance_message_reply',
+                'post_status'    => 'publish',
+                'posts_per_page' => 100,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                's'              => $search,
+            ) );
+        ?>
+            <div style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                <div style="font-size: 13px; color: #555;">
+                    <?php echo (int) $reply_q->found_posts; ?> replies total. <?php echo (int) $pending_replies; ?> message<?php echo $pending_replies === 1 ? '' : 's'; ?> awaiting admin response.
+                </div>
+                <form method="get" style="margin: 0;">
+                    <input type="hidden" name="page" value="vance-user-messages">
+                    <input type="hidden" name="vance_tab" value="replies">
+                    <input type="search" name="vance_search" value="<?php echo esc_attr( $search ); ?>" placeholder="Search reply text…" style="width: 240px;">
+                    <button class="button">Search</button>
+                    <?php if ( $search ) : ?><a class="button" href="<?php echo $tab_url( 'replies' ); ?>">Clear</a><?php endif; ?>
+                </form>
+            </div>
+            <?php if ( ! $reply_q->have_posts() ) : ?>
+                <p style="margin-top: 20px; padding: 32px; text-align: center; background: #f8fafc; border: 1px dashed #c3c4c7;">
+                    No replies yet. When users reply to your broadcasts, the conversations will appear here.
+                </p>
+            <?php else :
+                while ( $reply_q->have_posts() ) : $reply_q->the_post();
+                    $reply       = get_post();
+                    $parent_id   = (int) $reply->post_parent;
+                    $parent      = $parent_id ? get_post( $parent_id ) : null;
+                    $author      = get_userdata( (int) $reply->post_author );
+                    $is_admin    = $author && in_array( 'administrator', (array) $author->roles, true );
+                    $admin_reply_nonce = wp_create_nonce( 'vance_admin_reply_' . $parent_id );
+            ?>
+                <div style="background: white; border: 1px solid #c3c4c7; padding: 16px 20px; margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; align-items: baseline;">
+                        <div>
+                            <strong style="font-size: 14px;"><?php echo $author ? esc_html( $author->display_name ) : '—'; ?></strong>
+                            <?php if ( $is_admin ) : ?><span style="font-size: 11px; color: #008080; margin-left: 6px;">(admin)</span><?php endif; ?>
+                            <span style="color: #666; font-size: 12px; margin-left: 8px;">replied <?php echo esc_html( get_the_date( 'M j, Y g:i a', $reply ) ); ?></span>
+                        </div>
+                        <?php if ( $parent ) : ?>
+                            <span style="font-size: 12px; color: #666;">on <em><?php echo esc_html( $parent->post_title ); ?></em></span>
+                        <?php endif; ?>
+                    </div>
+                    <div style="font-size: 14px; line-height: 1.6; padding: 10px 14px; background: <?php echo $is_admin ? '#def4f4' : '#f8fafc'; ?>; border-left: 3px solid <?php echo $is_admin ? '#008080' : '#94a3b8'; ?>;">
+                        <?php echo wpautop( wp_kses_post( $reply->post_content ) ); ?>
+                    </div>
+                    <?php if ( $parent && ! $is_admin ) : ?>
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; font-size: 12px; font-weight: 600; color: #008080;">Reply as admin</summary>
+                            <form method="post" style="margin-top: 8px;">
+                                <?php wp_nonce_field( 'vance_admin_reply_' . $parent_id, 'vance_admin_reply_nonce' ); ?>
+                                <input type="hidden" name="reply_msg_id" value="<?php echo (int) $parent_id; ?>">
+                                <textarea name="reply_body" rows="3" required minlength="3" maxlength="4000" style="width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px;" placeholder="Reply to this user…"></textarea>
+                                <button type="submit" class="button button-primary" style="margin-top: 6px;">Send admin reply</button>
+                            </form>
+                        </details>
+                    <?php endif; ?>
+                </div>
+            <?php endwhile; wp_reset_postdata(); endif; ?>
+
+        <?php
+        // ───────── TAB: PREVIOUS (existing message list) ─────────
+        elseif ( $tab === 'previous' ) :
+            $messages = vance_admin_messages_list( $search );
+        ?>
+            <div style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                <div style="font-size: 13px; color: #555;"><?php echo count( $messages ); ?> messages.</div>
+                <form method="get" style="margin: 0;">
+                    <input type="hidden" name="page" value="vance-user-messages">
+                    <input type="hidden" name="vance_tab" value="previous">
+                    <input type="search" name="vance_search" value="<?php echo esc_attr( $search ); ?>" placeholder="Search title or body…" style="width: 280px;">
+                    <button class="button">Search</button>
+                    <?php if ( $search ) : ?><a class="button" href="<?php echo $tab_url( 'previous' ); ?>">Clear</a><?php endif; ?>
+                </form>
+            </div>
+            <table class="wp-list-table widefat fixed striped" style="margin-top: 16px;">
+                <thead>
+                    <tr>
+                        <th style="width: 26%;">Title</th>
+                        <th style="width: 12%;">Severity</th>
+                        <th style="width: 18%;">Audience</th>
+                        <th style="width: 14%;">Sent</th>
+                        <th style="width: 8%;">Status</th>
+                        <th style="width: 8%;">Reads</th>
+                        <th style="width: 8%;">Replies</th>
+                        <th style="width: 12%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ( empty( $messages ) ) : ?>
+                        <tr><td colspan="8" style="padding: 20px; text-align: center; color: #666;">No messages yet — switch to <em>Send New</em> to compose one.</td></tr>
+                    <?php else : foreach ( $messages as $m ) :
+                        $sev   = get_post_meta( $m->ID, '_sla_msg_severity', true ) ?: 'info';
+                        $aud   = get_post_meta( $m->ID, '_sla_msg_audience', true ) ?: 'all';
+                        $reads = (array) get_post_meta( $m->ID, '_sla_msg_read_by', true );
+                        $exp   = (int)  get_post_meta( $m->ID, '_sla_msg_expires', true );
+                        $aud_label = $aud === 'all' ? 'All users' : ( $aud === 'users' ? 'Selected users' : 'Role: ' . esc_html( get_post_meta( $m->ID, '_sla_msg_role', true ) ?: '—' ) );
+                        $resend_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=resend&msg_id=' . $m->ID ), 'vance_msg_action_' . $m->ID );
+                        $delete_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=delete&msg_id=' . $m->ID ), 'vance_msg_action_' . $m->ID );
+                        $is_expired = $exp && $exp < time();
+                        $reply_count = count( vance_msg_get_replies( $m->ID ) );
+                        $has_pending = (bool) get_post_meta( $m->ID, '_sla_msg_has_new_reply', true );
+                    ?>
+                        <tr>
+                            <td><strong><?php echo esc_html( $m->post_title ); ?></strong><br>
+                                <span style="color: #666; font-size: 12px;"><?php echo esc_html( wp_trim_words( $m->post_content, 18 ) ); ?></span></td>
+                            <td><span style="padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; background: <?php echo $sev === 'important' ? '#fff3cd; color: #856404' : ( $sev === 'announcement' ? '#0A1929; color: #fff' : '#def4f4; color: #008080' ); ?>;"><?php echo esc_html( ucfirst( $sev ) ); ?></span></td>
+                            <td><?php echo $aud_label; ?></td>
+                            <td><?php echo esc_html( get_the_date( 'M j, Y g:i a', $m ) ); ?></td>
+                            <td><?php
+                                if ( $m->post_status === 'future' ) echo '<span style="color: #b07d00;">Scheduled</span>';
+                                elseif ( $is_expired )              echo '<span style="color: #999;">Expired</span>';
+                                else                                echo '<span style="color: #008080;">Active</span>';
+                            ?></td>
+                            <td><?php echo (int) count( $reads ); ?></td>
+                            <td><?php echo (int) $reply_count; ?><?php if ( $has_pending ) : ?> <span style="color: #008080;" title="New reply awaiting admin">●</span><?php endif; ?></td>
+                            <td>
+                                <a href="<?php echo esc_url( $resend_url ); ?>">Resend</a> |
+                                <a href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('Move this message to trash?');" style="color: #b32d2e;">Delete</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+
+        <?php
+        // ───────── TAB: DELETED (trashed messages) ─────────
+        elseif ( $tab === 'deleted' ) :
+            $trashed = get_posts( array(
+                'post_type'      => 'vance_message',
+                'post_status'    => 'trash',
+                'posts_per_page' => 100,
+                'orderby'        => 'modified',
+                'order'          => 'DESC',
+                's'              => $search,
+            ) );
+        ?>
+            <div style="margin-top: 20px;">
+                <p style="font-size: 13px; color: #555;">Trashed messages stop appearing on dashboards but remain stored. Restore to revert, or permanently delete to remove for good.</p>
+            </div>
+            <table class="wp-list-table widefat fixed striped" style="margin-top: 12px;">
+                <thead>
+                    <tr>
+                        <th style="width: 36%;">Title</th>
+                        <th style="width: 16%;">Severity</th>
+                        <th style="width: 22%;">Originally sent</th>
+                        <th style="width: 26%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ( empty( $trashed ) ) : ?>
+                        <tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">Trash is empty.</td></tr>
+                    <?php else : foreach ( $trashed as $t ) :
+                        $sev = get_post_meta( $t->ID, '_sla_msg_severity', true ) ?: 'info';
+                        $restore_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=restore&msg_id=' . $t->ID ), 'vance_msg_action_' . $t->ID );
+                        $force_url   = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=force_delete&msg_id=' . $t->ID ), 'vance_msg_action_' . $t->ID );
+                    ?>
+                        <tr>
+                            <td><strong><?php echo esc_html( $t->post_title ); ?></strong><br>
+                                <span style="color: #666; font-size: 12px;"><?php echo esc_html( wp_trim_words( $t->post_content, 18 ) ); ?></span></td>
+                            <td><?php echo esc_html( ucfirst( $sev ) ); ?></td>
+                            <td><?php echo esc_html( get_the_date( 'M j, Y', $t ) ); ?></td>
+                            <td>
+                                <a href="<?php echo esc_url( $restore_url ); ?>">Restore</a> |
+                                <a href="<?php echo esc_url( $force_url ); ?>" onclick="return confirm('Permanently delete this message and its replies? This cannot be undone.');" style="color: #b32d2e;">Delete permanently</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
     </div>
     <?php
 }
@@ -545,6 +754,9 @@ function vance_admin_messages_for_user( $user_id, $include_read = false ) {
         $exp = (int) get_post_meta( $p->ID, '_sla_msg_expires', true );
         if ( $exp && $exp < $now ) continue;
 
+        // Skip messages this user has soft-deleted from their inbox.
+        if ( vance_msg_is_user_deleted( $p->ID, $user_id ) ) continue;
+
         $aud = get_post_meta( $p->ID, '_sla_msg_audience', true ) ?: 'all';
         if ( $aud === 'users' ) {
             $allow = (array) get_post_meta( $p->ID, '_sla_msg_user_ids', true );
@@ -630,3 +842,163 @@ function vance_admin_messages_render( $post, $context = 'banner' ) {
     <?php
     return ob_get_clean();
 }
+
+/**
+ * Render a message with its reply thread + reply form (for the user's
+ * /dashboard/?tab=messages view). Uses vance_admin_messages_render() for the
+ * top message body, then appends each reply and an inline reply form.
+ */
+function vance_admin_messages_render_with_thread( $post, $current_user_id ) {
+    if ( ! $post ) return '';
+    $current_user_id = (int) $current_user_id;
+
+    $body_html = vance_admin_messages_render( $post, 'list' );
+
+    $replies = vance_msg_get_replies( $post->ID );
+    $delete_nonce = wp_create_nonce( 'vance_msg_user_delete_' . $post->ID );
+    $reply_nonce  = wp_create_nonce( 'vance_msg_user_reply_' . $post->ID );
+
+    ob_start(); ?>
+    <div class="vance-msg-thread" data-msg-id="<?php echo (int) $post->ID; ?>" style="margin-bottom: 18px;">
+        <?php echo $body_html; ?>
+
+        <?php if ( $replies ) : ?>
+            <div class="vance-msg-replies" style="margin: 8px 0 0 18px; padding: 0 0 0 14px; border-left: 2px solid #def4f4;">
+                <?php foreach ( $replies as $r ) :
+                    $author = get_userdata( (int) $r->post_author );
+                    $is_admin_reply = $author && in_array( 'administrator', (array) $author->roles, true );
+                    $author_label = $author
+                        ? esc_html( $author->display_name . ( $is_admin_reply ? ' (Vance Medical team)' : '' ) )
+                        : '—';
+                    $r_body = wp_kses_post( $r->post_content );
+                    $r_body = preg_replace( '/\*\*(.+?)\*\*/', '<strong>$1</strong>', $r_body );
+                    $r_body = make_clickable( $r_body );
+                    $r_body = nl2br( $r_body );
+                ?>
+                    <div class="vance-msg-reply" data-reply-id="<?php echo (int) $r->ID; ?>" style="margin: 10px 0; padding: 12px 16px; background: <?php echo $is_admin_reply ? '#def4f4' : '#f8fafc'; ?>; border-left: 3px solid <?php echo $is_admin_reply ? '#008080' : '#94a3b8'; ?>;">
+                        <header style="display: flex; justify-content: space-between; gap: 10px; font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">
+                            <span><?php echo $author_label; ?></span>
+                            <span><?php echo esc_html( get_the_date( 'M j, g:ia', $r ) ); ?></span>
+                        </header>
+                        <div style="font-size: 13px; line-height: 1.55; color: #0F172A;"><?php echo $r_body; ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="vance-msg-actions" style="display: flex; gap: 8px; margin: 8px 0 0; align-items: center; flex-wrap: wrap;">
+            <button type="button"
+                    class="vance-msg-reply-toggle button"
+                    data-msg-id="<?php echo (int) $post->ID; ?>"
+                    style="background: #008080; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 0;">
+                Reply
+            </button>
+            <button type="button"
+                    class="vance-msg-delete button"
+                    data-msg-id="<?php echo (int) $post->ID; ?>"
+                    data-nonce="<?php echo esc_attr( $delete_nonce ); ?>"
+                    style="background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 0;">
+                Delete from my inbox
+            </button>
+        </div>
+
+        <form class="vance-msg-reply-form"
+              data-msg-id="<?php echo (int) $post->ID; ?>"
+              data-nonce="<?php echo esc_attr( $reply_nonce ); ?>"
+              style="display: none; margin-top: 12px; padding: 14px; background: white; border: 1px solid #e2e8f0;">
+            <textarea required minlength="3" maxlength="4000" placeholder="Write your reply… plain text, **bold**, *italic*, and URLs work." rows="4" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; font-size: 13px; line-height: 1.55; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <button type="submit" class="button" style="background: #008080; color: white; border: none; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 0;">Send reply</button>
+                <button type="button" class="vance-msg-reply-cancel button" style="background: transparent; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 0;">Cancel</button>
+                <span class="vance-msg-reply-status" style="margin-left: auto; align-self: center; font-size: 12px; color: #64748b;"></span>
+            </div>
+        </form>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+/* ============================================================================
+ * USER-SIDE AJAX: reply + soft-delete
+ * ============================================================================ */
+
+/**
+ * AJAX: user replies to a message. Creates a vance_message_reply post with
+ * post_parent linking back to the original message.
+ *
+ * POST: nonce, message_id, body
+ */
+function vance_msg_ajax_user_reply() {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Please sign in to reply.' ), 401 );
+    }
+    $msg_id = isset( $_POST['message_id'] ) ? absint( $_POST['message_id'] ) : 0;
+    if ( ! $msg_id || get_post_type( $msg_id ) !== 'vance_message' ) {
+        wp_send_json_error( array( 'message' => 'Invalid message.' ), 400 );
+    }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_msg_user_reply_' . $msg_id ) ) {
+        wp_send_json_error( array( 'message' => 'Security check failed.' ), 403 );
+    }
+
+    $body = isset( $_POST['body'] ) ? trim( wp_kses_post( wp_unslash( $_POST['body'] ) ) ) : '';
+    if ( strlen( $body ) < 3 ) {
+        wp_send_json_error( array( 'message' => 'Reply too short — please write at least 3 characters.' ) );
+    }
+    if ( strlen( $body ) > 4000 ) {
+        wp_send_json_error( array( 'message' => 'Reply too long — 4000 characters maximum.' ) );
+    }
+
+    $current = wp_get_current_user();
+    $title_seed = wp_trim_words( wp_strip_all_tags( $body ), 8, '…' );
+
+    $reply_id = wp_insert_post( array(
+        'post_type'    => 'vance_message_reply',
+        'post_status'  => 'publish',
+        'post_parent'  => $msg_id,
+        'post_author'  => (int) $current->ID,
+        'post_title'   => 'Re: ' . wp_trim_words( get_the_title( $msg_id ), 8, '…' ) . ' — ' . $title_seed,
+        'post_content' => $body,
+    ), true );
+
+    if ( is_wp_error( $reply_id ) ) {
+        wp_send_json_error( array( 'message' => $reply_id->get_error_message() ) );
+    }
+
+    // Stamp the reply with role context for the admin tool to render correctly.
+    update_post_meta( $reply_id, '_sla_reply_author_roles', (array) $current->roles );
+    update_post_meta( $reply_id, '_sla_reply_author_id',    (int) $current->ID );
+
+    // Optional: re-mark the parent message as unread for admins so they see
+    // the new reply. Stored as a separate "needs-attention" meta so we don't
+    // clobber the read-receipts for end-users.
+    update_post_meta( $msg_id, '_sla_msg_has_new_reply', time() );
+
+    wp_send_json_success( array(
+        'message'  => 'Reply sent.',
+        'reply_id' => (int) $reply_id,
+    ) );
+}
+add_action( 'wp_ajax_vance_msg_user_reply', 'vance_msg_ajax_user_reply' );
+
+/**
+ * AJAX: user soft-deletes a message from their own inbox. Doesn't affect
+ * other users' visibility or the admin's audit trail.
+ *
+ * POST: nonce, message_id
+ */
+function vance_msg_ajax_user_delete() {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Please sign in.' ), 401 );
+    }
+    $msg_id = isset( $_POST['message_id'] ) ? absint( $_POST['message_id'] ) : 0;
+    if ( ! $msg_id || get_post_type( $msg_id ) !== 'vance_message' ) {
+        wp_send_json_error( array( 'message' => 'Invalid message.' ), 400 );
+    }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_msg_user_delete_' . $msg_id ) ) {
+        wp_send_json_error( array( 'message' => 'Security check failed.' ), 403 );
+    }
+
+    vance_msg_mark_user_deleted( $msg_id, get_current_user_id() );
+    wp_send_json_success( array( 'message' => 'Removed from your inbox.' ) );
+}
+add_action( 'wp_ajax_vance_msg_user_delete', 'vance_msg_ajax_user_delete' );

@@ -130,7 +130,7 @@ get_header();
             'messages' => ['label' => 'My Messages', 'icon' => '💬'],
         ],
         'misc' => [
-            'high-score' => ['label' => 'My High Score', 'icon' => '🏆'],
+            'high-score' => ['label' => 'Play to Win', 'icon' => '🏆'],
         ]
     ];
 ?>
@@ -299,21 +299,20 @@ get_header();
 
             <?php switch($current_tab) :
                 case 'home':
-                    // Admin-broadcast messages banner (latest 3 unread, marked read on render).
-                    if ( function_exists( 'vance_admin_messages_for_user' ) ) {
-                        $vance_unread_msgs = vance_admin_messages_for_user( $current_user->ID );
-                        $vance_unread_msgs = array_slice( $vance_unread_msgs, 0, 3 );
-                        if ( ! empty( $vance_unread_msgs ) ) {
-                            echo '<section class="vance-msg-banner" style="margin: 0 0 24px;">';
-                            $rendered_ids = array();
-                            foreach ( $vance_unread_msgs as $m ) {
-                                echo vance_admin_messages_render( $m, 'banner' );
-                                $rendered_ids[] = $m->ID;
-                            }
-                            echo '</section>';
-                            vance_admin_messages_mark_read( $current_user->ID, $rendered_ids );
+                    // Admin-broadcast messages: compute unread count + latest items
+                    // for the Messages card below. We do NOT auto-mark-read here;
+                    // marking only happens when the user opens the My Messages tab.
+                    $vance_dashboard_msgs = function_exists( 'vance_admin_messages_for_user' )
+                        ? vance_admin_messages_for_user( $current_user->ID, true ) // include read for "latest" display
+                        : array();
+                    $vance_unread_count = 0;
+                    foreach ( $vance_dashboard_msgs as $m ) {
+                        $r = (array) get_post_meta( $m->ID, '_sla_msg_read_by', true );
+                        if ( ! in_array( (int) $current_user->ID, array_map( 'intval', $r ), true ) ) {
+                            $vance_unread_count++;
                         }
                     }
+                    $vance_recent_msgs = array_slice( $vance_dashboard_msgs, 0, 3 );
                     ?>
                     <style>
                         .dash-grid-v2 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
@@ -363,15 +362,42 @@ get_header();
                              </div>
                         </div>
 
-                        <!-- 2. MESSAGES (Tall/Side) -->
+                        <!-- 2. MESSAGES (Tall/Side) — admin-broadcast messages live here -->
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
                                 <div class="d-card-title"><span class="d-icon-box">💬</span> Messages</div>
-                                <span style="font-size:12px; font-weight:700; background:#F1F5F9; padding:4px 8px; border-radius:0;">0 New</span>
+                                <span style="font-size:12px; font-weight:700; padding:4px 10px; border-radius:0;
+                                    <?php echo $vance_unread_count > 0
+                                        ? 'background:#008080; color:white;'
+                                        : 'background:#F1F5F9; color:#64748B;'; ?>">
+                                    <?php echo (int) $vance_unread_count; ?> New
+                                </span>
                             </div>
-                            <div class="msg-empty-state">
-                                <strong>Inbox Zero!</strong><br>No new messages from your practitioner.
-                            </div>
+                            <?php if ( empty( $vance_recent_msgs ) ) : ?>
+                                <div class="msg-empty-state">
+                                    <strong>Inbox Zero!</strong><br>No messages from the team yet.
+                                </div>
+                            <?php else : ?>
+                                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                                    <?php foreach ( $vance_recent_msgs as $vm ) :
+                                        $vm_reads = (array) get_post_meta( $vm->ID, '_sla_msg_read_by', true );
+                                        $vm_unread = ! in_array( (int) $current_user->ID, array_map( 'intval', $vm_reads ), true );
+                                        $vm_sev = get_post_meta( $vm->ID, '_sla_msg_severity', true ) ?: 'info';
+                                        $vm_dot = $vm_sev === 'important' ? '#b07d00' : ( $vm_sev === 'announcement' ? '#0A1929' : '#008080' );
+                                    ?>
+                                        <li>
+                                            <a href="?tab=messages" style="display: flex; gap: 12px; padding: 10px 12px; background: <?php echo $vm_unread ? '#F4FFFF' : '#F8FAFC'; ?>; border-left: 3px solid <?php echo esc_attr( $vm_dot ); ?>; text-decoration: none; color: inherit; transition: background 0.15s;" onmouseover="this.style.background='#def4f4'" onmouseout="this.style.background='<?php echo $vm_unread ? '#F4FFFF' : '#F8FAFC'; ?>'">
+                                                <span style="flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; background: <?php echo $vm_unread ? esc_attr( $vm_dot ) : 'transparent'; ?>;" aria-hidden="true"></span>
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <div style="font-size: 13px; font-weight: <?php echo $vm_unread ? '700' : '600'; ?>; color: #0F172A; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html( $vm->post_title ); ?></div>
+                                                    <div style="font-size: 11px; color: #64748B; margin-top: 3px;"><?php echo esc_html( get_the_date( 'M j', $vm ) ); ?> · <?php echo esc_html( ucfirst( $vm_sev ) ); ?></div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                                <a href="?tab=messages" style="display: block; text-align: center; margin-top: 12px; font-size: 12px; font-weight: 700; color: #008080; text-decoration: none; padding: 8px; border-top: 1px solid #E2E8F0;">View all messages →</a>
+                            <?php endif; ?>
                         </div>
 
                         <!-- 3. NOTES -->
@@ -1041,7 +1067,7 @@ get_header();
                         <?php else : ?>
                             <div class="vance-msg-list">
                                 <?php foreach ( $all_msgs as $m ) :
-                                    echo vance_admin_messages_render( $m, 'list' );
+                                    echo vance_admin_messages_render_with_thread( $m, $current_user->ID );
                                     $rendered_ids[] = $m->ID;
                                 endforeach; ?>
                             </div>
@@ -1051,6 +1077,105 @@ get_header();
                                 vance_admin_messages_mark_read( $current_user->ID, $rendered_ids );
                             }
                             ?>
+                            <script>
+                            // Reply + soft-delete handlers for the messages tab.
+                            (function () {
+                                var ajaxUrl = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+
+                                function setStatus(form, msg, isError) {
+                                    var s = form.querySelector('.vance-msg-reply-status');
+                                    if (!s) return;
+                                    s.textContent = msg || '';
+                                    s.style.color = isError ? '#b32d2e' : '#64748b';
+                                }
+
+                                // Toggle reply form open/close.
+                                document.querySelectorAll('.vance-msg-reply-toggle').forEach(function (btn) {
+                                    btn.addEventListener('click', function () {
+                                        var thread = btn.closest('.vance-msg-thread');
+                                        if (!thread) return;
+                                        var form = thread.querySelector('.vance-msg-reply-form');
+                                        if (!form) return;
+                                        var hidden = form.style.display === 'none' || form.style.display === '';
+                                        form.style.display = hidden ? 'block' : 'none';
+                                        if (hidden) { var ta = form.querySelector('textarea'); if (ta) ta.focus(); }
+                                    });
+                                });
+                                document.querySelectorAll('.vance-msg-reply-cancel').forEach(function (btn) {
+                                    btn.addEventListener('click', function () {
+                                        var form = btn.closest('.vance-msg-reply-form');
+                                        if (form) form.style.display = 'none';
+                                    });
+                                });
+
+                                // Submit reply via AJAX.
+                                document.querySelectorAll('.vance-msg-reply-form').forEach(function (form) {
+                                    form.addEventListener('submit', function (e) {
+                                        e.preventDefault();
+                                        var msgId = form.getAttribute('data-msg-id');
+                                        var nonce = form.getAttribute('data-nonce');
+                                        var ta = form.querySelector('textarea');
+                                        var body = (ta && ta.value || '').trim();
+                                        if (body.length < 3) { setStatus(form, 'Please write a few words.', true); return; }
+
+                                        var fd = new FormData();
+                                        fd.append('action', 'vance_msg_user_reply');
+                                        fd.append('nonce', nonce);
+                                        fd.append('message_id', msgId);
+                                        fd.append('body', body);
+                                        setStatus(form, 'Sending…', false);
+
+                                        fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                            .then(function (r) { return r.json(); })
+                                            .then(function (j) {
+                                                if (j && j.success) {
+                                                    setStatus(form, 'Reply sent — admins will see it shortly. Refresh to see your reply in the thread.', false);
+                                                    if (ta) ta.value = '';
+                                                    setTimeout(function () { window.location.reload(); }, 1200);
+                                                } else {
+                                                    setStatus(form, (j && j.data && j.data.message) || 'Could not send.', true);
+                                                }
+                                            })
+                                            .catch(function () { setStatus(form, 'Network error.', true); });
+                                    });
+                                });
+
+                                // Soft-delete a message from this user's inbox.
+                                document.querySelectorAll('.vance-msg-delete').forEach(function (btn) {
+                                    btn.addEventListener('click', function () {
+                                        if (!window.confirm('Remove this message from your inbox? Admins will still have a copy.')) return;
+                                        var msgId = btn.getAttribute('data-msg-id');
+                                        var nonce = btn.getAttribute('data-nonce');
+                                        var fd = new FormData();
+                                        fd.append('action', 'vance_msg_user_delete');
+                                        fd.append('nonce', nonce);
+                                        fd.append('message_id', msgId);
+                                        btn.disabled = true;
+                                        btn.textContent = 'Removing…';
+
+                                        fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                            .then(function (r) { return r.json(); })
+                                            .then(function (j) {
+                                                if (j && j.success) {
+                                                    var thread = btn.closest('.vance-msg-thread');
+                                                    if (thread) thread.style.transition = 'opacity 0.25s';
+                                                    if (thread) thread.style.opacity = '0';
+                                                    setTimeout(function () { if (thread) thread.remove(); }, 280);
+                                                } else {
+                                                    btn.disabled = false;
+                                                    btn.textContent = 'Delete from my inbox';
+                                                    alert((j && j.data && j.data.message) || 'Could not remove.');
+                                                }
+                                            })
+                                            .catch(function () {
+                                                btn.disabled = false;
+                                                btn.textContent = 'Delete from my inbox';
+                                                alert('Network error.');
+                                            });
+                                    });
+                                });
+                            })();
+                            </script>
                         <?php endif; ?>
                     </div>
                 <?php break;
@@ -1058,7 +1183,7 @@ get_header();
                 case 'high-score': ?>
                     <div class="dash-grid-v2">
                         <div class="d-card d-col-8">
-                            <iframe src="<?php echo get_template_directory_uri(); ?>/assets/games/pacman-vance/index.html?user=<?php echo urlencode($first_name); ?>" style="width:100%; height:600px; border:none; border-radius:0; background:#F0F9FF;" allow="autoplay; fullscreen"></iframe>
+                            <iframe src="<?php echo get_template_directory_uri(); ?>/assets/games/pacman-vance/index.html?user=<?php echo urlencode($first_name); ?>" style="width:100%; height:600px; border:none; border-radius:0; background:#F0F9FF; display:block;" scrolling="no" allow="autoplay; fullscreen"></iframe>
                         </div>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
