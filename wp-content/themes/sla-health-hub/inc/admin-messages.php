@@ -81,7 +81,7 @@ function vance_register_admin_messages_menu() {
         'vance-content-hub',
         'User Messages',
         'User Messages',
-        'manage_options',
+        'administrator',
         'vance-user-messages',
         'vance_render_admin_messages_page'
     );
@@ -89,7 +89,7 @@ function vance_register_admin_messages_menu() {
 
 // ─── Admin page renderer ─────────────────────────────────────────────────────
 function vance_render_admin_messages_page() {
-    if ( ! current_user_can( 'manage_options' ) ) {
+    if ( ! current_user_can( 'administrator' ) ) {
         wp_die( 'Insufficient permissions.' );
     }
 
