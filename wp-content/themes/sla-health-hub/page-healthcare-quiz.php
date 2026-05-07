@@ -1,9 +1,14 @@
 <?php
 /**
  * Template Name: Healthcare Quiz
+ *
+ * Shares the AskAi visual shell: tall navy hero (badge → H1 → subtitle) with
+ * the quiz card overlapping by -40px, brand-teal border. Customizable via
+ * Customize → Healthcare Quiz panel (title / subtitle / badge / hero bg /
+ * overlay opacity).
  */
 
-// Get saved quiz answers for logged-in users to pre-populate
+// Get saved quiz answers for logged-in users to pre-populate.
 $saved_quiz = array();
 if ( is_user_logged_in() ) {
     $meta = get_user_meta( get_current_user_id(), '_sla_healthcare_quiz_results', true );
@@ -12,6 +17,14 @@ if ( is_user_logged_in() ) {
     }
 }
 $saved_role = isset( $saved_quiz['role'] ) ? $saved_quiz['role'] : '';
+
+// Hero shell mods (mirror the askai- and per-tool-page conventions).
+$hq_hero_bg       = vance_get_theme_mod( 'vance_hquiz_hero_bg', get_template_directory_uri() . '/assets/img/about_hero.png' );
+$hq_hero_title    = vance_get_theme_mod( 'vance_hquiz_hero_title', 'IBD Health Quiz' );
+$hq_hero_subtitle = vance_get_theme_mod( 'vance_hquiz_hero_subtitle', 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private — get an instant summary you can share with your clinician.' );
+$hq_hero_badge    = vance_get_theme_mod( 'vance_hquiz_hero_badge', 'Self-Assessment' );
+$hq_overlay       = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_hquiz_hero_overlay', 85 ) ) ) ) / 100;
+$hq_overlay_bot   = min( 1, $hq_overlay + 0.05 );
 
 get_header();
 ?>
@@ -26,42 +39,88 @@ get_header();
     --bg-light: #f8fafc;
 }
 
+/* Page shell — mirrors AskAi (.askai-page / .askai-hero / .askai-container). */
 .quiz-page-wrapper {
     background: var(--bg-light);
     min-height: 100vh;
-    padding: 80px 0;
     font-family: 'Inter', sans-serif;
 }
 
-.quiz-container {
+.quiz-hero {
+    background: linear-gradient(rgba(10, 25, 41, <?php echo esc_attr( $hq_overlay ); ?>), rgba(10, 25, 41, <?php echo esc_attr( $hq_overlay_bot ); ?>)), url('<?php echo esc_url( $hq_hero_bg ); ?>') center/cover;
+    padding: 80px 0;
+    color: white;
+    text-align: center;
+    border-bottom: 3px solid var(--primary-color);
+    position: relative;
+}
+
+.quiz-hero h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    color: white;
+}
+
+.quiz-hero p {
+    font-size: 20px;
+    color: #CBD5E1;
     max-width: 800px;
     margin: 0 auto;
+    font-weight: 500;
+}
+
+.quiz-hero .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.10);
+    padding: 6px 16px;
+    border-radius: 0;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255,255,255,0.20);
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.quiz-hero .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #22C55E;
+    border-radius: 0;
+    box-shadow: 0 0 10px #22C55E;
+    animation: hq-pulse 2s infinite;
+}
+
+@keyframes hq-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.quiz-container {
+    max-width: 1000px;
+    margin: -40px auto 0;
     background: white;
     border-radius: 0;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.10);
     overflow: hidden;
     position: relative;
-    border: 1px solid #e2e8f0;
+    z-index: 10;
+    border: 2px solid var(--primary-color);
 }
 
-.quiz-header {
-    background: var(--navy-dark);
-    color: white;
-    padding: 40px;
-    text-align: center;
-}
+/* Bottom margin so the card doesn't hug the footer. */
+.quiz-page-wrapper > .quiz-container { margin-bottom: 60px; }
 
-.quiz-header h1 {
-    font-family: 'Outfit', sans-serif;
-    font-size: 32px;
-    font-weight: 800;
-    margin: 0 0 10px 0;
-}
-
-.quiz-header p {
-    font-size: 16px;
-    color: #cbd5e1;
-    margin: 0;
+@media (max-width: 600px) {
+    .quiz-hero { padding: 48px 0; }
+    .quiz-hero h1 { font-size: 36px; }
+    .quiz-hero p { font-size: 16px; }
 }
 
 .progress-bar-container {
@@ -292,12 +351,21 @@ get_header();
 </style>
 
 <div class="quiz-page-wrapper">
-    <div class="quiz-container">
-        <div class="quiz-header">
-            <h1>Vance Medical Discovery</h1>
-            <p>Tell us a bit about yourself to personalize your experience.</p>
+
+    <section class="quiz-hero">
+        <div class="container">
+            <div class="hero-badge">
+                <span class="status-dot"></span>
+                <?php echo esc_html( $hq_hero_badge ); ?>
+            </div>
+            <h1><?php echo esc_html( $hq_hero_title ); ?></h1>
+            <?php if ( $hq_hero_subtitle ) : ?>
+                <p><?php echo esc_html( $hq_hero_subtitle ); ?></p>
+            <?php endif; ?>
         </div>
-        
+    </section>
+
+    <div class="quiz-container">
         <div class="progress-bar-container">
             <div class="progress-bar-fill" id="progress-bar"></div>
         </div>

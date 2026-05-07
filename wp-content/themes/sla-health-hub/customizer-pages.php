@@ -1378,5 +1378,29 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_premium_desc_size",    array( "default" => 18, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_premium_desc_size",    array( "label" => "Description Size (px)", "section" => "vance_premium_sizing", "type" => "number", "input_attrs" => array( "min" => 12, "max" => 28, "step" => 1 ) ) );
 
+    // ============================================================
+    // HEALTHCARE QUIZ — hero shell mods (mirrors AskAi visual layout)
+    // ============================================================
+    $wp_customize->add_panel( "vance_hquiz_panel", array(
+        "title"    => __( "Healthcare Quiz", "sla-health-hub" ),
+        "priority" => 54,
+    ) );
+    $wp_customize->add_section( "vance_hquiz_hero", array( "title" => "Hero Section", "panel" => "vance_hquiz_panel" ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_badge",    array( "default" => "Self-Assessment", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_hquiz_hero_badge",    array( "label" => "Hero Badge Text", "section" => "vance_hquiz_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_title",    array( "default" => "IBD Health Quiz", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_hquiz_hero_title",    array( "label" => "Hero Title (H1)", "section" => "vance_hquiz_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_subtitle", array( "default" => "A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private — get an instant summary you can share with your clinician.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_hquiz_hero_subtitle", array( "label" => "Hero Subtitle", "section" => "vance_hquiz_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_bg",       array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_hquiz_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_hquiz_hero" ) ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_overlay",  array( "default" => 85, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_hquiz_hero_overlay",  array(
+        "label"       => "Hero Overlay Opacity (%)",
+        "section"     => "vance_hquiz_hero",
+        "type"        => "number",
+        "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
+    ) );
+
 }
 add_action( 'customize_register', 'vance_pages_customize_register', 20 );
