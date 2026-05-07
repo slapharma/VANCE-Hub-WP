@@ -151,9 +151,9 @@ h6 {
 }
 
 .logo-area img {
-    width: 180px;
+    width: 225px;
     height: auto;
-    max-height: 50px;
+    max-height: 65px;
     object-fit: contain;
 }
 
@@ -310,10 +310,19 @@ h6 {
 }
 
 /* Shared hero sizing for about/heritage pages */
-.vance-about-hero {
+.vance-about-hero,
+.vance-contact-hero {
     min-height: 460px;
     display: flex;
     align-items: flex-start;
+}
+
+/* Hero is a flex row; force .container to fill width so shrink-to-content
+   doesn't shift text blocks horizontally based on title length. */
+.vance-about-hero > .container,
+.vance-contact-hero > .container {
+    width: 100%;
+    flex: 1 1 auto;
 }
 
 .tag-label {
@@ -432,10 +441,10 @@ h6 {
     box-shadow: 0 10px 20px rgba(0,128,128, 0.3);
 }
 
-/* Search Section */
+/* Search Section — brand teal gradient */
 .search-section {
     padding: 60px 0;
-    background: linear-gradient(135deg, var(--secondary-color), #112240);
+    background: linear-gradient(135deg, #008080, #006666);
 }
 
 /* Content Hub */
@@ -2114,7 +2123,7 @@ h6 {
     }
 
     .site-logo {
-        width: 175px !important; /* Vance rebrand: 25% larger than legacy 140px */
+        width: 220px !important; /* Vance rebrand: +25% from 175px after new logo file */
     }
 
     .main-nav {
@@ -2269,14 +2278,14 @@ h6 {
 }
 
 .site-logo {
-    width: 225px; /* Vance rebrand: 25% larger than legacy 180px */
+    width: 325px; /* Vance rebrand: +25% from 259px after new logo file */
     height: auto;
     display: block;
 }
 
 @media (max-width: 768px) {
     .site-logo {
-        width: 175px !important; /* Vance rebrand: 25% larger than legacy 140px */
+        width: 220px !important; /* Vance rebrand: +25% from 175px after new logo file */
     }
 }
 

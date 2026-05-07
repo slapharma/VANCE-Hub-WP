@@ -8,12 +8,14 @@ get_header(); ?>
 
     <!-- HERO SECTION -->
     <?php
-    $hero_bg    = vance_get_theme_mod( 'vance_hcp_hero_bg', get_template_directory_uri() . '/assets/img/hcp_hero.png' );
-    $hero_tag   = vance_get_theme_mod( 'vance_hcp_hero_tag', 'Professional Portal' );
-    $hero_title = vance_get_theme_mod( 'vance_hcp_hero_title', 'Advancing <span class="highlight">Clinical Practice</span> Through Nutrition' );
-    $hero_desc  = vance_get_theme_mod( 'vance_hcp_hero_desc', 'Evidence-based resources, clinical protocols, and CME opportunities designed for gastroenterologists, dietitians, GPs, and allied health professionals.' );
+    $hero_bg      = vance_get_theme_mod( 'vance_hcp_hero_bg', get_template_directory_uri() . '/assets/img/hcp_hero.png' );
+    $hero_tag     = vance_get_theme_mod( 'vance_hcp_hero_tag', 'Professional Portal' );
+    $hero_title   = vance_get_theme_mod( 'vance_hcp_hero_title', 'Advancing <span class="highlight">Clinical Practice</span> Through Nutrition' );
+    $hero_desc    = vance_get_theme_mod( 'vance_hcp_hero_desc', 'Evidence-based resources, clinical protocols, and CME opportunities designed for gastroenterologists, dietitians, GPs, and allied health professionals.' );
+    $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_hcp_hero_overlay', 75 ) ) ) ) / 100;
+    $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
     ?>
-    <section class="hero hcp-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,0.75), rgba(10,25,41,0.9)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
+    <section class="hero hcp-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
         <div class="container">
             <div class="hero-content">
                 <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
@@ -39,11 +41,12 @@ get_header(); ?>
         3 => array( 'Webinars & CME',      'On-demand educational sessions with CPD accreditation from leading gastroenterology experts.' ),
         4 => array( 'Patient Handouts',    'Downloadable, branded resources to share with patients to reinforce dietary and treatment advice.' ),
     );
+    // Brand-only palette: [grad-from, grad-to, svg stroke]
     $res_colors = array(
-        1 => 'var(--primary-color), #006666',
-        2 => '#0ea5e9, #0284c7',
-        3 => '#10b981, #059669',
-        4 => '#8b5cf6, #7c3aed',
+        1 => array( '#008080', '#006666', '#ffffff' ),
+        2 => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
+        3 => array( '#aedbdb', '#88c5c5', '#008080' ),
+        4 => array( '#def4f4', '#aedbdb', '#008080' ),
     );
     $res_icons = array(
         1 => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
@@ -64,9 +67,9 @@ get_header(); ?>
                     $card_title = vance_get_theme_mod( "vance_hcp_res{$i}_title", $res_defaults[ $i ][0] );
                     $card_desc  = vance_get_theme_mod( "vance_hcp_res{$i}_desc",  $res_defaults[ $i ][1] );
                 ?>
-                <div style="display: flex; gap: 20px; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-                    <div style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo $res_colors[ $i ]; ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                        <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24"><?php echo $res_icons[ $i ]; ?></svg>
+                <div class="hcp-resource-card" style="display: flex; gap: 20px; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+                    <div class="hcp-resource-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $res_colors[ $i ][0] ); ?>, <?php echo esc_attr( $res_colors[ $i ][1] ); ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $res_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $res_icons[ $i ]; ?></svg>
                     </div>
                     <div>
                         <h4 style="font-size: 18px; color: var(--secondary-color); margin-bottom: 8px;"><?php echo esc_html( $card_title ); ?></h4>
@@ -87,11 +90,12 @@ get_header(); ?>
         3 => array( 'Podcast Guest',    'Join our clinical podcast series to discuss innovations, challenges, and success stories.' ),
         4 => array( 'Clinical Trials',  'Work with us on our pipeline of clinical and in-market trials investigating novel specific treatments.' ),
     );
+    // Brand-only palette: border-top accent per card
     $collab_colors = array(
-        1 => 'var(--primary-color)',
-        2 => '#10b981',
-        3 => '#0ea5e9',
-        4 => '#8b5cf6',
+        1 => '#008080',
+        2 => '#78bfbf',
+        3 => '#aedbdb',
+        4 => '#def4f4',
     );
     ?>
     <section class="section-padding" style="background: white;">
@@ -102,7 +106,7 @@ get_header(); ?>
                     $col_title = vance_get_theme_mod( "vance_hcp_col{$i}_title", $collab_defaults[ $i ][0] );
                     $col_desc  = vance_get_theme_mod( "vance_hcp_col{$i}_desc",  $collab_defaults[ $i ][1] );
                 ?>
-                <div style="padding: 32px 24px; background: var(--accent-color); border-radius: var(--radius-lg); text-align: center; border-top: 4px solid <?php echo $collab_colors[ $i ]; ?>;">
+                <div class="hcp-collab-card" style="padding: 32px 24px; background: var(--accent-color); border-radius: var(--radius-lg); text-align: center; border-top: 4px solid <?php echo esc_attr( $collab_colors[ $i ] ); ?>;">
                     <h4 style="font-size: 17px; color: var(--secondary-color); margin-bottom: 12px;"><?php echo esc_html( $col_title ); ?></h4>
                     <p style="font-size: 13px; color: var(--text-light); margin: 0;"><?php echo esc_html( $col_desc ); ?></p>
                 </div>
@@ -116,7 +120,7 @@ get_header(); ?>
     $cta_title = vance_get_theme_mod( 'vance_hcp_cta_title', 'Join the Professional Network' );
     $cta_desc  = vance_get_theme_mod( 'vance_hcp_cta_desc',  'Free registration gives you full access to protocols, research, and CME opportunities.' );
     ?>
-    <section id="register" class="section-padding" style="background: linear-gradient(135deg, var(--secondary-color), #112240);">
+    <section id="register" class="section-padding hcp-cta-section" style="background: linear-gradient(135deg, #008080, #006666);">
         <div class="container" style="text-align: center; color: white;">
             <h2 style="color: white; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
             <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: rgba(255,255,255,0.85);"><?php echo esc_html( $cta_desc ); ?></p>

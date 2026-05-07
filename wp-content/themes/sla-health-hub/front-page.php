@@ -112,17 +112,33 @@ body {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     border: 1px solid #e5e7eb;
     transition: all 0.2s;
     text-decoration: none;
     color: inherit;
-    height: 100%; /* Ensure full height */
+    height: 100%;
+    overflow: hidden;
 }
 
 .bento-cell-side:hover {
     border-color: var(--primary-color);
     transform: translateX(4px);
+}
+
+.bento-cell-side .heading-small {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+}
+
+.bento-cell-side .text-body {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* REVIEWS ASYMMETRIC GRID */
@@ -268,7 +284,10 @@ body {
         $hero_bg = get_template_directory_uri() . '/assets/img/news_hero.png';
     }
     
-    $hero_tag = vance_get_theme_mod('vance_hero_tag_label', 'HEALTHCARE KNOWLEDGE HUB');
+    $hero_tag        = vance_get_theme_mod('vance_hero_tag_label',  'HEALTHCARE KNOWLEDGE HUB');
+    $hero_tag_bg     = vance_get_theme_mod('vance_hero_tag_bg',     '#ffffff');
+    $hero_tag_color  = vance_get_theme_mod('vance_hero_tag_color',  '#f86409');
+    $hero_tag_border = vance_get_theme_mod('vance_hero_tag_border', '#f86409');
     $hero_title = vance_get_theme_mod('vance_hero_custom_title', 'Your Partner in <span class="highlight">Lifelong Wellness</span>');
     $hero_subtitle = vance_get_theme_mod('vance_hero_custom_subtitle', 'Trusted, science-backed information to help you understand your health, manage your IBD condition, and live your best life through clinical nutrition.');
     
@@ -278,7 +297,13 @@ body {
     $btn2_link = vance_get_theme_mod('vance_hero_button_2_link', '/patients/');
 
     $mask_enabled = vance_get_theme_mod('vance_hero_mask_toggle', true);
-    $mask_opacity = vance_get_theme_mod('vance_hero_mask_opacity', 0.5);
+    // Per-page slider (0-100) takes precedence over the legacy global mask_opacity (0-1) when set.
+    $home_overlay_pct = vance_get_theme_mod('vance_home_hero_overlay', null);
+    if ( $home_overlay_pct !== null && $home_overlay_pct !== '' ) {
+        $mask_opacity = max(0, min(100, absint($home_overlay_pct))) / 100;
+    } else {
+        $mask_opacity = vance_get_theme_mod('vance_hero_mask_opacity', 0.5);
+    }
     $hero_title_size = vance_get_theme_mod('vance_hero_title_size', 52);
     $hero_title_color = vance_get_theme_mod('vance_hero_title_color', '#ffffff');
     $hero_subtitle_color = vance_get_theme_mod('vance_hero_subtitle_color', '#cbd5e1');
@@ -293,7 +318,7 @@ body {
     <section class="hero patient-hero" style="padding: 95px 0 140px; display: flex; align-items: center; <?php echo $hero_bg_style; ?> color: white; position: relative; overflow: hidden;">
         <div class="container" style="position:relative;z-index:1;">
             <div style="max-width: 800px;">
-                <span class="tag-label" style="background: white; color: #f86409; border: 1.5px solid #f86409;"><?php echo esc_html($hero_tag); ?></span>
+                <span class="tag-label" style="background: <?php echo esc_attr($hero_tag_bg); ?>; color: <?php echo esc_attr($hero_tag_color); ?>; border: 1.5px solid <?php echo esc_attr($hero_tag_border); ?>;"><?php echo esc_html($hero_tag); ?></span>
                 <h1 style="font-size: <?php echo esc_attr($hero_title_size); ?>px; color: <?php echo esc_attr($hero_title_color); ?>; line-height: 1.1; margin: 16px 0 10px; font-weight: 800; font-family: 'Outfit', sans-serif;">
                     <?php 
                     // Ensure highlight spans inherit the customized color if they exist in the title string
@@ -498,7 +523,7 @@ body {
                                 <?php endif; ?>
                             </div>
                         </a>
-                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <div style="display: flex; flex-direction: column; gap: 24px; grid-row: 1 / -1;">
                             <?php for ($i = 1; $i <= 2; $i++) : $p = $latest_posts[$i]; ?>
                             <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
                                 <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
@@ -1256,7 +1281,7 @@ body {
                                 <div class="meta" style="color: rgba(255,255,255,0.8);">By <?php echo get_the_author_meta('display_name', $p->post_author); ?> • <?php echo get_the_date('', $p->ID); ?></div>
                             </div>
                         </a>
-                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <div style="display: flex; flex-direction: column; gap: 24px; grid-row: 1 / -1;">
                             <?php for($i=1; $i<=2; $i++): $p = $posts_array[$i]; ?>
                             <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
                                 <span class="meta" style="color:<?php echo $color; ?>; margin-bottom:8px;"><?php echo $cat->name; ?></span>

@@ -73,7 +73,9 @@ get_header(); ?>
     $hero_desc     = vance_get_theme_mod( 'vance_contact_hero_desc',  'Whether you\'re a patient, healthcare professional, researcher, or media contact — our team is here to help. Reach out and we\'ll respond within one business day.' );
 
     $hero_styles   = vance_get_style_contact( 'vance_contact_hero' );
-    $hero_bg_style = "background: linear-gradient(rgba(10,25,41,0.78), rgba(10,25,41,0.93)), url('" . esc_url( $hero_img ) . "') no-repeat center center; background-size: cover;";
+    $hero_overlay  = max(0, min(100, absint(vance_get_theme_mod('vance_contact_hero_overlay', 78)))) / 100;
+    $hero_overlay_bottom = min(1, $hero_overlay + 0.15);
+    $hero_bg_style = "background: linear-gradient(rgba(10,25,41,{$hero_overlay}), rgba(10,25,41,{$hero_overlay_bottom})), url('" . esc_url( $hero_img ) . "') no-repeat center center; background-size: cover;";
     if ( $hero_bg_color ) {
         $hero_bg_style = "background: {$hero_bg_color};";
     }

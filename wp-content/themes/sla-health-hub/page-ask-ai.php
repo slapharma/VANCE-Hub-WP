@@ -11,6 +11,8 @@ $hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri
 $hero_title = vance_get_theme_mod('vance_askai_hero_title', 'Ask AI');
 $hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Direct access to our IBD Research Centre. Ask anything about IBD, clinical nutrition, and gastrointestinal health.');
 $hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Clinical Assistant v1.0');
+$askai_overlay = max(0, min(100, absint(vance_get_theme_mod('vance_askai_hero_overlay', 85)))) / 100;
+$askai_overlay_bottom = min(1, $askai_overlay + 0.05);
 
 // Define Single AI Agent
 $agent_data = array(
@@ -31,7 +33,7 @@ $agent_data = array(
 }
 
 .askai-hero {
-    background: linear-gradient(rgba(10, 25, 41, 0.85), rgba(10, 25, 41, 0.9)), url('<?php echo esc_url($hero_bg); ?>') center/cover;
+    background: linear-gradient(rgba(10, 25, 41, <?php echo esc_attr($askai_overlay); ?>), rgba(10, 25, 41, <?php echo esc_attr($askai_overlay_bottom); ?>)), url('<?php echo esc_url($hero_bg); ?>') center/cover;
     padding: 80px 0;
     color: white;
     text-align: center;

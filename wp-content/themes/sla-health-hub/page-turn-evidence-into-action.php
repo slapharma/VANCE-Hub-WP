@@ -26,8 +26,10 @@ get_header(); ?>
     $hero_btn1_link = vance_get_theme_mod( 'vance_evidence_hero_btn1_link', '#pillars' );
     $hero_btn2  = vance_get_theme_mod( 'vance_evidence_hero_btn2_text', 'Request a Clinical Consultation' );
     $hero_btn2_link = vance_get_theme_mod( 'vance_evidence_hero_btn2_link', '/contact-us/' );
+    $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_evidence_hero_overlay', 78 ) ) ) ) / 100;
+    $hero_overlay_bottom = min( 1, $hero_overlay + 0.14 );
     ?>
-    <section class="hero evidence-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,0.78), rgba(10,25,41,0.92)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
+    <section class="hero evidence-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
         <div class="container">
             <div class="hero-content">
                 <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
@@ -53,11 +55,12 @@ get_header(); ?>
         3 => array( 'Peer-Reviewed Science','Curated meta-analyses and systematic reviews from Gut, AJG, Lancet Gastro, JCN, and other indexed journals — summarised for bedside use.' ),
         4 => array( 'Expert Consensus',    'Multidisciplinary panel statements from gastroenterologists, dietitians, and pharmacists who have validated the protocol pathways we publish.' ),
     );
+    // Brand-only palette: [grad-from, grad-to, svg stroke]
     $pillar_colors = array(
-        1 => 'var(--primary-color), #006666',
-        2 => '#0ea5e9, #0284c7',
-        3 => '#10b981, #059669',
-        4 => '#8b5cf6, #7c3aed',
+        1 => array( '#008080', '#006666', '#ffffff' ),
+        2 => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
+        3 => array( '#aedbdb', '#88c5c5', '#008080' ),
+        4 => array( '#def4f4', '#aedbdb', '#008080' ),
     );
     // Heroicons (24 outline) — flask, chart-bar, book-open, user-group.
     $pillar_icons = array(
@@ -79,9 +82,9 @@ get_header(); ?>
                     $card_title = vance_get_theme_mod( "vance_evidence_pillar{$i}_title", $pillar_defaults[ $i ][0] );
                     $card_desc  = vance_get_theme_mod( "vance_evidence_pillar{$i}_desc",  $pillar_defaults[ $i ][1] );
                 ?>
-                <div style="display: flex; gap: 20px; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-                    <div style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo $pillar_colors[ $i ]; ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                        <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24"><?php echo $pillar_icons[ $i ]; ?></svg>
+                <div class="evidence-pillar-card" style="display: flex; gap: 20px; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+                    <div class="evidence-pillar-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $pillar_colors[ $i ][0] ); ?>, <?php echo esc_attr( $pillar_colors[ $i ][1] ); ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $pillar_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $pillar_icons[ $i ]; ?></svg>
                     </div>
                     <div>
                         <h4 style="font-size: 18px; color: var(--secondary-color); margin-bottom: 8px;"><?php echo esc_html( $card_title ); ?></h4>
@@ -186,7 +189,7 @@ get_header(); ?>
     $cta_btn2  = vance_get_theme_mod( 'vance_evidence_cta_btn2_text', 'Talk to Our Team' );
     $cta_btn2_link = vance_get_theme_mod( 'vance_evidence_cta_btn2_link', '/contact-us/' );
     ?>
-    <section class="section-padding" style="background: linear-gradient(135deg, var(--secondary-color), #112240);">
+    <section class="section-padding evidence-cta-section" style="background: linear-gradient(135deg, #008080, #006666);">
         <div class="container" style="text-align: center; color: white;">
             <h2 style="color: white; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
             <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: rgba(255,255,255,0.85);"><?php echo esc_html( $cta_desc ); ?></p>

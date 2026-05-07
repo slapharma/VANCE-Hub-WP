@@ -59,8 +59,10 @@ get_header(); ?>
         $hero_desc  = vance_get_theme_mod('vance_heritage_hero_desc', 'Vance Medical bridges the worlds of pharmaceutical science and patient-centred nutrition, delivering evidence-based medical food solutions for life with IBD.');
         
         $styles = vance_get_section_style_heritage('vance_heritage_hero');
+        $hero_overlay = max(0, min(100, absint(vance_get_theme_mod('vance_heritage_hero_overlay', 78)))) / 100;
+        $hero_overlay_bottom = min(1, $hero_overlay + 0.15);
         // Custom background logic for hero because it has a gradient and image
-        $hero_bg_style = "background: linear-gradient(rgba(10,25,41,0.78), rgba(10,25,41,0.93)), url('" . esc_url($hero_img) . "') no-repeat center center; background-size: cover;";
+        $hero_bg_style = "background: linear-gradient(rgba(10,25,41,{$hero_overlay}), rgba(10,25,41,{$hero_overlay_bottom})), url('" . esc_url($hero_img) . "') no-repeat center center; background-size: cover;";
         if ($hero_bg_color) {
             $hero_bg_style = "background: " . $hero_bg_color . ";";
         }

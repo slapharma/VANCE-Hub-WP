@@ -8,12 +8,14 @@ get_header(); ?>
 
     <!-- HERO SECTION -->
     <?php
-    $hero_bg    = vance_get_theme_mod( 'vance_pat_hero_bg', get_template_directory_uri() . '/assets/img/patient_hero.png' );
-    $hero_tag   = vance_get_theme_mod( 'vance_pat_hero_tag',   'Patient Portal' );
-    $hero_title = vance_get_theme_mod( 'vance_pat_hero_title', 'Empowering Your <span class="highlight">Wellness Journey</span>' );
-    $hero_desc  = vance_get_theme_mod( 'vance_pat_hero_desc',  'More than just a news site—a truly useful platform providing the highest quality clinical information, innovative tools, and expert opinions to help you explore and manage your gastro healthcare concerns.' );
+    $hero_bg      = vance_get_theme_mod( 'vance_pat_hero_bg', get_template_directory_uri() . '/assets/img/patient_hero.png' );
+    $hero_tag     = vance_get_theme_mod( 'vance_pat_hero_tag',   'Patient Portal' );
+    $hero_title   = vance_get_theme_mod( 'vance_pat_hero_title', 'Empowering Your <span class="highlight">Wellness Journey</span>' );
+    $hero_desc    = vance_get_theme_mod( 'vance_pat_hero_desc',  'More than just a news site—a truly useful platform providing the highest quality clinical information, innovative tools, and expert opinions to help you explore and manage your gastro healthcare concerns.' );
+    $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_pat_hero_overlay', 70 ) ) ) ) / 100;
+    $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
     ?>
-    <section class="hero patient-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,0.7), rgba(10,25,41,0.85)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
+    <section class="hero patient-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
         <div class="container">
             <div class="hero-content">
                 <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
@@ -38,7 +40,12 @@ get_header(); ?>
         2 => array( 'Renowned Expertise',    'Engage with exclusive content, insights, and guidance produced directly by Vance Medical specialists and world-renowned gastro healthcare experts.' ),
         3 => array( 'Actionable Solutions',  'Take control with highly interactive calculators, health trackers, and personalized AI to bring the clinic directly into your home life.' ),
     );
-    $ben_colors = array( 1 => 'var(--primary-color)', 2 => '#10b981', 3 => '#8b5cf6' );
+    // Brand-only palette: [solid bg, svg stroke]. White stroke on dark teal, teal stroke on light tints.
+    $ben_colors = array(
+        1 => array( '#008080', '#ffffff' ),
+        2 => array( '#78bfbf', '#ffffff' ),
+        3 => array( '#aedbdb', '#008080' ),
+    );
     $ben_icons  = array(
         1 => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>',
         2 => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
@@ -57,9 +64,9 @@ get_header(); ?>
                     $ben_t = vance_get_theme_mod( "vance_pat_ben{$i}_title", $ben_defaults[ $i ][0] );
                     $ben_d = vance_get_theme_mod( "vance_pat_ben{$i}_desc",  $ben_defaults[ $i ][1] );
                 ?>
-                <div style="text-align: center; padding: 40px 24px; background: var(--accent-color); border-radius: var(--radius-lg);">
-                    <div style="width: 64px; height: 64px; background: <?php echo $ben_colors[ $i ]; ?>; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                        <svg width="32" height="32" fill="none" stroke="white" viewBox="0 0 24 24"><?php echo $ben_icons[ $i ]; ?></svg>
+                <div class="patient-benefit-card" style="text-align: center; padding: 40px 24px; background: var(--accent-color); border-radius: var(--radius-lg);">
+                    <div class="patient-benefit-icon" style="width: 64px; height: 64px; background: <?php echo esc_attr( $ben_colors[ $i ][0] ); ?>; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <svg width="32" height="32" fill="none" stroke="<?php echo esc_attr( $ben_colors[ $i ][1] ); ?>" viewBox="0 0 24 24"><?php echo $ben_icons[ $i ]; ?></svg>
                     </div>
                     <h3 style="font-size: 20px; margin-bottom: 12px; color: var(--secondary-color);"><?php echo esc_html( $ben_t ); ?></h3>
                     <p style="color: var(--text-light); font-size: 15px;"><?php echo esc_html( $ben_d ); ?></p>
@@ -80,13 +87,14 @@ get_header(); ?>
         5 => array( 'Exclusive Courses',      'Enroll in customized, multi-chapter curriculums developed by gastro specialists focusing on diet, recovery, and lifestyle routines.' ),
         6 => array( 'Downloadable Guides',    'Save and export patient-focused literature, daily checklists, and clear instructions for managing clinical nutrition products.' ),
     );
+    // Brand-only palette: [grad-from, grad-to, svg stroke]. Cycles teal→light-teal pairs.
     $tool_colors = array(
-        1 => 'var(--primary-color), #006666',
-        2 => '#0ea5e9, #0284c7',
-        3 => '#10b981, #059669',
-        4 => '#8b5cf6, #7c3aed',
-        5 => '#f59e0b, #d97706',
-        6 => '#ec4899, #db2777',
+        1 => array( '#008080', '#006666', '#ffffff' ),
+        2 => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
+        3 => array( '#aedbdb', '#88c5c5', '#008080' ),
+        4 => array( '#008080', '#4a9999', '#ffffff' ),
+        5 => array( '#78bfbf', '#aedbdb', '#008080' ),
+        6 => array( '#def4f4', '#aedbdb', '#008080' ),
     );
     $tool_icons = array(
         1 => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>',
@@ -105,9 +113,9 @@ get_header(); ?>
                     $t_title = vance_get_theme_mod( "vance_pat_tool{$i}_title", $tool_defaults[ $i ][0] );
                     $t_desc  = vance_get_theme_mod( "vance_pat_tool{$i}_desc",  $tool_defaults[ $i ][1] );
                 ?>
-                <div style="display: flex; gap: 16px; padding: 28px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-                    <div style="flex-shrink: 0; width: 48px; height: 48px; background: linear-gradient(135deg, <?php echo $tool_colors[ $i ]; ?>); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                        <svg width="24" height="24" fill="none" stroke="white" viewBox="0 0 24 24"><?php echo $tool_icons[ $i ]; ?></svg>
+                <div class="patient-tool-card" style="display: flex; gap: 16px; padding: 28px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+                    <div class="patient-tool-icon" style="flex-shrink: 0; width: 48px; height: 48px; background: linear-gradient(135deg, <?php echo esc_attr( $tool_colors[ $i ][0] ); ?>, <?php echo esc_attr( $tool_colors[ $i ][1] ); ?>); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="24" height="24" fill="none" stroke="<?php echo esc_attr( $tool_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $tool_icons[ $i ]; ?></svg>
                     </div>
                     <div>
                         <h4 style="font-size: 16px; color: var(--secondary-color); margin-bottom: 6px;"><?php echo esc_html( $t_title ); ?></h4>
@@ -124,7 +132,7 @@ get_header(); ?>
     $cta_title = vance_get_theme_mod( 'vance_pat_cta_title', 'Begin Your Journey' );
     $cta_desc  = vance_get_theme_mod( 'vance_pat_cta_desc',  "Join thousands of patients taking control of their gut health and longevity. It's completely free to start using our clinical resources today." );
     ?>
-    <section id="subscribe" class="section-padding" style="background: linear-gradient(135deg, var(--secondary-color), #112240);">
+    <section id="subscribe" class="section-padding patient-cta-section" style="background: linear-gradient(135deg, #008080, #006666);">
         <div class="container" style="text-align: center; color: white;">
             <h2 style="color: white; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
             <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: rgba(255,255,255,0.85);"><?php echo esc_html( $cta_desc ); ?></p>

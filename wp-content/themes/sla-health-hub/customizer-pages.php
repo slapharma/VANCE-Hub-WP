@@ -787,5 +787,131 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_contact_hours",       array( "default" => "Monday – Friday, 9:00 am – 5:00 pm GMT", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_contact_hours",       array( "label" => "Office Hours",               "section" => "vance_contact_info", "type" => "text" ) );
 
+    // ============================================================
+    // HERO OVERLAY OPACITY SLIDERS — per-page (0–100, mapped to alpha 0.00–1.00)
+    // ============================================================
+    $hero_overlay_pages = array(
+        "vance_pat_hero"        => array( "default" => 70, "label" => "Patients hero overlay opacity (%)" ),
+        "vance_hcp_hero"        => array( "default" => 75, "label" => "HCP hero overlay opacity (%)" ),
+        "vance_about_hero"      => array( "default" => 78, "label" => "About hero overlay opacity (%)" ),
+        "vance_heritage_hero"   => array( "default" => 78, "label" => "Heritage hero overlay opacity (%)" ),
+        "vance_contact_hero"    => array( "default" => 78, "label" => "Contact hero overlay opacity (%)" ),
+    );
+    foreach ( $hero_overlay_pages as $section => $cfg ) {
+        $setting = $section . "_overlay";
+        $wp_customize->add_setting( $setting, array(
+            "default"           => $cfg["default"],
+            "sanitize_callback" => "absint",
+        ) );
+        $wp_customize->add_control( $setting, array(
+            "label"       => $cfg["label"],
+            "section"     => $section,
+            "type"        => "number",
+            "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
+        ) );
+    }
+
+    // For pages without a dedicated hero section in this file (evidence, ask-ai, home)
+    // — group their overlay sliders into a shared panel.
+    $wp_customize->add_panel( "vance_overlays_panel", array(
+        "title"    => __( "Hero Overlays (extra)", "sla-health-hub" ),
+        "priority" => 49,
+    ) );
+    $wp_customize->add_section( "vance_overlays_misc", array(
+        "title" => "Per-page Overlay Opacity",
+        "panel" => "vance_overlays_panel",
+        "description" => "Slide 0–100 to control how dark the photo overlay is on these heroes. Higher = darker.",
+    ) );
+    $extra_overlays = array(
+        "vance_home_hero_overlay"     => array( "default" => 50, "label" => "Home hero overlay opacity (%)" ),
+        "vance_evidence_hero_overlay" => array( "default" => 78, "label" => "Turn Evidence hero overlay opacity (%)" ),
+        "vance_askai_hero_overlay"    => array( "default" => 85, "label" => "Ask AI hero overlay opacity (%)" ),
+    );
+    foreach ( $extra_overlays as $key => $cfg ) {
+        $wp_customize->add_setting( $key, array(
+            "default"           => $cfg["default"],
+            "sanitize_callback" => "absint",
+        ) );
+        $wp_customize->add_control( $key, array(
+            "label"       => $cfg["label"],
+            "section"     => "vance_overlays_misc",
+            "type"        => "number",
+            "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
+        ) );
+    }
+
+    // ============================================================
+    // EDUCATION (COMING SOON) PAGE PANEL
+    // ============================================================
+    $wp_customize->add_panel( "vance_edu_panel", array(
+        "title"    => __( "Education Page Settings", "sla-health-hub" ),
+        "priority" => 50,
+    ) );
+
+    // Education Hero
+    $wp_customize->add_section( "vance_edu_hero", array( "title" => "Hero Section", "panel" => "vance_edu_panel" ) );
+    $wp_customize->add_setting( "vance_edu_hero_tag",   array( "default" => "Education", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_hero_tag",   array( "label" => "Tag Label", "section" => "vance_edu_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_hero_title", array( "default" => "Courses are <span class=\"highlight\">Coming Soon</span>", "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_edu_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_edu_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_edu_hero_desc",  array( "default" => "We're building self-paced courses for patients and CPD-accredited modules for practitioners. Join the waitlist to be the first to know when enrolment opens.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_edu_hero_desc",  array( "label" => "Description", "section" => "vance_edu_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_edu_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_edu_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_edu_hero" ) ) );
+    $wp_customize->add_setting( "vance_edu_hero_overlay", array( "default" => 75, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_edu_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_edu_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+
+    // Education Tracks
+    $wp_customize->add_section( "vance_edu_tracks", array( "title" => "Course Tracks", "panel" => "vance_edu_panel" ) );
+    $track_defaults = array(
+        1 => array( "Patient Courses", "Self-paced modules on living with IBD: nutrition fundamentals, symptom tracking, mealtime confidence, and working with your care team. Designed in plain English with downloadable worksheets." ),
+        2 => array( "Practitioner Courses", "CPD-accredited deep dives on FSMP integration, Omega-3 dosing, malnutrition screening, and translating evidence into protocols. Built for gastroenterologists, dietitians, GPs, and pharmacists." ),
+    );
+    for ( $i = 1; $i <= 2; $i++ ) {
+        $wp_customize->add_setting( "vance_edu_track{$i}_title", array( "default" => $track_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_edu_track{$i}_title", array( "label" => "Track {$i} Title", "section" => "vance_edu_tracks", "type" => "text" ) );
+        $wp_customize->add_setting( "vance_edu_track{$i}_desc",  array( "default" => $track_defaults[$i][1], "sanitize_callback" => "sanitize_textarea_field" ) );
+        $wp_customize->add_control( "vance_edu_track{$i}_desc",  array( "label" => "Track {$i} Description", "section" => "vance_edu_tracks", "type" => "textarea" ) );
+    }
+
+    // Education Waitlist
+    $wp_customize->add_section( "vance_edu_waitlist", array( "title" => "Waitlist Signup", "panel" => "vance_edu_panel" ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_heading", array( "default" => "Join the Waitlist", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_waitlist_heading", array( "label" => "Heading", "section" => "vance_edu_waitlist", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_desc",    array( "default" => "Be first to hear when patient or practitioner courses go live. We'll send a single email — no spam, easy unsubscribe.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_edu_waitlist_desc",    array( "label" => "Description", "section" => "vance_edu_waitlist", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_action",  array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_edu_waitlist_action",  array( "label" => "Form Action URL (Mailchimp/HubSpot endpoint — leave blank to hide form)", "section" => "vance_edu_waitlist", "type" => "url" ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_button",  array( "default" => "Notify Me", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_waitlist_button",  array( "label" => "Button Label", "section" => "vance_edu_waitlist", "type" => "text" ) );
+
+    // ============================================================
+    // TOOLS & RESOURCES PAGE PANEL
+    // ============================================================
+    $wp_customize->add_panel( "vance_tools_panel", array(
+        "title"    => __( "Tools & Resources Page", "sla-health-hub" ),
+        "priority" => 51,
+    ) );
+
+    // Tools Hero
+    $wp_customize->add_section( "vance_tools_hero", array( "title" => "Hero Section", "panel" => "vance_tools_panel" ) );
+    $wp_customize->add_setting( "vance_tools_hero_tag",   array( "default" => "Free Tools", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_tools_hero_tag",   array( "label" => "Tag Label", "section" => "vance_tools_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_tools_hero_title", array( "default" => "Tools &amp; <span class=\"highlight\">Resources</span>", "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_tools_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_tools_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_tools_hero_desc",  array( "default" => "Clinical calculators built on peer-reviewed evidence — free to use, no signup required. Save your results and build a meal plan by registering for a free account.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_tools_hero_desc",  array( "label" => "Description", "section" => "vance_tools_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_tools_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_tools_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_tools_hero" ) ) );
+    $wp_customize->add_setting( "vance_tools_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_tools_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_tools_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+
+    // Tools Intro
+    $wp_customize->add_section( "vance_tools_intro", array( "title" => "Intro Section", "panel" => "vance_tools_panel" ) );
+    $wp_customize->add_setting( "vance_tools_intro_title", array( "default" => "Clinical-grade calculators, free for everyone", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_tools_intro_title", array( "label" => "Section Title", "section" => "vance_tools_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_tools_intro_desc",  array( "default" => "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them — register if you want to save results to your dashboard.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_tools_intro_desc",  array( "label" => "Description", "section" => "vance_tools_intro", "type" => "textarea" ) );
+
 }
 add_action( 'customize_register', 'vance_pages_customize_register', 20 );
