@@ -58,6 +58,22 @@ function vance_register_message_cpt() {
     ) );
 }
 
+// ─── Friendly-URL redirect ───────────────────────────────────────────────────
+// Some users (and any external links) might hit the bare slug URL
+// /wp-admin/vance-user-messages without the admin.php?page= prefix. WP admin
+// pages don't have path-based routing, so that URL resolves to a front-end
+// 404 (theme's not-found template). Intercept early and 301 to the canonical
+// admin URL so the menu always lands users on the right page.
+add_action( 'init', 'vance_msg_legacy_url_redirect', 1 );
+function vance_msg_legacy_url_redirect() {
+    if ( empty( $_SERVER['REQUEST_URI'] ) ) return;
+    $path = strtok( $_SERVER['REQUEST_URI'], '?' );
+    if ( $path === '/wp-admin/vance-user-messages' || $path === '/wp-admin/vance-user-messages/' ) {
+        wp_safe_redirect( admin_url( 'admin.php?page=vance-user-messages' ), 301 );
+        exit;
+    }
+}
+
 // ─── Admin menu ──────────────────────────────────────────────────────────────
 add_action( 'admin_menu', 'vance_register_admin_messages_menu', 25 );
 function vance_register_admin_messages_menu() {
