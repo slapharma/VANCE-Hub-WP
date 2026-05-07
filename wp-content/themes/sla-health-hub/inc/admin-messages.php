@@ -76,22 +76,24 @@ function vance_msg_legacy_url_redirect() {
 
 // ─── Admin menu ──────────────────────────────────────────────────────────────
 //
-// Access policy: visible to any user who has the 'administrator' role anywhere
-// in their role array, even if they have additional secondary roles (e.g.
-// administrator + patient). We register the page with a permissive 'read' cap
-// (held by every logged-in user) so the menu rendering machinery doesn't
-// reject before our render function runs, then enforce the actual role check
-// inline. This bypasses any user_has_cap filter / capability arithmetic that
-// might silently strip caps from secondary role assignments.
+// Access policy: any user who satisfies *any* of these is treated as admin —
+//   - is_super_admin() (multisite super-admin)
+//   - has 'administrator' anywhere in their $user->roles array
+//   - has 'administrator' as a cap key in $user->allcaps
+//   - has 'manage_options' or 'edit_users' caps (default admin-only caps)
 //
-// We also add a `parent_file` filter so the menu item only APPEARS in the
-// sidebar for users who pass the role check — non-admins never see it.
+// The page itself is registered with the permissive 'read' cap so EVERY
+// logged-in request reaches our render function — that way the role check
+// has a chance to run, and a rejection produces our diagnostic wp_die rather
+// than WP's stock "Sorry, you are not allowed" message (which gives us
+// nothing to debug from).
+//
+// Menu visibility (sidebar item) is gated separately via the post-registration
+// $submenu filter, so subscribers don't see a tantalising "User Messages"
+// link they can't use.
 //
 add_action( 'admin_menu', 'vance_register_admin_messages_menu', 25 );
 function vance_register_admin_messages_menu() {
-    if ( ! vance_msg_user_is_admin() ) {
-        return; // hide menu item entirely for non-admins
-    }
     add_submenu_page(
         'vance-content-hub',
         'User Messages',
@@ -102,9 +104,32 @@ function vance_register_admin_messages_menu() {
     );
 }
 
+// Hide the menu link from non-admins (page itself still answers; the gate is
+// enforced in the render function with a diagnostic wp_die for visibility).
+add_action( 'admin_menu', 'vance_hide_admin_messages_menu_for_non_admins', 99 );
+function vance_hide_admin_messages_menu_for_non_admins() {
+    if ( vance_msg_user_is_admin() ) {
+        return;
+    }
+    global $submenu;
+    if ( ! isset( $submenu['vance-content-hub'] ) ) {
+        return;
+    }
+    foreach ( $submenu['vance-content-hub'] as $idx => $item ) {
+        if ( isset( $item[2] ) && $item[2] === 'vance-user-messages' ) {
+            unset( $submenu['vance-content-hub'][ $idx ] );
+        }
+    }
+}
+
 /**
- * Returns true if the current user has the 'administrator' role anywhere in
- * their role array. Multi-role users (admin + patient, etc.) pass.
+ * Permissive admin check — true if any of these are true for the current
+ * user (or supplied user_id):
+ *   - WP super-admin
+ *   - 'administrator' role
+ *   - 'administrator' cap in allcaps
+ *   - 'manage_options' cap
+ *   - 'edit_users' cap (admin-only default)
  *
  * @param int|null $user_id  Optional user ID; defaults to current.
  */
@@ -113,7 +138,12 @@ function vance_msg_user_is_admin( $user_id = null ) {
     if ( ! $user || empty( $user->ID ) ) {
         return false;
     }
-    return in_array( 'administrator', (array) $user->roles, true );
+    if ( function_exists( 'is_super_admin' ) && is_super_admin( $user->ID ) ) return true;
+    if ( in_array( 'administrator', (array) $user->roles, true ) )           return true;
+    if ( ! empty( $user->allcaps['administrator'] ) )                         return true;
+    if ( ! empty( $user->allcaps['manage_options'] ) )                        return true;
+    if ( ! empty( $user->allcaps['edit_users'] ) )                            return true;
+    return false;
 }
 
 // ─── Admin page renderer ─────────────────────────────────────────────────────
@@ -121,8 +151,15 @@ function vance_render_admin_messages_page() {
     if ( ! vance_msg_user_is_admin() ) {
         $cu = wp_get_current_user();
         $roles = $cu && ! empty( $cu->roles ) ? implode( ', ', $cu->roles ) : '(none)';
+        $caps_subset = array();
+        foreach ( array( 'administrator', 'manage_options', 'edit_users', 'edit_posts', 'read' ) as $c ) {
+            if ( $cu && ! empty( $cu->allcaps[ $c ] ) ) $caps_subset[] = $c;
+        }
         wp_die(
-            'Insufficient permissions — administrator role required. Your current roles: <code>' . esc_html( $roles ) . '</code>',
+            'Insufficient permissions — administrator role required.<br><br>' .
+            '<strong>Your roles:</strong> <code>' . esc_html( $roles ) . '</code><br>' .
+            '<strong>Admin-relevant caps detected:</strong> <code>' . esc_html( $caps_subset ? implode( ', ', $caps_subset ) : '(none)' ) . '</code><br>' .
+            '<strong>User ID:</strong> <code>' . (int) ( $cu->ID ?? 0 ) . '</code>',
             'Access denied',
             array( 'response' => 403 )
         );
