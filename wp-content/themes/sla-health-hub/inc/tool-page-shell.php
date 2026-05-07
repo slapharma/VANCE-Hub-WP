@@ -47,6 +47,14 @@ $save_enabled  = isset( $vance_tool_save_enabled ) ? (bool) $vance_tool_save_ena
 $autoresize    = isset( $vance_tool_autoresize ) ? (bool) $vance_tool_autoresize : false;
 $brand_css     = isset( $vance_tool_brand_css ) ? (string) $vance_tool_brand_css : '';
 
+// Optional caller overrides for badge / title / subtitle styling — empty string means "use default".
+$tool_title_color    = isset( $vance_tool_title_color )    ? (string) $vance_tool_title_color    : '';
+$tool_title_size     = isset( $vance_tool_title_size )     ? absint( $vance_tool_title_size )    : 0;
+$tool_subtitle_color = isset( $vance_tool_subtitle_color ) ? (string) $vance_tool_subtitle_color : '';
+$tool_subtitle_size  = isset( $vance_tool_subtitle_size )  ? absint( $vance_tool_subtitle_size )  : 0;
+$tool_badge_bg       = isset( $vance_tool_badge_bg )       ? (string) $vance_tool_badge_bg       : '';
+$tool_badge_color    = isset( $vance_tool_badge_color )    ? (string) $vance_tool_badge_color    : '';
+
 if ( ! $slug ) {
     return; // misconfigured caller — bail silently
 }
@@ -132,15 +140,27 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 
 <div class="tool-page">
 
+    <?php
+    // Build optional inline-style strings (only emit declarations when an override is set).
+    $badge_inline = '';
+    if ( $tool_badge_bg )    { $badge_inline .= 'background:' . esc_attr( $tool_badge_bg ) . ';'; }
+    if ( $tool_badge_color ) { $badge_inline .= 'color:' . esc_attr( $tool_badge_color ) . ';border-color:' . esc_attr( $tool_badge_color ) . ';'; }
+    $h1_inline    = '';
+    if ( $tool_title_color ) { $h1_inline .= 'color:' . esc_attr( $tool_title_color ) . ';'; }
+    if ( $tool_title_size  ) { $h1_inline .= 'font-size:' . (int) $tool_title_size . 'px;'; }
+    $sub_inline   = '';
+    if ( $tool_subtitle_color ) { $sub_inline .= 'color:' . esc_attr( $tool_subtitle_color ) . ';'; }
+    if ( $tool_subtitle_size  ) { $sub_inline .= 'font-size:' . (int) $tool_subtitle_size . 'px;'; }
+    ?>
     <section class="tool-page-hero">
         <div class="container">
-            <div class="tool-page-badge">
+            <div class="tool-page-badge" style="<?php echo $badge_inline; ?>">
                 <span class="status-dot"></span>
                 <?php echo esc_html( $tool_badge ); ?>
             </div>
-            <h1><?php echo esc_html( $tool_name ); ?></h1>
+            <h1 style="<?php echo $h1_inline; ?>"><?php echo esc_html( $tool_name ); ?></h1>
             <?php if ( $tool_subtitle ) : ?>
-                <p><?php echo esc_html( $tool_subtitle ); ?></p>
+                <p style="<?php echo $sub_inline; ?>"><?php echo esc_html( $tool_subtitle ); ?></p>
             <?php endif; ?>
         </div>
     </section>

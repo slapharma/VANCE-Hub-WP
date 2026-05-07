@@ -109,13 +109,15 @@ get_header();
 
     // Navigation Configuration (Global)
     $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'home';
+    // Back-compat: legacy ?tab=calculators links resolve to the new tools tab.
+    if ( $current_tab === 'calculators' ) { $current_tab = 'tools'; }
     $nav_items = [
         'main' => [
             'home'        => ['label' => 'Dashboard', 'icon' => '📊'],
             'profile'     => ['label' => 'My Profile', 'icon' => '👤'],
             'clinical-profile' => ['label' => 'Clinical Profile', 'icon' => '🩺'],
             'records'     => ['label' => 'My Records', 'icon' => '📋'],
-            'calculators' => ['label' => 'My Calculators', 'icon' => '🧮'],
+            'tools' => ['label' => 'My Tools', 'icon' => '🧮'],
         ],
         'learning' => [
             'reading-list' => ['label' => 'My Reading List', 'icon' => '📚'],
@@ -773,257 +775,53 @@ get_header();
                     </div>
                 <?php break;
 
-                case 'calculators': ?>
+                case 'tools':
+                    // Mirror the public /tools-resources/ card grid so logged-in users
+                    // see the same tool catalogue with consistent brand styling. Cards
+                    // link to the per-tool wrapper pages; saving results from the
+                    // wrappers is now logged-in-aware (see vance_save_tool_result).
+                    $dash_tools = array(
+                        array( 'slug' => 'omega-3-calculator',     'page_url' => '/omega-3-calculator/',     'name' => 'Omega-3 Calculator',     'tag' => 'Nutrition',        'desc' => 'EPA + DHA dosage optimiser based on body weight, dietary intake, and clinical guidance.',                                  'colors' => array( '#008080', '#006666', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12c2.5-3.5 6.5-5 9-5s6.5 1.5 9 5c-2.5 3.5-6.5 5-9 5s-6.5-1.5-9-5zm12 0a3 3 0 11-6 0 3 3 0 016 0z"/>' ),
+                        array( 'slug' => 'malnutrition-calculator','page_url' => '/malnutrition-calculator/','name' => 'Malnutrition Calculator','tag' => 'IBD Screening',    'desc' => '11-step risk screener combining MUST, IBD-NST, and GLIM criteria into one actionable score.',                                'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' ),
+                        array( 'slug' => 'blood-test',             'page_url' => '/blood-test/',             'name' => 'Blood Test Analyser',    'tag' => 'Lab Results',      'desc' => 'Plain-language analysis of your blood panel results, flagging anything outside reference ranges.',                            'colors' => array( '#aedbdb', '#88c5c5', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>' ),
+                        array( 'slug' => 'ibd-recipes',            'page_url' => '/ibd-recipies/',            'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'EPA-rich, gut-friendly recipes with full nutrition data and weekly plan builder.',                                            'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
+                        array( 'slug' => 'healthcare-quiz',        'page_url' => '/healthcare-quiz/',         'name' => 'IBD Health Quiz',        'tag' => 'Self-Assessment',  'desc' => 'Short evidence-based questionnaire on symptoms, triggers, and lifestyle factors. Get an instant clinician-shareable summary.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
+                    );
+                    ?>
                     <style>
-                        .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; }
-                        .calc-card { background: white; border-radius: 0; overflow: hidden; border: 1px solid #e2e8f0; transition: all 0.3s ease; position: relative; }
-                        .calc-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(10,25,41,0.1); border-color: transparent; }
-                        .calc-card-header { padding: 24px; position: relative; overflow: hidden; }
-                        .calc-card-header.malnutrition-bg { background: linear-gradient(135deg, #fd4f00 0%, #ff7a33 60%, #ffa366 100%); }
-                        .calc-card-header.omega-bg { background: linear-gradient(135deg, #0a1929 0%, #1e3a5f 60%, #2563eb 100%); }
-                        .calc-card-header .card-emoji { font-size: 40px; margin-bottom: 12px; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15)); }
-                        .calc-card-header h3 { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: white; margin: 0 0 6px; letter-spacing: -0.02em; }
-                        .calc-card-header .card-subtitle { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 500; }
-                        .calc-card-header .card-version-badge { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 0; padding: 4px 12px; font-size: 10px; color: white; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-                        .calc-card-body { padding: 24px; }
-                        .calc-card-body > p { font-size: 14px; color: #64748b; line-height: 1.7; margin: 0 0 20px; }
-                        .calc-card-actions { display: flex; gap: 10px; }
-                        .calc-btn-launch { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; border-radius: 0; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-                        .calc-btn-launch.primary { background: linear-gradient(135deg, #fd4f00, #ff7a33); color: white; box-shadow: 0 4px 16px rgba(253,79,0,0.25); }
-                        .calc-btn-launch.primary:hover { box-shadow: 0 8px 24px rgba(253,79,0,0.35); transform: translateY(-1px); }
-                        .calc-btn-launch.secondary { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-                        .calc-btn-launch.secondary:hover { background: #e2e8f0; }
-
-                        /* Calculator Popup */
-                        .calc-popup-overlay { display: none; position: fixed; inset: 0; background: rgba(10,25,41,0.75); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
-                        .calc-popup-overlay.active { display: flex; }
-                        .calc-popup-container { background: white; width: 100%; max-width: 780px; height: 92vh; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.3); animation: calcPopIn 0.3s cubic-bezier(0.16,1,0.3,1); }
-                        @keyframes calcPopIn { from { opacity:0; transform:scale(0.95) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
-                        .calc-popup-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
-                        .popup-tool-left { display: flex; align-items: center; gap: 10px; }
-                        .popup-tool-icon { width: 30px; height: 30px; background: linear-gradient(135deg, #fd4f00, #ff7a33); border-radius: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-                        .popup-tool-title { font-size: 13px; font-weight: 700; color: #0f172a; }
-                        .popup-tool-sub { font-size: 11px; color: #64748b; }
-                        .popup-tool-right { display: flex; gap: 8px; align-items: center; }
-                        .popup-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 0; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; background: white; color: #475569; cursor: pointer; transition: all 0.2s; text-decoration: none; font-family: inherit; }
-                        .popup-btn:hover { background: #f1f5f9; }
-                        .popup-btn-close { background: #0f172a; color: white !important; border-color: #0f172a; }
-                        .popup-btn-close:hover { background: #1e293b; }
-                        .calc-popup-iframe-wrap { flex: 1; overflow: hidden; }
-                        .calc-popup-iframe-wrap iframe { width: 100%; height:100%; border:none; }
-
-                        /* Results modal */
-                        .results-modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,25,41,0.7); backdrop-filter:blur(4px); z-index:100001; align-items:center; justify-content:center; padding:20px; }
-                        .results-modal-overlay.active { display:flex; }
-                        .results-modal { background:white; width:100%; max-width:660px; max-height:85vh; border-radius:0; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.25); display:flex; flex-direction:column; animation:calcPopIn 0.3s cubic-bezier(0.16,1,0.3,1); }
-                        .results-modal-header { padding:20px 24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
-                        .results-modal-title { font-size:17px; font-weight:800; color:#0a1929; font-family:'Outfit',sans-serif; }
-                        .results-modal-body { overflow-y:auto; padding:20px 24px; flex:1; }
-                        .result-entry { background:#f8fafc; border:1px solid #e2e8f0; border-radius:0; padding:16px 18px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
-                        .result-entry:last-child { margin-bottom:0; }
-                        .result-entry-left { flex:1; }
-                        .result-entry-date { font-size:12px; color:#64748b; font-weight:500; margin-bottom:4px; }
-                        .result-entry-label { font-size:15px; font-weight:800; font-family:'Outfit',sans-serif; }
-                        .result-entry-detail { font-size:12px; color:#64748b; margin-top:4px; }
-                        .result-risk-badge { padding:5px 14px; border-radius:0; font-size:12px; font-weight:700; white-space:nowrap; }
-                        .risk-low { background:#f0fdf4; color:#16a34a; }
-                        .risk-medium { background:#fffbeb; color:#d97706; }
-                        .risk-high { background:#def4f4; color:#008080; }
-                        .results-empty { text-align:center; padding:40px 20px; color:#64748b; font-size:14px; }
-                        .results-empty .empty-icon { font-size:40px; margin-bottom:12px; }
-
-                        @media (max-width: 768px) {
-                            .calc-grid { grid-template-columns: 1fr; }
-                            .calc-popup-container { height: 98vh; border-radius: 0; max-width:100%; }
-                            .calc-card-actions { flex-direction: column; }
-                            .calc-popup-toolbar { flex-wrap: wrap; gap: 8px; }
+                        .my-tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+                        .my-tools-grid .tool-card {
+                            display: flex; flex-direction: column; padding: 32px; background: white; border-radius: 0;
+                            box-shadow: 0 4px 16px rgba(10,25,41,0.06); border-top: 4px solid #008080;
+                            text-decoration: none; color: inherit; transition: transform 0.18s, box-shadow 0.18s;
                         }
+                        .my-tools-grid .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,25,41,0.10); }
+                        .my-tools-grid .tool-card__head { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+                        .my-tools-grid .tool-card__icon { flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+                        .my-tools-grid .tool-card__tag  { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #008080; margin-bottom: 4px; }
+                        .my-tools-grid .tool-card__title{ font-size: 19px; color: #0F172A; margin: 0; line-height: 1.3; }
+                        .my-tools-grid .tool-card__desc { color: #64748B; font-size: 14px; margin: 0 0 20px 0; line-height: 1.6; flex: 1; }
+                        .my-tools-grid .tool-card__cta  { font-size: 14px; font-weight: 600; color: #008080; display: inline-flex; align-items: center; gap: 6px; }
+                        @media (max-width: 768px) { .my-tools-grid { grid-template-columns: 1fr; } }
                     </style>
 
-                    <div class="calc-grid">
-                        <!-- Omega-3 Calculator Card -->
-                        <div class="calc-card">
-                            <div class="calc-card-header omega-bg">
-                                <span class="card-version-badge">v1.0</span>
-                                <span class="card-emoji">🐟</span>
-                                <h3>Omega-3 Calculator</h3>
-                                <span class="card-subtitle">EPA/DHA Dosage Optimiser</span>
-                            </div>
-                            <div class="calc-card-body">
-                                <p>Calculate your optimal Omega-3 EPA/DHA intake based on your clinical profile, weight, and condition type.</p>
-                                <div class="calc-card-actions">
-                                    <button class="calc-btn-launch primary" onclick="openCalcPopup('omega-3-calculator', 'Omega-3 Calculator', 'omega')">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                        Launch Calculator
-                                    </button>
-                                    <button class="calc-btn-launch secondary" onclick="openResultsModal('omega')">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-                                        View Results
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Malnutrition Calculator Card -->
-                        <div class="calc-card">
-                            <div class="calc-card-header malnutrition-bg">
-                                <span class="card-version-badge">v2.0</span>
-                                <span class="card-emoji">🍎</span>
-                                <h3>Malnutrition Calculator</h3>
-                                <span class="card-subtitle">IBD Risk Screening Tool</span>
-                            </div>
-                            <div class="calc-card-body">
-                                <p>A clinically-grounded 11-step malnutrition risk screener for IBD patients. Based on MUST, IBD-NST &amp; GLIM criteria.</p>
-                                <div class="calc-card-actions">
-                                    <button class="calc-btn-launch primary" onclick="openCalcPopup('malnutrition-calculator', 'IBD Malnutrition Calculator', 'malnutrition')">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                        Launch Calculator
-                                    </button>
-                                    <button class="calc-btn-launch secondary" onclick="openResultsModal('malnutrition')">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-                                        View Results
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Calculator Popup Modal -->
-                    <div class="calc-popup-overlay" id="calc-popup-overlay" onclick="if(event.target===this) closeCalcPopup()">
-                        <div class="calc-popup-container">
-                            <div class="calc-popup-toolbar">
-                                <div class="popup-tool-left">
-                                    <div class="popup-tool-icon" id="calc-popup-icon">🍎</div>
+                    <div class="my-tools-grid">
+                        <?php foreach ( $dash_tools as $tool ) : ?>
+                            <a class="tool-card" href="<?php echo esc_url( $tool['page_url'] ); ?>" style="border-top-color: <?php echo esc_attr( $tool['colors'][0] ); ?>;">
+                                <div class="tool-card__head">
+                                    <div class="tool-card__icon" style="background: linear-gradient(135deg, <?php echo esc_attr( $tool['colors'][0] ); ?>, <?php echo esc_attr( $tool['colors'][1] ); ?>);">
+                                        <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $tool['colors'][2] ); ?>" viewBox="0 0 24 24"><?php echo $tool['icon']; ?></svg>
+                                    </div>
                                     <div>
-                                        <div class="popup-tool-title" id="calc-popup-title">Calculator</div>
-                                        <div class="popup-tool-sub">Vance Medical · Precision Diagnostics</div>
+                                        <span class="tool-card__tag"><?php echo esc_html( $tool['tag'] ); ?></span>
+                                        <h3 class="tool-card__title"><?php echo esc_html( $tool['name'] ); ?></h3>
                                     </div>
                                 </div>
-                                <div class="popup-tool-right">
-                                    <button class="popup-btn" onclick="document.getElementById('calc-popup-iframe').contentWindow.location.reload()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                                        Reset
-                                    </button>
-                                    <a href="#" class="popup-btn" id="calc-popup-fullpage" target="_blank">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                                        Full Page
-                                    </a>
-                                    <button class="popup-btn popup-btn-close" onclick="closeCalcPopup()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="calc-popup-iframe-wrap">
-                                <iframe id="calc-popup-iframe" src="about:blank" title="Calculator"></iframe>
-                            </div>
-                        </div>
+                                <p class="tool-card__desc"><?php echo esc_html( $tool['desc'] ); ?></p>
+                                <span class="tool-card__cta">Open <?php echo esc_html( $tool['name'] ); ?> →</span>
+                            </a>
+                        <?php endforeach; ?>
                     </div>
-
-                    <!-- View Results Modal -->
-                    <div class="results-modal-overlay" id="results-modal-overlay" onclick="if(event.target===this) closeResultsModal()">
-                        <div class="results-modal">
-                            <div class="results-modal-header">
-                                <div>
-                                    <div class="results-modal-title" id="results-modal-title">Saved Results</div>
-                                    <div style="font-size:12px; color:#64748b; margin-top:2px;">Your previous calculator results, sorted by date</div>
-                                </div>
-                                <button class="popup-btn popup-btn-close" onclick="closeResultsModal()">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Close
-                                </button>
-                            </div>
-                            <div class="results-modal-body" id="results-modal-body">
-                                <div class="results-empty"><div class="empty-icon">📋</div>No saved results yet.<br>Run the calculator and tap "Save Results" to save.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <script>
-                    var calcNonce = '<?php echo wp_create_nonce('vance_dashboard_nonce'); ?>';
-                    var ajaxUrl   = '<?php echo admin_url('admin-ajax.php'); ?>';
-                    var tplDir     = '<?php echo get_template_directory_uri(); ?>';
-
-                    function openCalcPopup(toolSlug, title, type) {
-                        var icons = { 'malnutrition-calculator':'🍎', 'omega-3-calculator':'🐟' };
-                        var pages = { 'malnutrition-calculator':'/malnutrition-calculator/', 'omega-3-calculator':'/omega-3-calculator/' };
-                        document.getElementById('calc-popup-icon').textContent  = icons[toolSlug] || '🧮';
-                        document.getElementById('calc-popup-title').textContent  = title;
-                        document.getElementById('calc-popup-fullpage').href       = pages[toolSlug] || '#';
-                        document.getElementById('calc-popup-iframe').src          = tplDir + '/assets/tools/' + toolSlug + '/index.html';
-                        document.getElementById('calc-popup-overlay').classList.add('active');
-                        document.body.style.overflow = 'hidden';
-                    }
-
-                    function closeCalcPopup() {
-                        document.getElementById('calc-popup-overlay').classList.remove('active');
-                        document.getElementById('calc-popup-iframe').src = 'about:blank';
-                        document.body.style.overflow = 'auto';
-                    }
-
-                    // Listen for save-results postMessage from iframe
-                    window.addEventListener('message', function(e) {
-                        if (!e.data || e.data.type !== 'VANCE_SAVE_MALNUTRITION_RESULT') return;
-                        var r = e.data;
-                        jQuery.post(ajaxUrl, {
-                            action: 'vance_save_calc_result',
-                            nonce:  calcNonce,
-                            tool:   'malnutrition',
-                            result_id:   r.id,
-                            score:       r.score,
-                            risk_level:  r.riskLevel,
-                            risk_label:  r.riskLabel,
-                            bmi:         r.bmi,
-                            bmi_cat:     r.bmiCat,
-                            ibd_type:    r.ibdType,
-                            date:        r.date
-                        }, function(res) {
-                            if (res.success) console.log('Result saved.');
-                        });
-                    });
-
-                    function openResultsModal(type) {
-                        var titles = { malnutrition: 'Malnutrition Calculator — Results', omega: 'Omega-3 Calculator — Results' };
-                        document.getElementById('results-modal-title').textContent = titles[type] || 'Saved Results';
-                        var body = document.getElementById('results-modal-body');
-                        body.innerHTML = '<div style="text-align:center;padding:24px;color:#64748b;">Loading…</div>';
-                        document.getElementById('results-modal-overlay').classList.add('active');
-                        document.body.style.overflow = 'hidden';
-                        jQuery.post(ajaxUrl, { action: 'vance_get_calc_results', nonce: calcNonce, tool: type }, function(res) {
-                            if (!res.success || !res.data || res.data.length === 0) {
-                                body.innerHTML = '<div class="results-empty"><div class="empty-icon">📋</div>No saved results yet.<br>Run the calculator and tap &ldquo;Save Results&rdquo; to record your score.</div>';
-                                return;
-                            }
-                            var html = '';
-                            res.data.forEach(function(r) {
-                                var riskClass = r.risk_level === 'low' ? 'risk-low' : r.risk_level === 'medium' ? 'risk-medium' : 'risk-high';
-                                var dateStr = new Date(r.date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-                                var extra = r.bmi ? ' &nbsp;·&nbsp; BMI ' + r.bmi + ' (' + r.bmi_cat + ')' : '';
-                                if (r.ibd_type) extra += ' &nbsp;·&nbsp; ' + (r.ibd_type === 'crohns' ? "Crohn's" : r.ibd_type === 'uc' ? 'UC' : 'IBD');
-                                html += '<div class="result-entry">' +
-                                    '<div class="result-entry-left">' +
-                                    '<div class="result-entry-date">' + dateStr + '</div>' +
-                                    '<div class="result-entry-label" style="color:' + (r.risk_level==='low'?'#16a34a':r.risk_level==='medium'?'#d97706':'#008080') + '">' + (r.risk_label || 'Result') + '</div>' +
-                                    '<div class="result-entry-detail">Score: <strong>' + (r.score||'—') + '</strong>' + extra + '</div>' +
-                                    '</div>' +
-                                    '<span class="result-risk-badge ' + riskClass + '">' + (r.risk_label || 'Recorded') + '</span>' +
-                                    '</div>';
-                            });
-                            body.innerHTML = html;
-                        });
-                    }
-
-                    function closeResultsModal() {
-                        document.getElementById('results-modal-overlay').classList.remove('active');
-                        document.body.style.overflow = 'auto';
-                    }
-
-                    document.addEventListener('keydown', function(e) {
-                        if (e.key !== 'Escape') return;
-                        closeCalcPopup();
-                        closeResultsModal();
-                    });
-                    </script>
                 <?php break;
 
                 case 'reading-list': ?>
@@ -1260,7 +1058,7 @@ get_header();
                 case 'high-score': ?>
                     <div class="dash-grid-v2">
                         <div class="d-card d-col-8">
-                            <iframe src="<?php echo get_template_directory_uri(); ?>/assets/games/battleship-epa/index.html?user=<?php echo urlencode($first_name); ?>" style="width:100%; height:600px; border:none; border-radius:0; background:#F0F9FF;"></iframe>
+                            <iframe src="<?php echo get_template_directory_uri(); ?>/assets/games/pacman-vance/index.html?user=<?php echo urlencode($first_name); ?>" style="width:100%; height:600px; border:none; border-radius:0; background:#F0F9FF;" allow="autoplay; fullscreen"></iframe>
                         </div>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">

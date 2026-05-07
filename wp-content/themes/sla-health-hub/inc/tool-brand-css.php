@@ -112,6 +112,81 @@ main, [role="main"], body > div { padding-top: 16px !important; }
 [class*="text-amber-"] { color: #008080 !important; }
 [class*="border-orange-"],
 [class*="border-amber-"] { border-color: #008080 !important; }
+
+/* === GREENS → BRAND TEALS === */
+/* Tailwind / Vite-built greens (emerald, green, lime, teal-as-named) → brand palette */
+[class*="bg-green-"],
+[class*="bg-emerald-"],
+[class*="bg-lime-"]      { background-color: #008080 !important; }
+[class*="bg-green-50"],
+[class*="bg-emerald-50"] { background-color: #f4ffff !important; }
+[class*="bg-green-100"],
+[class*="bg-emerald-100"]{ background-color: #def4f4 !important; }
+[class*="bg-green-200"],
+[class*="bg-emerald-200"]{ background-color: #aedbdb !important; }
+[class*="bg-green-300"],
+[class*="bg-emerald-300"]{ background-color: #78bfbf !important; }
+[class*="text-green-"],
+[class*="text-emerald-"],
+[class*="text-lime-"]    { color: #008080 !important; }
+[class*="border-green-"],
+[class*="border-emerald-"],
+[class*="border-lime-"]  { border-color: #008080 !important; }
+[class*="ring-green-"],
+[class*="ring-emerald-"] { --tw-ring-color: #008080 !important; }
+[class*="from-green-"],
+[class*="from-emerald-"],
+[class*="from-lime-"]    { --tw-gradient-from: #008080 !important; }
+[class*="to-green-"],
+[class*="to-emerald-"],
+[class*="to-lime-"]      { --tw-gradient-to: #006666 !important; }
+
+/* Inline-style green hex catches (common Tailwind green shades + custom hexes used in the recipes bundle) */
+[style*="#10b981" i],
+[style*="#059669" i],
+[style*="#047857" i],
+[style*="#22c55e" i],
+[style*="#16a34a" i],
+[style*="#15803d" i],
+[style*="#84cc16" i],
+[style*="#65a30d" i],
+[style*="#4d7c0f" i] {
+    color: #008080 !important;
+}
+[style*="background:#10b981" i],
+[style*="background-color:#10b981" i],
+[style*="background: #10b981" i],
+[style*="background-color: #10b981" i],
+[style*="background:#059669" i],
+[style*="background-color:#059669" i],
+[style*="background:#22c55e" i],
+[style*="background-color:#22c55e" i],
+[style*="background:#16a34a" i],
+[style*="background-color:#16a34a" i] {
+    background-color: #008080 !important;
+    background: #008080 !important;
+}
+
+/* SQUARE CORNERS — kill border-radius on every content container/card so the
+   recipes app matches the rest of the brand (which uses border-radius: 0). */
+*,
+[class*="rounded"],
+[class*="card"],
+[class*="Card"],
+[class*="container"],
+[class*="Container"] {
+    border-radius: 0 !important;
+}
+/* Keep the visual circles round (avatar, status dots, icon buttons) — those
+   tend to use rounded-full / 9999px / 50%. Restore them by re-asserting. */
+[class*="rounded-full"],
+[class*="circle"],
+[style*="border-radius:9999"],
+[style*="border-radius: 9999"],
+[style*="border-radius:50%"],
+[style*="border-radius: 50%"] {
+    border-radius: 9999px !important;
+}
 CSS;
     }
 endif;

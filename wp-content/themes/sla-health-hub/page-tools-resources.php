@@ -99,6 +99,17 @@ get_header(); ?>
             'colors'   => array( '#def4f4', '#aedbdb', '#008080' ),
             'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />',
         ),
+        array(
+            // IBD Health Quiz lives as a PHP page template (page-healthcare-quiz.php),
+            // not as a /assets/tools/ bundle — so we just link to /healthcare-quiz/.
+            'slug'     => 'healthcare-quiz',
+            'page_url' => '/healthcare-quiz/',
+            'name'     => 'IBD Health Quiz',
+            'tag'      => 'Self-Assessment',
+            'desc'     => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.',
+            'colors'   => array( '#78bfbf', '#aedbdb', '#008080' ),
+            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>',
+        ),
     );
     ?>
     <section id="tools-grid" class="section-padding tools-grid-section" style="background: var(--accent-color);">

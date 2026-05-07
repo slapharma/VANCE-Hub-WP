@@ -1019,17 +1019,41 @@ function vance_pages_customize_register( $wp_customize ) {
         ),
     );
     foreach ( $tool_hero_specs as $key => $spec ) {
-        $wp_customize->add_section( $spec['section_id'], array( "title" => $spec['title'], "panel" => "vance_tools_panel" ) );
+        $section = $spec['section_id'];
+        $wp_customize->add_section( $section, array( "title" => $spec['title'], "panel" => "vance_tools_panel" ) );
+
+        // Tool name (H1) + colour/size.
         $wp_customize->add_setting( $spec['name_key'], array( "default" => $spec['name_default'], "sanitize_callback" => "sanitize_text_field" ) );
-        $wp_customize->add_control( $spec['name_key'], array( "label" => "Tool Name (H1)", "section" => $spec['section_id'], "type" => "text" ) );
+        $wp_customize->add_control( $spec['name_key'], array( "label" => "Tool Name (H1)", "section" => $section, "type" => "text" ) );
+        $wp_customize->add_setting( $spec['name_key'] . '_color', array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $spec['name_key'] . '_color', array( "label" => "Title Font Colour", "section" => $section ) ) );
+        $wp_customize->add_setting( $spec['name_key'] . '_size', array( "default" => 56, "sanitize_callback" => "absint" ) );
+        $wp_customize->add_control( $spec['name_key'] . '_size', array( "label" => "Title Font Size (px)", "section" => $section, "type" => "number", "input_attrs" => array( "min" => 24, "max" => 96, "step" => 2 ) ) );
+
+        // Subtitle + colour/size.
         $wp_customize->add_setting( $spec['sub_key'],  array( "default" => $spec['sub_default'], "sanitize_callback" => "sanitize_textarea_field" ) );
-        $wp_customize->add_control( $spec['sub_key'],  array( "label" => "Subtitle", "section" => $spec['section_id'], "type" => "textarea" ) );
+        $wp_customize->add_control( $spec['sub_key'],  array( "label" => "Subtitle", "section" => $section, "type" => "textarea" ) );
+        $wp_customize->add_setting( $spec['sub_key'] . '_color', array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $spec['sub_key'] . '_color', array( "label" => "Subtitle Font Colour", "section" => $section ) ) );
+        $wp_customize->add_setting( $spec['sub_key'] . '_size', array( "default" => 19, "sanitize_callback" => "absint" ) );
+        $wp_customize->add_control( $spec['sub_key'] . '_size', array( "label" => "Subtitle Font Size (px)", "section" => $section, "type" => "number", "input_attrs" => array( "min" => 12, "max" => 32, "step" => 1 ) ) );
+
+        // Badge: text + bg + fg.
+        $badge_key = str_replace( '_name', '_badge', $spec['name_key'] ); // vance_tool_omega_badge etc.
+        $wp_customize->add_setting( $badge_key,           array( "default" => "Free Tool", "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( $badge_key,           array( "label" => "Badge Text", "section" => $section, "type" => "text" ) );
+        $wp_customize->add_setting( $badge_key . '_bg',   array( "default" => "", "sanitize_callback" => "sanitize_text_field" ) ); // accepts rgba()
+        $wp_customize->add_control( $badge_key . '_bg',   array( "label" => "Badge Background (hex or rgba)", "section" => $section, "type" => "text" ) );
+        $wp_customize->add_setting( $badge_key . '_color', array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $badge_key . '_color', array( "label" => "Badge Font Colour", "section" => $section ) ) );
+
+        // Hero background image + overlay.
         $wp_customize->add_setting( $spec['bg_key'],   array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
-        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $spec['bg_key'], array( "label" => "Hero Background Image", "section" => $spec['section_id'] ) ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $spec['bg_key'], array( "label" => "Hero Background Image", "section" => $section ) ) );
         $wp_customize->add_setting( $spec['overlay_key'], array( "default" => 80, "sanitize_callback" => "absint" ) );
         $wp_customize->add_control( $spec['overlay_key'], array(
             "label"       => "Hero Overlay Opacity (%)",
-            "section"     => $spec['section_id'],
+            "section"     => $section,
             "type"        => "number",
             "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
         ) );
