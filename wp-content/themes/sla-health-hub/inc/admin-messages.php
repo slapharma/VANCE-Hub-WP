@@ -120,7 +120,13 @@ function vance_msg_legacy_url_redirect() {
 // $submenu filter, so subscribers don't see a tantalising "User Messages"
 // link they can't use.
 //
-add_action( 'admin_menu', 'vance_register_admin_messages_menu', 25 );
+// Priority 1000 — must run AFTER vance_register_content_hub_menu (priority 999
+// in functions.php) so $admin_page_hooks['vance-content-hub'] is populated
+// when add_submenu_page() computes our hookname. Registering before the parent
+// produces a malformed hookname like '_page_vance-user-messages', which
+// mismatches what admin.php looks up at request time → cap check fails → user
+// sees WP's stock "Sorry, you are not allowed to access this page."
+add_action( 'admin_menu', 'vance_register_admin_messages_menu', 1000 );
 function vance_register_admin_messages_menu() {
     add_submenu_page(
         'vance-content-hub',
@@ -134,7 +140,7 @@ function vance_register_admin_messages_menu() {
 
 // Hide the menu link from non-admins (page itself still answers; the gate is
 // enforced in the render function with a diagnostic wp_die for visibility).
-add_action( 'admin_menu', 'vance_hide_admin_messages_menu_for_non_admins', 99 );
+add_action( 'admin_menu', 'vance_hide_admin_messages_menu_for_non_admins', 1001 );
 function vance_hide_admin_messages_menu_for_non_admins() {
     if ( vance_msg_user_is_admin() ) {
         return;
