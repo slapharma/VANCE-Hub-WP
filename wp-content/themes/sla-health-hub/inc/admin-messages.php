@@ -58,6 +58,34 @@ function vance_register_message_cpt() {
     ) );
 }
 
+// ─── Diagnostic tracer ──────────────────────────────────────────────────────
+// TEMPORARY: log the current request's user state whenever someone hits the
+// User Messages URL. Writes to wp-content/uploads/vance-msg-debug.log so we
+// can read it via SSH and see exactly who/what WP is seeing on the request.
+// Removable once the access issue is resolved.
+add_action( 'init', 'vance_msg_debug_tracer', 0 );
+function vance_msg_debug_tracer() {
+    if ( empty( $_SERVER['REQUEST_URI'] ) ) return;
+    if ( strpos( $_SERVER['REQUEST_URI'], 'vance-user-messages' ) === false ) return;
+    $u = wp_get_current_user();
+    $entry = sprintf(
+        "[%s] uri=%s logged_in=%s user_id=%d login=%s roles=%s caps_admin=%s caps_mo=%s caps_read=%s caps_eu=%s remote=%s\n",
+        gmdate( 'c' ),
+        substr( $_SERVER['REQUEST_URI'], 0, 200 ),
+        is_user_logged_in() ? 'yes' : 'no',
+        $u ? (int) $u->ID : 0,
+        $u && ! empty( $u->user_login ) ? $u->user_login : '(none)',
+        $u && ! empty( $u->roles )      ? implode( ',', $u->roles ) : '(none)',
+        $u && ! empty( $u->allcaps['administrator'] ) ? '1' : '0',
+        $u && ! empty( $u->allcaps['manage_options'] ) ? '1' : '0',
+        $u && ! empty( $u->allcaps['read'] ) ? '1' : '0',
+        $u && ! empty( $u->allcaps['edit_users'] ) ? '1' : '0',
+        isset( $_SERVER['REMOTE_ADDR'] ) ? substr( $_SERVER['REMOTE_ADDR'], 0, 40 ) : '?'
+    );
+    $log = WP_CONTENT_DIR . '/uploads/vance-msg-debug.log';
+    @file_put_contents( $log, $entry, FILE_APPEND );
+}
+
 // ─── Friendly-URL redirect ───────────────────────────────────────────────────
 // Some users (and any external links) might hit the bare slug URL
 // /wp-admin/vance-user-messages without the admin.php?page= prefix. WP admin
