@@ -198,7 +198,7 @@ get_header();
     <aside class="dash-sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="/" class="dash-logo" style="display: flex; align-items: center; gap: 0; text-decoration: none;">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 40px; width: auto; object-fit: contain;">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 50px; width: auto; object-fit: contain;">
             </a>
             <button class="mobile-toggle" style="margin-left: auto; color: <?php echo $is_practitioner ? 'white' : '#0A1929'; ?>;" onclick="toggleSidebar()">✕</button>
         </div>
@@ -295,8 +295,24 @@ get_header();
                 <?php endif; ?>
             </div>
 
-            <?php switch($current_tab) : 
-                case 'home': ?>
+            <?php switch($current_tab) :
+                case 'home':
+                    // Admin-broadcast messages banner (latest 3 unread, marked read on render).
+                    if ( function_exists( 'vance_admin_messages_for_user' ) ) {
+                        $vance_unread_msgs = vance_admin_messages_for_user( $current_user->ID );
+                        $vance_unread_msgs = array_slice( $vance_unread_msgs, 0, 3 );
+                        if ( ! empty( $vance_unread_msgs ) ) {
+                            echo '<section class="vance-msg-banner" style="margin: 0 0 24px;">';
+                            $rendered_ids = array();
+                            foreach ( $vance_unread_msgs as $m ) {
+                                echo vance_admin_messages_render( $m, 'banner' );
+                                $rendered_ids[] = $m->ID;
+                            }
+                            echo '</section>';
+                            vance_admin_messages_mark_read( $current_user->ID, $rendered_ids );
+                        }
+                    }
+                    ?>
                     <style>
                         .dash-grid-v2 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
                         .d-card { background: white; border-radius: 0; padding: 24px; border: 1px solid #E2E8F0; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
@@ -1198,12 +1214,46 @@ get_header();
                     </div>
                 <?php break;
 
-                case 'messages': ?>
-                    <div class="dash-card">
-                        <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:0;">
-                            <h3 style="color:#0F172A; margin:0 0 10px 0;">Inbox Placeholder</h3>
-                            <p style="color:#64748B;">Internal and group messaging features are coming soon.</p>
-                        </div>
+                case 'messages':
+                    // Full message history — both unread and previously read.
+                    $all_msgs = function_exists( 'vance_admin_messages_for_user' )
+                        ? vance_admin_messages_for_user( $current_user->ID, true )
+                        : array();
+                    $unread_count = 0;
+                    if ( $all_msgs ) {
+                        foreach ( $all_msgs as $m ) {
+                            $r = (array) get_post_meta( $m->ID, '_sla_msg_read_by', true );
+                            if ( ! in_array( (int) $current_user->ID, array_map( 'intval', $r ), true ) ) $unread_count++;
+                        }
+                    }
+                    $rendered_ids = array();
+                    ?>
+                    <div class="dash-card" style="background: white; border: 1px solid #E2E8F0; padding: 28px;">
+                        <header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px;">
+                            <h2 style="margin: 0; color: #0F172A; font-size: 22px;">My Messages</h2>
+                            <?php if ( $unread_count > 0 ) : ?>
+                                <span style="background: #008080; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px;"><?php echo (int) $unread_count; ?> new</span>
+                            <?php endif; ?>
+                        </header>
+
+                        <?php if ( empty( $all_msgs ) ) : ?>
+                            <div style="text-align: center; padding: 48px; background: #F8FAFC; border: 1px dashed #E2E8F0;">
+                                <p style="color: #64748B; margin: 0;">No messages yet — the team will share updates and announcements here.</p>
+                            </div>
+                        <?php else : ?>
+                            <div class="vance-msg-list">
+                                <?php foreach ( $all_msgs as $m ) :
+                                    echo vance_admin_messages_render( $m, 'list' );
+                                    $rendered_ids[] = $m->ID;
+                                endforeach; ?>
+                            </div>
+                            <?php
+                            // Viewing the messages tab marks everything as read.
+                            if ( $rendered_ids ) {
+                                vance_admin_messages_mark_read( $current_user->ID, $rendered_ids );
+                            }
+                            ?>
+                        <?php endif; ?>
                     </div>
                 <?php break;
 

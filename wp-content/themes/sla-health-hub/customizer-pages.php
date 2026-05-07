@@ -865,9 +865,43 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_edu_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_edu_hero" ) ) );
     $wp_customize->add_setting( "vance_edu_hero_overlay", array( "default" => 75, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_edu_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_edu_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+    $wp_customize->add_setting( "vance_edu_hero_eyebrow_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_hero_eyebrow_color", array( "label" => "Hero Eyebrow Colour",       "section" => "vance_edu_hero" ) ) );
+    $wp_customize->add_setting( "vance_edu_hero_title_color",   array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_hero_title_color",   array( "label" => "Hero Title Colour",         "section" => "vance_edu_hero" ) ) );
+
+    // Education Intro
+    $wp_customize->add_section( "vance_edu_intro", array( "title" => "Intro Section", "panel" => "vance_edu_panel" ) );
+    $wp_customize->add_setting( "vance_edu_intro_bg", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_bg", array( "label" => "Background Colour", "section" => "vance_edu_intro" ) ) );
+    $wp_customize->add_setting( "vance_edu_intro_text_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_intro_text_color", array( "label" => "Text Colour (blank = theme defaults)", "section" => "vance_edu_intro" ) ) );
+    $wp_customize->add_setting( "vance_edu_intro_align", array( "default" => "center", "sanitize_callback" => "sanitize_key" ) );
+    $wp_customize->add_control( "vance_edu_intro_align", array(
+        "label"   => "Text Position",
+        "section" => "vance_edu_intro",
+        "type"    => "radio",
+        "choices" => array( "left" => "Left", "center" => "Centre", "right" => "Right" ),
+    ) );
+    $wp_customize->add_setting( "vance_edu_intro_pad_top",    array( "default" => 60, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_edu_intro_pad_top",    array( "label" => "Padding Top (px)",    "section" => "vance_edu_intro", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 200, "step" => 5 ) ) );
+    $wp_customize->add_setting( "vance_edu_intro_pad_bottom", array( "default" => 20, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_edu_intro_pad_bottom", array( "label" => "Padding Bottom (px)", "section" => "vance_edu_intro", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 200, "step" => 5 ) ) );
 
     // Education Tracks
     $wp_customize->add_section( "vance_edu_tracks", array( "title" => "Course Tracks", "panel" => "vance_edu_panel" ) );
+    $wp_customize->add_setting( "vance_edu_tracks_eyebrow", array( "default" => "Two Tracks. One Standard.", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_tracks_eyebrow", array( "label" => "Section Eyebrow", "section" => "vance_edu_tracks", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_tracks_heading", array( "default" => "Built for the people who need it most", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_edu_tracks_heading", array( "label" => "Section Heading", "section" => "vance_edu_tracks", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_tracks_desc",    array( "default" => "Every course is co-developed with practising clinicians and reviewed by patient advisors before release.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_edu_tracks_desc",    array( "label" => "Section Description", "section" => "vance_edu_tracks", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_edu_tracks_bg",          array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_tracks_bg",          array( "label" => "Section Background Colour",     "section" => "vance_edu_tracks" ) ) );
+    $wp_customize->add_setting( "vance_edu_tracks_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_tracks_title_color", array( "label" => "Title Colour (blank = theme)",  "section" => "vance_edu_tracks" ) ) );
+    $wp_customize->add_setting( "vance_edu_tracks_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_tracks_text_color",  array( "label" => "Body Text Colour (blank = theme)", "section" => "vance_edu_tracks" ) ) );
     $track_defaults = array(
         1 => array( "Patient Courses", "Self-paced modules on living with IBD: nutrition fundamentals, symptom tracking, mealtime confidence, and working with your care team. Designed in plain English with downloadable worksheets." ),
         2 => array( "Practitioner Courses", "CPD-accredited deep dives on FSMP integration, Omega-3 dosing, malnutrition screening, and translating evidence into protocols. Built for gastroenterologists, dietitians, GPs, and pharmacists." ),
@@ -889,6 +923,12 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_edu_waitlist_action",  array( "label" => "Form Action URL (Mailchimp/HubSpot endpoint — leave blank to hide form)", "section" => "vance_edu_waitlist", "type" => "url" ) );
     $wp_customize->add_setting( "vance_edu_waitlist_button",  array( "default" => "Notify Me", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_edu_waitlist_button",  array( "label" => "Button Label", "section" => "vance_edu_waitlist", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_bg_from",    array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_bg_from",    array( "label" => "Gradient — From Colour", "section" => "vance_edu_waitlist" ) ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_bg_to",      array( "default" => "#006666", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_bg_to",      array( "label" => "Gradient — To Colour",   "section" => "vance_edu_waitlist" ) ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_text_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_text_color", array( "label" => "Text Colour",            "section" => "vance_edu_waitlist" ) ) );
 
     // ============================================================
     // TOOLS & RESOURCES PAGE PANEL
@@ -929,6 +969,71 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_tools_intro_eyebrow_bg",    array( "label" => "Eyebrow Background (hex or rgba)", "section" => "vance_tools_intro", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_intro_eyebrow_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_tools_intro_eyebrow_color", array( "label" => "Eyebrow Font Colour", "section" => "vance_tools_intro" ) ) );
+
+    // ============================================================
+    // PER-TOOL HERO SECTIONS — grouped under the Tools panel.
+    // Mods read by page-{slug}.php wrapper templates (omega-3, malnutrition,
+    // blood-test, ibd-recipies). Each tool gets one section with name,
+    // subtitle, hero bg image, and overlay slider.
+    // ============================================================
+    $tool_hero_specs = array(
+        'omega'        => array(
+            'section_id'   => 'vance_tools_hero_omega',
+            'title'        => 'Omega-3 Calculator — Hero',
+            'name_key'     => 'vance_tool_omega_name',
+            'sub_key'      => 'vance_tool_omega_subtitle',
+            'bg_key'       => 'vance_tool_omega_hero_bg',
+            'overlay_key'  => 'vance_tool_omega_hero_overlay',
+            'name_default' => 'Omega-3 Calculator',
+            'sub_default'  => 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance — built on the latest gastroenterology evidence.',
+        ),
+        'malnutrition' => array(
+            'section_id'   => 'vance_tools_hero_malnutrition',
+            'title'        => 'Malnutrition Calculator — Hero',
+            'name_key'     => 'vance_tool_malnutrition_name',
+            'sub_key'      => 'vance_tool_malnutrition_subtitle',
+            'bg_key'       => 'vance_tool_malnutrition_hero_bg',
+            'overlay_key'  => 'vance_tool_malnutrition_hero_overlay',
+            'name_default' => 'IBD Malnutrition Calculator',
+            'sub_default'  => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.',
+        ),
+        'blood'        => array(
+            'section_id'   => 'vance_tools_hero_blood',
+            'title'        => 'Blood Test Analyser — Hero',
+            'name_key'     => 'vance_tool_blood_name',
+            'sub_key'      => 'vance_tool_blood_subtitle',
+            'bg_key'       => 'vance_tool_blood_hero_bg',
+            'overlay_key'  => 'vance_tool_blood_hero_overlay',
+            'name_default' => 'IBD Blood Test Analyser',
+            'sub_default'  => 'Drop in your blood panel results and get plain-language analysis flagging anything outside reference ranges. Designed to help you prepare for your next clinic appointment.',
+        ),
+        'recipes'      => array(
+            'section_id'   => 'vance_tools_hero_recipes',
+            'title'        => 'IBD Recipes — Hero',
+            'name_key'     => 'vance_tool_recipes_name',
+            'sub_key'      => 'vance_tool_recipes_subtitle',
+            'bg_key'       => 'vance_tool_recipes_hero_bg',
+            'overlay_key'  => 'vance_tool_recipes_hero_overlay',
+            'name_default' => 'IBD Recipes & Meal Planner',
+            'sub_default'  => 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely — saving plans takes two clicks to create your free account.',
+        ),
+    );
+    foreach ( $tool_hero_specs as $key => $spec ) {
+        $wp_customize->add_section( $spec['section_id'], array( "title" => $spec['title'], "panel" => "vance_tools_panel" ) );
+        $wp_customize->add_setting( $spec['name_key'], array( "default" => $spec['name_default'], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( $spec['name_key'], array( "label" => "Tool Name (H1)", "section" => $spec['section_id'], "type" => "text" ) );
+        $wp_customize->add_setting( $spec['sub_key'],  array( "default" => $spec['sub_default'], "sanitize_callback" => "sanitize_textarea_field" ) );
+        $wp_customize->add_control( $spec['sub_key'],  array( "label" => "Subtitle", "section" => $spec['section_id'], "type" => "textarea" ) );
+        $wp_customize->add_setting( $spec['bg_key'],   array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $spec['bg_key'], array( "label" => "Hero Background Image", "section" => $spec['section_id'] ) ) );
+        $wp_customize->add_setting( $spec['overlay_key'], array( "default" => 80, "sanitize_callback" => "absint" ) );
+        $wp_customize->add_control( $spec['overlay_key'], array(
+            "label"       => "Hero Overlay Opacity (%)",
+            "section"     => $spec['section_id'],
+            "type"        => "number",
+            "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
+        ) );
+    }
 
     // ============================================================
     // TURN EVIDENCE INTO ACTION — full content + styling controls
@@ -1095,6 +1200,8 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ─── Styling (page-wide overrides) ────────────────────────────
     $wp_customize->add_section( "vance_evidence_styling", array( "title" => "Page Styling", "panel" => "vance_evidence_panel" ) );
+    $wp_customize->add_setting( "vance_evidence_hero_bg_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_hero_bg_color", array( "label" => "Hero Background Colour (overrides image)", "section" => "vance_evidence_styling" ) ) );
     $wp_customize->add_setting( "vance_evidence_pillars_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_bg",     array( "label" => "Pillars Section Background", "section" => "vance_evidence_styling" ) ) );
     $wp_customize->add_setting( "vance_evidence_proc_bg",        array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );

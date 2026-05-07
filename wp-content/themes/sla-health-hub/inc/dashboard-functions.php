@@ -4,6 +4,9 @@
  * Handles AJAX requests for Profile Saving, Bookmarking, etc.
  */
 
+// User-message broadcast tool (admin page + CPT + dashboard render helpers).
+require_once get_template_directory() . '/inc/admin-messages.php';
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
