@@ -269,11 +269,20 @@ body {
 </style>
 
     <?php
-    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,promo,cats,discovery,join,kb,testimonials');
+    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,pathway_content,promo,cats,discovery,join,kb,testimonials');
     $sections = array_map( 'trim', explode( ',', $section_order ) );
     // Ensure testimonials always appears even if the saved customizer order predates this section.
     if ( ! in_array( 'testimonials', $sections, true ) ) {
         $sections[] = 'testimonials';
+    }
+    // Auto-insert 'pathway_content' after 'pathway' for admins whose saved order predates this block.
+    if ( ! in_array( 'pathway_content', $sections, true ) ) {
+        $idx = array_search( 'pathway', $sections, true );
+        if ( $idx !== false ) {
+            array_splice( $sections, $idx + 1, 0, 'pathway_content' );
+        } else {
+            $sections[] = 'pathway_content';
+        }
     }
 
     foreach ($sections as $section_id) {
@@ -550,6 +559,216 @@ body {
                                 <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
                                 <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
                                 <?php if ($show_date) : ?>
+                                <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
+                                <?php endif; ?>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else : ?>
+                        <div style="background: white; border-radius: 0; padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
+                            <p style="color: #64748b; margin: 0;">No posts found for this selection.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+                <?php
+                break;
+
+            case 'pathway_content':
+                // Cloned from 'pathway' (Who Am I? tiles + Latest Content bento).
+                // Replaces the two left-side audience cards with TOOL cards:
+                // - Healthcare Quiz  -> /healthcare-quiz/
+                // - Ask AI            -> /ask-ai/
+                // Each card now gives the image full visual weight (180px hero strip,
+                // not the original 80px afterthought) since this block is image-led.
+                $pwc_hover_color    = vance_get_theme_mod('vance_pwc_card_hover_color', '#008080');
+                $pwc_icon_bg        = vance_get_theme_mod('vance_pwc_icon_bg_color', '#0A1929');
+                $pwc_icon_hover_bg  = vance_get_theme_mod('vance_pwc_icon_hover_bg_color', 'rgba(255,255,255,0.2)');
+                $pwc_label          = vance_get_theme_mod('vance_pwc_label', 'Featured Tools');
+                $pwc_section_bg     = vance_get_theme_mod('vance_pwc_section_bg', '#ffffff');
+                $pwc_latest_title   = vance_get_theme_mod('vance_pwc_latest_title', 'LATEST CONTENT');
+                $pwc_latest_count   = vance_get_theme_mod('vance_pwc_latest_count', 3);
+                $pwc_latest_cat     = (int) vance_get_theme_mod('vance_pwc_latest_category', 0);
+                $pwc_show_date      = vance_get_theme_mod('vance_pwc_latest_show_date', true);
+
+                $pwc_cpt = array(
+                    'post', 'news', 'research', 'oped', 'review',
+                    'whitepaper', 'podcast', 'webinar', 'course', 'infographic',
+                );
+                $pwc_args = array(
+                    'numberposts' => $pwc_latest_count,
+                    'post_status' => 'publish',
+                    'post_type'   => $pwc_cpt,
+                    'orderby'     => 'date',
+                    'order'       => 'DESC',
+                );
+                if ($pwc_latest_cat > 0) { $pwc_args['category'] = $pwc_latest_cat; }
+                $pwc_latest_posts = get_posts($pwc_args);
+                ?>
+    <!-- Pathway Content (Featured Tools + Latest Content) -->
+    <style>
+        .pathway-content-section {
+            padding: 80px 0 60px;
+            background: <?php echo esc_attr($pwc_section_bg); ?>;
+        }
+        .pwc-card {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            padding: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1.5px solid #e2e8f0;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            height: 100%;
+        }
+        .pwc-card:hover {
+            background: <?php echo esc_attr($pwc_hover_color); ?>;
+            border-color: <?php echo esc_attr($pwc_hover_color); ?>;
+            transform: translateY(-4px);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+        }
+        .pwc-card-image {
+            width: 100%;
+            height: 180px;
+            background-position: center center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-color: <?php echo esc_attr($pwc_icon_bg); ?>;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pwc-card-image .pwc-fallback-icon {
+            font-size: 56px;
+            color: #ffffff;
+            opacity: 0.85;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+        }
+        .pwc-card-body {
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-between;
+        }
+        .pwc-card:hover .pwc-card-body h2,
+        .pwc-card:hover .pwc-card-body p {
+            color: white !important;
+        }
+        @media (max-width: 992px) {
+            .pathway-content-section { padding-top: 60px; }
+            .pwc-card-image { height: 140px; }
+        }
+    </style>
+    <section class="pathway-content-section">
+        <div class="container">
+            <div class="pathway-split-grid">
+                <!-- Left: 2 stacked TOOL tiles -->
+                <div class="pathway-tiles-stack" style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
+                    <!-- Section Label: Featured Tools -->
+                    <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
+                        <div class="section-label-left">
+                            <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
+                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html($pwc_label); ?></h2>
+                        </div>
+                    </div>
+
+                    <!-- Healthcare Quiz -->
+                    <?php
+                    $hq_title = vance_get_theme_mod('vance_hquiz_tile_title', 'Healthcare Quiz');
+                    $hq_desc  = vance_get_theme_mod('vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.');
+                    $hq_extra = vance_get_theme_mod('vance_hquiz_tile_extra', 'Find your starting point');
+                    $hq_img   = vance_get_theme_mod('vance_hquiz_tile_image');
+                    $hq_link  = vance_get_theme_mod('vance_hquiz_tile_link',  '/healthcare-quiz/');
+                    ?>
+                    <a href="<?php echo esc_url($hq_link); ?>" class="pwc-card" style="flex: 1;">
+                        <div class="pwc-card-image" style="<?php echo $hq_img ? 'background-image: url(\'' . esc_url($hq_img) . '\');' : ''; ?>">
+                            <?php if ( ! $hq_img ) : ?>
+                                <span class="pwc-fallback-icon">?</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="pwc-card-body">
+                            <div>
+                                <h2 style="font-size: 22px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;"><?php echo esc_html($hq_title); ?></h2>
+                                <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html($hq_desc); ?></p>
+                            </div>
+                            <p style="font-weight: 700; color: var(--primary-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo esc_html($hq_extra); ?></p>
+                        </div>
+                    </a>
+
+                    <!-- Ask AI -->
+                    <?php
+                    $ai_title = vance_get_theme_mod('vance_askai_tile_title', 'Ask AI');
+                    $ai_desc  = vance_get_theme_mod('vance_askai_tile_desc',  'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.');
+                    $ai_extra = vance_get_theme_mod('vance_askai_tile_extra', 'Personalised answers, 24/7');
+                    $ai_img   = vance_get_theme_mod('vance_askai_tile_image');
+                    $ai_link  = vance_get_theme_mod('vance_askai_tile_link',  '/ask-ai/');
+                    ?>
+                    <a href="<?php echo esc_url($ai_link); ?>" class="pwc-card" style="flex: 1;">
+                        <div class="pwc-card-image" style="<?php echo $ai_img ? 'background-image: url(\'' . esc_url($ai_img) . '\');' : ''; ?>">
+                            <?php if ( ! $ai_img ) : ?>
+                                <span class="pwc-fallback-icon">AI</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="pwc-card-body">
+                            <div>
+                                <h2 style="font-size: 22px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;"><?php echo esc_html($ai_title); ?></h2>
+                                <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html($ai_desc); ?></p>
+                            </div>
+                            <p style="font-weight: 700; color: var(--primary-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo esc_html($ai_extra); ?></p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Right: Latest Content Bento (independent customizer settings — vance_pwc_latest_*) -->
+                <div class="latest-content-column">
+                    <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
+                        <div class="section-label-left">
+                            <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
+                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html($pwc_latest_title); ?></h2>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($pwc_latest_posts) && count($pwc_latest_posts) >= 3) : ?>
+                    <div class="bento-grid-news">
+                        <?php $p = $pwc_latest_posts[0]; ?>
+                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured">
+                            <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
+                            <div class="bento-content-overlay">
+                                <span class="tag" style="background: var(--primary-color);">Featured</span>
+                                <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo get_the_title($p->ID); ?></h3>
+                                <?php if ($pwc_show_date) : ?>
+                                <div class="meta" style="color: rgba(255,255,255,0.8);">By <?php echo get_the_author_meta('display_name', $p->post_author); ?> &bull; <?php echo get_the_date('', $p->ID); ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </a>
+                        <div style="display: flex; flex-direction: column; gap: 24px; grid-row: 1 / -1;">
+                            <?php for ($i = 1; $i <= 2; $i++) : $p = $pwc_latest_posts[$i]; ?>
+                            <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
+                                <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
+                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
+                                <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
+                                <?php if ($pwc_show_date) : ?>
+                                <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
+                                <?php endif; ?>
+                            </a>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                    <?php elseif (!empty($pwc_latest_posts)) : ?>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <?php foreach ($pwc_latest_posts as $p) : ?>
+                            <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
+                                <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
+                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
+                                <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
+                                <?php if ($pwc_show_date) : ?>
                                 <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
                                 <?php endif; ?>
                             </a>

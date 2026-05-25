@@ -2150,6 +2150,74 @@ function vance_customize_register( $wp_customize ) {
         'section' => 'vance_pathway_tiles_settings',
     ) ) );
 
+    // 2.6.7 Pathway Content (cloned Pathway Tiles — Featured Tools cards)
+    $wp_customize->add_section( 'vance_pathway_content_settings', array(
+        'title'       => __( 'Pathway Content (Featured Tools)', 'sla-health-hub' ),
+        'priority'    => 31.7,
+        'panel'       => 'vance_homepage_panel',
+        'description' => __( 'Cloned Pathway Tiles block with Healthcare Quiz + Ask AI cards. Showing/hiding controlled by Homepage Order — add or remove "pathway_content" from that list.', 'sla-health-hub' ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_pwc_label', array( 'label' => 'Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_pwc_section_bg', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_section_bg', array( 'label' => 'Section Background', 'section' => 'vance_pathway_content_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_pwc_card_hover_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_card_hover_color', array( 'label' => 'Card Hover Colour', 'section' => 'vance_pathway_content_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_pwc_icon_bg_color', array( 'default' => '#0A1929', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_icon_bg_color', array( 'label' => 'Image Placeholder Background', 'section' => 'vance_pathway_content_settings' ) ) );
+
+    // Card 1: Healthcare Quiz
+    $wp_customize->add_setting( 'vance_hquiz_tile_title', array( 'default' => 'Healthcare Quiz', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_title', array( 'label' => 'Healthcare Quiz — Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_hquiz_tile_desc', array( 'default' => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.', 'sanitize_callback' => 'sanitize_textarea_field' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_desc', array( 'label' => 'Healthcare Quiz — Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
+
+    $wp_customize->add_setting( 'vance_hquiz_tile_extra', array( 'default' => 'Find your starting point', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_extra', array( 'label' => 'Healthcare Quiz — Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_hquiz_tile_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_hquiz_tile_image', array( 'label' => 'Healthcare Quiz — Image', 'section' => 'vance_pathway_content_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hquiz_tile_link', array( 'default' => '/healthcare-quiz/', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_link', array( 'label' => 'Healthcare Quiz — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    // Card 2: Ask AI
+    $wp_customize->add_setting( 'vance_askai_tile_title', array( 'default' => 'Ask AI', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_askai_tile_title', array( 'label' => 'Ask AI — Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_askai_tile_desc', array( 'default' => 'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.', 'sanitize_callback' => 'sanitize_textarea_field' ) );
+    $wp_customize->add_control( 'vance_askai_tile_desc', array( 'label' => 'Ask AI — Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
+
+    $wp_customize->add_setting( 'vance_askai_tile_extra', array( 'default' => 'Personalised answers, 24/7', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_askai_tile_extra', array( 'label' => 'Ask AI — Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_askai_tile_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_tile_image', array( 'label' => 'Ask AI — Image', 'section' => 'vance_pathway_content_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_askai_tile_link', array( 'default' => '/ask-ai/', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_askai_tile_link', array( 'label' => 'Ask AI — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    // Pathway Content — Latest Content (right column)
+    $wp_customize->add_setting( 'vance_pwc_latest_title', array( 'default' => 'LATEST CONTENT', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_title', array( 'label' => 'Right Column — Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_pwc_latest_count', array( 'default' => 3, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column — Number of Posts', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ) ) );
+
+    $wp_customize->add_setting( 'vance_pwc_latest_category', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
+    $cats = get_categories( array( 'hide_empty' => false ) );
+    $cat_choices = array( 0 => 'All Categories' );
+    foreach ( $cats as $c ) { $cat_choices[ $c->term_id ] = $c->name; }
+    $wp_customize->add_control( 'vance_pwc_latest_category', array( 'label' => 'Right Column — Category Filter', 'section' => 'vance_pathway_content_settings', 'type' => 'select', 'choices' => $cat_choices ) );
+
+    $wp_customize->add_setting( 'vance_pwc_latest_show_date', array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_show_date', array( 'label' => 'Right Column — Show Post Date', 'section' => 'vance_pathway_content_settings', 'type' => 'checkbox' ) );
+
     // 2.6.5 Latest Content Grid Settings (Right side of Pathway section)
     $wp_customize->add_section( 'vance_pathway_latest_settings', array(
         'title'    => __( 'Pathway Section: Latest Content', 'sla-health-hub' ),
