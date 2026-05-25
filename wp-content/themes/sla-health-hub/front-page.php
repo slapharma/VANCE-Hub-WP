@@ -311,12 +311,13 @@ body {
     $hero_title_size = vance_get_theme_mod('vance_hero_title_size', 52);
     $hero_title_color = vance_get_theme_mod('vance_hero_title_color', '#ffffff');
     $hero_subtitle_color = vance_get_theme_mod('vance_hero_subtitle_color', '#cbd5e1');
+    $hero_bg_color = vance_get_theme_mod('vance_hero_bg_color', '#0A1929');
 
-    $hero_bg_style = "background: url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
+    $hero_bg_style = "background-color: " . esc_attr($hero_bg_color) . "; background: url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
     if ($mask_enabled) {
         $alpha1 = $mask_opacity;
         $alpha2 = min(1, $alpha1 + 0.15);
-        $hero_bg_style = "background: linear-gradient(rgba(10, 25, 41, {$alpha1}), rgba(10, 25, 41, {$alpha2})), url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
+        $hero_bg_style = "background-color: " . esc_attr($hero_bg_color) . "; background: linear-gradient(rgba(10, 25, 41, {$alpha1}), rgba(10, 25, 41, {$alpha2})), url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
     }
     ?>
     <section class="hero patient-hero" style="padding: 95px 0 140px; display: flex; align-items: center; <?php echo $hero_bg_style; ?> color: white; position: relative; overflow: hidden;">
@@ -384,11 +385,12 @@ body {
     $pathway_icon_bg        = vance_get_theme_mod('vance_pathway_icon_bg_color', '#0A1929');
     $pathway_icon_hover_bg  = vance_get_theme_mod('vance_pathway_icon_hover_bg_color', 'rgba(255,255,255,0.2)');
     $pathway_who_label      = vance_get_theme_mod('vance_pathway_who_label', 'Who Am I?');
+    $pathway_section_bg     = vance_get_theme_mod('vance_pathway_section_bg', '#f8fafc');
     ?>
     <style>
         .pathway-tiles-section {
             padding: 80px 0 60px;
-            background: #f8fafc;
+            background: <?php echo esc_attr($pathway_section_bg); ?>;
         }
         .pathway-split-grid {
             display: grid;
@@ -601,6 +603,7 @@ body {
                 // Layout settings
                 $cards_per_row = vance_get_theme_mod('vance_homepage_cards_per_row', 6);
                 $justification = vance_get_theme_mod('vance_homepage_card_alignment', 'center');
+                $cats_section_bg = vance_get_theme_mod('vance_cats_section_bg', '#ffffff');
                 $all_cats = get_categories(array('hide_empty' => false));
                 $cards = array();
                 
@@ -623,7 +626,7 @@ body {
                     $justify = ($justification === 'left') ? 'start' : (($justification === 'right') ? 'end' : 'center');
                 ?>
     <!-- CATEGORY CARDS SECTION -->
-    <section class="category-cards-section" style="padding: 20px 0 40px; position: relative;">
+    <section class="category-cards-section" style="padding: 20px 0 40px; position: relative; background-color: <?php echo esc_attr($cats_section_bg); ?>;">
         <div class="container">
             <div style="display: grid; grid-template-columns: <?php echo $grid_cols; ?>; gap: 15px; justify-items: <?php echo $justify; ?>;">
                 <?php foreach ($cards as $item): 
@@ -1259,6 +1262,7 @@ body {
             case 'kb':
                 $kb_title = vance_get_theme_mod('vance_kb_mini_hero_title', 'IBD RESEARCH CENTRE');
                 $kb_subtitle = vance_get_theme_mod('vance_kb_mini_hero_subtitle', 'Catch Up on the Latest Articles and More...');
+                $kb_wrapper_bg = vance_get_theme_mod('vance_kb_wrapper_bg', '#ffffff');
                 $kb_padding = vance_get_theme_mod('vance_kb_mini_hero_padding', '60px 0 80px');
                 $kb_height = vance_get_theme_mod('vance_kb_mini_hero_height', '');
                 $kb_font_color = vance_get_theme_mod('vance_kb_mini_hero_font_color', '#ffffff');
@@ -1272,7 +1276,7 @@ body {
                     $hero_style .= " min-height: " . esc_attr($kb_height) . "px; display: flex; align-items: center;";
                 }
                 ?>
-    <section class="kb-section-wrapper" style="border-top: 2px solid var(--primary-color);">
+    <section class="kb-section-wrapper" style="border-top: 2px solid var(--primary-color); background-color: <?php echo esc_attr($kb_wrapper_bg); ?>;">
         <section class="kb-mini-hero" style="<?php echo $hero_style; ?>">
             <div class="container" style="width: 100%;">
                 <h2 style="font-family: 'Outfit', sans-serif; font-size: 38px; font-weight: 800; margin: 0 0 12px 0; color: inherit;"><?php echo esc_html($kb_title); ?></h2>
