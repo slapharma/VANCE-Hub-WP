@@ -339,6 +339,22 @@ h6 {
     color: #cbd5e1;
 }
 
+/* Section-level tag — same box-outline shape as .tag-label, defaults tuned for light section backgrounds.
+   Inline styles from the Customizer override background/colour/border per-section. */
+.tag-section {
+    background: rgba(0, 128, 128, 0.08);
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(0, 128, 128, 0.25);
+    color: var(--primary-color, #008080);
+}
+
 .hero h1 {
     font-size: 64px;
     line-height: 1.1;
@@ -2123,7 +2139,7 @@ h6 {
     }
 
     .site-logo {
-        width: 220px !important; /* Vance rebrand: +25% from 175px after new logo file */
+        width: 264px !important; /* +20% from 220px */
     }
 
     .main-nav {
@@ -2278,14 +2294,14 @@ h6 {
 }
 
 .site-logo {
-    width: 325px; /* Vance rebrand: +25% from 259px after new logo file */
+    width: 390px; /* +20% from 325px */
     height: auto;
     display: block;
 }
 
 @media (max-width: 768px) {
     .site-logo {
-        width: 220px !important; /* Vance rebrand: +25% from 175px after new logo file */
+        width: 264px !important; /* +20% from 220px */
     }
 }
 

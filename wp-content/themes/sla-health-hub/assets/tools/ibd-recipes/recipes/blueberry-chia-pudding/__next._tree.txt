@@ -1,0 +1,2 @@
+:HL["/wp-content/themes/sla-health-hub/assets/tools/ibd-recipes/_next/static/chunks/00w8_1d55.cxu.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"recipes","param":null,"prefetchHints":0,"slots":{"children":{"name":"id","param":{"type":"d","key":"blueberry-chia-pudding","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"tTsXgClLxTq4vhDGTo8oI"}

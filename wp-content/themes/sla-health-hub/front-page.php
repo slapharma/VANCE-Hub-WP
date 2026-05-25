@@ -269,8 +269,12 @@ body {
 </style>
 
     <?php
-    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,promo,cats,discovery,join,kb');
-    $sections = explode(',', $section_order);
+    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,promo,cats,discovery,join,kb,testimonials');
+    $sections = array_map( 'trim', explode( ',', $section_order ) );
+    // Ensure testimonials always appears even if the saved customizer order predates this section.
+    if ( ! in_array( 'testimonials', $sections, true ) ) {
+        $sections[] = 'testimonials';
+    }
 
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);
@@ -696,6 +700,30 @@ body {
     $askai_input_bg        = vance_get_theme_mod('vance_discovery_askai_input_bg',     'rgba(255,255,255,0.06)');
     $askai_input_color     = vance_get_theme_mod('vance_discovery_askai_input_color',  '#ffffff');
     $askai_input_border    = vance_get_theme_mod('vance_discovery_askai_input_border', 'rgba(255,255,255,0.12)');
+
+    // Action button colours (solid, no gradient). Blank = keep existing class default.
+    $btn_go_bg       = vance_get_theme_mod('vance_discovery_btn_go_bg',       '');
+    $btn_go_color    = vance_get_theme_mod('vance_discovery_btn_go_color',    '#ffffff');
+    $btn_clear_bg    = vance_get_theme_mod('vance_discovery_btn_clear_bg',    '');
+    $btn_clear_color = vance_get_theme_mod('vance_discovery_btn_clear_color', '#ffffff');
+    $btn_save_bg     = vance_get_theme_mod('vance_discovery_btn_save_bg',     '');
+    $btn_save_color  = vance_get_theme_mod('vance_discovery_btn_save_color',  '#ffffff');
+    $btn_send_bg     = vance_get_theme_mod('vance_discovery_btn_send_bg',     '');
+    $btn_send_color  = vance_get_theme_mod('vance_discovery_btn_send_color',  '#ffffff');
+
+    // Status text — "AI (Online)" and "Content Filters (Active)".
+    $status_ai_size       = (int) vance_get_theme_mod('vance_discovery_status_ai_size',       10);
+    $status_ai_color      = vance_get_theme_mod('vance_discovery_status_ai_color',            '#22C55E');
+    $status_filters_size  = (int) vance_get_theme_mod('vance_discovery_status_filters_size',  10);
+    $status_filters_color = vance_get_theme_mod('vance_discovery_status_filters_color',       'rgba(255,255,255,0.5)');
+
+    $btn_style = function($bg, $color) {
+        if (!$bg) return '';
+        return 'background:' . esc_attr($bg) . ' !important;'
+             . 'background-image:none !important;'
+             . 'border-color:' . esc_attr($bg) . ' !important;'
+             . 'color:' . esc_attr($color) . ' !important;';
+    };
     ?>
     <section id="discovery-suite" class="discovery-suite-section" style="padding: 60px 0 60px; background: <?php echo esc_attr($section_bg); ?>; position: relative; overflow: hidden;">
         <!-- Background shimmer effects -->
@@ -726,7 +754,7 @@ body {
                                     </div>
                                     <div>
                                         <div style="font-size: <?php echo (int) $disc_filters_size; ?>px; font-weight: 700; color: <?php echo esc_attr($disc_filters_color); ?>; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;"><?php echo esc_html($disc_filters_text); ?></div>
-                                        <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 1px;"><span style="display:inline-block; width:6px; height:6px; background:#22c55e; border-radius:50%; margin-right:4px; vertical-align:middle;"></span>Active</div>
+                                        <div style="font-size: <?php echo (int) $status_filters_size; ?>px; color: <?php echo esc_attr($status_filters_color); ?>; margin-top: 1px;"><span style="display:inline-block; width:6px; height:6px; background:#22c55e; border-radius:50%; margin-right:4px; vertical-align:middle;"></span>Active</div>
                                     </div>
                                 </div>
                             </div>
@@ -828,9 +856,9 @@ body {
 
                             <!-- ACTION ROW — pinned to bottom, aligns with Send button -->
                             <div class="action-row" style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 14px;">
-                                    <button type="submit" class="btn-go">GO</button>
-                                    <button type="reset" class="btn-text" onclick="setTimeout(()=>window.location.reload(), 100)">Clear</button>
-                                    <button type="button" class="btn-text" onclick="openSaveSearchModal()">Save Search</button>
+                                    <button type="submit" class="btn-go" style="<?php echo $btn_style($btn_go_bg, $btn_go_color); ?>">GO</button>
+                                    <button type="reset" class="btn-text" onclick="setTimeout(()=>window.location.reload(), 100)" style="<?php echo $btn_style($btn_clear_bg, $btn_clear_color); ?>">Clear</button>
+                                    <button type="button" class="btn-text" onclick="openSaveSearchModal()" style="<?php echo $btn_style($btn_save_bg, $btn_save_color); ?>">Save Search</button>
                                 </div>
                             </form>
                         </div>
@@ -846,7 +874,7 @@ body {
                                     </div>
                                     <div>
                                         <div class="agent-name" style="font-size: <?php echo (int) $disc_ai_size; ?>px; font-weight: 700; color: <?php echo esc_attr($disc_ai_color); ?>; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;"><?php echo esc_html($disc_ai_text); ?></div>
-                                        <div class="agent-status" style="font-size: 10px; margin-top: 1px;"><span class="status-dot"></span> Online</div>
+                                        <div class="agent-status" style="font-size: <?php echo (int) $status_ai_size; ?>px; color: <?php echo esc_attr($status_ai_color); ?>; margin-top: 1px;"><span class="status-dot"></span> Online</div>
                                     </div>
                                 </div>
                                 <?php if (is_user_logged_in()): ?>
@@ -867,7 +895,7 @@ body {
 
                             <div class="chat-input-bar" style="padding: 14px 0 0 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 14px; background: transparent;">
                                 <input type="text" id="vance-ai-chat-input" class="chat-input" placeholder="Ask AI..." style="padding: 10px 14px; font-size: 13px;">
-                                <button class="chat-send" id="vance-ai-chat-send" style="padding: 10px 18px; font-size: 13px;">Send</button>
+                                <button class="chat-send" id="vance-ai-chat-send" style="padding: 10px 18px; font-size: 13px; <?php echo $btn_style($btn_send_bg, $btn_send_color); ?>">Send</button>
                             </div>
                         </div>
                     </div>
@@ -1323,9 +1351,18 @@ body {
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;">
                         <?php foreach ($posts_array as $p): ?>
                         <article style="background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
+                            <?php
+                                $word_count = str_word_count(strip_tags(strip_shortcodes($p->post_content)));
+                                $view_count = vance_get_view_count($p->ID);
+                            ?>
                             <?php if (has_post_thumbnail($p->ID)): ?>
                                 <div style="position: relative; overflow: hidden; height: 180px; background: #f1f5f9;">
                                     <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
+                                        <div><?php echo get_the_date('', $p->ID); ?></div>
+                                        <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($word_count); ?> words</div>
+                                        <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($view_count); ?> views</div>
+                                    </div>
                                 </div>
                             <?php endif; ?>
                             <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
@@ -1335,9 +1372,6 @@ body {
                                 <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <?php echo wp_trim_words(get_the_excerpt($p->ID), 15); ?>
                                 </p>
-                                <div style="font-size: 12px; color: #94a3b8; padding-top: 12px; border-top: 1px solid #f1f5f9; margin-top: auto;">
-                                    <?php echo get_the_date('', $p->ID); ?>
-                                </div>
                             </div>
                         </article>
                         <?php endforeach; ?>
@@ -1367,6 +1401,12 @@ body {
     $prem_pad_bot        = absint( vance_get_theme_mod('vance_premium_pad_bottom', 100) );
     $prem_eyebrow        = vance_get_theme_mod('vance_premium_eyebrow',        'Join the Inner Circle');
     $prem_eyebrow_color  = vance_get_theme_mod('vance_premium_eyebrow_color',  '#008080');
+    $prem_eyebrow_bg     = vance_get_theme_mod('vance_premium_eyebrow_bg',     '');
+    $prem_eyebrow_border = vance_get_theme_mod('vance_premium_eyebrow_border', '');
+    $prem_eyebrow_style  = '';
+    if ( $prem_eyebrow_color )  { $prem_eyebrow_style .= 'color:' . esc_attr( $prem_eyebrow_color ) . ';'; }
+    if ( $prem_eyebrow_bg )     { $prem_eyebrow_style .= 'background:' . esc_attr( $prem_eyebrow_bg ) . ';'; }
+    if ( $prem_eyebrow_border ) { $prem_eyebrow_style .= 'border-color:' . esc_attr( $prem_eyebrow_border ) . ';'; }
     $prem_heading        = vance_get_theme_mod('vance_premium_heading',        'Access <span class="highlight">IBD Clinical Resources</span>');
     $prem_heading_color  = vance_get_theme_mod('vance_premium_heading_color',  '#ffffff');
     $prem_heading_size   = absint( vance_get_theme_mod('vance_premium_heading_size', 42) );
@@ -1402,7 +1442,7 @@ body {
     <section class="premium-subscribe-section" style="background: <?php echo esc_attr($prem_section_bg); ?>; padding: <?php echo $prem_pad_top; ?>px 0 <?php echo $prem_pad_bot; ?>px; color: <?php echo esc_attr($prem_heading_color); ?>;">
         <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: 60px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 300px;">
-                <span style="color: <?php echo esc_attr($prem_eyebrow_color); ?>; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; margin-bottom: 16px; display: block;"><?php echo esc_html($prem_eyebrow); ?></span>
+                <span class="tag-label" style="<?php echo $prem_eyebrow_style; ?>"><?php echo esc_html($prem_eyebrow); ?></span>
                 <h2 style="font-family: 'Outfit', sans-serif; font-size: <?php echo $prem_heading_size; ?>px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; color: <?php echo esc_attr($prem_heading_color); ?>;"><?php echo wp_kses_post($prem_heading); ?></h2>
                 <p style="font-size: <?php echo $prem_desc_size; ?>px; color: <?php echo esc_attr($prem_desc_color); ?>; line-height: 1.6; margin-bottom: 32px; max-width: 500px;">
                     <?php echo esc_html($prem_desc); ?>

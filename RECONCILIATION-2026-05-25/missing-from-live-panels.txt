@@ -1,0 +1,6 @@
+vance_edu_panel
+vance_evidence_panel
+vance_hquiz_panel
+vance_overlays_panel
+vance_premium_panel
+vance_tools_panel

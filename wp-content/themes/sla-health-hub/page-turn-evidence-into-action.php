@@ -34,8 +34,9 @@ $evd_hero_tag_color   = vance_get_theme_mod( 'vance_evidence_hero_tag_color', ''
 $evd_hero_title_color = vance_get_theme_mod( 'vance_evidence_hero_title_color', '' );
 $evd_hero_text_color  = vance_get_theme_mod( 'vance_evidence_hero_text_color',  '' );
 // Pillars: tag pill colours + title/body overrides (fall through to page-wide).
-$evd_pil_tag_bg       = vance_get_theme_mod( 'vance_evidence_pillars_tag_bg',    '' );
-$evd_pil_tag_color    = vance_get_theme_mod( 'vance_evidence_pillars_tag_color', '' );
+$evd_pil_tag_bg       = vance_get_theme_mod( 'vance_evidence_pillars_tag_bg',     '' );
+$evd_pil_tag_color    = vance_get_theme_mod( 'vance_evidence_pillars_tag_color',  '' );
+$evd_pil_tag_border   = vance_get_theme_mod( 'vance_evidence_pillars_tag_border', '' );
 $evd_pil_title_color  = vance_get_theme_mod( 'vance_evidence_pillars_title_color', '' ) ?: $_h_color;
 $evd_pil_text_color   = vance_get_theme_mod( 'vance_evidence_pillars_text_color',  '' ) ?: $_b_color;
 // Process / Featured / CTA per-section colour overrides.
@@ -120,8 +121,9 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     <?php
     // Pillars-section tag pill inline styles.
     $pil_tag_style = '';
-    if ( $evd_pil_tag_bg )    { $pil_tag_style .= 'background:' . esc_attr( $evd_pil_tag_bg ) . ';'; }
-    if ( $evd_pil_tag_color ) { $pil_tag_style .= 'color:' . esc_attr( $evd_pil_tag_color ) . ';'; }
+    if ( $evd_pil_tag_bg )     { $pil_tag_style .= 'background:' . esc_attr( $evd_pil_tag_bg ) . ';'; }
+    if ( $evd_pil_tag_color )  { $pil_tag_style .= 'color:' . esc_attr( $evd_pil_tag_color ) . ';'; }
+    if ( $evd_pil_tag_border ) { $pil_tag_style .= 'border-color:' . esc_attr( $evd_pil_tag_border ) . ';'; }
     ?>
     <section id="pillars" class="section-padding" style="background: <?php echo esc_attr( $evd_pillars_bg ?: 'var(--accent-color)' ); ?>;">
         <div class="container">

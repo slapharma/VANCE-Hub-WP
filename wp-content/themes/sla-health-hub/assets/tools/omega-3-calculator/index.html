@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omega-3 Clinical Dosing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              sla: {
+                navy: '#1a2b3c',
+                grey: '#4b5563',
+                soft: '#f8f9fa',
+                accent: '#e5e7eb',
+                brand: '#fd4f00ff'
+              }
+            },
+            fontFamily: {
+              sans: ['"Montserrat"', 'sans-serif'],
+              serif: ['"Montserrat"', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body { background-color: #f8f9fa; font-family: 'Montserrat', sans-serif; }
+    </style>
+
+<link rel="stylesheet" href="./index.css">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "recharts": "https://esm.sh/recharts@^3.6.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="./assets/index-DjlNKVbe.js"></script>
+</head>
+<body class="antialiased text-sla-navy font-sans">
+    <div id="root"></div>
+
+<script>
+(function(){
+  if (window.parent === window) return;
+  function collect(){
+    var root = document.getElementById('root') || document.body;
+    var text = (root.innerText||'').replace(/\s+/g,' ').trim().slice(0, 2000);
+    var doseMatch = text.match(/([0-9.,]+)\s*(g|mg|grams|milligrams)\s*(EPA|DHA|omega|total)?/i);
+    return { dose: doseMatch ? doseMatch[0] : '', snapshot: text, url: location.href };
+  }
+  function addBtn(){
+    if (document.getElementById('vance-save-btn')) return;
+    var b = document.createElement('button');
+    b.id='vance-save-btn';
+    b.textContent='Save to my profile';
+    b.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99999;background:#008080;color:white;border:none;padding:10px 16px;font-weight:700;font-family:Montserrat,sans-serif;font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,0.25);cursor:pointer;border-radius:0;';
+    b.onclick=function(){
+      var d = collect();
+      window.parent.postMessage({ type:'VANCE_SAVE_OMEGA3_RESULT', id:'o_'+Date.now(), date:new Date().toISOString(), dose:d.dose, snapshot:d.snapshot, url:d.url }, '*');
+      b.textContent='Saved!';
+      setTimeout(function(){ b.textContent='Save to my profile'; }, 2000);
+    };
+    document.body.appendChild(b);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addBtn); else addBtn();
+  setTimeout(addBtn, 1500);
+})();
+</script>
+</body>
+</html>

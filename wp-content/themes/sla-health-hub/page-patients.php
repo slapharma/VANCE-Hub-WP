@@ -31,9 +31,16 @@ get_header(); ?>
 
     <!-- BENEFITS SECTION -->
     <?php
-    $ben_tag   = vance_get_theme_mod( 'vance_pat_ben_tag',   'Why Choose Vance Medical?' );
-    $ben_title = vance_get_theme_mod( 'vance_pat_ben_title',  'Not Just Another Community' );
-    $ben_desc  = vance_get_theme_mod( 'vance_pat_ben_desc',  'Vance Medical is a comprehensive suite of resources designed to aid your personal health journey. We bridge the gap between complex medical research and practical, daily wellness by providing clinical information in a format that is easy to understand.' );
+    $ben_tag        = vance_get_theme_mod( 'vance_pat_ben_tag',        'Why Choose Vance Medical?' );
+    $ben_title      = vance_get_theme_mod( 'vance_pat_ben_title',      'Not Just Another Community' );
+    $ben_desc       = vance_get_theme_mod( 'vance_pat_ben_desc',       'Vance Medical is a comprehensive suite of resources designed to aid your personal health journey. We bridge the gap between complex medical research and practical, daily wellness by providing clinical information in a format that is easy to understand.' );
+    $ben_tag_bg     = vance_get_theme_mod( 'vance_pat_ben_tag_bg',     '' );
+    $ben_tag_color  = vance_get_theme_mod( 'vance_pat_ben_tag_color',  '' );
+    $ben_tag_border = vance_get_theme_mod( 'vance_pat_ben_tag_border', '' );
+    $ben_tag_style  = '';
+    if ( $ben_tag_bg )     { $ben_tag_style .= 'background:' . esc_attr( $ben_tag_bg ) . ';'; }
+    if ( $ben_tag_color )  { $ben_tag_style .= 'color:' . esc_attr( $ben_tag_color ) . ';'; }
+    if ( $ben_tag_border ) { $ben_tag_style .= 'border-color:' . esc_attr( $ben_tag_border ) . ';'; }
 
     $ben_defaults = array(
         1 => array( 'Clear Clinical Info',   'Access cutting-edge clinical information translated into a clear, easy-to-understand format tailored for patients, without the medical jargon.' ),
@@ -55,7 +62,7 @@ get_header(); ?>
     <section id="benefits" class="section-padding" style="background: white;">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <span class="tag-section"><?php echo esc_html( $ben_tag ); ?></span>
+                <span class="tag-section" style="<?php echo $ben_tag_style; ?>"><?php echo esc_html( $ben_tag ); ?></span>
                 <h2 style="color: var(--secondary-color);"><?php echo esc_html( $ben_title ); ?></h2>
                 <p style="color: var(--text-light);"><?php echo esc_html( $ben_desc ); ?></p>
             </div>

@@ -31,9 +31,16 @@ get_header(); ?>
 
     <!-- RESOURCES SECTION -->
     <?php
-    $res_tag   = vance_get_theme_mod( 'vance_hcp_res_tag',   'Join the Effort' );
-    $res_title = vance_get_theme_mod( 'vance_hcp_res_title',  "What You'll Access" );
-    $res_desc  = vance_get_theme_mod( 'vance_hcp_res_desc',  'We invite passionate healthcare practitioners to join us in advancing clinical nutrition. Share your expertise and help shape the future of specialized healthcare content.' );
+    $res_tag        = vance_get_theme_mod( 'vance_hcp_res_tag',        'Join the Effort' );
+    $res_title      = vance_get_theme_mod( 'vance_hcp_res_title',      "What You'll Access" );
+    $res_desc       = vance_get_theme_mod( 'vance_hcp_res_desc',       'We invite passionate healthcare practitioners to join us in advancing clinical nutrition. Share your expertise and help shape the future of specialized healthcare content.' );
+    $res_tag_bg     = vance_get_theme_mod( 'vance_hcp_res_tag_bg',     '' );
+    $res_tag_color  = vance_get_theme_mod( 'vance_hcp_res_tag_color',  '' );
+    $res_tag_border = vance_get_theme_mod( 'vance_hcp_res_tag_border', '' );
+    $res_tag_style  = '';
+    if ( $res_tag_bg )     { $res_tag_style .= 'background:' . esc_attr( $res_tag_bg ) . ';'; }
+    if ( $res_tag_color )  { $res_tag_style .= 'color:' . esc_attr( $res_tag_color ) . ';'; }
+    if ( $res_tag_border ) { $res_tag_style .= 'border-color:' . esc_attr( $res_tag_border ) . ';'; }
 
     $res_defaults = array(
         1 => array( 'Clinical Protocols',  'Step-by-step treatment algorithms for common and complex GI conditions, including FSMP integration.' ),
@@ -58,7 +65,7 @@ get_header(); ?>
     <section id="resources" class="section-padding" style="background: var(--accent-color);">
         <div class="container">
             <div class="text-center max-600 margin-b-60">
-                <span class="tag-section"><?php echo esc_html( $res_tag ); ?></span>
+                <span class="tag-section" style="<?php echo $res_tag_style; ?>"><?php echo esc_html( $res_tag ); ?></span>
                 <h2 style="color: var(--secondary-color);"><?php echo esc_html( $res_title ); ?></h2>
                 <p style="color: var(--text-light);"><?php echo esc_html( $res_desc ); ?></p>
             </div>

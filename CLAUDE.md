@@ -1,9 +1,16 @@
 # CLAUDE.md — Vance HealthHub WP
 
-**Live site:** https://gastrohealthhub.com
+**Live site:** https://vancehealthhub.co.uk
+  (the legacy `https://gastrohealthhub.com` Hostinger account is dormant — TLS errors;
+   `https://www.vancehealthhub.com` is a frameset wrapper pointing at the `.co.uk`
+   and is NOT a hosting target.)
 **Repo:** https://github.com/slapharma/VANCE-Hub-WP (this one)
-**Theme path:** `wp-content/themes/sla-health-hub/`
+**Theme path (in repo):** `wp-content/themes/sla-health-hub/`
+**Theme path (on server):** `~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub/`
+  (renamed from `~/domains/gastrohealthhub.com/...` during the domain swap — all earlier
+   handover commands referencing the old path must be rewritten.)
 **Host:** Hostinger, SSH `u767439438@82.29.185.3` port 65002, key `~/.ssh/hostinger_sla`
+**Other domains on the same Hostinger account:** `vancemedical.co.uk`, `ibdhealthhub.com` (do not touch).
 
 This repo consolidates and replaces the earlier `.gemini/SLAHealthHub` working tree and the archived `slapharma/SLAHealthHub` GitHub repo. The authoritative context for every decision below is [REBRAND-HANDOVER.md](REBRAND-HANDOVER.md) — **read that first** before any non-trivial work.
 
@@ -83,7 +90,7 @@ tar czf - \
   . | \
 ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
   "set -e; \
-   THEME=~/domains/gastrohealthhub.com/public_html/wp-content/themes/sla-health-hub; \
+   THEME=~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub; \
    cd \"\$THEME\" && \
    tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
    tar xzf - && \

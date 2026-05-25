@@ -23,6 +23,28 @@ if ( $note_id ) {
         }
     }
 }
+
+// Build reference lists for "Attach Reference" feature
+$vance_article_refs = array();
+$bookmark_ids = get_user_meta( $user_id, '_sla_reading_list', true );
+if ( is_array( $bookmark_ids ) && count( $bookmark_ids ) ) {
+    $q = new WP_Query( array( 'post__in' => $bookmark_ids, 'post_type' => 'any', 'posts_per_page' => -1, 'orderby' => 'post__in' ) );
+    while ( $q->have_posts() ) { $q->the_post();
+        $vance_article_refs[] = array( 'title' => get_the_title(), 'url' => get_permalink() );
+    }
+    wp_reset_postdata();
+}
+$vance_ai_refs = array();
+$saved_chats = get_user_meta( $user_id, '_sla_saved_chats', true );
+if ( is_array( $saved_chats ) ) {
+    foreach ( array_reverse( $saved_chats ) as $chat ) {
+        $vance_ai_refs[] = array(
+            'title' => ! empty( $chat['title'] ) ? $chat['title'] : 'AI Consultation',
+            'date'  => ! empty( $chat['date'] ) ? $chat['date'] : '',
+            'id'    => ! empty( $chat['id'] ) ? $chat['id'] : '',
+        );
+    }
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -87,6 +109,25 @@ if ( $note_id ) {
         <button onclick="document.execCommand('justifyCenter',false,null)" title="Align Center">Center</button>
         <div style="width: 1px; background: #e2e8f0; margin: 0 4px;"></div>
         <button onclick="document.execCommand('backColor',false,'#fef3c7')" title="Highlight">🖊️</button>
+        <div style="width: 1px; background: #e2e8f0; margin: 0 4px;"></div>
+        <button id="attach-ref-btn" onclick="toggleRefPanel(event)" title="Attach saved article or AI chat" style="display:flex; align-items:center; gap:6px; color:#008080; font-weight:700;">🔗 Attach Reference</button>
+    </div>
+
+    <!-- Reference panel -->
+    <div id="ref-panel" style="display:none; position:absolute; right:20px; margin-top:6px; width:340px; background:white; border:1px solid #e2e8f0; box-shadow:0 12px 30px rgba(0,0,0,0.12); z-index:50; max-height:380px; overflow-y:auto;">
+        <div style="padding:10px 14px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">From your Reading List</div>
+        <?php if ( empty( $vance_article_refs ) ) : ?>
+            <div style="padding:14px; color:#94a3b8; font-size:13px;">No saved articles yet.</div>
+        <?php else : foreach ( $vance_article_refs as $a ) : ?>
+            <button type="button" onclick='insertRef({ kind: "article", title: <?php echo wp_json_encode( $a["title"] ); ?>, url: <?php echo wp_json_encode( $a["url"] ); ?> })' style="display:block; width:100%; text-align:left; padding:10px 14px; border:none; background:white; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px; color:#0f172a;">📄 <?php echo esc_html( $a['title'] ); ?></button>
+        <?php endforeach; endif; ?>
+
+        <div style="padding:10px 14px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:6px;">From your AI Chats</div>
+        <?php if ( empty( $vance_ai_refs ) ) : ?>
+            <div style="padding:14px; color:#94a3b8; font-size:13px;">No saved AI chats yet.</div>
+        <?php else : foreach ( $vance_ai_refs as $c ) : ?>
+            <button type="button" onclick='insertRef({ kind: "ai", title: <?php echo wp_json_encode( $c["title"] ); ?>, date: <?php echo wp_json_encode( $c["date"] ); ?>, id: <?php echo wp_json_encode( $c["id"] ); ?> })' style="display:block; width:100%; text-align:left; padding:10px 14px; border:none; background:white; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px; color:#0f172a;">🤖 <?php echo esc_html( $c['title'] ); ?><?php if ( $c['date'] ) echo ' <span style="color:#94a3b8; font-size:11px;">— ' . esc_html( date( 'M j', strtotime( $c['date'] ) ) ) . '</span>'; ?></button>
+        <?php endforeach; endif; ?>
     </div>
 
     <div id="note-content" class="editor-content" contenteditable="true" placeholder="Start typing..."><?php echo wp_kses_post($content); ?></div>
@@ -94,6 +135,49 @@ if ( $note_id ) {
 
 <script>
 var noteId = '<?php echo esc_js($note_id); ?>';
+
+var savedRange = null;
+function saveSelection() {
+    var sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+}
+document.getElementById('note-content').addEventListener('mouseup', saveSelection);
+document.getElementById('note-content').addEventListener('keyup', saveSelection);
+
+function toggleRefPanel(e) {
+    e && e.stopPropagation && e.stopPropagation();
+    var p = document.getElementById('ref-panel');
+    p.style.display = (p.style.display === 'none' || !p.style.display) ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+    var p = document.getElementById('ref-panel');
+    var btn = document.getElementById('attach-ref-btn');
+    if (p && p.style.display === 'block' && !p.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+        p.style.display = 'none';
+    }
+});
+
+function insertRef(r) {
+    var editor = document.getElementById('note-content');
+    editor.focus();
+    if (savedRange) {
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+    }
+    var html = '';
+    if (r.kind === 'article') {
+        html = ' <a href="' + r.url + '" target="_blank" rel="noopener" style="color:#008080; font-weight:600;">📄 ' + r.title + '</a> ';
+    } else {
+        var dateStr = r.date ? ' <span style="color:#94a3b8;font-size:12px;">(' + new Date(r.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + ')</span>' : '';
+        // Link to dashboard AI Chats tab — user can reopen from there
+        html = ' <a href="/dashboard/?tab=ai-chats#chat-' + encodeURIComponent(r.id) + '" style="color:#0A1929; font-weight:600;">🤖 ' + r.title + dateStr + '</a> ';
+    }
+    document.execCommand('insertHTML', false, html);
+    document.getElementById('ref-panel').style.display = 'none';
+    saveSelection();
+}
+
 
 function saveNote() {
     var title = document.getElementById('note-title').value;

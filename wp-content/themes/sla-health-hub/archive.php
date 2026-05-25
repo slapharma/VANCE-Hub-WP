@@ -136,11 +136,19 @@
                 while ( have_posts() ) :
                     the_post();
                     ?>
+                    <?php
+                        $vance_word_count = str_word_count(strip_tags(strip_shortcodes(get_the_content())));
+                        $vance_view_count = vance_get_view_count(get_the_ID());
+                    ?>
                     <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?>>
-                        <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>'); background-color: #e2e8f0;">
-                            <!-- Optional: Category Tag overlay -->
+                        <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>'); background-color: #e2e8f0; position: relative;">
+                            <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
+                                <div><?php echo get_the_date(); ?></div>
+                                <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($vance_word_count); ?> words</div>
+                                <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($vance_view_count); ?> views</div>
+                            </div>
                         </div>
-                        
+
                         <div class="card-content">
                             <header class="entry-header">
                                 <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
@@ -148,10 +156,6 @@
 
                             <div class="entry-content">
                                 <?php the_excerpt(); ?>
-                            </div>
-                            
-                            <div class="card-meta">
-                                <span><?php echo get_the_date(); ?></span>
                             </div>
                         </div>
                     </article>

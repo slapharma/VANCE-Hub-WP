@@ -25,6 +25,14 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_section( "vance_hcp_resources", array( "title" => "Resources Section", "panel" => "vance_hcp_panel" ) );
     $wp_customize->add_setting( "vance_hcp_res_tag", array( "default" => "Join the Effort", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_hcp_res_tag", array( "label" => "Tag Label", "section" => "vance_hcp_resources", "type" => "text" ) );
+
+    // Tag-section box outline colours (same controls as hero tag-label)
+    $wp_customize->add_setting( "vance_hcp_res_tag_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_hcp_res_tag_bg",     array( "label" => "Tag Background Colour", "section" => "vance_hcp_resources" ) ) );
+    $wp_customize->add_setting( "vance_hcp_res_tag_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_hcp_res_tag_color",  array( "label" => "Tag Font Colour",       "section" => "vance_hcp_resources" ) ) );
+    $wp_customize->add_setting( "vance_hcp_res_tag_border", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_hcp_res_tag_border", array( "label" => "Tag Border Colour",     "section" => "vance_hcp_resources" ) ) );
     
     $wp_customize->add_setting( "vance_hcp_res_title", array( "default" => "What You'll Access", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_hcp_res_title", array( "label" => "Title", "section" => "vance_hcp_resources", "type" => "text" ) );
@@ -95,6 +103,14 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_section( "vance_pat_benefits", array( "title" => "Benefits Section", "panel" => "vance_pat_panel" ) );
     $wp_customize->add_setting( "vance_pat_ben_tag", array( "default" => "Why Choose Vance Medical?", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_pat_ben_tag", array( "label" => "Tag Label", "section" => "vance_pat_benefits", "type" => "text" ) );
+
+    // Tag-section box outline colours (same controls as hero tag-label)
+    $wp_customize->add_setting( "vance_pat_ben_tag_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_pat_ben_tag_bg",     array( "label" => "Tag Background Colour", "section" => "vance_pat_benefits" ) ) );
+    $wp_customize->add_setting( "vance_pat_ben_tag_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_pat_ben_tag_color",  array( "label" => "Tag Font Colour",       "section" => "vance_pat_benefits" ) ) );
+    $wp_customize->add_setting( "vance_pat_ben_tag_border", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_pat_ben_tag_border", array( "label" => "Tag Border Colour",     "section" => "vance_pat_benefits" ) ) );
     
     $wp_customize->add_setting( "vance_pat_ben_title", array( "default" => "Not Just Another Community", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_pat_ben_title", array( "label" => "Title", "section" => "vance_pat_benefits", "type" => "text" ) );
@@ -1115,6 +1131,8 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_tag_bg",    array( "label" => "Tag Label Background Colour", "section" => "vance_evidence_pillars" ) ) );
     $wp_customize->add_setting( "vance_evidence_pillars_tag_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_tag_color", array( "label" => "Tag Label Font Colour",       "section" => "vance_evidence_pillars" ) ) );
+    $wp_customize->add_setting( "vance_evidence_pillars_tag_border", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_tag_border", array( "label" => "Tag Label Border Colour",     "section" => "vance_evidence_pillars" ) ) );
     $wp_customize->add_setting( "vance_evidence_pillars_title_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_pillars_title_color", array( "label" => "Section Title Colour",     "section" => "vance_evidence_pillars" ) ) );
     $wp_customize->add_setting( "vance_evidence_pillars_text_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
@@ -1300,6 +1318,38 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_discovery_askai_input_border", array( "default" => "rgba(255,255,255,0.12)", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_discovery_askai_input_border", array( "label" => "Ask AI Input — Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
 
+    // Action buttons — solid colours (no gradient). Blank background = keep theme default.
+    $wp_customize->add_setting( "vance_discovery_btn_go_bg",       array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_go_bg",       array( "label" => "GO Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_setting( "vance_discovery_btn_go_color",    array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_go_color",    array( "label" => "GO Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+
+    $wp_customize->add_setting( "vance_discovery_btn_clear_bg",    array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_clear_bg",    array( "label" => "Clear Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_setting( "vance_discovery_btn_clear_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_clear_color", array( "label" => "Clear Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+
+    $wp_customize->add_setting( "vance_discovery_btn_save_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_save_bg",     array( "label" => "Save Search Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_setting( "vance_discovery_btn_save_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_save_color",  array( "label" => "Save Search Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+
+    $wp_customize->add_setting( "vance_discovery_btn_send_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_send_bg",     array( "label" => "Send Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_setting( "vance_discovery_btn_send_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_send_color",  array( "label" => "Send Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+
+    // Status text — "AI (Online)" and "Content Filters (Active)".
+    $wp_customize->add_setting( "vance_discovery_status_ai_size",       array( "default" => 10, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_discovery_status_ai_size",       array( "label" => "AI Status (Online) — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 24, "step" => 1 ) ) );
+    $wp_customize->add_setting( "vance_discovery_status_ai_color",      array( "default" => "#22C55E", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_status_ai_color", array( "label" => "AI Status (Online) — Text Colour", "section" => "vance_discovery_styling" ) ) );
+
+    $wp_customize->add_setting( "vance_discovery_status_filters_size",  array( "default" => 10, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_discovery_status_filters_size",  array( "label" => "Filters Status (Active) — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 24, "step" => 1 ) ) );
+    $wp_customize->add_setting( "vance_discovery_status_filters_color", array( "default" => "rgba(255,255,255,0.5)", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_discovery_status_filters_color", array( "label" => "Filters Status (Active) — Text Colour (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+
     // ============================================================
     // PREMIUM SUBSCRIBE SECTION — full Customizer panel
     // ============================================================
@@ -1340,8 +1390,12 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_section( "vance_premium_colors", array( "title" => "Colours", "panel" => "vance_premium_panel" ) );
     $wp_customize->add_setting( "vance_premium_section_bg",  array( "default" => "#0f172a", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_section_bg",  array( "label" => "Section Background", "section" => "vance_premium_colors" ) ) );
-    $wp_customize->add_setting( "vance_premium_eyebrow_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_color", array( "label" => "Eyebrow Colour", "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_setting( "vance_premium_eyebrow_color",  array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_color",  array( "label" => "Eyebrow Tag — Font Colour",        "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_setting( "vance_premium_eyebrow_bg",     array( "default" => "",        "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_bg",     array( "label" => "Eyebrow Tag — Background Colour",  "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_setting( "vance_premium_eyebrow_border", array( "default" => "",        "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_border", array( "label" => "Eyebrow Tag — Border Colour",      "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_heading_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_heading_color", array( "label" => "Heading Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_highlight_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );

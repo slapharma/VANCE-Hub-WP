@@ -348,7 +348,15 @@ get_header();
 
             <div class="form-group">
                 <label class="form-label" for="user_email">Email Address</label>
-                <input type="email" id="user_email" name="user_email" class="form-input" value="<?php echo isset($_POST['user_email']) ? esc_attr($_POST['user_email']) : ''; ?>" required>
+                <?php
+                $prefill_email = '';
+                if ( isset( $_POST['user_email'] ) ) {
+                    $prefill_email = wp_unslash( $_POST['user_email'] );
+                } elseif ( isset( $_GET['user_email'] ) ) {
+                    $prefill_email = sanitize_email( wp_unslash( $_GET['user_email'] ) );
+                }
+                ?>
+                <input type="email" id="user_email" name="user_email" class="form-input" value="<?php echo esc_attr( $prefill_email ); ?>" required>
             </div>
 
             <div class="form-group">

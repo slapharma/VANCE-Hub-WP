@@ -7,9 +7,9 @@
                         <?php
                         $f_logo = vance_get_theme_mod('vance_footer_logo');
                         if($f_logo): ?>
-                            <img src="<?php echo esc_url($f_logo); ?>" alt="Vance Medical" style="height: 30px; opacity: 0.6; transition: 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                            <img src="<?php echo esc_url($f_logo); ?>" alt="Vance Medical" style="height: 36px; opacity: 0.6; transition: 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
                         <?php else: ?>
-                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 30px; opacity: 0.6; transition: 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 36px; opacity: 0.6; transition: 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
                         <?php endif; ?>
                     </a>
                     <div class="copyright" style="color: #64748b; font-size: 13px;"><?php echo esc_html(vance_get_theme_mod('vance_footer_copyright', '© ' . date('Y') . ' Vance Medical Foods Ltd. All rights reserved.')); ?></div>

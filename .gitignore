@@ -2,6 +2,16 @@
 # Kept on disk for reference but not deployed or shared.
 LOCAL/
 
+# Live-server pulls and ad-hoc forensics workspaces (per-incident, not history).
+# RECONCILIATION-YYYY-MM-DD/ folders ARE committed (they document the incident).
+LIVE-PULL/
+.playwright-mcp/
+tasks/
+
+# Working-tree screenshots and design references (large binaries, kept on disk only)
+hcp-desktop-full.png
+**/*.bak-*
+
 # Editor/OS
 .DS_Store
 Thumbs.db

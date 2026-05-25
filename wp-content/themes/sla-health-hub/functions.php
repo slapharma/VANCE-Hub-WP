@@ -45,6 +45,50 @@ function vance_get_theme_mod( $vance_key, $default = false ) {
     return $default;
 }
 
+/**
+ * Get a post's view count, seeding with a random 10-150 baseline on first read
+ * so freshly-published articles never display as "0 views".
+ */
+function vance_get_view_count( $post_id ) {
+    $count = get_post_meta( $post_id, '_vance_view_count', true );
+    if ( '' === $count || null === $count ) {
+        $count = wp_rand( 10, 150 );
+        add_post_meta( $post_id, '_vance_view_count', $count, true );
+    }
+    return (int) $count;
+}
+
+/**
+ * Increment view count on single-post page loads. Skips bots, feeds, admin,
+ * and previews. Tracked once per session per post via a short-lived cookie.
+ */
+function vance_track_post_view() {
+    if ( is_admin() || is_feed() || is_preview() ) {
+        return;
+    }
+    if ( ! is_singular( 'post' ) ) {
+        return;
+    }
+    $post_id = get_queried_object_id();
+    if ( ! $post_id ) {
+        return;
+    }
+    $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '';
+    if ( $ua && preg_match( '/bot|crawler|spider|crawling|facebookexternalhit|preview/i', $ua ) ) {
+        return;
+    }
+    $cookie = 'vance_viewed_' . $post_id;
+    if ( ! empty( $_COOKIE[ $cookie ] ) ) {
+        return;
+    }
+    $current = vance_get_view_count( $post_id );
+    update_post_meta( $post_id, '_vance_view_count', $current + 1 );
+    if ( ! headers_sent() ) {
+        setcookie( $cookie, '1', time() + HOUR_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN );
+    }
+}
+add_action( 'wp', 'vance_track_post_view' );
+
 function vance_health_hub_scripts() {
     // Enqueue Google Fonts
     wp_enqueue_style( 'vance-google-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap', array(), null );
@@ -52,7 +96,7 @@ function vance_health_hub_scripts() {
     // Enqueue Main Styles
     // We will copy the prototype CSS to a file named 'main.css' in the theme folder
     // Version bumped to force browser/edge cache-miss after Vance Medical rebrand (teal palette + larger logo).
-    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.0.0-vance' );
+    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.1.1-vance' );
     
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
@@ -590,7 +634,11 @@ function vance_google_login_button_shortcode( $atts ) {
     }
     
     $nonce = wp_create_nonce( 'google_oauth_nonce' );
-    
+
+    // Capture redirect_to from URL, same-origin-only — fallback to /dashboard/
+    $raw_redirect = isset( $_GET['redirect_to'] ) ? wp_unslash( $_GET['redirect_to'] ) : home_url( '/dashboard/' );
+    $redirect_to = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
+
     return '
     <div id="google-login-container">
         <div id="g_id_onload"
@@ -610,18 +658,22 @@ function vance_google_login_button_shortcode( $atts ) {
         </div>
     </div>
     <script>
+    window.vanceLoginRedirect = ' . wp_json_encode( $redirect_to ) . ';
     function handleGoogleCredentialResponse(response) {
         fetch("' . admin_url('admin-ajax.php') . '", {
             method: "POST",
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
-            body: "action=vance_google_oauth_callback&credential=" + response.credential + "&nonce=' . $nonce . '"
+            body: "action=vance_google_oauth_callback&credential=" + response.credential +
+                  "&nonce=' . $nonce . '" +
+                  "&redirect_to=" + encodeURIComponent(window.vanceLoginRedirect || "")
         })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                window.location.reload();
+                var target = (data.data && data.data.redirect_to) || window.vanceLoginRedirect || window.location.href;
+                window.location.href = target;
             } else {
-                alert("Login failed: " + data.data);
+                alert("Login failed: " + (data.data || "Unknown error"));
             }
         });
     }
@@ -635,9 +687,13 @@ function vance_google_oauth_callback() {
     if ( ! isset( $_POST['nonce'] ) || ! isset( $_POST['credential'] ) ) {
         wp_send_json_error( 'Missing required data' );
     }
-    
+
     if ( ! wp_verify_nonce( $_POST['nonce'], 'google_oauth_nonce' ) ) {
         wp_send_json_error( 'Invalid nonce' );
+    }
+    // 20 attempts per 5 min per IP (looser than email login — JWT validation is cheap and abuse vector is account creation)
+    if ( ! function_exists( 'vance_rate_limit' ) || ! vance_rate_limit( 'google', 20, 300 ) ) {
+        wp_send_json_error( 'Too many sign-in attempts. Please wait a few minutes and try again.' );
     }
     
     $credential = sanitize_text_field( $_POST['credential'] );
@@ -690,22 +746,716 @@ function vance_google_oauth_callback() {
         ) );
         
         update_user_meta( $user_id, 'google_id', $google_id );
-        
+
         // Default to Patient Role
         update_user_meta( $user_id, '_sla_user_type', 'patient' );
         update_user_meta( $user_id, '_sla_dashboard_role', 'patient' );
-        
+
+        // Google has already verified the email address — mark as verified.
+        // Honour Google's email_verified flag if present (always true for OIDC-compliant providers).
+        $email_verified = isset( $payload['email_verified'] ) ? (bool) $payload['email_verified'] : true;
+        update_user_meta( $user_id, '_vance_email_verified', $email_verified ? 1 : 0 );
+
         $user = get_user_by( 'id', $user_id );
+    } else {
+        // Existing user signing in via Google — opportunistically mark verified if not already.
+        $current_verified = get_user_meta( $user->ID, '_vance_email_verified', true );
+        if ( '' === $current_verified || '0' === (string) $current_verified ) {
+            $email_verified = isset( $payload['email_verified'] ) ? (bool) $payload['email_verified'] : true;
+            if ( $email_verified ) {
+                update_user_meta( $user->ID, '_vance_email_verified', 1 );
+            }
+        }
     }
     
     // Log the user in
     wp_set_current_user( $user->ID );
     wp_set_auth_cookie( $user->ID, true );
-    
-    wp_send_json_success( array( 'message' => 'Logged in successfully' ) );
+
+    // Resolve safe post-login redirect (same-origin only)
+    $raw_redirect = isset( $_POST['redirect_to'] ) ? wp_unslash( $_POST['redirect_to'] ) : '';
+    $redirect_to  = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
+
+    wp_send_json_success( array(
+        'message'     => 'Logged in successfully',
+        'redirect_to' => $redirect_to,
+    ) );
 }
 add_action( 'wp_ajax_nopriv_vance_google_oauth_callback', 'vance_google_oauth_callback' );
 add_action( 'wp_ajax_vance_google_oauth_callback', 'vance_google_oauth_callback' );
+
+/**
+ * Redirect bare GET hits on wp-login.php to the themed /login/ page.
+ *
+ * Preserves the original ?redirect_to= target so "My Dashboard" links
+ * still land users on /dashboard/ after Google sign-in.
+ *
+ * Exemptions (must continue using wp-login.php):
+ *   - Logged-in users (let WP show its own "You are already logged in" notice)
+ *   - POST submissions (form-based username/password login)
+ *   - Any ?action= flow: logout, lostpassword, rp, resetpass, register, postpass, confirmaction
+ *   - Already on /login/ (no infinite loop)
+ *   - Site admins (debug-friendly: append ?wp_admin_login=1 to bypass)
+ */
+function vance_redirect_wp_login_to_themed_login() {
+    if ( is_user_logged_in() ) {
+        return;
+    }
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    if ( 'GET' !== $method && 'HEAD' !== $method ) {
+        return; // allow form POSTs to wp-login.php for native username/password fallback
+    }
+    if ( ! empty( $_GET['action'] ) ) {
+        return;
+    }
+    if ( isset( $_GET['wp_admin_login'] ) ) {
+        return; // escape hatch for admin
+    }
+
+    $raw_redirect = isset( $_GET['redirect_to'] ) ? wp_unslash( $_GET['redirect_to'] ) : home_url( '/dashboard/' );
+    $redirect_to  = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
+
+    $target = add_query_arg( 'redirect_to', urlencode( $redirect_to ), home_url( '/login/' ) );
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'login_init', 'vance_redirect_wp_login_to_themed_login' );
+
+/**
+ * Modal-style auth UI — Google + Email login + Email signup.
+ *
+ * Renders a self-contained modal (overlay + card + tabs) with three flows:
+ *   1. Google Sign-In via the existing GSI client + vance_google_oauth_callback AJAX
+ *   2. Email + Password login via vance_email_login AJAX (uses wp_authenticate())
+ *   3. Email + Password signup via vance_email_signup AJAX (uses wp_create_user())
+ *
+ * All three honour the same ?redirect_to= query param (same-origin validated).
+ * Uses :has() CSS to hide site chrome only when the overlay is present.
+ */
+function vance_auth_modal_shortcode( $atts ) {
+    if ( is_user_logged_in() ) {
+        $current_user = wp_get_current_user();
+        return '<div class="vance-user-logged-in" style="text-align:center;padding:40px 20px;">
+            <p>Welcome back, ' . esc_html( $current_user->display_name ) . '.</p>
+            <p><a href="' . esc_url( home_url( '/dashboard/' ) ) . '" class="btn btn-primary">Go to dashboard</a>
+            &nbsp;<a href="' . esc_url( wp_logout_url( home_url() ) ) . '" class="btn btn-outline">Logout</a></p>
+        </div>';
+    }
+
+    $client_id = defined( 'GOOGLE_CLIENT_ID' ) ? GOOGLE_CLIENT_ID : '';
+
+    $raw_redirect = isset( $_GET['redirect_to'] ) ? wp_unslash( $_GET['redirect_to'] ) : home_url( '/dashboard/' );
+    $redirect_to  = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
+
+    $nonces = array(
+        'google' => wp_create_nonce( 'google_oauth_nonce' ),
+        'login'  => wp_create_nonce( 'vance_login_nonce' ),
+        'signup' => wp_create_nonce( 'vance_signup_nonce' ),
+    );
+
+    $ajax_url    = admin_url( 'admin-ajax.php' );
+    $lost_pw_url = wp_lostpassword_url( $redirect_to );
+
+    $cfg = wp_json_encode( array(
+        'ajaxUrl'    => $ajax_url,
+        'redirectTo' => $redirect_to,
+        'nonces'     => $nonces,
+        'clientId'   => $client_id,
+    ) );
+
+    ob_start();
+    ?>
+    <style>
+    .vance-auth-overlay{position:fixed;inset:0;background:rgba(15,30,30,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;animation:vanceFadeIn .2s ease-out}
+    @keyframes vanceFadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes vancePopIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+    .vance-auth-modal{background:#fff;border-radius:16px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 24px 72px rgba(0,0,0,0.3);animation:vancePopIn .25s ease-out;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+    .vance-auth-header{text-align:center;margin-bottom:24px}
+    .vance-auth-header h2{margin:0 0 6px;color:#1a1a1a;font-size:24px;font-weight:700}
+    .vance-auth-header p{margin:0;color:#666;font-size:14px}
+    .vance-auth-google{display:flex;justify-content:center;margin-bottom:18px;min-height:44px}
+    .vance-auth-divider{text-align:center;margin:18px 0;color:#999;position:relative;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+    .vance-auth-divider span{background:#fff;padding:0 12px;position:relative;z-index:1}
+    .vance-auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#e5ebeb}
+    .vance-auth-tabs{display:flex;gap:4px;margin-bottom:20px;background:#f1f5f5;padding:4px;border-radius:10px}
+    .vance-auth-tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;border-radius:7px;font-weight:600;color:#666;transition:all .15s;font-size:14px}
+    .vance-auth-tab.active{background:#fff;color:#008080;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+    .vance-auth-error{background:#fee;color:#a00;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;border:1px solid #fcc}
+    .vance-auth-error.active{display:block}
+    .vance-auth-form{display:none}
+    .vance-auth-form.active{display:block}
+    .vance-auth-field{margin-bottom:14px}
+    .vance-auth-field label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:6px}
+    .vance-auth-field input{width:100%;padding:11px 14px;border:1.5px solid #e0e6e6;border-radius:8px;font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
+    .vance-auth-field input:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
+    .vance-auth-forgot{text-align:right;margin:-6px 0 14px}
+    .vance-auth-forgot a{color:#008080;text-decoration:none;font-size:13px}
+    .vance-auth-forgot a:hover{text-decoration:underline}
+    .vance-auth-submit{width:100%;padding:13px;background:#008080;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
+    .vance-auth-submit:hover:not(:disabled){background:#006666}
+    .vance-auth-submit:disabled{background:#aaa;cursor:not-allowed}
+    .vance-auth-footer{text-align:center;margin-top:18px;font-size:13px;color:#888}
+    @media (max-width:480px){.vance-auth-modal{padding:28px 22px}}
+    /* Hide site chrome only when the modal is rendered on the page */
+    body:has(.vance-auth-overlay) .site-header,
+    body:has(.vance-auth-overlay) .site-footer,
+    body:has(.vance-auth-overlay) header.header,
+    body:has(.vance-auth-overlay) footer.footer,
+    body:has(.vance-auth-overlay) .main-header,
+    body:has(.vance-auth-overlay) .main-footer,
+    body:has(.vance-auth-overlay) .entry-header,
+    body:has(.vance-auth-overlay) .page-header{display:none !important}
+    body:has(.vance-auth-overlay){background:#f7fafa !important;overflow:hidden}
+    </style>
+
+    <div class="vance-auth-overlay" id="vance-auth-overlay" role="dialog" aria-modal="true" aria-labelledby="vance-auth-title">
+        <div class="vance-auth-modal">
+            <div class="vance-auth-header">
+                <h2 id="vance-auth-title">Welcome</h2>
+                <p>Sign in or create your account to continue</p>
+            </div>
+
+            <?php if ( $client_id ) : ?>
+            <div class="vance-auth-google">
+                <div id="g_id_onload"
+                    data-client_id="<?php echo esc_attr( $client_id ); ?>"
+                    data-context="signin" data-ux_mode="popup"
+                    data-callback="handleGoogleCredentialResponse"
+                    data-auto_prompt="false"></div>
+                <div class="g_id_signin" data-type="standard" data-shape="rectangular"
+                    data-theme="outline" data-text="continue_with" data-size="large"
+                    data-logo_alignment="left" data-width="340"></div>
+            </div>
+            <div class="vance-auth-divider"><span>or</span></div>
+            <?php endif; ?>
+
+            <div class="vance-auth-tabs" role="tablist">
+                <button class="vance-auth-tab active" type="button" data-target="vance-signin" role="tab">Sign in</button>
+                <button class="vance-auth-tab" type="button" data-target="vance-signup" role="tab">Sign up</button>
+            </div>
+
+            <div class="vance-auth-error" id="vance-auth-error" role="alert"></div>
+
+            <form class="vance-auth-form active" id="vance-signin" novalidate>
+                <div class="vance-auth-field">
+                    <label for="vance-signin-email">Email</label>
+                    <input id="vance-signin-email" type="email" name="email" required autocomplete="email">
+                </div>
+                <div class="vance-auth-field">
+                    <label for="vance-signin-password">Password</label>
+                    <input id="vance-signin-password" type="password" name="password" required autocomplete="current-password">
+                </div>
+                <div class="vance-auth-forgot"><a href="<?php echo esc_url( $lost_pw_url ); ?>">Forgot password?</a></div>
+                <button type="submit" class="vance-auth-submit" data-label="Sign in">Sign in</button>
+            </form>
+
+            <form class="vance-auth-form" id="vance-signup" novalidate>
+                <div class="vance-auth-field">
+                    <label for="vance-signup-name">Full name</label>
+                    <input id="vance-signup-name" type="text" name="name" required autocomplete="name">
+                </div>
+                <div class="vance-auth-field">
+                    <label for="vance-signup-email">Email</label>
+                    <input id="vance-signup-email" type="email" name="email" required autocomplete="email">
+                </div>
+                <div class="vance-auth-field">
+                    <label for="vance-signup-password">Password (min 8 characters)</label>
+                    <input id="vance-signup-password" type="password" name="password" minlength="8" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="vance-auth-submit" data-label="Create account">Create account</button>
+            </form>
+
+            <div class="vance-auth-footer">
+                By continuing you agree to our <a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>" style="color:#008080">Terms</a> &amp; <a href="<?php echo esc_url( home_url( '/privacy/' ) ); ?>" style="color:#008080">Privacy</a>.
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var CFG = <?php echo $cfg; // already JSON-encoded by wp_json_encode ?>;
+        var errEl = document.getElementById('vance-auth-error');
+
+        function showError(msg){
+            errEl.textContent = msg;
+            errEl.classList.add('active');
+        }
+        function clearError(){ errEl.classList.remove('active'); }
+
+        function lockButton(btn, lockText){
+            btn.dataset.label = btn.dataset.label || btn.textContent;
+            btn.disabled = true;
+            btn.textContent = lockText;
+        }
+        function unlockButton(btn){
+            btn.disabled = false;
+            btn.textContent = btn.dataset.label;
+        }
+
+        function postForm(action, nonce, fields){
+            var body = new URLSearchParams();
+            body.set('action', action);
+            body.set('nonce', nonce);
+            body.set('redirect_to', CFG.redirectTo);
+            Object.keys(fields).forEach(function(k){ body.set(k, fields[k]); });
+            return fetch(CFG.ajaxUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body.toString()
+            }).then(function(r){ return r.json(); });
+        }
+
+        // Tabs
+        document.querySelectorAll('.vance-auth-tab').forEach(function(tab){
+            tab.addEventListener('click', function(){
+                document.querySelectorAll('.vance-auth-tab').forEach(function(t){ t.classList.remove('active'); });
+                document.querySelectorAll('.vance-auth-form').forEach(function(f){ f.classList.remove('active'); });
+                this.classList.add('active');
+                document.getElementById(this.dataset.target).classList.add('active');
+                clearError();
+            });
+        });
+
+        // Email login
+        document.getElementById('vance-signin').addEventListener('submit', function(e){
+            e.preventDefault();
+            clearError();
+            var btn = this.querySelector('.vance-auth-submit');
+            lockButton(btn, 'Signing in…');
+            postForm('vance_email_login', CFG.nonces.login, {
+                email: this.email.value.trim(),
+                password: this.password.value
+            }).then(function(data){
+                if (data.success) {
+                    window.location.href = (data.data && data.data.redirect_to) || CFG.redirectTo;
+                } else {
+                    showError((data.data && (data.data.message || data.data)) || 'Sign in failed');
+                    unlockButton(btn);
+                }
+            }).catch(function(){ showError('Network error — try again'); unlockButton(btn); });
+        });
+
+        // Email signup
+        document.getElementById('vance-signup').addEventListener('submit', function(e){
+            e.preventDefault();
+            clearError();
+            var btn = this.querySelector('.vance-auth-submit');
+            lockButton(btn, 'Creating account…');
+            postForm('vance_email_signup', CFG.nonces.signup, {
+                name: this.name.value.trim(),
+                email: this.email.value.trim(),
+                password: this.password.value
+            }).then(function(data){
+                if (data.success) {
+                    window.location.href = (data.data && data.data.redirect_to) || CFG.redirectTo;
+                } else {
+                    showError((data.data && (data.data.message || data.data)) || 'Signup failed');
+                    unlockButton(btn);
+                }
+            }).catch(function(){ showError('Network error — try again'); unlockButton(btn); });
+        });
+
+        // Google
+        window.vanceLoginRedirect = CFG.redirectTo;
+        window.handleGoogleCredentialResponse = function(response){
+            clearError();
+            var body = new URLSearchParams();
+            body.set('action', 'vance_google_oauth_callback');
+            body.set('credential', response.credential);
+            body.set('nonce', CFG.nonces.google);
+            body.set('redirect_to', CFG.redirectTo);
+            fetch(CFG.ajaxUrl, {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body.toString()
+            }).then(function(r){ return r.json(); }).then(function(data){
+                if (data.success) {
+                    window.location.href = (data.data && data.data.redirect_to) || CFG.redirectTo;
+                } else {
+                    showError(typeof data.data === 'string' ? data.data : 'Google sign-in failed');
+                }
+            }).catch(function(){ showError('Network error — try again'); });
+        };
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode( 'vance_auth_modal', 'vance_auth_modal_shortcode' );
+
+/**
+ * AJAX: email + password login.
+ */
+function vance_email_login_ajax() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_login_nonce' ) ) {
+        wp_send_json_error( 'Invalid request — please refresh and try again.' );
+    }
+    // 10 attempts per 5 min per IP
+    if ( ! vance_rate_limit( 'login', 10, 300 ) ) {
+        wp_send_json_error( 'Too many login attempts. Please wait 5 minutes and try again.' );
+    }
+
+    $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+
+    if ( ! is_email( $email ) || '' === $password ) {
+        wp_send_json_error( 'Please enter a valid email and password.' );
+    }
+
+    // Try email-as-login first; fall back to username if user record has different login
+    $user = wp_authenticate( $email, $password );
+    if ( is_wp_error( $user ) ) {
+        $user_by_email = get_user_by( 'email', $email );
+        if ( $user_by_email ) {
+            $user = wp_authenticate( $user_by_email->user_login, $password );
+        }
+    }
+    if ( is_wp_error( $user ) ) {
+        wp_send_json_error( 'Incorrect email or password.' );
+    }
+
+    wp_set_current_user( $user->ID );
+    wp_set_auth_cookie( $user->ID, true );
+
+    $raw_redirect = isset( $_POST['redirect_to'] ) ? wp_unslash( $_POST['redirect_to'] ) : '';
+    $redirect_to  = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
+
+    wp_send_json_success( array( 'redirect_to' => $redirect_to ) );
+}
+add_action( 'wp_ajax_nopriv_vance_email_login', 'vance_email_login_ajax' );
+add_action( 'wp_ajax_vance_email_login', 'vance_email_login_ajax' );
+
+/**
+ * AJAX: email + password signup.
+ *
+ * Defaults new users to the "patient" role keys used by the Google flow so
+ * existing dashboard logic continues to work identically.
+ */
+function vance_email_signup_ajax() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_signup_nonce' ) ) {
+        wp_send_json_error( 'Invalid request — please refresh and try again.' );
+    }
+    // 5 signup attempts per 15 min per IP (prevents mass account creation)
+    if ( ! vance_rate_limit( 'signup', 5, 900 ) ) {
+        wp_send_json_error( 'Too many signup attempts. Please wait 15 minutes and try again.' );
+    }
+
+    $name     = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+    $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+
+    if ( '' === $name ) {
+        wp_send_json_error( 'Please enter your name.' );
+    }
+    if ( ! is_email( $email ) ) {
+        wp_send_json_error( 'Please enter a valid email address.' );
+    }
+    if ( strlen( $password ) < 8 ) {
+        wp_send_json_error( 'Password must be at least 8 characters.' );
+    }
+    if ( email_exists( $email ) ) {
+        wp_send_json_error( 'An account with this email already exists. Try signing in.' );
+    }
+
+    // Username from email local-part, deduplicated
+    $username      = sanitize_user( str_replace( '.', '_', strstr( $email, '@', true ) ) );
+    $base_username = $username;
+    $i             = 1;
+    while ( username_exists( $username ) ) {
+        $username = $base_username . $i;
+        $i++;
+    }
+
+    $user_id = wp_create_user( $username, $password, $email );
+    if ( is_wp_error( $user_id ) ) {
+        wp_send_json_error( $user_id->get_error_message() );
+    }
+
+    $name_parts = explode( ' ', $name, 2 );
+    wp_update_user( array(
+        'ID'           => $user_id,
+        'display_name' => $name,
+        'first_name'   => isset( $name_parts[0] ) ? $name_parts[0] : '',
+        'last_name'    => isset( $name_parts[1] ) ? $name_parts[1] : '',
+    ) );
+
+    // Match the Google flow's role assignment for dashboard compatibility
+    update_user_meta( $user_id, '_sla_user_type', 'patient' );
+    update_user_meta( $user_id, '_sla_dashboard_role', 'patient' );
+
+    // Mark email as unverified and dispatch verification email
+    update_user_meta( $user_id, '_vance_email_verified', 0 );
+    vance_send_verification_email( $user_id );
+
+    wp_set_current_user( $user_id );
+    wp_set_auth_cookie( $user_id, true );
+
+    // Send the new user to /verify-email/ regardless of requested redirect_to
+    // (they hit the dashboard gate otherwise). The gate handles re-redirects on click.
+    wp_send_json_success( array(
+        'redirect_to'        => home_url( '/verify-email/' ),
+        'requires_verification' => true,
+    ) );
+}
+add_action( 'wp_ajax_nopriv_vance_email_signup', 'vance_email_signup_ajax' );
+add_action( 'wp_ajax_vance_email_signup', 'vance_email_signup_ajax' );
+
+/* =====================================================================
+ * Rate limiting helpers (transient-backed, IP-bucketed).
+ * ===================================================================== */
+
+/**
+ * Resolve client IP honouring common proxy headers.
+ * Falls back to REMOTE_ADDR, then to 0.0.0.0.
+ */
+function vance_get_client_ip() {
+    foreach ( array( 'HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR' ) as $h ) {
+        if ( ! empty( $_SERVER[ $h ] ) ) {
+            $candidate = trim( explode( ',', $_SERVER[ $h ] )[0] );
+            if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+                return $candidate;
+            }
+        }
+    }
+    return '0.0.0.0';
+}
+
+/**
+ * Increment-and-check counter per (action_key, IP).
+ * Returns true if request is within the allowance, false if it should be blocked.
+ */
+function vance_rate_limit( $action_key, $max_attempts = 10, $window_seconds = 300 ) {
+    $ip         = vance_get_client_ip();
+    $bucket_key = 'vance_rl_' . md5( $action_key . '|' . $ip );
+    $hits       = (int) get_transient( $bucket_key );
+    if ( $hits >= $max_attempts ) {
+        return false;
+    }
+    set_transient( $bucket_key, $hits + 1, $window_seconds );
+    return true;
+}
+
+/* =====================================================================
+ * Email verification — token issue, send, verify, gate, resend.
+ *
+ * User meta:
+ *   _vance_email_verified         — '1' verified, '0' unverified, missing = legacy-verified
+ *   _vance_email_verify_token     — bcrypt hash of one-time verification token
+ *   _vance_email_verify_sent      — unix ts of last verification email sent
+ * ===================================================================== */
+
+/**
+ * Generate a one-time token, store its hash, and email a verification link.
+ */
+function vance_send_verification_email( $user_id ) {
+    $user = get_user_by( 'id', $user_id );
+    if ( ! $user ) {
+        return false;
+    }
+
+    $token = wp_generate_password( 32, false, false );
+    update_user_meta( $user_id, '_vance_email_verify_token', wp_hash_password( $token ) );
+    update_user_meta( $user_id, '_vance_email_verify_sent', time() );
+
+    $verify_url = add_query_arg(
+        array(
+            'verify_token' => $token,
+            'verify_uid'   => $user_id,
+        ),
+        home_url( '/verify-email/' )
+    );
+
+    $site_name = get_bloginfo( 'name' );
+    $subject   = sprintf( 'Verify your %s account', $site_name );
+    $message   = sprintf(
+        "Hi %s,\n\n" .
+        "Welcome to %s! Please confirm your email by clicking the link below:\n\n" .
+        "%s\n\n" .
+        "This link will keep working until you successfully verify.\n" .
+        "If you did not create this account, you can safely ignore this email.\n\n" .
+        "— %s",
+        $user->display_name ? $user->display_name : $user->user_login,
+        $site_name,
+        $verify_url,
+        $site_name
+    );
+
+    $headers = array( 'Content-Type: text/plain; charset=UTF-8' );
+
+    return wp_mail( $user->user_email, $subject, $message, $headers );
+}
+
+/**
+ * Process ?verify_token=X&verify_uid=N on any frontend request.
+ * Runs early on template_redirect so we can short-circuit before page render.
+ */
+function vance_verify_email_handler() {
+    if ( ! isset( $_GET['verify_token'], $_GET['verify_uid'] ) ) {
+        return;
+    }
+
+    $uid         = absint( $_GET['verify_uid'] );
+    $token       = sanitize_text_field( wp_unslash( $_GET['verify_token'] ) );
+    $stored_hash = $uid ? get_user_meta( $uid, '_vance_email_verify_token', true ) : '';
+
+    if ( ! $uid || ! $stored_hash || ! wp_check_password( $token, $stored_hash ) ) {
+        wp_safe_redirect( add_query_arg( 'verify_error', '1', home_url( '/verify-email/' ) ) );
+        exit;
+    }
+
+    update_user_meta( $uid, '_vance_email_verified', 1 );
+    delete_user_meta( $uid, '_vance_email_verify_token' );
+
+    // If the user is already logged-in as this account, send them to the dashboard.
+    // Otherwise, send them to the login modal with redirect_to=dashboard.
+    if ( is_user_logged_in() && get_current_user_id() === $uid ) {
+        wp_safe_redirect( add_query_arg( 'verified', '1', home_url( '/dashboard/' ) ) );
+    } else {
+        wp_safe_redirect( add_query_arg(
+            array(
+                'verified'    => '1',
+                'redirect_to' => urlencode( home_url( '/dashboard/' ) ),
+            ),
+            home_url( '/login/' )
+        ) );
+    }
+    exit;
+}
+add_action( 'template_redirect', 'vance_verify_email_handler', 5 );
+
+/**
+ * Gate the /dashboard/ page for users with `_vance_email_verified === '0'`.
+ * Missing meta is treated as verified (backwards compat with pre-existing users).
+ */
+function vance_gate_unverified_users() {
+    if ( ! is_user_logged_in() || ! is_page( 'dashboard' ) ) {
+        return;
+    }
+    $verified = get_user_meta( get_current_user_id(), '_vance_email_verified', true );
+    if ( '' === $verified ) {
+        return; // legacy users with no meta — let them through
+    }
+    if ( 1 !== (int) $verified ) {
+        wp_safe_redirect( home_url( '/verify-email/' ) );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'vance_gate_unverified_users' );
+
+/**
+ * AJAX: resend verification email. Rate-limited to prevent abuse.
+ */
+function vance_resend_verification_ajax() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_resend_nonce' ) ) {
+        wp_send_json_error( 'Invalid request — please refresh and try again.' );
+    }
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( 'Please sign in first.' );
+    }
+    if ( ! vance_rate_limit( 'resend_verify', 3, 600 ) ) {
+        wp_send_json_error( 'Too many resend requests. Please wait 10 minutes and try again.' );
+    }
+    $uid      = get_current_user_id();
+    $verified = get_user_meta( $uid, '_vance_email_verified', true );
+    if ( '1' === (string) $verified ) {
+        wp_send_json_success( array( 'message' => 'Your email is already verified.', 'already_verified' => true ) );
+    }
+    if ( vance_send_verification_email( $uid ) ) {
+        wp_send_json_success( array( 'message' => 'Verification email sent.' ) );
+    }
+    wp_send_json_error( 'Could not send verification email. Please contact support.' );
+}
+add_action( 'wp_ajax_vance_resend_verification', 'vance_resend_verification_ajax' );
+
+/**
+ * Shortcode: [vance_verify_email] — page content for the /verify-email/ landing.
+ */
+function vance_verify_email_shortcode() {
+    $is_verified_now = isset( $_GET['verified'] ) && '1' === $_GET['verified'];
+    $had_error       = isset( $_GET['verify_error'] ) && '1' === $_GET['verify_error'];
+
+    if ( $is_verified_now ) {
+        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,128,128,0.08)">
+            <div style="font-size:48px;margin-bottom:12px">&#10003;</div>
+            <h1 style="margin:0 0 8px;color:#008080">Email verified</h1>
+            <p style="color:#666;margin-bottom:24px">Your account is ready. Redirecting to your dashboard&hellip;</p>
+            <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Go to dashboard</a>
+            <script>setTimeout(function(){window.location.href=' . wp_json_encode( home_url( '/dashboard/' ) ) . ';},1500);</script>
+        </div>';
+    }
+
+    if ( ! is_user_logged_in() ) {
+        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.08)">
+            <h1 style="margin:0 0 8px;color:#1a1a1a">Verify your email</h1>
+            <p style="color:#666;margin-bottom:24px">Please sign in to resend your verification email.</p>
+            <a href="' . esc_url( home_url( '/login/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Sign in</a>
+        </div>';
+    }
+
+    $user        = wp_get_current_user();
+    $resend_nonce = wp_create_nonce( 'vance_resend_nonce' );
+    $ajax_url    = admin_url( 'admin-ajax.php' );
+
+    $error_html = $had_error
+        ? '<div style="background:#fee;color:#a00;padding:12px;border-radius:8px;margin-bottom:16px;border:1px solid #fcc;font-size:14px">That verification link was invalid or has already been used. Request a new one below.</div>'
+        : '';
+
+    ob_start();
+    ?>
+    <div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
+        <h1 style="margin:0 0 8px;color:#1a1a1a;font-size:24px">Check your inbox</h1>
+        <p style="color:#666;margin-bottom:24px;line-height:1.5">
+            We sent a verification link to <strong><?php echo esc_html( $user->user_email ); ?></strong>.<br>
+            Click the link in that email to activate your account.
+        </p>
+        <?php echo $error_html; // sanitized literal above ?>
+        <div id="vance-resend-status" style="margin-bottom:14px;font-size:14px"></div>
+        <button id="vance-resend-btn" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">Resend verification email</button>
+        <p style="margin-top:24px;font-size:13px;color:#999">
+            Already verified? <a href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>" style="color:#008080">Go to dashboard</a> &middot;
+            <a href="<?php echo esc_url( wp_logout_url( home_url() ) ); ?>" style="color:#008080">Sign out</a>
+        </p>
+    </div>
+    <script>
+    (function(){
+        var btn = document.getElementById('vance-resend-btn');
+        var status = document.getElementById('vance-resend-status');
+        btn.addEventListener('click', function(){
+            btn.disabled = true; btn.textContent = 'Sending…';
+            var body = new URLSearchParams();
+            body.set('action', 'vance_resend_verification');
+            body.set('nonce', <?php echo wp_json_encode( $resend_nonce ); ?>);
+            fetch(<?php echo wp_json_encode( $ajax_url ); ?>, {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body.toString()
+            }).then(function(r){ return r.json(); }).then(function(data){
+                if (data.success) {
+                    status.style.color = '#008080';
+                    status.textContent = data.data.message || 'Verification email sent.';
+                    if (data.data.already_verified) {
+                        setTimeout(function(){ window.location.href = <?php echo wp_json_encode( home_url( '/dashboard/' ) ); ?>; }, 1200);
+                        return;
+                    }
+                } else {
+                    status.style.color = '#a00';
+                    status.textContent = data.data || 'Failed to send. Please try again.';
+                }
+                btn.disabled = false; btn.textContent = 'Resend verification email';
+            }).catch(function(){
+                status.style.color = '#a00';
+                status.textContent = 'Network error.';
+                btn.disabled = false; btn.textContent = 'Resend verification email';
+            });
+        });
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode( 'vance_verify_email', 'vance_verify_email_shortcode' );
 
 /**
  * Include Op-Ed Template Functions
@@ -2605,7 +3355,7 @@ function vance_customize_testimonials( $wp_customize ) {
     $wp_customize->add_section( 'vance_testimonials_section', array(
         'title'    => __( 'Content: Testimonials', 'sla-health-hub' ),
         'priority' => 45,
-        'panel'    => 'vance_theme_panel',
+        'panel'    => 'vance_content_panel',
         'description' => 'Manage the "What Our Community Says" section.'
     ) );
 
@@ -2629,6 +3379,22 @@ function vance_customize_testimonials( $wp_customize ) {
         'label'   => __( 'Section Heading', 'sla-health-hub' ),
         'section' => 'vance_testimonials_section',
         'type'    => 'text',
+    ) );
+
+    // Heading alignment
+    $wp_customize->add_setting( 'vance_testimonial_heading_align', array(
+        'default'           => 'left',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_testimonial_heading_align', array(
+        'label'   => __( 'Heading Alignment', 'sla-health-hub' ),
+        'section' => 'vance_testimonials_section',
+        'type'    => 'select',
+        'choices' => array(
+            'left'   => 'Left',
+            'center' => 'Center',
+            'right'  => 'Right',
+        ),
     ) );
 
     // Selection Mode
@@ -2669,6 +3435,120 @@ function vance_customize_testimonials( $wp_customize ) {
         'type'    => 'number',
         'input_attrs' => array( 'min' => 1, 'max' => 9 ),
     ) );
+
+    // Inline testimonials — used as fallback when no Testimonial CPT posts exist.
+    // Lets editors author testimonials directly in the Customizer without creating posts.
+    $inline_defaults = array(
+        1 => array(
+            'quote' => 'Vance Medical Hub has transformed how I manage my IBD. The clinical reviews are clear, current, and genuinely useful between consultant appointments.',
+            'name'  => 'Sarah J.',
+            'role'  => 'Living with Crohn\'s for 8 years',
+        ),
+        2 => array(
+            'quote' => 'As a gastroenterology nurse I recommend this site to patients every week. The evidence-based summaries save them hours of confused Googling.',
+            'name'  => 'Dr Imran K.',
+            'role'  => 'IBD Specialist Nurse',
+        ),
+        3 => array(
+            'quote' => 'The omega-3 calculator and recipe tools are the most practical resources I\'ve found anywhere. Finally something built for the patient, not the clinician.',
+            'name'  => 'Marcus T.',
+            'role'  => 'Ulcerative Colitis, diagnosed 2022',
+        ),
+    );
+
+    foreach ( $inline_defaults as $i => $d ) {
+        $wp_customize->add_setting( "vance_testimonial_inline_{$i}_quote", array(
+            'default'           => $d['quote'],
+            'sanitize_callback' => 'wp_kses_post',
+        ) );
+        $wp_customize->add_control( "vance_testimonial_inline_{$i}_quote", array(
+            'label'       => sprintf( __( 'Testimonial %d — Quote', 'sla-health-hub' ), $i ),
+            'description' => 1 === $i ? __( 'Inline testimonials show when no Testimonial posts exist. Leave Quote blank to skip a slot.', 'sla-health-hub' ) : '',
+            'section'     => 'vance_testimonials_section',
+            'type'        => 'textarea',
+        ) );
+
+        $wp_customize->add_setting( "vance_testimonial_inline_{$i}_name", array(
+            'default'           => $d['name'],
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( "vance_testimonial_inline_{$i}_name", array(
+            'label'   => sprintf( __( 'Testimonial %d — Name', 'sla-health-hub' ), $i ),
+            'section' => 'vance_testimonials_section',
+            'type'    => 'text',
+        ) );
+
+        $wp_customize->add_setting( "vance_testimonial_inline_{$i}_role", array(
+            'default'           => $d['role'],
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( "vance_testimonial_inline_{$i}_role", array(
+            'label'   => sprintf( __( 'Testimonial %d — Role / Subtitle', 'sla-health-hub' ), $i ),
+            'section' => 'vance_testimonials_section',
+            'type'    => 'text',
+        ) );
+
+        $wp_customize->add_setting( "vance_testimonial_inline_{$i}_image", array(
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_testimonial_inline_{$i}_image", array(
+            'label'   => sprintf( __( 'Testimonial %d — Image (optional)', 'sla-health-hub' ), $i ),
+            'section' => 'vance_testimonials_section',
+        ) ) );
+    }
+
+    // ---------- Styling: layout, colours, font sizes ----------
+    $style_fields = array(
+        // Layout
+        'vance_testimonial_pad_top'        => array( 'default' => 100, 'label' => 'Section Padding Top (px)',    'type' => 'number', 'sanitize' => 'absint' ),
+        'vance_testimonial_pad_bottom'     => array( 'default' => 100, 'label' => 'Section Padding Bottom (px)', 'type' => 'number', 'sanitize' => 'absint' ),
+
+        // Colours
+        'vance_testimonial_section_bg'     => array( 'default' => '#F8FAFC', 'label' => 'Section Background',           'type' => 'color' ),
+        'vance_testimonial_border_color'   => array( 'default' => '#e2e8f0', 'label' => 'Section Top Border',           'type' => 'color' ),
+        'vance_testimonial_underline_color'=> array( 'default' => '#e5e7eb', 'label' => 'Heading Underline Colour',     'type' => 'color' ),
+        'vance_testimonial_accent_color'   => array( 'default' => '#008080', 'label' => 'Accent Colour (bar + icon)',   'type' => 'color' ),
+        'vance_testimonial_heading_color'  => array( 'default' => '#0A1929', 'label' => 'Heading Colour',               'type' => 'color' ),
+        'vance_testimonial_card_bg'        => array( 'default' => '#ffffff', 'label' => 'Card Background',           'type' => 'color' ),
+        'vance_testimonial_card_border'    => array( 'default' => '#e2e8f0', 'label' => 'Card Border',               'type' => 'color' ),
+        'vance_testimonial_quote_color'    => array( 'default' => '#475569', 'label' => 'Quote Text Colour',         'type' => 'color' ),
+        'vance_testimonial_name_color'     => array( 'default' => '#0f172a', 'label' => 'Author Name Colour',        'type' => 'color' ),
+        'vance_testimonial_role_color'     => array( 'default' => '#64748b', 'label' => 'Role / Subtitle Colour',    'type' => 'color' ),
+        'vance_testimonial_avatar_bg'      => array( 'default' => '#0A1929', 'label' => 'Avatar Fallback Background','type' => 'color' ),
+        'vance_testimonial_avatar_color'   => array( 'default' => '#ffffff', 'label' => 'Avatar Fallback Text',      'type' => 'color' ),
+
+        // Font sizes
+        'vance_testimonial_heading_size'   => array( 'default' => 24, 'label' => 'Heading Font Size (px)',     'type' => 'number', 'sanitize' => 'absint' ),
+        'vance_testimonial_quote_size'     => array( 'default' => 16, 'label' => 'Quote Font Size (px)',       'type' => 'number', 'sanitize' => 'absint' ),
+        'vance_testimonial_name_size'      => array( 'default' => 16, 'label' => 'Author Name Font Size (px)', 'type' => 'number', 'sanitize' => 'absint' ),
+        'vance_testimonial_role_size'      => array( 'default' => 12, 'label' => 'Role Font Size (px)',        'type' => 'number', 'sanitize' => 'absint' ),
+    );
+
+    foreach ( $style_fields as $setting_id => $cfg ) {
+        $sanitize = isset( $cfg['sanitize'] )
+            ? $cfg['sanitize']
+            : ( 'color' === $cfg['type'] ? 'sanitize_hex_color' : 'sanitize_text_field' );
+
+        $wp_customize->add_setting( $setting_id, array(
+            'default'           => $cfg['default'],
+            'sanitize_callback' => $sanitize,
+        ) );
+
+        if ( 'color' === $cfg['type'] ) {
+            $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $setting_id, array(
+                'label'   => __( $cfg['label'], 'sla-health-hub' ),
+                'section' => 'vance_testimonials_section',
+            ) ) );
+        } else {
+            $wp_customize->add_control( $setting_id, array(
+                'label'   => __( $cfg['label'], 'sla-health-hub' ),
+                'section' => 'vance_testimonials_section',
+                'type'    => 'number',
+                'input_attrs' => array( 'min' => 0, 'max' => 400, 'step' => 1 ),
+            ) );
+        }
+    }
 }
 add_action( 'customize_register', 'vance_customize_testimonials' );
 
@@ -2703,63 +3583,106 @@ function vance_testimonials_shortcode( $atts ) {
 
     $query = new WP_Query( $args );
 
-    // Output Buffer
+    // Collect items from CPT, or fall back to inline Customizer testimonials.
+    $items = array();
+    if ( $query->have_posts() ) {
+        while ( $query->have_posts() ) {
+            $query->the_post();
+            $items[] = array(
+                'quote' => get_the_content(),
+                'name'  => get_the_title(),
+                'role'  => get_post_meta( get_the_ID(), '_testimonial_role', true ),
+                'image' => has_post_thumbnail() ? get_the_post_thumbnail_url( get_the_ID(), 'thumbnail' ) : '',
+            );
+        }
+        wp_reset_postdata();
+    } else {
+        for ( $i = 1; $i <= 3; $i++ ) {
+            $quote = vance_get_theme_mod( "vance_testimonial_inline_{$i}_quote", '' );
+            if ( ! $quote ) {
+                continue;
+            }
+            $items[] = array(
+                'quote' => $quote,
+                'name'  => vance_get_theme_mod( "vance_testimonial_inline_{$i}_name", '' ),
+                'role'  => vance_get_theme_mod( "vance_testimonial_inline_{$i}_role", '' ),
+                'image' => vance_get_theme_mod( "vance_testimonial_inline_{$i}_image", '' ),
+            );
+        }
+    }
+
+    if ( empty( $items ) ) {
+        return '';
+    }
+
+    // Style tokens
+    $pad_top      = absint( vance_get_theme_mod( 'vance_testimonial_pad_top', 100 ) );
+    $pad_bot      = absint( vance_get_theme_mod( 'vance_testimonial_pad_bottom', 100 ) );
+    $sec_bg       = vance_get_theme_mod( 'vance_testimonial_section_bg', '#F8FAFC' );
+    $sec_border   = vance_get_theme_mod( 'vance_testimonial_border_color', '#e2e8f0' );
+    $underline    = vance_get_theme_mod( 'vance_testimonial_underline_color', '#e5e7eb' );
+    $accent       = vance_get_theme_mod( 'vance_testimonial_accent_color', '#008080' );
+    $h_align_raw  = vance_get_theme_mod( 'vance_testimonial_heading_align', 'left' );
+    $h_align      = in_array( $h_align_raw, array( 'left', 'center', 'right' ), true ) ? $h_align_raw : 'left';
+    $h_justify    = ( 'center' === $h_align ) ? 'center' : ( ( 'right' === $h_align ) ? 'flex-end' : 'flex-start' );
+    $heading_col  = vance_get_theme_mod( 'vance_testimonial_heading_color', '#0A1929' );
+    $card_bg      = vance_get_theme_mod( 'vance_testimonial_card_bg', '#ffffff' );
+    $card_border  = vance_get_theme_mod( 'vance_testimonial_card_border', '#e2e8f0' );
+    $quote_col    = vance_get_theme_mod( 'vance_testimonial_quote_color', '#475569' );
+    $name_col     = vance_get_theme_mod( 'vance_testimonial_name_color', '#0f172a' );
+    $role_col     = vance_get_theme_mod( 'vance_testimonial_role_color', '#64748b' );
+    $avatar_bg    = vance_get_theme_mod( 'vance_testimonial_avatar_bg', '#0A1929' );
+    $avatar_col   = vance_get_theme_mod( 'vance_testimonial_avatar_color', '#ffffff' );
+    $heading_size = absint( vance_get_theme_mod( 'vance_testimonial_heading_size', 24 ) );
+    $quote_size   = absint( vance_get_theme_mod( 'vance_testimonial_quote_size', 16 ) );
+    $name_size    = absint( vance_get_theme_mod( 'vance_testimonial_name_size', 16 ) );
+    $role_size    = absint( vance_get_theme_mod( 'vance_testimonial_role_size', 12 ) );
+
     ob_start();
     ?>
-    <section class="vance-testimonials-section" style="padding: 100px 0; background: #F8FAFC; border-top: 1px solid #e2e8f0; position: relative; z-index: 10;">
+    <section class="vance-testimonials-section" style="padding: <?php echo $pad_top; ?>px 0 <?php echo $pad_bot; ?>px; background: <?php echo esc_attr( $sec_bg ); ?>; border-top: 1px solid <?php echo esc_attr( $sec_border ); ?>; position: relative; z-index: 10;">
         <div class="container">
-            <?php if ( $query->have_posts() ) : ?>
-                <?php if ( $heading ) : ?>
-                    <div class="section-label" style="display: flex; align-items: center; gap: 12px; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 16px;">
-                        <div class="color-bar" style="background: #008080; width: 6px; height: 24px; border-radius: 0;"></div>
-                        <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0A1929; font-family: 'Outfit', sans-serif; text-transform: uppercase;"><?php echo esc_html( $heading ); ?></h2>
-                    </div>
-                <?php endif; ?>
+            <?php if ( $heading ) : ?>
+                <div class="section-label" style="display: flex; align-items: center; gap: 12px; margin-bottom: 40px; border-bottom: 2px solid <?php echo esc_attr( $underline ); ?>; padding-bottom: 16px; justify-content: <?php echo esc_attr( $h_justify ); ?>; text-align: <?php echo esc_attr( $h_align ); ?>;">
+                    <div class="color-bar" style="background: <?php echo esc_attr( $accent ); ?>; width: 6px; height: <?php echo max( 16, $heading_size ); ?>px; border-radius: 0;"></div>
+                    <h2 style="margin: 0; font-size: <?php echo $heading_size; ?>px; font-weight: 800; color: <?php echo esc_attr( $heading_col ); ?>; font-family: 'Outfit', sans-serif; text-transform: uppercase;"><?php echo esc_html( $heading ); ?></h2>
+                </div>
+            <?php endif; ?>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
-                    <?php while ( $query->have_posts() ) : $query->the_post(); 
-                        $role = get_post_meta( get_the_ID(), '_testimonial_role', true ); 
-                    ?>
-                        <div style="background: white; border-radius: 0; padding: 40px 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; flex-direction: column; position: relative;">
-                            <!-- Quote Icon -->
-                            <div style="position: absolute; top: 24px; right: 24px;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#008080" style="opacity: 0.1;">
-                                    <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
-                                </svg>
-                            </div>
-                            
-                            <!-- Content -->
-                            <div style="font-family: 'Inter', sans-serif; font-size: 16px; color: #475569; line-height: 1.7; font-style: italic; margin-bottom: 24px; flex-grow: 1;">
-                                "<?php echo get_the_content(); ?>"
-                            </div>
-                            
-                            <!-- Author -->
-                            <div style="display: flex; align-items: center; gap: 16px; border-top: 1px solid #f1f5f9; padding-top: 24px; margin-top: auto;">
-                                <?php if( has_post_thumbnail() ): ?>
-                                    <img src="<?php echo get_the_post_thumbnail_url( get_the_ID(), 'thumbnail' ); ?>" style="width: 56px; height: 56px; border-radius: 0; object-fit: cover; border: 3px solid #f8fafc;">
-                                <?php else: ?>
-                                    <div style="width: 56px; height: 56px; border-radius: 0; background: #0A1929; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; font-family: 'Outfit', sans-serif;">
-                                        <?php echo strtoupper(substr(get_the_title(), 0, 1)); ?>
-                                    </div>
-                                <?php endif; ?>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;"><?php the_title(); ?></h4>
-                                    <?php if($role): ?>
-                                        <span style="font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo esc_html($role); ?></span>
-                                    <?php endif; ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                <?php foreach ( $items as $item ) : ?>
+                    <div style="background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; padding: 40px 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
+                        <div style="position: absolute; top: 24px; right: 24px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="<?php echo esc_attr( $accent ); ?>" style="opacity: 0.1;">
+                                <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
+                            </svg>
+                        </div>
+
+                        <div style="font-family: 'Inter', sans-serif; font-size: <?php echo $quote_size; ?>px; color: <?php echo esc_attr( $quote_col ); ?>; line-height: 1.7; font-style: italic; margin-bottom: 24px; flex-grow: 1;">
+                            "<?php echo wp_kses_post( $item['quote'] ); ?>"
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 16px; border-top: 1px solid <?php echo esc_attr( $card_border ); ?>; padding-top: 24px; margin-top: auto;">
+                            <?php if ( ! empty( $item['image'] ) ) : ?>
+                                <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 56px; height: 56px; border-radius: 0; object-fit: cover; border: 3px solid <?php echo esc_attr( $sec_bg ); ?>;">
+                            <?php else : ?>
+                                <div style="width: 56px; height: 56px; border-radius: 0; background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; font-family: 'Outfit', sans-serif;">
+                                    <?php echo esc_html( strtoupper( substr( $item['name'], 0, 1 ) ) ); ?>
                                 </div>
+                            <?php endif; ?>
+                            <div>
+                                <h4 style="margin: 0; font-size: <?php echo $name_size; ?>px; font-weight: 700; color: <?php echo esc_attr( $name_col ); ?>; font-family: 'Outfit', sans-serif;"><?php echo esc_html( $item['name'] ); ?></h4>
+                                <?php if ( ! empty( $item['role'] ) ) : ?>
+                                    <span style="font-size: <?php echo $role_size; ?>px; color: <?php echo esc_attr( $role_col ); ?>; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo esc_html( $item['role'] ); ?></span>
+                                <?php endif; ?>
                             </div>
                         </div>
-                    <?php endwhile; ?>
-                </div>
-            <?php else : ?>
-                <!-- No Testimonials Found -->
-                <div style="display: none;">No Testimonials Found</div>
-            <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </div>
     </section>
     <?php
-    wp_reset_postdata();
     return ob_get_clean();
 }
 add_shortcode( 'testimonials', 'vance_testimonials_shortcode' );
@@ -2789,6 +3712,28 @@ function vance_save_testimonial_meta( $post_id ) {
 }
 add_action( 'save_post', 'vance_save_testimonial_meta' );
 
+/**
+ * Prefill wp-login.php?action=register email field from ?user_email= query param.
+ * Used by the homepage Premium Subscribe form which submits via GET to the registration URL.
+ */
+function vance_prefill_register_email() {
+    if ( empty( $_GET['user_email'] ) ) {
+        return;
+    }
+    $email = sanitize_email( wp_unslash( $_GET['user_email'] ) );
+    if ( ! $email ) {
+        return;
+    }
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var f = document.getElementById('user_email');
+        if (f && !f.value) { f.value = <?php echo wp_json_encode( $email ); ?>; }
+    });
+    </script>
+    <?php
+}
+add_action( 'login_form_register', 'vance_prefill_register_email' );
 
 
 
