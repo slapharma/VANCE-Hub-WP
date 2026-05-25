@@ -620,6 +620,12 @@ body {
             gap: 24px;
             height: 100%;
         }
+        /* The label is a flex item inside .pathway-tiles-stack, so the
+           container's gap:24px already provides spacing to the next item.
+           Zero out the label's own margin-bottom on THIS block so the first
+           tool card starts at the same Y as the featured news card on the
+           right (which has no flex gap). */
+        .pathway-content-section .pathway-tiles-stack > .section-label { margin-bottom: 0 !important; }
         @media (max-width: 992px) {
             .pathway-content-section .pathway-split-grid { grid-template-columns: 1fr; }
             .pathway-content-section .bento-grid-news { grid-template-columns: 1fr; grid-template-rows: auto; }
@@ -635,7 +641,11 @@ body {
             border-radius: 0;
             transition: all 0.3s ease;
             overflow: hidden;
-            height: 100%;
+            /* flex:1 inside the height:100% stack splits available column
+               height between the two cards so they both end at the same Y
+               as the featured news card on the right. */
+            flex: 1;
+            min-height: 0;
         }
         .pwc-card:hover {
             background: <?php echo esc_attr($pwc_hover_color); ?>;
@@ -645,7 +655,11 @@ body {
         }
         .pwc-card-image {
             width: 100%;
-            height: 180px;
+            /* Was 180px — pushed each card to ~340px which made the stack
+               overflow the right column. Now a tight 70px strip, so each
+               card is ~150px and the two fit cleanly inside the featured
+               news card's vertical envelope. */
+            height: 70px;
             background-position: center center;
             background-size: cover;
             background-repeat: no-repeat;
@@ -653,20 +667,29 @@ body {
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         .pwc-card-image .pwc-fallback-icon {
-            font-size: 56px;
+            font-size: 28px;
             color: #ffffff;
             opacity: 0.85;
             font-weight: 800;
             font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.5px;
         }
         .pwc-card-body {
-            padding: 20px 24px;
+            padding: 16px 20px;
             display: flex;
             flex-direction: column;
             flex: 1;
+            min-height: 0;
             justify-content: space-between;
+        }
+        .pwc-card-body p {
+            -webkit-line-clamp: 2;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .pwc-card:hover .pwc-card-body h2,
         .pwc-card:hover .pwc-card-body p {
@@ -674,7 +697,7 @@ body {
         }
         @media (max-width: 992px) {
             .pathway-content-section { padding-top: 60px; }
-            .pwc-card-image { height: 140px; }
+            .pwc-card-image { height: 60px; }
         }
     </style>
     <section class="pathway-content-section">
