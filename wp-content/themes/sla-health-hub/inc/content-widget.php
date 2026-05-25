@@ -148,21 +148,21 @@ function vance_cw_render_bento( $posts, $n, $featured_pos, $text_align, $show_da
 	$cols = ( $featured_pos === 'right' ) ? '7fr 5fr' : '5fr 7fr';
 	?>
 	<style>
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-grid {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-grid {
 			display: grid;
 			grid-template-columns: <?php echo esc_attr( $cols ); ?>;
 			gap: 32px;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-featured-cell {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-featured-cell {
 			<?php echo $featured_pos === 'right' ? 'order: 2;' : 'order: 1;'; ?>
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-side-cells {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-side-cells {
 			<?php echo $featured_pos === 'right' ? 'order: 1;' : 'order: 2;'; ?>
 			display: flex;
 			flex-direction: column;
 			gap: 24px;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-featured {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-featured {
 			display: block;
 			position: relative;
 			min-height: 360px;
@@ -171,13 +171,13 @@ function vance_cw_render_bento( $posts, $n, $featured_pos, $text_align, $show_da
 			text-decoration: none;
 			background: #0A1929;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-featured img {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-featured img {
 			position: absolute; inset: 0;
 			width: 100%; height: 100%;
 			object-fit: cover;
 			opacity: 0.7;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-featured .overlay {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-featured .overlay {
 			position: relative; z-index: 2;
 			padding: 32px;
 			background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 100%);
@@ -188,7 +188,7 @@ function vance_cw_render_bento( $posts, $n, $featured_pos, $text_align, $show_da
 			justify-content: flex-end;
 			text-align: <?php echo esc_attr( $text_align ); ?>;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-side-card {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-side-card {
 			display: block;
 			background: white;
 			border: 1.5px solid #e2e8f0;
@@ -197,14 +197,14 @@ function vance_cw_render_bento( $posts, $n, $featured_pos, $text_align, $show_da
 			text-align: <?php echo esc_attr( $text_align ); ?>;
 			transition: all 0.2s ease;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-side-card:hover {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-side-card:hover {
 			border-color: var(--primary-color);
 			box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 		}
 		@media (max-width: 992px) {
-			.vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-grid { grid-template-columns: 1fr; }
-			.vance-cw-<?php echo (int) $n; ?> .vance-cw-featured-cell,
-			.vance-cw-<?php echo (int) $n; ?> .vance-cw-side-cells { order: unset; }
+			#vance-cw-<?php echo (int) $n; ?> .vance-cw-bento-grid { grid-template-columns: 1fr; }
+			#vance-cw-<?php echo (int) $n; ?> .vance-cw-featured-cell,
+			#vance-cw-<?php echo (int) $n; ?> .vance-cw-side-cells { order: unset; }
 		}
 	</style>
 	<div class="vance-cw-bento-grid">
@@ -242,12 +242,12 @@ function vance_cw_render_grid( $posts, $n, $per_row, $text_align, $show_date, $s
 	if ( empty( $posts ) ) { return; }
 	?>
 	<style>
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-grid {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-grid {
 			display: grid;
 			grid-template-columns: repeat(<?php echo (int) $per_row; ?>, 1fr);
 			gap: 24px;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-card {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card {
 			display: block;
 			background: white;
 			border: 1.5px solid #e2e8f0;
@@ -256,24 +256,24 @@ function vance_cw_render_grid( $posts, $n, $per_row, $text_align, $show_date, $s
 			transition: all 0.2s ease;
 			text-align: <?php echo esc_attr( $text_align ); ?>;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-card:hover {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card:hover {
 			border-color: var(--primary-color);
 			box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 			transform: translateY(-2px);
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-card-image {
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card-image {
 			width: 100%;
 			aspect-ratio: 16/9;
 			background-size: cover;
 			background-position: center center;
 			background-color: #0A1929;
 		}
-		.vance-cw-<?php echo (int) $n; ?> .vance-cw-card-body { padding: 20px 22px; }
+		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card-body { padding: 20px 22px; }
 		@media (max-width: 992px) {
-			.vance-cw-<?php echo (int) $n; ?> .vance-cw-grid { grid-template-columns: repeat(<?php echo (int) min( 2, $per_row ); ?>, 1fr); }
+			#vance-cw-<?php echo (int) $n; ?> .vance-cw-grid { grid-template-columns: repeat(<?php echo (int) min( 2, $per_row ); ?>, 1fr); }
 		}
 		@media (max-width: 600px) {
-			.vance-cw-<?php echo (int) $n; ?> .vance-cw-grid { grid-template-columns: 1fr; }
+			#vance-cw-<?php echo (int) $n; ?> .vance-cw-grid { grid-template-columns: 1fr; }
 		}
 	</style>
 	<div class="vance-cw-grid">
