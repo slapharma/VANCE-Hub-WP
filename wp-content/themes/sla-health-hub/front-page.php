@@ -274,8 +274,28 @@ body {
     // Stored as a comma-separated string of CHECKED section IDs in display
     // order. The previous "force-add testimonials/pathway_content" fallbacks
     // have been removed now that the admin has explicit per-section checkboxes.
-    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,pathway_content,promo,cats,discovery,join,kb,testimonials');
+    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,pathway_content,promo,cats,tool-widget-content-filters,tool-widget-vance-ai,join,kb,testimonials');
     $sections      = array_filter( array_map( 'trim', explode( ',', $section_order ) ) );
+    // Migration: the legacy combined 'discovery' block (chip filters + Ask AI
+    // input + reading-level toggles) has been split into two focused modal-
+    // opening tool widgets: 'tool-widget-content-filters' and
+    // 'tool-widget-vance-ai'. For admins whose saved section_order still
+    // includes 'discovery', substitute it in-place so the visual intent is
+    // preserved automatically. The original case 'discovery': block below is
+    // kept as a fallback (someone might want the combined block back), but
+    // the registry hides it from the Section Order Customizer control.
+    if ( in_array( 'discovery', $sections, true ) ) {
+        $rewritten = array();
+        foreach ( $sections as $sid ) {
+            if ( $sid === 'discovery' ) {
+                $rewritten[] = 'tool-widget-content-filters';
+                $rewritten[] = 'tool-widget-vance-ai';
+            } else {
+                $rewritten[] = $sid;
+            }
+        }
+        $sections = $rewritten;
+    }
 
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);

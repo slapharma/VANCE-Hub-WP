@@ -18,6 +18,10 @@ require_once get_template_directory() . '/inc/cross-page-sections.php';
 // admin can enable, position, and configure independently via the Section
 // Order control + the "Content Widgets" Customizer panel.
 require_once get_template_directory() . '/inc/content-widget.php';
+// Tool Widgets — two modal-opening cards that replace the legacy Discovery
+// block (Content Filters + Vance AI). Modal infrastructure (iframe + CSS + JS)
+// is emitted once per page from inside the first widget's render.
+require_once get_template_directory() . '/inc/tool-widgets.php';
 
 /**
  * Rebrand migration helper.
@@ -3068,6 +3072,86 @@ function vance_customize_register( $wp_customize ) {
 
         $wp_customize->add_setting( $prefix . 'subtitle_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
         $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'subtitle_color', array( 'label' => 'Subtitle / Eyebrow Colour', 'section' => $sec_id ) ) );
+    }
+
+    // 6d. Tool Widgets — two modal cards that replace the legacy Discovery
+    // engine (Content Filters + Vance AI). Each card opens its tool in a
+    // modal iframe. Customizer lets the admin tune the card copy, image,
+    // accent colour, button label, and which URL the modal loads.
+    $wp_customize->add_panel( 'vance_tool_widgets_panel', array(
+        'title'       => __( 'Vance Theme → Tool Widgets', 'sla-health-hub' ),
+        'priority'    => 14.6,
+        'description' => __( 'Two modal-opening tool cards that replace the legacy Discovery block. Enable each via Appearance → Customize → Homepage → Section Order; configure copy/image/colours here.', 'sla-health-hub' ),
+    ) );
+
+    $vance_tw_slots = array(
+        'content_filters' => array(
+            'sec_title'   => __( 'Content Filters Widget', 'sla-health-hub' ),
+            'title_def'   => 'Content Filters',
+            'desc_def'    => 'Filter the knowledge base by reading level, pathway, content type and keywords — find exactly the article, study, or guide you need in seconds.',
+            'cta_def'     => 'Open Filters',
+            'url_def'     => '/discovery/',
+            'accent_def'  => '#008080',
+        ),
+        'vance_ai' => array(
+            'sec_title'   => __( 'Vance AI Widget', 'sla-health-hub' ),
+            'title_def'   => 'Vance AI',
+            'desc_def'    => 'Ask any gastro health question and get an evidence-backed answer in seconds. Powered by curated clinical content — available 24/7.',
+            'cta_def'     => 'Ask Vance AI',
+            'url_def'     => '/ask-ai/',
+            'accent_def'  => '#0EA5E9',
+        ),
+    );
+
+    foreach ( $vance_tw_slots as $tw_key => $tw_meta ) {
+        $sec_id = 'vance_tw_' . $tw_key;
+        $prefix = 'vance_tw_' . $tw_key . '_';
+
+        $wp_customize->add_section( $sec_id, array(
+            'title'    => $tw_meta['sec_title'],
+            'panel'    => 'vance_tool_widgets_panel',
+            'priority' => 10,
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'title', array( 'default' => $tw_meta['title_def'], 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'title', array( 'label' => 'Card Title', 'section' => $sec_id, 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . 'desc', array( 'default' => $tw_meta['desc_def'], 'sanitize_callback' => 'sanitize_textarea_field' ) );
+        $wp_customize->add_control( $prefix . 'desc', array( 'label' => 'Card Description', 'section' => $sec_id, 'type' => 'textarea' ) );
+
+        $wp_customize->add_setting( $prefix . 'cta', array( 'default' => $tw_meta['cta_def'], 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'cta', array( 'label' => 'Button Label', 'section' => $sec_id, 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . 'url', array( 'default' => $tw_meta['url_def'], 'sanitize_callback' => 'esc_url_raw' ) );
+        $wp_customize->add_control( $prefix . 'url', array(
+            'label'       => 'Modal Target URL',
+            'description' => 'The URL the modal iframe loads when the button is clicked. Defaults to the in-theme tool page.',
+            'section'     => $sec_id,
+            'type'        => 'url',
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $prefix . 'image', array(
+            'label'       => 'Card Image (left panel)',
+            'description' => 'When empty, the accent colour fills the panel with a built-in SVG icon.',
+            'section'     => $sec_id,
+        ) ) );
+
+        $wp_customize->add_setting( $prefix . 'accent', array( 'default' => $tw_meta['accent_def'], 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'accent', array(
+            'label'       => 'Accent Colour',
+            'description' => 'Used on the top border of the card, the button, and the image-panel background when no image is set.',
+            'section'     => $sec_id,
+        ) ) );
+
+        $wp_customize->add_setting( $prefix . 'bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'bg_color', array( 'label' => 'Section Background', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'title_color', array( 'default' => '#0F172A', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'title_color', array( 'label' => 'Title Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'desc_color', array( 'default' => '#64748b', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'desc_color', array( 'label' => 'Description Colour', 'section' => $sec_id ) ) );
     }
 
     // 7. Promo Content Block (New)
