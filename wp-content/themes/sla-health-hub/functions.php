@@ -2819,7 +2819,12 @@ function vance_customize_register( $wp_customize ) {
         ) );
     }
 
-    // 6. Homepage Section Ordering
+    // 6. Homepage Section Ordering — drag-and-drop sortable control
+    // Class + helpers live in inc/customizer-sortable-control.php. The setting
+    // still stores a comma-separated string of checked section IDs in display
+    // order, so the front-page.php switch loop reads it unchanged.
+    require_once get_template_directory() . '/inc/customizer-sortable-control.php';
+
     $wp_customize->add_section( 'vance_homepage_order', array(
         'title'    => __( 'Section Order', 'sla-health-hub' ),
         'priority' => 35,
@@ -2827,15 +2832,21 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     $wp_customize->add_setting( 'vance_homepage_section_order', array(
-        'default'           => 'hero,pathway,promo,cats,discovery,kb,testimonials',
-        'sanitize_callback' => 'sanitize_text_field',
+        'default'           => 'hero,pathway,pathway_content,promo,cats,discovery,join,kb,testimonials',
+        'sanitize_callback' => 'vance_sanitize_sortable_sections',
     ) );
-    $wp_customize->add_control( 'vance_homepage_section_order', array(
-        'label'       => __( 'Section Order (Comma-separated IDs)', 'sla-health-hub' ),
-        'description' => __( 'IDs: hero, pathway, promo, cats, discovery, kb, testimonials', 'sla-health-hub' ),
-        'section'     => 'vance_homepage_order',
-        'type'        => 'text',
-    ) );
+
+    $wp_customize->add_control(
+        new Vance_Customize_Sortable_Sections_Control(
+            $wp_customize,
+            'vance_homepage_section_order',
+            array(
+                'label'       => __( 'Homepage Section Order', 'sla-health-hub' ),
+                'description' => __( 'Drag to reorder. Tick the checkbox to show a section on the homepage; untick to hide it. Sections are rendered top-to-bottom in the order shown.', 'sla-health-hub' ),
+                'section'     => 'vance_homepage_order',
+            )
+        )
+    );
 
     // 7. Promo Content Block (New)
     $wp_customize->add_section( 'vance_promo_block', array(

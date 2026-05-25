@@ -269,21 +269,13 @@ body {
 </style>
 
     <?php
+    // Section order is now driven by the sortable Customizer control:
+    // Appearance -> Customize -> Vance Theme -> Homepage -> Section Order.
+    // Stored as a comma-separated string of CHECKED section IDs in display
+    // order. The previous "force-add testimonials/pathway_content" fallbacks
+    // have been removed now that the admin has explicit per-section checkboxes.
     $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,pathway_content,promo,cats,discovery,join,kb,testimonials');
-    $sections = array_map( 'trim', explode( ',', $section_order ) );
-    // Ensure testimonials always appears even if the saved customizer order predates this section.
-    if ( ! in_array( 'testimonials', $sections, true ) ) {
-        $sections[] = 'testimonials';
-    }
-    // Auto-insert 'pathway_content' after 'pathway' for admins whose saved order predates this block.
-    if ( ! in_array( 'pathway_content', $sections, true ) ) {
-        $idx = array_search( 'pathway', $sections, true );
-        if ( $idx !== false ) {
-            array_splice( $sections, $idx + 1, 0, 'pathway_content' );
-        } else {
-            $sections[] = 'pathway_content';
-        }
-    }
+    $sections      = array_filter( array_map( 'trim', explode( ',', $section_order ) ) );
 
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);
