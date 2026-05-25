@@ -3321,6 +3321,23 @@ function vance_customize_register( $wp_customize ) {
                 'section'     => 'vance_knowledgebase_sections',
             )
         ) );
+
+        // Title colour — overrides the default theme heading colour on the H2
+        // displayed next to the accent bar. Default #0f172a matches the
+        // existing dark heading colour, so unset categories look unchanged.
+        $wp_customize->add_setting( "vance_kb_title_color_{$cat->term_id}", array(
+            'default'           => '#0f172a',
+            'sanitize_callback' => 'sanitize_hex_color',
+        ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control(
+            $wp_customize,
+            "vance_kb_title_color_{$cat->term_id}",
+            array(
+                'label'       => sprintf( __( '"%s" Title Colour', 'sla-health-hub' ), $cat->name ),
+                'description' => __( 'Colour of the category heading (H2) shown next to the accent bar.', 'sla-health-hub' ),
+                'section'     => 'vance_knowledgebase_sections',
+            )
+        ) );
     }
 
     // 7. Scripts & Analytics

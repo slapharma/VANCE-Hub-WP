@@ -1596,17 +1596,24 @@ body {
             // without an explicit pick still get a stable colour across loads.
             $vance_kb_accent_palette = array('#F59E0B', '#0EA5E9', '#008080', '#10B981', '#8B5CF6');
             $kb_accent_default       = $vance_kb_accent_palette[ ((int) $cat->term_id) % count($vance_kb_accent_palette) ];
-            $color = vance_get_theme_mod("vance_kb_accent_{$cat->term_id}", $kb_accent_default);
+            $color       = vance_get_theme_mod("vance_kb_accent_{$cat->term_id}", $kb_accent_default);
+            // Per-category title colour (new) + the previously-orphaned
+            // description text the admin set but which wasn't being rendered.
+            $title_color = vance_get_theme_mod("vance_kb_title_color_{$cat->term_id}", '#0f172a');
+            $cat_desc    = trim( (string) vance_get_theme_mod("vance_kb_desc_{$cat->term_id}", '') );
         ?>
         <section style="padding: 60px 0;">
             <div class="container">
                 <div class="section-label">
                     <div class="section-label-left">
-                        <div class="color-bar" style="background: <?php echo $color; ?>"></div>
-                        <h2><?php echo esc_html($cat->name); ?></h2>
+                        <div class="color-bar" style="background: <?php echo esc_attr($color); ?>"></div>
+                        <h2 style="color: <?php echo esc_attr($title_color); ?>;"><?php echo esc_html($cat->name); ?></h2>
                     </div>
                     <a href="<?php echo esc_url(get_category_link($cat->term_id)); ?>" style="color: var(--primary-color); font-weight: 600; text-decoration: none; font-size: 14px;"><?php echo esc_html($sec['view_all']); ?> →</a>
                 </div>
+                <?php if ( $cat_desc !== '' ) : ?>
+                    <p style="max-width: 720px; margin: 4px 0 28px 0; color: #475569; font-size: 15px; line-height: 1.55;"><?php echo esc_html( $cat_desc ); ?></p>
+                <?php endif; ?>
 
                 <?php if ($layout === 'bento' && count($posts_array) >= 3): ?>
                     <div class="bento-grid-news">
