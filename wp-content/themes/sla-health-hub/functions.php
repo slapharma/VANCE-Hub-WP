@@ -14,6 +14,10 @@ require_once get_template_directory() . '/ai-visibility.php';
 // front-page.php when the admin enables those blocks on the homepage via the
 // Section Order Customizer control.
 require_once get_template_directory() . '/inc/cross-page-sections.php';
+// Multi-instance Content Widget — 5 pre-registered latest-content blocks the
+// admin can enable, position, and configure independently via the Section
+// Order control + the "Content Widgets" Customizer panel.
+require_once get_template_directory() . '/inc/content-widget.php';
 
 /**
  * Rebrand migration helper.
@@ -2855,6 +2859,216 @@ function vance_customize_register( $wp_customize ) {
             )
         )
     );
+
+    // 6b. Section Dividers
+    // One shared look config + a per-section "show divider after this" toggle.
+    // Renderer is in front-page.php's foreach loop right after each section's
+    // case body runs: if vance_divider_after_<section_id> is true, emit a
+    // styled <hr> between this section and the next one.
+    $wp_customize->add_section( 'vance_section_dividers', array(
+        'title'       => __( 'Section Dividers', 'sla-health-hub' ),
+        'priority'    => 35.5,
+        'panel'       => 'vance_homepage_panel',
+        'description' => __( 'Insert a divider line between specific homepage sections. Configure the look once below, then tick which sections should have a divider rendered AFTER them.', 'sla-health-hub' ),
+    ) );
+
+    // -- Look config (shared across all dividers) --
+    $wp_customize->add_setting( 'vance_divider_color', array(
+        'default'           => '#e2e8f0',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_divider_color', array(
+        'label'   => __( 'Divider Colour', 'sla-health-hub' ),
+        'section' => 'vance_section_dividers',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_divider_thickness', array(
+        'default'           => 1,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_divider_thickness', array(
+        'label'       => __( 'Thickness (px) — line stroke', 'sla-health-hub' ),
+        'description' => __( 'How thick the line is.', 'sla-health-hub' ),
+        'section'     => 'vance_section_dividers',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 1, 'max' => 20, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_divider_width', array(
+        'default'           => 100,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_divider_width', array(
+        'label'       => __( 'Width (%) — horizontal extent', 'sla-health-hub' ),
+        'description' => __( '100 = full container width. Less than 100 centres a shorter line (e.g. 50 = half width, centred).', 'sla-health-hub' ),
+        'section'     => 'vance_section_dividers',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 10, 'max' => 100, 'step' => 5 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_divider_style', array(
+        'default'           => 'solid',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_divider_style', array(
+        'label'   => __( 'Line Style', 'sla-health-hub' ),
+        'section' => 'vance_section_dividers',
+        'type'    => 'select',
+        'choices' => array(
+            'solid'  => 'Solid',
+            'dashed' => 'Dashed',
+            'dotted' => 'Dotted',
+            'double' => 'Double',
+        ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_divider_margin', array(
+        'default'           => 40,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_divider_margin', array(
+        'label'       => __( 'Margin (px) — vertical space around the divider', 'sla-health-hub' ),
+        'description' => __( 'Gap above and below the line. Larger = more breathing room between sections.', 'sla-health-hub' ),
+        'section'     => 'vance_section_dividers',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 200, 'step' => 4 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_divider_padding', array(
+        'default'           => 0,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_divider_padding', array(
+        'label'       => __( 'Padding (px) — vertical space inside the divider wrapper', 'sla-health-hub' ),
+        'description' => __( 'Adds space between the line and the edges of its own wrapper (rarely needed; usually leave at 0).', 'sla-health-hub' ),
+        'section'     => 'vance_section_dividers',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 100, 'step' => 4 ),
+    ) );
+
+    // -- Per-section toggles. One checkbox per available section. --
+    // We iterate the same registry the Section Order control uses, so any
+    // section added to vance_get_available_sections() (Phase 2b, content
+    // widgets, etc) automatically gets a divider toggle without code changes.
+    if ( function_exists( 'vance_get_available_sections' ) ) {
+        $divider_targets = vance_get_available_sections();
+        foreach ( $divider_targets as $sid => $meta ) {
+            $key = 'vance_divider_after_' . str_replace( '-', '_', $sid );
+            $wp_customize->add_setting( $key, array(
+                'default'           => false,
+                'sanitize_callback' => 'rest_sanitize_boolean',
+            ) );
+            $wp_customize->add_control( $key, array(
+                'label'   => sprintf( 'Show divider AFTER: %s (%s)', $meta['label'], $meta['group'] ),
+                'section' => 'vance_section_dividers',
+                'type'    => 'checkbox',
+            ) );
+        }
+    }
+
+    // 6c. Content Widgets — N pre-registered latest-content slots.
+    // The render functions live in inc/content-widget.php (required at the
+    // top of functions.php). Here we just register the Customizer panel +
+    // one section per instance, each with the full per-widget config.
+    if ( ! defined( 'VANCE_CONTENT_WIDGET_INSTANCES' ) ) {
+        define( 'VANCE_CONTENT_WIDGET_INSTANCES', 5 );
+    }
+
+    $wp_customize->add_panel( 'vance_content_widgets_panel', array(
+        'title'       => __( 'Vance Theme → Content Widgets', 'sla-health-hub' ),
+        'priority'    => 14.5,
+        'description' => __( 'Five reusable latest-content blocks. Enable any combination via Appearance → Customize → Homepage → Section Order, then configure each one here.', 'sla-health-hub' ),
+    ) );
+
+    // Build the category choices once (re-used across all 5 widget panels).
+    $cw_cat_choices = array( 0 => '— All categories —' );
+    foreach ( get_categories( array( 'hide_empty' => false ) ) as $cat ) {
+        $cw_cat_choices[ $cat->term_id ] = $cat->name;
+    }
+
+    for ( $cwn = 1; $cwn <= VANCE_CONTENT_WIDGET_INSTANCES; $cwn++ ) {
+        $sec_id = 'vance_cw_' . $cwn;
+        $prefix = 'vance_cw' . $cwn . '_';
+
+        $wp_customize->add_section( $sec_id, array(
+            'title'    => sprintf( __( 'Content Widget %d', 'sla-health-hub' ), $cwn ),
+            'priority' => 10 + $cwn,
+            'panel'    => 'vance_content_widgets_panel',
+        ) );
+
+        // -- Heading + Subtitle copy --
+        $wp_customize->add_setting( $prefix . 'heading', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'heading', array( 'label' => 'Heading (leave blank to hide)', 'section' => $sec_id, 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . 'subtitle', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'subtitle', array( 'label' => 'Subtitle / Eyebrow (above heading)', 'section' => $sec_id, 'type' => 'text' ) );
+
+        // -- Query: count, category, tag --
+        $wp_customize->add_setting( $prefix . 'count', array( 'default' => 6, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'count', array( 'label' => 'Number of posts', 'section' => $sec_id, 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 24, 'step' => 1 ) ) );
+
+        $wp_customize->add_setting( $prefix . 'category', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'category', array( 'label' => 'Filter by category', 'section' => $sec_id, 'type' => 'select', 'choices' => $cw_cat_choices ) );
+
+        $wp_customize->add_setting( $prefix . 'tag', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'tag', array( 'label' => 'Filter by tag slug (optional, e.g. "ibd")', 'section' => $sec_id, 'type' => 'text' ) );
+
+        // -- Layout --
+        $wp_customize->add_setting( $prefix . 'layout', array( 'default' => 'grid', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'layout', array(
+            'label'   => 'Layout',
+            'section' => $sec_id,
+            'type'    => 'select',
+            'choices' => array(
+                'grid'  => 'Uniform Grid (every card same size)',
+                'bento' => 'Bento (1 large featured + smaller grid)',
+            ),
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'text_align', array( 'default' => 'left', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'text_align', array(
+            'label'   => 'Text Alignment (inside cards + heading)',
+            'section' => $sec_id,
+            'type'    => 'select',
+            'choices' => array( 'left' => 'Left', 'center' => 'Center', 'right' => 'Right' ),
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'featured_position', array( 'default' => 'left', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'featured_position', array(
+            'label'       => 'Featured Card Position (Bento layout only)',
+            'description' => 'Which side the big featured card sits on. Ignored in Uniform Grid.',
+            'section'     => $sec_id,
+            'type'        => 'select',
+            'choices'     => array( 'left' => 'Left', 'right' => 'Right' ),
+        ) );
+
+        // -- Grid sizing (only relevant in Uniform Grid mode) --
+        $wp_customize->add_setting( $prefix . 'rows', array( 'default' => 1, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'rows', array( 'label' => 'Rows (Uniform Grid only)', 'section' => $sec_id, 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ) ) );
+
+        $wp_customize->add_setting( $prefix . 'per_row', array( 'default' => 3, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'per_row', array( 'label' => 'Per Row (Uniform Grid only)', 'section' => $sec_id, 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ) ) );
+
+        // -- Meta toggles --
+        $wp_customize->add_setting( $prefix . 'show_image', array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
+        $wp_customize->add_control( $prefix . 'show_image', array( 'label' => 'Show post thumbnail', 'section' => $sec_id, 'type' => 'checkbox' ) );
+
+        $wp_customize->add_setting( $prefix . 'show_date', array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
+        $wp_customize->add_control( $prefix . 'show_date', array( 'label' => 'Show post date', 'section' => $sec_id, 'type' => 'checkbox' ) );
+
+        $wp_customize->add_setting( $prefix . 'show_author', array( 'default' => false, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
+        $wp_customize->add_control( $prefix . 'show_author', array( 'label' => 'Show post author', 'section' => $sec_id, 'type' => 'checkbox' ) );
+
+        // -- Colours --
+        $wp_customize->add_setting( $prefix . 'bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'bg_color', array( 'label' => 'Section Background Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'title_color', array( 'default' => '#0F172A', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'title_color', array( 'label' => 'Card Title Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'subtitle_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'subtitle_color', array( 'label' => 'Subtitle / Eyebrow Colour', 'section' => $sec_id ) ) );
+    }
 
     // 7. Promo Content Block (New)
     $wp_customize->add_section( 'vance_promo_block', array(

@@ -1649,10 +1649,10 @@ body {
                 // Registry-driven dispatch. Any section ID that's registered
                 // via vance_get_available_sections() with a 'render' callable
                 // will fire here — including all the cross-page named blocks
-                // (patients-*, hcp-*, and any Phase 2b additions). This means
-                // there is no upper limit on how many sections the admin can
-                // tick in the Section Order Customizer control; every checked
-                // section displays.
+                // (patients-*, hcp-*, content-widget-* and any future
+                // additions). This means there is no upper limit on how many
+                // sections the admin can tick in the Section Order Customizer
+                // control; every checked section displays.
                 if ( function_exists( 'vance_get_available_sections' ) ) {
                     $registry = vance_get_available_sections();
                     if ( isset( $registry[ $section_id ]['render'] ) && is_callable( $registry[ $section_id ]['render'] ) ) {
@@ -1660,6 +1660,39 @@ body {
                     }
                 }
                 break;
+        }
+
+        // -------------------------------------------------------------
+        // SECTION DIVIDER (per-section toggle)
+        // After each section's case body runs, check whether the admin has
+        // ticked "Show divider AFTER {section}" in Appearance -> Customize
+        // -> Homepage -> Section Dividers. If so, emit a styled <hr> using
+        // the shared look config (colour, thickness, width, style, margin,
+        // padding). Section IDs with hyphens are stored with underscores in
+        // the setting key (Customizer doesn't like hyphenated keys mid-name
+        // in some contexts, and underscores keep saved values stable).
+        // -------------------------------------------------------------
+        $divider_key = 'vance_divider_after_' . str_replace( '-', '_', $section_id );
+        if ( vance_get_theme_mod( $divider_key, false ) ) {
+            $div_color     = vance_get_theme_mod( 'vance_divider_color',     '#e2e8f0' );
+            $div_thickness = absint( vance_get_theme_mod( 'vance_divider_thickness', 1 ) );
+            $div_width_pct = absint( vance_get_theme_mod( 'vance_divider_width',     100 ) );
+            $div_style     = vance_get_theme_mod( 'vance_divider_style',     'solid' );
+            $div_margin    = absint( vance_get_theme_mod( 'vance_divider_margin',    40 ) );
+            $div_padding   = absint( vance_get_theme_mod( 'vance_divider_padding',   0 ) );
+            $div_width_pct = max( 10, min( 100, $div_width_pct ) );
+            $allowed_styles = array( 'solid', 'dashed', 'dotted', 'double' );
+            if ( ! in_array( $div_style, $allowed_styles, true ) ) { $div_style = 'solid'; }
+            ?>
+            <div class="vance-section-divider-wrap" style="padding: <?php echo $div_padding; ?>px 0; margin: <?php echo $div_margin; ?>px 0;">
+                <hr class="vance-section-divider" style="
+                    border: 0;
+                    border-top: <?php echo $div_thickness; ?>px <?php echo esc_attr( $div_style ); ?> <?php echo esc_attr( $div_color ); ?>;
+                    width: <?php echo $div_width_pct; ?>%;
+                    margin: 0 auto;
+                " aria-hidden="true">
+            </div>
+            <?php
         }
     }
     ?>
