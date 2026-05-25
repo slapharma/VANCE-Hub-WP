@@ -1569,8 +1569,14 @@ body {
             ));
             
             if (empty($posts_array)) continue;
-            $colors = array('#F59E0B', '#0EA5E9', '#008080', '#10B981', '#8B5CF6');
-            $color = $colors[array_rand($colors)];
+            // Accent colour now driven by per-category Customizer setting
+            // (Appearance -> Customize -> Vance Theme -> Homepage ->
+            // Knowledge Base Section -> "<Cat>" Accent Colour). Deterministic
+            // fallback cycles a 5-colour palette by term_id so categories
+            // without an explicit pick still get a stable colour across loads.
+            $vance_kb_accent_palette = array('#F59E0B', '#0EA5E9', '#008080', '#10B981', '#8B5CF6');
+            $kb_accent_default       = $vance_kb_accent_palette[ ((int) $cat->term_id) % count($vance_kb_accent_palette) ];
+            $color = vance_get_theme_mod("vance_kb_accent_{$cat->term_id}", $kb_accent_default);
         ?>
         <section style="padding: 60px 0;">
             <div class="container">

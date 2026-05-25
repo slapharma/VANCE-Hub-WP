@@ -3214,6 +3214,29 @@ function vance_customize_register( $wp_customize ) {
                 'posters'    => 'Posters (Opinion Style)',
             ),
         ) );
+
+        // Accent colour — used on the section's left-of-heading color bar
+        // and (in bento layout) on the Featured tag pill and side-cell meta.
+        // Previous behaviour: random pick from 5 hardcoded colours every page
+        // load. Now driven by a per-category Customizer value with a
+        // deterministic fallback (cycles through the original 5-colour
+        // palette by term_id, so unset categories still get a stable colour).
+        $vance_kb_accent_palette = array( '#F59E0B', '#0EA5E9', '#008080', '#10B981', '#8B5CF6' );
+        $kb_accent_default       = $vance_kb_accent_palette[ ( (int) $cat->term_id ) % count( $vance_kb_accent_palette ) ];
+
+        $wp_customize->add_setting( "vance_kb_accent_{$cat->term_id}", array(
+            'default'           => $kb_accent_default,
+            'sanitize_callback' => 'sanitize_hex_color',
+        ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control(
+            $wp_customize,
+            "vance_kb_accent_{$cat->term_id}",
+            array(
+                'label'       => sprintf( __( '"%s" Accent Colour', 'sla-health-hub' ), $cat->name ),
+                'description' => __( 'Sets the colour bar next to the section heading, and the Featured tag colour in Bento layout.', 'sla-health-hub' ),
+                'section'     => 'vance_knowledgebase_sections',
+            )
+        ) );
     }
 
     // 7. Scripts & Analytics
