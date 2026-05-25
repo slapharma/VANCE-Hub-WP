@@ -820,25 +820,6 @@ body {
                 <?php
                 break;
 
-            case 'patients-benefits':
-            case 'patients-tools':
-            case 'patients-cta':
-            case 'hcp-resources':
-            case 'hcp-collaborate':
-            case 'hcp-cta':
-                // Cross-page named blocks. Dispatched through the registry so
-                // we don't need a new explicit `case` here every time Phase 2
-                // adds another source page. The registry is built by
-                // inc/customizer-sortable-control.php + cross-page-sections.php
-                // and queried via vance_get_available_sections().
-                if ( function_exists( 'vance_get_available_sections' ) ) {
-                    $registry = vance_get_available_sections();
-                    if ( isset( $registry[ $section_id ]['render'] ) && is_callable( $registry[ $section_id ]['render'] ) ) {
-                        call_user_func( $registry[ $section_id ]['render'] );
-                    }
-                }
-                break;
-
             case 'promo':
                 if (vance_get_theme_mod('vance_promo_show', false)) :
                     $promo_h = vance_get_theme_mod('vance_promo_heading', 'Experience the Hub');
@@ -1662,6 +1643,22 @@ body {
             
             case 'testimonials':
                 echo vance_testimonials_shortcode(array());
+                break;
+
+            default:
+                // Registry-driven dispatch. Any section ID that's registered
+                // via vance_get_available_sections() with a 'render' callable
+                // will fire here — including all the cross-page named blocks
+                // (patients-*, hcp-*, and any Phase 2b additions). This means
+                // there is no upper limit on how many sections the admin can
+                // tick in the Section Order Customizer control; every checked
+                // section displays.
+                if ( function_exists( 'vance_get_available_sections' ) ) {
+                    $registry = vance_get_available_sections();
+                    if ( isset( $registry[ $section_id ]['render'] ) && is_callable( $registry[ $section_id ]['render'] ) ) {
+                        call_user_func( $registry[ $section_id ]['render'] );
+                    }
+                }
                 break;
         }
     }
