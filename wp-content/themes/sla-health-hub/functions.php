@@ -96,7 +96,7 @@ function vance_health_hub_scripts() {
     // Enqueue Main Styles
     // We will copy the prototype CSS to a file named 'main.css' in the theme folder
     // Version bumped to force browser/edge cache-miss after Vance Medical rebrand (teal palette + larger logo).
-    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.1.1-vance' );
+    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.2.0-vance-recovery' );
     
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
