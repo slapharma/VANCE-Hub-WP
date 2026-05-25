@@ -15,21 +15,35 @@ get_header(); ?>
 
 <main id="main-content">
 
-    <!-- HERO (category-style: 350px banner, matches archive.php Tools/Resource branch) -->
+    <!-- HERO (patients-hero style: full-height with description + CTA buttons) -->
     <?php
-    $hero_bg      = vance_get_theme_mod( 'vance_tools_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
-    $hero_tag     = vance_get_theme_mod( 'vance_tools_hero_tag',   'Empower Your Practice' );
-    $hero_title   = vance_get_theme_mod( 'vance_tools_hero_title', 'Tools &amp; Resources' );
-    $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_tools_hero_overlay', 70 ) ) ) ) / 100;
-    $hero_overlay_bottom = min( 1, $hero_overlay + 0.10 );
-    $title_color  = vance_get_theme_mod( 'vance_hero_title_color', '#ffffff' );
+    $hero_bg        = vance_get_theme_mod( 'vance_tools_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
+    $hero_tag       = vance_get_theme_mod( 'vance_tools_hero_tag',   'Free Tools' );
+    $hero_title     = vance_get_theme_mod( 'vance_tools_hero_title', 'Tools &amp; <span class="highlight">Resources</span>' );
+    $hero_desc      = vance_get_theme_mod( 'vance_tools_hero_desc',  'Clinical calculators built on peer-reviewed evidence — free to use, no signup required. Save your results and build a meal plan by registering for a free account.' );
+    $hero_overlay   = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_tools_hero_overlay', 70 ) ) ) ) / 100;
+    $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
+    $hero_btn1_text = vance_get_theme_mod( 'vance_tools_hero_btn1_text', 'Try a Tool' );
+    $hero_btn1_link = vance_get_theme_mod( 'vance_tools_hero_btn1_link', '#tools-list' );
+    $hero_btn2_text = vance_get_theme_mod( 'vance_tools_hero_btn2_text', 'Create Free Account' );
+    $hero_btn2_link = vance_get_theme_mod( 'vance_tools_hero_btn2_link', '/register/' );
     ?>
-    <section class="hero tools-hero" style="height: 350px; min-height: 0; display: flex; align-items: center; padding: 0; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(20,40,70,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>'); background-position: center center; background-size: cover; background-repeat: no-repeat; z-index: 1;"></div>
-        <div class="container" style="position: relative; z-index: 2; width: 100%;">
-            <div class="hero-content" style="max-width: 800px;">
-                <span class="eyebrow" style="color: #008080; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-size: 14px; display: block; margin-bottom: 10px;"><?php echo esc_html( $hero_tag ); ?></span>
-                <h1 class="entry-title" style="font-size: 56px; color: <?php echo esc_attr( $title_color ); ?>; font-weight: 700; margin: 0; line-height: 1.1;"><?php echo wp_kses_post( $hero_title ); ?></h1>
+    <section class="hero tools-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
+        <div class="container">
+            <div class="hero-content">
+                <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
+                <h1><?php echo wp_kses_post( $hero_title ); ?></h1>
+                <p><?php echo esc_html( $hero_desc ); ?></p>
+                <?php if ( $hero_btn1_text || $hero_btn2_text ) : ?>
+                <div class="hero-actions" style="margin-top: 24px;">
+                    <?php if ( $hero_btn1_text ) : ?>
+                        <a href="<?php echo esc_url( $hero_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $hero_btn1_text ); ?></a>
+                    <?php endif; ?>
+                    <?php if ( $hero_btn2_text ) : ?>
+                        <a href="<?php echo esc_url( $hero_btn2_link ); ?>" class="btn btn-outline"><?php echo esc_html( $hero_btn2_text ); ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>

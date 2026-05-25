@@ -966,6 +966,16 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_tools_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_tools_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_tools_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
+    // Hero CTA buttons (set text to empty to hide a button)
+    $wp_customize->add_setting( "vance_tools_hero_btn1_text", array( "default" => "Try a Tool", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn1_text", array( "label" => "Button 1 — Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_tools_hero_btn1_link", array( "default" => "#tools-list", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn1_link", array( "label" => "Button 1 — Link", "section" => "vance_tools_hero", "type" => "url" ) );
+    $wp_customize->add_setting( "vance_tools_hero_btn2_text", array( "default" => "Create Free Account", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn2_text", array( "label" => "Button 2 — Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_tools_hero_btn2_link", array( "default" => "/register/", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn2_link", array( "label" => "Button 2 — Link", "section" => "vance_tools_hero", "type" => "url" ) );
+
     // Tools Intro
     $wp_customize->add_section( "vance_tools_intro", array( "title" => "Intro Section", "panel" => "vance_tools_panel" ) );
     $wp_customize->add_setting( "vance_tools_intro_eyebrow", array( "default" => "Open Access", "sanitize_callback" => "sanitize_text_field" ) );
