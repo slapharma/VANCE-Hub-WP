@@ -1,0 +1,99 @@
+name: Deploy theme to vancehealthhub.co.uk
+
+# Auto-deploys the WordPress theme to the live Hostinger site on every push to
+# main that touches the theme. A manual "Run workflow" button is also exposed
+# for re-deploys / deploying from another branch.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wp-content/themes/sla-health-hub/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+# Never let two deploys overlap onto the live site; cancel-in-progress is off so
+# an in-flight deploy always finishes cleanly rather than being interrupted.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  SSH_HOST: 82.29.185.3
+  SSH_PORT: '65002'
+  SSH_USER: u767439438
+  # Server-side path was renamed from domains/gastrohealthhub.com/ to
+  # domains/vancehealthhub.co.uk/ during the 2026-04 rebrand. Earlier versions
+  # of this workflow still referenced the old name; see RECONCILIATION-2026-05-25
+  # for the incident this fix addresses.
+  REMOTE_THEME: domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub
+  LOCAL_THEME: wp-content/themes/sla-health-hub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify deploy secret is configured
+        env:
+          SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "::error::Repository secret HOSTINGER_SSH_KEY is not set. Add the Hostinger private key under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/hostinger_sla
+          chmod 600 ~/.ssh/hostinger_sla
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Verify remote theme path exists
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "test -d ~/$REMOTE_THEME && echo 'REMOTE_THEME_OK' || (echo '::error::Remote theme dir ~/$REMOTE_THEME not found on server' && exit 1)"
+
+      - name: Deploy theme (backup-then-extract)
+        working-directory: ${{ env.LOCAL_THEME }}
+        run: |
+          set -euo pipefail
+          TSTAMP=$(date +%Y-%m-%d-%H%M)
+          tar czf - \
+            --exclude='./.git' --exclude='./.claude' \
+            --exclude='./vance_rebrand.py' --exclude='./vance_color_swap.py' --exclude='./vance_ai_rename.py' \
+            --exclude='./functions.php.bak' --exclude='./functions.php.bak2' \
+            --exclude='./front-page-original.php' --exclude='./inc/dashboard-functions-backup.txt' \
+            --exclude='./screenshot.png' --exclude='./Documents - Shortcut.lnk' \
+            --exclude='./check.py' --exclude='./debug_quote.py' \
+            . | \
+          ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "set -e; \
+             THEME=~/$REMOTE_THEME; \
+             cd \"\$THEME\" && \
+             tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
+             tar xzf - && \
+             echo 'DEPLOY_OK'"
+
+      - name: Post-deploy reminder
+        if: success()
+        run: |
+          echo "### Deploy complete :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Site: https://vancehealthhub.co.uk" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "A pre-deploy backup was written on the server as \`sla-health-hub-pre-deploy-*.tar.gz\` (one level above the theme dir)." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Manual follow-ups (no CLI hook available):**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Purge Hostinger cache: hPanel → Cache Manager → Purge All" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Purge LiteSpeed plugin cache (if installed)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- If CSS changed, bump the \`wp_enqueue_style\` version in \`functions.php\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Run the smoke tests listed in CLAUDE.md" >> "$GITHUB_STEP_SUMMARY"
