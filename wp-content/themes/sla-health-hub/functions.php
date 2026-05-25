@@ -2665,6 +2665,25 @@ function vance_customize_register( $wp_customize ) {
         'type'    => 'textarea',
     ) );
 
+    // 4.5 Header (theme-wide nav)
+    $wp_customize->add_section( 'vance_header_nav', array(
+        'title'       => __( 'Header Navigation', 'sla-health-hub' ),
+        'priority'    => 1,
+        'panel'       => 'vance_brand_panel',
+        'description' => __( 'Theme-wide header controls.', 'sla-health-hub' ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_show_dashboard_btn', array(
+        'default'           => false,
+        'sanitize_callback' => 'rest_sanitize_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_show_dashboard_btn', array(
+        'label'       => __( 'Show "My Dashboard" button in header', 'sla-health-hub' ),
+        'description' => __( 'When off, the dashboard CTA is hidden from the header on every page. Logged-in users can still reach the dashboard via their account menu.', 'sla-health-hub' ),
+        'section'     => 'vance_header_nav',
+        'type'        => 'checkbox',
+    ) );
+
     // 4.6 Footer Brand & Widgets
     $wp_customize->add_section( 'vance_footer_brand', array(
         'title'       => __( 'Brand & Widgets', 'sla-health-hub' ),

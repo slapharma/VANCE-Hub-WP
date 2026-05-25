@@ -69,9 +69,12 @@
                 </div>
 
 
-                <?php 
-                // Always show My Dashboard button - redirect based on login status
-                $dashboard_url = is_user_logged_in() ? home_url('/dashboard/') : wp_login_url(home_url('/dashboard/'));
+                <?php
+                // My Dashboard button — gated by Customizer toggle.
+                // Appearance → Customize → Vance Theme → Brand Identity → Header Navigation
+                // → "Show My Dashboard button in header" (default OFF since 2026-05-25).
+                if ( vance_get_theme_mod( 'vance_show_dashboard_btn', false ) ) :
+                    $dashboard_url = is_user_logged_in() ? home_url('/dashboard/') : wp_login_url(home_url('/dashboard/'));
                 ?>
                 <a href="<?php echo esc_url($dashboard_url); ?>" class="btn btn-primary">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
@@ -82,6 +85,7 @@
                     </svg>
                     My Dashboard
                 </a>
+                <?php endif; ?>
             </div>
         </div>
     </header>
