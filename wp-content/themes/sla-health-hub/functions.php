@@ -9,6 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // AI Visibility System — drop-in file that makes the site discoverable to LLMs/agents.
 require_once get_template_directory() . '/ai-visibility.php';
+// Cross-page section renderers — defines vance_render_section_*() functions
+// used both by source page templates (page-patients.php etc) AND by
+// front-page.php when the admin enables those blocks on the homepage via the
+// Section Order Customizer control.
+require_once get_template_directory() . '/inc/cross-page-sections.php';
 
 /**
  * Rebrand migration helper.
@@ -2822,7 +2827,10 @@ function vance_customize_register( $wp_customize ) {
     // 6. Homepage Section Ordering — drag-and-drop sortable control
     // Class + helpers live in inc/customizer-sortable-control.php. The setting
     // still stores a comma-separated string of checked section IDs in display
-    // order, so the front-page.php switch loop reads it unchanged.
+    // order, so the front-page.php switch loop reads it unchanged. The cross-
+    // page section registry is registered eagerly in cross-page-sections.php
+    // (required at the top of functions.php), so by the time we get here the
+    // vance_homepage_sections filter already knows about patients-*, hcp-*, etc.
     require_once get_template_directory() . '/inc/customizer-sortable-control.php';
 
     $wp_customize->add_section( 'vance_homepage_order', array(

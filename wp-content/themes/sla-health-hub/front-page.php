@@ -605,6 +605,25 @@ body {
             padding: 80px 0 60px;
             background: <?php echo esc_attr($pwc_section_bg); ?>;
         }
+        /* Local copy of the split-grid rules — the originals live in the
+           'pathway' case and aren't emitted when pathway is hidden, so this
+           block needs its own copy. */
+        .pathway-content-section .pathway-split-grid {
+            display: grid;
+            grid-template-columns: 3fr 7fr;
+            gap: 40px;
+            align-items: stretch;
+        }
+        .pathway-content-section .pathway-tiles-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: 100%;
+        }
+        @media (max-width: 992px) {
+            .pathway-content-section .pathway-split-grid { grid-template-columns: 1fr; }
+            .pathway-content-section .bento-grid-news { grid-template-columns: 1fr; grid-template-rows: auto; }
+        }
         .pwc-card {
             text-decoration: none;
             display: flex;
@@ -776,6 +795,25 @@ body {
         </div>
     </section>
                 <?php
+                break;
+
+            case 'patients-benefits':
+            case 'patients-tools':
+            case 'patients-cta':
+            case 'hcp-resources':
+            case 'hcp-collaborate':
+            case 'hcp-cta':
+                // Cross-page named blocks. Dispatched through the registry so
+                // we don't need a new explicit `case` here every time Phase 2
+                // adds another source page. The registry is built by
+                // inc/customizer-sortable-control.php + cross-page-sections.php
+                // and queried via vance_get_available_sections().
+                if ( function_exists( 'vance_get_available_sections' ) ) {
+                    $registry = vance_get_available_sections();
+                    if ( isset( $registry[ $section_id ]['render'] ) && is_callable( $registry[ $section_id ]['render'] ) ) {
+                        call_user_func( $registry[ $section_id ]['render'] );
+                    }
+                }
                 break;
 
             case 'promo':
