@@ -985,6 +985,16 @@ function vance_customize_register( $wp_customize ) {
         'section' => 'vance_hero_settings',
     ) ) );
 
+    $wp_customize->add_setting( 'vance_hero_bg_color', array(
+        'default'           => '#0A1929',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_bg_color', array(
+        'label'       => __( 'Hero Background Color', 'sla-health-hub' ),
+        'description' => __( 'Solid background color — visible when no image is set, or as image load fallback.', 'sla-health-hub' ),
+        'section'     => 'vance_hero_settings',
+    ) ) );
+
     // 2.5 Discovery Suite Settings (Nested under Vance Theme Settings)
     $wp_customize->add_section( 'vance_discovery_general', array(
         'title'    => __( 'Discovery Engine (General)', 'sla-health-hub' ),
@@ -1381,6 +1391,15 @@ function vance_customize_register( $wp_customize ) {
         'type'        => 'text',
     ) );
 
+    $wp_customize->add_setting( 'vance_pathway_section_bg', array(
+        'default'           => '#f8fafc',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pathway_section_bg', array(
+        'label'   => __( 'Section Background Color', 'sla-health-hub' ),
+        'section' => 'vance_pathway_tiles_settings',
+    ) ) );
+
     // 2.6.5 Latest Content Grid Settings (Right side of Pathway section)
     $wp_customize->add_section( 'vance_pathway_latest_settings', array(
         'title'    => __( 'Pathway Section: Latest Content', 'sla-health-hub' ),
@@ -1459,6 +1478,16 @@ function vance_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( 'vance_kb_mini_hero_opacity', array( 'default' => 80, 'sanitize_callback' => 'absint' ) );
     $wp_customize->add_control( 'vance_kb_mini_hero_opacity', array( 'label' => 'Overlay Opacity (%)', 'section' => 'vance_kb_mini_hero', 'type' => 'range', 'input_attrs' => array( 'min' => 0, 'max' => 100, 'step' => 5 ) ) );
+
+    $wp_customize->add_setting( 'vance_kb_wrapper_bg', array(
+        'default'           => '#ffffff',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_wrapper_bg', array(
+        'label'       => __( 'Knowledge Base Section Background Color', 'sla-health-hub' ),
+        'description' => __( 'Background color for the KB content sections below the mini-hero.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+    ) ) );
 
     // 2.8 Join the Hub Section
     $wp_customize->add_section( 'vance_join_community', array(
@@ -1671,6 +1700,15 @@ function vance_customize_register( $wp_customize ) {
         'type'    => 'number',
         'input_attrs' => array('min' => 1, 'max' => 50),
     ) );
+
+    $wp_customize->add_setting( 'vance_cats_section_bg', array(
+        'default'           => '#ffffff',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_cats_section_bg', array(
+        'label'   => __( 'Section Background Color', 'sla-health-hub' ),
+        'section' => 'vance_homepage_categories',
+    ) ) );
 
     // --- DISCOVERY SUITE STYLING ---
     $wp_customize->add_section( 'vance_discovery_styling', array(
@@ -2009,6 +2047,15 @@ function vance_customize_register( $wp_customize ) {
     // 8. Join Toggle
     $wp_customize->add_setting( 'vance_join_show', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
     $wp_customize->add_control( 'vance_join_show', array( 'label' => 'Show "Join the Hub" Block', 'section' => 'vance_join_community', 'type' => 'checkbox' ) );
+
+    $wp_customize->add_setting( 'vance_premium_section_bg', array(
+        'default'           => '#0f172a',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_premium_section_bg', array(
+        'label'   => __( 'Premium Subscribe Section Background Color', 'sla-health-hub' ),
+        'section' => 'vance_join_community',
+    ) ) );
 
     // 6. Dynamic Knowledgebase Sections
     $wp_customize->add_section( 'vance_knowledgebase_sections', array(
