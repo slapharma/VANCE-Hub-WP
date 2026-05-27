@@ -5040,7 +5040,7 @@ function vance_mobile_customize_register( $wp_customize ) {
     ) );
     $wp_customize->add_control( 'vance_mobile_stickycta_enable', array(
         'label'       => __( 'Show mobile sticky CTA bar', 'sla-health-hub' ),
-        'description' => __( 'Slides up from the bottom on phones after the reader scrolls down. Hidden on the dashboard and whenever the bottom nav is showing.', 'sla-health-hub' ),
+        'description' => __( 'Slides up from the bottom on phones after the reader scrolls down. Hidden on the dashboard. If the bottom nav is also on, the CTA sits just above it.', 'sla-health-hub' ),
         'section'     => 'vance_mobile_experience',
         'type'        => 'checkbox',
     ) );
@@ -5121,17 +5121,15 @@ function vance_mobile_bottomnav_active() {
 
 /**
  * Decide whether the mobile sticky CTA bar should render for this request.
- * Never on the dashboard, and never at the same time as the bottom nav (they'd
- * both occupy the bottom of the screen).
+ * Never on the dashboard. It MAY co-exist with the bottom nav — when both are
+ * active, mobile-components.css lifts the CTA to sit just above the nav bar
+ * (see body.has-vance-bottom-nav .vance-sticky-cta).
  */
 function vance_mobile_stickycta_active() {
     if ( ! vance_get_theme_mod( 'vance_mobile_stickycta_enable', false ) ) {
         return false;
     }
     if ( is_page( 'dashboard' ) || is_page_template( 'page-dashboard.php' ) ) {
-        return false;
-    }
-    if ( vance_mobile_bottomnav_active() ) {
         return false;
     }
     return true;

@@ -215,6 +215,16 @@
         transform: translateY(0);
     }
 
+    /* When the bottom nav is also enabled, lift the CTA so it stacks just above
+     * the 56px nav bar instead of overlapping it. */
+    body.has-vance-bottom-nav .vance-sticky-cta {
+        bottom: calc(56px + 8px + env(safe-area-inset-bottom));
+    }
+    /* Hidden (pre-reveal) offset also accounts for the nav so it slides cleanly. */
+    body.has-vance-bottom-nav .vance-sticky-cta:not(.is-visible) {
+        transform: translateY( calc(100% + 64px) );
+    }
+
     .vance-sticky-cta .vsc-text {
         flex: 1 1 auto;
         margin: 0;
