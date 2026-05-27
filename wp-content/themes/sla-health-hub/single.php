@@ -74,18 +74,7 @@ while ( have_posts() ) :
 
         <div class="container" style="position: relative; z-index: 2; padding: 0 20px;">
             <div class="oped-hero-content">
-                <div class="oped-meta-tags">
-                <span class="oped-category-tag"><?php echo esc_html( $type_label ); ?></span>
-                    <span class="oped-read-time" style="color: #cbd5e1;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        <?php echo esc_html( $read_time ); ?> min read
-                    </span>
-                    
-                    </span>
-                </div>
+                <?php // Article meta relocated to the dedicated header bar below the hero (all-screens redesign). ?>
 
                 <h1 class="oped-title" style="color: <?php echo esc_attr($title_color); ?>; font-size: 40px; text-shadow: none;"><?php the_title(); ?></h1>
 
@@ -94,6 +83,130 @@ while ( have_posts() ) :
     </section>
 
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
+
+    <?php
+    // =========================================================================
+    // ARTICLE HEADER BAR (all-screens redesign)
+    // Key meta (category · date · read time · author) + the Save action, placed
+    // directly under the hero so it's at the top on every device. The Save
+    // button also has a slim sticky companion that follows the reader.
+    // =========================================================================
+    $va_logged_in = is_user_logged_in();
+    $va_is_saved  = ( $va_logged_in && function_exists( 'vance_is_bookmarked' ) ) ? vance_is_bookmarked() : false;
+    $va_nonce     = wp_create_nonce( 'vance_dashboard_nonce' );
+    $va_btn_attrs = 'data-post-id="' . esc_attr( get_the_ID() ) . '" data-nonce="' . esc_attr( $va_nonce ) . '" data-logged-in="' . ( $va_logged_in ? '1' : '0' ) . '"';
+    ?>
+    <style>
+        .va-article-header { background:#fff; border-bottom:1px solid #e2e8f0; }
+        .va-article-header .container { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-top:16px; padding-bottom:16px; }
+        .va-article-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:14px; color:#64748b; }
+        .va-article-meta .va-cat { background:var(--primary-color,#008080); color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:4px; }
+        .va-article-meta .va-sep { color:#cbd5e1; }
+        .va-article-meta .va-author { display:inline-flex; align-items:center; gap:8px; color:#334155; font-weight:600; }
+        .va-article-meta .va-author img { width:26px; height:26px; border-radius:50%; }
+        .vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:10px; padding:12px 20px; font-weight:700; font-size:15px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+        .vance-save-btn.is-saved { background:#10B981; }
+        .vance-save-btn:hover { filter:brightness(0.96); }
+        .vance-save-btn:active { transform:scale(.97); }
+        .vance-save-btn .va-save-icon { font-size:18px; }
+
+        /* Slim sticky Save bar — revealed once the header scrolls out of view. */
+        .va-sticky-save { position:fixed; top:0; left:0; right:0; z-index:997; background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 2px 12px rgba(15,23,42,.08); transform:translateY(-100%); transition:transform .25s ease; }
+        .va-sticky-save.is-visible { transform:translateY(0); }
+        .va-sticky-save .container { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:10px; padding-bottom:10px; }
+        .va-sticky-save .va-sticky-title { font-weight:700; color:#0f172a; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .va-sticky-save .vance-save-btn { padding:9px 16px; font-size:14px; flex:0 0 auto; }
+
+        @media (max-width:767.98px) {
+            .va-sticky-save { top:70px; } /* sit below the fixed mobile site header */
+            .va-article-header .container { gap:12px; }
+            .va-article-meta { font-size:13px; gap:8px; width:100%; }
+            .va-save-main { width:100%; justify-content:center; }
+        }
+        @media (prefers-reduced-motion: reduce) { .va-sticky-save { transition:none; } }
+    </style>
+
+    <section class="va-article-header">
+        <div class="container">
+            <div class="va-article-meta">
+                <span class="va-cat"><?php echo esc_html( $type_label ); ?></span>
+                <span class="va-date"><?php echo esc_html( get_the_date( 'F j, Y' ) ); ?></span>
+                <span class="va-sep" aria-hidden="true">·</span>
+                <span class="va-read"><?php echo esc_html( $read_time ); ?> min read</span>
+                <span class="va-sep" aria-hidden="true">·</span>
+                <span class="va-author">
+                    <?php echo get_avatar( get_the_author_meta( 'ID' ), 26 ); ?>
+                    <span><?php the_author(); ?></span>
+                </span>
+            </div>
+            <button class="vance-save-btn va-save-main<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
+                <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
+                <span class="va-save-text"><?php echo $va_is_saved ? 'Saved' : 'Save Article'; ?></span>
+            </button>
+        </div>
+    </section>
+
+    <div class="va-sticky-save" hidden>
+        <div class="container">
+            <span class="va-sticky-title"><?php echo esc_html( get_the_title() ); ?></span>
+            <button class="vance-save-btn va-save-sticky<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
+                <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
+                <span class="va-save-text"><?php echo $va_is_saved ? 'Saved' : 'Save'; ?></span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+    jQuery(function($){
+        // Keep every Save button on the page (header + sticky) in sync.
+        function vaSetSaved(saved){
+            $('.vance-save-btn').each(function(){
+                var b = $(this);
+                b.toggleClass('is-saved', saved).attr('aria-pressed', saved ? 'true' : 'false');
+                b.find('.va-save-icon').html(saved ? '★' : '☆');
+                var full = ! b.hasClass('va-save-sticky');
+                b.find('.va-save-text').text(saved ? 'Saved' : (full ? 'Save Article' : 'Save'));
+            });
+        }
+
+        $(document).on('click', '.vance-save-btn', function(e){
+            e.preventDefault();
+            var btn = $(this);
+            if (btn.attr('data-logged-in') !== '1') {
+                if (typeof openGuestModal === 'function') { openGuestModal(); }
+                else { alert('Please log in to save articles.'); }
+                return;
+            }
+            $('.vance-save-btn').css('opacity', '0.7');
+            $.post('<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>', {
+                action: 'vance_toggle_bookmark',
+                post_id: btn.attr('data-post-id'),
+                nonce: btn.attr('data-nonce')
+            }, function(res){
+                $('.vance-save-btn').css('opacity', '1');
+                if (res && res.success) { vaSetSaved(res.data.action === 'added'); }
+                else { alert('Error: ' + (res && res.data ? res.data : 'could not save')); }
+            });
+        });
+
+        // Reveal the slim sticky Save bar once the header bar scrolls out of view.
+        var header = document.querySelector('.va-article-header');
+        var sticky = document.querySelector('.va-sticky-save');
+        if (header && sticky && 'IntersectionObserver' in window) {
+            new IntersectionObserver(function(entries){
+                entries.forEach(function(en){
+                    if (en.isIntersecting) {
+                        sticky.classList.remove('is-visible');
+                        window.setTimeout(function(){ if (!sticky.classList.contains('is-visible')) sticky.hidden = true; }, 250);
+                    } else {
+                        sticky.hidden = false;
+                        window.requestAnimationFrame(function(){ sticky.classList.add('is-visible'); });
+                    }
+                });
+            }, { threshold: 0 }).observe(header);
+        }
+    });
+    </script>
 
     <!-- Main Content Area -->
     <section class="oped-content-section">
@@ -194,65 +307,7 @@ while ( have_posts() ) :
                 <!-- Sidebar Column -->
                 <aside class="oped-sidebar">
 
-                    <!-- Redesigned Save Button -->
-                    <?php 
-                        $is_logged_in = is_user_logged_in();
-                        $is_saved = $is_logged_in ? vance_is_bookmarked() : false;
-                        $saved_bg = $is_saved ? '#10B981' : '#008080'; // Green if saved, Orange if not
-                    ?>
-                    <div class="oped-sidebar-block" style="padding: 0; background: transparent; border: none; margin-bottom: 24px;">
-                        <button id="vance-bookmark-sidebar-btn" style="width: 100%; padding: 16px; background: <?php echo $saved_bg; ?>; border: none; border-radius: 12px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" data-post-id="<?php the_ID(); ?>" data-nonce="<?php echo wp_create_nonce('vance_dashboard_nonce'); ?>" data-logged-in="<?php echo $is_logged_in ? '1' : '0'; ?>">
-                            <span class="icon" style="font-size: 20px;"><?php echo $is_saved ? '★' : '☆'; ?></span>
-                            <span class="text" style="font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;"><?php echo $is_saved ? 'Article Saved' : 'Save This Article'; ?></span>
-                        </button>
-                    </div>
-
-                    <script>
-                    jQuery(document).ready(function($) {
-                        $('#vance-bookmark-sidebar-btn').on('click', function(e) {
-                            e.preventDefault();
-                            var btn = $(this);
-                            var isLoggedIn = btn.data('logged-in') == '1';
-                            
-                            if (!isLoggedIn) {
-                                if (typeof openGuestModal === 'function') {
-                                    openGuestModal();
-                                } else {
-                                    alert('Please log in to save articles.');
-                                }
-                                return;
-                            }
-
-                            var pid = btn.data('post-id');
-                            var nonce = btn.data('nonce');
-                            var icon = btn.find('.icon');
-                            var text = btn.find('.text');
-                            
-                            btn.css('opacity', '0.7');
-                            
-                            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                                action: 'vance_toggle_bookmark',
-                                post_id: pid,
-                                nonce: nonce
-                            }, function(res) {
-                                btn.css('opacity', '1');
-                                if(res.success) {
-                                    if(res.data.action === 'added') {
-                                        btn.css('background', '#10B981');
-                                        icon.html('★');
-                                        text.text('Article Saved');
-                                    } else {
-                                        btn.css('background', '#008080');
-                                        icon.html('☆');
-                                        text.text('Save This Article');
-                                    }
-                                } else {
-                                    alert('Error: ' + res.data);
-                                }
-                            });
-                        });
-                    });
-                    </script>
+                    <?php // Save button relocated to the article header bar at the top (all-screens redesign). ?>
 
                     <!-- Author Info -->
                     <div class="oped-sidebar-block" style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 16px;">

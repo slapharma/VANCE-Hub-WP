@@ -78,6 +78,7 @@ jobs:
           ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "set -e; \
              THEME=~/$REMOTE_THEME; \
+             cd \"\$THEME/..\" && ls -1t sla-health-hub-pre-deploy-*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -f; \
              cd \"\$THEME\" && \
              tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
              tar xzf - && \
