@@ -297,6 +297,49 @@ body {
         $sections = $rewritten;
     }
 
+    // Migration (2026-05-26): the two split tool widgets have been merged
+    // back into one banner row, 'tool-widgets-row'. Substitute either
+    // legacy ID with the merged ID; if both are present, drop the second
+    // occurrence so we don't render the merged row twice.
+    $legacy_tw_ids = array( 'tool-widget-content-filters', 'tool-widget-vance-ai' );
+    if ( count( array_intersect( $sections, $legacy_tw_ids ) ) > 0 ) {
+        $rewritten = array();
+        $injected  = false;
+        foreach ( $sections as $sid ) {
+            if ( in_array( $sid, $legacy_tw_ids, true ) ) {
+                if ( ! $injected ) {
+                    $rewritten[] = 'tool-widgets-row';
+                    $injected    = true;
+                }
+                // otherwise: skip (deduped)
+            } else {
+                $rewritten[] = $sid;
+            }
+        }
+        $sections = $rewritten;
+    }
+
+    // One-time migration (2026-05-26): the legacy combined 'kb' case rendered
+    // both the mini-hero AND the category content blocks together. They're
+    // now split so admins can insert other blocks between them. For sites
+    // upgrading, inject 'kb-content' right after 'kb' ONCE and persist back
+    // to the saved order so the admin's subsequent toggles in Section Order
+    // are respected. Flag is a simple option that we set after the first run.
+    if ( ! get_option( 'vance_kb_content_split_migrated' ) ) {
+        if ( in_array( 'kb', $sections, true ) && ! in_array( 'kb-content', $sections, true ) ) {
+            $rewritten = array();
+            foreach ( $sections as $sid ) {
+                $rewritten[] = $sid;
+                if ( $sid === 'kb' ) {
+                    $rewritten[] = 'kb-content';
+                }
+            }
+            $sections = $rewritten;
+            set_theme_mod( 'vance_homepage_section_order', implode( ',', $sections ) );
+        }
+        update_option( 'vance_kb_content_split_migrated', 1, false );
+    }
+
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);
         switch ($section_id) {
@@ -321,6 +364,19 @@ body {
     $btn2_text = vance_get_theme_mod('vance_hero_button_2_text', "I'm a Patient");
     $btn2_link = vance_get_theme_mod('vance_hero_button_2_link', '/patients/');
 
+    // 2026-05-26: button colour controls (text + bg + border + hover variants).
+    $btn1_text_color       = vance_get_theme_mod('vance_hero_btn1_text_color',       '#ffffff');
+    $btn1_bg_color         = vance_get_theme_mod('vance_hero_btn1_bg_color',         '#008080');
+    $btn1_border_color     = vance_get_theme_mod('vance_hero_btn1_border_color',     '#008080');
+    $btn1_hover_text_color = vance_get_theme_mod('vance_hero_btn1_hover_text_color', '#ffffff');
+    $btn1_hover_bg_color   = vance_get_theme_mod('vance_hero_btn1_hover_bg_color',   '#006666');
+    $btn2_text_color       = vance_get_theme_mod('vance_hero_btn2_text_color',       '#ffffff');
+    $btn2_bg_color         = vance_get_theme_mod('vance_hero_btn2_bg_color',         '');
+    $btn2_border_color     = vance_get_theme_mod('vance_hero_btn2_border_color',     '#ffffff');
+    $btn2_hover_text_color = vance_get_theme_mod('vance_hero_btn2_hover_text_color', '#0A1929');
+    $btn2_hover_bg_color   = vance_get_theme_mod('vance_hero_btn2_hover_bg_color',   '#ffffff');
+    $btn2_bg_decl          = $btn2_bg_color ? 'background: ' . esc_attr($btn2_bg_color) . ';' : 'background: transparent;';
+
     $mask_enabled = vance_get_theme_mod('vance_hero_mask_toggle', true);
     // Per-page slider (0-100) takes precedence over the legacy global mask_opacity (0-1) when set.
     $home_overlay_pct = vance_get_theme_mod('vance_home_hero_overlay', null);
@@ -341,7 +397,11 @@ body {
         $hero_bg_style = "background-color: " . esc_attr($hero_bg_color) . "; background: linear-gradient(rgba(10, 25, 41, {$alpha1}), rgba(10, 25, 41, {$alpha2})), url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
     }
     ?>
-    <section class="hero patient-hero" style="padding: 95px 0 140px; display: flex; align-items: center; <?php echo $hero_bg_style; ?> color: white; position: relative; overflow: hidden;">
+    <style>
+        .hero .vance-hero-btn-1:hover { background: <?php echo esc_attr($btn1_hover_bg_color); ?> !important; color: <?php echo esc_attr($btn1_hover_text_color); ?> !important; border-color: <?php echo esc_attr($btn1_hover_bg_color); ?> !important; }
+        .hero .vance-hero-btn-2:hover { background: <?php echo esc_attr($btn2_hover_bg_color); ?> !important; color: <?php echo esc_attr($btn2_hover_text_color); ?> !important; border-color: <?php echo esc_attr($btn2_hover_bg_color); ?> !important; }
+    </style>
+    <section class="hero patient-hero" style="display: flex; align-items: center; <?php echo $hero_bg_style; ?> color: white; position: relative; overflow: hidden;">
         <div class="container" style="position:relative;z-index:1;">
             <div style="max-width: 800px;">
                 <span class="tag-label" style="background: <?php echo esc_attr($hero_tag_bg); ?>; color: <?php echo esc_attr($hero_tag_color); ?>; border: 1.5px solid <?php echo esc_attr($hero_tag_border); ?>;"><?php echo esc_html($hero_tag); ?></span>
@@ -363,8 +423,8 @@ body {
                     $btn1_onclick = (strpos($btn1_link, 'quiz') !== false) ? 'onclick="event.preventDefault(); openQuizModal();"' : '';
                     $btn2_onclick = (strpos($btn2_link, 'quiz') !== false) ? 'onclick="event.preventDefault(); openQuizModal();"' : '';
                     ?>
-                    <a href="<?php echo esc_url($btn1_link); ?>" <?php echo $btn1_onclick; ?> class="btn btn-primary" style="background: var(--primary-color); color: white; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none;"><?php echo esc_html($btn1_text); ?></a>
-                    <a href="<?php echo esc_url($btn2_link); ?>" <?php echo $btn2_onclick; ?> class="btn btn-outline" style="border: 2px solid white; color: white; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none;"><?php echo esc_html($btn2_text); ?></a>
+                    <a href="<?php echo esc_url($btn1_link); ?>" <?php echo $btn1_onclick; ?> class="btn btn-primary vance-hero-btn-1" style="background: <?php echo esc_attr($btn1_bg_color); ?>; color: <?php echo esc_attr($btn1_text_color); ?>; border: 2px solid <?php echo esc_attr($btn1_border_color); ?>; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;"><?php echo esc_html($btn1_text); ?></a>
+                    <a href="<?php echo esc_url($btn2_link); ?>" <?php echo $btn2_onclick; ?> class="btn btn-outline vance-hero-btn-2" style="<?php echo $btn2_bg_decl; ?> color: <?php echo esc_attr($btn2_text_color); ?>; border: 2px solid <?php echo esc_attr($btn2_border_color); ?>; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;"><?php echo esc_html($btn2_text); ?></a>
                 </div>
             </div>
         </div>
@@ -467,7 +527,7 @@ body {
         <div class="container">
             <div class="pathway-split-grid">
                 <!-- Left: Stacked Tiles -->
-                <div class="pathway-tiles-stack" style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
+                <div class="pathway-tiles-stack" style="<?php echo $pwc_tools_stack_style; ?>">
                     <!-- Section Label: Who Am I? -->
                     <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
                         <div class="section-label-left">
@@ -605,6 +665,32 @@ body {
                 $pwc_latest_cat     = (int) vance_get_theme_mod('vance_pwc_latest_category', 0);
                 $pwc_show_date      = vance_get_theme_mod('vance_pwc_latest_show_date', true);
 
+                // 2026-05-26: layout select - 'left' (tools beside content, tools on left,
+                // historical default), 'right' (tools beside content, tools on right),
+                // 'stacked' (tools full-width row above the content list).
+                $pwc_layout = vance_get_theme_mod('vance_pwc_layout', 'left');
+                if ( ! in_array( $pwc_layout, array( 'left', 'right', 'stacked' ), true ) ) { $pwc_layout = 'left'; }
+
+                // 2026-05-26: banner style + colour controls. style = card (default,
+                // existing 2-card layout), image_text (horizontal banner), image
+                // (image-led banner with overlay), pill (compact pill).
+                $pwc_style                 = vance_get_theme_mod( 'vance_pwc_style', 'card' );
+                if ( ! in_array( $pwc_style, array( 'card', 'image_text', 'image', 'pill' ), true ) ) { $pwc_style = 'card'; }
+                $pwc_section_label_color   = vance_get_theme_mod( 'vance_pwc_section_label_color',   '#0f172a' );
+                $pwc_card_title_color      = vance_get_theme_mod( 'vance_pwc_card_title_color',      '#0A1929' );
+                $pwc_card_title_hover_color= vance_get_theme_mod( 'vance_pwc_card_title_hover_color','#ffffff' );
+                $pwc_card_desc_color       = vance_get_theme_mod( 'vance_pwc_card_desc_color',       '#64748b' );
+                $pwc_card_eyebrow_color    = vance_get_theme_mod( 'vance_pwc_card_eyebrow_color',    '#008080' );
+                $pwc_tools_column_bg       = vance_get_theme_mod( 'vance_pwc_tools_column_bg',       '' );
+
+                // Inline style for the tools column wrapper. When a bg is set,
+                // include vertical+horizontal padding so the colour reads as a
+                // coloured block instead of a sliver behind the cards.
+                $pwc_tools_stack_style = 'display: flex; flex-direction: column; gap: 24px; height: 100%;';
+                if ( $pwc_tools_column_bg !== '' ) {
+                    $pwc_tools_stack_style .= ' background: ' . esc_attr( $pwc_tools_column_bg ) . '; padding: 24px;';
+                }
+
                 $pwc_cpt = array(
                     'post', 'news', 'research', 'oped', 'review',
                     'whitepaper', 'podcast', 'webinar', 'course', 'infographic',
@@ -634,6 +720,28 @@ body {
             gap: 40px;
             align-items: stretch;
         }
+        /* Layout: tools on the RIGHT - swap visual order via grid-column overrides
+           so the DOM stays in the same order (a11y + SEO friendly). */
+        .pathway-content-section.layout-right .pathway-split-grid {
+            grid-template-columns: 7fr 3fr;
+        }
+        .pathway-content-section.layout-right .pathway-tiles-stack    { grid-column: 2; }
+        .pathway-content-section.layout-right .latest-content-column  { grid-column: 1; grid-row: 1; }
+        /* Layout: STACKED - tools row across the top, content list below. */
+        .pathway-content-section.layout-stacked .pathway-split-grid {
+            grid-template-columns: 1fr;
+            gap: 48px;
+        }
+        .pathway-content-section.layout-stacked .pathway-tiles-stack {
+            flex-direction: row !important;
+            flex-wrap: wrap;
+            height: auto !important;
+            align-items: stretch;
+        }
+        .pathway-content-section.layout-stacked .pathway-tiles-stack > .section-label {
+            flex-basis: 100%;
+        }
+        .pathway-content-section.layout-stacked .pwc-card { flex: 1 1 0 !important; min-width: 240px; }
         .pathway-content-section .pathway-tiles-stack {
             display: flex;
             flex-direction: column;
@@ -648,6 +756,11 @@ body {
         .pathway-content-section .pathway-tiles-stack > .section-label { margin-bottom: 0 !important; }
         @media (max-width: 992px) {
             .pathway-content-section .pathway-split-grid { grid-template-columns: 1fr; }
+            .pathway-content-section.layout-right .pathway-split-grid { grid-template-columns: 1fr; }
+            /* On mobile every layout collapses to a single column with tools on top. */
+            .pathway-content-section.layout-right .pathway-tiles-stack   { grid-column: 1; grid-row: 1; }
+            .pathway-content-section.layout-right .latest-content-column { grid-column: 1; grid-row: 2; }
+            .pathway-content-section.layout-stacked .pathway-tiles-stack { flex-direction: column !important; }
             .pathway-content-section .bento-grid-news { grid-template-columns: 1fr; grid-template-rows: auto; }
         }
         .pwc-card {
@@ -720,64 +833,138 @@ body {
             .pwc-card-image { height: 60px; }
         }
     </style>
-    <section class="pathway-content-section">
+    <section class="pathway-content-section layout-<?php echo esc_attr($pwc_layout); ?>">
         <div class="container">
             <div class="pathway-split-grid">
-                <!-- Left: 2 stacked TOOL tiles -->
+                <!-- Tools column (style: card / image_text / image / pill; position controlled by layout-* on parent section) -->
                 <div class="pathway-tiles-stack" style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
                     <!-- Section Label: Featured Tools -->
                     <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
                         <div class="section-label-left">
                             <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
-                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html($pwc_label); ?></h2>
+                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: <?php echo esc_attr( $pwc_section_label_color ); ?>;"><?php echo esc_html($pwc_label); ?></h2>
                         </div>
                     </div>
 
-                    <!-- Healthcare Quiz -->
                     <?php
-                    $hq_title = vance_get_theme_mod('vance_hquiz_tile_title', 'Healthcare Quiz');
-                    $hq_desc  = vance_get_theme_mod('vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.');
-                    $hq_extra = vance_get_theme_mod('vance_hquiz_tile_extra', 'Find your starting point');
-                    $hq_img   = vance_get_theme_mod('vance_hquiz_tile_image');
-                    $hq_link  = vance_get_theme_mod('vance_hquiz_tile_link',  '/healthcare-quiz/');
-                    ?>
-                    <a href="<?php echo esc_url($hq_link); ?>" class="pwc-card" style="flex: 1;">
-                        <div class="pwc-card-image" style="<?php echo $hq_img ? 'background-image: url(\'' . esc_url($hq_img) . '\');' : ''; ?>">
-                            <?php if ( ! $hq_img ) : ?>
-                                <span class="pwc-fallback-icon">?</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="pwc-card-body">
-                            <div>
-                                <h2 style="font-size: 22px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;"><?php echo esc_html($hq_title); ?></h2>
-                                <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html($hq_desc); ?></p>
-                            </div>
-                            <p style="font-weight: 700; color: var(--primary-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo esc_html($hq_extra); ?></p>
-                        </div>
-                    </a>
+                    // Build the two tool cards into a normalised array, then render
+                    // each one in whichever style the admin selected.
+                    $pwc_cards = array(
+                        array(
+                            'title'         => vance_get_theme_mod('vance_hquiz_tile_title', 'Healthcare Quiz'),
+                            'desc'          => vance_get_theme_mod('vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.'),
+                            'eyebrow'       => vance_get_theme_mod('vance_hquiz_tile_extra', 'Find your starting point'),
+                            'image'         => vance_get_theme_mod('vance_hquiz_tile_image'),
+                            'link'          => vance_get_theme_mod('vance_hquiz_tile_link',  '/healthcare-quiz/'),
+                            'fallback_icon' => '?',
+                        ),
+                        array(
+                            'title'         => vance_get_theme_mod('vance_askai_tile_title', 'Ask AI'),
+                            'desc'          => vance_get_theme_mod('vance_askai_tile_desc',  'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.'),
+                            'eyebrow'       => vance_get_theme_mod('vance_askai_tile_extra', 'Personalised answers, 24/7'),
+                            'image'         => vance_get_theme_mod('vance_askai_tile_image'),
+                            'link'          => vance_get_theme_mod('vance_askai_tile_link',  '/ask-ai/'),
+                            'fallback_icon' => 'AI',
+                        ),
+                    );
 
-                    <!-- Ask AI -->
-                    <?php
-                    $ai_title = vance_get_theme_mod('vance_askai_tile_title', 'Ask AI');
-                    $ai_desc  = vance_get_theme_mod('vance_askai_tile_desc',  'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.');
-                    $ai_extra = vance_get_theme_mod('vance_askai_tile_extra', 'Personalised answers, 24/7');
-                    $ai_img   = vance_get_theme_mod('vance_askai_tile_image');
-                    $ai_link  = vance_get_theme_mod('vance_askai_tile_link',  '/ask-ai/');
+                    // Inline styles for the hover-state title colour. The base
+                    // .pwc-card and banner :hover rules live in the existing
+                    // <style> block at the top of the case; we override the
+                    // title colour on hover via a scoped CSS rule per render.
                     ?>
-                    <a href="<?php echo esc_url($ai_link); ?>" class="pwc-card" style="flex: 1;">
-                        <div class="pwc-card-image" style="<?php echo $ai_img ? 'background-image: url(\'' . esc_url($ai_img) . '\');' : ''; ?>">
-                            <?php if ( ! $ai_img ) : ?>
-                                <span class="pwc-fallback-icon">AI</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="pwc-card-body">
-                            <div>
-                                <h2 style="font-size: 22px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;"><?php echo esc_html($ai_title); ?></h2>
-                                <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html($ai_desc); ?></p>
+                    <style>
+                        .pathway-content-section .pwc-card:hover .pwc-card-title,
+                        .pathway-content-section .pwc-banner:hover .pwc-banner-title { color: <?php echo esc_attr( $pwc_card_title_hover_color ); ?> !important; }
+                        .pathway-content-section .pwc-banner {
+                            display: flex;
+                            text-decoration: none;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                            flex: 1;
+                            min-height: 0;
+                        }
+                        .pathway-content-section .pwc-banner:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,0.10); }
+                        /* Image-led banner */
+                        .pathway-content-section .pwc-banner--image > div { position: relative; overflow: hidden; padding: 26px 24px; color: #ffffff; min-height: 160px; flex: 1; }
+                        .pathway-content-section .pwc-banner--image::after { content: ''; display: block; }
+                        /* Pill banner */
+                        .pathway-content-section .pwc-banner--pill > div { background: #ffffff; border: 1.5px solid #0A1929; padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-height: 72px; flex: 1; }
+                        /* Horizontal image+text banner */
+                        .pathway-content-section .pwc-banner--image_text > div { display: flex; align-items: center; gap: 18px; padding: 22px; color: #ffffff; min-height: 140px; flex: 1; }
+                    </style>
+
+                    <?php foreach ( $pwc_cards as $card ) :
+                        $c_title = esc_html( $card['title'] );
+                        $c_desc  = esc_html( $card['desc'] );
+                        $c_eye   = esc_html( $card['eyebrow'] );
+                        $c_img   = $card['image'];
+                        $c_link  = esc_url( $card['link'] );
+                        $c_fi    = esc_html( $card['fallback_icon'] );
+
+                        if ( $pwc_style === 'image' ) :
+                            // Image-led banner with dark overlay. Falls back to a flat
+                            // teal background when no image set.
+                            $bg = $c_img
+                                ? "background-image: linear-gradient(135deg, rgba(10,25,41,0.55) 0%, rgba(10,25,41,0.90) 100%), url('" . esc_url( $c_img ) . "'); background-size: cover; background-position: center;"
+                                : "background: linear-gradient(135deg, " . esc_attr( $pwc_card_eyebrow_color ) . " 0%, #0A1929 100%);";
+                    ?>
+                        <a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--image">
+                            <div style="<?php echo $bg; ?>">
+                                <?php if ( $c_eye !== '' ) : ?>
+                                    <div style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;"><?php echo $c_eye; ?></div>
+                                <?php endif; ?>
+                                <h3 class="pwc-banner-title" style="margin: 0 0 6px; font-size: 22px; font-weight: 800; color: #ffffff; line-height: 1.15; font-family: 'Outfit', sans-serif;"><?php echo $c_title; ?></h3>
+                                <p style="margin: 0; font-size: 13px; opacity: 0.9; max-width: 320px; line-height: 1.5;"><?php echo $c_desc; ?></p>
                             </div>
-                            <p style="font-weight: 700; color: var(--primary-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo esc_html($ai_extra); ?></p>
-                        </div>
-                    </a>
+                        </a>
+                    <?php elseif ( $pwc_style === 'pill' ) : ?>
+                        <a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--pill">
+                            <div>
+                                <div style="display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1;">
+                                    <span style="flex-shrink: 0; width: 32px; height: 32px; background: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; font-family: 'Outfit', sans-serif; margin-top: 2px;"><?php echo $c_fi; ?></span>
+                                    <div style="min-width: 0; flex: 1;">
+                                        <div class="pwc-banner-title" style="font-size: 14px; font-weight: 700; color: <?php echo esc_attr( $pwc_card_title_color ); ?>; font-family: 'Outfit', sans-serif; line-height: 1.3;"><?php echo $c_title; ?></div>
+                                        <div style="font-size: 12px; color: <?php echo esc_attr( $pwc_card_desc_color ); ?>; line-height: 1.4; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo $c_desc; ?></div>
+                                    </div>
+                                </div>
+                                <span style="background: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; color: #ffffff; padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; margin-top: 2px;">Open &rarr;</span>
+                            </div>
+                        </a>
+                    <?php elseif ( $pwc_style === 'image_text' ) : ?>
+                        <a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--image_text">
+                            <div style="background: linear-gradient(135deg, <?php echo esc_attr( $pwc_card_eyebrow_color ); ?> 0%, #0A1929 100%);">
+                                <div style="flex-shrink: 0; width: 64px; height: 64px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center;">
+                                    <?php if ( $c_img ) : ?>
+                                        <img src="<?php echo esc_url( $c_img ); ?>" alt="" style="width: 36px; height: 36px; object-fit: contain; filter: brightness(0) invert(1);">
+                                    <?php else : ?>
+                                        <span style="color: #ffffff; font-size: 22px; font-weight: 800; font-family: 'Outfit', sans-serif;"><?php echo $c_fi; ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <?php if ( $c_eye !== '' ) : ?>
+                                        <div style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px;"><?php echo $c_eye; ?></div>
+                                    <?php endif; ?>
+                                    <h3 class="pwc-banner-title" style="margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #ffffff; font-family: 'Outfit', sans-serif;"><?php echo $c_title; ?></h3>
+                                    <p style="margin: 0; font-size: 13px; opacity: 0.88; line-height: 1.4;"><?php echo $c_desc; ?></p>
+                                </div>
+                            </div>
+                        </a>
+                    <?php else : // 'card' (default — existing 2-card stacked layout) ?>
+                        <a href="<?php echo $c_link; ?>" class="pwc-card" style="flex: 1;">
+                            <div class="pwc-card-image" style="<?php echo $c_img ? 'background-image: url(\'' . esc_url( $c_img ) . '\');' : ''; ?>">
+                                <?php if ( ! $c_img ) : ?>
+                                    <span class="pwc-fallback-icon"><?php echo $c_fi; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="pwc-card-body">
+                                <div>
+                                    <h2 class="pwc-card-title" style="font-size: 22px; font-weight: 800; color: <?php echo esc_attr( $pwc_card_title_color ); ?>; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif; transition: color 0.2s ease;"><?php echo $c_title; ?></h2>
+                                    <p style="color: <?php echo esc_attr( $pwc_card_desc_color ); ?>; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo $c_desc; ?></p>
+                                </div>
+                                <p style="font-weight: 700; color: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo $c_eye; ?></p>
+                            </div>
+                        </a>
+                    <?php endif; endforeach; ?>
                 </div>
 
                 <!-- Right: Latest Content Bento (independent customizer settings — vance_pwc_latest_*) -->
@@ -1542,9 +1729,54 @@ body {
                 $kb_opacity = (int) vance_get_theme_mod('vance_kb_mini_hero_opacity', 80) / 100;
                 $kb_opacity_2 = min(1, $kb_opacity + 0.1);
                 $kb_mini_bg = vance_get_theme_mod('vance_kb_mini_hero_bg');
-                if(!$kb_mini_bg) $kb_mini_bg = get_template_directory_uri() . '/assets/img/patient_hero.png';
-                
-                $hero_style = "position: relative; padding: " . esc_attr($kb_padding) . "; background: linear-gradient(rgba(10, 25, 41, " . $kb_opacity . "), rgba(10, 25, 41, " . $kb_opacity_2 . ")), url('" . esc_url($kb_mini_bg) . "') center center / cover; text-align: center; color: " . esc_attr($kb_font_color) . ";";
+                // 2026-05-26: removed patient_hero.png fallback. When admin clears the
+                // Background Image, render a solid Background Color instead and drop
+                // the dark overlay gradient so the colour reads cleanly.
+                $kb_mini_bg_color = vance_get_theme_mod('vance_kb_mini_hero_bg_color', '#0A1929');
+
+                // Mini-Hero header controls (eyebrow + per-field colour/size/align/divider).
+                // Added 2026-05-26. Blank colour values fall back to $kb_font_color so
+                // existing sites keep their look without re-saving anything.
+                $kb_show_eyebrow      = (bool) vance_get_theme_mod('vance_kb_mini_hero_show_eyebrow', true);
+                $kb_eyebrow_text      = vance_get_theme_mod('vance_kb_mini_hero_eyebrow', 'KNOWLEDGE LIBRARY');
+                $kb_eyebrow_size      = (int)  vance_get_theme_mod('vance_kb_mini_hero_eyebrow_size', 12);
+                $kb_eyebrow_color     = vance_get_theme_mod('vance_kb_mini_hero_eyebrow_color', '#ffffff') ?: $kb_font_color;
+                $kb_eyebrow_bg        = vance_get_theme_mod('vance_kb_mini_hero_eyebrow_bg', 'rgba(255,255,255,0.10)');
+                $kb_eyebrow_border    = vance_get_theme_mod('vance_kb_mini_hero_eyebrow_border', 'rgba(255,255,255,0.20)');
+                $kb_title_size        = (int)  vance_get_theme_mod('vance_kb_mini_hero_title_size', 38);
+                $kb_title_color       = vance_get_theme_mod('vance_kb_mini_hero_title_color', '') ?: $kb_font_color;
+                $kb_subtitle_size     = (int)  vance_get_theme_mod('vance_kb_mini_hero_subtitle_size', 18);
+                $kb_subtitle_color    = vance_get_theme_mod('vance_kb_mini_hero_subtitle_color', '') ?: $kb_font_color;
+                $kb_align             = vance_get_theme_mod('vance_kb_mini_hero_align', 'center');
+                if ( ! in_array( $kb_align, array( 'left', 'center', 'right' ), true ) ) { $kb_align = 'center'; }
+                $kb_header_bg         = vance_get_theme_mod('vance_kb_mini_hero_header_bg', '');
+                $kb_show_divider      = (bool) vance_get_theme_mod('vance_kb_mini_hero_show_divider', false);
+                $kb_divider_color     = vance_get_theme_mod('vance_kb_mini_hero_divider_color', 'rgba(255,255,255,0.25)');
+                $kb_divider_width     = max(1, (int) vance_get_theme_mod('vance_kb_mini_hero_divider_width', 2));
+
+                // Map alignment -> margin rules so left/right alignments don't get
+                // visually centred by the 600px subtitle cap.
+                $kb_subtitle_margin = ($kb_align === 'center') ? '0 auto' : '0';
+                if ($kb_align === 'right') { $kb_subtitle_margin = '0 0 0 auto'; }
+                $kb_divider_margin  = ($kb_align === 'center') ? '24px auto 0' : '24px 0 0';
+                if ($kb_align === 'right') { $kb_divider_margin = '24px 0 0 auto'; }
+
+                // Optional header-block (card behind the copy). Empty bg = no card chrome,
+                // so the layout is identical to the legacy render when admin hasn't opted in.
+                $kb_header_block_style = 'max-width: 800px;';
+                if ($kb_align === 'center') { $kb_header_block_style .= ' margin: 0 auto;'; }
+                if ($kb_align === 'right')  { $kb_header_block_style .= ' margin: 0 0 0 auto;'; }
+                if ($kb_header_bg !== '') {
+                    $kb_header_block_style .= ' background: ' . esc_attr($kb_header_bg) . '; padding: 32px 36px;';
+                }
+
+                // Build hero background. With an image: dark overlay gradient + image.
+                // Without an image: solid background color, no gradient overlay.
+                if ( $kb_mini_bg ) {
+                    $hero_style = "position: relative; padding: " . esc_attr($kb_padding) . "; background-color: " . esc_attr($kb_mini_bg_color) . "; background-image: linear-gradient(rgba(10, 25, 41, " . $kb_opacity . "), rgba(10, 25, 41, " . $kb_opacity_2 . ")), url('" . esc_url($kb_mini_bg) . "'); background-position: center; background-size: cover; background-repeat: no-repeat; text-align: " . esc_attr($kb_align) . "; color: " . esc_attr($kb_font_color) . ";";
+                } else {
+                    $hero_style = "position: relative; padding: " . esc_attr($kb_padding) . "; background-color: " . esc_attr($kb_mini_bg_color) . "; background-image: none; text-align: " . esc_attr($kb_align) . "; color: " . esc_attr($kb_font_color) . ";";
+                }
                 if ($kb_height) {
                     $hero_style .= " min-height: " . esc_attr($kb_height) . "px; display: flex; align-items: center;";
                 }
@@ -1552,11 +1784,31 @@ body {
     <section class="kb-section-wrapper" style="border-top: 2px solid var(--primary-color); background-color: <?php echo esc_attr($kb_wrapper_bg); ?>;">
         <section class="kb-mini-hero" style="<?php echo $hero_style; ?>">
             <div class="container" style="width: 100%;">
-                <h2 style="font-family: 'Outfit', sans-serif; font-size: 38px; font-weight: 800; margin: 0 0 12px 0; color: inherit;"><?php echo esc_html($kb_title); ?></h2>
-                <p style="font-size: 18px; opacity: 0.8; max-width: 600px; margin: 0 auto; color: inherit;"><?php echo esc_html($kb_subtitle); ?></p>
+                <div class="kb-mini-hero__header" style="<?php echo $kb_header_block_style; ?>">
+                    <?php if ($kb_show_eyebrow && trim($kb_eyebrow_text) !== '') : ?>
+                        <span class="kb-mini-hero__eyebrow" style="display: inline-block; padding: 6px 14px; margin-bottom: 18px; font-family: 'Inter', sans-serif; font-size: <?php echo (int) $kb_eyebrow_size; ?>px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: <?php echo esc_attr($kb_eyebrow_color); ?>; background: <?php echo esc_attr($kb_eyebrow_bg); ?>; border: 1px solid <?php echo esc_attr($kb_eyebrow_border); ?>; border-radius: 0; line-height: 1;"><?php echo esc_html($kb_eyebrow_text); ?></span>
+                    <?php endif; ?>
+                    <h2 class="kb-mini-hero__title" style="font-family: 'Outfit', sans-serif; font-size: <?php echo (int) $kb_title_size; ?>px; font-weight: 800; line-height: 1.1; margin: 0 0 12px 0; color: <?php echo esc_attr($kb_title_color); ?>;"><?php echo esc_html($kb_title); ?></h2>
+                    <p class="kb-mini-hero__subtitle" style="font-size: <?php echo (int) $kb_subtitle_size; ?>px; opacity: 0.85; max-width: 600px; margin: <?php echo esc_attr($kb_subtitle_margin); ?>; color: <?php echo esc_attr($kb_subtitle_color); ?>; line-height: 1.5;"><?php echo esc_html($kb_subtitle); ?></p>
+                    <?php if ($kb_show_divider) : ?>
+                        <div class="kb-mini-hero__divider" aria-hidden="true" style="width: 80px; height: <?php echo (int) $kb_divider_width; ?>px; background: <?php echo esc_attr($kb_divider_color); ?>; margin: <?php echo esc_attr($kb_divider_margin); ?>;"></div>
+                    <?php endif; ?>
+                </div>
             </div>
         </section>
-        
+    </section>
+                <?php
+                break;
+
+            case 'kb-content':
+                // Category content blocks. Standalone section so admins can put
+                // other blocks (e.g. tool-widgets-row) between the KB hero and
+                // this content area. 2026-05-26.
+                $kbc_bg       = vance_get_theme_mod( 'vance_kb_content_bg', vance_get_theme_mod( 'vance_kb_wrapper_bg', '#ffffff' ) );
+                $kbc_pad_top  = absint( vance_get_theme_mod( 'vance_kb_content_pad_top', 0 ) );
+                $kbc_pad_bot  = absint( vance_get_theme_mod( 'vance_kb_content_pad_bottom', 0 ) );
+                ?>
+    <section class="kb-content-wrapper" style="background-color: <?php echo esc_attr($kbc_bg); ?>; padding: <?php echo $kbc_pad_top; ?>px 0 <?php echo $kbc_pad_bot; ?>px;">
         <?php
         $kb_cats = get_categories(array('hide_empty' => false));
         $kb_sections = array();
@@ -1673,7 +1925,7 @@ body {
     </section>
                 <?php
                 break;
-            
+
             case 'testimonials':
                 echo vance_testimonials_shortcode(array());
                 break;
@@ -1708,6 +1960,7 @@ body {
         $divider_key = 'vance_divider_after_' . str_replace( '-', '_', $section_id );
         if ( vance_get_theme_mod( $divider_key, false ) ) {
             $div_color     = vance_get_theme_mod( 'vance_divider_color',     '#e2e8f0' );
+            $div_bg_color  = vance_get_theme_mod( 'vance_divider_bg_color',  '' );
             $div_thickness = absint( vance_get_theme_mod( 'vance_divider_thickness', 1 ) );
             $div_width_pct = absint( vance_get_theme_mod( 'vance_divider_width',     100 ) );
             $div_style     = vance_get_theme_mod( 'vance_divider_style',     'solid' );
@@ -1716,8 +1969,20 @@ body {
             $div_width_pct = max( 10, min( 100, $div_width_pct ) );
             $allowed_styles = array( 'solid', 'dashed', 'dotted', 'double' );
             if ( ! in_array( $div_style, $allowed_styles, true ) ) { $div_style = 'solid'; }
+            // 2026-05-26: optional background colour on the divider wrapper.
+            // When blank, omit the declaration entirely so the row is transparent.
+            // When a bg colour IS set, force a sensible min padding so the band
+            // is visible (otherwise the wrapper is only 1px tall — just the <hr>
+            // line — and the colour shows as a near-invisible sliver).
+            $div_bg_decl = '';
+            if ( $div_bg_color ) {
+                $div_bg_decl = 'background: ' . esc_attr( $div_bg_color ) . ';';
+                if ( $div_padding < 16 ) {
+                    $div_padding = 32; // visible band height
+                }
+            }
             ?>
-            <div class="vance-section-divider-wrap" style="padding: <?php echo $div_padding; ?>px 0; margin: <?php echo $div_margin; ?>px 0;">
+            <div class="vance-section-divider-wrap" style="padding: <?php echo $div_padding; ?>px 0; margin: <?php echo $div_margin; ?>px 0; <?php echo $div_bg_decl; ?>">
                 <hr class="vance-section-divider" style="
                     border: 0;
                     border-top: <?php echo $div_thickness; ?>px <?php echo esc_attr( $div_style ); ?> <?php echo esc_attr( $div_color ); ?>;

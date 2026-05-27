@@ -37,6 +37,7 @@ function vance_get_available_sections() {
 		'discovery'         => array( 'label' => 'Discovery Suite',                        'group' => 'Homepage' ),
 		'join'              => array( 'label' => 'Join the Community',                     'group' => 'Homepage' ),
 		'kb'                => array( 'label' => 'Knowledge Base Mini-Hero',               'group' => 'Homepage' ),
+		'kb-content'        => array( 'label' => 'Knowledge Base Content (category blocks)', 'group' => 'Homepage' ),
 		'testimonials'      => array( 'label' => 'Testimonials',                           'group' => 'Homepage' ),
 	);
 

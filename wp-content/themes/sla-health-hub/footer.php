@@ -8,13 +8,13 @@
                 $nl_desc = vance_get_theme_mod('vance_newsletter_desc', 'Get the latest clinical reviews and tools.');
             ?>
             <div class="newsletter-bar" style="background: #0A1929; border-radius: 0; padding: 40px; margin-bottom: 60px; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-                <div style="flex: 1; min-width: 300px;">
+                <div style="flex: 1; min-width: min(300px, 100%);">
                     <h3 style="color: white; margin-bottom: 8px; font-size: 24px; font-weight: 700;"><?php echo esc_html($nl_head); ?></h3>
                     <p style="color: #94a3b8; margin: 0; font-size: 16px;"><?php echo esc_html($nl_desc); ?></p>
                 </div>
                 <!-- Generic Form action for Mailchimp/HubSpot -->
-                <form action="<?php echo esc_url($nl_action); ?>" method="post" target="_blank" style="display: flex; gap: 10px; flex: 1; min-width: 300px;">
-                    <input type="email" name="EMAIL" placeholder="Enter your professional email" required style="flex: 1; padding: 12px 16px; border-radius: 0; border: 1px solid #334155; background: #1e293b; color: white;">
+                <form action="<?php echo esc_url($nl_action); ?>" method="post" target="_blank" style="display: flex; gap: 10px; flex: 1; min-width: min(300px, 100%); flex-wrap: wrap;">
+                    <input type="email" name="EMAIL" placeholder="Enter your professional email" required style="flex: 1 1 200px; padding: 12px 16px; font-size: 16px; border-radius: 0; border: 1px solid #334155; background: #1e293b; color: white;">
                     <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_<?php echo md5($nl_action); ?>" tabindex="-1" value=""></div>
                     <button type="submit" class="btn btn-primary" style="white-space: nowrap; padding: 12px 24px;">Subscribe</button>
                 </form>

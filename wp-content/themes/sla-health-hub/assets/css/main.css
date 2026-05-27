@@ -1643,7 +1643,7 @@ h6 {
     }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
     .quick-nav-grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -1678,7 +1678,7 @@ h6 {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .hero h1 {
         font-size: 36px;
     }
@@ -2093,7 +2093,7 @@ h6 {
     object-fit: cover;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
 
     .bento-grid-news,
     .bento-grid-reviews,
@@ -2112,7 +2112,7 @@ h6 {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 
     .bento-grid-news,
     .bento-grid-reviews,
@@ -2122,14 +2122,14 @@ h6 {
 }
 
 /* MOBILE OVERRIDES */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     h1 {
         font-size: 32px !important;
     }
 }
 
 /* MOBILE OVERRIDES START */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .site-header {
         height: 70px !important;
         position: fixed !important;
@@ -2256,7 +2256,7 @@ h6 {
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .main-nav {
         display: none !important;
     }
@@ -2285,7 +2285,7 @@ h6 {
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .mobile-menu-toggle {
         display: flex !important;
         align-items: center;
@@ -2299,14 +2299,14 @@ h6 {
     display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .site-logo {
         width: 264px !important; /* +20% from 220px */
     }
 }
 
 /* REFINING IMPORTANT FLAGS */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .search-section form {
         flex-direction: column !important;
         gap: 12px !important;
@@ -2349,13 +2349,13 @@ h6 {
     gap: 32px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
     .grid-4 {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 
     .grid-4,
     .grid-3,
@@ -2370,7 +2370,7 @@ h6 {
 }
 
 /* PAGE SPECIFIC MOBILE REFINEMENTS */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 
     .hcp-hero,
     .patient-hero {
@@ -2427,7 +2427,7 @@ h6 {
     margin-bottom: 60px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .section-padding {
         padding: 50px 0 !important;
     }
@@ -2446,7 +2446,7 @@ h6 {
 }
 
 /* OP-ED & MISC RESPONSIVENESS */
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
     .oped-layout {
         grid-template-columns: 1fr !important;
         gap: 40px !important;
@@ -2460,7 +2460,7 @@ h6 {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .oped-sidebar {
         grid-template-columns: 1fr !important;
     }
@@ -2491,7 +2491,7 @@ h6 {
     transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .header-social-links {
         display: none !important;
     }

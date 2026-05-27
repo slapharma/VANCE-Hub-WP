@@ -515,18 +515,231 @@ function vance_tw_render_vance_ai_body() {
 }
 
 // =========================================================================
+// Merged Tool Widgets Row (banner-style)
+// =========================================================================
+/**
+ * Render BOTH tool widget banners side-by-side in a single homepage section.
+ * Style is admin-selectable via Customizer:
+ *   - 'horizontal' (default): icon-led horizontal banner with gradient
+ *   - 'image':                background image with dark overlay
+ *   - 'pill':                 compact pill banner with CTA on the right
+ *
+ * Per-card content reads from new vance_twrow_card{N}_* settings first, then
+ * falls back to the legacy vance_tw_{content_filters,vance_ai}_* settings so
+ * existing customisations carry over without re-saving anything.
+ *
+ * Both modals (content filters + vance AI) are still emitted so the cards open
+ * the same focused tools they always did.
+ *
+ * @since 2026-05-26
+ */
+function vance_render_tool_widgets_row() {
+	vance_tool_widgets_emit_modal_css_once();
+
+	$style = vance_get_theme_mod( 'vance_twrow_style', 'horizontal' );
+	if ( ! in_array( $style, array( 'horizontal', 'image', 'pill' ), true ) ) { $style = 'horizontal'; }
+
+	$sec_bg     = vance_get_theme_mod( 'vance_twrow_section_bg', '#F8FAFC' );
+	$pad_top    = absint( vance_get_theme_mod( 'vance_twrow_pad_top', 60 ) );
+	$pad_bot    = absint( vance_get_theme_mod( 'vance_twrow_pad_bottom', 60 ) );
+	$show_head  = (bool) vance_get_theme_mod( 'vance_twrow_show_heading', false );
+	$head_text  = vance_get_theme_mod( 'vance_twrow_heading', 'Quick Tools' );
+	$head_color = vance_get_theme_mod( 'vance_twrow_heading_color', '#0A1929' );
+
+	// Per-card data, with fallbacks to legacy settings.
+	$cards = array(
+		array(
+			'modal_id' => 'vance-tw-modal-content-filters',
+			'eyebrow'  => vance_get_theme_mod( 'vance_twrow_card1_eyebrow', 'Filter content' ),
+			'title'    => vance_get_theme_mod( 'vance_twrow_card1_title', '' )
+				?: vance_get_theme_mod( 'vance_tw_content_filters_title', 'Content Filters' ),
+			'desc'     => vance_get_theme_mod( 'vance_twrow_card1_desc', '' )
+				?: vance_get_theme_mod( 'vance_tw_content_filters_desc',
+					'Find research by topic, type and reading level.' ),
+			'cta'      => vance_get_theme_mod( 'vance_twrow_card1_cta', '' )
+				?: vance_get_theme_mod( 'vance_tw_content_filters_cta', 'Open' ),
+			'accent'   => vance_get_theme_mod( 'vance_twrow_card1_accent', '#008080' ),
+			'bg_start' => vance_get_theme_mod( 'vance_twrow_card1_bg_start', '#008080' ),
+			'bg_end'   => vance_get_theme_mod( 'vance_twrow_card1_bg_end', '#0A1929' ),
+			'image'    => vance_get_theme_mod( 'vance_twrow_card1_image', '' )
+				?: vance_get_theme_mod( 'vance_tw_content_filters_image', '' ),
+			'icon_svg' => '<rect x="3" y="6" width="18" height="2" fill="currentColor"/><rect x="6" y="11" width="12" height="2" fill="currentColor"/><rect x="9" y="16" width="6" height="2" fill="currentColor"/>',
+		),
+		array(
+			'modal_id' => 'vance-tw-modal-vance-ai',
+			'eyebrow'  => vance_get_theme_mod( 'vance_twrow_card2_eyebrow', 'AI assistant' ),
+			'title'    => vance_get_theme_mod( 'vance_twrow_card2_title', '' )
+				?: vance_get_theme_mod( 'vance_tw_vance_ai_title', 'Vance AI' ),
+			'desc'     => vance_get_theme_mod( 'vance_twrow_card2_desc', '' )
+				?: vance_get_theme_mod( 'vance_tw_vance_ai_desc',
+					'Evidence-backed answers in seconds.' ),
+			'cta'      => vance_get_theme_mod( 'vance_twrow_card2_cta', '' )
+				?: vance_get_theme_mod( 'vance_tw_vance_ai_cta', 'Open' ),
+			'accent'   => vance_get_theme_mod( 'vance_twrow_card2_accent', '#008080' ),
+			'bg_start' => vance_get_theme_mod( 'vance_twrow_card2_bg_start', '#008080' ),
+			'bg_end'   => vance_get_theme_mod( 'vance_twrow_card2_bg_end', '#0A1929' ),
+			'image'    => vance_get_theme_mod( 'vance_twrow_card2_image', '' )
+				?: vance_get_theme_mod( 'vance_tw_vance_ai_image', '' ),
+			'icon_svg' => '<rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="8" y1="20" x2="16" y2="20" stroke="currentColor" stroke-width="2"/><line x1="12" y1="16" x2="12" y2="20" stroke="currentColor" stroke-width="2"/>',
+		),
+	);
+	?>
+	<section class="vance-twrow vance-twrow--<?php echo esc_attr( $style ); ?>" style="padding: <?php echo $pad_top; ?>px 0 <?php echo $pad_bot; ?>px; background: <?php echo esc_attr( $sec_bg ); ?>;">
+		<div class="container">
+			<?php if ( $show_head && $head_text ) : ?>
+				<h2 class="vance-twrow__heading" style="margin: 0 0 28px 0; font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: <?php echo esc_attr( $head_color ); ?>; text-transform: uppercase; letter-spacing: 1px;"><?php echo esc_html( $head_text ); ?></h2>
+			<?php endif; ?>
+
+			<div class="vance-twrow__grid">
+				<?php foreach ( $cards as $card ) : ?>
+					<?php vance_twrow_render_banner( $card, $style ); ?>
+				<?php endforeach; ?>
+			</div>
+		</div>
+	</section>
+
+	<style>
+		.vance-twrow__grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 20px;
+		}
+		.vance-twrow__banner {
+			cursor: pointer;
+			text-decoration: none;
+			position: relative;
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+			background: transparent;
+			border: 0;
+			padding: 0;
+			text-align: left;
+			width: 100%;
+			font-family: inherit;
+		}
+		.vance-twrow__banner:hover { transform: translateY(-2px); }
+		/* Below 768px: horizontal scroll-snap row, two banners visible at 85% width with a peek */
+		@media (max-width: 768px) {
+			.vance-twrow__grid {
+				grid-template-columns: 85% 85%;
+				gap: 14px;
+				overflow-x: auto;
+				scroll-snap-type: x mandatory;
+				-webkit-overflow-scrolling: touch;
+				padding-bottom: 12px;
+				margin: 0 -16px;
+				padding-left: 16px;
+				padding-right: 16px;
+			}
+			.vance-twrow__grid::-webkit-scrollbar { display: none; }
+			.vance-twrow__grid { scrollbar-width: none; }
+			.vance-twrow__banner { scroll-snap-align: start; }
+		}
+	</style>
+
+	<?php
+	// Both modals — same scoped bodies as the standalone widgets.
+	vance_tool_widget_modal( 'vance-tw-modal-content-filters', 'Content Filters', 'vance_tw_render_content_filters_body' );
+	vance_tool_widget_modal( 'vance-tw-modal-vance-ai',        'Vance AI',        'vance_tw_render_vance_ai_body'        );
+}
+
+/**
+ * Render a single banner in the chosen style.
+ * Modal opening uses data-vance-tw-open which the shared CSS+JS already binds.
+ */
+function vance_twrow_render_banner( $card, $style ) {
+	$title    = $card['title'];
+	$desc     = $card['desc'];
+	$cta      = $card['cta'];
+	$eyebrow  = $card['eyebrow'];
+	$accent   = $card['accent'];
+	$bg_start = $card['bg_start'];
+	$bg_end   = $card['bg_end'];
+	$image    = $card['image'];
+	$modal_id = $card['modal_id'];
+	$svg      = $card['icon_svg'];
+
+	if ( $style === 'image' ) {
+		// Option 2 — image-led banner with dark overlay.
+		$bg_layers = $image
+			? "background-color: " . esc_attr( $bg_end ) . "; background-image: linear-gradient(135deg, rgba(10,25,41,0.55) 0%, rgba(10,25,41,0.92) 100%), url('" . esc_url( $image ) . "'); background-position: center; background-size: cover; background-repeat: no-repeat;"
+			: "background: linear-gradient(135deg, " . esc_attr( $bg_start ) . " 0%, " . esc_attr( $bg_end ) . " 100%);";
+		?>
+		<button type="button" class="vance-twrow__banner vance-twrow__banner--image" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+			<div style="position: relative; padding: 28px 24px; color: white; min-height: 160px; overflow: hidden; <?php echo $bg_layers; ?>">
+				<?php if ( $eyebrow ) : ?>
+					<div style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( $accent ); ?>; opacity: 0.92; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px;"><?php echo esc_html( $eyebrow ); ?></div>
+				<?php endif; ?>
+				<h3 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: white; line-height: 1.15; font-family: 'Outfit', sans-serif;"><?php echo esc_html( $title ); ?></h3>
+				<p style="margin: 0 0 16px; font-size: 14px; opacity: 0.92; max-width: 320px; line-height: 1.5;"><?php echo esc_html( $desc ); ?></p>
+				<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.30); font-size: 12px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.4px;"><?php echo esc_html( $cta ); ?> &rarr;</span>
+			</div>
+		</button>
+		<?php
+	} elseif ( $style === 'pill' ) {
+		// Option 3 — minimal pill banner with right-side CTA.
+		?>
+		<button type="button" class="vance-twrow__banner vance-twrow__banner--pill" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+			<!-- 2026-05-26: pill desc now wraps to multiple lines on long copy.
+			     Vertical alignment switched from `center` to `flex-start` so
+			     icon + content sit at the top when desc spans 2-3 lines.
+			     min-height kept (72px) but the row grows when content needs it. -->
+			<div style="background: #ffffff; border: 1.5px solid #0A1929; padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-height: 72px;">
+				<div style="display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1;">
+					<svg width="22" height="22" viewBox="0 0 24 24" style="color: <?php echo esc_attr( $accent ); ?>; flex-shrink: 0; margin-top: 2px;" aria-hidden="true"><?php echo $svg; ?></svg>
+					<div style="min-width: 0; flex: 1;">
+						<div style="font-size: 14px; font-weight: 700; color: #0A1929; font-family: 'Outfit', sans-serif; line-height: 1.3;"><?php echo esc_html( $title ); ?></div>
+						<div style="font-size: 12px; color: #64748b; line-height: 1.4; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html( $desc ); ?></div>
+					</div>
+				</div>
+				<span style="background: <?php echo esc_attr( $accent ); ?>; color: white; padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; margin-top: 2px;"><?php echo esc_html( $cta ); ?> &rarr;</span>
+			</div>
+		</button>
+		<?php
+	} else {
+		// Option 1 (default) — wide horizontal banner with icon left, content right.
+		?>
+		<button type="button" class="vance-twrow__banner vance-twrow__banner--horizontal" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+			<div style="background: linear-gradient(135deg, <?php echo esc_attr( $bg_start ); ?> 0%, <?php echo esc_attr( $bg_end ); ?> 100%); padding: 24px; color: white; display: flex; align-items: center; gap: 18px; min-height: 140px;">
+				<div style="flex-shrink: 0; width: 56px; height: 56px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.20); display: flex; align-items: center; justify-content: center; color: white;">
+					<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><?php echo $svg; ?></svg>
+				</div>
+				<div style="flex: 1; min-width: 0;">
+					<?php if ( $eyebrow ) : ?>
+						<div style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px;"><?php echo esc_html( $eyebrow ); ?></div>
+					<?php endif; ?>
+					<h3 style="margin: 0 0 4px; font-size: 18px; font-weight: 800; color: white; font-family: 'Outfit', sans-serif;"><?php echo esc_html( $title ); ?></h3>
+					<p style="margin: 0 0 10px; font-size: 13px; opacity: 0.88; line-height: 1.4;"><?php echo esc_html( $desc ); ?></p>
+					<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.95;"><?php echo esc_html( $cta ); ?> &rarr;</span>
+				</div>
+			</div>
+		</button>
+		<?php
+	}
+}
+
+// =========================================================================
 // Registry
 // =========================================================================
 add_filter( 'vance_homepage_sections', function ( $sections ) {
-	$sections[ 'tool-widget-content-filters' ] = array(
-		'label'  => 'Tool Widget: Content Filters',
+	// New merged section — the primary entry going forward.
+	$sections[ 'tool-widgets-row' ] = array(
+		'label'  => 'Tool Widgets Row (merged banners)',
 		'group'  => 'Tool Widgets',
-		'render' => 'vance_render_tool_widget_content_filters',
+		'render' => 'vance_render_tool_widgets_row',
+	);
+	// Old standalone widgets kept for backwards-compat. Hidden from the
+	// section-order picker so admins don't pick them by accident going forward.
+	$sections[ 'tool-widget-content-filters' ] = array(
+		'label'    => 'Tool Widget: Content Filters (legacy single)',
+		'group'    => 'Tool Widgets',
+		'render'   => 'vance_render_tool_widget_content_filters',
+		'hidden'   => true,
 	);
 	$sections[ 'tool-widget-vance-ai' ] = array(
-		'label'  => 'Tool Widget: Vance AI',
-		'group'  => 'Tool Widgets',
-		'render' => 'vance_render_tool_widget_vance_ai',
+		'label'    => 'Tool Widget: Vance AI (legacy single)',
+		'group'    => 'Tool Widgets',
+		'render'   => 'vance_render_tool_widget_vance_ai',
+		'hidden'   => true,
 	);
 	unset( $sections['discovery'] );
 	return $sections;
