@@ -88,9 +88,35 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
     display: none !important;
 }
 
+/* IMPORTANT: Mega Menu Pro renders its own hamburger + menu INSIDE the theme's
+ * <nav class="main-nav"> (that's where the theme calls wp_nav_menu). So we must
+ * NOT hide .main-nav on mobile — doing so hides MM Pro's hamburger too, leaving
+ * phones with NO menu at all. Instead, neutralise the theme's old off-canvas
+ * styles on .main-nav so MM Pro's wrapper displays in normal flow and MM Pro can
+ * run its own responsive toggle/menu. (Regression fix — see git history.) */
 @media (max-width: 767.98px) {
     body.mega-menu-primary-menu .main-nav {
-        display: none !important;
+        display: block !important;
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: none !important;
+        transform: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* MM Pro's menu list is a <ul> inside .main-nav, so the theme's mobile
+     * `.main-nav ul { flex-direction: column }` override would distort it.
+     * Let Mega Menu Pro's own CSS control its list layout. */
+    body.mega-menu-primary-menu .main-nav ul#mega-menu-primary-menu {
+        flex-direction: initial !important;
+        gap: initial !important;
     }
 }
 

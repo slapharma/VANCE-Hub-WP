@@ -123,8 +123,8 @@ function vance_health_hub_scripts() {
 
     // Phase 1 mobile hardening overrides. Enqueued AFTER main.css so equal-specificity
     // rules here win the cascade. See assets/css/mobile-base.css + MOBILE-PLAN.md §1.
-    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.0-vance-mobile-phase1' );
-    
+    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.1-vance-mobile-navfix' );
+
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
 }
