@@ -110,14 +110,6 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
         padding: 0 !important;
         overflow: visible !important;
     }
-
-    /* MM Pro's menu list is a <ul> inside .main-nav, so the theme's mobile
-     * `.main-nav ul { flex-direction: column }` override would distort it.
-     * Let Mega Menu Pro's own CSS control its list layout. */
-    body.mega-menu-primary-menu .main-nav ul#mega-menu-primary-menu {
-        flex-direction: initial !important;
-        gap: initial !important;
-    }
 }
 
 /* When the bespoke hamburger IS being used (no MM Pro), make the open/close

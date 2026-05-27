@@ -123,7 +123,13 @@ function vance_health_hub_scripts() {
 
     // Phase 1 mobile hardening overrides. Enqueued AFTER main.css so equal-specificity
     // rules here win the cascade. See assets/css/mobile-base.css + MOBILE-PLAN.md §1.
-    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.1-vance-mobile-navfix' );
+    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.2-vance-mobile-navfix' );
+
+    // Phase 2 mobile components (bottom nav, etc.). All rules are gated behind
+    // @media (max-width:767.98px) AND behind Customizer toggles that default OFF,
+    // so this file is inert on desktop and until a feature is explicitly enabled.
+    // See MOBILE-PLAN.md §2.
+    wp_enqueue_style( 'vance-mobile-components', get_template_directory_uri() . '/assets/css/mobile-components.css', array( 'vance-mobile-base' ), '2.4.0-vance-mobile-phase2' );
 
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
@@ -4988,6 +4994,77 @@ function vance_save_quiz_results() {
 }
 add_action( 'wp_ajax_vance_save_quiz_results', 'vance_save_quiz_results' );
 
+
+/**
+ * ---------------------------------------------------------------------------
+ * Phase 2 mobile components — Customizer registration + helpers.
+ * See MOBILE-PLAN.md §2. Every component defaults OFF so nothing renders on the
+ * live site until an admin explicitly enables it under Appearance → Customize →
+ * Mobile Experience.
+ * ---------------------------------------------------------------------------
+ */
+function vance_mobile_customize_register( $wp_customize ) {
+    $wp_customize->add_section( 'vance_mobile_experience', array(
+        'title'       => __( 'Mobile Experience', 'sla-health-hub' ),
+        'priority'    => 47,
+        'description' => __( 'App-like mobile-only components. These appear on phones (≤767px) and are hidden on desktop.', 'sla-health-hub' ),
+    ) );
+
+    // --- Bottom navigation bar ---
+    $wp_customize->add_setting( 'vance_mobile_bottomnav_enable', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_bottomnav_enable', array(
+        'label'   => __( 'Show mobile bottom navigation bar', 'sla-health-hub' ),
+        'section' => 'vance_mobile_experience',
+        'type'    => 'checkbox',
+    ) );
+
+    // Optional: restrict the bottom nav to logged-in users only.
+    $wp_customize->add_setting( 'vance_mobile_bottomnav_loggedin_only', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_bottomnav_loggedin_only', array(
+        'label'       => __( 'Bottom nav: logged-in users only', 'sla-health-hub' ),
+        'description' => __( 'If ticked, the bar only shows to signed-in members.', 'sla-health-hub' ),
+        'section'     => 'vance_mobile_experience',
+        'type'        => 'checkbox',
+    ) );
+}
+add_action( 'customize_register', 'vance_mobile_customize_register' );
+
+/**
+ * Decide whether the mobile bottom nav should render for the current request.
+ * Centralised so the partial, the body-class filter and the body padding all
+ * agree. Never renders on the dashboard (it has its own footer + sidebar).
+ */
+function vance_mobile_bottomnav_active() {
+    if ( ! vance_get_theme_mod( 'vance_mobile_bottomnav_enable', false ) ) {
+        return false;
+    }
+    if ( is_page( 'dashboard' ) || is_page_template( 'page-dashboard.php' ) ) {
+        return false;
+    }
+    if ( vance_get_theme_mod( 'vance_mobile_bottomnav_loggedin_only', false ) && ! is_user_logged_in() ) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Add a body class when the bottom nav is active so mobile-components.css can
+ * reserve bottom padding (only inside the mobile media query) and prevent the
+ * fixed bar from covering page content.
+ */
+function vance_mobile_body_class( $classes ) {
+    if ( vance_mobile_bottomnav_active() ) {
+        $classes[] = 'has-vance-bottom-nav';
+    }
+    return $classes;
+}
+add_filter( 'body_class', 'vance_mobile_body_class' );
 
 // End of File
 

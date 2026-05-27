@@ -1,0 +1,181 @@
+/*
+ * mobile-components.css — Phase 2 mobile-only components for the Vance Medical theme.
+ *
+ * Enqueued AFTER mobile-base.css. Every component here is:
+ *   (a) gated behind @media (max-width: 767.98px) so it is invisible on desktop, and
+ *   (b) only rendered server-side when its Customizer toggle is ON (defaults OFF).
+ *
+ * Companion: MOBILE-PLAN.md → "Phase 2 — Mobile-only components".
+ *
+ * Section index:
+ *   2.1  Mobile bottom navigation bar + "More" sheet
+ */
+
+/* ===========================================================================
+ * 2.1  MOBILE BOTTOM NAVIGATION
+ * ======================================================================== */
+
+/* Hidden by default everywhere; only revealed on phones below. The server only
+ * prints the markup when the Customizer toggle is on, so this is a second guard. */
+.vance-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .vance-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        margin: 0;
+        padding: 0;
+        padding-bottom: env(safe-area-inset-bottom);
+        background: #ffffff;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
+    }
+
+    .vbn-tab {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        min-height: 56px;
+        padding: 8px 2px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        color: #64748b;
+        font-family: inherit;
+        font-size: 11px;
+        line-height: 1.1;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.15s ease;
+    }
+
+    .vbn-icon {
+        width: 24px;
+        height: 24px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    /* Icons that read better filled (dashboard squares) — override stroke. */
+    .vbn-tab .vbn-icon rect {
+        fill: currentColor;
+        stroke: none;
+    }
+
+    .vbn-label {
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+
+    .vbn-tab.is-active {
+        color: var(--primary-color, #008080);
+    }
+
+    /* Only show the lift/colour feedback on real pointers; on touch use :active. */
+    @media (hover: hover) {
+        .vbn-tab:hover {
+            color: var(--primary-color, #008080);
+        }
+    }
+    .vbn-tab:active {
+        color: var(--primary-color, #008080);
+    }
+
+    /* Reserve space so the fixed bar never covers page content. The class is only
+     * added (server-side) when the bar is actually rendering. */
+    body.has-vance-bottom-nav:not(.dashboard-body) {
+        padding-bottom: calc(56px + env(safe-area-inset-bottom));
+    }
+}
+
+/* --- "More" bottom sheet ---------------------------------------------------- */
+
+.vbn-sheet-backdrop,
+.vbn-sheet {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .vbn-sheet-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1001;
+        background: rgba(15, 23, 42, 0.45);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+    .vbn-sheet-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .vbn-sheet {
+        display: block;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1002;
+        background: #ffffff;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.2);
+        padding: 8px 0 calc(16px + env(safe-area-inset-bottom));
+        transform: translateY(100%);
+        transition: transform 0.25s ease;
+    }
+    .vbn-sheet.is-open {
+        transform: translateY(0);
+    }
+
+    .vbn-sheet-handle {
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: #cbd5e1;
+        margin: 8px auto 12px;
+    }
+
+    .vbn-sheet-links {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .vbn-sheet-links li + li {
+        border-top: 1px solid #f1f5f9;
+    }
+    .vbn-sheet-links a {
+        display: block;
+        padding: 16px 24px;
+        min-height: 44px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f172a;
+        text-decoration: none;
+    }
+    .vbn-sheet-links a:active {
+        background: #f8fafc;
+        color: var(--primary-color, #008080);
+    }
+}
+
+/* Respect reduced-motion: skip the slide/fade transitions. */
+@media (prefers-reduced-motion: reduce) {
+    .vbn-sheet,
+    .vbn-sheet-backdrop {
+        transition: none !important;
+    }
+}

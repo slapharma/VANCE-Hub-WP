@@ -305,6 +305,12 @@
     });
     </script>
 
+<?php
+// Phase 2.1 — mobile bottom navigation (renders only when enabled in
+// Customizer → Mobile Experience, and never on the dashboard). Self-gated.
+include get_template_directory() . '/template-parts/mobile-bottom-nav.php';
+?>
+
 <?php wp_footer(); ?>
 <?php echo vance_get_theme_mod( 'vance_footer_scripts' ); ?>
 </body>
