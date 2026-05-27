@@ -3,6 +3,10 @@
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <?php // Phase 4 (mobile performance): open TLS connections to font + image CDNs early. ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="//i0.wp.com">
     <meta name="theme-color" content="#0A1929" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#008080" media="(prefers-color-scheme: dark)">
     <meta name="apple-mobile-web-app-capable" content="yes">

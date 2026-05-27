@@ -29,9 +29,9 @@
                     ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:block; margin-bottom: 24px;">
                         <?php if($f_logo): ?>
-                            <img src="<?php echo esc_url($f_logo); ?>" alt="Vance Medical" style="height: 48px;">
+                            <img src="<?php echo esc_url($f_logo); ?>" alt="Vance Medical" style="height: 48px;" loading="lazy" decoding="async">
                         <?php else: ?>
-                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 48px;">
+                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 48px;" loading="lazy" decoding="async">
                         <?php endif; ?>
                     </a>
                     <p><?php echo esc_html($f_text); ?></p>
