@@ -5032,6 +5032,48 @@ function vance_mobile_customize_register( $wp_customize ) {
         'section'     => 'vance_mobile_experience',
         'type'        => 'checkbox',
     ) );
+
+    // --- Sticky CTA bar (Phase 2.2) ---
+    $wp_customize->add_setting( 'vance_mobile_stickycta_enable', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_stickycta_enable', array(
+        'label'       => __( 'Show mobile sticky CTA bar', 'sla-health-hub' ),
+        'description' => __( 'Slides up from the bottom on phones after the reader scrolls down. Hidden on the dashboard and whenever the bottom nav is showing.', 'sla-health-hub' ),
+        'section'     => 'vance_mobile_experience',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_mobile_stickycta_text', array(
+        'default'           => 'Ready to take control of your gut health?',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_stickycta_text', array(
+        'label'   => __( 'Sticky CTA: headline', 'sla-health-hub' ),
+        'section' => 'vance_mobile_experience',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_mobile_stickycta_btn', array(
+        'default'           => 'Join for Free',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_stickycta_btn', array(
+        'label'   => __( 'Sticky CTA: button text', 'sla-health-hub' ),
+        'section' => 'vance_mobile_experience',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_mobile_stickycta_link', array(
+        'default'           => home_url( '/register/' ),
+        'sanitize_callback' => 'esc_url_raw',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_stickycta_link', array(
+        'label'   => __( 'Sticky CTA: button link', 'sla-health-hub' ),
+        'section' => 'vance_mobile_experience',
+        'type'    => 'url',
+    ) );
 }
 add_action( 'customize_register', 'vance_mobile_customize_register' );
 
@@ -5048,6 +5090,24 @@ function vance_mobile_bottomnav_active() {
         return false;
     }
     if ( vance_get_theme_mod( 'vance_mobile_bottomnav_loggedin_only', false ) && ! is_user_logged_in() ) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Decide whether the mobile sticky CTA bar should render for this request.
+ * Never on the dashboard, and never at the same time as the bottom nav (they'd
+ * both occupy the bottom of the screen).
+ */
+function vance_mobile_stickycta_active() {
+    if ( ! vance_get_theme_mod( 'vance_mobile_stickycta_enable', false ) ) {
+        return false;
+    }
+    if ( is_page( 'dashboard' ) || is_page_template( 'page-dashboard.php' ) ) {
+        return false;
+    }
+    if ( vance_mobile_bottomnav_active() ) {
         return false;
     }
     return true;
