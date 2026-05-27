@@ -2,7 +2,11 @@
 <html <?php language_attributes(); ?>>
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0A1929" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#008080" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="Vance Medical provides pharma-grade nutritional health resources, clinical reviews, and education for healthcare practitioners and patients.">
     <title>Vance Medical. Pharma-Grade Nutritional Health.</title>
     <link rel="icon" type="image/png" href="<?php echo get_template_directory_uri(); ?>/assets/img/favicon.png">
@@ -93,21 +97,62 @@
 
 
     <script>
+    /*
+     * Bespoke mobile hamburger toggle.
+     *
+     * This is a fallback for when Mega Menu Pro is not installed/active. When MM Pro
+     * IS active (body.mega-menu-primary-menu), mobile-base.css hides this button and
+     * the .main-nav drawer so MM Pro owns mobile navigation without conflict.
+     *
+     * Fixes vs the previous version:
+     *  - Old JS toggled .menu-icon / .close-icon classes that don't exist in markup
+     *    (audit §2.2). New JS toggles .is-open on the button itself; mobile-base.css
+     *    animates the three <span> bars into an X via that class.
+     *  - Resets body scroll-lock on resize past the 768px breakpoint so a user who
+     *    opens the drawer then rotates to landscape doesn't get stuck (audit §2.6).
+     *  - Closes the drawer when any nav link is tapped (so single-page jumps don't
+     *    leave the menu open over content).
+     */
     document.addEventListener('DOMContentLoaded', function() {
-        const toggle = document.querySelector('.mobile-menu-toggle');
-        const nav = document.querySelector('.main-nav');
+        const toggle  = document.querySelector('.mobile-menu-toggle');
+        const nav     = document.querySelector('.main-nav');
         const actions = document.querySelector('.header-actions');
-        const menuIcon = document.querySelector('.menu-icon');
-        const closeIcon = document.querySelector('.close-icon');
 
-        if (toggle) {
-            toggle.addEventListener('click', function() {
-                nav.classList.toggle('active');
-                actions.classList.toggle('active');
-                menuIcon && menuIcon.classList.toggle('hidden');
-                closeIcon && closeIcon.classList.toggle('hidden');
-                document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
-            });
+        if (!toggle || !nav) return;
+
+        function setOpen(open) {
+            nav.classList.toggle('active', open);
+            if (actions) actions.classList.toggle('active', open);
+            toggle.classList.toggle('is-open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            document.body.style.overflow = open ? 'hidden' : '';
         }
+
+        toggle.setAttribute('aria-expanded', 'false');
+
+        toggle.addEventListener('click', function() {
+            setOpen(!nav.classList.contains('active'));
+        });
+
+        // Close drawer when any nav link is tapped.
+        nav.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (nav.classList.contains('active')) setOpen(false);
+            });
+        });
+
+        // If user rotates to landscape past the mobile breakpoint while drawer
+        // is open, reset body overflow and close state so desktop nav can render.
+        const mq = window.matchMedia('(min-width: 768px)');
+        const onResize = function(e) {
+            if (e.matches && nav.classList.contains('active')) setOpen(false);
+        };
+        if (mq.addEventListener) mq.addEventListener('change', onResize);
+        else mq.addListener(onResize); // Safari < 14
+
+        // Close on Escape key.
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && nav.classList.contains('active')) setOpen(false);
+        });
     });
     </script>

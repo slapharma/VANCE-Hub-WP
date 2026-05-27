@@ -22,6 +22,16 @@ require_once get_template_directory() . '/inc/content-widget.php';
 // block (Content Filters + Vance AI). Modal infrastructure (iframe + CSS + JS)
 // is emitted once per page from inside the first widget's render.
 require_once get_template_directory() . '/inc/tool-widgets.php';
+// Sortable section registry — defines vance_get_available_sections() which
+// front-page.php's default-case dispatch needs on EVERY page load (not just
+// in the Customizer admin context). The custom WP_Customize_Control class
+// inside is guarded by `class_exists( 'WP_Customize_Control' )` so it's safe
+// to load on the frontend — only the function + registry filter pipeline
+// runs there. Bug fix 2026-05-26: previously this file was only loaded
+// inside customize_register, so registry-driven sections (content-widget-N,
+// tool-widgets-row, patients-*, hcp-*) silently failed to render on the
+// frontend.
+require_once get_template_directory() . '/inc/customizer-sortable-control.php';
 
 /**
  * Rebrand migration helper.
@@ -109,7 +119,11 @@ function vance_health_hub_scripts() {
     // Enqueue Main Styles
     // We will copy the prototype CSS to a file named 'main.css' in the theme folder
     // Version bumped to force browser/edge cache-miss after Vance Medical rebrand (teal palette + larger logo).
-    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.2.0-vance-recovery' );
+    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.3.0-vance-mobile-phase1' );
+
+    // Phase 1 mobile hardening overrides. Enqueued AFTER main.css so equal-specificity
+    // rules here win the cascade. See assets/css/mobile-base.css + MOBILE-PLAN.md §1.
+    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.0-vance-mobile-phase1' );
     
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
@@ -1758,6 +1772,73 @@ function vance_customize_register( $wp_customize ) {
         'section'     => 'vance_hero_settings',
     ) ) );
 
+    // 2026-05-26: hero eyebrow + button colour controls. The eyebrow tag was
+    // already wired in the render (vance_hero_tag_bg/color/border) but had no
+    // Customizer UI — register the controls here so admins can edit them.
+    // Buttons get full chrome control (text + bg + border, default + hover).
+    $wp_customize->add_setting( 'vance_hero_tag_bg', array(
+        'default'           => '#ffffff',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_tag_bg', array(
+        'label'   => __( 'Hero Eyebrow — Background', 'sla-health-hub' ),
+        'section' => 'vance_hero_settings',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_tag_color', array(
+        'default'           => '#008080',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_tag_color', array(
+        'label'   => __( 'Hero Eyebrow — Text Colour', 'sla-health-hub' ),
+        'section' => 'vance_hero_settings',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_tag_border', array(
+        'default'           => '#008080',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_tag_border', array(
+        'label'   => __( 'Hero Eyebrow — Border Colour', 'sla-health-hub' ),
+        'section' => 'vance_hero_settings',
+    ) ) );
+
+    // Button 1 (Practitioner — primary fill)
+    $wp_customize->add_setting( 'vance_hero_btn1_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_text_color', array( 'label' => 'Button 1 — Text Colour', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn1_bg_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_bg_color', array( 'label' => 'Button 1 — Background', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn1_border_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_border_color', array( 'label' => 'Button 1 — Border', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn1_hover_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_hover_text_color', array( 'label' => 'Button 1 — Text on Hover', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn1_hover_bg_color', array( 'default' => '#006666', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_hover_bg_color', array( 'label' => 'Button 1 — Background on Hover', 'section' => 'vance_hero_settings' ) ) );
+
+    // Button 2 (Patient — outline)
+    $wp_customize->add_setting( 'vance_hero_btn2_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_text_color', array( 'label' => 'Button 2 — Text Colour', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn2_bg_color', array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_bg_color', array(
+        'label'       => 'Button 2 — Background',
+        'description' => 'Blank = transparent (outline button look).',
+        'section'     => 'vance_hero_settings',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn2_border_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_border_color', array( 'label' => 'Button 2 — Border', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn2_hover_text_color', array( 'default' => '#0A1929', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_text_color', array( 'label' => 'Button 2 — Text on Hover', 'section' => 'vance_hero_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_hero_btn2_hover_bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_bg_color', array( 'label' => 'Button 2 — Background on Hover', 'section' => 'vance_hero_settings' ) ) );
+
     // 2.5 Discovery Suite Settings (Nested under Vance Theme Settings)
     $wp_customize->add_section( 'vance_discovery_general', array(
         'title'    => __( 'Discovery Engine (General)', 'sla-health-hub' ),
@@ -2174,8 +2255,112 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_pwc_label', array( 'label' => 'Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
+    // Layout - choose where the tools column sits relative to the Latest Content
+    // list. Added 2026-05-26. Defaults to 'left' to match the historical behaviour
+    // (3fr tools / 7fr news split). 'stacked' renders both as full-width rows.
+    $wp_customize->add_setting( 'vance_pwc_layout', array(
+        'default'           => 'left',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_pwc_layout', array(
+        'label'       => __( 'Layout - Tools Position', 'sla-health-hub' ),
+        'description' => __( 'Choose whether Featured Tools sit beside the Latest Content list, or stack above it.', 'sla-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+        'type'        => 'select',
+        'choices'     => array(
+            'left'    => __( 'Left of Latest Content',  'sla-health-hub' ),
+            'right'   => __( 'Right of Latest Content', 'sla-health-hub' ),
+            'stacked' => __( 'Stacked (Tools on top)',  'sla-health-hub' ),
+        ),
+    ) );
+
+    // 2026-05-26: Banner-style selector + colour controls for the two PWC tool
+    // cards. When style != 'card' the existing 2-card layout is replaced with
+    // banners matching the Tool Widgets Row visual language.
+    $wp_customize->add_setting( 'vance_pwc_style', array(
+        'default'           => 'card',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_pwc_style', array(
+        'label'       => __( 'Tool Card Style', 'sla-health-hub' ),
+        'description' => __( 'Card = current paired tool tiles with image header. Image + Text = horizontal banner (icon left, content right). Image = image-led banner with overlay text. Pill = compact pill banner with CTA on the right.', 'sla-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+        'type'        => 'select',
+        'choices'     => array(
+            'card'       => __( 'Card (current paired tiles)', 'sla-health-hub' ),
+            'image_text' => __( 'Image + Text (horizontal banner)', 'sla-health-hub' ),
+            'image'      => __( 'Image-led banner', 'sla-health-hub' ),
+            'pill'       => __( 'Minimal pill banner', 'sla-health-hub' ),
+        ),
+    ) );
+
+    // Section-level label colour
+    $wp_customize->add_setting( 'vance_pwc_section_label_color', array(
+        'default'           => '#0f172a',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_section_label_color', array(
+        'label'   => __( 'Section Label Colour ("Featured Tools" heading)', 'sla-health-hub' ),
+        'section' => 'vance_pathway_content_settings',
+    ) ) );
+
+    // Card title + hover
+    $wp_customize->add_setting( 'vance_pwc_card_title_color', array(
+        'default'           => '#0A1929',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_card_title_color', array(
+        'label'   => __( 'Card Title Colour', 'sla-health-hub' ),
+        'section' => 'vance_pathway_content_settings',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_pwc_card_title_hover_color', array(
+        'default'           => '#ffffff',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_card_title_hover_color', array(
+        'label'       => __( 'Card Title Colour (on hover)', 'sla-health-hub' ),
+        'description' => __( 'Applied when the card is hovered, especially when Card Hover Colour darkens the background.', 'sla-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+    ) ) );
+
+    // Card description
+    $wp_customize->add_setting( 'vance_pwc_card_desc_color', array(
+        'default'           => '#64748b',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_card_desc_color', array(
+        'label'   => __( 'Card Description Colour', 'sla-health-hub' ),
+        'section' => 'vance_pathway_content_settings',
+    ) ) );
+
+    // Card eyebrow (e.g. "Find your starting point", "Personalised answers, 24/7")
+    $wp_customize->add_setting( 'vance_pwc_card_eyebrow_color', array(
+        'default'           => '#008080',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_card_eyebrow_color', array(
+        'label'       => __( 'Card Eyebrow / Extra-text Colour', 'sla-health-hub' ),
+        'description' => __( 'The small uppercase line under each card description (e.g. "Find your starting point").', 'sla-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+    ) ) );
+
     $wp_customize->add_setting( 'vance_pwc_section_bg', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_section_bg', array( 'label' => 'Section Background', 'section' => 'vance_pathway_content_settings' ) ) );
+
+    // 2026-05-26: Background colour for the LEFT/TOOLS column only. Independent
+    // of the overall Section Background. Blank = transparent (current default).
+    // When set, the tools column gets vertical + horizontal padding so the
+    // colour reads as a coloured block.
+    $wp_customize->add_setting( 'vance_pwc_tools_column_bg', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_tools_column_bg', array(
+        'label'       => __( 'Featured Tools Column Background', 'sla-health-hub' ),
+        'description' => __( 'Background colour applied ONLY to the Featured Tools column (left side). Leave blank for transparent. The column auto-pads when a colour is set so the band is visible.', 'sla-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+    ) ) );
 
     $wp_customize->add_setting( 'vance_pwc_card_hover_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_card_hover_color', array( 'label' => 'Card Hover Colour', 'section' => 'vance_pathway_content_settings' ) ) );
@@ -2296,7 +2481,24 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_control( 'vance_kb_mini_hero_subtitle', array( 'label' => 'Subtitle Text', 'section' => 'vance_kb_mini_hero', 'type' => 'textarea' ) );
 
     $wp_customize->add_setting( 'vance_kb_mini_hero_bg', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
-    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_kb_mini_hero_bg', array( 'label' => 'Background Image', 'section' => 'vance_kb_mini_hero' ) ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_kb_mini_hero_bg', array(
+        'label'       => 'Background Image',
+        'description' => __( 'Optional. Leave blank to use the Background Color below instead.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+    ) ) );
+
+    // Solid background colour used when no Background Image is set. When an image
+    // IS set, this colour acts as the fallback underneath the dark overlay.
+    // Added 2026-05-26.
+    $wp_customize->add_setting( 'vance_kb_mini_hero_bg_color', array(
+        'default'           => '#0A1929',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_mini_hero_bg_color', array(
+        'label'       => __( 'Background Color', 'sla-health-hub' ),
+        'description' => __( 'Used when no Background Image is selected. The dark overlay gradient is automatically dropped so this colour renders cleanly.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+    ) ) );
 
     $wp_customize->add_setting( 'vance_kb_mini_hero_font_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_mini_hero_font_color', array( 'label' => 'Font Color', 'section' => 'vance_kb_mini_hero' ) ) );
@@ -2319,6 +2521,338 @@ function vance_customize_register( $wp_customize ) {
         'description' => __( 'Background color for the KB content sections below the mini-hero.', 'sla-health-hub' ),
         'section'     => 'vance_kb_mini_hero',
     ) ) );
+
+    // --- Mini-Hero header copy: eyebrow + title + subtitle + alignment + divider ---
+    // Extends the existing title / subtitle with eyebrow chip + per-field colour
+    // and size controls, alignment selector, optional card background, divider.
+    // All controls have safe defaults so existing sites keep their look.
+    // Added 2026-05-26.
+
+    // Eyebrow
+    $wp_customize->add_setting( 'vance_kb_mini_hero_show_eyebrow', array(
+        'default'           => true,
+        'sanitize_callback' => 'rest_sanitize_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_show_eyebrow', array(
+        'label'       => __( 'Show Eyebrow Chip', 'sla-health-hub' ),
+        'description' => __( 'Small uppercase tag rendered above the title.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_eyebrow', array(
+        'default'           => 'KNOWLEDGE LIBRARY',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_eyebrow', array(
+        'label'   => __( 'Eyebrow Text', 'sla-health-hub' ),
+        'section' => 'vance_kb_mini_hero',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_eyebrow_size', array(
+        'default'           => 12,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_eyebrow_size', array(
+        'label'       => __( 'Eyebrow - Font Size (px)', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 8, 'max' => 24, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_eyebrow_color', array(
+        'default'           => '#ffffff',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_mini_hero_eyebrow_color', array(
+        'label'   => __( 'Eyebrow - Text Colour', 'sla-health-hub' ),
+        'section' => 'vance_kb_mini_hero',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_eyebrow_bg', array(
+        'default'           => 'rgba(255,255,255,0.10)',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_eyebrow_bg', array(
+        'label'       => __( 'Eyebrow - Chip Background (hex or rgba)', 'sla-health-hub' ),
+        'description' => __( 'Use rgba for translucent over the hero image.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_eyebrow_border', array(
+        'default'           => 'rgba(255,255,255,0.20)',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_eyebrow_border', array(
+        'label'       => __( 'Eyebrow - Border Colour (hex or rgba)', 'sla-health-hub' ),
+        'description' => __( 'Set to "transparent" to remove the border.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'text',
+    ) );
+
+    // Title
+    $wp_customize->add_setting( 'vance_kb_mini_hero_title_size', array(
+        'default'           => 38,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_title_size', array(
+        'label'       => __( 'Title - Font Size (px)', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 20, 'max' => 96, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_title_color', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_mini_hero_title_color', array(
+        'label'       => __( 'Title - Text Colour', 'sla-health-hub' ),
+        'description' => __( 'Blank = inherit from generic Font Color above.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+    ) ) );
+
+    // Subtitle
+    $wp_customize->add_setting( 'vance_kb_mini_hero_subtitle_size', array(
+        'default'           => 18,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_subtitle_size', array(
+        'label'       => __( 'Subtitle - Font Size (px)', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 12, 'max' => 32, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_subtitle_color', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_mini_hero_subtitle_color', array(
+        'label'       => __( 'Subtitle - Text Colour', 'sla-health-hub' ),
+        'description' => __( 'Blank = inherit from generic Font Color above.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+    ) ) );
+
+    // Alignment + header background + divider
+    $wp_customize->add_setting( 'vance_kb_mini_hero_align', array(
+        'default'           => 'center',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_align', array(
+        'label'   => __( 'Header Alignment', 'sla-health-hub' ),
+        'section' => 'vance_kb_mini_hero',
+        'type'    => 'select',
+        'choices' => array(
+            'left'   => __( 'Left',   'sla-health-hub' ),
+            'center' => __( 'Center', 'sla-health-hub' ),
+            'right'  => __( 'Right',  'sla-health-hub' ),
+        ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_header_bg', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_header_bg', array(
+        'label'       => __( 'Header Block - Background (hex or rgba)', 'sla-health-hub' ),
+        'description' => __( 'Optional background card behind eyebrow + title + subtitle. Blank = transparent.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_show_divider', array(
+        'default'           => false,
+        'sanitize_callback' => 'rest_sanitize_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_show_divider', array(
+        'label'   => __( 'Show Divider Under Subtitle', 'sla-health-hub' ),
+        'section' => 'vance_kb_mini_hero',
+        'type'    => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_divider_color', array(
+        'default'           => 'rgba(255,255,255,0.25)',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_divider_color', array(
+        'label'   => __( 'Divider - Colour (hex or rgba)', 'sla-health-hub' ),
+        'section' => 'vance_kb_mini_hero',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_mini_hero_divider_width', array(
+        'default'           => 2,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_kb_mini_hero_divider_width', array(
+        'label'       => __( 'Divider - Thickness (px)', 'sla-health-hub' ),
+        'section'     => 'vance_kb_mini_hero',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 1, 'max' => 8, 'step' => 1 ),
+    ) );
+
+    // 2.72 Knowledge Base Content (category blocks). Split from the Mini-Hero
+    // so admins can place other blocks between the KB hero and category list.
+    // Added 2026-05-26.
+    $wp_customize->add_section( 'vance_kb_content', array(
+        'title'       => __( 'Knowledge Base Content', 'sla-health-hub' ),
+        'priority'    => 31.72,
+        'panel'       => 'vance_content_panel',
+        'description' => __( 'Standalone homepage section that renders the category content blocks below the Mini-Hero. Enable it from Section Order.', 'sla-health-hub' ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_content_bg', array(
+        'default'           => '#ffffff',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_content_bg', array(
+        'label'       => __( 'Background Colour', 'sla-health-hub' ),
+        'description' => __( 'Falls back to Knowledge Base Section Background Color from the Mini-Hero panel if left blank.', 'sla-health-hub' ),
+        'section'     => 'vance_kb_content',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_kb_content_pad_top', array(
+        'default'           => 0,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_kb_content_pad_top', array(
+        'label'       => __( 'Padding Top (px)', 'sla-health-hub' ),
+        'section'     => 'vance_kb_content',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 200, 'step' => 4 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_kb_content_pad_bottom', array(
+        'default'           => 0,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_kb_content_pad_bottom', array(
+        'label'       => __( 'Padding Bottom (px)', 'sla-health-hub' ),
+        'section'     => 'vance_kb_content',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 200, 'step' => 4 ),
+    ) );
+
+    // 2.75 Tool Widgets Row (merged banners). Added 2026-05-26.
+    $wp_customize->add_section( 'vance_tool_widgets_row', array(
+        'title'       => __( 'Tool Widgets Row (merged)', 'sla-health-hub' ),
+        'priority'    => 31.75,
+        'panel'       => 'vance_content_panel',
+        'description' => __( 'Single homepage row that houses both the Content Filters and Vance AI tool banners. Pick a banner style and customise each card.', 'sla-health-hub' ),
+    ) );
+
+    // Style select
+    $wp_customize->add_setting( 'vance_twrow_style', array(
+        'default'           => 'horizontal',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_twrow_style', array(
+        'label'       => __( 'Banner Style', 'sla-health-hub' ),
+        'description' => __( 'Horizontal: icon + content + CTA, gradient background. Image: hero image with dark overlay. Pill: compact single-line banner.', 'sla-health-hub' ),
+        'section'     => 'vance_tool_widgets_row',
+        'type'        => 'select',
+        'choices'     => array(
+            'horizontal' => __( 'Horizontal Banner (gradient)', 'sla-health-hub' ),
+            'image'      => __( 'Image-led Banner', 'sla-health-hub' ),
+            'pill'       => __( 'Minimal Pill Banner', 'sla-health-hub' ),
+        ),
+    ) );
+
+    // Section chrome
+    $wp_customize->add_setting( 'vance_twrow_section_bg', array(
+        'default'           => '#F8FAFC',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_twrow_section_bg', array(
+        'label'   => __( 'Section Background', 'sla-health-hub' ),
+        'section' => 'vance_tool_widgets_row',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_twrow_pad_top', array(
+        'default'           => 60,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_twrow_pad_top', array(
+        'label'       => __( 'Section Padding Top (px)', 'sla-health-hub' ),
+        'section'     => 'vance_tool_widgets_row',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 200, 'step' => 4 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_twrow_pad_bottom', array(
+        'default'           => 60,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_twrow_pad_bottom', array(
+        'label'       => __( 'Section Padding Bottom (px)', 'sla-health-hub' ),
+        'section'     => 'vance_tool_widgets_row',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 200, 'step' => 4 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_twrow_show_heading', array(
+        'default'           => false,
+        'sanitize_callback' => 'rest_sanitize_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_twrow_show_heading', array(
+        'label'   => __( 'Show Section Heading', 'sla-health-hub' ),
+        'section' => 'vance_tool_widgets_row',
+        'type'    => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_twrow_heading', array(
+        'default'           => 'Quick Tools',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_twrow_heading', array(
+        'label'   => __( 'Section Heading Text', 'sla-health-hub' ),
+        'section' => 'vance_tool_widgets_row',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_twrow_heading_color', array(
+        'default'           => '#0A1929',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_twrow_heading_color', array(
+        'label'   => __( 'Section Heading Colour', 'sla-health-hub' ),
+        'section' => 'vance_tool_widgets_row',
+    ) ) );
+
+    // Per-card controls (1 = Content Filters, 2 = Vance AI).
+    foreach ( array(
+        1 => array( 'label' => 'Card 1 (Content Filters)', 'eyebrow_default' => 'Filter content', 'fallback_prefix' => 'vance_tw_content_filters_' ),
+        2 => array( 'label' => 'Card 2 (Vance AI)',        'eyebrow_default' => 'AI assistant',   'fallback_prefix' => 'vance_tw_vance_ai_'        ),
+    ) as $n => $meta ) {
+        $prefix = 'vance_twrow_card' . $n . '_';
+
+        $wp_customize->add_setting( $prefix . 'eyebrow', array( 'default' => $meta['eyebrow_default'], 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'eyebrow', array( 'label' => $meta['label'] . ' - Eyebrow', 'section' => 'vance_tool_widgets_row', 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . 'title', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'title', array( 'label' => $meta['label'] . ' - Title (blank = inherit from legacy widget)', 'section' => 'vance_tool_widgets_row', 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . 'desc', array( 'default' => '', 'sanitize_callback' => 'sanitize_textarea_field' ) );
+        $wp_customize->add_control( $prefix . 'desc', array( 'label' => $meta['label'] . ' - Description (blank = inherit)', 'section' => 'vance_tool_widgets_row', 'type' => 'textarea' ) );
+
+        $wp_customize->add_setting( $prefix . 'cta', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'cta', array( 'label' => $meta['label'] . ' - CTA text (blank = inherit)', 'section' => 'vance_tool_widgets_row', 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . 'accent', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'accent', array( 'label' => $meta['label'] . ' - Accent Colour', 'section' => 'vance_tool_widgets_row' ) ) );
+
+        $wp_customize->add_setting( $prefix . 'bg_start', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'bg_start', array( 'label' => $meta['label'] . ' - Gradient Start (horizontal style)', 'section' => 'vance_tool_widgets_row' ) ) );
+
+        $wp_customize->add_setting( $prefix . 'bg_end', array( 'default' => '#0A1929', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'bg_end', array( 'label' => $meta['label'] . ' - Gradient End (horizontal style)', 'section' => 'vance_tool_widgets_row' ) ) );
+
+        $wp_customize->add_setting( $prefix . 'image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $prefix . 'image', array( 'label' => $meta['label'] . ' - Background Image (image style only)', 'section' => 'vance_tool_widgets_row' ) ) );
+    }
 
     // 2.8 Join the Hub Section
     $wp_customize->add_section( 'vance_join_community', array(
@@ -2833,13 +3367,11 @@ function vance_customize_register( $wp_customize ) {
     }
 
     // 6. Homepage Section Ordering — drag-and-drop sortable control
-    // Class + helpers live in inc/customizer-sortable-control.php. The setting
-    // still stores a comma-separated string of checked section IDs in display
-    // order, so the front-page.php switch loop reads it unchanged. The cross-
-    // page section registry is registered eagerly in cross-page-sections.php
-    // (required at the top of functions.php), so by the time we get here the
-    // vance_homepage_sections filter already knows about patients-*, hcp-*, etc.
-    require_once get_template_directory() . '/inc/customizer-sortable-control.php';
+    // Class + helpers live in inc/customizer-sortable-control.php (now required
+    // at the top of functions.php so the registry function is available on
+    // frontend page loads too — see bug-fix comment there).
+    // Re-require is idempotent (require_once) and kept here as belt-and-braces
+    // in case any future refactor moves the top-level require.
 
     $wp_customize->add_section( 'vance_homepage_order', array(
         'title'    => __( 'Section Order', 'sla-health-hub' ),
@@ -2884,6 +3416,19 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_divider_color', array(
         'label'   => __( 'Divider Colour', 'sla-health-hub' ),
         'section' => 'vance_section_dividers',
+    ) ) );
+
+    // Optional background colour for the divider wrapper. Blank = transparent
+    // (current behaviour). Set a colour to render a coloured band across the
+    // whole row that the divider sits inside. Added 2026-05-26.
+    $wp_customize->add_setting( 'vance_divider_bg_color', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_divider_bg_color', array(
+        'label'       => __( 'Divider Background Colour', 'sla-health-hub' ),
+        'description' => __( 'Background colour for the divider row. Leave blank for transparent.', 'sla-health-hub' ),
+        'section'     => 'vance_section_dividers',
     ) ) );
 
     $wp_customize->add_setting( 'vance_divider_thickness', array(
@@ -3072,87 +3617,94 @@ function vance_customize_register( $wp_customize ) {
 
         $wp_customize->add_setting( $prefix . 'subtitle_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
         $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'subtitle_color', array( 'label' => 'Subtitle / Eyebrow Colour', 'section' => $sec_id ) ) );
-    }
 
-    // 6d. Tool Widgets — two modal cards that replace the legacy Discovery
-    // engine (Content Filters + Vance AI). Each card opens its tool in a
-    // modal iframe. Customizer lets the admin tune the card copy, image,
-    // accent colour, button label, and which URL the modal loads.
-    $wp_customize->add_panel( 'vance_tool_widgets_panel', array(
-        'title'       => __( 'Vance Theme → Tool Widgets', 'sla-health-hub' ),
-        'priority'    => 14.6,
-        'description' => __( 'Two modal-opening tool cards that replace the legacy Discovery block. Enable each via Appearance → Customize → Homepage → Section Order; configure copy/image/colours here.', 'sla-health-hub' ),
-    ) );
-
-    $vance_tw_slots = array(
-        'content_filters' => array(
-            'sec_title'   => __( 'Content Filters Widget', 'sla-health-hub' ),
-            'title_def'   => 'Content Filters',
-            'desc_def'    => 'Filter the knowledge base by reading level, pathway, content type and keywords — find exactly the article, study, or guide you need in seconds.',
-            'cta_def'     => 'Open Filters',
-            'url_def'     => '/discovery/',
-            'accent_def'  => '#008080',
-        ),
-        'vance_ai' => array(
-            'sec_title'   => __( 'Vance AI Widget', 'sla-health-hub' ),
-            'title_def'   => 'Vance AI',
-            'desc_def'    => 'Ask any gastro health question and get an evidence-backed answer in seconds. Powered by curated clinical content — available 24/7.',
-            'cta_def'     => 'Ask Vance AI',
-            'url_def'     => '/ask-ai/',
-            'accent_def'  => '#0EA5E9',
-        ),
-    );
-
-    foreach ( $vance_tw_slots as $tw_key => $tw_meta ) {
-        $sec_id = 'vance_tw_' . $tw_key;
-        $prefix = 'vance_tw_' . $tw_key . '_';
-
-        $wp_customize->add_section( $sec_id, array(
-            'title'    => $tw_meta['sec_title'],
-            'panel'    => 'vance_tool_widgets_panel',
-            'priority' => 10,
+        // -- Display mode + truncation (added 2026-05-26, revised) -----------
+        // Display mode select replaces the older title_only checkbox. Three
+        // choices: full card (default), image+title only, title only.
+        // (Old title_only theme_mod is still read in the render as fallback so
+        // existing customisations don't break.)
+        $wp_customize->add_setting( $prefix . 'display_mode', array( 'default' => 'full', 'sanitize_callback' => 'sanitize_key' ) );
+        $wp_customize->add_control( $prefix . 'display_mode', array(
+            'label'       => 'Display Mode',
+            'description' => 'Full card = image + meta + title + excerpt + Read More. Image + Title = thumbnail + title + Read More (no excerpt, no meta). Title only = title + Read More.',
+            'section'     => $sec_id,
+            'type'        => 'select',
+            'choices'     => array(
+                'full'        => 'Full card (image + meta + title + excerpt + Read More)',
+                'image_title' => 'Image + Title + Read More',
+                'title_only'  => 'Title + Read More only',
+            ),
         ) );
 
-        $wp_customize->add_setting( $prefix . 'title', array( 'default' => $tw_meta['title_def'], 'sanitize_callback' => 'sanitize_text_field' ) );
-        $wp_customize->add_control( $prefix . 'title', array( 'label' => 'Card Title', 'section' => $sec_id, 'type' => 'text' ) );
+        $wp_customize->add_setting( $prefix . 'read_more_text', array( 'default' => 'Read more →', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'read_more_text', array( 'label' => '"Read more" link text', 'section' => $sec_id, 'type' => 'text' ) );
 
-        $wp_customize->add_setting( $prefix . 'desc', array( 'default' => $tw_meta['desc_def'], 'sanitize_callback' => 'sanitize_textarea_field' ) );
-        $wp_customize->add_control( $prefix . 'desc', array( 'label' => 'Card Description', 'section' => $sec_id, 'type' => 'textarea' ) );
-
-        $wp_customize->add_setting( $prefix . 'cta', array( 'default' => $tw_meta['cta_def'], 'sanitize_callback' => 'sanitize_text_field' ) );
-        $wp_customize->add_control( $prefix . 'cta', array( 'label' => 'Button Label', 'section' => $sec_id, 'type' => 'text' ) );
-
-        $wp_customize->add_setting( $prefix . 'url', array( 'default' => $tw_meta['url_def'], 'sanitize_callback' => 'esc_url_raw' ) );
-        $wp_customize->add_control( $prefix . 'url', array(
-            'label'       => 'Modal Target URL',
-            'description' => 'The URL the modal iframe loads when the button is clicked. Defaults to the in-theme tool page.',
+        $wp_customize->add_setting( $prefix . 'title_truncate', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'title_truncate', array(
+            'label'       => 'Truncate title at N characters',
+            'description' => '0 = no truncation. Otherwise titles longer than N characters are cut off with an ellipsis.',
             'section'     => $sec_id,
-            'type'        => 'url',
+            'type'        => 'number',
+            'input_attrs' => array( 'min' => 0, 'max' => 200, 'step' => 1 ),
         ) );
 
-        $wp_customize->add_setting( $prefix . 'image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
-        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $prefix . 'image', array(
-            'label'       => 'Card Image (left panel)',
-            'description' => 'When empty, the accent colour fills the panel with a built-in SVG icon.',
+        $wp_customize->add_setting( $prefix . 'desc_truncate', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'desc_truncate', array(
+            'label'       => 'Truncate description at N characters',
+            'description' => '0 = no truncation. Applies only in Full card mode.',
             'section'     => $sec_id,
-        ) ) );
+            'type'        => 'number',
+            'input_attrs' => array( 'min' => 0, 'max' => 500, 'step' => 1 ),
+        ) );
 
-        $wp_customize->add_setting( $prefix . 'accent', array( 'default' => $tw_meta['accent_def'], 'sanitize_callback' => 'sanitize_hex_color' ) );
-        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'accent', array(
-            'label'       => 'Accent Colour',
-            'description' => 'Used on the top border of the card, the button, and the image-panel background when no image is set.',
+        // -- Card chrome (added 2026-05-26) ----------------------------------
+        $wp_customize->add_setting( $prefix . 'card_bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'card_bg_color', array( 'label' => 'Card Background Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'card_border_color', array( 'default' => '#e2e8f0', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'card_border_color', array( 'label' => 'Card Border Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'card_border_width', array( 'default' => 1, 'sanitize_callback' => 'absint' ) );
+        $wp_customize->add_control( $prefix . 'card_border_width', array(
+            'label'       => 'Card Border Width (px)',
             'section'     => $sec_id,
-        ) ) );
+            'type'        => 'number',
+            'input_attrs' => array( 'min' => 0, 'max' => 6, 'step' => 1 ),
+        ) );
 
-        $wp_customize->add_setting( $prefix . 'bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
-        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'bg_color', array( 'label' => 'Section Background', 'section' => $sec_id ) ) );
+        // -- Title hover + excerpt + meta (added 2026-05-26) -----------------
+        $wp_customize->add_setting( $prefix . 'title_hover_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'title_hover_color', array( 'label' => 'Card Title Colour (on hover)', 'section' => $sec_id ) ) );
 
-        $wp_customize->add_setting( $prefix . 'title_color', array( 'default' => '#0F172A', 'sanitize_callback' => 'sanitize_hex_color' ) );
-        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'title_color', array( 'label' => 'Title Colour', 'section' => $sec_id ) ) );
+        $wp_customize->add_setting( $prefix . 'excerpt_color', array( 'default' => '#64748b', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'excerpt_color', array( 'label' => 'Excerpt / Description Colour', 'section' => $sec_id ) ) );
 
-        $wp_customize->add_setting( $prefix . 'desc_color', array( 'default' => '#64748b', 'sanitize_callback' => 'sanitize_hex_color' ) );
-        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'desc_color', array( 'label' => 'Description Colour', 'section' => $sec_id ) ) );
+        $wp_customize->add_setting( $prefix . 'meta_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'meta_color', array( 'label' => 'Meta Colour (date / author / category)', 'section' => $sec_id ) ) );
+
+        // -- Read more button (added 2026-05-26) -----------------------------
+        $wp_customize->add_setting( $prefix . 'rm_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'rm_text_color', array( 'label' => '"Read more" Text Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'rm_bg_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'rm_bg_color', array( 'label' => '"Read more" Background Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'rm_border_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'rm_border_color', array( 'label' => '"Read more" Border Colour', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'rm_hover_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'rm_hover_text_color', array( 'label' => '"Read more" Text on Hover', 'section' => $sec_id ) ) );
+
+        $wp_customize->add_setting( $prefix . 'rm_hover_bg_color', array( 'default' => '#0A1929', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'rm_hover_bg_color', array( 'label' => '"Read more" Background on Hover', 'section' => $sec_id ) ) );
     }
+
+    // 6d. Tool Widgets — LEGACY Customizer panel was removed 2026-05-26.
+    // The two single tool widgets were merged into one row; configure the
+    // merged section under Vance Theme → Content → Tool Widgets Row (merged).
+    // The vance_tw_content_filters_* and vance_tw_vance_ai_* theme_mods still
+    // exist in the DB (read as fallback defaults by the merged renderer) but
+    // are no longer exposed in the Customizer UI.
 
     // 7. Promo Content Block (New)
     $wp_customize->add_section( 'vance_promo_block', array(
@@ -4140,37 +4692,148 @@ function vance_testimonials_shortcode( $atts ) {
                 </div>
             <?php endif; ?>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
-                <?php foreach ( $items as $item ) : ?>
-                    <div style="background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; padding: 40px 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
-                        <div style="position: absolute; top: 24px; right: 24px;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="<?php echo esc_attr( $accent ); ?>" style="opacity: 0.1;">
-                                <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
-                            </svg>
-                        </div>
-
-                        <div style="font-family: 'Inter', sans-serif; font-size: <?php echo $quote_size; ?>px; color: <?php echo esc_attr( $quote_col ); ?>; line-height: 1.7; font-style: italic; margin-bottom: 24px; flex-grow: 1;">
-                            "<?php echo wp_kses_post( $item['quote'] ); ?>"
-                        </div>
-
-                        <div style="display: flex; align-items: center; gap: 16px; border-top: 1px solid <?php echo esc_attr( $card_border ); ?>; padding-top: 24px; margin-top: auto;">
-                            <?php if ( ! empty( $item['image'] ) ) : ?>
-                                <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 56px; height: 56px; border-radius: 0; object-fit: cover; border: 3px solid <?php echo esc_attr( $sec_bg ); ?>;">
-                            <?php else : ?>
-                                <div style="width: 56px; height: 56px; border-radius: 0; background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; font-family: 'Outfit', sans-serif;">
-                                    <?php echo esc_html( strtoupper( substr( $item['name'], 0, 1 ) ) ); ?>
+            <?php
+            // 2026-05-26: carousel rewrite. Cards shrunk ~40% (padding 40/32 -> 24/20,
+            // avatar 56 -> 40). Desktop shows 5 / tablet 3 / mobile 1.2 cards.
+            // Left/right arrows shift one card per click, disabled at the ends.
+            // Carousel chrome only renders when items.length > visibleCount; with
+            // fewer items, falls back to a centered flex row (no arrows).
+            $tcount = count( $items );
+            $tslider_id = 'vance-testimonials-' . wp_unique_id();
+            ?>
+            <div class="vance-testimonials-wrap" data-tcount="<?php echo (int) $tcount; ?>" id="<?php echo esc_attr( $tslider_id ); ?>" style="position: relative;">
+                <div class="vance-testimonials-viewport" style="overflow: hidden;">
+                    <div class="vance-testimonials-track" style="display: flex; gap: 16px; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform;">
+                        <?php foreach ( $items as $item ) : ?>
+                            <div class="vance-testimonial-card" style="flex: 0 0 auto; box-sizing: border-box; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; padding: 24px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
+                                <div style="position: absolute; top: 14px; right: 14px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="<?php echo esc_attr( $accent ); ?>" style="opacity: 0.1;">
+                                        <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
+                                    </svg>
                                 </div>
-                            <?php endif; ?>
-                            <div>
-                                <h4 style="margin: 0; font-size: <?php echo $name_size; ?>px; font-weight: 700; color: <?php echo esc_attr( $name_col ); ?>; font-family: 'Outfit', sans-serif;"><?php echo esc_html( $item['name'] ); ?></h4>
-                                <?php if ( ! empty( $item['role'] ) ) : ?>
-                                    <span style="font-size: <?php echo $role_size; ?>px; color: <?php echo esc_attr( $role_col ); ?>; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo esc_html( $item['role'] ); ?></span>
-                                <?php endif; ?>
+
+                                <div style="font-family: 'Inter', sans-serif; font-size: <?php echo max( 12, $quote_size - 2 ); ?>px; color: <?php echo esc_attr( $quote_col ); ?>; line-height: 1.55; font-style: italic; margin-bottom: 16px; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;">
+                                    "<?php echo wp_kses_post( $item['quote'] ); ?>"
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid <?php echo esc_attr( $card_border ); ?>; padding-top: 14px; margin-top: auto;">
+                                    <?php if ( ! empty( $item['image'] ) ) : ?>
+                                        <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 40px; height: 40px; border-radius: 0; object-fit: cover; border: 2px solid <?php echo esc_attr( $sec_bg ); ?>; flex-shrink: 0;">
+                                    <?php else : ?>
+                                        <div style="width: 40px; height: 40px; border-radius: 0; background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: 'Outfit', sans-serif; flex-shrink: 0;">
+                                            <?php echo esc_html( strtoupper( substr( $item['name'], 0, 1 ) ) ); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div style="min-width: 0;">
+                                        <h4 style="margin: 0; font-size: <?php echo max( 12, $name_size - 2 ); ?>px; font-weight: 700; color: <?php echo esc_attr( $name_col ); ?>; font-family: 'Outfit', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html( $item['name'] ); ?></h4>
+                                        <?php if ( ! empty( $item['role'] ) ) : ?>
+                                            <span style="font-size: <?php echo max( 10, $role_size - 1 ); ?>px; color: <?php echo esc_attr( $role_col ); ?>; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html( $item['role'] ); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php endforeach; ?>
+                </div>
+
+                <?php if ( $tcount > 1 ) : ?>
+                    <div class="vance-testimonials-controls" aria-hidden="false" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="vance-tslide-prev" aria-label="Previous testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <button type="button" class="vance-tslide-next" aria-label="Next testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
+
+            <style>
+                /* Card width varies by breakpoint to fit 5/3/1.2 visible.
+                   Calc accounts for the 16px gap between cards. */
+                #<?php echo esc_attr( $tslider_id ); ?> .vance-testimonial-card {
+                    width: calc((100% - 4 * 16px) / 5);
+                    min-height: 220px;
+                }
+                @media (max-width: 1024px) {
+                    #<?php echo esc_attr( $tslider_id ); ?> .vance-testimonial-card {
+                        width: calc((100% - 2 * 16px) / 3);
+                    }
+                }
+                @media (max-width: 600px) {
+                    #<?php echo esc_attr( $tslider_id ); ?> .vance-testimonial-card {
+                        width: calc((100% - 0.2 * 16px) / 1.2);
+                    }
+                }
+                #<?php echo esc_attr( $tslider_id ); ?> .vance-tslide-prev:hover:not([disabled]),
+                #<?php echo esc_attr( $tslider_id ); ?> .vance-tslide-next:hover:not([disabled]) {
+                    background: <?php echo esc_attr( $accent ); ?>;
+                    color: #fff;
+                    transform: translateY(-1px);
+                }
+                #<?php echo esc_attr( $tslider_id ); ?> .vance-tslide-prev[disabled],
+                #<?php echo esc_attr( $tslider_id ); ?> .vance-tslide-next[disabled] {
+                    opacity: 0.3;
+                    cursor: not-allowed;
+                }
+            </style>
+
+            <script>
+            (function() {
+                var root = document.getElementById('<?php echo esc_js( $tslider_id ); ?>');
+                if (!root) { return; }
+                var viewport = root.querySelector('.vance-testimonials-viewport');
+                var track    = root.querySelector('.vance-testimonials-track');
+                var prevBtn  = root.querySelector('.vance-tslide-prev');
+                var nextBtn  = root.querySelector('.vance-tslide-next');
+                var cards    = track ? track.children : null;
+                if (!track || !cards || cards.length === 0 || !prevBtn || !nextBtn) { return; }
+
+                var idx = 0;
+                var GAP = 16; // matches .vance-testimonials-track gap
+
+                function getVisible() {
+                    var w = window.innerWidth;
+                    if (w >= 1025) return 5;
+                    if (w >= 601)  return 3;
+                    return 1.2;
+                }
+
+                function step() {
+                    // One card width + the gap that follows it.
+                    return cards[0].getBoundingClientRect().width + GAP;
+                }
+
+                function maxIdx() {
+                    return Math.max(0, cards.length - Math.floor(getVisible()));
+                }
+
+                function update() {
+                    if (idx < 0) { idx = 0; }
+                    if (idx > maxIdx()) { idx = maxIdx(); }
+                    track.style.transform = 'translateX(' + (-idx * step()) + 'px)';
+                    prevBtn.disabled = (idx <= 0);
+                    nextBtn.disabled = (idx >= maxIdx());
+                }
+
+                prevBtn.addEventListener('click', function () { idx -= 1; update(); });
+                nextBtn.addEventListener('click', function () { idx += 1; update(); });
+
+                // Keyboard support: arrows when the carousel is focused.
+                root.addEventListener('keydown', function (e) {
+                    if (e.key === 'ArrowLeft')  { idx -= 1; update(); }
+                    if (e.key === 'ArrowRight') { idx += 1; update(); }
+                });
+
+                var rT;
+                window.addEventListener('resize', function () {
+                    clearTimeout(rT);
+                    rT = setTimeout(update, 80);
+                });
+
+                update();
+            })();
+            </script>
         </div>
     </section>
     <?php

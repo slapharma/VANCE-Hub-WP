@@ -257,7 +257,7 @@ get_header();
                  </button>
                 
                 <div class="user-profile">
-                    <div style="text-align: right; display: none; @media(min-width:768px){display:block;}">
+                    <div class="dash-user-meta">
                         <div style="font-size: 14px; font-weight: 600; color: #0F172A;"><?php echo esc_html($first_name); ?></div>
                         <div style="font-size: 11px; color: #64748B;"><?php echo esc_html($is_practitioner ? 'MD, ' . $org : 'Member'); ?></div>
                     </div>

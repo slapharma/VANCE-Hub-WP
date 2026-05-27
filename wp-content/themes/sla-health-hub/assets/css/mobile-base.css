@@ -1,0 +1,290 @@
+/*
+ * mobile-base.css — Phase 1 mobile hardening for the Vance Medical theme.
+ *
+ * This file is enqueued AFTER main.css (see functions.php → vance_health_hub_scripts)
+ * so every rule here wins specificity ties against the equivalent rule in main.css.
+ * Keep this file small and surgical — it exists to fix the "stop the bleeding"
+ * P0/P1 mobile issues listed in MOBILE-AUDIT.md without touching desktop layout.
+ *
+ * Companion: MOBILE-PLAN.md → "Phase 1 — Foundations".
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Base HTML / body hardening
+ * ------------------------------------------------------------------------- */
+
+/* Prevent iOS Safari from inflating font-size after orientation change. */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* Stops decorative absolutely-positioned glow elements (front-page.php ~491,517,908)
+ * from creating horizontal scroll on narrow phones. */
+body {
+    overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. iOS Safari input zoom — keep at 16px exactly.
+ *    Apple zooms any focused input whose computed font-size is below 16px.
+ *    See MOBILE-AUDIT.md §5. Applies on all viewport widths because the audit
+ *    found 13-15px inputs sprinkled across desktop and mobile inline styles.
+ * ------------------------------------------------------------------------- */
+input,
+select,
+textarea,
+.chat-input,
+.form-input {
+    font-size: 16px;
+}
+
+/* Buttons aren't focusable inputs but inherit weird browser defaults — set a
+ * sane minimum so Send / Submit don't shrink to 13px next to a 16px input. */
+button,
+.btn {
+    font-size: max(14px, 1em);
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Fixed-header content offset.
+ *    main.css:2132-2139 makes .site-header position:fixed at <=768px but
+ *    never offsets the page below it — first ~70px of every page sits under
+ *    the header. Reserve that space, except where a template opts out via
+ *    body.dashboard-body (uses its own layout) or body.no-header-offset.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+    body:not(.dashboard-body):not(.no-header-offset) {
+        padding-top: 70px;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Tap targets — meet Apple HIG (44pt) / Material (48dp) minimums.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+    .btn,
+    .pagination a,
+    .pagination span {
+        min-height: 44px;
+        padding-block: 12px;
+    }
+
+    /* Don't break Mega Menu Pro's own animated toggle button or its menu items. */
+    button:not(.mega-toggle-animated):not(.mega-menu-link):not(.mobile-menu-toggle) {
+        min-height: 44px;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Resolve the dual-hamburger conflict.
+ *    Mega Menu Pro is the keeper (see MOBILE-PLAN.md §1.2). When it's active
+ *    WordPress adds body.mega-menu-{menu-id} — for the primary menu that's
+ *    body.mega-menu-primary-menu. Hide the theme's bespoke hamburger and its
+ *    .main-nav drawer whenever MM Pro is rendering, but leave them functional
+ *    if MM Pro is ever deactivated (defence in depth — see audit §2.1).
+ * ------------------------------------------------------------------------- */
+body.mega-menu-primary-menu .mobile-menu-toggle {
+    display: none !important;
+}
+
+@media (max-width: 767.98px) {
+    body.mega-menu-primary-menu .main-nav {
+        display: none !important;
+    }
+}
+
+/* When the bespoke hamburger IS being used (no MM Pro), make the open/close
+ * state visible — main.css references .menu-icon / .close-icon classes that
+ * don't exist in markup, so the icon-swap silently no-ops (audit §2.2).
+ * Use the button's own .is-open class instead and animate the three bars. */
+.mobile-menu-toggle {
+    position: relative;
+}
+
+.mobile-menu-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: currentColor;
+    margin: 5px auto;
+    transition: transform 0.3s ease, opacity 0.2s ease;
+}
+
+.mobile-menu-toggle.is-open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.mobile-menu-toggle.is-open span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-toggle.is-open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. Off-canvas drawer height — use dynamic viewport units where supported
+ *    so the iOS Safari address-bar collapse doesn't leave a gap.
+ * ------------------------------------------------------------------------- */
+@supports (height: 100dvh) {
+    @media (max-width: 767.98px) {
+        .main-nav {
+            height: calc(100dvh - 70px);
+        }
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. Inline-style escape hatches — bypass element-level specificity.
+ *
+ * The audit found ~1200 inline style="..." attributes; we can't strip them
+ * all in Phase 1, but the worst offenders (min-width:300px in flex children)
+ * cause real horizontal overflow on iPhone SE / 13 mini (375px). For those
+ * specific patterns, override at <=767.98px with !important.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+    /* Footer newsletter bar — footer.php:11, 16 */
+    .newsletter-bar > div[style*="min-width: 300px"],
+    .newsletter-bar > form[style*="min-width: 300px"] {
+        min-width: 0 !important;
+        flex-basis: 100% !important;
+    }
+
+    /* Generic safety net for any flex child carrying inline min-width 300px */
+    [style*="min-width: 300px"] {
+        min-width: min(300px, 100%) !important;
+    }
+    [style*="min-width:300px"] {
+        min-width: min(300px, 100%) !important;
+    }
+    [style*="min-width: 250px"] {
+        min-width: min(250px, 100%) !important;
+    }
+
+    /* Footer newsletter form: stack input + button rather than crowd into one row */
+    .newsletter-bar form {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .newsletter-bar form .btn,
+    .newsletter-bar form button[type="submit"] {
+        width: 100% !important;
+    }
+
+    /* Hero inline padding 95/140 (front-page.php:387, page-about.php:69, etc.)
+     * — element-level inline beats a class !important, but [style*=] selectors
+     * have the same low specificity as inline; we still win because we're a
+     * later cascade rule and use !important explicitly. */
+    section[style*="padding: 95px 0 140px"],
+    section[style*="padding:95px 0 140px"] {
+        padding: 50px 0 60px !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Small-phone breakpoint (≤480px) — squeeze container + headings further.
+ *    main.css has a 480px block (line 1769) but it only touches hero, quick-nav
+ *    and category header. Add the missing pieces.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    h1 {
+        font-size: clamp(24px, 7vw, 28px) !important;
+    }
+
+    h2 {
+        font-size: clamp(20px, 6vw, 24px) !important;
+    }
+
+    .hero h1 {
+        font-size: clamp(24px, 7.5vw, 30px) !important;
+    }
+
+    .hero p {
+        font-size: 15px !important;
+    }
+
+    /* Footer column padding pinch */
+    .footer-grid {
+        gap: 24px !important;
+    }
+
+    .newsletter-bar {
+        padding: 24px !important;
+    }
+
+    .newsletter-bar h3 {
+        font-size: 20px !important;
+    }
+
+    /* Guest-save modal padding 40px eats 80px on 360px viewports */
+    #guest-save-modal .modal-content {
+        padding: 24px !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. Safe-area-inset for iPhones with notch / Dynamic Island.
+ * ------------------------------------------------------------------------- */
+@supports (padding: max(0px, env(safe-area-inset-top))) {
+    .site-header {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    @media (max-width: 767.98px) {
+        body:not(.dashboard-body):not(.no-header-offset) {
+            padding-top: calc(70px + env(safe-area-inset-top));
+        }
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. Reduced motion — respect user preference for the lift transitions.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 12. Dashboard header user meta (name + role).
+ *     Replaces the broken inline `style="...@media(min-width:768px){...}"`
+ *     at page-dashboard.php:260 (audit §4.2 / P0-D). An @media inside a style
+ *     attribute is invalid CSS, so the block was display:none on every screen.
+ *     Intent: show the name/role text beside the avatar on tablet/desktop,
+ *     hide it on phones where space is tight (avatar alone remains).
+ * ------------------------------------------------------------------------- */
+.dash-user-meta {
+    text-align: right;
+    display: block;
+}
+
+@media (max-width: 767.98px) {
+    .dash-user-meta {
+        display: none;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 11. Hover-only hover states — touch devices fire :hover on tap and the
+ *     element stays "hovered" until next tap. Confine lift transforms to
+ *     devices with a real pointer.
+ * ------------------------------------------------------------------------- */
+@media (hover: none) {
+    .vance-category-card:hover,
+    .social-link:hover,
+    .btn:hover {
+        transform: none !important;
+    }
+}
