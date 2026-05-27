@@ -129,7 +129,7 @@ function vance_health_hub_scripts() {
     // @media (max-width:767.98px) AND behind Customizer toggles that default OFF,
     // so this file is inert on desktop and until a feature is explicitly enabled.
     // See MOBILE-PLAN.md §2.
-    wp_enqueue_style( 'vance-mobile-components', get_template_directory_uri() . '/assets/css/mobile-components.css', array( 'vance-mobile-base' ), '2.4.0-vance-mobile-phase2' );
+    wp_enqueue_style( 'vance-mobile-components', get_template_directory_uri() . '/assets/css/mobile-components.css', array( 'vance-mobile-base' ), '2.5.0-vance-mobile-phase3' );
 
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
@@ -5093,8 +5093,19 @@ function vance_mobile_customize_register( $wp_customize ) {
         'sanitize_callback' => 'wp_validate_boolean',
     ) );
     $wp_customize->add_control( 'vance_mobile_dashboard_enhance', array(
-        'label'       => __( 'Mobile dashboard: sidebar backdrop', 'sla-health-hub' ),
-        'description' => __( 'On phones, dim the page behind the open dashboard sidebar and let a tap outside close it.', 'sla-health-hub' ),
+        'label'       => __( 'Mobile dashboard: touch interactions', 'sla-health-hub' ),
+        'description' => __( 'On phones: dim + tap-to-close behind the open sidebar, swipe-left to close the sidebar, and pull-to-refresh at the top.', 'sla-health-hub' ),
+        'section'     => 'vance_mobile_experience',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_mobile_dashboard_accordion', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_dashboard_accordion', array(
+        'label'       => __( 'Mobile dashboard: collapsible cards', 'sla-health-hub' ),
+        'description' => __( 'On phones, make dashboard cards collapsible (tap the header to expand/collapse). Cards containing forms are left fully expanded.', 'sla-health-hub' ),
         'section'     => 'vance_mobile_experience',
         'type'        => 'checkbox',
     ) );

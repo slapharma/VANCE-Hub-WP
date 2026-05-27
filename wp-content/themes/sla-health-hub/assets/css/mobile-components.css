@@ -344,3 +344,95 @@
         transition: none !important;
     }
 }
+
+/* --- Pull-to-refresh indicator (Phase 3.2) --- */
+.dash-ptr-indicator {
+    display: none;
+}
+@media (max-width: 767.98px) {
+    .dash-ptr-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 48px;
+        z-index: 1003;
+        transform: translateY(-48px);
+        pointer-events: none;
+    }
+    .dash-ptr-spinner {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        border-top-color: var(--primary-color, #008080);
+        opacity: 0.6;
+        transition: opacity 0.15s ease;
+    }
+    .dash-ptr-indicator.is-armed .dash-ptr-spinner {
+        opacity: 1;
+    }
+    .dash-ptr-indicator.is-refreshing .dash-ptr-spinner {
+        animation: vance-ptr-spin 0.7s linear infinite;
+    }
+}
+@keyframes vance-ptr-spin { to { transform: rotate(360deg); } }
+
+/* --- Collapsible dashboard cards (Phase 2.4 accordion) --- */
+@media (max-width: 767.98px) {
+    .d-card-accordion .d-card-header {
+        cursor: pointer;
+        position: relative;
+        margin-bottom: 0;
+    }
+    /* Chevron affordance on the header. */
+    .d-card-accordion .d-card-header::after {
+        content: '';
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid #94a3b8;
+        border-bottom: 2px solid #94a3b8;
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+        margin-left: 12px;
+        flex: 0 0 auto;
+    }
+    .d-card-accordion.is-collapsed .d-card-header::after {
+        transform: rotate(-45deg);
+    }
+    /* Collapse everything after the header. */
+    .d-card-accordion.is-collapsed .d-card-header ~ * {
+        display: none !important;
+    }
+    .d-card-accordion:not(.is-collapsed) .d-card-header {
+        margin-bottom: 20px;
+    }
+}
+
+/* --- Skeleton loader utility (Phase 3.4) ---
+ * Add class "vance-skeleton" to a placeholder block while AJAX content loads,
+ * then remove it (or replace the node) when the real content arrives. */
+.vance-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #eef2f7;
+    border-radius: 4px;
+    min-height: 14px;
+    color: transparent !important;
+}
+.vance-skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: vance-skeleton-shimmer 1.3s infinite;
+}
+@keyframes vance-skeleton-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+    .vance-skeleton::after { animation: none; }
+    .dash-ptr-indicator.is-refreshing .dash-ptr-spinner { animation: none; }
+}
