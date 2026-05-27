@@ -10,6 +10,8 @@
  * Section index:
  *   2.1  Mobile bottom navigation bar + "More" sheet
  *   2.2  Sticky CTA bar
+ *   2.3  Swipeable category-card carousel (dot indicators)
+ *   2.4  Dashboard sidebar backdrop
  */
 
 /* ===========================================================================
@@ -251,6 +253,84 @@
 
 @media (prefers-reduced-motion: reduce) {
     .vance-sticky-cta {
+        transition: none !important;
+    }
+}
+
+/* ===========================================================================
+ * 2.3  SWIPEABLE CATEGORY-CARD CAROUSEL
+ * The grid → flex/scroll-snap conversion is done in JS (it must override the
+ * existing inline grid styles). Here we only style the dot indicators and hide
+ * the native scrollbar for a cleaner look. All scoped to phones.
+ * ======================================================================== */
+
+@media (max-width: 767.98px) {
+    /* Hide the scrollbar on the enhanced row (cosmetic; scrolling still works). */
+    .vsw-grid {
+        scrollbar-width: none;            /* Firefox */
+        -ms-overflow-style: none;          /* old Edge */
+        padding-bottom: 4px;
+    }
+    .vsw-grid::-webkit-scrollbar {
+        display: none;                     /* WebKit */
+    }
+
+    .vsw-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 14px;
+    }
+    .vsw-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .vsw-dot.is-active {
+        background: var(--primary-color, #008080);
+        transform: scale(1.35);
+    }
+}
+
+/* Dots are a mobile-only affordance — never show them on desktop. */
+.vsw-dots {
+    display: none;
+}
+@media (max-width: 767.98px) {
+    body .vsw-dots { display: flex; }
+}
+
+/* ===========================================================================
+ * 2.4  DASHBOARD SIDEBAR BACKDROP
+ * Only meaningful on phones, where .dash-sidebar slides over content. On
+ * desktop the sidebar is a fixed rail and the backdrop must never appear.
+ * ======================================================================== */
+
+.dash-sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .dash-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 998;                       /* just under .dash-sidebar (z-index:999) */
+        background: rgba(15, 23, 42, 0.45);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+    }
+    .dash-sidebar-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dash-sidebar-backdrop {
         transition: none !important;
     }
 }

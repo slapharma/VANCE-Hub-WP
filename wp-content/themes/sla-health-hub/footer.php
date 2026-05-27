@@ -312,6 +312,8 @@ include get_template_directory() . '/template-parts/mobile-bottom-nav.php';
 // Phase 2.2 — mobile sticky CTA bar (self-gated; never shows alongside the
 // bottom nav or on the dashboard).
 include get_template_directory() . '/template-parts/mobile-sticky-cta.php';
+// Phase 2.3 — swipeable homepage category cards (self-gated; front page only).
+include get_template_directory() . '/template-parts/mobile-swipe-cards.php';
 ?>
 
 <?php wp_footer(); ?>

@@ -5074,6 +5074,30 @@ function vance_mobile_customize_register( $wp_customize ) {
         'section' => 'vance_mobile_experience',
         'type'    => 'url',
     ) );
+
+    // --- Swipeable homepage category cards (Phase 2.3) ---
+    $wp_customize->add_setting( 'vance_mobile_swipecards_enable', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_swipecards_enable', array(
+        'label'       => __( 'Swipeable homepage category cards', 'sla-health-hub' ),
+        'description' => __( 'On phones, turn the homepage category grid into a horizontal swipe carousel with dot indicators. Desktop is unchanged.', 'sla-health-hub' ),
+        'section'     => 'vance_mobile_experience',
+        'type'        => 'checkbox',
+    ) );
+
+    // --- Mobile dashboard enhancements (Phase 2.4) ---
+    $wp_customize->add_setting( 'vance_mobile_dashboard_enhance', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_mobile_dashboard_enhance', array(
+        'label'       => __( 'Mobile dashboard: sidebar backdrop', 'sla-health-hub' ),
+        'description' => __( 'On phones, dim the page behind the open dashboard sidebar and let a tap outside close it.', 'sla-health-hub' ),
+        'section'     => 'vance_mobile_experience',
+        'type'        => 'checkbox',
+    ) );
 }
 add_action( 'customize_register', 'vance_mobile_customize_register' );
 
@@ -5121,6 +5145,10 @@ function vance_mobile_stickycta_active() {
 function vance_mobile_body_class( $classes ) {
     if ( vance_mobile_bottomnav_active() ) {
         $classes[] = 'has-vance-bottom-nav';
+    }
+    // Swipeable category cards only apply on the front page.
+    if ( is_front_page() && vance_get_theme_mod( 'vance_mobile_swipecards_enable', false ) ) {
+        $classes[] = 'has-vance-swipecards';
     }
     return $classes;
 }

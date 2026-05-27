@@ -41,6 +41,11 @@
     }
     </script>
 
+    <?php
+    // Phase 2.4 — mobile dashboard sidebar backdrop (self-gated by Customizer).
+    include get_template_directory() . '/template-parts/mobile-dashboard-enhance.php';
+    ?>
+
     <?php wp_footer(); ?>
 </body>
 </html>
