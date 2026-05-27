@@ -306,3 +306,49 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
         transform: none !important;
     }
 }
+
+/* ---------------------------------------------------------------------------
+ * 13. Mega Menu Pro mobile palette (admin-requested brand colours).
+ *     toggle: transparent button, #2F4F6F bars on the white header
+ *     mobile dropdown panel background: #2F4F6F
+ *     top-level item text: #f4ffff
+ *     2nd-level (sub-menu) background: #f4ffff ; 2nd-level item text: #2F4F6F
+ *     Class-based selectors (not the wrap id) for resilience; scoped to phones
+ *     so the desktop horizontal nav is unaffected.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+    /* Hamburger toggle: transparent background, navy bars. */
+    body.mega-menu-primary-menu .mega-menu-toggle {
+        background: transparent !important;
+    }
+    body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated-inner,
+    body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated-inner::before,
+    body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated-inner::after {
+        background-color: #2F4F6F !important;
+    }
+
+    /* Mobile dropdown panel. */
+    body.mega-menu-primary-menu ul.mega-menu,
+    body.mega-menu-primary-menu #mega-menu-primary-menu {
+        background-color: #2F4F6F !important;
+    }
+
+    /* Top-level menu items: near-white text on the navy panel. */
+    body.mega-menu-primary-menu ul.mega-menu > li.mega-menu-item > a.mega-menu-link {
+        background-color: transparent !important;
+        color: #f4ffff !important;
+    }
+    /* Top-level expand/collapse arrow visible on navy. */
+    body.mega-menu-primary-menu ul.mega-menu > li.mega-menu-item > a.mega-menu-link .mega-indicator::after {
+        color: #f4ffff !important;
+    }
+
+    /* 2nd-level sub-menu: light background, navy items (e.g. "Contact Us"). */
+    body.mega-menu-primary-menu ul.mega-menu .mega-sub-menu {
+        background-color: #f4ffff !important;
+    }
+    body.mega-menu-primary-menu ul.mega-menu .mega-sub-menu li.mega-menu-item > a.mega-menu-link {
+        background-color: #f4ffff !important;
+        color: #2F4F6F !important;
+    }
+}

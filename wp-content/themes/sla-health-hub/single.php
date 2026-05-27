@@ -100,7 +100,7 @@ while ( have_posts() ) :
         .va-article-header { background:#fff; border-bottom:1px solid #e2e8f0; }
         .va-article-header .container { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-top:16px; padding-bottom:16px; }
         .va-article-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:14px; color:#64748b; }
-        .va-article-meta .va-cat { background:var(--primary-color,#008080); color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:4px; }
+        .va-article-meta .va-cat { background:#8e7dbe; color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:4px; }
         .va-article-meta .va-sep { color:#cbd5e1; }
         .va-article-meta .va-author { display:inline-flex; align-items:center; gap:8px; color:#334155; font-weight:600; }
         .va-article-meta .va-author img { width:26px; height:26px; border-radius:50%; }

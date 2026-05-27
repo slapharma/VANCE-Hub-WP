@@ -123,7 +123,7 @@ function vance_health_hub_scripts() {
 
     // Phase 1 mobile hardening overrides. Enqueued AFTER main.css so equal-specificity
     // rules here win the cascade. See assets/css/mobile-base.css + MOBILE-PLAN.md §1.
-    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.2-vance-mobile-navfix' );
+    wp_enqueue_style( 'vance-mobile-base', get_template_directory_uri() . '/assets/css/mobile-base.css', array( 'vance-main-style' ), '2.3.3-vance-menu-palette' );
 
     // Phase 2 mobile components (bottom nav, etc.). All rules are gated behind
     // @media (max-width:767.98px) AND behind Customizer toggles that default OFF,
