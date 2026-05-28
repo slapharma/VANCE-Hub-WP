@@ -320,6 +320,67 @@ while ( have_posts() ) :
                         </div>
                     </div>
 
+                    <!-- Topics & Tags Sidebar Block -->
+                    <?php
+                    // Sub-categories: any category on this post that has a parent
+                    // in the WP category hierarchy (i.e. it's a child term). The
+                    // primary category already appears as the chip in the header
+                    // bar, so we don't repeat it here.
+                    $va_sub_categories = array();
+                    $va_all_cats = get_the_category();
+                    if ( ! empty( $va_all_cats ) ) {
+                        foreach ( $va_all_cats as $va_c ) {
+                            if ( ! empty( $va_c->parent ) ) {
+                                $va_sub_categories[] = $va_c;
+                            }
+                        }
+                    }
+                    $va_post_tags = get_the_tags();
+                    if ( ! is_array( $va_post_tags ) ) { $va_post_tags = array(); }
+
+                    if ( ! empty( $va_sub_categories ) || ! empty( $va_post_tags ) ) : ?>
+                        <div class="oped-sidebar-block oped-topics-tags">
+                            <h4>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                </svg>
+                                Topics &amp; Tags
+                            </h4>
+                            <div class="oped-sidebar-content">
+                                <?php if ( ! empty( $va_sub_categories ) ) : ?>
+                                    <div class="va-tt-group" style="margin-bottom: 14px;">
+                                        <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Sub-categories</div>
+                                        <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                            <?php foreach ( $va_sub_categories as $va_sc ) : ?>
+                                                <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="display: inline-block; padding: 4px 10px; background: var(--primary-color, #008080); color: #fff; border-radius: 4px; font-size: 12px; font-weight: 600; text-decoration: none; line-height: 1.4; transition: filter 0.15s ease;">
+                                                    <?php echo esc_html( $va_sc->name ); ?>
+                                                </a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ( ! empty( $va_post_tags ) ) : ?>
+                                    <div class="va-tt-group">
+                                        <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Tags</div>
+                                        <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                            <?php foreach ( $va_post_tags as $va_t ) : ?>
+                                                <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag" style="display: inline-block; padding: 4px 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; font-weight: 500; text-decoration: none; line-height: 1.4; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;">
+                                                    #<?php echo esc_html( $va_t->name ); ?>
+                                                </a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <style>
+                            .oped-topics-tags .va-tt-chip--cat:hover { filter: brightness(0.92); color: #fff; }
+                            .oped-topics-tags .va-tt-chip--tag:hover { background: var(--primary-color, #008080); color: #fff; border-color: var(--primary-color, #008080); }
+                        </style>
+                    <?php endif; ?>
+
                      <!-- Attached Document -->
                     <?php if ( $attached_document ) : ?>
                         <div class="oped-sidebar-block oped-document-download">

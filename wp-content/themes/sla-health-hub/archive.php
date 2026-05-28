@@ -157,6 +157,42 @@
                             <div class="entry-content">
                                 <?php the_excerpt(); ?>
                             </div>
+
+                            <?php
+                            // Sub-categories: post categories with a parent in the
+                            // WP hierarchy (i.e. child terms). The parent/primary
+                            // category is already implicit from archive context;
+                            // we surface the deeper child plus any post tags.
+                            $va_card_sub_cats = array();
+                            $va_card_all_cats = get_the_category();
+                            if ( ! empty( $va_card_all_cats ) ) {
+                                foreach ( $va_card_all_cats as $va_cc ) {
+                                    if ( ! empty( $va_cc->parent ) ) {
+                                        $va_card_sub_cats[] = $va_cc;
+                                    }
+                                }
+                            }
+                            $va_card_tags = get_the_tags();
+                            if ( ! is_array( $va_card_tags ) ) { $va_card_tags = array(); }
+
+                            if ( ! empty( $va_card_sub_cats ) || ! empty( $va_card_tags ) ) :
+                                // Cap visible chips so cards stay tidy.
+                                $va_card_sub_cats = array_slice( $va_card_sub_cats, 0, 2 );
+                                $va_card_tags     = array_slice( $va_card_tags, 0, 3 );
+                            ?>
+                                <div class="va-card-taxonomy" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                                    <?php foreach ( $va_card_sub_cats as $va_csc ) : ?>
+                                        <a href="<?php echo esc_url( get_category_link( $va_csc->term_id ) ); ?>" class="va-card-chip va-card-chip--cat" style="display: inline-block; padding: 3px 9px; background: var(--primary-color, #008080); color: #fff; border-radius: 4px; font-size: 11px; font-weight: 600; text-decoration: none; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.3px;">
+                                            <?php echo esc_html( $va_csc->name ); ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                    <?php foreach ( $va_card_tags as $va_ct ) : ?>
+                                        <a href="<?php echo esc_url( get_tag_link( $va_ct->term_id ) ); ?>" class="va-card-chip va-card-chip--tag" style="display: inline-block; padding: 3px 9px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 11px; font-weight: 500; text-decoration: none; line-height: 1.4;">
+                                            #<?php echo esc_html( $va_ct->name ); ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </article>
                 <?php endwhile; ?>
