@@ -90,7 +90,7 @@
                 <div class="footer-links">
                     <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>">Privacy Policy</a>
                     <a href="<?php echo esc_url( home_url( '/terms-of-use/' ) ); ?>">Terms of Use</a>
-                    <a href="<?php echo esc_url( home_url( '/cookie-policy/' ) ); ?>">Cookie Policy</a>
+                    <a href="<?php echo esc_url( home_url( '/cookie-policy-uk/' ) ); ?>">Cookie Policy</a>
                     <a href="<?php echo esc_url( home_url( '/medical-disclaimer/' ) ); ?>">Medical Disclaimer</a>
                     <a href="<?php echo esc_url( home_url( '/accessibility/' ) ); ?>">Accessibility</a>
                 </div>
