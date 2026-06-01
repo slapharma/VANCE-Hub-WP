@@ -113,6 +113,16 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 .tool-page-card__actions { display: flex; gap: 10px; align-items: center; }
 .tool-page-iframe { width: 100%; height: <?php echo (int) $iframe_height; ?>px; border: 0; display: block; background: #fff; }
 
+.tool-page-disclaimer-top {
+    background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
+    padding: 12px 24px; font-size: 12.5px; color: #64748b; line-height: 1.6;
+}
+.tool-page-disclaimer {
+    background: #EEF6F6; border-left: 4px solid var(--primary-color);
+    padding: 16px 22px; margin: 24px 0 0; font-size: 13px; line-height: 1.75; color: #475569;
+}
+.tool-page-disclaimer strong { color: var(--secondary-color); }
+
 .tool-page-save {
     background: var(--primary-color); color: white; border: none; padding: 10px 20px;
     font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.3px;
@@ -182,6 +192,9 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
                     <?php endif; ?>
                 </div>
             </div>
+            <div class="tool-page-disclaimer-top">
+                General information only. Not a diagnosis or a substitute for professional medical advice. In an emergency call 999 or NHS 111.
+            </div>
             <iframe class="tool-page-iframe<?php echo $autoresize ? ' tool-page-iframe--autoresize' : ''; ?>"
                     id="vance-tool-iframe-<?php echo esc_attr( $slug ); ?>"
                     src="<?php echo esc_url( $iframe_src ); ?>"
@@ -189,6 +202,10 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
                     loading="lazy"
                     allow="clipboard-write"
                     <?php echo $autoresize ? 'scrolling="no"' : ''; ?>></iframe>
+        </div>
+
+        <div class="tool-page-disclaimer">
+            <strong>About this tool.</strong> This tool provides general information to help you understand your health and prepare for conversations with your healthcare team. It does not provide a medical diagnosis and is not a substitute for assessment by a qualified healthcare professional. Results are estimates based only on the information you enter and the general method described; they may not be accurate for your individual circumstances. Do not start, stop or change any treatment, medication or diet on the basis of this tool alone. If you have any concerns about your health, contact your GP, pharmacist or healthcare team. In an emergency call 999 or NHS 111.
         </div>
 
         <p style="margin: 24px 0 0; font-size: 13px; color: var(--text-light); text-align: center;">
