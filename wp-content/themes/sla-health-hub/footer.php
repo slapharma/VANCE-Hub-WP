@@ -76,7 +76,7 @@
                 'vance_footer_medical_disclaimer',
                 'Vance Medical Hub provides general information and community support for people affected by gastrointestinal conditions. It is not medical advice and is not a substitute for the care of your own healthcare team. Nothing on this site should be used to diagnose or treat a health problem or disease. Always speak to your GP, pharmacist, dietitian or other qualified healthcare professional before making changes to your diet, medication or treatment, and with any questions about a medical condition. If you think you may have a medical emergency, call 999 or NHS 111 straight away.'
             );
-            $vance_footer_operator = vance_get_theme_mod( 'vance_footer_operator', '' );
+            $vance_footer_operator = vance_get_theme_mod( 'vance_footer_operator', 'Operated by Vance Medical Foods Ltd, 3a Chestnut House, Farm Close, Shenley, Hertfordshire, WD7 9AD, United Kingdom. Registered in England and Wales, company number 17157853.' );
             ?>
             <div class="footer-disclaimer" style="border-top: 1px solid rgba(148,163,184,0.22); margin-top: 32px; padding-top: 24px; color: #94a3b8; font-size: 13px; line-height: 1.75; max-width: 1000px;">
                 <strong style="color:#cbd5e1;">Medical disclaimer.</strong> <?php echo esc_html( $vance_footer_disclaimer ); ?>
