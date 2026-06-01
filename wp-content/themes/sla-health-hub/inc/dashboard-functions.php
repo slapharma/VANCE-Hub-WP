@@ -1088,6 +1088,8 @@ function vance_ajax_quick_register() {
 
     $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
     $password = isset( $_POST['password'] ) ? (string) $_POST['password'] : '';
+    $consent_terms    = ! empty( $_POST['consent_terms'] );
+    $marketing_opt_in = ! empty( $_POST['consent_marketing'] );
     $role_in  = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'patient';
     $tool     = isset( $_POST['tool'] ) ? sanitize_key( wp_unslash( $_POST['tool'] ) ) : '';
     $payload  = array();
@@ -1105,6 +1107,9 @@ function vance_ajax_quick_register() {
     }
     if ( strlen( $password ) < 8 ) {
         wp_send_json_error( array( 'message' => 'Please choose a password of at least 8 characters.' ) );
+    }
+    if ( ! $consent_terms ) {
+        wp_send_json_error( array( 'message' => 'Please agree to the Terms and Privacy Policy to continue.' ) );
     }
     if ( email_exists( $email ) ) {
         wp_send_json_error( array(
@@ -1144,6 +1149,16 @@ function vance_ajax_quick_register() {
     update_user_meta( $user_id, '_sla_audience_role', $role_in );
     update_user_meta( $user_id, '_sla_signup_source', 'tool_page:' . ( $tool ?: 'unknown' ) );
     update_user_meta( $user_id, '_sla_signup_ts',     time() );
+
+    // Consent record (UK GDPR / PECR). Saving a tool result is the affirmative
+    // action giving explicit consent to store health data (Article 9).
+    update_user_meta( $user_id, '_sla_consent_terms', '1' );
+    update_user_meta( $user_id, '_sla_consent_terms_at', current_time( 'mysql' ) );
+    update_user_meta( $user_id, '_sla_consent_terms_version', '2026-06-01' );
+    update_user_meta( $user_id, '_sla_consent_health', '1' );
+    update_user_meta( $user_id, '_sla_consent_health_at', current_time( 'mysql' ) );
+    update_user_meta( $user_id, '_sla_marketing_opt_in', $marketing_opt_in ? '1' : '0' );
+    update_user_meta( $user_id, '_sla_marketing_opt_in_at', current_time( 'mysql' ) );
 
     // Stash the pending tool payload (if any).
     if ( $tool && ! empty( $payload ) ) {
@@ -1202,7 +1217,15 @@ function vance_ajax_save_tool_result() {
         );
     }
 
-    $ok = vance_append_tool_history( get_current_user_id(), $tool, $payload );
+    // Ensure a health-data consent record exists (Article 9). Clicking "save" is
+    // the affirmative action; record it on first save if not already present.
+    $uid = get_current_user_id();
+    if ( ! get_user_meta( $uid, '_sla_consent_health', true ) ) {
+        update_user_meta( $uid, '_sla_consent_health', '1' );
+        update_user_meta( $uid, '_sla_consent_health_at', current_time( 'mysql' ) );
+    }
+
+    $ok = vance_append_tool_history( $uid, $tool, $payload );
     if ( ! $ok ) {
         wp_send_json_error( array( 'message' => 'Could not save — please try again.' ) );
     }

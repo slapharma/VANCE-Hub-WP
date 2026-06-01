@@ -26,6 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vance_register_submit
     $role = sanitize_text_field($_POST['user_role']);
     $first_name = sanitize_text_field($_POST['first_name']);
     $last_name = sanitize_text_field($_POST['last_name']);
+
+    // Consent capture (UK GDPR / PECR). Stored under _sla_* on success.
+    $consent_terms    = isset( $_POST['vance_consent_terms'] );
+    $marketing_opt_in = isset( $_POST['vance_consent_marketing'] );
+    $consent_version  = '2026-06-01';
     
     // Validation
     if (empty($email) || !is_email($email)) {
@@ -46,6 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vance_register_submit
     
     if (empty($role) || !in_array($role, array('subscriber', 'practitioner'))) {
         $errors[] = 'Please select a valid role.';
+    }
+
+    if ( ! $consent_terms ) {
+        $errors[] = 'Please agree to the Terms of Use and Privacy Policy to create an account.';
     }
     
     // If no errors, create user
@@ -75,6 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vance_register_submit
             // Set role
             $user = new WP_User($user_id);
             $user->set_role($role);
+
+            // Record consent (UK GDPR / PECR). Keys use the _sla_* prefix per CLAUDE.md.
+            update_user_meta( $user_id, '_sla_consent_terms', '1' );
+            update_user_meta( $user_id, '_sla_consent_terms_at', current_time( 'mysql' ) );
+            update_user_meta( $user_id, '_sla_consent_terms_version', $consent_version );
+            update_user_meta( $user_id, '_sla_marketing_opt_in', $marketing_opt_in ? '1' : '0' );
+            update_user_meta( $user_id, '_sla_marketing_opt_in_at', current_time( 'mysql' ) );
             
             // Log user in
             wp_set_current_user($user_id);
@@ -374,6 +390,22 @@ get_header();
                 <label class="form-label" for="user_password_confirm">Confirm Password</label>
                 <input type="password" id="user_password_confirm" name="user_password_confirm" class="form-input" required minlength="8">
             </div>
+
+            <div class="form-group">
+                <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#475569; line-height:1.6; cursor:pointer; font-weight:400;">
+                    <input type="checkbox" name="vance_consent_terms" value="1" style="margin-top:3px;" <?php echo isset($_POST['vance_consent_terms']) ? 'checked' : ''; ?> required>
+                    <span>I have read and agree to the <a href="<?php echo esc_url( home_url('/terms-of-use/') ); ?>" target="_blank" style="color:var(--primary-color); font-weight:600;">Terms of Use</a> and <a href="<?php echo esc_url( home_url('/privacy-policy/') ); ?>" target="_blank" style="color:var(--primary-color); font-weight:600;">Privacy Policy</a>.</span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#475569; line-height:1.6; cursor:pointer; font-weight:400;">
+                    <input type="checkbox" name="vance_consent_marketing" value="1" style="margin-top:3px;" <?php echo isset($_POST['vance_consent_marketing']) ? 'checked' : ''; ?>>
+                    <span>Send me occasional emails about new articles, tools and resources from Vance Medical Hub. I can unsubscribe at any time. <span style="color:#94a3b8;">(Optional)</span></span>
+                </label>
+            </div>
+
+            <p style="font-size:12px; color:#94a3b8; margin:0 0 18px; line-height:1.6;">Vance Medical Hub is intended for members of the public aged 18 and over in the United Kingdom.</p>
 
             <button type="submit" name="vance_register_submit" class="submit-btn">Create Account</button>
         </form>

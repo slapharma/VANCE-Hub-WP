@@ -112,12 +112,21 @@ $ajax_url       = admin_url( 'admin-ajax.php' );
                 <input type="text" name="vance_hp" tabindex="-1" value="">
             </div>
 
+            <label class="vance-reg-modal__consent" style="display:flex; gap:8px; align-items:flex-start; text-transform:none; font-weight:400; font-size:12.5px; color:var(--text-light); margin:16px 0 0; letter-spacing:0; cursor:pointer;">
+                <input type="checkbox" name="consent_terms" id="vance-reg-terms" value="1" style="width:auto; margin-top:2px;" required>
+                <span>I agree to the <a href="/terms-of-use/" target="_blank" style="color:var(--primary-color);">Terms</a> and <a href="/privacy-policy/" target="_blank" style="color:var(--primary-color);">Privacy Policy</a>, and to my saved result being stored as health information so I can see it in my dashboard.</span>
+            </label>
+            <label class="vance-reg-modal__consent" style="display:flex; gap:8px; align-items:flex-start; text-transform:none; font-weight:400; font-size:12.5px; color:var(--text-light); margin:10px 0 0; letter-spacing:0; cursor:pointer;">
+                <input type="checkbox" name="consent_marketing" id="vance-reg-marketing" value="1" style="width:auto; margin-top:2px;">
+                <span>Email me occasional updates about new tools and resources. Optional, unsubscribe anytime.</span>
+            </label>
+
             <div class="vance-reg-modal__error" id="vance-reg-error" role="alert"></div>
 
             <button type="submit" class="vance-reg-modal__submit" id="vance-reg-submit">
                 Create account &amp; save result
             </button>
-            <p class="vance-reg-modal__terms">By creating an account you agree to our <a href="/terms-of-use/" style="color: var(--primary-color);">Terms</a> and <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>.</p>
+            <p class="vance-reg-modal__terms">Your saved result is stored securely, is only visible to you, and can be deleted anytime from your dashboard.</p>
         </form>
 
         <p class="vance-reg-modal__signin">
@@ -184,6 +193,8 @@ $ajax_url       = admin_url( 'admin-ajax.php' );
         var pw    = pwEl.value || '';
         if (!email || email.indexOf('@') < 1) { showErr('Please enter a valid email.'); emailEl.focus(); return; }
         if (pw.length < 8) { showErr('Password must be at least 8 characters.'); pwEl.focus(); return; }
+        var termsEl = document.getElementById('vance-reg-terms');
+        if (termsEl && !termsEl.checked) { showErr('Please agree to the Terms and Privacy Policy to continue.'); termsEl.focus(); return; }
 
         submit.disabled = true;
         submit.textContent = 'Creating your account…';
