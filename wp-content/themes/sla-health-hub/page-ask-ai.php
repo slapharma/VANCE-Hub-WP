@@ -10,13 +10,13 @@ get_header();
 $hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri() . '/assets/img/about_hero.png');
 $hero_title = vance_get_theme_mod('vance_askai_hero_title', 'Ask AI');
 $hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Direct access to our Gastro Health Hub. Ask anything about IBD, clinical nutrition, and gastrointestinal health.');
-$hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Clinical Assistant v1.0');
+$hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Information Assistant');
 $askai_overlay = max(0, min(100, absint(vance_get_theme_mod('vance_askai_hero_overlay', 85)))) / 100;
 $askai_overlay_bottom = min(1, $askai_overlay + 0.05);
 
 // Define Single AI Agent
 $agent_data = array(
-    'name' => 'AI Clinical Assistant',
+    'name' => 'AI Information Assistant',
     'icon' => '🤖',
     'color' => '#fd4f00',
     'description' => 'Your Gastro Health Hub assistant. Ask anything about IBD, gut health, or clinical nutrition.',
@@ -201,7 +201,7 @@ $agent_data = array(
                         <?php echo $agent_data['icon']; ?>
                     </div>
                     <div class="agent-info">
-                        <h2>AI CLINICAL INTELLIGENCE</h2>
+                        <h2>AI INFORMATION ASSISTANT</h2>
                         <div class="agent-status"><span style="width: 6px; height: 6px; background: #22C55E; border-radius: 0;"></span> ONLINE & READY</div>
                     </div>
                 </div>
@@ -227,6 +227,9 @@ $agent_data = array(
                         <input type="text" id="vance-ai-chat-input" class="chat-input" placeholder="Ask a question..." style="flex: 1; padding: 14px 20px; border: 2px solid #E2E8F0; border-radius: 0; font-size: 15px; outline: none; transition: 0.2s;">
                         <button class="chat-send" id="vance-ai-chat-send" style="padding: 14px 28px; background: var(--primary-color); color: white; border: none; border-radius: 0; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.2s;">Send</button>
                     </div>
+                    <div style="padding: 8px 32px 14px; font-size: 12px; color: #94a3b8; background: white; line-height: 1.5;">
+                        General information only, not medical advice. In an emergency call 999 or NHS 111.
+                    </div>
 
                 </div>
             </div>
@@ -243,8 +246,8 @@ $agent_data = array(
         /* User vs Bot styling logic inline via JS to keep it simple */
         </style>
 
-        <div style="text-align: center; margin-top: 32px; color: #64748b; font-size: 13px; max-width: 800px; margin-left: auto; margin-right: auto; padding: 20px; background: white; border-radius: 0; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <p style="margin: 0; line-height: 1.6;"><strong>Medical Disclaimer:</strong> This AI tool is designed for IBD research synthesis and clinical nutrition analysis. It is not a substitute for professional medical advice, diagnosis, or treatment. Always verify research data with peer-reviewed literature and consult with qualified health professionals. Not for use in medical emergencies.</p>
+        <div style="text-align: left; margin-top: 32px; color: #64748b; font-size: 13px; max-width: 800px; margin-left: auto; margin-right: auto; padding: 20px; background: white; border-radius: 0; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <p style="margin: 0; line-height: 1.65;"><strong>How to use this tool.</strong> Vance AI gives general information about gastrointestinal health, IBD and clinical nutrition. It is an automated assistant: it can be wrong or out of date, it does not know your personal medical history, and it does not provide a diagnosis, prescription or treatment plan. It is not a substitute for advice from your own healthcare team and must not be used for urgent or emergency needs. If you feel unwell or think you may have a medical emergency, call 999 or NHS 111 now. Please do not enter information that identifies you, conversations may be processed by a third-party AI provider and stored to improve the service. By using this tool you accept that it is for general information only.</p>
         </div>
     </div>
 </div>
