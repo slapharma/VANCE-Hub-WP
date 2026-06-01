@@ -194,7 +194,7 @@ get_header(); ?>
 <!-- CONTENT -->
 <div class="legal-wrap">
 
-    <span class="legal-updated">&#128197; Last updated: 17 April 2025</span>
+    <span class="legal-updated">&#128197; Last updated: 1 June 2026</span>
 
     <!-- TOC -->
     <div class="legal-toc">
@@ -219,10 +219,10 @@ get_header(); ?>
     <!-- SECTIONS -->
     <h2 id="who-we-are">1. Who We Are</h2>
     <p>
-        Vance Medical Foods Ltd ("Vance Medical", "we", "us", or "our") is the data controller responsible for your personal data collected through the Gastro Health Hub platform at <a href="https://gastrohealthhub.com">gastrohealthhub.com</a>.
+        Vance Medical Foods Ltd ("Vance Medical", "we", "us", or "our") is the data controller responsible for the personal data collected through Vance Medical Hub at <a href="https://vancehealthhub.co.uk">vancehealthhub.co.uk</a>. We are registered in England and Wales, company number 17157853, registered office 3a Chestnut House, Farm Close, Shenley, Hertfordshire, WD7 9AD, United Kingdom.
     </p>
     <p>
-        We are committed to processing your personal data lawfully, fairly, and transparently in accordance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
+        We are committed to processing your personal data lawfully, fairly and transparently, in accordance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018. If you have any questions about this policy or how we handle your data, contact us using the details in Section 13.
     </p>
 
     <h2 id="data-collected">2. Information We Collect</h2>
@@ -242,9 +242,17 @@ get_header(); ?>
         <li><strong>Cookies:</strong> session and preference data as described in Section 6</li>
     </ul>
 
-    <h3>Information we do not collect</h3>
+    <h3>Health information (special category data)</h3>
     <p>
-        We do not collect special category data (e.g. diagnosed medical conditions) unless you choose to provide it for the purpose of using our personalisation tools. Such data is processed only with your explicit consent and is not shared with third parties for marketing purposes.
+        Some of the information you choose to give us is health information, which UK GDPR treats as a "special category" needing extra protection. This includes anything you enter into our calculators, quiz or the Ask AI assistant, and any results you choose to save to your account (for example from the malnutrition calculator, blood-test reference tool or omega-3 calculator).
+    </p>
+    <p>
+        We only process this health information with your explicit consent, which you give when you choose to save a result or use a feature that stores it. We do not use it for advertising, and we do not share it with third parties for marketing. You can withdraw your consent and delete your saved results at any time from your dashboard, or by contacting us.
+    </p>
+
+    <h3>The Ask AI assistant</h3>
+    <p>
+        When you use Ask AI, the questions and messages you type are sent to a third-party artificial-intelligence processing provider to generate a response. Your conversation may be stored to operate and improve the service. Please do not enter information that identifies you or another person. Ask AI gives general information only and is described further in our <a href="https://vancehealthhub.co.uk/medical-disclaimer/">Medical Disclaimer</a>.
     </p>
 
     <h2 id="how-we-use">3. How We Use Your Information</h2>
@@ -283,21 +291,27 @@ get_header(); ?>
     <h2 id="legal-basis">4. Legal Basis for Processing</h2>
     <p>Under UK GDPR, we rely on the following lawful bases:</p>
     <ul>
-        <li><strong>Contract performance</strong> — to provide your account and deliver the services you have requested</li>
-        <li><strong>Legitimate interests</strong> — to improve and secure the Platform, and to communicate relevant service updates, where our interests are not overridden by your rights</li>
-        <li><strong>Legal obligation</strong> — to comply with applicable law</li>
-        <li><strong>Consent</strong> — where you have given explicit consent, such as for optional personalisation features or marketing communications. You may withdraw consent at any time</li>
+        <li><strong>Contract performance:</strong> to create and manage your account and deliver the services you have requested.</li>
+        <li><strong>Consent:</strong> for optional features and communications, including saving your health-tool results and sending you marketing email. You can withdraw consent at any time.</li>
+        <li><strong>Explicit consent (Article 9):</strong> for processing health information, such as the tool results you choose to save. This is separate from, and additional to, the consent above.</li>
+        <li><strong>Legitimate interests:</strong> to secure and improve the platform and to send service messages such as password resets, where our interests are not overridden by your rights.</li>
+        <li><strong>Legal obligation:</strong> to comply with applicable law.</li>
     </ul>
 
     <h2 id="sharing">5. Sharing Your Data</h2>
     <p>We do not sell your personal data. We may share your information with:</p>
     <ul>
-        <li><strong>Service providers</strong> acting as data processors on our behalf — including web hosting, analytics, email delivery, and AI model providers — under strict data processing agreements</li>
+        <li><strong>Service providers acting as data processors on our behalf</strong>, under written data processing agreements. These include website hosting, website analytics, email and newsletter delivery, and the third-party AI provider that powers Ask AI. Each is contractually required to protect your data and to use it only on our documented instructions.</li>
         <li><strong>Professional advisors</strong> — such as lawyers or auditors — where necessary and under confidentiality obligations</li>
         <li><strong>Regulatory or legal authorities</strong> — where required by law or to protect the rights of Vance Medical or others</li>
     </ul>
     <p>
         Any third-party processors we engage are contractually required to implement appropriate technical and organisational security measures and to process data only on our documented instructions.
+    </p>
+
+    <h3>Marketing communications</h3>
+    <p>
+        We only send you marketing email if you have given us your separate, optional consent, for example by ticking the marketing box when you register. We will never make marketing a condition of creating an account. Every marketing email includes an unsubscribe link, and you can opt out at any time by using it or by contacting us. Withdrawing marketing consent does not affect the service messages we need to send to run your account.
     </p>
 
     <h2 id="cookies">6. Cookies &amp; Tracking</h2>
@@ -335,9 +349,12 @@ get_header(); ?>
         We retain your personal data only for as long as necessary to fulfil the purposes for which it was collected, or as required by law.
     </p>
     <ul>
-        <li><strong>Account data</strong> is retained for the duration of your account and for up to 2 years after deletion, for legal and audit purposes</li>
-        <li><strong>Contact form data</strong> is retained for up to 12 months</li>
-        <li><strong>Analytics data</strong> is retained in aggregated, anonymised form indefinitely</li>
+        <li><strong>Account data</strong> is retained for the life of your account and for up to 2 years after deletion, for legal and audit purposes.</li>
+        <li><strong>Saved tool results and health information</strong> are kept while your account is open and until you delete them. You can delete saved results at any time from your dashboard. When you close your account we delete or anonymise them, except where we must keep limited records by law.</li>
+        <li><strong>Ask AI conversations</strong> are retained only as long as needed to operate and improve the service, and then deleted or anonymised.</li>
+        <li><strong>Consent records</strong> (what you agreed to, and when) are kept for as long as needed to demonstrate compliance, typically for the life of your account plus up to 2 years.</li>
+        <li><strong>Contact form data</strong> is retained for up to 12 months.</li>
+        <li><strong>Analytics data</strong> is retained in aggregated, anonymised form indefinitely.</li>
     </ul>
 
     <h2 id="your-rights">8. Your Rights</h2>
@@ -367,6 +384,10 @@ get_header(); ?>
             <strong>Right to Object</strong>
             <span>Object to processing based on legitimate interests or for direct marketing</span>
         </div>
+        <div class="legal-right-card">
+            <strong>Right to Withdraw Consent</strong>
+            <span>Withdraw any consent you have given, such as marketing or saving health results, at any time, without affecting earlier processing</span>
+        </div>
     </div>
     <p>
         To exercise any of these rights, please contact us using the details in Section 13. We will respond within one calendar month. We may need to verify your identity before processing your request.
@@ -377,7 +398,7 @@ get_header(); ?>
         We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, accidental loss, destruction, or alteration. These include encrypted storage, access controls, and regular security assessments.
     </p>
     <p>
-        While we take every reasonable precaution, no method of transmission over the internet is completely secure. If you become aware of any security vulnerability relating to our Platform, please contact us promptly at <a href="mailto:info@gastrohealthhub.com">info@gastrohealthhub.com</a>.
+        While we take every reasonable precaution, no method of transmission over the internet is completely secure. If you become aware of any security vulnerability relating to our Platform, please contact us promptly at <a href="mailto:info@vancehealthhub.co.uk">info@vancehealthhub.co.uk</a>.
     </p>
 
     <h2 id="transfers">10. International Transfers</h2>
@@ -387,7 +408,7 @@ get_header(); ?>
 
     <h2 id="children">11. Children's Privacy</h2>
     <p>
-        The Platform is not intended for use by children under the age of 16. We do not knowingly collect personal data from children. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.
+        Vance Medical Hub is intended for members of the public aged 18 and over in the United Kingdom. It is not directed at children, and we do not knowingly collect personal data from anyone under 18. If you believe someone under 18 has given us personal information, please contact us and we will delete it promptly.
     </p>
 
     <h2 id="policy-changes">12. Changes to This Policy</h2>
@@ -405,9 +426,9 @@ get_header(); ?>
 
     <div class="legal-contact-box">
         <h3>Vance Medical Foods Ltd</h3>
-        <p><strong>Email:</strong> <a href="mailto:info@gastrohealthhub.com">info@gastrohealthhub.com</a></p>
-        <p><strong>Phone:</strong> +44 (0)1628 526 005</p>
-        <p><strong>Website:</strong> <a href="https://gastrohealthhub.com">gastrohealthhub.com</a></p>
+        <p><strong>Registered office:</strong> 3a Chestnut House, Farm Close, Shenley, Hertfordshire, WD7 9AD, United Kingdom (company no. 17157853)</p>
+        <p><strong>Email:</strong> <a href="mailto:info@vancehealthhub.co.uk">info@vancehealthhub.co.uk</a></p>
+        <p><strong>Website:</strong> <a href="https://vancehealthhub.co.uk">vancehealthhub.co.uk</a></p>
         <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,128,128,0.15); font-size: 14px; color: #718096;">
             <strong>Supervisory Authority:</strong> If you are not satisfied with our response, you have the right to lodge a complaint with the UK Information Commissioner's Office (ICO):<br>
             <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a> &nbsp;|&nbsp; Helpline: 0303 123 1113
