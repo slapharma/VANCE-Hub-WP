@@ -3,8 +3,8 @@
 function vance_pages_customize_register( $wp_customize ) {
     // ---- HCP PAGE PANEL ----
     $wp_customize->add_panel( "vance_hcp_panel", array(
-        "title"    => __( "HCP Page Settings", "sla-health-hub" ),
-        "priority" => 46,
+        "title"    => __( "Page — For Practitioners (HCP)", "sla-health-hub" ),
+        "priority" => 43,
     ) );
 
     // HCP Hero
@@ -81,8 +81,8 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- PATIENT PAGE PANEL ----
     $wp_customize->add_panel( "vance_pat_panel", array(
-        "title"    => __( "Patient Page Settings", "sla-health-hub" ),
-        "priority" => 47,
+        "title"    => __( "Page — For Patients", "sla-health-hub" ),
+        "priority" => 42,
     ) );
 
     // Patient Hero
@@ -160,8 +160,8 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- ABOUT US PAGE PANEL ----
     $wp_customize->add_panel( "vance_about_panel", array(
-        "title"    => __( "About Us Page", "sla-health-hub" ),
-        "priority" => 48,
+        "title"    => __( "Page — About Us", "sla-health-hub" ),
+        "priority" => 40,
     ) );
 
     // ── Hero ──────────────────────────────────────────────────
@@ -771,8 +771,8 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- CONTACT US PAGE PANEL ----
     $wp_customize->add_panel( "vance_contact_panel", array(
-        "title"    => __( "Contact Us Page", "sla-health-hub" ),
-        "priority" => 51,
+        "title"    => __( "Page — Contact Us", "sla-health-hub" ),
+        "priority" => 47,
     ) );
 
     // ── Hero ──────────────────────────────────────────────────
@@ -835,8 +835,8 @@ function vance_pages_customize_register( $wp_customize ) {
     // For pages without a dedicated hero section in this file (evidence, ask-ai, home)
     // — group their overlay sliders into a shared panel.
     $wp_customize->add_panel( "vance_overlays_panel", array(
-        "title"    => __( "Hero Overlays (extra)", "sla-health-hub" ),
-        "priority" => 49,
+        "title"    => __( "Hero Overlays", "sla-health-hub" ),
+        "priority" => 60,
     ) );
     $wp_customize->add_section( "vance_overlays_misc", array(
         "title" => "Per-page Overlay Opacity",
@@ -865,8 +865,8 @@ function vance_pages_customize_register( $wp_customize ) {
     // EDUCATION (COMING SOON) PAGE PANEL
     // ============================================================
     $wp_customize->add_panel( "vance_edu_panel", array(
-        "title"    => __( "Education Page Settings", "sla-health-hub" ),
-        "priority" => 50,
+        "title"    => __( "Page — Education", "sla-health-hub" ),
+        "priority" => 44,
     ) );
 
     // Education Hero
@@ -949,8 +949,8 @@ function vance_pages_customize_register( $wp_customize ) {
     // TOOLS & RESOURCES PAGE PANEL
     // ============================================================
     $wp_customize->add_panel( "vance_tools_panel", array(
-        "title"    => __( "Tools & Resources Page", "sla-health-hub" ),
-        "priority" => 51,
+        "title"    => __( "Page — Tools & Resources", "sla-health-hub" ),
+        "priority" => 45,
     ) );
 
     // Tools Hero
@@ -1090,8 +1090,8 @@ function vance_pages_customize_register( $wp_customize ) {
     //  page-turn-evidence-into-action.php, no parallel naming)
     // ============================================================
     $wp_customize->add_panel( "vance_evidence_panel", array(
-        "title"    => __( "Turn Evidence into Action", "sla-health-hub" ),
-        "priority" => 52,
+        "title"    => __( "Page — Get Started", "sla-health-hub" ),
+        "priority" => 41,
     ) );
 
     // ─── Hero ──────────────────────────────────────────────────────
@@ -1364,8 +1364,8 @@ function vance_pages_customize_register( $wp_customize ) {
     // PREMIUM SUBSCRIBE SECTION — full Customizer panel
     // ============================================================
     $wp_customize->add_panel( "vance_premium_panel", array(
-        "title"    => __( "Homepage — Premium Subscribe", "sla-health-hub" ),
-        "priority" => 53,
+        "title"    => __( "Homepage: Premium Band", "sla-health-hub" ),
+        "priority" => 48,
     ) );
 
     // Section: Content
@@ -1446,8 +1446,8 @@ function vance_pages_customize_register( $wp_customize ) {
     // HEALTHCARE QUIZ — hero shell mods (mirrors AskAi visual layout)
     // ============================================================
     $wp_customize->add_panel( "vance_hquiz_panel", array(
-        "title"    => __( "Healthcare Quiz", "sla-health-hub" ),
-        "priority" => 54,
+        "title"    => __( "Page — IBD Health Quiz", "sla-health-hub" ),
+        "priority" => 46,
     ) );
     $wp_customize->add_section( "vance_hquiz_hero", array( "title" => "Hero Section", "panel" => "vance_hquiz_panel" ) );
     $wp_customize->add_setting( "vance_hquiz_hero_badge",    array( "default" => "Self-Assessment", "sanitize_callback" => "sanitize_text_field" ) );
@@ -1466,5 +1466,10 @@ function vance_pages_customize_register( $wp_customize ) {
         "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
     ) );
 
+    /* ---- Retire orphaned "Our Heritage" panel (unlinked clone of About Us). Reversible: delete this block to restore. Template file & saved values are untouched. ---- */
+    foreach ( array( 'vance_heritage_hero', 'vance_heritage_origin', 'vance_heritage_mission', 'vance_heritage_product', 'vance_heritage_platform', 'vance_heritage_cta', 'vance_heritage_promo1', 'vance_heritage_promo2' ) as $vance_retired_sec ) {
+        $wp_customize->remove_section( $vance_retired_sec );
+    }
+    $wp_customize->remove_panel( 'vance_heritage_panel' );
 }
 add_action( 'customize_register', 'vance_pages_customize_register', 20 );

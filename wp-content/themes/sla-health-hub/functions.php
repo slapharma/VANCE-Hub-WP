@@ -82,6 +82,22 @@ function vance_get_view_count( $post_id ) {
 }
 
 /**
+ * Estimate a post's reading time in whole minutes. Prefers the manually-set
+ * `_oped_read_time` meta (the same convention single.php uses); otherwise
+ * derives it from the word count at ~200 wpm. Reads the post by ID so it works
+ * outside the loop too. Always returns at least 1.
+ */
+function vance_get_read_time( $post_id ) {
+    $read_time = (int) get_post_meta( $post_id, '_oped_read_time', true );
+    if ( $read_time < 1 ) {
+        $content    = get_post_field( 'post_content', $post_id );
+        $word_count = str_word_count( wp_strip_all_tags( strip_shortcodes( (string) $content ) ) );
+        $read_time  = (int) ceil( $word_count / 200 );
+    }
+    return max( 1, $read_time );
+}
+
+/**
  * Increment view count on single-post page loads. Skips bots, feeds, admin,
  * and previews. Tracked once per session per post via a short-lived cookie.
  */
@@ -119,7 +135,10 @@ function vance_health_hub_scripts() {
     // Enqueue Main Styles
     // We will copy the prototype CSS to a file named 'main.css' in the theme folder
     // Version bumped to force browser/edge cache-miss after Vance Medical rebrand (teal palette + larger logo).
-    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.3.0-vance-mobile-phase1' );
+    // 2026-06-03: bumped to 2.6.0 to ship the sub-category grouped-archive layouts
+    // (.va-layout-grid/bento/asymmetric/posters). filemtime() suffix guarantees the
+    // edge/browser cache busts whenever main.css changes from here on.
+    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.6.0-subcat-layouts-' . ( @filemtime( get_template_directory() . '/assets/css/main.css' ) ?: '1' ) );
 
     // Phase 1 mobile hardening overrides. Enqueued AFTER main.css so equal-specificity
     // rules here win the cascade. See assets/css/mobile-base.css + MOBILE-PLAN.md §1.
@@ -133,6 +152,35 @@ function vance_health_hub_scripts() {
 
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
+
+    // GI Health section — CSS enqueued only on hub + condition pages.
+    if ( is_page_template( 'page-gi-health.php' ) || is_page_template( 'page-gi-condition.php' ) ) {
+        wp_enqueue_style(
+            'vance-gi-health',
+            get_template_directory_uri() . '/assets/css/gi-health.css',
+            array( 'vance-main-style' ),
+            @filemtime( get_template_directory() . '/assets/css/gi-health.css' ) ?: '1.0.0'
+        );
+    }
+
+    // References accordion — single articles + GI Health condition/hub pages.
+    // Progressively enhances the "References & further reading" block into an
+    // animated collapsible disclosure (assets/js/references-accordion.js).
+    if ( is_single() || is_page_template( 'page-gi-health.php' ) || is_page_template( 'page-gi-condition.php' ) ) {
+        wp_enqueue_style(
+            'vance-references-accordion',
+            get_template_directory_uri() . '/assets/css/references-accordion.css',
+            array(),
+            @filemtime( get_template_directory() . '/assets/css/references-accordion.css' ) ?: '1.0.0'
+        );
+        wp_enqueue_script(
+            'vance-references-accordion',
+            get_template_directory_uri() . '/assets/js/references-accordion.js',
+            array(),
+            @filemtime( get_template_directory() . '/assets/js/references-accordion.js' ) ?: '1.0.0',
+            true
+        );
+    }
 }
 add_action( 'wp_enqueue_scripts', 'vance_health_hub_scripts' );
 
@@ -1572,6 +1620,90 @@ function vance_increase_upload_size_limit( $limit ) {
 add_filter( 'upload_size_limit', 'vance_increase_upload_size_limit' );
 
 /**
+ * Fetch the list of available models from OpenRouter for the Ask AI model dropdown.
+ *
+ * The /models endpoint is public (no API key required). Results are cached in a
+ * transient for 12 hours so the Customizer stays responsive. On any failure a small
+ * hardcoded fallback list is returned so the control is never empty.
+ *
+ * @return array Associative array of [ model_id => human label ].
+ */
+function vance_get_openrouter_models() {
+    $fallback = array(
+        'anthropic/claude-opus-4.8'   => 'Anthropic: Claude Opus 4.8 (anthropic/claude-opus-4.8)',
+        'anthropic/claude-opus-4.7'   => 'Anthropic: Claude Opus 4.7 (anthropic/claude-opus-4.7)',
+        'google/gemini-3.5-flash'     => 'Google: Gemini 3.5 Flash (google/gemini-3.5-flash)',
+    );
+
+    $cached = get_transient( 'vance_openrouter_models' );
+    if ( is_array( $cached ) && ! empty( $cached ) ) {
+        return $cached;
+    }
+
+    $response = wp_remote_get( 'https://openrouter.ai/api/v1/models', array( 'timeout' => 8 ) );
+    if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+        return $fallback;
+    }
+
+    $data = json_decode( wp_remote_retrieve_body( $response ), true );
+    if ( empty( $data['data'] ) || ! is_array( $data['data'] ) ) {
+        return $fallback;
+    }
+
+    $choices = array();
+    foreach ( $data['data'] as $entry ) {
+        if ( empty( $entry['id'] ) ) {
+            continue;
+        }
+        $id            = $entry['id'];
+        $name          = ! empty( $entry['name'] ) ? $entry['name'] : $id;
+        $choices[ $id ] = $name . ' (' . $id . ')';
+    }
+
+    if ( empty( $choices ) ) {
+        return $fallback;
+    }
+
+    asort( $choices );
+    set_transient( 'vance_openrouter_models', $choices, 12 * HOUR_IN_SECONDS );
+    return $choices;
+}
+
+/**
+ * Sanitize a colour value for the Customizer. Accepts hex (#fff / #ffffff) or rgb()/rgba().
+ * Returns '' on anything else so the setting falls back to its default.
+ */
+function vance_sanitize_color( $value ) {
+	$value = trim( (string) $value );
+	if ( '' === $value ) { return ''; }
+	if ( preg_match( '/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $value ) ) { return $value; }
+	if ( preg_match( '/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\)$/', $value ) ) { return $value; }
+	return '';
+}
+
+/**
+ * Default colours for the Vance AI modal (mirror the hardcoded CSS defaults).
+ *
+ * @return array [ setting_key => default_value ]
+ */
+function vance_modal_color_defaults() {
+	return array(
+		'vance_modal_backdrop'         => 'rgba(10, 25, 41, 0.78)',
+		'vance_modal_panel_bg'         => '#0A1929',
+		'vance_modal_text_color'       => '#ffffff',
+		'vance_modal_header_bg'        => '#061119',
+		'vance_modal_title_color'      => '#ffffff',
+		'vance_modal_bot_bubble_bg'    => 'rgba(255,255,255,0.08)',
+		'vance_modal_bot_bubble_text'  => '#ffffff',
+		'vance_modal_user_bubble_bg'   => '#008080',
+		'vance_modal_user_bubble_text' => '#ffffff',
+		'vance_modal_input_bg'         => 'rgba(255,255,255,0.94)',
+		'vance_modal_input_text'       => '#1a2332',
+		'vance_modal_send_bg'          => '#008080',
+	);
+}
+
+/**
  * Add Advanced Theme Settings to Customizer
  */
 /**
@@ -1704,11 +1836,12 @@ add_action( 'customize_preview_init', 'vance_post_overlay_preview_js' );
 
 function vance_customize_register( $wp_customize ) {
     // 0. Vance Theme Panels
-    $wp_customize->add_panel( 'vance_brand_panel', array( 'title' => __( 'Vance Theme -> Brand Identity', 'sla-health-hub' ), 'priority' => 10 ) );
-    $wp_customize->add_panel( 'vance_homepage_panel', array( 'title' => __( 'Vance Theme -> Homepage', 'sla-health-hub' ), 'priority' => 11 ) );
-    $wp_customize->add_panel( 'vance_content_panel', array( 'title' => __( 'Vance Theme -> Content', 'sla-health-hub' ), 'priority' => 12 ) );
-    $wp_customize->add_panel( 'vance_footer_panel', array( 'title' => __( 'Vance Theme -> Footer', 'sla-health-hub' ), 'priority' => 13 ) );
-    $wp_customize->add_panel( 'vance_advanced_panel', array( 'title' => __( 'Vance Theme -> Advanced', 'sla-health-hub' ), 'priority' => 14 ) );
+    $wp_customize->add_panel( 'vance_brand_panel', array( 'title' => __( 'Brand Identity', 'sla-health-hub' ), 'priority' => 10 ) );
+    $wp_customize->add_panel( 'vance_homepage_panel', array( 'title' => __( 'Homepage', 'sla-health-hub' ), 'priority' => 11 ) );
+    $wp_customize->add_panel( 'vance_content_panel', array( 'title' => __( 'Content & Knowledge Base', 'sla-health-hub' ), 'priority' => 12 ) );
+    $wp_customize->add_panel( 'vance_footer_panel', array( 'title' => __( 'Footer', 'sla-health-hub' ), 'priority' => 13 ) );
+    $wp_customize->add_panel( 'vance_advanced_panel', array( 'title' => __( 'Advanced', 'sla-health-hub' ), 'priority' => 14 ) );
+    $wp_customize->add_panel( 'vance_discovery_panel', array( 'title' => __( 'Discovery Engine', 'sla-health-hub' ), 'priority' => 11.5 ) );
 
     // Move Site Identity into Vance Theme Settings
     if ( $wp_customize->get_section('title_tagline') ) {
@@ -2046,33 +2179,33 @@ function vance_customize_register( $wp_customize ) {
 
     // 2.5 Discovery Suite Settings (Nested under Vance Theme Settings)
     $wp_customize->add_section( 'vance_discovery_general', array(
-        'title'    => __( 'Discovery Engine (General)', 'sla-health-hub' ),
-        'priority' => 31.5,
-        'panel'    => 'vance_homepage_panel',
+        'title'    => __( 'General', 'sla-health-hub' ),
+        'priority' => 10,
+        'panel'    => 'vance_discovery_panel',
     ) );
 
     $wp_customize->add_section( 'vance_discovery_reading', array(
-        'title'    => __( 'Discovery Engine (Reading Levels)', 'sla-health-hub' ),
-        'panel'    => 'vance_homepage_panel',
-        'priority' => 31.6,
+        'title'    => __( 'Reading Levels', 'sla-health-hub' ),
+        'panel'    => 'vance_discovery_panel',
+        'priority' => 20,
     ) );
 
     $wp_customize->add_section( 'vance_discovery_type', array(
-        'title'    => __( 'Discovery Engine (Content Types)', 'sla-health-hub' ),
-        'panel'    => 'vance_homepage_panel',
-        'priority' => 31.7,
+        'title'    => __( 'Content Types', 'sla-health-hub' ),
+        'panel'    => 'vance_discovery_panel',
+        'priority' => 30,
     ) );
 
     $wp_customize->add_section( 'vance_discovery_path', array(
-        'title'    => __( 'Discovery Engine (Healthcare Pathways)', 'sla-health-hub' ),
-        'panel'    => 'vance_homepage_panel',
-        'priority' => 31.8,
+        'title'    => __( 'Healthcare Pathways', 'sla-health-hub' ),
+        'panel'    => 'vance_discovery_panel',
+        'priority' => 40,
     ) );
 
     $wp_customize->add_section( 'vance_discovery_focus', array(
-        'title'    => __( 'Discovery Engine (IBD Research Focus)', 'sla-health-hub' ),
-        'panel'    => 'vance_homepage_panel',
-        'priority' => 31.9,
+        'title'    => __( 'IBD Research Focus', 'sla-health-hub' ),
+        'panel'    => 'vance_discovery_panel',
+        'priority' => 50,
     ) );
 
     // Get all tags for Discovery Suite configuration
@@ -2943,7 +3076,7 @@ function vance_customize_register( $wp_customize ) {
 
     // 2.75 Tool Widgets Row (merged banners). Added 2026-05-26.
     $wp_customize->add_section( 'vance_tool_widgets_row', array(
-        'title'       => __( 'Tool Widgets Row (merged)', 'sla-health-hub' ),
+        'title'       => __( 'Tool Widgets Row', 'sla-health-hub' ),
         'priority'    => 31.75,
         'panel'       => 'vance_content_panel',
         'description' => __( 'Single homepage row that houses both the Content Filters and Vance AI tool banners. Pick a banner style and customise each card.', 'sla-health-hub' ),
@@ -3192,16 +3325,57 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     $wp_customize->add_setting( 'vance_askai_model', array(
-        'default'           => 'gpt-4',
+        'default'           => 'anthropic/claude-opus-4.8',
         'sanitize_callback' => 'sanitize_text_field',
     ) );
+    // Build the model choices live from OpenRouter (cached). Always keep the
+    // currently-saved value selectable even if the live list omits it.
+    $vance_model_choices = vance_get_openrouter_models();
+    $vance_current_model = get_theme_mod( 'vance_askai_model', '' );
+    if ( $vance_current_model && ! isset( $vance_model_choices[ $vance_current_model ] ) ) {
+        $vance_model_choices = array( $vance_current_model => $vance_current_model . ' (saved)' ) + $vance_model_choices;
+    }
     $wp_customize->add_control( 'vance_askai_model', array(
         'label'       => __( 'AI Model', 'sla-health-hub' ),
-        'description' => __( 'e.g., gpt-4, claude-3-opus, gemini-pro', 'sla-health-hub' ),
+        'description' => __( 'Pulled live from OpenRouter. Pick the model the Ask AI chat should use. The list refreshes every 12 hours.', 'sla-health-hub' ),
         'section'     => 'vance_askai_settings',
-        'type'        => 'text',
+        'type'        => 'select',
+        'choices'     => $vance_model_choices,
     ) );
 
+
+    // Vance AI Modal — colour customization
+    $wp_customize->add_section( 'vance_modal_colors', array(
+        'title'    => __( 'Ask AI — Modal Colours', 'sla-health-hub' ),
+        'panel'    => 'vance_content_panel',
+        'priority' => 161,
+    ) );
+    $vance_modal_labels = array(
+        'vance_modal_backdrop'         => 'Backdrop overlay',
+        'vance_modal_panel_bg'         => 'Panel background',
+        'vance_modal_text_color'       => 'Body text',
+        'vance_modal_header_bg'        => 'Header / footer background',
+        'vance_modal_title_color'      => 'Title text',
+        'vance_modal_bot_bubble_bg'    => 'Bot bubble background',
+        'vance_modal_bot_bubble_text'  => 'Bot bubble text',
+        'vance_modal_user_bubble_bg'   => 'User bubble background',
+        'vance_modal_user_bubble_text' => 'User bubble text',
+        'vance_modal_input_bg'         => 'Input background',
+        'vance_modal_input_text'       => 'Input text',
+        'vance_modal_send_bg'          => 'Send button',
+    );
+    foreach ( vance_modal_color_defaults() as $vance_mc_key => $vance_mc_default ) {
+        $wp_customize->add_setting( $vance_mc_key, array(
+            'default'           => $vance_mc_default,
+            'sanitize_callback' => 'vance_sanitize_color',
+        ) );
+        $wp_customize->add_control( $vance_mc_key, array(
+            'label'       => $vance_modal_labels[ $vance_mc_key ],
+            'description' => 'Hex (#008080) or rgba(r,g,b,a)',
+            'section'     => 'vance_modal_colors',
+            'type'        => 'text',
+        ) );
+    }
 
     // 4. Dynamic Homepage & Inner Nav Category Cards
     $wp_customize->add_section( 'vance_homepage_categories', array(
@@ -3282,9 +3456,9 @@ function vance_customize_register( $wp_customize ) {
 
     // --- DISCOVERY SUITE STYLING ---
     $wp_customize->add_section( 'vance_discovery_styling', array(
-        'title'    => __( 'Discovery Engine (Styling)', 'sla-health-hub' ),
-        'priority' => 32,
-        'panel'    => 'vance_homepage_panel',
+        'title'    => __( 'Styling', 'sla-health-hub' ),
+        'priority' => 60,
+        'panel'    => 'vance_discovery_panel',
     ) );
 
     // Titles
@@ -3393,8 +3567,14 @@ function vance_customize_register( $wp_customize ) {
     $categories = get_categories( array( 'hide_empty' => false ) );
     foreach ( $categories as $cat ) {
         // Show/Hide Toggle
+        // Default FALSE: a card only shows when its box is explicitly ticked.
+        // This makes the saved value authoritative (ticking now stores true,
+        // which differs from the default and therefore persists reliably) and
+        // stops new categories/sub-categories auto-appearing. Front-end reads
+        // this via core get_theme_mod() so a stale legacy sla_* value can't
+        // override the choice — see front-page.php 'cats' case.
         $wp_customize->add_setting( "vance_cat_card_show_{$cat->term_id}", array(
-            'default'           => true,
+            'default'           => false,
             'sanitize_callback' => 'vance_sanitize_checkbox',
         ) );
         $wp_customize->add_control( "vance_cat_card_show_{$cat->term_id}", array(
@@ -3537,6 +3717,49 @@ function vance_customize_register( $wp_customize ) {
         'panel'       => 'vance_content_panel',
     ) );
 
+    // --- Tagline pill styling (global — applies to every category hero tagline) ---
+    $wp_customize->add_setting( 'vance_cat_tagline_text_color', array(
+        'default'           => '#008080',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_cat_tagline_text_color', array(
+        'label'       => __( 'Tagline: Text Colour', 'sla-health-hub' ),
+        'description' => __( 'Colour of the small eyebrow tagline above every category title.', 'sla-health-hub' ),
+        'section'     => 'vance_category_heroes',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_cat_tagline_bg', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_cat_tagline_bg', array(
+        'label'       => __( 'Tagline: Background Colour', 'sla-health-hub' ),
+        'description' => __( 'Leave empty for no background (transparent). Setting a colour turns the tagline into a pill.', 'sla-health-hub' ),
+        'section'     => 'vance_category_heroes',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_cat_tagline_border_color', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_cat_tagline_border_color', array(
+        'label'       => __( 'Tagline: Border Colour', 'sla-health-hub' ),
+        'description' => __( 'Used together with Border Width below.', 'sla-health-hub' ),
+        'section'     => 'vance_category_heroes',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_cat_tagline_border_width', array(
+        'default'           => 0,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_cat_tagline_border_width', array(
+        'label'       => __( 'Tagline: Border Width (px)', 'sla-health-hub' ),
+        'description' => __( '0 = no border. Needs a Border Colour set above to show.', 'sla-health-hub' ),
+        'section'     => 'vance_category_heroes',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 10, 'step' => 1 ),
+    ) );
+
     foreach ( $categories as $cat ) {
         // Hero Image
         $wp_customize->add_setting( "vance_cat_hero_{$cat->term_id}", array(
@@ -3569,6 +3792,102 @@ function vance_customize_register( $wp_customize ) {
             'section' => 'vance_category_heroes',
             'type'    => 'text',
         ) );
+    }
+
+    // 5.5 Sub-Category Layouts (Clinical Reviews & Gastro Living)
+    // For each child category under the grouped-archive parents, expose a
+    // layout picker (Standard Grid / Bento / Asymmetric / Posters) and a
+    // description block. Settings are keyed by term id so values survive
+    // renames. The matching front-end lives in
+    // template-parts/subcategory-grouped-archive.php.
+    $wp_customize->add_section( 'vance_subcategory_layouts', array(
+        'title'       => __( 'Sub-Category Layouts', 'sla-health-hub' ),
+        'description' => __( 'Choose a layout and intro description for each sub-category (child category) of Clinical Reviews and Gastro Living. These drive how each group of articles is laid out on those category pages. Create child categories under those two parents (Posts → Categories) to see them listed here.', 'sla-health-hub' ),
+        'priority'    => 34.5,
+        'panel'       => 'vance_content_panel',
+    ) );
+
+    $vance_layout_choices = vance_subcat_layout_choices();
+    foreach ( vance_grouped_archive_parent_slugs() as $vance_parent_slug ) {
+        $vance_parent_term = get_category_by_slug( $vance_parent_slug );
+        if ( ! $vance_parent_term ) {
+            continue;
+        }
+        $vance_child_terms = get_categories( array(
+            'parent'     => $vance_parent_term->term_id,
+            'hide_empty' => false,
+        ) );
+        if ( empty( $vance_child_terms ) ) {
+            continue;
+        }
+        foreach ( $vance_child_terms as $vance_sub ) {
+            // Order (lower numbers appear first)
+            $wp_customize->add_setting( "vance_subcat_order_{$vance_sub->term_id}", array(
+                'default'           => 10,
+                'sanitize_callback' => 'absint',
+            ) );
+            $wp_customize->add_control( "vance_subcat_order_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Order', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'Lower numbers appear first. Ties fall back to alphabetical.', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'number',
+                'input_attrs' => array( 'min' => 0, 'max' => 100, 'step' => 1 ),
+            ) );
+
+            // Layout picker
+            $wp_customize->add_setting( "vance_subcat_layout_{$vance_sub->term_id}", array(
+                'default'           => 'grid',
+                'sanitize_callback' => 'vance_sanitize_subcat_layout',
+            ) );
+            $wp_customize->add_control( "vance_subcat_layout_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Layout', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'select',
+                'choices'     => $vance_layout_choices,
+            ) );
+
+            // Bento sub-options (only take effect when Layout = Bento)
+            $wp_customize->add_setting( "vance_subcat_bento_count_{$vance_sub->term_id}", array(
+                'default'           => '2',
+                'sanitize_callback' => 'vance_sanitize_bento_count',
+            ) );
+            $wp_customize->add_control( "vance_subcat_bento_count_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Bento layout', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'Only applies when Layout = Bento.', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'select',
+                'choices'     => array(
+                    '2' => __( 'Main + 2 small', 'sla-health-hub' ),
+                    '4' => __( 'Main + 4 small', 'sla-health-hub' ),
+                ),
+            ) );
+            $wp_customize->add_setting( "vance_subcat_bento_side_{$vance_sub->term_id}", array(
+                'default'           => 'left',
+                'sanitize_callback' => 'vance_sanitize_bento_side',
+            ) );
+            $wp_customize->add_control( "vance_subcat_bento_side_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Bento main side', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'Which side the large main article sits on (Bento only).', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'select',
+                'choices'     => array(
+                    'left'  => __( 'Main on left', 'sla-health-hub' ),
+                    'right' => __( 'Main on right', 'sla-health-hub' ),
+                ),
+            ) );
+
+            // Description block
+            $wp_customize->add_setting( "vance_subcat_desc_{$vance_sub->term_id}", array(
+                'default'           => '',
+                'sanitize_callback' => 'wp_kses_post',
+            ) );
+            $wp_customize->add_control( "vance_subcat_desc_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Description', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'Shown above this sub-category\'s articles. Leave blank to use the category\'s own description.', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'textarea',
+            ) );
+        }
     }
 
     // 6. Homepage Section Ordering — drag-and-drop sortable control
@@ -3729,7 +4048,7 @@ function vance_customize_register( $wp_customize ) {
     }
 
     $wp_customize->add_panel( 'vance_content_widgets_panel', array(
-        'title'       => __( 'Vance Theme → Content Widgets', 'sla-health-hub' ),
+        'title'       => __( 'Content Widgets', 'sla-health-hub' ),
         'priority'    => 14.5,
         'description' => __( 'Five reusable latest-content blocks. Enable any combination via Appearance → Customize → Homepage → Section Order, then configure each one here.', 'sla-health-hub' ),
     ) );
@@ -4147,6 +4466,142 @@ function vance_sanitize_scripts( $input ) {
 function vance_sanitize_checkbox( $checked ) {
     return ( ( isset( $checked ) && true == $checked ) ? true : false );
 }
+
+/**
+ * Allowed layout keys for sub-category groups on the Clinical Reviews and
+ * Gastro Living category archives.
+ *
+ * @return array slug => human label
+ */
+function vance_subcat_layout_choices() {
+    return array(
+        'grid'       => __( 'Standard Grid', 'sla-health-hub' ),
+        'bento'      => __( 'Bento', 'sla-health-hub' ),
+        'asymmetric' => __( 'Asymmetric', 'sla-health-hub' ),
+        'posters'    => __( 'Posters', 'sla-health-hub' ),
+    );
+}
+
+/**
+ * Sanitize a sub-category layout choice — falls back to 'grid' if the
+ * submitted value is not one of the registered layouts.
+ */
+function vance_sanitize_subcat_layout( $value ) {
+    $value = is_string( $value ) ? $value : '';
+    return array_key_exists( $value, vance_subcat_layout_choices() ) ? $value : 'grid';
+}
+
+/**
+ * Parent category slugs whose child terms get per-sub-category layout +
+ * description controls and grouped archive rendering. Extend this list to
+ * roll the feature out to further categories.
+ *
+ * @return array of category slugs
+ */
+function vance_grouped_archive_parent_slugs() {
+    return apply_filters( 'vance_grouped_archive_parent_slugs', array(
+        'content-clinical-reviews',
+        'content-gastro-living',
+    ) );
+}
+
+/**
+ * Resolve the layout chosen for a given sub-category term id (defaults grid).
+ */
+function vance_get_subcat_layout( $term_id ) {
+    return vance_sanitize_subcat_layout( vance_get_theme_mod( "vance_subcat_layout_{$term_id}", 'grid' ) );
+}
+
+/**
+ * Resolve the description for a given sub-category term. Falls back to the
+ * term's own WordPress description when no Customizer override is set.
+ */
+function vance_get_subcat_description( $term ) {
+    $custom = vance_get_theme_mod( "vance_subcat_desc_{$term->term_id}", '' );
+    if ( '' !== trim( (string) $custom ) ) {
+        return $custom;
+    }
+    return $term->description;
+}
+
+/**
+ * Resolve the display order for a sub-category group (lower = first).
+ */
+function vance_get_subcat_order( $term_id ) {
+    return (int) vance_get_theme_mod( "vance_subcat_order_{$term_id}", 10 );
+}
+
+/**
+ * Build the inline style string for the category hero tagline (eyebrow),
+ * combining the base typography with the global Customizer styling controls
+ * (text colour, background pill, border). Shared by archive.php and the
+ * grouped sub-category templates so both stay in sync.
+ *
+ * @return string ready for echo into a style="" attribute (already escaped-safe values).
+ */
+function vance_category_tagline_style() {
+    $text   = vance_get_theme_mod( 'vance_cat_tagline_text_color', '#008080' );
+    $bg     = vance_get_theme_mod( 'vance_cat_tagline_bg', '' );
+    $bcolor = vance_get_theme_mod( 'vance_cat_tagline_border_color', '' );
+    $bwidth = (int) vance_get_theme_mod( 'vance_cat_tagline_border_width', 0 );
+
+    $text = sanitize_hex_color( $text ) ? $text : '#008080';
+
+    $style  = 'text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-size: 14px; margin-bottom: 10px;';
+    $style .= ' color: ' . $text . ';';
+
+    $is_pill = ( sanitize_hex_color( $bg ) || ( $bwidth > 0 && sanitize_hex_color( $bcolor ) ) );
+    // inline-block so a background/border hugs the text; plain block otherwise.
+    $style .= $is_pill ? ' display: inline-block; padding: 5px 14px; border-radius: 4px;' : ' display: block;';
+
+    if ( sanitize_hex_color( $bg ) ) {
+        $style .= ' background-color: ' . $bg . ';';
+    }
+    if ( $bwidth > 0 && sanitize_hex_color( $bcolor ) ) {
+        $style .= ' border: ' . $bwidth . 'px solid ' . $bcolor . ';';
+    }
+    return $style;
+}
+
+/**
+ * Bento sub-options. Count = how many small cards sit beside the main feature
+ * (2 or 4); side = whether the main feature sits on the left or right.
+ */
+function vance_sanitize_bento_count( $v ) {
+    return in_array( $v, array( '2', '4' ), true ) ? $v : '2';
+}
+function vance_sanitize_bento_side( $v ) {
+    return in_array( $v, array( 'left', 'right' ), true ) ? $v : 'left';
+}
+function vance_get_subcat_bento_count( $term_id ) {
+    return vance_sanitize_bento_count( (string) vance_get_theme_mod( "vance_subcat_bento_count_{$term_id}", '2' ) );
+}
+function vance_get_subcat_bento_side( $term_id ) {
+    return vance_sanitize_bento_side( (string) vance_get_theme_mod( "vance_subcat_bento_side_{$term_id}", 'left' ) );
+}
+
+/**
+ * Grouped category archives (Clinical Reviews / Gastro Living) show every
+ * sub-category on a single page — so load all matching posts and suppress
+ * pagination. Other archives are untouched.
+ */
+function vance_grouped_archive_no_pagination( $query ) {
+    if ( is_admin() || ! $query->is_main_query() ) {
+        return;
+    }
+    if ( ! $query->is_category() ) {
+        return;
+    }
+    $slugs = vance_grouped_archive_parent_slugs();
+    $cat   = $query->get_queried_object();
+    // $cat may not be populated this early; fall back to the requested category var.
+    $slug  = ( $cat instanceof WP_Term ) ? $cat->slug : $query->get( 'category_name' );
+    if ( $slug && in_array( $slug, $slugs, true ) ) {
+        $query->set( 'posts_per_page', -1 );
+        $query->set( 'nopaging', true );
+    }
+}
+add_action( 'pre_get_posts', 'vance_grouped_archive_no_pagination' );
 
 /**
  * Get category choices for Customizer (all categories)
@@ -4601,7 +5056,7 @@ add_action( 'init', 'vance_register_testimonial_cpt' );
 function vance_customize_testimonials( $wp_customize ) {
     // Section
     $wp_customize->add_section( 'vance_testimonials_section', array(
-        'title'    => __( 'Content: Testimonials', 'sla-health-hub' ),
+        'title'    => __( 'Testimonials', 'sla-health-hub' ),
         'priority' => 45,
         'panel'    => 'vance_content_panel',
         'description' => 'Manage the "What Our Community Says" section.'
@@ -5102,6 +5557,7 @@ add_action( 'login_form_register', 'vance_prefill_register_email' );
  * HCP, Patient & About Us Pages Customizer Settings
  */
 require_once get_template_directory() . '/customizer-pages.php';
+require_once get_template_directory() . '/inc/customizer-gi-health.php';
 
 
 
@@ -5362,5 +5818,5 @@ function vance_mobile_body_class( $classes ) {
 }
 add_filter( 'body_class', 'vance_mobile_body_class' );
 
-// End of File
+// End of File — verified complete 2026-06-03
 

@@ -1068,7 +1068,10 @@ body {
                 $cards = array();
                 
                 foreach ($all_cats as $cat) {
-                    if (vance_get_theme_mod("vance_cat_card_show_{$cat->term_id}", true)) {
+                    // Authoritative read: core get_theme_mod (NOT vance_get_theme_mod)
+                    // so a stale legacy sla_cat_card_show_* value can't override the
+                    // tick. Default false => only explicitly-ticked categories show.
+                    if ( get_theme_mod( "vance_cat_card_show_{$cat->term_id}", false ) ) {
                         $cards[] = array(
                             'cat' => $cat,
                             'priority' => vance_get_theme_mod("vance_cat_card_priority_{$cat->term_id}", 10),
@@ -1894,7 +1897,7 @@ body {
                         <?php foreach ($posts_array as $p): ?>
                         <article style="background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
                             <?php
-                                $word_count = str_word_count(strip_tags(strip_shortcodes($p->post_content)));
+                                $read_time = vance_get_read_time($p->ID);
                                 $view_count = vance_get_view_count($p->ID);
                             ?>
                             <?php if (has_post_thumbnail($p->ID)): ?>
@@ -1902,7 +1905,7 @@ body {
                                     <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
                                     <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
                                         <div><?php echo get_the_date('', $p->ID); ?></div>
-                                        <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($word_count); ?> words</div>
+                                        <div style="font-weight: 500; opacity: 0.95;"><?php echo (int) $read_time; ?> min read</div>
                                         <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($view_count); ?> views</div>
                                     </div>
                                 </div>

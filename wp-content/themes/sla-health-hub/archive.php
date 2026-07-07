@@ -103,7 +103,7 @@
         <div class="container" style="position: relative; z-index: 2; width: 100%;">
             <div class="hero-content" style="max-width: 800px;">
                 <?php if ( is_category() && $category_tagline ) : ?>
-                    <span class="eyebrow" style="color: #008080; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-size: 14px; display: block; margin-bottom: 10px;"><?php echo esc_html( $category_tagline ); ?></span>
+                    <span class="eyebrow" style="<?php echo esc_attr( vance_category_tagline_style() ); ?>"><?php echo esc_html( $category_tagline ); ?></span>
                 <?php endif; ?>
 
                 <?php
@@ -137,14 +137,14 @@
                     the_post();
                     ?>
                     <?php
-                        $vance_word_count = str_word_count(strip_tags(strip_shortcodes(get_the_content())));
+                        $vance_read_time = vance_get_read_time(get_the_ID());
                         $vance_view_count = vance_get_view_count(get_the_ID());
                     ?>
                     <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?>>
                         <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>'); background-color: #e2e8f0; position: relative;">
                             <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
                                 <div><?php echo get_the_date(); ?></div>
-                                <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($vance_word_count); ?> words</div>
+                                <div style="font-weight: 500; opacity: 0.95;"><?php echo (int) $vance_read_time; ?> min read</div>
                                 <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($vance_view_count); ?> views</div>
                             </div>
                         </div>
