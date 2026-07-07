@@ -1574,6 +1574,134 @@ add_filter( 'upload_size_limit', 'vance_increase_upload_size_limit' );
 /**
  * Add Advanced Theme Settings to Customizer
  */
+/**
+ * Native HTML5 colour control for the Customizer.
+ *
+ * Renders a browser-native <input type="color"> instead of WordPress's
+ * wp-color-picker (Iris) widget. Iris relies on Customizer controls-pane JS that
+ * an unrelated script error can knock out — leaving the swatch dead (clicking
+ * "Select Color" does nothing) while native range inputs keep working. The
+ * native colour input needs no picker JS: it binds through the same core
+ * setting-link mechanism the range sliders use, so it stays reliable. The value
+ * is a #rrggbb hex string, saved via the standard setting link.
+ *
+ * Guarded by class_exists( 'WP_Customize_Control' ) so it is only defined on
+ * Customizer requests (where that base class is loaded), matching the pattern in
+ * inc/customizer-sortable-control.php.
+ */
+if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'Vance_Customize_HTML5_Color_Control' ) ) {
+
+    class Vance_Customize_HTML5_Color_Control extends WP_Customize_Control {
+
+        public $type = 'vance_html5_color';
+
+        public function render_content() {
+            $value = (string) $this->value();
+            if ( ! preg_match( '/^#[0-9a-fA-F]{6}$/', $value ) ) {
+                $value = '#434343';
+            }
+            ?>
+            <?php if ( ! empty( $this->label ) ) : ?>
+                <span class="customize-control-title"><?php echo esc_html( $this->label ); ?></span>
+            <?php endif; ?>
+            <?php if ( ! empty( $this->description ) ) : ?>
+                <span class="description customize-control-description"><?php echo wp_kses_post( $this->description ); ?></span>
+            <?php endif; ?>
+            <span class="vance-color-field" style="display:flex; align-items:center; gap:10px; margin-top:6px;">
+                <input
+                    type="color"
+                    value="<?php echo esc_attr( $value ); ?>"
+                    style="width:46px; height:34px; padding:2px; border:1px solid #dcdcde; border-radius:4px; background:#fff; cursor:pointer;"
+                    <?php $this->link(); ?>
+                    oninput="var h=this.closest('.vance-color-field').querySelector('.vance-color-hex'); if(h){h.value=this.value.toUpperCase();}"
+                />
+                <input
+                    type="text"
+                    class="vance-color-hex"
+                    value="<?php echo esc_attr( strtoupper( $value ) ); ?>"
+                    readonly
+                    aria-label="<?php esc_attr_e( 'Selected colour hex value', 'sla-health-hub' ); ?>"
+                    style="width:96px; font-family:monospace;"
+                />
+            </span>
+            <?php
+        }
+    }
+}
+
+/**
+ * Build the post hero overlay gradient layer.
+ *
+ * A single continuous full-bleed gradient running left → right across a post's
+ * featured image: solid start colour (#434343 by default) on the left so the
+ * overlaid title text stays legible, fading to fully transparent on the right.
+ * Returns only the gradient layer — callers stack it above the image URL in a
+ * `background-image` value. Returns an empty string when disabled in the
+ * Customizer (Content & Knowledge Base → Post Hero Overlay).
+ *
+ * @return string A CSS linear-gradient() value, or '' when the overlay is off.
+ */
+function vance_post_hero_overlay_gradient() {
+    if ( ! vance_get_theme_mod( 'vance_post_overlay_enable', true ) ) {
+        return '';
+    }
+
+    $color   = vance_get_theme_mod( 'vance_post_overlay_color', '#434343' );
+    $opacity = max( 0, min( 1, (float) vance_get_theme_mod( 'vance_post_overlay_opacity', 1 ) ) );
+    $spread  = max( 10, min( 100, (float) vance_get_theme_mod( 'vance_post_overlay_spread', 100 ) ) );
+
+    // Normalise hex (#rgb or #rrggbb) → r,g,b so we can express it as rgba().
+    $hex = ltrim( (string) $color, '#' );
+    if ( strlen( $hex ) === 3 ) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if ( strlen( $hex ) !== 6 || ! ctype_xdigit( $hex ) ) {
+        $hex = '434343';
+    }
+    $r = hexdec( substr( $hex, 0, 2 ) );
+    $g = hexdec( substr( $hex, 2, 2 ) );
+    $b = hexdec( substr( $hex, 4, 2 ) );
+
+    // Trim trailing zeros so "1.00" → "1" and "62.50" → "62.5".
+    $fmt = function ( $n ) {
+        return rtrim( rtrim( number_format( (float) $n, 2, '.', '' ), '0' ), '.' );
+    };
+
+    // One continuous gradient. The start colour holds SOLID across the first
+    // half of the fade distance, then ramps to fully transparent by $spread% of
+    // the width. Holding a solid plateau (instead of fading from the very left
+    // edge) means a full Fade Distance genuinely covers the whole image —
+    // without it, a plain 0%→100% fade is already 50% transparent at the
+    // midpoint and visibly peters out around half-way.
+    $solid = $spread * 0.5;
+    return sprintf(
+        'linear-gradient(to right, rgba(%1$d,%2$d,%3$d,%4$s) 0%%, rgba(%1$d,%2$d,%3$d,%4$s) %5$s%%, rgba(%1$d,%2$d,%3$d,0) %6$s%%)',
+        $r, $g, $b, $fmt( $opacity ), $fmt( $solid ), $fmt( $spread )
+    );
+}
+
+/**
+ * Live-preview script for the Post Hero Overlay.
+ *
+ * The four overlay settings use the 'postMessage' transport so dragging a
+ * slider or picking a colour updates the hero instantly in the browser instead
+ * of forcing a full server-side preview reload on every change. Reloading on
+ * each change floods the Customizer preview messenger and eventually trips the
+ * "Looks like something's gone wrong" error (and blocks Publish); postMessage
+ * avoids that entirely. This script mirrors vance_post_hero_overlay_gradient()
+ * in JS and repaints the .oped-hero-image element as settings change.
+ */
+function vance_post_overlay_preview_js() {
+    wp_enqueue_script(
+        'vance-post-overlay-preview',
+        get_template_directory_uri() . '/assets/js/customizer-post-overlay.js',
+        array( 'customize-preview' ),
+        wp_get_theme()->get( 'Version' ),
+        true
+    );
+}
+add_action( 'customize_preview_init', 'vance_post_overlay_preview_js' );
+
 function vance_customize_register( $wp_customize ) {
     // 0. Vance Theme Panels
     $wp_customize->add_panel( 'vance_brand_panel', array( 'title' => __( 'Vance Theme -> Brand Identity', 'sla-health-hub' ), 'priority' => 10 ) );
@@ -1757,6 +1885,77 @@ function vance_customize_register( $wp_customize ) {
         'section'     => 'vance_hero_settings',
         'type'        => 'range',
         'input_attrs' => array( 'min' => 0, 'max' => 1, 'step' => 0.1 ),
+    ) );
+
+    // -------------------------------------------------------------------------
+    // Post Hero Overlay
+    // A single continuous full-bleed gradient laid over each post's featured
+    // image, running left → right: solid on the left so overlaid title text
+    // stays legible, fading to fully transparent on the right. Applied in
+    // single.php via vance_post_hero_overlay_gradient().
+    // -------------------------------------------------------------------------
+    $wp_customize->add_section( 'vance_post_hero_overlay', array(
+        'title'       => __( 'Post Hero Overlay', 'sla-health-hub' ),
+        'description' => __( 'Gradient laid over the featured image on single posts. Fades from a solid colour on the left (keeping the title readable) to transparent on the right.', 'sla-health-hub' ),
+        'priority'    => 33,
+        'panel'       => 'vance_content_panel',
+    ) );
+
+    $wp_customize->add_setting( 'vance_post_overlay_enable', array(
+        'default'           => true,
+        'sanitize_callback' => 'vance_sanitize_checkbox',
+        'transport'         => 'postMessage',
+    ) );
+    $wp_customize->add_control( 'vance_post_overlay_enable', array(
+        'label'   => __( 'Enable Post Hero Overlay', 'sla-health-hub' ),
+        'section' => 'vance_post_hero_overlay',
+        'type'    => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_post_overlay_color', array(
+        'default'           => '#434343',
+        'sanitize_callback' => 'sanitize_hex_color',
+        'transport'         => 'postMessage',
+    ) );
+    if ( class_exists( 'Vance_Customize_HTML5_Color_Control' ) ) {
+        // Native browser colour picker — reliable even if the Iris (wp-color-picker) widget fails to init.
+        $wp_customize->add_control( new Vance_Customize_HTML5_Color_Control( $wp_customize, 'vance_post_overlay_color', array(
+            'label'       => __( 'Overlay Start Colour', 'sla-health-hub' ),
+            'description' => __( 'The solid colour on the left edge (default #434343).', 'sla-health-hub' ),
+            'section'     => 'vance_post_hero_overlay',
+        ) ) );
+    } else {
+        // Fallback to the core colour control if the custom class is unavailable.
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_post_overlay_color', array(
+            'label'   => __( 'Overlay Start Colour', 'sla-health-hub' ),
+            'section' => 'vance_post_hero_overlay',
+        ) ) );
+    }
+
+    $wp_customize->add_setting( 'vance_post_overlay_opacity', array(
+        'default'           => 1,
+        'sanitize_callback' => 'floatval',
+        'transport'         => 'postMessage',
+    ) );
+    $wp_customize->add_control( 'vance_post_overlay_opacity', array(
+        'label'       => __( 'Start Opacity (0.0 - 1.0)', 'sla-health-hub' ),
+        'description' => __( 'Strength of the overlay at the left edge.', 'sla-health-hub' ),
+        'section'     => 'vance_post_hero_overlay',
+        'type'        => 'range',
+        'input_attrs' => array( 'min' => 0, 'max' => 1, 'step' => 0.05 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_post_overlay_spread', array(
+        'default'           => 100,
+        'sanitize_callback' => 'absint',
+        'transport'         => 'postMessage',
+    ) );
+    $wp_customize->add_control( 'vance_post_overlay_spread', array(
+        'label'       => __( 'Fade Distance (% of width)', 'sla-health-hub' ),
+        'description' => __( 'How far across the image the overlay extends before clearing. The colour holds solid for the first half of this distance, then fades to transparent. 100% covers the whole width (fading out on the right); lower values keep more of the right side clear.', 'sla-health-hub' ),
+        'section'     => 'vance_post_hero_overlay',
+        'type'        => 'range',
+        'input_attrs' => array( 'min' => 10, 'max' => 100, 'step' => 5 ),
     ) );
 
     $wp_customize->add_setting( 'vance_hero_subtitle_color', array(

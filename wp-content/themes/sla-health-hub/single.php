@@ -45,8 +45,6 @@ while ( have_posts() ) :
     // Hero Settings
     $title_color = vance_get_theme_mod('vance_hero_title_color', '#ffffff');
     $title_size = vance_get_theme_mod('vance_hero_title_size', 52);
-    $mask_enabled = vance_get_theme_mod('vance_hero_mask_toggle', true);
-    $mask_opacity = vance_get_theme_mod('vance_hero_mask_opacity', 0.5); 
 
     $hero_bg = '';
     if ( has_post_thumbnail() ) {
@@ -57,11 +55,14 @@ while ( have_posts() ) :
         elseif ( $post_type == 'news' ) $hero_bg = get_template_directory_uri() . '/assets/img/news_hero.png';
         else $hero_bg = get_template_directory_uri() . '/assets/img/opinion_hero.png';
     }
-    
-    $overlay_css = '';
-    if ( $mask_enabled ) {
-        // Use rgba for opacity (using the brand dark blue/navy colors)
-        $overlay_css = "background-image: linear-gradient(rgba(10, 25, 41, {$mask_opacity}), rgba(20, 40, 70, {$mask_opacity})), url('" . esc_url($hero_bg) . "');";
+
+    // Left → right gradient overlay (Customizer: Content → Post Hero Overlay).
+    // Solid #434343 on the left keeps the title legible, fading to transparent
+    // on the right. Layered above the image so it is one continuous full-bleed
+    // wash over the hero.
+    $overlay_gradient = function_exists( 'vance_post_hero_overlay_gradient' ) ? vance_post_hero_overlay_gradient() : '';
+    if ( $overlay_gradient !== '' ) {
+        $overlay_css = "background-image: {$overlay_gradient}, url('" . esc_url($hero_bg) . "');";
     } else {
         $overlay_css = "background-image: url('" . esc_url($hero_bg) . "');";
     }
