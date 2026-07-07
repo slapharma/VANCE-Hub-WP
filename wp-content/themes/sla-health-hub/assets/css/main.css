@@ -2519,3 +2519,232 @@ h6 {
     transform: scale(1.05);
     transition: transform 0.3s ease;
 }
+
+/* =====================================================================
+   Sub-category grouped archives (Clinical Reviews & Gastro Living)
+   Drives template-parts/subcategory-grouped-archive.php. Four selectable
+   layouts per sub-category: Standard Grid, Bento, Asymmetric, Posters.
+   ===================================================================== */
+
+.va-subcat-group {
+    margin-bottom: 64px;
+}
+.va-subcat-group:last-of-type {
+    margin-bottom: 0;
+}
+
+/* --- Group header + description block --- */
+.va-subcat-head {
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+.va-subcat-title {
+    font-size: 30px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--secondary-color, #0a1929);
+    margin: 0 0 8px;
+}
+.va-subcat-desc {
+    max-width: 760px;
+    color: var(--text-light, #475569);
+    font-size: 16px;
+    line-height: 1.65;
+}
+.va-subcat-desc p {
+    margin: 0 0 8px;
+}
+.va-subcat-desc p:last-child {
+    margin-bottom: 0;
+}
+.va-subcat-viewall {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--primary-color, #008080);
+    text-decoration: none;
+}
+.va-subcat-viewall:hover {
+    text-decoration: underline;
+}
+
+/* --- Shared card hover for the standard news-card used in these grids --- */
+.va-sub-grid .news-card {
+    background: #fff;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.va-sub-grid .news-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px -10px rgba(10, 25, 41, 0.25);
+}
+
+/* --- 1. Standard Grid --- */
+.va-layout-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+
+/* --- 2. Bento: one large main feature + 2 or 4 small cards beside it --- */
+/* Layout is driven by markup (.va-bento-main / .va-bento-side), not by nth-child,
+   so card content height never overflows its cell (the old bug). */
+.va-bento {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 22px;
+    align-items: stretch;
+}
+.va-bento--right {
+    grid-template-columns: 1fr 2fr;
+}
+.va-bento--right .va-bento-main { order: 2; }
+.va-bento--right .va-bento-side { order: 1; }
+.va-bento--solo {
+    grid-template-columns: 1fr;
+}
+
+/* Main feature fills the full height of the side column */
+.va-bento-main { display: flex; }
+.va-bento-main .news-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.va-bento-main .card-image {
+    flex: 1 1 auto;
+    min-height: 340px;
+}
+.va-bento-main .entry-title a { font-size: 24px !important; }
+
+/* Side column: 2 cards stacked, or 4 cards in a 2x2 grid */
+.va-bento-side {
+    display: grid;
+    gap: 22px;
+    grid-template-rows: repeat(2, 1fr);
+}
+.va-bento--count-4 .va-bento-side {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+}
+.va-bento-side .news-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.va-bento-side .card-image { height: 120px; }
+.va-bento-side .card-content { padding: 14px 16px; }
+.va-bento-side .entry-title a { font-size: 15px !important; }
+
+/* Overflow row beneath the bento feature */
+.va-bento-overflow { margin-top: 22px; }
+
+/* --- 3. Asymmetric: alternating wide/narrow two-column rhythm --- */
+.va-layout-asymmetric {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 28px;
+}
+.va-layout-asymmetric .va-sub-item:nth-child(4n + 1),
+.va-layout-asymmetric .va-sub-item:nth-child(4n + 4) {
+    grid-column: 1;
+}
+.va-layout-asymmetric .va-sub-item:nth-child(4n + 2),
+.va-layout-asymmetric .va-sub-item:nth-child(4n + 3) {
+    grid-column: 2;
+}
+
+/* --- 4. Posters: tall image-dominant cards with overlaid title --- */
+.va-layout-posters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+.va-poster-card {
+    position: relative;
+    border-radius: var(--radius-md, 8px);
+    overflow: hidden;
+}
+.va-poster-link {
+    display: block;
+    position: relative;
+    min-height: 380px;
+    background-size: cover;
+    background-position: center;
+    background-color: #1e293b;
+    text-decoration: none;
+}
+.va-poster-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 25, 41, 0) 35%, rgba(10, 25, 41, 0.85) 100%);
+}
+.va-poster-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 22px;
+    z-index: 2;
+}
+.va-poster-meta {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
+}
+.va-poster-title {
+    color: #fff;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 700;
+    margin: 0;
+}
+.va-poster-card:hover .va-poster-title {
+    text-decoration: underline;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .va-layout-grid,
+    .va-layout-posters {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    /* Bento: stack main above the side cards; side becomes a 2-up row */
+    .va-bento,
+    .va-bento--right {
+        grid-template-columns: 1fr;
+    }
+    .va-bento--right .va-bento-main { order: 1; }
+    .va-bento--right .va-bento-side { order: 2; }
+    .va-bento-main .card-image { min-height: 220px; }
+    .va-bento-side,
+    .va-bento--count-4 .va-bento-side {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+    }
+    .va-layout-asymmetric {
+        grid-template-columns: 1fr;
+    }
+    .va-layout-asymmetric .va-sub-item {
+        grid-column: 1 !important;
+    }
+}
+@media (max-width: 560px) {
+    .va-layout-grid,
+    .va-layout-posters {
+        grid-template-columns: 1fr;
+    }
+    .va-bento-side,
+    .va-bento--count-4 .va-bento-side {
+        grid-template-columns: 1fr;
+    }
+    .va-subcat-title {
+        font-size: 24px;
+    }
+}
