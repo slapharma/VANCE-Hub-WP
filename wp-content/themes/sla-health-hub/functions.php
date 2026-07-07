@@ -1779,25 +1779,88 @@ function vance_sanitize_float( $value ) {
 }
 
 /**
+ * Resolve the "main category" (top-level ancestor) of a post.
+ *
+ * Per-category overlay settings are keyed to top-level categories only, so a
+ * post filed under a sub-category (e.g. a child of Gastro Living) inherits its
+ * parent's overlay. We take the post's first/primary category and walk up the
+ * hierarchy to its top-level ancestor.
+ *
+ * @param int|null $post_id Post ID (defaults to the current post).
+ * @return int Top-level category term_id, or 0 when the post has no category.
+ */
+function vance_post_overlay_main_category_id( $post_id = null ) {
+    $cats = get_the_category( $post_id );
+    if ( empty( $cats ) ) {
+        return 0;
+    }
+    $term  = $cats[0];
+    $guard = 0;
+    while ( $term && ! empty( $term->parent ) && $guard < 10 ) {
+        $parent = get_term( $term->parent, 'category' );
+        if ( ! $parent || is_wp_error( $parent ) ) {
+            break;
+        }
+        $term = $parent;
+        $guard++;
+    }
+    return (int) $term->term_id;
+}
+
+/**
+ * Resolve the effective overlay settings for a post.
+ *
+ * If the post's main (top-level) category has "Use custom overlay" enabled, its
+ * per-category settings win; otherwise the global Post Hero Overlay settings are
+ * used. Returns a normalised array consumed by vance_post_hero_overlay_gradient().
+ *
+ * @param int|null $post_id Post ID (defaults to the current post).
+ * @return array{enable:bool,color:string,opacity:float,spread:float}
+ */
+function vance_resolve_post_overlay_settings( $post_id = null ) {
+    $cat_id     = vance_post_overlay_main_category_id( $post_id );
+    $use_custom = $cat_id && vance_get_theme_mod( "vance_post_overlay_{$cat_id}_custom", false );
+    $p          = $use_custom ? "vance_post_overlay_{$cat_id}_" : 'vance_post_overlay_';
+
+    return array(
+        'enable'  => (bool) vance_get_theme_mod( $p . 'enable', true ),
+        'color'   => vance_get_theme_mod( $p . 'color', '#434343' ),
+        'opacity' => vance_get_theme_mod( $p . 'opacity', 1 ),
+        'spread'  => vance_get_theme_mod( $p . 'spread', 100 ),
+    );
+}
+
+/**
  * Build the post hero overlay gradient layer.
  *
  * A single continuous full-bleed gradient running left → right across a post's
  * featured image: solid start colour (#434343 by default) on the left so the
  * overlaid title text stays legible, fading to fully transparent on the right.
  * Returns only the gradient layer — callers stack it above the image URL in a
- * `background-image` value. Returns an empty string when disabled in the
- * Customizer (Content & Knowledge Base → Post Hero Overlay).
+ * `background-image` value. Returns an empty string when the overlay is off.
  *
+ * @param array|null $settings Effective settings (enable/color/opacity/spread).
+ *                             When null, the global Customizer settings are read
+ *                             — Content & Knowledge Base → Post Hero Overlay.
  * @return string A CSS linear-gradient() value, or '' when the overlay is off.
  */
-function vance_post_hero_overlay_gradient() {
-    if ( ! vance_get_theme_mod( 'vance_post_overlay_enable', true ) ) {
+function vance_post_hero_overlay_gradient( $settings = null ) {
+    if ( ! is_array( $settings ) ) {
+        $settings = array(
+            'enable'  => vance_get_theme_mod( 'vance_post_overlay_enable', true ),
+            'color'   => vance_get_theme_mod( 'vance_post_overlay_color', '#434343' ),
+            'opacity' => vance_get_theme_mod( 'vance_post_overlay_opacity', 1 ),
+            'spread'  => vance_get_theme_mod( 'vance_post_overlay_spread', 100 ),
+        );
+    }
+
+    if ( empty( $settings['enable'] ) ) {
         return '';
     }
 
-    $color   = vance_get_theme_mod( 'vance_post_overlay_color', '#434343' );
-    $opacity = max( 0, min( 1, (float) vance_get_theme_mod( 'vance_post_overlay_opacity', 1 ) ) );
-    $spread  = max( 10, min( 100, (float) vance_get_theme_mod( 'vance_post_overlay_spread', 100 ) ) );
+    $color   = isset( $settings['color'] ) ? $settings['color'] : '#434343';
+    $opacity = max( 0, min( 1, (float) ( isset( $settings['opacity'] ) ? $settings['opacity'] : 1 ) ) );
+    $spread  = max( 10, min( 100, (float) ( isset( $settings['spread'] ) ? $settings['spread'] : 100 ) ) );
 
     // Normalise hex (#rgb or #rrggbb) → r,g,b so we can express it as rgba().
     $hex = ltrim( (string) $color, '#' );
@@ -1832,24 +1895,37 @@ function vance_post_hero_overlay_gradient() {
 /**
  * Live-preview script for the Post Hero Overlay.
  *
- * The four overlay settings use the 'postMessage' transport so dragging a
- * slider or picking a colour updates the hero instantly in the browser instead
- * of forcing a full server-side preview reload on every change. Reloading on
- * each change floods the Customizer preview messenger and eventually trips the
- * "Looks like something's gone wrong" error (and blocks Publish); postMessage
- * avoids that entirely. This script mirrors vance_post_hero_overlay_gradient()
- * in JS and repaints the .oped-hero-image element as settings change.
+ * The overlay settings use the 'postMessage' transport so dragging a slider or
+ * picking a colour updates the hero instantly in the browser instead of forcing
+ * a full server-side preview reload on every change. Reloading on each change
+ * floods the Customizer preview messenger and eventually trips the "Looks like
+ * something's gone wrong" error (and blocks Publish); postMessage avoids that
+ * entirely. This script mirrors vance_post_hero_overlay_gradient() in JS and
+ * repaints the .oped-hero-image element as settings change.
+ *
+ * Runs on wp_enqueue_scripts (not customize_preview_init) so the main query is
+ * available and we can localise the previewed post's main category — letting the
+ * preview switch between the global and per-category settings live.
  */
 function vance_post_overlay_preview_js() {
+    if ( ! is_customize_preview() ) {
+        return;
+    }
     wp_enqueue_script(
         'vance-post-overlay-preview',
         get_template_directory_uri() . '/assets/js/customizer-post-overlay.js',
         array( 'customize-preview' ),
-        wp_get_theme()->get( 'Version' ),
+        // filemtime cache-bust so preview picks up JS changes on every deploy
+        // (a static version string would serve a stale, cached file).
+        ( @filemtime( get_template_directory() . '/assets/js/customizer-post-overlay.js' ) ?: wp_get_theme()->get( 'Version' ) ),
         true
     );
+    $cat_id = is_single() ? vance_post_overlay_main_category_id( get_queried_object_id() ) : 0;
+    wp_localize_script( 'vance-post-overlay-preview', 'vancePostOverlayPreview', array(
+        'catId' => $cat_id,
+    ) );
 }
-add_action( 'customize_preview_init', 'vance_post_overlay_preview_js' );
+add_action( 'wp_enqueue_scripts', 'vance_post_overlay_preview_js' );
 
 function vance_customize_register( $wp_customize ) {
     // 0. Vance Theme Panels
@@ -2107,6 +2183,93 @@ function vance_customize_register( $wp_customize ) {
         'type'        => 'range',
         'input_attrs' => array( 'min' => 10, 'max' => 100, 'step' => 5 ),
     ) );
+
+    // -------------------------------------------------------------------------
+    // Post Hero Overlay — Per Category
+    // For each TOP-LEVEL category, optionally override the global overlay above.
+    // "Use custom overlay" off  → the category inherits the global settings.
+    // "Use custom overlay" on   → this category's own enable/colour/opacity/fade
+    //                             apply. Posts resolve to their main (top-level)
+    //                             category via vance_resolve_post_overlay_settings().
+    // -------------------------------------------------------------------------
+    $wp_customize->add_section( 'vance_post_hero_overlay_cats', array(
+        'title'       => __( 'Post Hero Overlay — Per Category', 'sla-health-hub' ),
+        'description' => __( 'Give each main (top-level) category its own overlay. Tick “Use custom overlay” for a category to override the global settings; leave it off to inherit them. Posts in a sub-category use their top-level parent’s overlay.', 'sla-health-hub' ),
+        'priority'    => 33.5,
+        'panel'       => 'vance_content_panel',
+    ) );
+
+    foreach ( get_categories( array( 'hide_empty' => false, 'parent' => 0 ) ) as $vance_ov_cat ) {
+        $cid   = (int) $vance_ov_cat->term_id;
+        $cname = $vance_ov_cat->name;
+
+        // Use custom? (master toggle for this category)
+        $wp_customize->add_setting( "vance_post_overlay_{$cid}_custom", array(
+            'default'           => false,
+            'sanitize_callback' => 'vance_sanitize_checkbox',
+            'transport'         => 'postMessage',
+        ) );
+        $wp_customize->add_control( "vance_post_overlay_{$cid}_custom", array(
+            'label'   => sprintf( __( '%s: Use custom overlay', 'sla-health-hub' ), $cname ),
+            'section' => 'vance_post_hero_overlay_cats',
+            'type'    => 'checkbox',
+        ) );
+
+        // Enable overlay for this category.
+        $wp_customize->add_setting( "vance_post_overlay_{$cid}_enable", array(
+            'default'           => true,
+            'sanitize_callback' => 'vance_sanitize_checkbox',
+            'transport'         => 'postMessage',
+        ) );
+        $wp_customize->add_control( "vance_post_overlay_{$cid}_enable", array(
+            'label'       => sprintf( __( '%s: Enable overlay', 'sla-health-hub' ), $cname ),
+            'description' => __( 'Only applies when “Use custom overlay” is ticked. Untick to show this category’s posts with no overlay.', 'sla-health-hub' ),
+            'section'     => 'vance_post_hero_overlay_cats',
+            'type'        => 'checkbox',
+        ) );
+
+        // Start colour.
+        $wp_customize->add_setting( "vance_post_overlay_{$cid}_color", array(
+            'default'           => '#434343',
+            'sanitize_callback' => 'sanitize_hex_color',
+            'transport'         => 'postMessage',
+        ) );
+        $vance_ov_color_args = array(
+            'label'   => sprintf( __( '%s: Start colour', 'sla-health-hub' ), $cname ),
+            'section' => 'vance_post_hero_overlay_cats',
+        );
+        if ( class_exists( 'Vance_Customize_HTML5_Color_Control' ) ) {
+            $wp_customize->add_control( new Vance_Customize_HTML5_Color_Control( $wp_customize, "vance_post_overlay_{$cid}_color", $vance_ov_color_args ) );
+        } else {
+            $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_post_overlay_{$cid}_color", $vance_ov_color_args ) );
+        }
+
+        // Start opacity.
+        $wp_customize->add_setting( "vance_post_overlay_{$cid}_opacity", array(
+            'default'           => 1,
+            'sanitize_callback' => 'vance_sanitize_float',
+            'transport'         => 'postMessage',
+        ) );
+        $wp_customize->add_control( "vance_post_overlay_{$cid}_opacity", array(
+            'label'       => sprintf( __( '%s: Start opacity (0.0 - 1.0)', 'sla-health-hub' ), $cname ),
+            'section'     => 'vance_post_hero_overlay_cats',
+            'type'        => 'range',
+            'input_attrs' => array( 'min' => 0, 'max' => 1, 'step' => 0.05 ),
+        ) );
+
+        // Fade distance.
+        $wp_customize->add_setting( "vance_post_overlay_{$cid}_spread", array(
+            'default'           => 100,
+            'sanitize_callback' => 'absint',
+            'transport'         => 'postMessage',
+        ) );
+        $wp_customize->add_control( "vance_post_overlay_{$cid}_spread", array(
+            'label'       => sprintf( __( '%s: Fade distance (%% of width)', 'sla-health-hub' ), $cname ),
+            'section'     => 'vance_post_hero_overlay_cats',
+            'type'        => 'range',
+            'input_attrs' => array( 'min' => 10, 'max' => 100, 'step' => 5 ),
+        ) );
+    }
 
     $wp_customize->add_setting( 'vance_hero_subtitle_color', array(
         'default'           => '#cbd5e1',

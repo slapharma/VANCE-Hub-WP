@@ -56,11 +56,12 @@ while ( have_posts() ) :
         else $hero_bg = get_template_directory_uri() . '/assets/img/opinion_hero.png';
     }
 
-    // Left → right gradient overlay (Customizer: Content → Post Hero Overlay).
-    // Solid #434343 on the left keeps the title legible, fading to transparent
-    // on the right. Layered above the image so it is one continuous full-bleed
-    // wash over the hero.
-    $overlay_gradient = function_exists( 'vance_post_hero_overlay_gradient' ) ? vance_post_hero_overlay_gradient() : '';
+    // Left → right gradient overlay (Customizer: Content → Post Hero Overlay,
+    // with optional per-main-category overrides). Solid colour on the left keeps
+    // the title legible, fading to transparent on the right. Layered above the
+    // image so it is one continuous full-bleed wash over the hero.
+    $overlay_settings = function_exists( 'vance_resolve_post_overlay_settings' ) ? vance_resolve_post_overlay_settings( get_the_ID() ) : null;
+    $overlay_gradient = function_exists( 'vance_post_hero_overlay_gradient' ) ? vance_post_hero_overlay_gradient( $overlay_settings ) : '';
     if ( $overlay_gradient !== '' ) {
         $overlay_css = "background-image: {$overlay_gradient}, url('" . esc_url($hero_bg) . "');";
     } else {
