@@ -36,6 +36,18 @@ function vance_tool_widgets_emit_modal_css_once() {
 	static $emitted = false;
 	if ( $emitted ) { return; }
 	$emitted = true;
+		$c_backdrop   = vance_get_theme_mod( 'vance_modal_backdrop',        'rgba(10, 25, 41, 0.78)' );
+		$c_panel_bg   = vance_get_theme_mod( 'vance_modal_panel_bg',        '#0A1929' );
+		$c_text       = vance_get_theme_mod( 'vance_modal_text_color',      '#ffffff' );
+		$c_header_bg  = vance_get_theme_mod( 'vance_modal_header_bg',       '#061119' );
+		$c_title      = vance_get_theme_mod( 'vance_modal_title_color',     '#ffffff' );
+		$c_bot_bg     = vance_get_theme_mod( 'vance_modal_bot_bubble_bg',   'rgba(255,255,255,0.08)' );
+		$c_bot_text   = vance_get_theme_mod( 'vance_modal_bot_bubble_text', '#ffffff' );
+		$c_user_bg    = vance_get_theme_mod( 'vance_modal_user_bubble_bg',  '#008080' );
+		$c_user_text  = vance_get_theme_mod( 'vance_modal_user_bubble_text','#ffffff' );
+		$c_input_bg   = vance_get_theme_mod( 'vance_modal_input_bg',        'rgba(255,255,255,0.94)' );
+		$c_input_text = vance_get_theme_mod( 'vance_modal_input_text',      '#1a2332' );
+		$c_send_bg    = vance_get_theme_mod( 'vance_modal_send_bg',         '#008080' );
 	?>
 	<style>
 		.vance-tw-modal {
@@ -43,7 +55,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 			z-index: 99999;
 			display: none;
 			align-items: center; justify-content: center;
-			background: rgba(10, 25, 41, 0.78);
+			background: <?php echo $c_backdrop; ?>;
 			opacity: 0;
 			transition: opacity 0.25s ease;
 		}
@@ -52,8 +64,8 @@ function vance_tool_widgets_emit_modal_css_once() {
 			position: relative;
 			width: min(720px, 96vw);
 			max-height: min(86vh, 800px);
-			background: #0A1929;
-			color: #ffffff;
+			background: <?php echo $c_panel_bg; ?>;
+			color: <?php echo $c_text; ?>;
 			border-radius: 0;
 			box-shadow: 0 40px 80px rgba(0, 0, 0, 0.40);
 			overflow: hidden;
@@ -63,7 +75,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 		.vance-tw-modal__header {
 			display: flex; align-items: center; justify-content: space-between;
 			padding: 14px 22px;
-			background: #061119;
+			background: <?php echo $c_header_bg; ?>;
 			border-bottom: 1px solid rgba(255,255,255,0.10);
 		}
 		.vance-tw-modal__title {
@@ -72,7 +84,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 			font-family: 'Outfit', sans-serif;
 			letter-spacing: 0.6px;
 			text-transform: uppercase;
-			color: #ffffff;
+			color: <?php echo $c_title; ?>;
 		}
 		.vance-tw-modal__close {
 			background: transparent; border: none;
@@ -83,7 +95,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 		}
 		.vance-tw-modal__close:hover { opacity: 1; background: rgba(255,255,255,0.10); }
 		.vance-tw-modal__body { flex: 1; min-height: 0; padding: 22px 24px; overflow-y: auto; }
-		.vance-tw-modal__footer { padding: 14px 22px; border-top: 1px solid rgba(255,255,255,0.10); background: #061119; }
+		.vance-tw-modal__footer { padding: 14px 22px; border-top: 1px solid rgba(255,255,255,0.10); background: <?php echo $c_header_bg; ?>; }
 		/* Reused filter UI bits (same look as the old Discovery block) */
 		.vance-tw-modal .filter-group { margin-bottom: 22px; }
 		.vance-tw-modal .filter-label {
@@ -154,18 +166,18 @@ function vance_tool_widgets_emit_modal_css_once() {
 			display: flex; flex-direction: column; gap: 10px;
 		}
 		.vance-tw-chat-bubble { padding: 10px 14px; border-radius: 4px; font-size: 13px; line-height: 1.5; max-width: 86%; }
-		.vance-tw-chat-bubble.bot  { background: rgba(255,255,255,0.08); color: #ffffff; align-self: flex-start; }
-		.vance-tw-chat-bubble.user { background: #008080;                 color: #ffffff; align-self: flex-end; }
+		.vance-tw-chat-bubble.bot  { background: <?php echo $c_bot_bg; ?>; color: <?php echo $c_bot_text; ?>; align-self: flex-start; }
+		.vance-tw-chat-bubble.user { background: <?php echo $c_user_bg; ?>;                 color: <?php echo $c_user_text; ?>; align-self: flex-end; }
 		.vance-tw-chat-input-bar { display: flex; gap: 8px; }
 		.vance-tw-chat-input {
 			flex: 1; padding: 10px 14px;
-			background: rgba(255,255,255,0.94); color: #1a2332;
+			background: <?php echo $c_input_bg; ?>; color: <?php echo $c_input_text; ?>;
 			border: 1px solid rgba(255,255,255,0.20); border-radius: 0;
 			font-size: 14px;
 		}
 		.vance-tw-chat-send {
 			padding: 10px 18px;
-			background: linear-gradient(135deg, #008080, #006666);
+			background: <?php echo $c_send_bg; ?>;
 			color: #ffffff; border: none; border-radius: 0;
 			font-family: 'Outfit', sans-serif; font-size: 13px;
 			font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
@@ -463,11 +475,20 @@ function vance_tw_render_vance_ai_body() {
 		var area     = document.getElementById('vance-tw-chat-messages');
 		var history  = [];
 
+			function vanceEscapeHtml(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+			function vanceFormatMd(raw){
+				var t = vanceEscapeHtml(raw);
+				t = t.replace(/^[ \t]*#{1,6}[ \t]*(.+)$/gm, '<strong>$1</strong>');
+				t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+				t = t.replace(/^[ \t]*[-*][ \t]+(.+)$/gm, '\u2022 $1');
+				t = t.replace(/\n/g, '<br>');
+				return t;
+			}
 		function append(role, text) {
 			if (!area) return;
 			var bubble = document.createElement('div');
 			bubble.className = 'vance-tw-chat-bubble ' + (role === 'user' ? 'user' : 'bot');
-			bubble.textContent = text;
+			if (role === 'user') { bubble.textContent = text; } else { bubble.innerHTML = vanceFormatMd(text); }
 			area.appendChild(bubble);
 			area.scrollTop = area.scrollHeight;
 		}
@@ -487,7 +508,7 @@ function vance_tw_render_vance_ai_body() {
 			fetch(ENDPOINT, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
-				body: JSON.stringify({ message: msg, history: history })
+				body: JSON.stringify({ messages: history })
 			})
 			.then(function (r) { return r.json(); })
 			.then(function (d) {

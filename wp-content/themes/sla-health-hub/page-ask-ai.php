@@ -261,7 +261,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var messages = [];
 
     function appendMessage(role, text) {
-        var mdText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        var mdText = text
+            .replace(/^[ \t]*#{1,6}[ \t]*(.+)$/gm, '<strong>$1</strong>')
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/^[ \t]*[-*][ \t]+(.+)$/gm, '\u2022 $1');
         var msgDiv = document.createElement('div');
         msgDiv.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
         msgDiv.style.marginBottom = '18px';

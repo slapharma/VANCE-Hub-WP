@@ -850,6 +850,7 @@ DIRECTIONS:
 2. If the user asks a question that cannot be answered using the provided context or general knowledge typical of gastrohealthhub.com content, politely inform them that you are restricted to Vance Medical Hub data.
 3. Maintain a professional, clinical, yet accessible tone.
 4. Do not provide personal medical advice.
+5. FORMATTING: Reply in clean, readable prose. Do NOT use Markdown headings or any "#" characters. Keep formatting light: you may use **bold** for key terms and simple hyphen (-) bullet points for short lists, but do not use heading syntax, tables, or code blocks.
 
 ' . $site_context;
 
@@ -868,8 +869,18 @@ DIRECTIONS:
         );
     }
     
+    // Model — read from Customizer (Appearance → Customize → Ask AI Configuration → AI Model).
+    // The dropdown is populated live from OpenRouter; do NOT hardcode a model here.
+    $model = function_exists( 'vance_get_theme_mod' )
+        ? vance_get_theme_mod( 'vance_askai_model', '' )
+        : get_theme_mod( 'vance_askai_model', '' );
+    $model = trim( (string) $model );
+    if ( '' === $model ) {
+        $model = 'anthropic/claude-opus-4.8'; // sensible fallback if the setting is unset
+    }
+
     $body = array(
-        'model' => 'google/gemini-2.0-flash-001',
+        'model' => $model,
         'messages' => $messages_formatted,
         'temperature' => 0.3, // Lower temperature to improve grounding and reduce hallucinations
         'max_tokens' => 1000
