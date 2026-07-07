@@ -1762,6 +1762,23 @@ if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'Vance_Customize_
 }
 
 /**
+ * Sanitize a float value for a Customizer setting.
+ *
+ * WP_Customize_Setting::sanitize() invokes the sanitize_callback via
+ * apply_filters() with TWO arguments ( $value, $setting ). PHP 8's internal
+ * floatval() accepts exactly one argument and throws ArgumentCountError when
+ * handed two — which fatals the entire customize_save request (HTTP 500,
+ * frozen Customizer, Publish blocked). This userland wrapper takes the value,
+ * harmlessly ignores the extra arg, and returns a float.
+ *
+ * @param mixed $value Raw setting value.
+ * @return float
+ */
+function vance_sanitize_float( $value ) {
+    return floatval( $value );
+}
+
+/**
  * Build the post hero overlay gradient layer.
  *
  * A single continuous full-bleed gradient running left → right across a post's
@@ -2011,7 +2028,7 @@ function vance_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( 'vance_hero_mask_opacity', array(
         'default'           => 0.5,
-        'sanitize_callback' => 'floatval',
+        'sanitize_callback' => 'vance_sanitize_float',
     ) );
     $wp_customize->add_control( 'vance_hero_mask_opacity', array(
         'label'       => __( 'Overlay Opacity (0.0 - 1.0)', 'sla-health-hub' ),
@@ -2067,7 +2084,7 @@ function vance_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( 'vance_post_overlay_opacity', array(
         'default'           => 1,
-        'sanitize_callback' => 'floatval',
+        'sanitize_callback' => 'vance_sanitize_float',
         'transport'         => 'postMessage',
     ) );
     $wp_customize->add_control( 'vance_post_overlay_opacity', array(
