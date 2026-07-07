@@ -142,11 +142,7 @@
                     ?>
                     <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?>>
                         <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>'); background-color: #e2e8f0; position: relative;">
-                            <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
-                                <div><?php echo get_the_date(); ?></div>
-                                <div style="font-weight: 500; opacity: 0.95;"><?php echo (int) $vance_read_time; ?> min read</div>
-                                <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($vance_view_count); ?> views</div>
-                            </div>
+                            <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                         </div>
 
                         <div class="card-content">
@@ -193,6 +189,8 @@
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
+
+                            <?php echo vance_card_meta_footer_html( get_the_ID() ); ?>
                         </div>
                     </article>
                 <?php endwhile; ?>

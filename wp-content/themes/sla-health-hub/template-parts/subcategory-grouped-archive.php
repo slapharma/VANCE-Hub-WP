@@ -41,6 +41,7 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
             <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' va-poster-card' ); ?>>
                 <a class="va-poster-link" href="<?php the_permalink(); ?>" style="background-image: url('<?php echo esc_url( $thumb ); ?>');">
                     <span class="va-poster-shade" aria-hidden="true"></span>
+                    <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                     <div class="va-poster-body">
                         <div class="va-poster-meta"><?php echo esc_html( get_the_date() ); ?> &middot; <?php echo (int) $vance_read_time; ?> min read</div>
                         <h3 class="va-poster-title"><?php the_title(); ?></h3>
@@ -50,17 +51,14 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
         <?php else : ?>
             <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' news-card' ); ?>>
                 <div class="card-image" style="background-image: url('<?php echo esc_url( $thumb ); ?>'); background-color: #e2e8f0; position: relative;">
-                    <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
-                        <div><?php echo esc_html( get_the_date() ); ?></div>
-                        <div style="font-weight: 500; opacity: 0.95;"><?php echo (int) $vance_read_time; ?> min read</div>
-                        <div style="font-weight: 500; opacity: 0.95;"><?php echo esc_html( number_format( $vance_view_count ) ); ?> views</div>
-                    </div>
+                    <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                 </div>
                 <div class="card-content">
                     <header class="entry-header">
                         <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
                     </header>
                     <div class="entry-content"><?php the_excerpt(); ?></div>
+                    <?php echo vance_card_meta_footer_html( get_the_ID() ); ?>
                 </div>
             </article>
         <?php endif;
@@ -128,7 +126,18 @@ if ( $vance_cat instanceof WP_Term ) {
         </div>
     </section>
 
-    <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
+    <?php
+    // Gastro Living passes inner_nav_subcats => true so the inner nav shows ONLY
+    // this category's sub-categories. Other categories using this template
+    // (e.g. Clinical Reviews) fall through to the standard global inner nav.
+    if ( isset( $args['inner_nav_subcats'] ) && $args['inner_nav_subcats'] ) {
+        $vance_nav_parent    = get_queried_object();
+        $vance_nav_parent_id = ( $vance_nav_parent instanceof WP_Term ) ? (int) $vance_nav_parent->term_id : 0;
+        get_template_part( 'template-parts/inner-category-nav', null, array( 'subcategories_of' => $vance_nav_parent_id ) );
+    } else {
+        get_template_part( 'template-parts/inner-category-nav' );
+    }
+    ?>
 
     <div class="container" style="padding: 60px 20px;">
         <?php if ( have_posts() ) : ?>

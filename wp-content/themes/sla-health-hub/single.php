@@ -131,7 +131,7 @@ while ( have_posts() ) :
     <section class="va-article-header">
         <div class="container">
             <div class="va-article-meta">
-                <span class="va-cat"><?php echo esc_html( $type_label ); ?></span>
+                <span class="va-cat" style="background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>;"><?php echo esc_html( $type_label ); ?></span>
                 <span class="va-date"><?php echo esc_html( get_the_date( 'F j, Y' ) ); ?></span>
                 <span class="va-sep" aria-hidden="true">·</span>
                 <span class="va-read"><?php echo esc_html( $read_time ); ?> min read</span>
@@ -368,7 +368,7 @@ while ( have_posts() ) :
                                         <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Sub-categories</div>
                                         <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
                                             <?php foreach ( $va_sub_categories as $va_sc ) : ?>
-                                                <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="display: inline-block; padding: 4px 10px; background: var(--primary-color, #008080); color: #fff; border-radius: 4px; font-size: 12px; font-weight: 600; text-decoration: none; line-height: 1.4; transition: filter 0.15s ease;">
+                                                <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>; color: #fff; border-radius: 4px; font-size: 12px; font-weight: 600; text-decoration: none; line-height: 1.4; transition: filter 0.15s ease;">
                                                     <?php echo esc_html( $va_sc->name ); ?>
                                                 </a>
                                             <?php endforeach; ?>
@@ -608,11 +608,13 @@ while ( have_posts() ) :
                         $thumb = get_the_post_thumbnail_url(get_the_ID(), 'medium');
                 ?>
                     <a href="<?php the_permalink(); ?>" style="text-decoration: none; display: flex; flex-direction: column; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; border: 1px solid #e2e8f0;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="height: 200px; background-color: #cbd5e1; background-image: url('<?php echo $thumb; ?>'); background-size: cover; background-position: center;"></div>
+                        <div style="position: relative; height: 200px; background-color: #cbd5e1; background-image: url('<?php echo $thumb; ?>'); background-size: cover; background-position: center;">
+                            <?php echo vance_card_eyebrow_html( get_the_ID() ); ?>
+                        </div>
                         <div style="padding: 24px; flex: 1; display: flex; flex-direction: column;">
-                            <span style="font-size: 12px; font-weight: 600; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;"><?php echo get_the_date(); ?></span>
                             <h4 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 12px; line-height: 1.4;"><?php the_title(); ?></h4>
-                            <span style="margin-top: auto; font-size: 14px; font-weight: 600; color: var(--secondary-color);">Read Article →</span>
+                            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo wp_trim_words( get_the_excerpt(), 18 ); ?></p>
+                            <?php echo vance_card_meta_footer_html( get_the_ID() ); ?>
                         </div>
                     </a>
                 <?php 

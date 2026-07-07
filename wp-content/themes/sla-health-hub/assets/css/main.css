@@ -666,6 +666,62 @@ h6 {
     overflow: hidden;
 }
 
+/* ============================================================
+   Article card: category eyebrow + bottom meta footer
+   Shared across every card variant (homepage grids, category /
+   archive pages, sub-category archives, single "Read Next").
+   ============================================================ */
+
+/* Category eyebrow — pinned to the top-left corner of the thumbnail.
+   Background colour is set inline per-post to match that post's hero
+   overlay colour (vance_card_eyebrow_html()). */
+.card-eyebrow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    display: inline-block;
+    max-width: calc(100% - 24px);
+    padding: 6px 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Make news-cards flex columns so the meta footer pins to the bottom and
+   footers line up across a row regardless of title/excerpt length. */
+.news-card { display: flex; flex-direction: column; }
+.news-card .card-content { display: flex; flex-direction: column; flex: 1 1 auto; }
+
+/* Date · read-time · views, divided by hairline rules, at the card bottom. */
+.card-meta-footer {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+.card-meta-footer .card-meta-item {
+    padding: 0 10px;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+.card-meta-footer .card-meta-item:first-child { padding-left: 0; }
+.card-meta-footer .card-meta-item:last-child { padding-right: 0; }
+.card-meta-footer .card-meta-item + .card-meta-item { border-left: 1px solid #e2e8f0; }
+
 .card-meta {
     font-size: 12px;
     color: #9CA3AF;

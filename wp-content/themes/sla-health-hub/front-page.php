@@ -59,6 +59,73 @@ body {
     gap: 24px;
 }
 
+/* "--grow" variant: used by the Pathway / Featured-Tools "Latest Content"
+   blocks so the side column can hold the featured + up to 4 more articles.
+   The fixed 2-row height is relaxed to auto so the grid grows to fit the
+   side list, and the featured cell stretches to match. The Knowledge Base
+   category rows keep the plain .bento-grid-news (fixed 2-row featured + 2). */
+.bento-grid-news.bento-grid-news--grow {
+    grid-template-rows: auto;
+    align-items: stretch;
+}
+.bento-grid-news.bento-grid-news--grow .bento-cell-featured {
+    min-height: 340px;
+}
+
+/* Latest Content side list — the "+4" articles collected into ONE box,
+   each row showing just category + title (no excerpt). Rows flex to divide
+   the box height evenly so it lines up with the featured cell. */
+.latest-list-box {
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    overflow: hidden;
+}
+.latest-list-item {
+    /* grow to fill the box (so rows line up with the featured cell) but never
+       shrink below the content height — basis:auto keeps room for a 2-line
+       title so it can't be clipped by the row edge. */
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 22px;
+    text-decoration: none;
+    border-bottom: 1px solid #e2e8f0;
+    transition: background 0.2s ease;
+}
+.latest-list-item:last-child { border-bottom: none; }
+.latest-list-item:hover { background: #f8fafc; }
+.latest-list-cat {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary-color); /* fallback; per-post hero-overlay colour set inline */
+    line-height: 1.2;
+}
+.latest-list-title {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #0f172a;
+    transition: color 0.2s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.latest-list-item:hover .latest-list-title { color: var(--primary-color); }
+@media (max-width: 992px) {
+    /* On mobile the box sits below the featured cell full-width. */
+    .latest-list-box { grid-row: auto; }
+}
+
 .bento-cell-featured {
     grid-row: 1 / -1; /* Spans both rows */
     position: relative;
@@ -438,7 +505,7 @@ body {
                 
                 // Fetch latest posts using Customizer settings
                 $latest_title = vance_get_theme_mod('vance_pathway_latest_title', 'LATEST CONTENT');
-                $latest_count = vance_get_theme_mod('vance_pathway_latest_count', 3);
+                $latest_count = vance_get_theme_mod('vance_pathway_latest_count', 5);
                 $latest_cat   = (int) vance_get_theme_mod('vance_pathway_latest_category', 0);
                 $show_date    = vance_get_theme_mod('vance_pathway_latest_show_date', true);
 
@@ -598,7 +665,7 @@ body {
                     </div>
 
                     <?php if (!empty($latest_posts) && count($latest_posts) >= 3) : ?>
-                    <div class="bento-grid-news">
+                    <div class="bento-grid-news bento-grid-news--grow">
                         <?php $p = $latest_posts[0]; ?>
                         <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured">
                             <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
@@ -610,17 +677,13 @@ body {
                                 <?php endif; ?>
                             </div>
                         </a>
-                        <div style="display: flex; flex-direction: column; gap: 24px; grid-row: 1 / -1;">
-                            <?php for ($i = 1; $i <= 2; $i++) : $p = $latest_posts[$i]; ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
-                                <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
-                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
-                                <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
-                                <?php if ($show_date) : ?>
-                                <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
-                                <?php endif; ?>
+                        <div class="latest-list-box">
+                            <?php foreach (array_slice($latest_posts, 1) as $p) : ?>
+                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item">
+                                <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
+                                <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
                             </a>
-                            <?php endfor; ?>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     <?php elseif (!empty($latest_posts)) : ?>
@@ -661,7 +724,7 @@ body {
                 $pwc_label          = vance_get_theme_mod('vance_pwc_label', 'Featured Tools');
                 $pwc_section_bg     = vance_get_theme_mod('vance_pwc_section_bg', '#ffffff');
                 $pwc_latest_title   = vance_get_theme_mod('vance_pwc_latest_title', 'LATEST CONTENT');
-                $pwc_latest_count   = vance_get_theme_mod('vance_pwc_latest_count', 3);
+                $pwc_latest_count   = vance_get_theme_mod('vance_pwc_latest_count', 5);
                 $pwc_latest_cat     = (int) vance_get_theme_mod('vance_pwc_latest_category', 0);
                 $pwc_show_date      = vance_get_theme_mod('vance_pwc_latest_show_date', true);
 
@@ -977,7 +1040,7 @@ body {
                     </div>
 
                     <?php if (!empty($pwc_latest_posts) && count($pwc_latest_posts) >= 3) : ?>
-                    <div class="bento-grid-news">
+                    <div class="bento-grid-news bento-grid-news--grow">
                         <?php $p = $pwc_latest_posts[0]; ?>
                         <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured">
                             <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
@@ -989,17 +1052,13 @@ body {
                                 <?php endif; ?>
                             </div>
                         </a>
-                        <div style="display: flex; flex-direction: column; gap: 24px; grid-row: 1 / -1;">
-                            <?php for ($i = 1; $i <= 2; $i++) : $p = $pwc_latest_posts[$i]; ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
-                                <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
-                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
-                                <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
-                                <?php if ($pwc_show_date) : ?>
-                                <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
-                                <?php endif; ?>
+                        <div class="latest-list-box">
+                            <?php foreach (array_slice($pwc_latest_posts, 1) as $p) : ?>
+                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item">
+                                <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
+                                <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
                             </a>
-                            <?php endfor; ?>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     <?php elseif (!empty($pwc_latest_posts)) : ?>
@@ -1844,14 +1903,18 @@ body {
             ));
             
             if (empty($posts_array)) continue;
-            // Accent colour now driven by per-category Customizer setting
-            // (Appearance -> Customize -> Vance Theme -> Homepage ->
-            // Knowledge Base Section -> "<Cat>" Accent Colour). Deterministic
-            // fallback cycles a 5-colour palette by term_id so categories
-            // without an explicit pick still get a stable colour across loads.
+            // Accent colour is sourced from the single per-category "source of
+            // truth" colour — the Post Hero Overlay colour (this category's
+            // custom colour when set, otherwise the global overlay colour), via
+            // vance_category_source_color(). This keeps the colour bar, featured
+            // tag and category meta in sync with the category's article hero
+            // instead of a separate per-widget setting. Falls back to a stable
+            // per-term palette colour if the helper isn't available.
             $vance_kb_accent_palette = array('#F59E0B', '#0EA5E9', '#008080', '#10B981', '#8B5CF6');
             $kb_accent_default       = $vance_kb_accent_palette[ ((int) $cat->term_id) % count($vance_kb_accent_palette) ];
-            $color       = vance_get_theme_mod("vance_kb_accent_{$cat->term_id}", $kb_accent_default);
+            $color       = function_exists('vance_category_source_color')
+                ? vance_category_source_color($cat->term_id)
+                : vance_get_theme_mod("vance_kb_accent_{$cat->term_id}", $kb_accent_default);
             // Per-category title colour (new) + the previously-orphaned
             // description text the admin set but which wasn't being rendered.
             $title_color = vance_get_theme_mod("vance_kb_title_color_{$cat->term_id}", '#0f172a');
@@ -1903,11 +1966,7 @@ body {
                             <?php if (has_post_thumbnail($p->ID)): ?>
                                 <div style="position: relative; overflow: hidden; height: 180px; background: #f1f5f9;">
                                     <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
-                                    <div style="position: absolute; top: 10px; left: 12px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.3; font-weight: 600; display: flex; flex-direction: column; gap: 6px;">
-                                        <div><?php echo get_the_date('', $p->ID); ?></div>
-                                        <div style="font-weight: 500; opacity: 0.95;"><?php echo (int) $read_time; ?> min read</div>
-                                        <div style="font-weight: 500; opacity: 0.95;"><?php echo number_format($view_count); ?> views</div>
-                                    </div>
+                                    <?php echo vance_card_eyebrow_html($p->ID); ?>
                                 </div>
                             <?php endif; ?>
                             <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
@@ -1917,6 +1976,7 @@ body {
                                 <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <?php echo wp_trim_words(get_the_excerpt($p->ID), 15); ?>
                                 </p>
+                                <?php echo vance_card_meta_footer_html($p->ID); ?>
                             </div>
                         </article>
                         <?php endforeach; ?>

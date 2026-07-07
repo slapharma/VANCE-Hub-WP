@@ -1808,17 +1808,18 @@ function vance_post_overlay_main_category_id( $post_id = null ) {
 }
 
 /**
- * Resolve the effective overlay settings for a post.
+ * Resolve overlay settings for a (top-level) category id.
  *
- * If the post's main (top-level) category has "Use custom overlay" enabled, its
- * per-category settings win; otherwise the global Post Hero Overlay settings are
- * used. Returns a normalised array consumed by vance_post_hero_overlay_gradient().
+ * The category's own per-category settings win when its "Use custom overlay"
+ * toggle is on; otherwise the global Post Hero Overlay settings are returned.
+ * Pass 0 for the global settings. This is the single place the custom/global
+ * fallback lives — the post- and category-keyed resolvers both defer to it.
  *
- * @param int|null $post_id Post ID (defaults to the current post).
+ * @param int $cat_id Top-level category term id (0 = global).
  * @return array{enable:bool,color:string,opacity:float,spread:float}
  */
-function vance_resolve_post_overlay_settings( $post_id = null ) {
-    $cat_id     = vance_post_overlay_main_category_id( $post_id );
+function vance_overlay_settings_for_category( $cat_id ) {
+    $cat_id     = (int) $cat_id;
     $use_custom = $cat_id && vance_get_theme_mod( "vance_post_overlay_{$cat_id}_custom", false );
     $p          = $use_custom ? "vance_post_overlay_{$cat_id}_" : 'vance_post_overlay_';
 
@@ -1828,6 +1829,44 @@ function vance_resolve_post_overlay_settings( $post_id = null ) {
         'opacity' => vance_get_theme_mod( $p . 'opacity', 1 ),
         'spread'  => vance_get_theme_mod( $p . 'spread', 100 ),
     );
+}
+
+/**
+ * Resolve the effective overlay settings for a post (via its main category).
+ *
+ * @param int|null $post_id Post ID (defaults to the current post).
+ * @return array{enable:bool,color:string,opacity:float,spread:float}
+ */
+function vance_resolve_post_overlay_settings( $post_id = null ) {
+    return vance_overlay_settings_for_category( vance_post_overlay_main_category_id( $post_id ) );
+}
+
+/**
+ * The per-category "source of truth" accent colour, keyed by category.
+ *
+ * Walks the given category up to its top-level ancestor (per-category overlay
+ * settings live on top-level categories) and returns that category's overlay
+ * colour — custom when it defines one, else the global overlay colour. This is
+ * the category-keyed companion to vance_post_eyebrow_color() (post-keyed) so
+ * category-level UI (homepage KB blocks, colour bars) can share the one
+ * canonical colour instead of a separate per-widget setting.
+ *
+ * @param int $cat_id Category term id.
+ * @return string Hex colour (never empty; falls back to #434343).
+ */
+function vance_category_source_color( $cat_id ) {
+    $cat_id = (int) $cat_id;
+    $guard  = 0;
+    while ( $cat_id ) {
+        $term = get_term( $cat_id, 'category' );
+        if ( ! $term || is_wp_error( $term ) || empty( $term->parent ) || $guard >= 10 ) {
+            break;
+        }
+        $cat_id = (int) $term->parent;
+        $guard++;
+    }
+    $settings = vance_overlay_settings_for_category( $cat_id );
+    return ! empty( $settings['color'] ) ? $settings['color'] : '#434343';
 }
 
 /**
@@ -1890,6 +1929,110 @@ function vance_post_hero_overlay_gradient( $settings = null ) {
         'linear-gradient(to right, rgba(%1$d,%2$d,%3$d,%4$s) 0%%, rgba(%1$d,%2$d,%3$d,%4$s) %5$s%%, rgba(%1$d,%2$d,%3$d,0) %6$s%%)',
         $r, $g, $b, $fmt( $opacity ), $fmt( $solid ), $fmt( $spread )
     );
+}
+
+/**
+ * Resolve a post's category-eyebrow colour.
+ *
+ * Mirrors the post's hero overlay colour (per top-level category when that
+ * category defines a custom overlay, otherwise the global Post Hero Overlay
+ * colour) so eyebrows and category labels always match the article hero.
+ *
+ * @param int|null $post_id Post ID (defaults to the current post).
+ * @return string Hex colour (never empty; falls back to the primary teal).
+ */
+function vance_post_eyebrow_color( $post_id = null ) {
+    if ( null === $post_id ) {
+        $post_id = get_the_ID();
+    }
+    $settings = vance_resolve_post_overlay_settings( $post_id );
+
+    return ! empty( $settings['color'] ) ? $settings['color'] : '#008080';
+}
+
+/**
+ * Article-card category eyebrow chip.
+ *
+ * A small uppercase label pinned to the top-left corner of a card thumbnail.
+ * Its background colour mirrors the post's hero overlay colour (see
+ * vance_post_eyebrow_color()). By default the label is the post's MAIN
+ * (top-level) category; pass $prefer_sub = true (used on category / archive
+ * pages) to show the post's SUB-category instead, falling back to the main
+ * category when the post has no child term. Uppercasing is done in CSS
+ * (.card-eyebrow) to stay multibyte-safe.
+ *
+ * @param int|null $post_id    Post ID (defaults to the current post).
+ * @param bool     $prefer_sub Show the sub-category label instead of the main one.
+ * @return string Eyebrow chip HTML, or '' when the post has no category.
+ */
+function vance_card_eyebrow_html( $post_id = null, $prefer_sub = false ) {
+    if ( null === $post_id ) {
+        $post_id = get_the_ID();
+    }
+    $main_id = vance_post_overlay_main_category_id( $post_id );
+    if ( ! $main_id ) {
+        return '';
+    }
+
+    // Default label: the main (top-level) category.
+    $label     = '';
+    $main_term = get_term( $main_id, 'category' );
+    if ( $main_term && ! is_wp_error( $main_term ) ) {
+        $label = $main_term->name;
+    }
+
+    // On category / archive pages, prefer the deeper sub-category (first child term).
+    if ( $prefer_sub ) {
+        foreach ( get_the_category( $post_id ) as $c ) {
+            if ( ! empty( $c->parent ) ) {
+                $label = $c->name;
+                break;
+            }
+        }
+    }
+
+    if ( '' === $label ) {
+        return '';
+    }
+
+    return sprintf(
+        '<span class="card-eyebrow" style="background:%1$s;">%2$s</span>',
+        esc_attr( vance_post_eyebrow_color( $post_id ) ),
+        esc_html( $label )
+    );
+}
+
+/**
+ * Article-card meta footer (date · read-time · views).
+ *
+ * Rendered at the BOTTOM of an article card — previously these were overlaid on
+ * the thumbnail. Segments are divided by CSS borders; see .card-meta-footer in
+ * main.css. Read-time is omitted when unavailable; views can be suppressed for
+ * contexts where the count isn't meaningful.
+ *
+ * @param int|null $post_id    Post ID (defaults to the current post).
+ * @param bool     $show_views Whether to include the view-count segment.
+ * @return string Footer HTML.
+ */
+function vance_card_meta_footer_html( $post_id = null, $show_views = true ) {
+    if ( null === $post_id ) {
+        $post_id = get_the_ID();
+    }
+    $date  = get_the_date( '', $post_id );
+    $read  = function_exists( 'vance_get_read_time' ) ? (int) vance_get_read_time( $post_id ) : 0;
+    $views = function_exists( 'vance_get_view_count' ) ? (int) vance_get_view_count( $post_id ) : 0;
+
+    $out  = '<div class="card-meta-footer">';
+    $out .= '<span class="card-meta-item">' . esc_html( $date ) . '</span>';
+    if ( $read > 0 ) {
+        $out .= '<span class="card-meta-item">' . esc_html( $read ) . ' min read</span>';
+    }
+    if ( $show_views ) {
+        $out .= '<span class="card-meta-item">' . esc_html( number_format( $views ) ) . ' views</span>';
+    }
+    $out .= '</div>';
+
+    return $out;
 }
 
 /**
@@ -2922,8 +3065,8 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_pwc_latest_title', array( 'default' => 'LATEST CONTENT', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_pwc_latest_title', array( 'label' => 'Right Column — Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
-    $wp_customize->add_setting( 'vance_pwc_latest_count', array( 'default' => 3, 'sanitize_callback' => 'absint' ) );
-    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column — Number of Posts', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ) ) );
+    $wp_customize->add_setting( 'vance_pwc_latest_count', array( 'default' => 5, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column — Number of Posts', 'description' => 'Bento layout shows 1 featured + the rest as side cards (5 = featured + 4).', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ) ) );
 
     $wp_customize->add_setting( 'vance_pwc_latest_category', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
     $cats = get_categories( array( 'hide_empty' => false ) );
@@ -2952,12 +3095,12 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     $wp_customize->add_setting( 'vance_pathway_latest_count', array(
-        'default'           => 3,
+        'default'           => 5,
         'sanitize_callback' => 'absint',
     ) );
     $wp_customize->add_control( 'vance_pathway_latest_count', array(
         'label'   => __( 'Number of Posts', 'sla-health-hub' ),
-        'description' => __( 'The bento layout style works best with 3 items.', 'sla-health-hub' ),
+        'description' => __( 'Bento layout shows 1 featured + the rest as side cards (5 = featured + 4).', 'sla-health-hub' ),
         'section' => 'vance_pathway_latest_settings',
         'type'    => 'number',
         'input_attrs' => array( 'min' => 1, 'max' => 10 ),

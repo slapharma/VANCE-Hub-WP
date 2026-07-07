@@ -342,11 +342,11 @@ function vance_cw_render_bento( $posts, $opts ) {
 				<?php if ( $render_image ) :
 					$thumb = get_the_post_thumbnail_url( $featured->ID, 'large' );
 					if ( $thumb ) : ?>
-						<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title( $featured->ID ) ); ?>">
+						<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title( $featured->ID ) ); ?>"><?php echo vance_card_eyebrow_html( $featured->ID ); ?>
 					<?php endif;
 				endif; ?>
 				<div class="overlay">
-					<?php vance_cw_render_meta_strip( $featured, $show_date, $show_author, '#ffffff' ); ?>
+					<?php vance_cw_render_meta_strip( $featured, $show_date, $show_author, '#ffffff', ! $render_image ); ?>
 					<h3 style="font-size: 28px; color: white; margin: 8px 0 0 0; line-height: 1.2;"><?php echo esc_html( vance_cw_truncate_chars( get_the_title( $featured->ID ), $trunc_t ) ); ?></h3>
 					<?php vance_cw_read_more( $featured->ID, $opts, true ); ?>
 				</div>
@@ -423,6 +423,7 @@ function vance_cw_render_grid( $posts, $opts ) {
 		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card:hover h4 { color: <?php echo esc_attr( $title_hover ); ?> !important; }
 		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card:hover .vance-cw-rm-<?php echo (int) $n; ?>-btn > span { color: <?php echo esc_attr( $rm_hover_t ); ?>; background: <?php echo esc_attr( $rm_hover_b ); ?>; border-color: <?php echo esc_attr( $rm_hover_b ); ?>; }
 		#vance-cw-<?php echo (int) $n; ?> .vance-cw-card-image {
+			position: relative;
 			width: 100%;
 			aspect-ratio: 16/9;
 			background-size: cover;
@@ -450,10 +451,10 @@ function vance_cw_render_grid( $posts, $opts ) {
 			?>
 			<a href="<?php echo esc_url( get_permalink( $p->ID ) ); ?>" class="vance-cw-card">
 				<?php if ( $render_image ) : ?>
-					<div class="vance-cw-card-image" style="<?php echo $thumb ? "background-image: url('" . esc_url( $thumb ) . "');" : ''; ?>"></div>
+					<div class="vance-cw-card-image" style="<?php echo $thumb ? "background-image: url('" . esc_url( $thumb ) . "');" : ''; ?>"><?php echo vance_card_eyebrow_html( $p->ID ); ?></div>
 				<?php endif; ?>
 				<div class="vance-cw-card-body">
-					<?php vance_cw_render_meta_strip( $p, $show_date, $show_author, $meta_col ); ?>
+					<?php vance_cw_render_meta_strip( $p, $show_date, $show_author, $meta_col, ! $render_image ); ?>
 					<h4 style="font-size: 17px; color: <?php echo esc_attr( $title_color ); ?>; margin: 6px 0 8px 0; line-height: 1.3; transition: color 0.15s ease;"><?php echo esc_html( vance_cw_truncate_chars( get_the_title( $p->ID ), $trunc_t ) ); ?></h4>
 					<?php if ( $render_excerpt ) :
 						$excerpt = wp_trim_words( get_the_excerpt( $p->ID ), 18 );
@@ -473,16 +474,17 @@ function vance_cw_render_grid( $posts, $opts ) {
  * Tiny shared helper for the date/author/category meta strip above the title.
  * Skipped entirely when both date + author are off.
  */
-function vance_cw_render_meta_strip( $post, $show_date, $show_author, $forced_color ) {
+function vance_cw_render_meta_strip( $post, $show_date, $show_author, $forced_color, $show_cat = true ) {
 	if ( ! $show_date && ! $show_author ) { return; }
 	$bits  = array();
 	$style = $forced_color
 		? 'color: ' . esc_attr( $forced_color ) . '; opacity: 0.85;'
 		: 'color: var(--primary-color);';
 
+	// Category is omitted on image cards — the thumbnail eyebrow already shows it.
 	$cats = get_the_category( $post->ID );
 	$cat  = ( ! empty( $cats ) ) ? $cats[0]->name : '';
-	if ( $cat ) { $bits[] = esc_html( $cat ); }
+	if ( $show_cat && $cat ) { $bits[] = esc_html( $cat ); }
 	if ( $show_author ) { $bits[] = esc_html( get_the_author_meta( 'display_name', $post->post_author ) ); }
 	if ( $show_date )   { $bits[] = esc_html( get_the_date( '', $post->ID ) ); }
 

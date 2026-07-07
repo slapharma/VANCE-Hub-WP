@@ -10,5 +10,7 @@
  */
 
 get_header();
-get_template_part( 'template-parts/subcategory-grouped-archive' );
+// inner_nav_subcats => true makes the inner category nav on this page list ONLY
+// Gastro Living's sub-categories (see template-parts/inner-category-nav.php).
+get_template_part( 'template-parts/subcategory-grouped-archive', null, array( 'inner_nav_subcats' => true ) );
 get_footer();
