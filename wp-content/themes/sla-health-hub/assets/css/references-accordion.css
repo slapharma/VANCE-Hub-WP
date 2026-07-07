@@ -1,0 +1,137 @@
+/* =============================================================
+   Vance Medical Hub — References accordion
+   Progressive-enhancement disclosure for the "References & further
+   reading" block. Shared by single articles (.oped-article-body) and
+   GI Health condition pages (.gi-references).
+
+   The server renders references fully visible; references-accordion.js
+   upgrades the block to a collapsible panel on load, so the markup stays
+   crawlable and works with JS disabled.
+
+   Colour tokens fall back to the site teal whether or not the GI Health
+   custom properties are present on the page.
+   ============================================================= */
+
+.vref {
+    --vref-accent:        var(--gi-primary, var(--primary-color, #008080));
+    --vref-accent-strong: var(--gi-primary-hover, #006666);
+    --vref-wash:          #eef6f6;
+    --vref-wash-2:        #def4f4;
+    --vref-ink:           #1f2937;
+    --vref-muted:         #6b7280;
+    --vref-line:          #e6e9ec;
+
+    margin: 40px 0;
+    border: 1px solid var(--vref-line);
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+}
+
+/* GI condition pages already give .gi-references a top divider + padding;
+   the card border replaces it, so neutralise the old treatment. */
+.gi-references.vref { padding-top: 0; margin-top: 48px; border-top: 1px solid var(--vref-line); }
+
+/* ---------- Trigger ---------- */
+.vref__toggle {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 16px 18px;
+    min-height: 44px;
+    background: #fff;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--vref-ink);
+    transition: background 0.2s ease;
+}
+.vref__toggle:hover { background: var(--vref-wash); }
+.vref__toggle:focus-visible { outline: 3px solid var(--vref-accent); outline-offset: -3px; }
+
+.vref__ic {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: var(--vref-wash-2);
+    color: var(--vref-accent);
+}
+.vref__ic svg { width: 19px; height: 19px; display: block; }
+
+.vref__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 1.3;
+    color: var(--vref-ink);
+}
+
+.vref__count {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--vref-accent-strong);
+    background: var(--vref-wash-2);
+    border-radius: 999px;
+    padding: 4px 9px;
+}
+
+.vref__chev {
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: var(--vref-accent);
+    transition: transform 0.24s ease;
+}
+.vref__chev svg { width: 22px; height: 22px; display: block; }
+.vref__toggle[aria-expanded="true"] .vref__chev { transform: rotate(180deg); }
+
+/* ---------- Collapsible panel ---------- */
+.vref__panel {
+    overflow: hidden;
+    height: 0;
+    transition: height 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.vref__panel[hidden] { display: none; }
+
+.vref__inner {
+    padding: 6px 18px 18px;
+    border-top: 1px solid var(--vref-line);
+}
+.vref .vref__inner > :first-child { margin-top: 14px; }
+.vref .vref__inner ol,
+.vref .vref__inner ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--vref-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+.vref .vref__inner li { margin-bottom: 8px; }
+.vref .vref__inner li:last-child { margin-bottom: 0; }
+.vref .vref__inner p { font-size: 14px; line-height: 1.6; color: var(--vref-muted); }
+.vref .vref__inner a { color: var(--vref-accent-strong); }
+.vref .vref__inner .gi-disclaimer,
+.vref .vref__inner .vref__disclaimer {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--vref-muted);
+    margin-top: 14px;
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .vref__panel { transition: none; }
+    .vref__chev { transition: none; }
+}
