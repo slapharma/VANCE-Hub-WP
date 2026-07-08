@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'wp-content/themes/sla-health-hub/**'
+      - 'wp-content/plugins/vhh-annotations/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -27,6 +28,8 @@ env:
   # for the incident this fix addresses.
   REMOTE_THEME: domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub
   LOCAL_THEME: wp-content/themes/sla-health-hub
+  REMOTE_PLUGIN: domains/vancehealthhub.co.uk/public_html/wp-content/plugins/vhh-annotations
+  LOCAL_PLUGIN: wp-content/plugins/vhh-annotations
 
 jobs:
   deploy:
@@ -84,6 +87,28 @@ jobs:
              tar xzf - && \
              echo 'DEPLOY_OK'"
 
+      # The plugin dir may not exist yet on first deploy, so this step creates
+      # it (mkdir -p) instead of reusing the theme step's test -d guard. The
+      # backup rotation mirrors the theme step with its own file prefix.
+      # hashFiles guard: skip (don't fail) on refs that predate the plugin —
+      # e.g. a workflow_dispatch rollback of an older commit.
+      - name: Deploy vhh-annotations plugin (backup-then-extract)
+        if: ${{ hashFiles('wp-content/plugins/vhh-annotations/vhh-annotations.php') != '' }}
+        working-directory: ${{ env.LOCAL_PLUGIN }}
+        run: |
+          set -euo pipefail
+          TSTAMP=$(date +%Y-%m-%d-%H%M)
+          tar czf - . | \
+          ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "set -e; \
+             PLUGIN=~/$REMOTE_PLUGIN; \
+             mkdir -p \"\$PLUGIN\"; \
+             cd \"\$PLUGIN/..\" && ls -1t vhh-annotations-pre-deploy-*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -f; \
+             cd \"\$PLUGIN\" && \
+             if [ -f vhh-annotations.php ]; then tar czf \"\$PLUGIN/../vhh-annotations-pre-deploy-${TSTAMP}.tar.gz\" .; fi && \
+             tar xzf - && \
+             echo 'PLUGIN_DEPLOY_OK'"
+
       - name: Post-deploy reminder
         if: success()
         run: |
@@ -98,3 +123,4 @@ jobs:
           echo "- Purge LiteSpeed plugin cache (if installed)" >> "$GITHUB_STEP_SUMMARY"
           echo "- If CSS changed, bump the \`wp_enqueue_style\` version in \`functions.php\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Run the smoke tests listed in CLAUDE.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "- First plugin deploy only: activate over SSH with \`wp plugin activate vhh-annotations\` (run from the site's public_html)" >> "$GITHUB_STEP_SUMMARY"

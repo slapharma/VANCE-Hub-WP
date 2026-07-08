@@ -61,6 +61,21 @@ Only `\bSLA\b` (word-boundary) is safe as a bare pattern.
 
 See [REBRAND-HANDOVER.md §6.1](REBRAND-HANDOVER.md) for full steps.
 
+### Security: exposed SSH deploy key — rotate ASAP
+On 2026-06-24 a misdirected manual deploy (run from the repo root) left the whole
+repo root sitting in the live, web-served theme dir, exposing a **private SSH key**
+(`.deploy_key`) plus the handover docs and compliance `.docx` files publicly over
+HTTPS. The stray files were removed from the server and the deploy command was
+hardened with a directory guard (see Deploy workflow), but the key must be treated
+as compromised:
+1. Generate a new keypair locally.
+2. On the Hostinger server, replace the old public key in `~/.ssh/authorized_keys`; remove the leaked one.
+3. Update the `HOSTINGER_SSH_KEY` GitHub Actions secret with the new private key.
+4. Update local `~/.ssh/hostinger_sla`.
+5. Confirm both the manual deploy and the GitHub Actions deploy still authenticate.
+
+`.deploy_key` is gitignored, so it was never in the GitHub repo — the website was the only leak vector.
+
 ### DB cleanup (requires wp-cli on server)
 - `siteurl` and `home` are `http://` — should be `https://` (§6.2)
 - Body text, post meta, customizer serialised values still contain `slahealth.co.uk` / `vancemedical.co.uk` — run targeted `wp search-replace` per (§6.3)
@@ -76,14 +91,23 @@ Create a WP Page titled `Turn Evidence into Action`, slug `turn-evidence-into-ac
 
 ## Deploy workflow
 
-From `wp-content/themes/sla-health-hub/`:
+Run this **only** from `wp-content/themes/sla-health-hub/`. The leading guard
+aborts if you're not there — a wrong working directory makes `tar . ` package the
+whole repo root *into* the live theme dir, which on 2026-06-24 publicly leaked
+`.deploy_key`, the handover docs, and the compliance `.docx` files. (CI in
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml) pins `working-directory`
+and is safe; this guard protects the manual path.)
 
 ```bash
+# Abort unless the current dir really is the theme dir.
+if [ ! -f style.css ] || ! grep -q 'Theme Name' style.css || [ ! -f functions.php ]; then
+  echo 'ABORT: run this from wp-content/themes/sla-health-hub/'; exit 1
+fi
 TSTAMP=$(date +%Y-%m-%d-%H%M) && \
 tar czf - \
   --exclude='./.git' --exclude='./.claude' \
+  --exclude='./*.bak' --exclude='./*.bak-*' --exclude='./*.bak2' \
   --exclude='./vance_rebrand.py' --exclude='./vance_color_swap.py' --exclude='./vance_ai_rename.py' \
-  --exclude='./functions.php.bak' --exclude='./functions.php.bak2' \
   --exclude='./front-page-original.php' --exclude='./inc/dashboard-functions-backup.txt' \
   --exclude='./screenshot.png' --exclude='./Documents - Shortcut.lnk' \
   --exclude='./check.py' --exclude='./debug_quote.py' \
@@ -100,6 +124,28 @@ ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
 After deploy: purge Hostinger cache (hPanel → Cache Manager → Purge All), LiteSpeed plugin cache if installed, and bump the `wp_enqueue_style` version string in `functions.php` if CSS changed.
 
 Full deploy/rollback commands and the three-layer cache order are in [REBRAND-HANDOVER.md §5](REBRAND-HANDOVER.md).
+
+### Plugin deploy (vhh-annotations)
+
+The annotations companion plugin lives at `wp-content/plugins/vhh-annotations/` and deploys separately. Run this **only** from that directory (same guard pattern as the theme):
+
+```bash
+# Abort unless the current dir really is the plugin dir.
+if [ ! -f vhh-annotations.php ] || ! grep -q 'Plugin Name' vhh-annotations.php; then
+  echo 'ABORT: run this from wp-content/plugins/vhh-annotations/'; exit 1
+fi
+TSTAMP=$(date +%Y-%m-%d-%H%M) && \
+tar czf - --exclude='./.git' --exclude='./.claude' . | \
+ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
+  "set -e; \
+   PLUGIN=~/domains/vancehealthhub.co.uk/public_html/wp-content/plugins/vhh-annotations; \
+   mkdir -p \"\$PLUGIN\" && cd \"\$PLUGIN\" && \
+   if [ -f vhh-annotations.php ]; then tar czf \"\$PLUGIN/../vhh-annotations-pre-deploy-${TSTAMP}.tar.gz\" .; fi && \
+   tar xzf - && \
+   echo 'PLUGIN_DEPLOY_OK'"
+```
+
+First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/public_html && wp plugin activate vhh-annotations`. The feature ships with its master toggle **off** (Appearance → Customize → Article Annotations); activation alone changes nothing user-visible. CI (`.github/workflows/deploy.yml`) also ships the plugin automatically on pushes touching it.
 
 ---
 
@@ -127,8 +173,10 @@ Full deploy/rollback commands and the three-layer cache order are in [REBRAND-HA
 │   ├── IMPLEMENTATION_SUMMARY.md
 │   └── UI_UPDATES_SUMMARY.md
 ├── wp-content/
-│   └── themes/
-│       └── sla-health-hub/   ← the actual WordPress theme
+│   ├── themes/
+│   │   └── sla-health-hub/   ← the actual WordPress theme
+│   └── plugins/
+│       └── vhh-annotations/  ← highlight/comment companion plugin (see Plugin deploy)
 └── LOCAL/                    ← gitignored, one-shot transformer scripts
 ```
 
