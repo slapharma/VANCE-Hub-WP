@@ -65,6 +65,9 @@ body {
    side list, and the featured cell stretches to match. The Knowledge Base
    category rows keep the plain .bento-grid-news (fixed 2-row featured + 2). */
 .bento-grid-news.bento-grid-news--grow {
+    /* Side list widened from the base 2fr/1fr so each row fits a right-hand
+       postage-stamp thumbnail without squeezing 2-line titles. */
+    grid-template-columns: 1.5fr 1fr;
     grid-template-rows: auto;
     align-items: stretch;
 }
@@ -89,16 +92,31 @@ body {
        title so it can't be clipped by the row edge. */
     flex: 1 0 auto;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-    padding: 16px 22px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 22px;
     text-decoration: none;
     border-bottom: 1px solid #e2e8f0;
     transition: background 0.2s ease;
 }
 .latest-list-item:last-child { border-bottom: none; }
 .latest-list-item:hover { background: #f8fafc; }
+.latest-list-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+/* Postage-stamp thumbnail pinned to the right edge of each row. */
+.latest-list-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
 .latest-list-cat {
     font-size: 9px;
     font-weight: 700;
@@ -110,9 +128,9 @@ body {
 .latest-list-title {
     margin: 0;
     font-family: 'Outfit', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.35;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
     color: #0f172a;
     transition: color 0.2s ease;
     display: -webkit-box;
@@ -159,6 +177,27 @@ body {
     padding: 40px;
     background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     width: 100%;
+}
+
+.bento-featured-excerpt {
+    margin: 0 0 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.85);
+    max-width: 560px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* card-meta-footer (main.css) recoloured for the dark featured overlay. */
+.bento-content-overlay .card-meta-footer {
+    border-top-color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.78);
+}
+.bento-content-overlay .card-meta-footer .card-meta-item + .card-meta-item {
+    border-left-color: rgba(255,255,255,0.25);
 }
 
 .tag {
@@ -672,16 +711,24 @@ body {
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background: var(--primary-color);">Featured</span>
                                 <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo get_the_title($p->ID); ?></h3>
-                                <?php if ($show_date) : ?>
-                                <div class="meta" style="color: rgba(255,255,255,0.8);">By <?php echo get_the_author_meta('display_name', $p->post_author); ?> &bull; <?php echo get_the_date('', $p->ID); ?></div>
-                                <?php endif; ?>
+                                <p class="bento-featured-excerpt"><?php echo esc_html(wp_trim_words(get_the_excerpt($p->ID), 24)); ?></p>
+                                <?php echo vance_card_meta_footer_html($p->ID); ?>
                             </div>
                         </a>
                         <div class="latest-list-box">
                             <?php foreach (array_slice($latest_posts, 1) as $p) : ?>
                             <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item">
-                                <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
-                                <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
+                                <div class="latest-list-text">
+                                    <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php
+                                        // Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
+                                        $main_cat = get_term(vance_post_overlay_main_category_id($p->ID), 'category');
+                                        echo ($main_cat && !is_wp_error($main_cat)) ? esc_html($main_cat->name) : 'Latest';
+                                    ?></span>
+                                    <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
+                                </div>
+                                <?php $list_thumb = get_the_post_thumbnail_url($p->ID, 'thumbnail'); if ($list_thumb) : ?>
+                                <img class="latest-list-thumb" src="<?php echo esc_url($list_thumb); ?>" alt="">
+                                <?php endif; ?>
                             </a>
                             <?php endforeach; ?>
                         </div>
@@ -779,14 +826,16 @@ body {
            block needs its own copy. */
         .pathway-content-section .pathway-split-grid {
             display: grid;
-            grid-template-columns: 3fr 7fr;
+            /* Tools column pinned to ~the height of one stacked tool card so the
+               two cards render roughly SQUARE; content takes the rest. */
+            grid-template-columns: 220px minmax(0, 1fr);
             gap: 40px;
             align-items: stretch;
         }
         /* Layout: tools on the RIGHT - swap visual order via grid-column overrides
            so the DOM stays in the same order (a11y + SEO friendly). */
         .pathway-content-section.layout-right .pathway-split-grid {
-            grid-template-columns: 7fr 3fr;
+            grid-template-columns: minmax(0, 1fr) 220px;
         }
         .pathway-content-section.layout-right .pathway-tiles-stack    { grid-column: 2; }
         .pathway-content-section.layout-right .latest-content-column  { grid-column: 1; grid-row: 1; }
@@ -1047,16 +1096,24 @@ body {
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background: var(--primary-color);">Featured</span>
                                 <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo get_the_title($p->ID); ?></h3>
-                                <?php if ($pwc_show_date) : ?>
-                                <div class="meta" style="color: rgba(255,255,255,0.8);">By <?php echo get_the_author_meta('display_name', $p->post_author); ?> &bull; <?php echo get_the_date('', $p->ID); ?></div>
-                                <?php endif; ?>
+                                <p class="bento-featured-excerpt"><?php echo esc_html(wp_trim_words(get_the_excerpt($p->ID), 24)); ?></p>
+                                <?php echo vance_card_meta_footer_html($p->ID); ?>
                             </div>
                         </a>
                         <div class="latest-list-box">
                             <?php foreach (array_slice($pwc_latest_posts, 1) as $p) : ?>
                             <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item">
-                                <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
-                                <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
+                                <div class="latest-list-text">
+                                    <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php
+                                        // Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
+                                        $main_cat = get_term(vance_post_overlay_main_category_id($p->ID), 'category');
+                                        echo ($main_cat && !is_wp_error($main_cat)) ? esc_html($main_cat->name) : 'Latest';
+                                    ?></span>
+                                    <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
+                                </div>
+                                <?php $list_thumb = get_the_post_thumbnail_url($p->ID, 'thumbnail'); if ($list_thumb) : ?>
+                                <img class="latest-list-thumb" src="<?php echo esc_url($list_thumb); ?>" alt="">
+                                <?php endif; ?>
                             </a>
                             <?php endforeach; ?>
                         </div>
