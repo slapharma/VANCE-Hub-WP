@@ -30,6 +30,7 @@ class VHH_Apply {
 		add_action( 'admin_post_vhh_ai_preview', array( __CLASS__, 'handle_preview' ) );
 		add_action( 'admin_post_vhh_ai_apply', array( __CLASS__, 'handle_apply' ) );
 		add_action( 'admin_post_vhh_ai_discard', array( __CLASS__, 'handle_discard' ) );
+		add_action( 'wp_ajax_vhh_ai_generate', array( __CLASS__, 'ajax_generate' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'admin_notice' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin' ) );
 	}
@@ -41,6 +42,36 @@ class VHH_Apply {
 		}
 		wp_enqueue_style( 'vhh-admin', VHH_ANN_URL . 'assets/css/admin.css', array(), VHH_ANN_VERSION . '-' . ( @filemtime( VHH_ANN_DIR . 'assets/css/admin.css' ) ?: '1' ) );
 		wp_enqueue_script( 'vhh-admin', VHH_ANN_URL . 'assets/js/admin-todo.js', array(), VHH_ANN_VERSION . '-' . ( @filemtime( VHH_ANN_DIR . 'assets/js/admin-todo.js' ) ?: '1' ), true );
+		wp_localize_script(
+			'vhh-admin',
+			'VHH_ADMIN',
+			array(
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'nonce'      => wp_create_nonce( 'vhh_ai_generate' ),
+				'generating' => __( 'Generating the edit with AI…', 'vhh-annotations' ),
+				'failed'     => __( 'Generation failed', 'vhh-annotations' ),
+			)
+		);
+	}
+
+	/** AJAX: generate a preview and return the modal review HTML (no reload). */
+	public static function ajax_generate() {
+		if ( ! current_user_can( VHH_Capabilities::CAP_MODERATE ) ) {
+			wp_send_json_error( array( 'message' => __( 'Forbidden', 'vhh-annotations' ) ), 403 );
+		}
+		check_ajax_referer( 'vhh_ai_generate', 'nonce' );
+		$todo_id = isset( $_POST['todo'] ) ? absint( $_POST['todo'] ) : 0;
+
+		$res = self::generate( $todo_id );
+		if ( is_wp_error( $res ) ) {
+			wp_send_json_error( array( 'message' => $res->get_error_message() ) );
+		}
+		wp_send_json_success(
+			array(
+				'html'    => self::review_html( $todo_id ),
+				'warning' => $res['warning'],
+			)
+		);
 	}
 
 	/**
@@ -317,32 +348,51 @@ class VHH_Apply {
 		}
 
 		$proposed = (string) get_post_meta( $post->ID, self::META_PROPOSED, true );
-
-		if ( '' === $proposed ) {
-			echo '<p class="description">' . esc_html__( 'Generate the edit with AI, review the diff, then confirm to apply it live (as a reversible revision).', 'vhh-annotations' ) . '</p>';
-			echo '<p>';
-			echo self::ai_link( $post->ID, 'preview', __( 'Generate AI edit preview', 'vhh-annotations' ), true ); // phpcs:ignore WordPress.Security.EscapeOutput
-			echo self::reject_link( $post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput
-			echo '</p>';
-			echo '<p class="description">' . esc_html( sprintf( __( 'Model: %s', 'vhh-annotations' ), self::model() ) ) . '</p>';
-			return;
-		}
-
-		// A proposal exists — offer a "Review changes" modal.
-		$src_hash = (string) get_post_meta( $post->ID, self::META_SRC_HASH, true );
-		$stale    = ( $target && $src_hash && $src_hash !== md5( $target->post_content ) );
+		$has      = ( '' !== $proposed );
 		$modal_id = 'vhh-diff-modal';
 
-		echo '<p><strong>' . esc_html__( 'AI edit ready.', 'vhh-annotations' ) . '</strong></p>';
-		if ( $stale ) {
-			echo '<p class="notice notice-warning" style="padding:6px 10px;">' . esc_html__( 'The article changed since this preview. Discard and regenerate.', 'vhh-annotations' ) . '</p>';
-		}
+		// One button. With a preview already generated it just opens the modal
+		// ("Review changes"); with none, it AJAX-generates and opens the modal
+		// in one click — no page reload, no separate step.
+		echo '<p class="description">' . esc_html__( 'Generate the edit with AI, review the diff in a popup, then confirm to apply it live (as a reversible revision).', 'vhh-annotations' ) . '</p>';
 		echo '<p>';
-		echo '<button type="button" class="button button-primary" data-vhh-open-modal="' . esc_attr( $modal_id ) . '">' . esc_html__( 'Review changes', 'vhh-annotations' ) . '</button> ';
+		if ( $has ) {
+			echo '<button type="button" class="button button-primary" data-vhh-open-modal="' . esc_attr( $modal_id ) . '">' . esc_html__( 'Review changes', 'vhh-annotations' ) . '</button> ';
+		} else {
+			echo '<button type="button" class="button button-primary" data-vhh-generate="' . esc_attr( $post->ID ) . '" data-vhh-modal="' . esc_attr( $modal_id ) . '">' . esc_html__( 'Generate AI edit preview', 'vhh-annotations' ) . '</button> ';
+		}
 		echo self::reject_link( $post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '</p>';
+		echo '<p class="description">' . esc_html( sprintf( __( 'Model: %s', 'vhh-annotations' ), self::model() ) ) . '</p>';
 
-		// The review modal (rendered HTML of the changed excerpt + raw diff + actions).
+		// Modal shell. Body is pre-filled when a preview exists; otherwise the
+		// AJAX generate response fills #vhh-ai-review and opens it.
+		echo '<div id="' . esc_attr( $modal_id ) . '" class="vhh-modal" hidden>';
+		echo '<div class="vhh-modal-backdrop" data-vhh-close-modal></div>';
+		echo '<div class="vhh-modal-dialog" role="dialog" aria-modal="true" aria-label="' . esc_attr__( 'Review AI edit', 'vhh-annotations' ) . '">';
+		echo '<button type="button" class="vhh-modal-close" data-vhh-close-modal aria-label="' . esc_attr__( 'Close', 'vhh-annotations' ) . '">&times;</button>';
+		echo '<h2>' . esc_html__( 'Review AI edit', 'vhh-annotations' ) . '</h2>';
+		if ( $target ) {
+			echo '<p class="description" style="padding:0 22px;">' . esc_html( get_the_title( $target->ID ) ) . '</p>';
+		}
+		echo '<div id="vhh-ai-review">' . ( $has ? self::review_html( $post->ID ) : '' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		echo '</div></div>';
+	}
+
+	/**
+	 * Inner modal content: rendered changed excerpts + raw diff + action
+	 * buttons. Shared by the meta box (preview already exists) and the AJAX
+	 * generate response. Returns '' if there is no stored proposal.
+	 */
+	public static function review_html( $todo_id ) {
+		$proposed = (string) get_post_meta( $todo_id, self::META_PROPOSED, true );
+		if ( '' === $proposed ) {
+			return '';
+		}
+		$target   = get_post( (int) get_post_meta( $todo_id, '_vhh_target_post', true ) );
+		$src_hash = (string) get_post_meta( $todo_id, self::META_SRC_HASH, true );
+		$stale    = ( $target && $src_hash && $src_hash !== md5( $target->post_content ) );
+
 		require_once ABSPATH . 'wp-admin/includes/revision.php';
 		$raw = $target ? wp_text_diff(
 			$target->post_content,
@@ -350,28 +400,25 @@ class VHH_Apply {
 			array( 'title_left' => __( 'Current HTML', 'vhh-annotations' ), 'title_right' => __( 'Proposed HTML', 'vhh-annotations' ) )
 		) : '';
 
-		echo '<div id="' . esc_attr( $modal_id ) . '" class="vhh-modal" hidden>';
-		echo '<div class="vhh-modal-backdrop" data-vhh-close-modal></div>';
-		echo '<div class="vhh-modal-dialog" role="dialog" aria-modal="true" aria-label="' . esc_attr__( 'Review AI edit', 'vhh-annotations' ) . '">';
-		echo '<button type="button" class="vhh-modal-close" data-vhh-close-modal aria-label="' . esc_attr__( 'Close', 'vhh-annotations' ) . '">&times;</button>';
-		echo '<h2>' . esc_html__( 'Review AI edit', 'vhh-annotations' ) . '</h2>';
-		if ( $target ) {
-			echo '<p class="description">' . esc_html( get_the_title( $target->ID ) ) . '</p>';
+		$out  = '<div class="vhh-modal-body">';
+		if ( $stale ) {
+			$out .= '<p class="notice notice-warning" style="padding:6px 10px;">' . esc_html__( 'The article changed since this preview. Discard and regenerate before applying.', 'vhh-annotations' ) . '</p>';
 		}
-		echo '<div class="vhh-modal-body">';
-		echo self::changed_excerpts_html( $target ? $target->post_content : '', wp_unslash( $proposed ) ); // phpcs:ignore WordPress.Security.EscapeOutput
+		$out .= self::changed_excerpts_html( $target ? $target->post_content : '', wp_unslash( $proposed ) );
 		if ( $raw ) {
-			echo '<details class="vhh-rawdiff"><summary>' . esc_html__( 'Show raw HTML diff', 'vhh-annotations' ) . '</summary>' . $raw . '</details>'; // phpcs:ignore WordPress.Security.EscapeOutput
+			$out .= '<details class="vhh-rawdiff"><summary>' . esc_html__( 'Show raw HTML diff', 'vhh-annotations' ) . '</summary>' . $raw . '</details>';
 		}
-		echo '</div>';
-		echo '<div class="vhh-modal-actions">';
+		$out .= '</div>';
+
+		$out .= '<div class="vhh-modal-actions">';
 		if ( ! $stale ) {
-			echo self::ai_link( $post->ID, 'apply', __( 'Confirm & apply (live)', 'vhh-annotations' ), true ); // phpcs:ignore WordPress.Security.EscapeOutput
+			$out .= self::ai_link( $todo_id, 'apply', __( 'Confirm & apply (live)', 'vhh-annotations' ), true );
 		}
-		echo self::ai_link( $post->ID, 'discard', __( 'Discard', 'vhh-annotations' ), false ); // phpcs:ignore WordPress.Security.EscapeOutput
-		echo self::ai_link( $post->ID, 'preview', __( 'Regenerate', 'vhh-annotations' ), false ); // phpcs:ignore WordPress.Security.EscapeOutput
-		echo '</div>';
-		echo '</div></div>';
+		$out .= self::ai_link( $todo_id, 'discard', __( 'Discard', 'vhh-annotations' ), false );
+		// Regenerate re-runs the AJAX generate in place (no reload).
+		$out .= '<button type="button" class="button" data-vhh-generate="' . esc_attr( $todo_id ) . '" data-vhh-modal="vhh-diff-modal">' . esc_html__( 'Regenerate', 'vhh-annotations' ) . '</button>';
+		$out .= '</div>';
+		return $out;
 	}
 
 	/* ------------------------- admin handlers ------------------------- */
