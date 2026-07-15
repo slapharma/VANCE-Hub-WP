@@ -98,6 +98,39 @@ function vance_get_read_time( $post_id ) {
 }
 
 /**
+ * Strip leftover Markdown syntax from excerpt text.
+ *
+ * Post bodies are authored in Markdown and converted to HTML on `the_content`,
+ * but WordPress excerpts (manual `post_excerpt`, or auto-excerpts taken from the
+ * raw body) can carry literal Markdown tokens like `##`, `**`, or `[text](url)`.
+ * Those render fine as a heading on the article page but leak as raw characters
+ * into card excerpts. This scrubs the common tokens while leaving the words
+ * intact. Hooked after WordPress' own excerpt trimming (priority 20).
+ */
+function vance_strip_markdown_from_excerpt( $excerpt ) {
+    if ( ! is_string( $excerpt ) || $excerpt === '' ) {
+        return $excerpt;
+    }
+    // ATX heading markers: one or more leading #, at the start of the text or
+    // after whitespace (e.g. "## Understanding ..." -> "Understanding ...").
+    // Safe mid-text because "#" + space is not natural prose.
+    $excerpt = preg_replace( '/(^|\s)#{1,6}[ \t]+/', '$1', $excerpt );
+    // Blockquote / list markers only at the very start of the excerpt — a lone
+    // "-", "*", or ">" mid-sentence (ranges, "3 * 4") is real text, not a marker.
+    $excerpt = preg_replace( '/^\s*(?:>|[-*+]|\d+\.)[ \t]+/', '', $excerpt );
+    // Links / images: [text](url) or ![alt](url) -> text / alt.
+    $excerpt = preg_replace( '/!?\[([^\]]*)\]\([^)]*\)/', '$1', $excerpt );
+    // Bold / italic / inline-code wrappers -> inner text.
+    $excerpt = preg_replace( '/(\*\*|__)(.+?)\1/s', '$2', $excerpt );
+    $excerpt = preg_replace( '/(\*|_)(.+?)\1/s', '$2', $excerpt );
+    $excerpt = preg_replace( '/`([^`]+)`/', '$1', $excerpt );
+    // Collapse any doubled spaces the removals left behind.
+    $excerpt = preg_replace( '/[ \t]{2,}/', ' ', $excerpt );
+    return trim( $excerpt );
+}
+add_filter( 'get_the_excerpt', 'vance_strip_markdown_from_excerpt', 20 );
+
+/**
  * Increment view count on single-post page loads. Skips bots, feeds, admin,
  * and previews. Tracked once per session per post via a short-lived cookie.
  */

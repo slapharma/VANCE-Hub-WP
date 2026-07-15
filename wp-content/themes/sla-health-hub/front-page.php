@@ -60,19 +60,32 @@ body {
 }
 
 /* "--grow" variant: used by the Pathway / Featured-Tools "Latest Content"
-   blocks so the side column can hold the featured + up to 4 more articles.
+   blocks so the side column can hold the featured + up to 5 more articles.
    The fixed 2-row height is relaxed to auto so the grid grows to fit the
    side list, and the featured cell stretches to match. The Knowledge Base
    category rows keep the plain .bento-grid-news (fixed 2-row featured + 2). */
 .bento-grid-news.bento-grid-news--grow {
-    /* Side list widened from the base 2fr/1fr so each row fits a right-hand
-       postage-stamp thumbnail without squeezing 2-line titles. */
-    grid-template-columns: 1.5fr 1fr;
+    /* Image column widened further (66%/34%, up from 60%/40%) so the
+       widen reads clearly instead of disappearing as a few extra px. */
+    grid-template-columns: 2fr 1fr;
     grid-template-rows: auto;
     align-items: stretch;
+    /* Small breathing-room gap — flush (0px) read as the image and list
+       overlapping/glued together with no separation. The shared border
+       (moved here from .latest-list-box) still frames both as one section;
+       this just keeps them from touching directly. */
+    gap: 20px;
+    border: 1.5px solid #e2e8f0;
 }
 .bento-grid-news.bento-grid-news--grow .bento-cell-featured {
-    min-height: 340px;
+    /* Fills the full 2fr column width. No aspect-ratio here: with the column
+       widened to 2fr, forcing a 1:1 ratio shrank the box back down to a
+       460px square that no longer filled its column, leaving a dead gap of
+       page background between the photo and the article list. Capped by
+       max-height only, so width always fills the column and height is
+       whatever the row (article list) content naturally settles at. */
+    width: 100%;
+    max-height: 460px;
 }
 
 /* Latest Content side list — the "+4" articles collected into ONE box,
@@ -83,7 +96,9 @@ body {
     display: flex;
     flex-direction: column;
     background: #ffffff;
-    border: 1.5px solid #e2e8f0;
+    /* No border here — the shared border lives on .bento-grid-news--grow so
+       the image and this list read as one bordered section, not two boxes
+       pushed together. */
     overflow: hidden;
 }
 .latest-list-item {
@@ -94,8 +109,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 14px 22px;
+    gap: 8px;
+    /* Title pulled hard left (no left inset). Right padding narrowed again
+       (50px -> 20px, 30px more) to move the thumbnail closer to the row's
+       right edge without touching the title's position. The divider/border
+       itself is unaffected since it's on the row box, not the padding, so it
+       still runs the full width flush to the featured image. */
+    padding: 10px 20px 10px 0;
     text-decoration: none;
     border-bottom: 1px solid #e2e8f0;
     transition: background 0.2s ease;
@@ -106,14 +126,14 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     flex: 1;
     min-width: 0;
 }
 /* Postage-stamp thumbnail pinned to the right edge of each row. */
 .latest-list-thumb {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     object-fit: cover;
     flex-shrink: 0;
 }
@@ -706,7 +726,7 @@ body {
                     <?php if (!empty($latest_posts) && count($latest_posts) >= 3) : ?>
                     <div class="bento-grid-news bento-grid-news--grow">
                         <?php $p = $latest_posts[0]; ?>
-                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured">
+                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
                             <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background: var(--primary-color);">Featured</span>
@@ -717,7 +737,7 @@ body {
                         </a>
                         <div class="latest-list-box">
                             <?php foreach (array_slice($latest_posts, 1) as $p) : ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item">
+                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
                                 <div class="latest-list-text">
                                     <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php
                                         // Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
@@ -771,7 +791,7 @@ body {
                 $pwc_label          = vance_get_theme_mod('vance_pwc_label', 'Featured Tools');
                 $pwc_section_bg     = vance_get_theme_mod('vance_pwc_section_bg', '#ffffff');
                 $pwc_latest_title   = vance_get_theme_mod('vance_pwc_latest_title', 'LATEST CONTENT');
-                $pwc_latest_count   = vance_get_theme_mod('vance_pwc_latest_count', 5);
+                $pwc_latest_count   = vance_get_theme_mod('vance_pwc_latest_count', 6);
                 $pwc_latest_cat     = (int) vance_get_theme_mod('vance_pwc_latest_category', 0);
                 $pwc_show_date      = vance_get_theme_mod('vance_pwc_latest_show_date', true);
 
@@ -818,8 +838,20 @@ body {
     <!-- Pathway Content (Featured Tools + Latest Content) -->
     <style>
         .pathway-content-section {
-            padding: 80px 0 60px;
+            padding: 80px 0 0;
             background: <?php echo esc_attr($pwc_section_bg); ?>;
+        }
+        /* The next section down (Quick Reads / Most Popular Articles) is a
+           generic content-widget instance whose own 80px top padding is
+           shared by every content-widget placement sitewide — editing that
+           file would shrink the gap everywhere it's used, not just here.
+           Scoping the reduction to this specific widget's own id (#vance-cw-1)
+           keeps the change local to this one spot on the homepage. Combined
+           with dropping this section's own bottom padding to 0 above, that's
+           a 75px reduction (40px here + 35px there) in the gap between the
+           two sections. */
+        #vance-cw-1 {
+            padding-top: 45px !important;
         }
         /* Local copy of the split-grid rules — the originals live in the
            'pathway' case and aren't emitted when pathway is hidden, so this
@@ -866,6 +898,22 @@ body {
            tool card starts at the same Y as the featured news card on the
            right (which has no flex gap). */
         .pathway-content-section .pathway-tiles-stack > .section-label { margin-bottom: 0 !important; }
+        /* The tools column stretches to fill the row (height:100% above), but
+           .latest-content-column was a plain block — its label + bento grid
+           only took their own content height, leaving the image/article list
+           shorter than the tools column with dead space below. Making this a
+           flex column too, with the grid as the flexible item, lets the
+           image and article list stretch down to match the tools column's
+           full height. */
+        .pathway-content-section .latest-content-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .pathway-content-section .latest-content-column .bento-grid-news.bento-grid-news--grow {
+            flex: 1;
+            min-height: 0;
+        }
         @media (max-width: 992px) {
             .pathway-content-section .pathway-split-grid { grid-template-columns: 1fr; }
             .pathway-content-section.layout-right .pathway-split-grid { grid-template-columns: 1fr; }
@@ -1091,7 +1139,7 @@ body {
                     <?php if (!empty($pwc_latest_posts) && count($pwc_latest_posts) >= 3) : ?>
                     <div class="bento-grid-news bento-grid-news--grow">
                         <?php $p = $pwc_latest_posts[0]; ?>
-                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured">
+                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
                             <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background: var(--primary-color);">Featured</span>
@@ -1102,7 +1150,7 @@ body {
                         </a>
                         <div class="latest-list-box">
                             <?php foreach (array_slice($pwc_latest_posts, 1) as $p) : ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item">
+                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
                                 <div class="latest-list-text">
                                     <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php
                                         // Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
@@ -1993,7 +2041,7 @@ body {
                 <?php if ($layout === 'bento' && count($posts_array) >= 3): ?>
                     <div class="bento-grid-news">
                         <?php $p = $posts_array[0]; ?>
-                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured">
+                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
                             <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background:<?php echo $color; ?>">Featured</span>
@@ -2015,7 +2063,7 @@ body {
                 <?php else: ?>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;">
                         <?php foreach ($posts_array as $p): ?>
-                        <article style="background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
+                        <article class="news-card" style="background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
                             <?php
                                 $read_time = vance_get_read_time($p->ID);
                                 $view_count = vance_get_view_count($p->ID);
@@ -2028,7 +2076,7 @@ body {
                             <?php endif; ?>
                             <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
                                 <h3 style="font-size: 16px; margin-bottom: 10px; line-height: 1.4;">
-                                    <a href="<?php echo get_permalink($p->ID); ?>" style="color: #0f172a; text-decoration: none; font-weight: 600;"><?php echo get_the_title($p->ID); ?></a>
+                                    <a href="<?php echo get_permalink($p->ID); ?>" class="card-stretched-link" style="color: #0f172a; text-decoration: none; font-weight: 600;"><?php echo get_the_title($p->ID); ?></a>
                                 </h3>
                                 <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <?php echo wp_trim_words(get_the_excerpt($p->ID), 15); ?>

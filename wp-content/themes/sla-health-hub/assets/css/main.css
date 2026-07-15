@@ -111,6 +111,18 @@ h6 {
     transform: translateY(-1px);
 }
 
+/* Header "My Dashboard" CTA — sized 30% down from the base .btn */
+.header-actions .btn-primary {
+    padding: 8px 17px;
+    font-size: 10px;
+}
+
+.header-actions .btn-primary svg {
+    width: 13px;
+    height: 13px;
+    margin-right: 6px;
+}
+
 .btn-outline {
     background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -697,8 +709,24 @@ h6 {
 
 /* Make news-cards flex columns so the meta footer pins to the bottom and
    footers line up across a row regardless of title/excerpt length. */
-.news-card { display: flex; flex-direction: column; }
+.news-card { display: flex; flex-direction: column; position: relative; }
 .news-card .card-content { display: flex; flex-direction: column; flex: 1 1 auto; }
+
+/* Whole-card click target: the title link is stretched via ::after to cover
+   the entire card (image, excerpt, meta footer), so clicking anywhere on the
+   card navigates, not just the title text. Taxonomy chips are real nested
+   links, so they're raised above the stretch layer to stay independently
+   clickable. */
+.news-card .card-stretched-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+.news-card .va-card-chip {
+    position: relative;
+    z-index: 2;
+}
 
 /* Date · read-time · views, divided by hairline rules, at the card bottom. */
 .card-meta-footer {
@@ -1239,7 +1267,8 @@ h6 {
 }
 
 .oped-hero-content {
-    max-width: 800px;
+    /* Post title container, narrowed by 5 characters' worth of width, plus 10px. */
+    max-width: calc(800px - 5ch - 10px);
 }
 
 .oped-meta-tags {
