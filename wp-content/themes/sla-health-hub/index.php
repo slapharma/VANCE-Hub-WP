@@ -11,14 +11,14 @@
             while ( have_posts() ) :
                 the_post();
                 ?>
-                <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?>>
+                <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?> data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
                     <?php if ( has_post_thumbnail() ) : ?>
                         <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>');"></div>
                     <?php endif; ?>
                     
                     <div class="card-content">
                         <header class="entry-header">
-                            <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
+                            <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" class="card-stretched-link" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
                         </header>
 
                         <div class="entry-content">

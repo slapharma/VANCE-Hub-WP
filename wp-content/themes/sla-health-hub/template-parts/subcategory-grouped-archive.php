@@ -39,7 +39,7 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
 
         if ( 'posters' === $layout ) : ?>
             <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' va-poster-card' ); ?>>
-                <a class="va-poster-link" href="<?php the_permalink(); ?>" style="background-image: url('<?php echo esc_url( $thumb ); ?>');">
+                <a class="va-poster-link" href="<?php the_permalink(); ?>" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>" style="background-image: url('<?php echo esc_url( $thumb ); ?>');">
                     <span class="va-poster-shade" aria-hidden="true"></span>
                     <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                     <div class="va-poster-body">
@@ -49,13 +49,13 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
                 </a>
             </article>
         <?php else : ?>
-            <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' news-card' ); ?>>
+            <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' news-card' ); ?> data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
                 <div class="card-image" style="background-image: url('<?php echo esc_url( $thumb ); ?>'); background-color: #e2e8f0; position: relative;">
                     <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                 </div>
                 <div class="card-content">
                     <header class="entry-header">
-                        <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
+                        <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" class="card-stretched-link" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
                     </header>
                     <div class="entry-content"><?php the_excerpt(); ?></div>
                     <?php echo vance_card_meta_footer_html( get_the_ID() ); ?>

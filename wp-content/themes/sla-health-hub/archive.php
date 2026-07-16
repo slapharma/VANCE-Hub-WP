@@ -140,14 +140,14 @@
                         $vance_read_time = vance_get_read_time(get_the_ID());
                         $vance_view_count = vance_get_view_count(get_the_ID());
                     ?>
-                    <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?>>
+                    <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?> data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
                         <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>'); background-color: #e2e8f0; position: relative;">
                             <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                         </div>
 
                         <div class="card-content">
                             <header class="entry-header">
-                                <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
+                                <?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark" class="card-stretched-link" style="font-size: 20px;">', esc_url( get_permalink() ) ), '</a></h2>' ); ?>
                             </header>
 
                             <div class="entry-content">
