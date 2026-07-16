@@ -1,5 +1,34 @@
 <?php get_header(); ?>
 
+<?php
+/*
+ * Auto-route: a category archive whose category has populated sub-categories
+ * is rendered with the grouped sub-category layout — each sub-category as its
+ * own section, fronted by the "Sub-category nav cards" jump bar — instead of
+ * the flat post grid below. This makes the Gastro Living treatment automatic
+ * for every category that has sub-categories. The two categories with their
+ * own category-content-*.php templates take precedence over this file and route
+ * to the same grouped template themselves. Categories with no populated
+ * sub-categories fall through to the flat grid below.
+ */
+if ( is_category() ) {
+    $vance_arch_cat = get_queried_object();
+    if ( $vance_arch_cat instanceof WP_Term ) {
+        $vance_arch_children = get_categories( array(
+            'parent'     => $vance_arch_cat->term_id,
+            'hide_empty' => true,
+            'number'     => 1,
+            'fields'     => 'ids',
+        ) );
+        if ( ! empty( $vance_arch_children ) ) {
+            get_template_part( 'template-parts/subcategory-grouped-archive' );
+            get_footer();
+            return;
+        }
+    }
+}
+?>
+
 <main>
     <!-- Hero Section -->
     <!-- Hero Section -->

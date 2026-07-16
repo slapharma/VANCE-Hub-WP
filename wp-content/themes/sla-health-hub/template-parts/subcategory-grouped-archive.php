@@ -127,12 +127,26 @@ if ( $vance_cat instanceof WP_Term ) {
     </section>
 
     <?php
-    // Gastro Living passes inner_nav_subcats => true so the inner nav shows ONLY
-    // this category's sub-categories. Other categories using this template
-    // (e.g. Clinical Reviews) fall through to the standard global inner nav.
-    if ( isset( $args['inner_nav_subcats'] ) && $args['inner_nav_subcats'] ) {
-        $vance_nav_parent    = get_queried_object();
-        $vance_nav_parent_id = ( $vance_nav_parent instanceof WP_Term ) ? (int) $vance_nav_parent->term_id : 0;
+    // "Sub-category nav cards" — the glass jump buttons that link to the
+    // #va-subcat-<id> section anchors rendered below. These auto-activate for
+    // ANY category that has populated child categories, so every grouped
+    // archive (Gastro Living, Clinical Reviews, and any category routed here by
+    // archive.php) gets them without a per-page flag. An explicit
+    // inner_nav_subcats => true arg forces the same behaviour. Categories with
+    // no populated sub-categories fall through to the standard global inner nav.
+    $vance_nav_parent    = get_queried_object();
+    $vance_nav_parent_id = ( $vance_nav_parent instanceof WP_Term ) ? (int) $vance_nav_parent->term_id : 0;
+    $vance_show_subnav   = ! empty( $args['inner_nav_subcats'] );
+    if ( ! $vance_show_subnav && $vance_nav_parent_id > 0 ) {
+        $vance_nav_children = get_categories( array(
+            'parent'     => $vance_nav_parent_id,
+            'hide_empty' => true,
+            'number'     => 1,
+            'fields'     => 'ids',
+        ) );
+        $vance_show_subnav = ! empty( $vance_nav_children );
+    }
+    if ( $vance_show_subnav ) {
         get_template_part( 'template-parts/inner-category-nav', null, array( 'subcategories_of' => $vance_nav_parent_id ) );
     } else {
         get_template_part( 'template-parts/inner-category-nav' );
