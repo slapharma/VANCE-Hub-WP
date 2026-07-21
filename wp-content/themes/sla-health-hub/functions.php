@@ -303,7 +303,14 @@ function vance_register_cpts() {
             'capability_type'       => 'post',
             'map_meta_cap'          => true,
             'show_in_rest'          => true,
-            'show_in_menu'          => true, // Fixed: Setting this to true and manually moving solves permissions
+            // Hidden from the admin sidebar entirely. remove_menu_page() at
+            // admin_menu:999 (and a later PHP_INT_MAX pass) proved unreliable on
+            // live — the nine "…ss" menus rendered anyway — so prevent core from
+            // ever adding the menu instead of trying to strip it afterwards.
+            // Admins/editors keep edit access via direct edit.php?post_type=<slug>
+            // URLs (capability_type=post → edit_posts). Managed via the
+            // VanceHealthHub dashboard, not their own top-level menus.
+            'show_in_menu'          => false,
             'taxonomies'            => array('category', 'post_tag'),
             'rewrite'               => array(
                 'slug'                  => $slug,
@@ -356,13 +363,13 @@ add_action( 'after_switch_theme', 'vance_flush_rewrite_rules' );
 // Create Content Hub Menu
 function vance_register_content_hub_menu() {
     add_menu_page(
-        'Gastro Health Hub',
-        'Gastro Health Hub',
+        'VanceHealthHub',
+        'VanceHealthHub',
         'manage_options',
         'vance-content-hub',
         'vance_render_content_hub_dashboard',
         'dashicons-category',
-        1 
+        1
     );
 
     add_submenu_page(
@@ -387,7 +394,7 @@ function vance_register_content_hub_menu() {
         'news' => 'Healthcare News',
         'research' => 'Clinical Reviews',
         'oped' => 'Expert Opinions',
-        // 'review' => 'Reviews', // REMOVED from Content Hub menu per user request
+        'review' => 'Reviews', // Removes the buggy default "Reviewss" top-level menu entry
         'whitepaper' => 'Tools & Resources',
         'podcast' => 'Media Library',
         'webinar' => 'Webinars',
@@ -401,6 +408,49 @@ function vance_register_content_hub_menu() {
     }
 }
 add_action( 'admin_menu', 'vance_register_content_hub_menu', 999 );
+
+/**
+ * Nest the Comments screen under Posts instead of its own top-level menu item.
+ */
+function vance_move_comments_under_posts() {
+    remove_menu_page( 'edit-comments.php' );
+    add_submenu_page( 'edit.php', 'Comments', 'Comments', 'moderate_comments', 'edit-comments.php' );
+}
+add_action( 'admin_menu', 'vance_move_comments_under_posts', 999 );
+
+/**
+ * Belt-and-braces removal of the nine content-CPT top-level admin menus
+ * ("Healthcare Newss", "Reviewss", "Expert Opinionss", …). The removal inside
+ * vance_register_content_hub_menu() runs at admin_menu:999, but on live those
+ * entries were still appearing — so strip them again at the very end of the
+ * admin_menu chain (after any callback that could re-add them) by unsetting the
+ * exact post_type slugs from $menu. The user demonstrably sees these items, so
+ * they are present in $menu at this point and this pass reliably clears them.
+ * The vhh_todo "Content Feedback" menu is deliberately NOT in this list.
+ */
+function vance_strip_content_cpt_menus() {
+    global $menu;
+    if ( ! is_array( $menu ) ) {
+        return;
+    }
+    $hide = array(
+        'edit.php?post_type=news',
+        'edit.php?post_type=research',
+        'edit.php?post_type=oped',
+        'edit.php?post_type=review',
+        'edit.php?post_type=whitepaper',
+        'edit.php?post_type=podcast',
+        'edit.php?post_type=webinar',
+        'edit.php?post_type=course',
+        'edit.php?post_type=infographic',
+    );
+    foreach ( $menu as $i => $item ) {
+        if ( isset( $item[2] ) && in_array( $item[2], $hide, true ) ) {
+            unset( $menu[ $i ] );
+        }
+    }
+}
+add_action( 'admin_menu', 'vance_strip_content_cpt_menus', PHP_INT_MAX );
 
 /**
  * Get SVG Icon for Category
