@@ -169,14 +169,12 @@ h6 {
     object-fit: contain;
 }
 
-/* Desktop-only: logo sits inline with the menu here, so size/offset are
-   scoped to min-width:768px to avoid overflowing the fixed 70px mobile header. */
+/* Desktop-only: logo sits inline with the menu here, so size is scoped to
+   min-width:768px to avoid overflowing the fixed 70px mobile header. No vertical
+   offset — .header-content is align-items:center, so the enlarged logo stays
+   vertically centred on the same line as the nav (the earlier +10px drop was
+   removed 2026-07-21 per request to line the logo up with the menu). */
 @media (min-width: 768px) {
-    .logo-area {
-        position: relative;
-        top: 10px;
-    }
-
     .logo-area img {
         width: 259px; /* +15% from 225px */
         max-height: 75px; /* +15% from 65px */
@@ -347,12 +345,13 @@ h6 {
     overflow: hidden;
 }
 
-/* Homepage hero only (scoped via body.home) — -15% from the shared .hero
-   defaults above, which are also used by page-patients.php, page-healthcare-
-   professionals.php etc. via the same "hero patient-hero" classes. */
+/* Homepage hero only (scoped via body.home) — cumulatively -15% twice from the
+   shared .hero defaults above (which are also used by page-patients.php,
+   page-healthcare-professionals.php etc. via the same "hero patient-hero"
+   classes). 100/160/460 → 85/136/391 (first -15%) → 72/116/332 (second -15%). */
 body.home .hero {
-    padding: 85px 0 136px; /* -15% from 100px/160px */
-    min-height: 391px; /* -15% from 460px */
+    padding: 72px 0 116px; /* -15% from 85px/136px */
+    min-height: 332px; /* -15% from 391px */
 }
 
 .hero-content {
@@ -2808,9 +2807,13 @@ body.home .hero {
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
 }
-/* Per-sub-category "Posters per row" option (3 default, or 4). */
+/* "Posters per row" option — 3 default, or 4/5. Used by both the sub-category
+   grouped archives and the homepage Knowledge Base poster layout. */
 .va-layout-posters.va-posters--cols-4 {
     grid-template-columns: repeat(4, 1fr);
+}
+.va-layout-posters.va-posters--cols-5 {
+    grid-template-columns: repeat(5, 1fr);
 }
 .va-poster-card {
     position: relative;
@@ -2998,7 +3001,8 @@ body.home .hero {
 /* --- Responsive --- */
 /* 5-across grids need room; step 5 -> 4 on laptops before the tablet collapse. */
 @media (max-width: 1200px) {
-    .va-layout-grid.va-grid--cols-5 {
+    .va-layout-grid.va-grid--cols-5,
+    .va-layout-posters.va-posters--cols-5 {
         grid-template-columns: repeat(4, 1fr);
     }
 }
@@ -3009,6 +3013,7 @@ body.home .hero {
     }
     /* Two-class selectors need their own collapse or they out-specify the above. */
     .va-layout-posters.va-posters--cols-4,
+    .va-layout-posters.va-posters--cols-5,
     .va-layout-grid.va-grid--cols-4,
     .va-layout-grid.va-grid--cols-5 {
         grid-template-columns: repeat(2, 1fr);
@@ -3043,6 +3048,7 @@ body.home .hero {
         grid-template-columns: 1fr;
     }
     .va-layout-posters.va-posters--cols-4,
+    .va-layout-posters.va-posters--cols-5,
     .va-layout-grid.va-grid--cols-4,
     .va-layout-grid.va-grid--cols-5 {
         grid-template-columns: 1fr;

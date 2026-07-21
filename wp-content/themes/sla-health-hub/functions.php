@@ -4835,6 +4835,40 @@ function vance_customize_register( $wp_customize ) {
             ),
         ) );
 
+        // Posters sub-options (only take effect when Layout = Posters).
+        // Posts fetched for the poster grid = columns x rows.
+        $wp_customize->add_setting( "vance_kb_posters_cols_{$cat->term_id}", array(
+            'default'           => '3',
+            'sanitize_callback' => 'vance_sanitize_kb_posters_cols',
+        ) );
+        $wp_customize->add_control( "vance_kb_posters_cols_{$cat->term_id}", array(
+            'label'       => sprintf( __( '"%s" Posters per row', 'sla-health-hub' ), $cat->name ),
+            'description' => __( 'How many poster cards per row (Posters layout only).', 'sla-health-hub' ),
+            'section'     => 'vance_knowledgebase_sections',
+            'type'        => 'select',
+            'choices'     => array(
+                '3' => __( '3 per row', 'sla-health-hub' ),
+                '4' => __( '4 per row', 'sla-health-hub' ),
+                '5' => __( '5 per row', 'sla-health-hub' ),
+            ),
+        ) );
+
+        $wp_customize->add_setting( "vance_kb_posters_rows_{$cat->term_id}", array(
+            'default'           => '2',
+            'sanitize_callback' => 'vance_sanitize_kb_posters_rows',
+        ) );
+        $wp_customize->add_control( "vance_kb_posters_rows_{$cat->term_id}", array(
+            'label'       => sprintf( __( '"%s" Poster rows', 'sla-health-hub' ), $cat->name ),
+            'description' => __( 'How many rows of poster cards to show (Posters layout only).', 'sla-health-hub' ),
+            'section'     => 'vance_knowledgebase_sections',
+            'type'        => 'select',
+            'choices'     => array(
+                '1' => __( '1 row', 'sla-health-hub' ),
+                '2' => __( '2 rows', 'sla-health-hub' ),
+                '3' => __( '3 rows', 'sla-health-hub' ),
+            ),
+        ) );
+
         // Accent colour — used on the section's left-of-heading color bar
         // and (in bento layout) on the Featured tag pill and side-cell meta.
         // Previous behaviour: random pick from 5 hardcoded colours every page
@@ -5050,6 +5084,24 @@ function vance_sanitize_posters_cols( $v ) {
 }
 function vance_get_subcat_posters_cols( $term_id ) {
     return vance_sanitize_posters_cols( (string) vance_get_theme_mod( "vance_subcat_posters_cols_{$term_id}", '3' ) );
+}
+
+/**
+ * Homepage Knowledge Base "Posters" layout sub-options. Unlike the sub-category
+ * posters (3 or 4 cols, with a separate rows cap), the homepage KB grid fetches
+ * exactly columns x rows posts, so columns allow 3/4/5 and rows allow 1/2/3.
+ */
+function vance_sanitize_kb_posters_cols( $v ) {
+    return in_array( $v, array( '3', '4', '5' ), true ) ? $v : '3';
+}
+function vance_get_kb_posters_cols( $term_id ) {
+    return (int) vance_sanitize_kb_posters_cols( (string) vance_get_theme_mod( "vance_kb_posters_cols_{$term_id}", '3' ) );
+}
+function vance_sanitize_kb_posters_rows( $v ) {
+    return in_array( $v, array( '1', '2', '3' ), true ) ? $v : '2';
+}
+function vance_get_kb_posters_rows( $term_id ) {
+    return (int) vance_sanitize_kb_posters_rows( (string) vance_get_theme_mod( "vance_kb_posters_rows_{$term_id}", '2' ) );
 }
 
 /**

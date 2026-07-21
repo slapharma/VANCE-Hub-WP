@@ -75,15 +75,10 @@ get_header(); ?>
     <!-- TOOLS GRID — each card links to its own dedicated page (ask-ai-style shell) -->
     <?php
     $tools = array(
-        array(
-            'slug'     => 'omega-3-calculator',
-            'page_url' => '/omega-3-calculator/',
-            'name'     => 'Omega-3 Calculator',
-            'tag'      => 'Nutrition',
-            'desc'     => 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance. Built on the latest gastroenterology evidence.',
-            'colors'   => array( '#008080', '#006666', '#ffffff' ),
-            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12c2.5-3.5 6.5-5 9-5s6.5 1.5 9 5c-2.5 3.5-6.5 5-9 5s-6.5-1.5-9-5zm12 0a3 3 0 11-6 0 3 3 0 016 0z"/>',
-        ),
+        // Omega-3 Calculator card removed 2026-07-21 per request. The tool page
+        // (page-omega-3-calculator.php → /omega-3-calculator/) and its asset
+        // bundle still exist and remain reachable by direct URL; only the card
+        // on this Tools & Resources listing was pulled.
         array(
             'slug'     => 'malnutrition-calculator',
             'page_url' => '/malnutrition-calculator/',

@@ -1996,7 +1996,18 @@ body {
             $cat = $sec['cat'];
             $layout = $sec['layout'];
             if ($cat->name === 'Expert Opinions' || $cat->slug === 'expert-opinions') { $layout = 'bento'; }
-            $post_count = ($layout === 'bento' || $layout === 'asymmetric' || $layout === 'posters') ? 3 : intval($sec['count']);
+            // Posters fetch exactly columns x rows cards (admin-controlled, 3-5
+            // cols x 1-3 rows); bento/asymmetric are fixed at 3; grids use the
+            // per-category count. Cols default is reused by the render branch.
+            $kb_posters_cols = ($layout === 'posters') ? vance_get_kb_posters_cols($cat->term_id) : 3;
+            $kb_posters_rows = ($layout === 'posters') ? vance_get_kb_posters_rows($cat->term_id) : 2;
+            if ($layout === 'posters') {
+                $post_count = $kb_posters_cols * $kb_posters_rows;
+            } elseif ($layout === 'bento' || $layout === 'asymmetric') {
+                $post_count = 3;
+            } else {
+                $post_count = intval($sec['count']);
+            }
             
             $posts_array = get_posts(array(
                 'numberposts' => $post_count,
@@ -2061,7 +2072,7 @@ body {
                         </div>
                     </div>
                 <?php elseif ($layout === 'posters' && count($posts_array) >= 1): ?>
-                    <div class="va-sub-grid va-layout-posters va-posters--cols-3">
+                    <div class="va-sub-grid va-layout-posters va-posters--cols-<?php echo (int) $kb_posters_cols; ?>">
                         <?php foreach ($posts_array as $p):
                             $poster_thumb = get_the_post_thumbnail_url($p->ID, 'large');
                             $poster_read  = vance_get_read_time($p->ID);
