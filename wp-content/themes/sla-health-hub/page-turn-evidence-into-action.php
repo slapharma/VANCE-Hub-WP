@@ -77,7 +77,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
         ? esc_attr( $evd_hero_bg_color )
         : "linear-gradient(rgba(10,25,41," . esc_attr( $hero_overlay ) . "), rgba(10,25,41," . esc_attr( $hero_overlay_bottom ) . ")), url('" . esc_url( $hero_bg ) . "') no-repeat center center";
     ?>
-    <section class="hero evidence-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: <?php echo $hero_section_bg; ?>; background-size: cover;">
+    <section class="hero evidence-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: <?php echo $hero_section_bg; ?>; background-size: cover;">
         <div class="container">
             <div class="hero-content">
                 <span class="tag-label" style="<?php echo $tag_inline_style; ?>"><?php echo esc_html( $hero_tag ); ?></span>

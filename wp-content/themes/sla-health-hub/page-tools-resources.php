@@ -28,7 +28,7 @@ get_header(); ?>
     $hero_btn2_text = vance_get_theme_mod( 'vance_tools_hero_btn2_text', 'Create Free Account' );
     $hero_btn2_link = vance_get_theme_mod( 'vance_tools_hero_btn2_link', '/register/' );
     ?>
-    <section class="hero tools-hero" style="padding: 80px 0 120px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
+    <section class="hero tools-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
         <div class="container">
             <div class="hero-content">
                 <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
@@ -123,7 +123,7 @@ get_header(); ?>
     ?>
     <section id="tools-grid" class="section-padding tools-grid-section" style="background: var(--accent-color);">
         <div class="container">
-            <div class="tools-card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px;">
+            <div class="tools-card-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;">
                 <?php foreach ( $tools as $tool ) : ?>
                 <a class="tool-card tool-card--<?php echo esc_attr( $tool['slug'] ); ?>" href="<?php echo esc_url( $tool['page_url'] ); ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid <?php echo esc_attr( $tool['colors'][0] ); ?>; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;">
                     <div class="tool-card__head" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
@@ -147,6 +147,11 @@ get_header(); ?>
 
     <style>
         .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,25,41,0.10) !important; }
+        /* Two tools per row on desktop (set inline); collapse to one on narrow
+           screens. !important is needed to beat the inline grid-template-columns. */
+        @media (max-width: 640px) {
+            .tools-card-grid { grid-template-columns: 1fr !important; }
+        }
     </style>
 
     <!-- SAVE-RESULTS CTA -->

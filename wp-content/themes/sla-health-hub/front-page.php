@@ -2104,7 +2104,7 @@ body {
                                 </div>
                             <?php endif; ?>
                             <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
-                                <h3 style="font-size: 16px; margin-bottom: 10px; line-height: 1.4;">
+                                <h3 style="font-size: 12px; margin-bottom: 10px; line-height: 1.4;">
                                     <a href="<?php echo get_permalink($p->ID); ?>" class="card-stretched-link" style="color: #0f172a; text-decoration: none; font-weight: 600;"><?php echo get_the_title($p->ID); ?></a>
                                 </h3>
                                 <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">

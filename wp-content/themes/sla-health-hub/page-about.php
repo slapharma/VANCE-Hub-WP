@@ -66,7 +66,7 @@ get_header(); ?>
             $hero_bg_style = "background: " . $hero_bg_color . ";";
         }
     ?>
-    <section class="vance-about-hero" style="padding: 95px 0 140px; display: flex; align-items: flex-start; <?php echo $hero_bg_style; ?> position: relative; overflow: hidden;">
+    <section class="vance-about-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: flex-start; <?php echo $hero_bg_style; ?> position: relative; overflow: hidden;">
         <div class="container" style="position:relative;z-index:1;">
             <div style="max-width: 800px;">
                 <span class="tag-label" style="<?php echo $styles['tag']; ?>"><?php echo esc_html($hero_tag); ?></span>
