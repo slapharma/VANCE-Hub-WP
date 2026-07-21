@@ -2862,6 +2862,12 @@ body.home .hero {
     font-weight: 700;
     margin: 0;
 }
+/* Homepage Knowledge Base poster cards use a slightly smaller title (-4px) than
+   the sub-category archive posters. Scoped to .kb-content-wrapper so the
+   sub-category grouped archives keep the 22px above. */
+.kb-content-wrapper .va-poster-title {
+    font-size: 18px;
+}
 .va-poster-card:hover .va-poster-title {
     text-decoration: underline;
 }
