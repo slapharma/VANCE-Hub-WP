@@ -22,11 +22,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function vance_enqueue_single_template_styles() {
     if ( is_singular() ) {
-        wp_enqueue_style( 
-            'vance-oped-template', 
-            get_template_directory_uri() . '/assets/css/oped-template.css', 
-            array(), 
-            '1.0.0' 
+        wp_enqueue_style(
+            'vance-oped-template',
+            get_template_directory_uri() . '/assets/css/oped-template.css',
+            array(),
+            '1.0.1-' . ( @filemtime( get_template_directory() . '/assets/css/oped-template.css' ) ?: '1' )
         );
     }
 }

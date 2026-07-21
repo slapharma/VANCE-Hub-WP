@@ -3148,8 +3148,8 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_pwc_latest_title', array( 'default' => 'LATEST CONTENT', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_pwc_latest_title', array( 'label' => 'Right Column — Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
-    $wp_customize->add_setting( 'vance_pwc_latest_count', array( 'default' => 5, 'sanitize_callback' => 'absint' ) );
-    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column — Number of Posts', 'description' => 'Bento layout shows 1 featured + the rest as side cards (5 = featured + 4).', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ) ) );
+    $wp_customize->add_setting( 'vance_pwc_latest_count', array( 'default' => 6, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column — Number of Posts', 'description' => 'Bento layout shows 1 featured + the rest as side cards (6 = featured + 5).', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 7, 'step' => 1 ) ) );
 
     $wp_customize->add_setting( 'vance_pwc_latest_category', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
     $cats = get_categories( array( 'hide_empty' => false ) );
@@ -4080,7 +4080,7 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     $wp_customize->add_setting( 'vance_show_dashboard_btn', array(
-        'default'           => false,
+        'default'           => true,
         'sanitize_callback' => 'rest_sanitize_boolean',
     ) );
     $wp_customize->add_control( 'vance_show_dashboard_btn', array(

@@ -62,7 +62,8 @@
 }
 
 .oped-hero-content {
-    max-width: 800px;
+    /* Post title container, narrowed by 5 characters' worth of width, plus 10px. */
+    max-width: calc(800px - 5ch - 10px);
 }
 
 .oped-meta-tags {

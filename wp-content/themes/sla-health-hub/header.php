@@ -80,8 +80,8 @@
                 <?php
                 // My Dashboard button — gated by Customizer toggle.
                 // Appearance → Customize → Vance Theme → Brand Identity → Header Navigation
-                // → "Show My Dashboard button in header" (default OFF since 2026-05-25).
-                if ( vance_get_theme_mod( 'vance_show_dashboard_btn', false ) ) :
+                // → "Show My Dashboard button in header" (default ON since 2026-07-09).
+                if ( vance_get_theme_mod( 'vance_show_dashboard_btn', true ) ) :
                     $dashboard_url = is_user_logged_in() ? home_url('/dashboard/') : wp_login_url(home_url('/dashboard/'));
                 ?>
                 <a href="<?php echo esc_url($dashboard_url); ?>" class="btn btn-primary">
