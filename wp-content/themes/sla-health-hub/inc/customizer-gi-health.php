@@ -85,11 +85,11 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
     ] );
     $sec = 'vance_gi_hub_grid';
 
-    $wp_customize->add_setting( 'vance_gi_hub_grid_eyebrow', [ 'default' => 'GI Health', 'sanitize_callback' => 'sanitize_text_field' ] );
-    $wp_customize->add_control( 'vance_gi_hub_grid_eyebrow', [ 'label' => 'Eyebrow label', 'section' => $sec, 'type' => 'text' ] );
-
-    $wp_customize->add_setting( 'vance_gi_hub_grid_heading', [ 'default' => 'Find out more about seven common GI conditions affecting people in the UK.', 'sanitize_callback' => 'sanitize_textarea_field' ] );
+    $wp_customize->add_setting( 'vance_gi_hub_grid_heading', [ 'default' => 'Learn more about common GI conditions', 'sanitize_callback' => 'sanitize_textarea_field' ] );
     $wp_customize->add_control( 'vance_gi_hub_grid_heading', [ 'label' => 'Section heading', 'section' => $sec, 'type' => 'textarea' ] );
+
+    $wp_customize->add_setting( 'vance_gi_hub_grid_subtitle', [ 'default' => 'Understanding your digestive health, one condition at a time', 'sanitize_callback' => 'sanitize_text_field' ] );
+    $wp_customize->add_control( 'vance_gi_hub_grid_subtitle', [ 'label' => 'Section subtitle', 'section' => $sec, 'type' => 'text' ] );
 
     /* ════════════════════════════════════════
        SECTION 3 — Hub: Stats Band
@@ -100,16 +100,11 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
     ] );
     $sec = 'vance_gi_hub_stats';
 
-    $wp_customize->add_setting( 'vance_gi_hub_stats_eyebrow', [ 'default' => 'Understanding your gut', 'sanitize_callback' => 'sanitize_text_field' ] );
-    $wp_customize->add_control( 'vance_gi_hub_stats_eyebrow', [ 'label' => 'Eyebrow label', 'section' => $sec, 'type' => 'text' ] );
-
-    $wp_customize->add_setting( 'vance_gi_hub_stats_heading', [ 'default' => 'Digestive conditions are more common than you might think', 'sanitize_callback' => 'sanitize_text_field' ] );
+    $wp_customize->add_setting( 'vance_gi_hub_stats_heading', [ 'default' => "You're not alone", 'sanitize_callback' => 'sanitize_text_field' ] );
     $wp_customize->add_control( 'vance_gi_hub_stats_heading', [ 'label' => 'Heading', 'section' => $sec, 'type' => 'text' ] );
 
-    $wp_customize->add_setting( 'vance_gi_hub_stats_desc', [ 'default' => 'The gut does far more than digest food — it influences immunity, mood and overall wellbeing. Millions of people live with a digestive condition, and most can be well managed with the right information and care.', 'sanitize_callback' => 'sanitize_textarea_field' ] );
-    $wp_customize->add_control( 'vance_gi_hub_stats_desc', [ 'label' => 'Description', 'section' => $sec, 'type' => 'textarea' ] );
-
-    $colour( 'vance_gi_hub_stats_bg', '#0A1929', $sec, 'Band background colour' );
+    $wp_customize->add_setting( 'vance_gi_hub_stats_desc', [ 'default' => "Digestive conditions are more common than you might think. You're in good company.", 'sanitize_callback' => 'sanitize_textarea_field' ] );
+    $wp_customize->add_control( 'vance_gi_hub_stats_desc', [ 'label' => 'Subtitle', 'section' => $sec, 'type' => 'textarea' ] );
 
     $stat_defaults = [
         1 => [ '1 in 7',   'UK adults live with IBS symptoms' ],
@@ -230,7 +225,6 @@ function vance_gi_inline_css(): void {
     $hero_c1   = $p( 'vance_gi_hub_hero_c1', '#003d3d' );
     $hero_c2   = $p( 'vance_gi_hub_hero_c2', '#006666' );
     $hero_c3   = $p( 'vance_gi_hub_hero_c3', '#008080' );
-    $stats_bg  = $p( 'vance_gi_hub_stats_bg', '#0A1929' );
     $cta_c1    = $p( 'vance_gi_hub_cta_c1', '#008080' );
     $cta_c2    = $p( 'vance_gi_hub_cta_c2', '#006666' );
 
@@ -248,7 +242,6 @@ function vance_gi_inline_css(): void {
     echo "--gi-hero-c1:{$hero_c1};\n";
     echo "--gi-hero-c2:{$hero_c2};\n";
     echo "--gi-hero-c3:{$hero_c3};\n";
-    echo "--gi-stat-bg:{$stats_bg};\n";
     echo "--gi-cta-c1:{$cta_c1};\n";
     echo "--gi-cta-c2:{$cta_c2};\n";
     echo "}\n</style>\n";

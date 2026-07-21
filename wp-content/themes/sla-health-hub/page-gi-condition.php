@@ -40,6 +40,12 @@ $nav_conditions = [
     ['slug' => 'colorectal-cancer',            'data' => 'crc',          'label' => 'Colorectal Cancer'],
     ['slug' => 'diverticular-disease',         'data' => 'diverticular', 'label' => 'Diverticular Disease'],
 ];
+
+/* Image-led redesign (v2): single-column layout with in-page jump nav
+   instead of the sidebar + table-of-contents shell used by the rest
+   of the GI Health condition pages. */
+$redesigned_conditions = [ 'inflammatory-bowel-disease', 'crohns-disease', 'ulcerative-colitis', 'microscopic-colitis', 'irritable-bowel-syndrome', 'colorectal-cancer', 'diverticular-disease' ];
+$is_redesigned = in_array( $slug, $redesigned_conditions, true );
 ?>
 
 <main id="main-content">
@@ -57,12 +63,12 @@ $nav_conditions = [
       'diverticular-disease'       => 'div',
   ];
   $cond_defaults = [
-      'ibd'    => [ 'Inflammatory Bowel Disease (IBD)',      'Inflammatory bowel disease (IBD) is a chronic inflammatory condition of the gastrointestinal tract. It is divided mainly into Crohn\'s disease and ulcerative colitis.' ],
-      'uc'     => [ 'Ulcerative Colitis',                    'A type of inflammatory bowel disease that causes inflammation and ulcers in the lining of the colon and rectum.' ],
-      'crohns' => [ 'Crohn\'s Disease',                     'A type of inflammatory bowel disease that can cause inflammation anywhere in the digestive tract, most often the end of the small intestine.' ],
-      'mc'     => [ 'Microscopic Colitis',                   'Inflammation of the colon that can only be seen under a microscope.' ],
+      'ibd'    => [ 'Inflammatory Bowel Disease (IBD)',      'A chronic condition of the digestive tract. There is no single cure, but with the right plan, many people live well in long, stable remission.' ],
+      'uc'     => [ 'Ulcerative Colitis',                    'A type of inflammatory bowel disease that causes inflammation and ulcers in the lining of the colon and rectum. Many people with UC lead full, active lives with the right treatment.' ],
+      'crohns' => [ 'Crohn\'s Disease',                     'A type of inflammatory bowel disease that can cause inflammation anywhere in the digestive tract, most often the end of the small intestine. With modern treatment, most people manage their symptoms well.' ],
+      'mc'     => [ 'Microscopic Colitis',                   'Inflammation of the colon that can only be seen under a microscope. A common and treatable cause of ongoing watery diarrhoea, particularly in older adults.' ],
       'ibs'    => [ 'Irritable Bowel Syndrome',              'A common, long-term disorder of how the gut functions, causing abdominal pain, bloating and changes in bowel habit, without visible damage to the bowel.' ],
-      'crc'    => [ 'Colorectal Cancer',                     'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps.' ],
+      'crc'    => [ 'Colorectal Cancer',                     'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps. Early detection through screening saves lives.' ],
       'div'    => [ 'Diverticular Disease &amp; Diverticulitis', 'Small pouches called diverticula can form in the wall of the colon as we get older. They are very common and usually harmless, but can sometimes cause symptoms or become inflamed.' ],
   ];
   $cond_key     = $cond_key_map[ $slug ] ?? '';
@@ -79,7 +85,33 @@ $nav_conditions = [
   } else {
       $cond_hero_bg = 'linear-gradient(135deg,#003d3d 0%,#006666 45%,#008080 100%)';
   }
+
+  /* v2 hero banner images (bundled with the redesign, not customizer-managed) */
+  $cond_hero_images = [
+      'inflammatory-bowel-disease' => 'hero-ibd.jpg',
+      'crohns-disease'           => 'hero-crohns.jpg',
+      'ulcerative-colitis'       => 'hero-uc.jpg',
+      'microscopic-colitis'      => 'hero-mc.jpg',
+      'irritable-bowel-syndrome' => 'hero-ibs.jpg',
+      'colorectal-cancer'        => 'hero-crc.jpg',
+      'diverticular-disease'     => 'hero-dd.jpg',
+  ];
   ?>
+  <?php if ( $is_redesigned ) : ?>
+  <section class="gi-cp-hero">
+    <p class="gi-cp-breadcrumb"><a href="<?php echo esc_url( $hub_url ); ?>">GI Health</a> &nbsp;&rarr;&nbsp; <?php echo wp_kses_post( $cond_title ); ?></p>
+    <h1><?php echo wp_kses_post( $cond_title ); ?></h1>
+    <?php if ( $cond_lede ) : ?>
+    <p class="gi-cp-subtitle"><?php echo esc_html( $cond_lede ); ?></p>
+    <?php endif; ?>
+    <?php if ( ! empty( $cond_hero_images[ $slug ] ) ) : ?>
+    <div class="gi-cp-hero-image">
+      <img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/' . $cond_hero_images[ $slug ] ); ?>"
+           alt="<?php echo esc_attr( wp_strip_all_tags( $cond_title ) ); ?> illustration">
+    </div>
+    <?php endif; ?>
+  </section>
+  <?php else : ?>
   <section class="hero gi-cond-hero" style="height:350px;min-height:0;display:flex;align-items:center;padding:0;position:relative;overflow:hidden;">
     <div style="position:absolute;inset:0;background-image:<?php echo $cond_hero_bg; ?>;background-position:center center;background-size:cover;background-repeat:no-repeat;z-index:1;"></div>
     <div class="container" style="position:relative;z-index:2;width:100%;">
@@ -92,7 +124,9 @@ $nav_conditions = [
       </div>
     </div>
   </section>
+  <?php endif; ?>
 
+  <?php if ( ! $is_redesigned ) : ?>
   <section class="section-padding">
     <div class="container gi-cond-layout">
 
@@ -130,758 +164,6 @@ $nav_conditions = [
       <div class="gi-cond-main">
         <?php switch ( $slug ) {
 
-          /* ─────────────────────────────────────────
-             INFLAMMATORY BOWEL DISEASE
-             ───────────────────────────────────────── */
-          case 'inflammatory-bowel-disease': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is IBD?</h2>
-            <p>Inflammatory bowel disease (IBD) is the umbrella term for a group of long-term conditions in which the immune system causes ongoing inflammation of the digestive tract. The three main types are Crohn's disease, ulcerative colitis and microscopic colitis.</p>
-            <p>IBD usually follows a relapsing-remitting pattern: <strong>flares</strong>, when symptoms are active, followed by periods of <strong>remission</strong>, when symptoms settle.</p>
-            <div class="gi-callout">
-              <strong>Key fact:</strong> there isn't a single cure for IBD, but it can be managed well. Treatment can control inflammation, ease symptoms and help many people stay in long, stable remission, it is about finding the right management plan rather than a one-size-fits-all cure.
-            </div>
-            <div class="gi-keyfacts">
-              <div class="gi-keyfact gi-reveal">
-                <div class="gi-kf-num">~<span data-count="500">0</span>,000</div>
-                <div class="gi-kf-label">People in the UK are estimated to live with IBD</div>
-              </div>
-              <div class="gi-keyfact gi-reveal" style="--reveal-delay:.08s">
-                <div class="gi-kf-num">Any age</div>
-                <div class="gi-kf-label">IBD can be diagnosed at any age, and is becoming more common</div>
-              </div>
-              <div class="gi-keyfact gi-reveal" style="--reveal-delay:.16s">
-                <div class="gi-kf-num"><span data-count="3">0</span> main types</div>
-                <div class="gi-kf-label">Crohn's, ulcerative colitis and microscopic colitis</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="types" class="gi-reveal">
-            <h2>Types of IBD</h2>
-            <figure class="gi-diagram-card">
-              <figcaption class="gi-diagram-title">Where each type affects the gut</figcaption>
-              <svg viewBox="0 0 560 290" role="img" aria-label="Schematic diagram showing where each type of IBD occurs">
-                <path d="M300 28 Q330 22 340 44 Q348 66 322 74 Q300 80 290 64 Q282 46 300 28" fill="none" stroke="#94a8b8" stroke-width="5" stroke-linejoin="round"/>
-                <path d="M298 76 C 270 110, 330 128, 296 152 C 262 176, 330 196, 292 216 C 268 230, 250 222, 238 212" fill="none" stroke="#94a8b8" stroke-width="5" stroke-linecap="round"/>
-                <path d="M170 250 L170 110 Q170 80 200 80 L386 80 Q416 80 416 110 L416 218 Q416 246 388 246 L362 246 Q340 246 346 268 L352 282" fill="none" stroke="#94a8b8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M170 250 L170 110 Q170 80 200 80 L386 80 Q416 80 416 110 L416 218 Q416 246 388 246 L362 246 Q340 246 346 268 L352 282" fill="none" stroke="#008080" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.55"/>
-                <circle cx="238" cy="212" r="11" fill="#006666"/>
-                <circle cx="296" cy="152" r="9" fill="#006666"/>
-                <circle cx="322" cy="74" r="8" fill="#006666"/>
-                <g transform="translate(118,178)" fill="none" stroke="#0A1929" stroke-width="4" stroke-linecap="round">
-                  <circle cx="22" cy="22" r="16"/>
-                  <line x1="34" y1="34" x2="48" y2="48"/>
-                </g>
-                <text x="118" y="158" font-family="Inter, sans-serif" font-size="13" fill="#6B7280">Seen only under</text>
-                <text x="118" y="173" font-family="Inter, sans-serif" font-size="13" fill="#6B7280">the microscope</text>
-              </svg>
-              <ul class="gi-diagram-legend">
-                <li><span class="gi-swatch" style="background:#006666"></span>Crohn's disease: patches anywhere, mouth to anus</li>
-                <li><span class="gi-swatch" style="background:#008080;opacity:.55"></span>Ulcerative colitis: continuous, colon and rectum only</li>
-                <li><span class="gi-swatch" style="background:#0A1929"></span>Microscopic colitis: colon looks normal; inflammation seen on biopsy</li>
-              </ul>
-              <p class="gi-diagram-note">Simplified schematic for illustration, not to anatomical scale.</p>
-            </figure>
-            <div class="gi-mini-grid">
-              <div class="gi-mini-card">
-                <h4>Crohn's disease</h4>
-                <p>Can affect any part of the gut, from mouth to anus, in patches, most often the end of the small intestine.</p>
-              </div>
-              <div class="gi-mini-card">
-                <h4>Ulcerative colitis</h4>
-                <p>Affects only the large bowel (colon) and rectum, causing inflammation and ulcers in the lining.</p>
-              </div>
-              <div class="gi-mini-card">
-                <h4>Microscopic colitis</h4>
-                <p>A less widely known form of IBD where inflammation of the colon is only visible under a microscope.</p>
-              </div>
-            </div>
-            <p>Crohn's disease and ulcerative colitis are the two most common forms. In a small number of people the pattern doesn't fit neatly into either and is described as IBD-unclassified.</p>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <p>Symptoms vary by type and by which part of the gut is affected. Common ones include:</p>
-            <ul class="gi-bullets">
-              <li>Persistent diarrhoea, sometimes with blood or mucus</li>
-              <li>Tummy (abdominal) pain and cramping</li>
-              <li>Tiredness and fatigue</li>
-              <li>Unintended weight loss and loss of appetite</li>
-              <li>A frequent or urgent need to empty the bowel</li>
-            </ul>
-            <p>IBD can sometimes cause symptoms outside the gut too, such as joint pain, mouth ulcers or sore eyes. See the individual condition pages for more detail.</p>
-          </section>
-
-          <section id="causes" class="gi-reveal">
-            <h2>Causes &amp; risk factors</h2>
-            <p>The exact cause isn't fully understood, but IBD is thought to develop from a combination of factors:</p>
-            <ul class="gi-bullets">
-              <li><strong>Genetics and family history</strong>: IBD is more common if a close relative has it</li>
-              <li><strong>The immune system</strong>: an over-active immune response in the gut</li>
-              <li><strong>The gut microbiome</strong>: the community of bacteria living in the bowel</li>
-              <li><strong>Diet, lifestyle and environmental factors</strong></li>
-            </ul>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <ul class="gi-bullets">
-              <li>Blood tests to check for inflammation and anaemia</li>
-              <li>A stool test for <strong>faecal calprotectin</strong>, a marker of gut inflammation</li>
-              <li>Endoscopy (colonoscopy) to look at the bowel lining and take biopsies</li>
-              <li>Scans such as MRI or CT to assess the small bowel</li>
-            </ul>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment &amp; management</h2>
-            <p>Treatment has two goals: settling a flare, then maintaining remission. The right approach depends on the type, location and severity of the condition.</p>
-            <ul class="gi-bullets">
-              <li>Anti-inflammatory medicines to calm the gut lining (for example aminosalicylates such as mesalazine)</li>
-              <li>Immune-modifying and biologic therapies for moderate-to-severe disease (for example azathioprine, or biologics such as infliximab, adalimumab or vedolizumab)</li>
-              <li>Short courses of steroids to bring a flare under control (for example prednisolone or budesonide)</li>
-              <li>Surgery for some people when medicines aren't enough</li>
-              <li>Support for diet and overall wellbeing alongside medical treatment</li>
-            </ul>
-            <p>Most people with IBD are cared for by a specialist team and have regular reviews to keep things under control.</p>
-            <div class="gi-callout">
-              <strong>Explore the conditions in detail:</strong>
-              <a href="<?php echo esc_url( vance_gi_cond_url('crohns-disease') ); ?>" style="color:#006666;font-weight:600">Crohn's disease</a> ·
-              <a href="<?php echo esc_url( vance_gi_cond_url('ulcerative-colitis') ); ?>" style="color:#006666;font-weight:600">Ulcerative colitis</a> ·
-              <a href="<?php echo esc_url( vance_gi_cond_url('microscopic-colitis') ); ?>" style="color:#006666;font-weight:600">Microscopic colitis</a>
-            </div>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>NHS. <em>Inflammatory bowel disease</em>. nhs.uk</li>
-              <li>NICE guidance on Crohn's disease and ulcerative colitis management. nice.org.uk</li>
-              <li>Crohn's &amp; Colitis UK. crohnsandcolitis.org.uk</li>
-              <li>Guts UK Charity. gutscharity.org.uk</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is IBD?', 'types' => 'Types of IBD', 'symptoms' => 'Symptoms', 'causes' => 'Causes &amp; risk factors', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment &amp; management'];
-          break;
-
-          /* ─────────────────────────────────────────
-             ULCERATIVE COLITIS
-             ───────────────────────────────────────── */
-          case 'ulcerative-colitis': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is Ulcerative Colitis?</h2>
-            <p>Ulcerative colitis (UC) is a long-term condition where the lining of the large bowel, the colon and rectum, becomes inflamed. Small sores (ulcers) can form on the lining, which may bleed and produce mucus.</p>
-            <p>UC can occur at any age and is often first diagnosed in younger adults. Most people have times when symptoms flare up, followed by periods of remission when they feel well.</p>
-            <div class="gi-callout">
-              <strong>Key fact:</strong> ulcerative colitis always begins in the rectum and can spread part or all of the way up the colon. Unlike Crohn's disease, it affects only the colon and rectum, and only the inner lining.
-            </div>
-            <div class="gi-keyfacts">
-              <div class="gi-keyfact gi-reveal">
-                <div class="gi-kf-num">~<span data-count="1">0</span> in <span data-count="420">0</span></div>
-                <div class="gi-kf-label">People in the UK are estimated to live with UC</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <ul class="gi-bullets">
-              <li>Diarrhoea, often containing blood or mucus</li>
-              <li>An urgent and frequent need to empty the bowel</li>
-              <li>Tummy pain and cramping, often eased by passing a stool</li>
-              <li>A feeling of needing to go even when the bowel is empty (tenesmus)</li>
-              <li>Tiredness, weight loss and reduced appetite during <strong>flares</strong></li>
-            </ul>
-            <div class="gi-callout"><strong>When to seek help:</strong> it's a good idea to seek urgent advice if you have a severe flare, for example frequent bloody stools, a fever, a racing heart or significant tummy pain.</div>
-
-            <figure class="gi-diagram-card">
-              <figcaption class="gi-diagram-title">How far UC extends</figcaption>
-              <svg viewBox="0 0 560 230" role="img" aria-label="Diagram showing the three patterns of how far ulcerative colitis extends">
-                <g transform="translate(28,16)">
-                  <path d="M30 150 L30 50 Q30 22 58 22 L112 22 Q140 22 140 50 L140 118 Q140 142 118 142 L106 142 Q92 142 96 160 L102 176" fill="none" stroke="#c3d0da" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M106 142 Q92 142 96 160 L102 176" fill="none" stroke="#008080" stroke-width="9" stroke-linecap="round"/>
-                  <text x="85" y="206" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="600" font-size="14" fill="#0A1929">Proctitis</text>
-                  <text x="85" y="222" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">rectum only · ~30%</text>
-                </g>
-                <g transform="translate(212,16)">
-                  <path d="M30 150 L30 50 Q30 22 58 22 L112 22 Q140 22 140 50 L140 118 Q140 142 118 142 L106 142 Q92 142 96 160 L102 176" fill="none" stroke="#c3d0da" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M140 60 L140 118 Q140 142 118 142 L106 142 Q92 142 96 160 L102 176" fill="none" stroke="#008080" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                  <text x="85" y="206" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="600" font-size="14" fill="#0A1929">Left-sided colitis</text>
-                  <text x="85" y="222" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">up the left colon · ~40%</text>
-                </g>
-                <g transform="translate(396,16)">
-                  <path d="M30 150 L30 50 Q30 22 58 22 L112 22 Q140 22 140 50 L140 118 Q140 142 118 142 L106 142 Q92 142 96 160 L102 176" fill="none" stroke="#008080" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                  <text x="85" y="206" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="600" font-size="14" fill="#0A1929">Extensive colitis</text>
-                  <text x="85" y="222" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">most or all of the colon · ~30%</text>
-                </g>
-              </svg>
-              <p class="gi-diagram-note">Illustrative proportions at diagnosis; the pattern varies between individuals. UC always starts in the rectum.</p>
-            </figure>
-          </section>
-
-          <section id="causes" class="gi-reveal">
-            <h2>Causes &amp; risk factors</h2>
-            <p>UC develops from a combination of factors, rather than one single cause:</p>
-            <ul class="gi-bullets">
-              <li>Genetics and family history of IBD</li>
-              <li>The immune system's response in the gut</li>
-              <li>The gut microbiome</li>
-              <li>Environmental factors</li>
-            </ul>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <ul class="gi-bullets">
-              <li>Blood tests for inflammation and anaemia</li>
-              <li>Stool tests, including <strong>faecal calprotectin</strong>, and tests to rule out infection</li>
-              <li>Colonoscopy with biopsies to confirm the diagnosis and map how much of the colon is involved</li>
-            </ul>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment &amp; management</h2>
-            <p>The aim is to bring <strong>flares</strong> under control, then keep the bowel healed and in <strong>remission</strong>.</p>
-            <ul class="gi-bullets">
-              <li><strong>Aminosalicylates / 5-ASAs</strong> (for example mesalazine or sulfasalazine): often the first-line treatment, taken by mouth or as an enema/suppository</li>
-              <li><strong>Steroids</strong> (for example prednisolone or budesonide): short courses to settle a flare</li>
-              <li><strong>Immunosuppressants and biologic therapies</strong> (for example azathioprine, infliximab, adalimumab or vedolizumab): for more active or hard-to-treat disease</li>
-              <li><strong>Surgery</strong>: removing the colon can cure UC and is an option for some people</li>
-            </ul>
-          </section>
-
-          <section id="living" class="gi-reveal">
-            <h2>Living with Ulcerative Colitis</h2>
-            <p>Many people with UC lead full, active lives. Taking maintenance treatment as prescribed, attending reviews, knowing your personal warning signs and looking after sleep, stress and diet all help keep things stable.</p>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>NHS. <em>Ulcerative colitis</em>. nhs.uk</li>
-              <li>NICE NG130. <em>Ulcerative colitis: management</em>. nice.org.uk</li>
-              <li>Crohn's &amp; Colitis UK. <em>Ulcerative colitis</em>. crohnsandcolitis.org.uk</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is Ulcerative Colitis?', 'symptoms' => 'Symptoms', 'causes' => 'Causes &amp; risk factors', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment &amp; management', 'living' => 'Living with Ulcerative Colitis'];
-          break;
-
-          /* ─────────────────────────────────────────
-             CROHN'S DISEASE
-             ───────────────────────────────────────── */
-          case 'crohns-disease': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is Crohn's Disease?</h2>
-            <p>Crohn's disease is a long-term condition where the immune system causes inflammation that can appear anywhere along the gut, from the mouth to the anus. It most commonly affects the last part of the small intestine (the terminal ileum) and the start of the colon.</p>
-            <p>A key feature is that the inflammation comes in patches, with healthy stretches of bowel in between, and it can reach through the full thickness of the bowel wall. Over time this can sometimes lead to narrowing (strictures) or small tunnels between loops of bowel (fistulas).</p>
-            <div class="gi-callout"><strong>Crohn's vs ulcerative colitis:</strong> Crohn's can affect any part of the gut, in patches, and through the whole bowel wall. Ulcerative colitis affects only the colon and rectum, in a continuous pattern, and only the lining.</div>
-            <div class="gi-callout"><strong>Key fact:</strong> Crohn's most commonly affects the end of the small intestine (the terminal ileum), but it can appear anywhere from mouth to anus.</div>
-            <div class="gi-keyfacts">
-              <div class="gi-keyfact gi-reveal">
-                <div class="gi-kf-num">~115,000–250,000</div>
-                <div class="gi-kf-label">People in the UK are estimated to live with Crohn's disease</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <ul class="gi-bullets">
-              <li>Tummy pain and cramping, often in the lower right side</li>
-              <li>Persistent or recurring diarrhoea</li>
-              <li>Fatigue and feeling generally unwell</li>
-              <li>Unintended weight loss</li>
-              <li>Blood or mucus in the stool</li>
-              <li>Mouth ulcers, and soreness around the anus</li>
-            </ul>
-            <figure class="gi-diagram-card">
-              <figcaption class="gi-diagram-title">Where Crohn's commonly occurs</figcaption>
-              <svg viewBox="0 0 560 290" role="img" aria-label="Schematic gut diagram showing where Crohn's disease commonly occurs">
-                <path d="M298 76 C 270 110, 330 128, 296 152 C 262 176, 330 196, 292 216 C 268 230, 250 222, 238 212" fill="none" stroke="#94a8b8" stroke-width="5" stroke-linecap="round"/>
-                <path d="M170 250 L170 110 Q170 80 200 80 L386 80 Q416 80 416 110 L416 218 Q416 246 388 246 L362 246 Q340 246 346 268 L352 282" fill="none" stroke="#94a8b8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M200 80 L386 80 Q416 80 416 110 L416 190" fill="none" stroke="#78bfbf" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="238" cy="212" r="14" fill="#006666"/>
-                <path d="M170 250 L170 130" fill="none" stroke="#008080" stroke-width="9" stroke-linecap="round"/>
-                <circle cx="276" cy="184" r="9" fill="#008080"/>
-                <text x="118" y="262" font-family="Inter, sans-serif" font-size="13" fill="#6B7280" text-anchor="end">Terminal</text>
-                <text x="118" y="277" font-family="Inter, sans-serif" font-size="13" fill="#6B7280" text-anchor="end">ileum</text>
-                <line x1="124" y1="262" x2="224" y2="216" stroke="#cdd6df" stroke-width="2"/>
-              </svg>
-              <ul class="gi-diagram-legend">
-                <li><span class="gi-swatch" style="background:#006666"></span>Terminal ileum: ~30%</li>
-                <li><span class="gi-swatch" style="background:#78bfbf"></span>Colon only: ~30%</li>
-                <li><span class="gi-swatch" style="background:#008080"></span>Ileum &amp; colon: ~40%</li>
-              </ul>
-              <p class="gi-diagram-note">Illustrative split of where Crohn's commonly occurs; it can affect any part of the gut.</p>
-            </figure>
-          </section>
-
-          <section id="causes" class="gi-reveal">
-            <h2>Causes &amp; risk factors</h2>
-            <p>As with other forms of IBD, Crohn's results from a combination of factors:</p>
-            <ul class="gi-bullets">
-              <li>Genetics and family history</li>
-              <li>The immune system's response in the gut</li>
-              <li>The gut microbiome</li>
-              <li>Environmental factors, including smoking, which is linked to a higher risk and severity of Crohn's</li>
-            </ul>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <ul class="gi-bullets">
-              <li>Blood and stool tests, including <strong>faecal calprotectin</strong></li>
-              <li>Colonoscopy with biopsies</li>
-              <li>MRI or CT scans to assess the small bowel and check for complications</li>
-              <li>Capsule endoscopy in some cases</li>
-            </ul>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment &amp; management</h2>
-            <p>Treatment can bring on and maintain remission and help prevent complications.</p>
-            <ul class="gi-bullets">
-              <li>Steroids (for example prednisolone or budesonide) or liquid nutrition therapy to settle a flare</li>
-              <li>Immunosuppressants and biologic therapies (for example azathioprine, infliximab, adalimumab or ustekinumab) to maintain remission</li>
-              <li>Surgery to remove or repair badly affected sections, common in Crohn's, though inflammation can return</li>
-            </ul>
-          </section>
-
-          <section id="living" class="gi-reveal">
-            <h2>Living with Crohn's Disease</h2>
-            <p>With modern treatment and regular specialist review, most people with Crohn's manage their symptoms well. Good nutrition, watching for warning signs and looking after mental wellbeing are all important parts of care.</p>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>NHS. <em>Crohn's disease</em>. nhs.uk</li>
-              <li>NICE NG129. <em>Crohn's disease: management</em>. nice.org.uk</li>
-              <li>Crohn's &amp; Colitis UK. <em>Crohn's disease</em>. crohnsandcolitis.org.uk</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is Crohn\'s Disease?', 'symptoms' => 'Symptoms', 'causes' => 'Causes &amp; risk factors', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment &amp; management', 'living' => 'Living with Crohn\'s Disease'];
-          break;
-
-          /* ─────────────────────────────────────────
-             MICROSCOPIC COLITIS
-             ───────────────────────────────────────── */
-          case 'microscopic-colitis': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is Microscopic Colitis?</h2>
-            <p>Microscopic colitis is a type of inflammatory bowel disease affecting the large bowel. Its defining feature is that the colon usually looks completely normal during a colonoscopy. The inflammation only shows up when a small tissue sample (a biopsy) is examined under a microscope.</p>
-            <p>Because the bowel looks normal, it is often mistaken for irritable bowel syndrome. It is a common and treatable cause of ongoing watery diarrhoea, particularly in older adults.</p>
-            <div class="gi-callout">
-              <strong>Key fact:</strong> microscopic colitis is more common in women, especially over the age of 60, and is confirmed by taking a biopsy even when the colon looks normal.
-            </div>
-          </section>
-
-          <section id="subtypes" class="gi-reveal">
-            <h2>Subtypes</h2>
-            <table class="gi-compare-table">
-              <thead>
-                <tr><th>Subtype</th><th>What's different under the microscope</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><strong>Collagenous colitis</strong></td><td>A thickened band of collagen forms just beneath the lining of the colon</td></tr>
-                <tr><td><strong>Lymphocytic colitis</strong></td><td>An increased number of white blood cells (lymphocytes) in the colon lining</td></tr>
-              </tbody>
-            </table>
-            <p>The two subtypes cause similar symptoms and are generally treated in the same way.</p>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <ul class="gi-bullets">
-              <li>Chronic watery diarrhoea that is not bloody</li>
-              <li>An urgent need to empty the bowel, sometimes at night</li>
-              <li>Tummy pain or cramps</li>
-              <li>Faecal incontinence in some people</li>
-              <li>Tiredness and mild weight loss</li>
-            </ul>
-          </section>
-
-          <section id="causes" class="gi-reveal">
-            <h2>Causes &amp; risk factors</h2>
-            <p>The exact trigger isn't fully understood, but it is thought to involve the immune system reacting to something passing through the bowel. Microscopic colitis is more likely in people with these known associations:</p>
-            <ul class="gi-bullets">
-              <li>Being female and over 60</li>
-              <li>Autoimmune conditions such as coeliac disease, thyroid disorders and rheumatoid arthritis</li>
-              <li>Certain medicines, including some anti-inflammatory painkillers (NSAIDs), acid-reducing drugs (PPIs) and some antidepressants (SSRIs)</li>
-            </ul>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <p>Diagnosis relies on a colonoscopy <strong>with biopsies</strong>. Even when the bowel looks normal, the laboratory findings confirm the type. Blood and stool tests help rule out other causes such as coeliac disease or infection.</p>
-            <div class="gi-callout"><strong>Why it can be missed:</strong> a normal-looking colonoscopy can be falsely reassuring. In anyone with persistent watery diarrhoea, taking biopsies is the key step that confirms the diagnosis.</div>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment &amp; management</h2>
-            <ul class="gi-bullets">
-              <li><strong>Budesonide</strong>, a targeted steroid, is usually the first-line treatment and works well for most people</li>
-              <li>Reviewing any medicines that may be contributing</li>
-              <li>Anti-diarrhoeal medicines for milder symptoms</li>
-              <li>Simple dietary adjustments</li>
-            </ul>
-            <p>Symptoms often settle with treatment, though they can come back and may need a further course.</p>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>Guts UK Charity. <em>Microscopic colitis</em>. gutscharity.org.uk</li>
-              <li>British Society of Gastroenterology guidelines on microscopic colitis. bsg.org.uk</li>
-              <li>NHS. <em>Colitis</em>. nhs.uk</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is Microscopic Colitis?', 'subtypes' => 'Subtypes', 'symptoms' => 'Symptoms', 'causes' => 'Causes &amp; risk factors', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment &amp; management'];
-          break;
-
-          /* ─────────────────────────────────────────
-             IRRITABLE BOWEL SYNDROME
-             ───────────────────────────────────────── */
-          case 'irritable-bowel-syndrome': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is Irritable Bowel Syndrome?</h2>
-            <p>Irritable bowel syndrome (IBS) is one of the most common digestive conditions. It is a <strong>functional</strong> disorder, which means the gut doesn't work as it should even though it looks normal and isn't damaged. This is what sets it apart from inflammatory bowel disease.</p>
-            <p>IBS is closely linked to how the gut and the brain communicate; this is often referred to as the <strong>gut-brain axis</strong>. It can be uncomfortable and disruptive, but it does not damage the bowel or raise the risk of bowel cancer.</p>
-            <div class="gi-keyfacts">
-              <div class="gi-keyfact gi-reveal">
-                <div class="gi-kf-num"><span data-count="1">0</span> in <span data-count="7">0</span></div>
-                <div class="gi-kf-label">Adults are thought to have IBS symptoms</div>
-              </div>
-              <div class="gi-keyfact gi-reveal" style="--reveal-delay:.08s">
-                <div class="gi-kf-num">~<span data-count="2">0</span>× more common</div>
-                <div class="gi-kf-label">In women than in men</div>
-              </div>
-              <div class="gi-keyfact gi-reveal" style="--reveal-delay:.16s">
-                <div class="gi-kf-num"><span data-count="3">0</span> main types</div>
-                <div class="gi-kf-label">IBS-D, IBS-C and IBS-M</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="subtypes" class="gi-reveal">
-            <h2>Subtypes</h2>
-            <p>IBS is grouped by the main change in bowel habit, which helps guide treatment:</p>
-            <div class="gi-mini-grid">
-              <div class="gi-mini-card">
-                <h4>IBS-D</h4>
-                <p>Diarrhoea-predominant: loose or frequent stools are the main problem.</p>
-              </div>
-              <div class="gi-mini-card">
-                <h4>IBS-C</h4>
-                <p>Constipation-predominant: infrequent, hard or difficult-to-pass stools.</p>
-              </div>
-              <div class="gi-mini-card">
-                <h4>IBS-M</h4>
-                <p>Mixed: alternating between diarrhoea and constipation over time.</p>
-              </div>
-            </div>
-            <p>Many people move between subtypes over time.</p>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <ul class="gi-bullets">
-              <li>Abdominal pain or cramping, often relieved by passing a stool</li>
-              <li>Bloating and a swollen tummy</li>
-              <li>Diarrhoea, constipation, or both at different times</li>
-              <li>Excess wind</li>
-              <li>A feeling of not having fully emptied the bowel</li>
-              <li>Mucus in the stool</li>
-            </ul>
-            <div class="gi-callout"><strong>When to get checked:</strong> some symptoms are not typical of IBS and should always be checked by a doctor: blood in the stool, unexplained weight loss, a persistent change in bowel habit over the age of 50, or symptoms that wake you at night.</div>
-          </section>
-
-          <section id="causes" class="gi-reveal">
-            <h2>Causes &amp; triggers</h2>
-            <p>There is no single cause. IBS is thought to involve a sensitive gut, changes in how quickly the bowel moves, and altered gut-brain signalling. Common triggers that can worsen symptoms include:</p>
-            <ul class="gi-bullets">
-              <li><strong>Diet</strong>: certain foods, including some high in fermentable carbohydrates (FODMAPs)</li>
-              <li><strong>Stress and anxiety</strong>, through the gut-brain connection</li>
-              <li><strong>A previous bout of gastroenteritis</strong> (post-infectious IBS)</li>
-              <li><strong>Hormonal changes</strong>, such as around the menstrual cycle</li>
-            </ul>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <p>IBS is usually diagnosed from the typical pattern of symptoms (often using the <strong>Rome criteria</strong>) once other conditions have been ruled out. A doctor may arrange blood tests, a coeliac disease test and a stool test for <strong>faecal calprotectin</strong> to help exclude inflammation or infection.</p>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment &amp; management</h2>
-            <p>IBS cannot be cured, but symptoms can usually be well controlled with a combination of approaches tailored to the individual:</p>
-            <ul class="gi-bullets">
-              <li><strong>Diet and lifestyle</strong>: regular meals, adjusting fibre, and limiting caffeine and alcohol; a dietitian-supervised low-FODMAP diet helps many people</li>
-              <li><strong>Medicines</strong>: antispasmodics for pain, laxatives for constipation, or anti-diarrhoeals for loose stools</li>
-              <li><strong>Probiotics</strong>: worth a trial for some people</li>
-              <li><strong>Psychological therapies</strong>: cognitive behavioural therapy (CBT) or gut-directed hypnotherapy can be very effective</li>
-            </ul>
-          </section>
-
-          <section id="living" class="gi-reveal">
-            <h2>Living with IBS</h2>
-            <p>Identifying your personal triggers, often with a food and symptom diary, managing stress, staying active and keeping a regular routine can all make a big difference. IBS tends to come and go, but most people find a management plan that lets them get on with daily life.</p>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>NHS. <em>Irritable bowel syndrome (IBS)</em>. nhs.uk</li>
-              <li>NICE CG61. <em>Irritable bowel syndrome in adults</em>. nice.org.uk</li>
-              <li>Guts UK Charity. gutscharity.org.uk</li>
-              <li>The IBS Network. theibsnetwork.org</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is Irritable Bowel Syndrome?', 'subtypes' => 'Subtypes', 'symptoms' => 'Symptoms', 'causes' => 'Causes &amp; triggers', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment &amp; management', 'living' => 'Living with IBS'];
-          break;
-
-          /* ─────────────────────────────────────────
-             COLORECTAL CANCER
-             ───────────────────────────────────────── */
-          case 'colorectal-cancer': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is Colorectal Cancer?</h2>
-            <p>Colorectal cancer, also called bowel cancer, starts in the large bowel (colon) or back passage (rectum). Most bowel cancers develop slowly from small growths called polyps on the bowel lining. Not all polyps become cancer, and finding and removing them, often during screening, can stop a cancer from ever forming.</p>
-            <div class="gi-keyfacts">
-              <div class="gi-keyfact gi-reveal">
-                <div class="gi-kf-num"><span data-count="9">0</span> in <span data-count="10">0</span></div>
-                <div class="gi-kf-label">Survive bowel cancer when it is found at the earliest stage</div>
-              </div>
-              <div class="gi-keyfact gi-reveal" style="--reveal-delay:.08s">
-                <div class="gi-kf-num">4th</div>
-                <div class="gi-kf-label">Most common cancer in the UK</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <ul class="gi-bullets">
-              <li>Bleeding from the back passage, or blood in the stool</li>
-              <li>A lasting change in bowel habit, looser stools, or going more often</li>
-              <li>Tummy pain, bloating or discomfort, especially after eating</li>
-              <li>Unintended weight loss</li>
-              <li>Tiredness or breathlessness from unexplained anaemia</li>
-            </ul>
-            <div class="gi-callout"><strong>Don't panic:</strong> most of the time these symptoms are caused by something far less serious than cancer. If they last more than a few weeks, see your GP.</div>
-          </section>
-
-          <section id="risk" class="gi-reveal">
-            <h2>Risk factors</h2>
-            <ul class="gi-bullets">
-              <li><strong>Age</strong>: risk rises from around the age of 50</li>
-              <li>A family history of bowel cancer, or certain inherited conditions</li>
-              <li>A long history of inflammatory bowel disease</li>
-              <li><strong>Lifestyle</strong>: diets high in red and processed meat and low in fibre, being overweight, smoking and drinking a lot of alcohol</li>
-            </ul>
-          </section>
-
-          <section id="screening" class="gi-reveal">
-            <h2>Screening</h2>
-            <p>Screening looks for early signs of cancer in people who have no symptoms. This is the single most effective way to catch bowel cancer early.</p>
-            <figure class="gi-diagram-card">
-              <figcaption class="gi-diagram-title">How NHS bowel cancer screening works</figcaption>
-              <div class="gi-steps">
-                <div class="gi-step">
-                  <h4>A kit arrives by post</h4>
-                  <p>An NHS bowel screening kit is posted to eligible adults within the screening age range.</p>
-                </div>
-                <div class="gi-step">
-                  <h4>Take the FIT test at home</h4>
-                  <p>The faecal immunochemical test takes a few minutes and detects tiny traces of blood in the stool.</p>
-                </div>
-                <div class="gi-step">
-                  <h4>Colonoscopy if needed</h4>
-                  <p>If the test is positive, a colonoscopy looks at the bowel lining and can remove any polyps found.</p>
-                </div>
-              </div>
-            </figure>
-            <div class="gi-callout"><strong>If you receive a screening kit, use it.</strong> Using it takes only a few minutes at home and can detect changes long before any symptoms appear.</div>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <p>If bowel cancer is suspected, the main test is a <strong>colonoscopy</strong>, which lets the bowel be examined and biopsies taken. Scans such as CT then check the size of the cancer and whether it has spread (its stage), which guides treatment.</p>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment</h2>
-            <p>Treatment depends on where the cancer is, its stage and a person's general health. The main options, often used in combination, are:</p>
-            <ul class="gi-bullets">
-              <li>Surgery to remove the affected part of the bowel, the most common treatment</li>
-              <li>Chemotherapy</li>
-              <li>Radiotherapy, particularly for rectal cancer</li>
-              <li>Targeted and immunotherapy medicines for some cancers</li>
-            </ul>
-          </section>
-
-          <section id="prevention" class="gi-reveal">
-            <h2>Prevention</h2>
-            <p>You can lower your risk by eating plenty of fibre, fruit and vegetables, limiting red and processed meat and alcohol, keeping to a healthy weight, staying active and not smoking, alongside taking part in screening when invited.</p>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>NHS. <em>Bowel cancer</em>. nhs.uk</li>
-              <li>NHS. <em>Bowel cancer screening</em>. nhs.uk</li>
-              <li>Bowel Cancer UK. bowelcanceruk.org.uk</li>
-              <li>Cancer Research UK. <em>Bowel cancer</em>. cancerresearchuk.org</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is Colorectal Cancer?', 'symptoms' => 'Symptoms', 'risk' => 'Risk factors', 'screening' => 'Screening', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'prevention' => 'Prevention'];
-          break;
-
-          /* ─────────────────────────────────────────
-             DIVERTICULAR DISEASE
-             ───────────────────────────────────────── */
-          case 'diverticular-disease': ?>
-
-          <section id="what" class="gi-reveal">
-            <h2>What is diverticular disease and diverticulitis?</h2>
-            <p>Diverticular disease and diverticulitis affect the large bowel (colon). Over time, small pouches called <strong>diverticula</strong> can develop in the bowel wall. Having these pouches is extremely common as we age and is known as <strong>diverticulosis</strong>.</p>
-            <p>Most people with diverticula never know they have them. When the pouches cause symptoms such as tummy pain, it is called <strong>diverticular disease</strong>. If a pouch becomes inflamed or infected, this is <strong>diverticulitis</strong>.</p>
-            <div class="gi-callout">
-              <strong>Key fact:</strong> diverticula are a normal part of getting older for many people and usually cause no problems at all. Simple steps, including eating enough fibre, can help ease symptoms and keep them away.
-            </div>
-          </section>
-
-          <section id="terms" class="gi-reveal">
-            <h2>Three terms explained</h2>
-            <figure class="gi-diagram-card">
-              <figcaption class="gi-diagram-title">A section of the colon wall</figcaption>
-              <svg viewBox="0 0 560 200" role="img" aria-label="Cross-section diagram of the colon showing healthy bowel, pouches and an inflamed pouch">
-                <rect x="30" y="55" width="500" height="70" rx="35" fill="#def4f4" stroke="#94a8b8" stroke-width="5"/>
-                <text x="105" y="45" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#6B7280">Healthy bowel wall</text>
-                <path d="M250 124 q0 26 22 26 q22 0 22 -26" fill="#def4f4" stroke="#008080" stroke-width="5"/>
-                <path d="M330 124 q0 22 18 22 q18 0 18 -22" fill="#def4f4" stroke="#008080" stroke-width="5"/>
-                <text x="300" y="184" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#6B7280">Pouches (diverticula)</text>
-                <path d="M430 124 q0 28 24 28 q24 0 24 -28" fill="#f6ddda" stroke="#c0564b" stroke-width="5"/>
-                <text x="478" y="184" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#6B7280">Inflamed (diverticulitis)</text>
-              </svg>
-              <p class="gi-diagram-note">Simplified cross-section for illustration.</p>
-            </figure>
-            <table class="gi-compare-table">
-              <thead>
-                <tr><th>Term</th><th>What it means</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><strong>Diverticulosis</strong></td><td>Pouches are present in the bowel, but cause no symptoms</td></tr>
-                <tr><td><strong>Diverticular disease</strong></td><td>The pouches cause symptoms such as tummy pain</td></tr>
-                <tr><td><strong>Diverticulitis</strong></td><td>One or more pouches become inflamed or infected</td></tr>
-              </tbody>
-            </table>
-          </section>
-
-          <section id="symptoms" class="gi-reveal">
-            <h2>Symptoms</h2>
-            <h3>Diverticular disease</h3>
-            <ul class="gi-bullets">
-              <li>Tummy pain, usually in the lower left side (a small number of people feel it on the right)</li>
-              <li>Pain that often eases after passing wind or having a poo</li>
-              <li>Bloating</li>
-              <li>Constipation, diarrhoea, or both</li>
-              <li>Occasionally, blood in the stool</li>
-            </ul>
-            <h3>Diverticulitis (more serious)</h3>
-            <ul class="gi-bullets">
-              <li>More severe, constant tummy pain (usually on the left)</li>
-              <li>A high temperature (fever)</li>
-              <li>Feeling sick or being sick</li>
-              <li>A change in bowel habit, sometimes with blood or mucus</li>
-              <li>Feeling generally tired and unwell</li>
-            </ul>
-            <div class="gi-callout"><strong>When to seek help:</strong> see your GP if you have ongoing tummy pain or a change in bowel habit. Seek urgent medical advice if you have severe tummy pain with a fever, as diverticulitis sometimes needs prompt treatment.</div>
-          </section>
-
-          <section id="causes" class="gi-reveal">
-            <h2>Causes &amp; risk factors</h2>
-            <p>Diverticula are thought to form when weak spots in the bowel wall give way under pressure, for example from straining with constipation. Factors linked to a higher risk include:</p>
-            <ul class="gi-bullets">
-              <li>A low-fibre diet</li>
-              <li>Getting older, as the bowel wall naturally weakens</li>
-              <li>Constipation and straining</li>
-              <li>Being overweight</li>
-              <li>Not being very physically active</li>
-              <li>Some painkillers, such as NSAIDs (anti-inflammatories)</li>
-              <li>Smoking</li>
-            </ul>
-          </section>
-
-          <section id="diagnosis" class="gi-reveal">
-            <h2>Diagnosis</h2>
-            <ul class="gi-bullets">
-              <li>Diverticulosis is often found by chance during tests done for another reason</li>
-              <li>A CT scan is the main test if diverticulitis is suspected</li>
-              <li>A colonoscopy or CT colonography may be used to look at the bowel lining</li>
-              <li>Blood tests can check for signs of infection</li>
-            </ul>
-          </section>
-
-          <section id="treatment" class="gi-reveal">
-            <h2>Treatment &amp; management</h2>
-            <h3>Diverticular disease</h3>
-            <ul class="gi-bullets">
-              <li>A high-fibre diet and plenty of fluids, increasing fibre gradually</li>
-              <li>Managing constipation</li>
-              <li>Simple pain relief such as paracetamol; avoid NSAIDs and opioid painkillers, which can upset the bowel</li>
-            </ul>
-            <h3>Diverticulitis</h3>
-            <ul class="gi-bullets">
-              <li>Mild cases can often be managed at home, sometimes with antibiotics</li>
-              <li>More serious cases may need hospital treatment, and occasionally surgery, to treat or prevent complications</li>
-            </ul>
-          </section>
-
-          <section id="living" class="gi-reveal">
-            <h2>Living with it &amp; prevention</h2>
-            <p>Most people with diverticular disease manage well with simple changes. Eating plenty of fibre, drinking enough fluids, staying active and keeping to a healthy weight can all help reduce symptoms and lower the chance of future flare-ups.</p>
-          </section>
-
-          <div class="gi-references gi-reveal">
-            <h2>References &amp; further reading</h2>
-            <ol>
-              <li>NHS. <em>Diverticular disease and diverticulitis</em>. nhs.uk</li>
-              <li>Guts UK Charity. <em>Diverticular disease</em>. gutscharity.org.uk</li>
-              <li>NICE NG147. <em>Diverticular disease: diagnosis and management</em>. nice.org.uk</li>
-            </ol>
-            <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
-          </div>
-
-          <?php
-          $toc = ['what' => 'What is diverticular disease?', 'terms' => 'Three terms explained', 'symptoms' => 'Symptoms', 'causes' => 'Causes &amp; risk factors', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment &amp; management', 'living' => 'Living with it &amp; prevention'];
-          break;
-
           default:
             /* Fallback: display the page's WordPress content */
             $toc = [];
@@ -912,6 +194,970 @@ $nav_conditions = [
 
     </div><!-- .gi-cond-layout -->
   </section>
+  <?php endif; // ! $is_redesigned ?>
+
+  <?php if ( $is_redesigned ) :
+
+    $cp_facts = [
+        'inflammatory-bowel-disease' => [ 3, [ [ '500,000', 'People in the UK are estimated to live with IBD' ], [ 'Any age', 'IBD can be diagnosed at any age and is becoming more common' ], [ '3 types', 'Crohn\'s, ulcerative colitis and microscopic colitis' ] ] ],
+        'crohns-disease'           => [ 3, [ [ '115,000–250,000', 'People in the UK are estimated to live with Crohn\'s disease' ], [ 'Any part', 'Can affect anywhere from mouth to anus, most commonly the terminal ileum' ] ] ],
+        'ulcerative-colitis'       => [ 2, [ [ '1 in 420', 'People in the UK are estimated to live with UC' ], [ 'Any age', 'Often first diagnosed in younger adults, but can occur at any age' ] ] ],
+        'microscopic-colitis'      => [ 3, [ [ 'Women 60+', 'Most commonly affects women over the age of 60' ], [ 'Normal scope', 'Colon looks completely normal during colonoscopy' ], [ 'Treatable', 'Symptoms often settle well with targeted treatment' ] ] ],
+        'irritable-bowel-syndrome' => [ 3, [ [ '1 in 7', 'Adults are thought to have IBS symptoms' ], [ '~2x more', 'Common in women than in men' ], [ '3 types', 'IBS-D, IBS-C and IBS-M' ] ] ],
+        'colorectal-cancer'        => [ 2, [ [ '9 in 10', 'Survive bowel cancer when it is found at the earliest stage' ], [ '4th', 'Most common cancer in the UK' ] ] ],
+        'diverticular-disease'     => [ 3, [ [ '50%+', 'Of people over 50 have diverticula' ], [ '~25%', 'Will develop symptoms at some point' ], [ 'Treatable', 'Most cases managed with diet and lifestyle changes' ] ] ],
+    ];
+    $cp_nav = [
+        'inflammatory-bowel-disease' => [ 'what-is-ibd' => 'What is IBD?', 'types' => 'Types', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment' ],
+        'crohns-disease'           => [ 'what-is-crohns' => 'What is Crohn\'s?', 'location' => 'Location', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'living' => 'Living with Crohn\'s' ],
+        'ulcerative-colitis'       => [ 'what-is-uc' => 'What is UC?', 'extent' => 'Extent', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'living' => 'Living with UC' ],
+        'microscopic-colitis'      => [ 'what-is-mc' => 'What is MC?', 'subtypes' => 'Subtypes', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment' ],
+        'irritable-bowel-syndrome' => [ 'what-is-ibs' => 'What is IBS?', 'subtypes' => 'Subtypes', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'living' => 'Living with IBS' ],
+        'colorectal-cancer'        => [ 'what-is-crc' => 'What is it?', 'symptoms' => 'Symptoms', 'risk-factors' => 'Risk factors', 'screening' => 'Screening', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'prevention' => 'Prevention' ],
+        'diverticular-disease'     => [ 'what-is-dd' => 'What is it?', 'terms' => 'Three terms', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'living' => 'Living with it' ],
+    ];
+    $cp_explore = [
+        'inflammatory-bowel-disease' => [ [ 'crohns-disease', "Crohn's Disease" ], [ 'ulcerative-colitis', 'Ulcerative Colitis' ], [ 'microscopic-colitis', 'Microscopic Colitis' ] ],
+        'crohns-disease'           => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'ulcerative-colitis', 'Ulcerative Colitis' ], [ 'microscopic-colitis', 'Microscopic Colitis' ] ],
+        'ulcerative-colitis'       => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'crohns-disease', "Crohn's Disease" ], [ 'microscopic-colitis', 'Microscopic Colitis' ] ],
+        'microscopic-colitis'      => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'ulcerative-colitis', 'Ulcerative Colitis' ], [ 'crohns-disease', "Crohn's Disease" ] ],
+        'irritable-bowel-syndrome' => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'microscopic-colitis', 'Microscopic Colitis' ], [ 'colorectal-cancer', 'Colorectal Cancer' ] ],
+        'colorectal-cancer'        => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'diverticular-disease', 'Diverticular Disease' ], [ 'irritable-bowel-syndrome', 'IBS' ] ],
+        'diverticular-disease'     => [ [ 'colorectal-cancer', 'Colorectal Cancer' ], [ 'irritable-bowel-syndrome', 'IBS' ], [ 'inflammatory-bowel-disease', 'IBD Overview' ] ],
+    ];
+    $cp_explore_copy = [
+        'inflammatory-bowel-disease' => [ 'Explore the conditions in detail', 'Learn more about each type of IBD and how it is managed' ],
+        'colorectal-cancer'          => [ 'Explore related conditions', 'Learn more about other GI conditions' ],
+        'diverticular-disease'       => [ 'Explore related conditions', 'Learn more about other GI conditions' ],
+    ];
+    list( $cp_explore_h2, $cp_explore_p ) = $cp_explore_copy[ $slug ] ?? [ 'Explore related conditions', 'Learn more about IBD and other related conditions' ];
+    list( $cp_fact_cols, $cp_fact_items ) = $cp_facts[ $slug ];
+  ?>
+  <div class="gi-cp-container">
+
+    <!-- ===== Key facts ===== -->
+    <section class="gi-cp-facts<?php echo ( 2 === $cp_fact_cols ) ? ' is-cols-2' : ''; ?>">
+      <?php foreach ( $cp_fact_items as $fact ) : ?>
+      <div class="gi-cp-fact">
+        <div class="gi-cp-fact-num"><?php echo esc_html( $fact[0] ); ?></div>
+        <div class="gi-cp-fact-label"><?php echo esc_html( $fact[1] ); ?></div>
+      </div>
+      <?php endforeach; ?>
+    </section>
+
+    <!-- ===== In-page jump nav ===== -->
+    <nav class="gi-cp-nav" aria-label="On this page">
+      <ul>
+        <?php foreach ( $cp_nav[ $slug ] as $anchor => $label ) : ?>
+        <li><a href="#<?php echo esc_attr( $anchor ); ?>"><?php echo esc_html( $label ); ?></a></li>
+        <?php endforeach; ?>
+      </ul>
+    </nav>
+
+    <?php switch ( $slug ) {
+
+      /* ─────────────────────────────────────────
+         INFLAMMATORY BOWEL DISEASE (v2)
+         ───────────────────────────────────────── */
+      case 'inflammatory-bowel-disease': ?>
+
+      <section class="gi-cp-section" id="what-is-ibd">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📖</div><h2>What is IBD?</h2></div>
+        <div class="gi-cp-card">
+          <p>Inflammatory bowel disease (IBD) is the umbrella term for a group of long-term conditions in which the immune system causes ongoing inflammation of the digestive tract. The three main types are Crohn's disease, ulcerative colitis and microscopic colitis.</p>
+          <p>IBD usually follows a <strong>relapsing-remitting pattern</strong>: flares, when symptoms are active, followed by periods of remission, when symptoms settle.</p>
+          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> There isn't a single cure for IBD, but it can be managed well. Treatment can control inflammation, ease symptoms and help many people stay in long, stable remission. It is about finding the right management plan rather than a one-size-fits-all cure.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="types">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔍</div><h2>Types of IBD</h2></div>
+        <div class="gi-cp-card">
+          <p>Where each type affects the gut:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd.jpg' ); ?>" loading="lazy" alt="Comparison of the three types of IBD showing where each affects the gut"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile is-centered"><h4>Crohn's Disease</h4><p>Can affect any part of the gut, from mouth to anus, in patches. Most often the end of the small intestine.</p></div>
+                <div class="gi-cp-tile is-centered"><h4>Ulcerative Colitis</h4><p>Affects only the large bowel (colon) and rectum, causing inflammation and ulcers in the lining.</p></div>
+                <div class="gi-cp-tile is-centered"><h4>Microscopic Colitis</h4><p>A less widely known form where inflammation of the colon is only visible under a microscope.</p></div>
+              </div>
+            </div>
+          </div>
+          <p style="margin-top:20px">Crohn's disease and ulcerative colitis are the two most common forms. In a small number of people the pattern doesn't fit neatly into either and is described as IBD-unclassified.</p>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <p>Symptoms vary by type and by which part of the gut is affected. Common ones include:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing common IBD symptoms on a body silhouette"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Persistent diarrhoea, sometimes with blood or mucus</li>
+                <li>Tummy (abdominal) pain and cramping</li>
+                <li>Tiredness and fatigue</li>
+                <li>Unintended weight loss and loss of appetite</li>
+                <li>A frequent or urgent need to empty the bowel</li>
+              </ul>
+            </div>
+          </div>
+          <div class="gi-cp-highlight" style="margin-top:25px"><p>IBD can sometimes cause symptoms outside the gut too, such as joint pain, mouth ulcers or sore eyes. See the individual condition pages for more detail.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="causes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Causes &amp; risk factors</h2></div>
+        <div class="gi-cp-card">
+          <p>The exact cause isn't fully understood, but IBD is thought to develop from a combination of factors:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/causes-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing the four main factors contributing to IBD"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile"><h4>Genetics &amp; family history</h4><p>IBD is more common if a close relative has it</p></div>
+                <div class="gi-cp-tile"><h4>The immune system</h4><p>An over-active immune response in the gut</p></div>
+                <div class="gi-cp-tile"><h4>The gut microbiome</h4><p>The community of bacteria living in the bowel</p></div>
+                <div class="gi-cp-tile"><h4>Diet &amp; environment</h4><p>Lifestyle and environmental factors may play a role</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <p>Your doctor may use several tests to diagnose IBD:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing IBD diagnostic tools including blood tests, stool tests, colonoscopy and MRI"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-steps">
+                <div class="gi-cp-step"><div class="gi-cp-step-num">1</div><div class="gi-cp-step-text">Blood tests to check for inflammation and anaemia</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">2</div><div class="gi-cp-step-text">A stool test for <strong>faecal calprotectin</strong>, a marker of gut inflammation</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">3</div><div class="gi-cp-step-text">Endoscopy (colonoscopy) to look at the bowel lining and take biopsies</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">4</div><div class="gi-cp-step-text">Scans such as MRI or CT to assess the small bowel</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
+        <div class="gi-cp-card">
+          <p>Treatment has two goals: <strong>settling a flare</strong>, then <strong>maintaining remission</strong>. The right approach depends on the type, location and severity of the condition.</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing IBD treatment approaches including medication, biologics, diet and wellbeing support"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile"><h4>Anti-inflammatory medicines</h4><p>To calm the gut lining, for example aminosalicylates such as mesalazine</p></div>
+                <div class="gi-cp-tile"><h4>Immune-modifying &amp; biologic therapies</h4><p>For moderate-to-severe disease, for example azathioprine, infliximab, adalimumab or vedolizumab</p></div>
+                <div class="gi-cp-tile"><h4>Short courses of steroids</h4><p>To bring a flare under control, for example prednisolone or budesonide</p></div>
+                <div class="gi-cp-tile"><h4>Surgery</h4><p>For some people when medicines aren't enough</p></div>
+                <div class="gi-cp-tile"><h4>Diet &amp; wellbeing support</h4><p>Support for nutrition and overall wellbeing alongside medical treatment</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="gi-cp-highlight" style="margin-top:25px"><p>Most people with IBD are cared for by a specialist team and have regular reviews to keep things under control.</p></div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>NHS. <em>Inflammatory bowel disease</em>. nhs.uk</li>
+          <li>NICE guidance on Crohn's disease and ulcerative colitis management. nice.org.uk</li>
+          <li>Crohn's &amp; Colitis UK. crohnsandcolitis.org.uk</li>
+          <li>Guts UK Charity. gutscharity.org.uk</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+
+      /* ─────────────────────────────────────────
+         CROHN'S DISEASE (v2)
+         ───────────────────────────────────────── */
+      case 'crohns-disease': ?>
+
+      <section class="gi-cp-section" id="what-is-crohns">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📖</div><h2>What is Crohn's Disease?</h2></div>
+        <div class="gi-cp-card">
+          <p>Crohn's disease is a long-term condition where the immune system causes inflammation that can appear anywhere along the gut, from the mouth to the anus. It most commonly affects the last part of the small intestine (the terminal ileum) and the start of the colon.</p>
+          <p>A key feature is that the inflammation comes in <strong>patches</strong>, with healthy stretches of bowel in between, and it can reach through the <strong>full thickness</strong> of the bowel wall. Over time this can sometimes lead to narrowing (strictures) or small tunnels between loops of bowel (fistulas).</p>
+          <div class="gi-cp-highlight"><p><strong>Crohn's vs Ulcerative Colitis:</strong> Crohn's can affect any part of the gut, in patches, and through the whole bowel wall. Ulcerative colitis affects only the colon and rectum, in a continuous pattern, and only the lining.</p></div>
+          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Crohn's most commonly affects the end of the small intestine (the terminal ileum), but it can appear anywhere from mouth to anus.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="location">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔍</div><h2>Where Crohn's commonly occurs</h2></div>
+        <div class="gi-cp-card">
+          <p>Crohn's can affect any part of the digestive tract. Here's how it typically distributes at diagnosis:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/location-crohns.jpg' ); ?>" loading="lazy" alt="Diagram showing where Crohn's commonly occurs"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-big">~30%</div><h4>Terminal ileum only</h4><p>End of the small intestine</p></div>
+                <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-big">~30%</div><h4>Colon only</h4><p>Large intestine (colonic Crohn's)</p></div>
+                <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-big">~40%</div><h4>Ileum &amp; colon</h4><p>Both small and large intestine</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <p>Symptoms can vary depending on which part of the gut is affected:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-crohns.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Crohn's symptoms"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Tummy pain and cramping, often in the lower right side</li>
+                <li>Persistent or recurring diarrhoea</li>
+                <li>Fatigue and feeling generally unwell</li>
+                <li>Unintended weight loss</li>
+                <li>Blood or mucus in the stool</li>
+                <li>Mouth ulcers, and soreness around the anus</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="causes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Causes &amp; risk factors</h2></div>
+        <div class="gi-cp-card">
+          <p>As with other forms of IBD, Crohn's results from a combination of factors:</p>
+          <div class="gi-cp-grid">
+            <div class="gi-cp-tile"><h4>Genetics &amp; family history</h4><p>More common if a close relative has IBD</p></div>
+            <div class="gi-cp-tile"><h4>The immune system</h4><p>An over-active immune response in the gut</p></div>
+            <div class="gi-cp-tile"><h4>The gut microbiome</h4><p>The community of bacteria living in the bowel</p></div>
+            <div class="gi-cp-tile"><h4>Environmental factors</h4><p>Including smoking, which is linked to higher risk and severity of Crohn's</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <p>Your doctor may use several tests to diagnose Crohn's and understand which parts of the gut are affected:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing Crohn's diagnostic tools"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-steps">
+                <div class="gi-cp-step"><div class="gi-cp-step-num">1</div><div class="gi-cp-step-text">Blood and stool tests, including <strong>faecal calprotectin</strong></div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">2</div><div class="gi-cp-step-text">Colonoscopy with biopsies</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">3</div><div class="gi-cp-step-text">MRI or CT scans to assess the small bowel and check for complications</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">4</div><div class="gi-cp-step-text">Capsule endoscopy in some cases</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
+        <div class="gi-cp-card">
+          <p>Treatment can bring on and maintain <strong>remission</strong> and help prevent complications.</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing Crohn's treatment approaches"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile"><h4>Steroids or liquid nutrition therapy</h4><p>To settle a flare (e.g. prednisolone or budesonide, or exclusive enteral nutrition)</p></div>
+                <div class="gi-cp-tile"><h4>Immunosuppressants &amp; biologics</h4><p>To maintain remission (e.g. azathioprine, infliximab, adalimumab or ustekinumab)</p></div>
+                <div class="gi-cp-tile"><h4>Surgery</h4><p>To remove or repair badly affected sections; common in Crohn's, though inflammation can return</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="living">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🌟</div><h2>Living with Crohn's Disease</h2></div>
+        <div class="gi-cp-card">
+          <p>With modern treatment and regular specialist review, most people with Crohn's manage their symptoms well:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing a person living well with Crohn's"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-tips is-cols-1">
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Good nutrition</strong> — eating well supports healing and energy levels</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">⚠️</div><p><strong>Know your warning signs</strong> — recognise when a flare may be starting</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🧠</div><p><strong>Mental wellbeing</strong> — looking after your emotional health is an important part of care</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">📅</div><p><strong>Regular specialist review</strong> — stay in touch with your IBD team</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>NHS. <em>Crohn's disease</em>. nhs.uk</li>
+          <li>NICE NG129. <em>Crohn's disease: management</em>. nice.org.uk</li>
+          <li>Crohn's &amp; Colitis UK. <em>Crohn's disease</em>. crohnsandcolitis.org.uk</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+
+      /* ─────────────────────────────────────────
+         ULCERATIVE COLITIS (v2)
+         ───────────────────────────────────────── */
+      case 'ulcerative-colitis': ?>
+
+      <section class="gi-cp-section" id="what-is-uc">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📖</div><h2>What is Ulcerative Colitis?</h2></div>
+        <div class="gi-cp-card">
+          <p>Ulcerative colitis (UC) is a long-term condition where the lining of the large bowel — the colon and rectum — becomes inflamed. Small sores (ulcers) can form on the lining, which may bleed and produce mucus.</p>
+          <p>UC can occur at any age and is often first diagnosed in younger adults. Most people have times when symptoms <strong>flare up</strong>, followed by periods of <strong>remission</strong> when they feel well.</p>
+          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Ulcerative colitis always begins in the rectum and can spread part or all of the way up the colon. Unlike Crohn's disease, it affects only the colon and rectum, and only the inner lining.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="extent">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔍</div><h2>How far UC extends</h2></div>
+        <div class="gi-cp-card">
+          <p>UC always starts in the rectum. How far it spreads up the colon varies between individuals:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/extent-uc.jpg' ); ?>" loading="lazy" alt="Three diagrams showing proctitis, left-sided colitis, and pancolitis"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile is-centered"><h4>Proctitis</h4><p>Inflammation limited to the rectum only</p></div>
+                <div class="gi-cp-tile is-centered"><h4>Left-sided colitis</h4><p>Inflammation extends from the rectum up the left side of the colon</p></div>
+                <div class="gi-cp-tile is-centered"><h4>Extensive / Pancolitis</h4><p>Inflammation affects most or all of the colon</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <p>Symptoms can vary depending on how much of the colon is affected and how active the inflammation is:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-uc.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common UC symptoms"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Diarrhoea, often containing blood or mucus</li>
+                <li>An urgent and frequent need to empty the bowel</li>
+                <li>Tummy pain and cramping, often eased by passing a stool</li>
+                <li>A feeling of needing to go even when the bowel is empty (tenesmus)</li>
+                <li>Tiredness, weight loss and reduced appetite during flares</li>
+              </ul>
+            </div>
+          </div>
+          <div class="gi-cp-warning-urgent" style="margin-top:25px"><p><strong>When to seek help:</strong> Seek urgent advice if you have a severe flare — for example frequent bloody stools, a fever, a racing heart or significant tummy pain.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="causes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Causes &amp; risk factors</h2></div>
+        <div class="gi-cp-card">
+          <p>UC develops from a combination of factors, rather than one single cause:</p>
+          <div class="gi-cp-grid">
+            <div class="gi-cp-tile"><h4>Genetics &amp; family history</h4><p>More common if a close relative has IBD</p></div>
+            <div class="gi-cp-tile"><h4>The immune system</h4><p>An over-active immune response in the gut lining</p></div>
+            <div class="gi-cp-tile"><h4>The gut microbiome</h4><p>The community of bacteria living in the bowel</p></div>
+            <div class="gi-cp-tile"><h4>Environmental factors</h4><p>Lifestyle and environmental triggers may play a role</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <p>Your doctor may use several tests to diagnose UC and understand how much of the colon is affected:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing UC diagnostic tools"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-steps">
+                <div class="gi-cp-step"><div class="gi-cp-step-num">1</div><div class="gi-cp-step-text">Blood tests for inflammation and anaemia</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">2</div><div class="gi-cp-step-text">Stool tests, including <strong>faecal calprotectin</strong>, and tests to rule out infection</div></div>
+                <div class="gi-cp-step"><div class="gi-cp-step-num">3</div><div class="gi-cp-step-text">Colonoscopy with biopsies to confirm the diagnosis and map how much of the colon is involved</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
+        <div class="gi-cp-card">
+          <p>The aim is to bring <strong>flares</strong> under control, then keep the bowel healed and in <strong>remission</strong>.</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing UC treatment approaches"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile"><h4>Aminosalicylates / 5-ASAs</h4><p>Often the first-line treatment (e.g. mesalazine or sulfasalazine), taken by mouth or as an enema/suppository</p></div>
+                <div class="gi-cp-tile"><h4>Steroids</h4><p>Short courses to settle a flare (e.g. prednisolone or budesonide)</p></div>
+                <div class="gi-cp-tile"><h4>Immunosuppressants &amp; biologics</h4><p>For more active or hard-to-treat disease (e.g. azathioprine, infliximab, adalimumab or vedolizumab)</p></div>
+                <div class="gi-cp-tile"><h4>Surgery</h4><p>Removing the colon can cure UC and is an option for some people</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="living">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🌟</div><h2>Living with Ulcerative Colitis</h2></div>
+        <div class="gi-cp-card">
+          <p>Many people with UC lead full, active lives. Here are some things that can help keep things stable:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing a person living well with UC"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-tips is-cols-1">
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">💊</div><p><strong>Take maintenance treatment as prescribed</strong> — even when you feel well</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">📅</div><p><strong>Attend regular reviews</strong> — stay in touch with your specialist team</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">⚠️</div><p><strong>Know your warning signs</strong> — recognise when a flare may be starting</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Look after sleep, stress and diet</strong> — these all help keep things stable</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>NHS. <em>Ulcerative colitis</em>. nhs.uk</li>
+          <li>NICE NG130. <em>Ulcerative colitis: management</em>. nice.org.uk</li>
+          <li>Crohn's &amp; Colitis UK. <em>Ulcerative colitis</em>. crohnsandcolitis.org.uk</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+
+      /* ─────────────────────────────────────────
+         MICROSCOPIC COLITIS (v2)
+         ───────────────────────────────────────── */
+      case 'microscopic-colitis': ?>
+
+      <section class="gi-cp-section" id="what-is-mc">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔬</div><h2>What is Microscopic Colitis?</h2></div>
+        <div class="gi-cp-card">
+          <p>Microscopic colitis is a type of inflammatory bowel disease affecting the large bowel. Its defining feature is that the colon usually looks <strong>completely normal</strong> during a colonoscopy. The inflammation only shows up when a small tissue sample (a biopsy) is examined under a microscope.</p>
+          <p>Because the bowel looks normal, it is often mistaken for irritable bowel syndrome. It is a common and treatable cause of ongoing watery diarrhoea, particularly in older adults.</p>
+          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Microscopic colitis is more common in women, especially over the age of 60, and is confirmed by taking a biopsy even when the colon looks normal.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="subtypes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧪</div><h2>Subtypes</h2></div>
+        <div class="gi-cp-card">
+          <p>There are two main subtypes of microscopic colitis. The two subtypes cause similar symptoms and are generally treated in the same way.</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/subtypes-mc.jpg' ); ?>" loading="lazy" alt="Diagram showing the two subtypes of microscopic colitis"></div>
+            <div class="gi-cp-row-text">
+              <table class="gi-compare-table">
+                <thead><tr><th>Subtype</th><th>What's different under the microscope</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Collagenous colitis</strong></td><td>A thickened band of collagen forms just beneath the lining of the colon</td></tr>
+                  <tr><td><strong>Lymphocytic colitis</strong></td><td>An increased number of white blood cells (lymphocytes) in the colon lining</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <p>The main symptom is chronic watery diarrhoea that is not bloody:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-mc.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Microscopic Colitis symptoms"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Chronic watery diarrhoea that is not bloody</li>
+                <li>An urgent need to empty the bowel, sometimes at night</li>
+                <li>Tummy pain or cramps</li>
+                <li>Faecal incontinence in some people</li>
+                <li>Tiredness and mild weight loss</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="causes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Causes &amp; risk factors</h2></div>
+        <div class="gi-cp-card">
+          <p>The exact trigger isn't fully understood, but it is thought to involve the immune system reacting to something passing through the bowel. Microscopic colitis is more likely in people with these known associations:</p>
+          <div class="gi-cp-grid is-cols-1">
+            <div class="gi-cp-tile"><h4>Being female and over 60</h4><p>The condition is significantly more common in women, particularly after the age of 60</p></div>
+            <div class="gi-cp-tile"><h4>Autoimmune conditions</h4><p>Such as coeliac disease, thyroid disorders and rheumatoid arthritis</p></div>
+            <div class="gi-cp-tile"><h4>Certain medicines</h4><p>Including some anti-inflammatory painkillers (NSAIDs), acid-reducing drugs (PPIs) and some antidepressants (SSRIs)</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <p>Diagnosis relies on a colonoscopy <strong>with biopsies</strong>. Even when the bowel looks normal, the laboratory findings confirm the type. Blood and stool tests help rule out other causes such as coeliac disease or infection.</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-mc.jpg' ); ?>" loading="lazy" alt="Illustration showing the diagnostic process for Microscopic Colitis"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-warning"><p><strong>Why it can be missed:</strong> A normal-looking colonoscopy can be falsely reassuring. In anyone with persistent watery diarrhoea, taking biopsies is the key step that confirms the diagnosis.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
+        <div class="gi-cp-card">
+          <p>Symptoms often settle with treatment, though they can come back and may need a further course:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-mc.jpg' ); ?>" loading="lazy" alt="Illustration showing Microscopic Colitis treatment approaches"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile"><h4>Budesonide</h4><p>A targeted steroid, usually the first-line treatment and works well for most people</p></div>
+                <div class="gi-cp-tile"><h4>Medicine review</h4><p>Reviewing any medicines that may be contributing to symptoms</p></div>
+                <div class="gi-cp-tile"><h4>Anti-diarrhoeal medicines</h4><p>For milder symptoms, such as loperamide</p></div>
+                <div class="gi-cp-tile"><h4>Dietary adjustments</h4><p>Simple changes to diet that may help manage symptoms</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>Guts UK Charity. <em>Microscopic colitis</em>. gutscharity.org.uk</li>
+          <li>British Society of Gastroenterology guidelines on microscopic colitis. bsg.org.uk</li>
+          <li>NHS. <em>Colitis</em>. nhs.uk</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+
+      /* ─────────────────────────────────────────
+         IRRITABLE BOWEL SYNDROME (v2)
+         ───────────────────────────────────────── */
+      case 'irritable-bowel-syndrome': ?>
+
+      <section class="gi-cp-section" id="what-is-ibs">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧠</div><h2>What is Irritable Bowel Syndrome?</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/gutbrain-ibs.jpg' ); ?>" loading="lazy" alt="Gut-brain axis illustration"></div>
+            <div class="gi-cp-row-text">
+              <p>Irritable bowel syndrome (IBS) is one of the most common digestive conditions. It is a <strong>functional</strong> disorder, which means the gut doesn't work as it should even though it looks normal and isn't damaged. This is what sets it apart from inflammatory bowel disease.</p>
+              <p>IBS is closely linked to how the gut and the brain communicate; this is often referred to as the <strong>gut-brain axis</strong>. It can be uncomfortable and disruptive, but it does not damage the bowel or raise the risk of bowel cancer.</p>
+              <div class="gi-cp-highlight"><p><strong>Key fact:</strong> IBS is a functional disorder — the gut looks normal but doesn't work as it should. It is closely linked to the gut-brain axis.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="subtypes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📊</div><h2>Subtypes</h2></div>
+        <div class="gi-cp-card">
+          <p>IBS is grouped by the main change in bowel habit, which helps guide treatment:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/subtypes-ibs.jpg' ); ?>" loading="lazy" alt="Three IBS subtypes illustration"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-3">
+                <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-eyebrow">Diarrhoea-predominant</div><h4>IBS-D</h4><p>Loose or frequent stools are the main problem</p></div>
+                <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-eyebrow">Constipation-predominant</div><h4>IBS-C</h4><p>Infrequent, hard or difficult-to-pass stools</p></div>
+                <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-eyebrow">Mixed</div><h4>IBS-M</h4><p>Alternating between diarrhoea and constipation over time</p></div>
+              </div>
+              <div class="gi-cp-highlight" style="margin-top:20px"><p>Many people move between subtypes over time.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-ibs.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common IBS symptoms"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Abdominal pain or cramping, often relieved by passing a stool</li>
+                <li>Bloating and a swollen tummy</li>
+                <li>Diarrhoea, constipation, or both at different times</li>
+                <li>Excess wind</li>
+                <li>A feeling of not having fully emptied the bowel</li>
+                <li>Mucus in the stool</li>
+              </ul>
+              <div class="gi-cp-warning"><p><strong>When to get checked:</strong> Some symptoms are not typical of IBS and should always be checked by a doctor: blood in the stool, unexplained weight loss, a persistent change in bowel habit over the age of 50, or symptoms that wake you at night.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="causes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Causes &amp; triggers</h2></div>
+        <div class="gi-cp-card">
+          <p>There is no single cause. IBS is thought to involve a sensitive gut, changes in how quickly the bowel moves, and altered gut-brain signalling. Common triggers that can worsen symptoms include:</p>
+          <div class="gi-cp-grid">
+            <div class="gi-cp-tile"><h4>Diet</h4><p>Certain foods, including some high in fermentable carbohydrates (FODMAPs)</p></div>
+            <div class="gi-cp-tile"><h4>Stress and anxiety</h4><p>Through the gut-brain connection, stress can directly worsen symptoms</p></div>
+            <div class="gi-cp-tile"><h4>Previous gastroenteritis</h4><p>A bout of food poisoning or stomach bug can trigger post-infectious IBS</p></div>
+            <div class="gi-cp-tile"><h4>Hormonal changes</h4><p>Such as around the menstrual cycle, which may explain higher prevalence in women</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <p>IBS is usually diagnosed from the typical pattern of symptoms (often using the <strong>Rome criteria</strong>) once other conditions have been ruled out.</p>
+          <p>A doctor may arrange:</p>
+          <ul class="gi-cp-list">
+            <li>Blood tests to check for anaemia and inflammation</li>
+            <li>A coeliac disease test</li>
+            <li>A stool test for <strong>faecal calprotectin</strong> to help exclude inflammation or infection</li>
+          </ul>
+          <div class="gi-cp-highlight"><p><strong>Important:</strong> IBS is a diagnosis of exclusion — tests are done to rule out other conditions rather than to confirm IBS itself.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
+        <div class="gi-cp-card">
+          <p>IBS cannot be cured, but symptoms can usually be well controlled with a combination of approaches tailored to the individual:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-ibs.jpg' ); ?>" loading="lazy" alt="Illustration showing IBS treatment approaches"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid is-cols-1">
+                <div class="gi-cp-tile"><h4>Diet and lifestyle</h4><p>Regular meals, adjusting fibre, and limiting caffeine and alcohol; a dietitian-supervised low-FODMAP diet helps many people</p></div>
+                <div class="gi-cp-tile"><h4>Medicines</h4><p>Antispasmodics for pain, laxatives for constipation, or anti-diarrhoeals for loose stools</p></div>
+                <div class="gi-cp-tile"><h4>Probiotics</h4><p>Worth a trial for some people to help balance gut bacteria</p></div>
+                <div class="gi-cp-tile"><h4>Psychological therapies</h4><p>Cognitive behavioural therapy (CBT) or gut-directed hypnotherapy can be very effective</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="living">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🌱</div><h2>Living with IBS</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-ibs.jpg' ); ?>" loading="lazy" alt="Illustration showing positive daily life with IBS management"></div>
+            <div class="gi-cp-row-text">
+              <p>Identifying your personal triggers, often with a food and symptom diary, managing stress, staying active and keeping a regular routine can all make a big difference.</p>
+              <p>IBS tends to come and go, but most people find a management plan that lets them get on with daily life.</p>
+              <div class="gi-cp-highlight"><p><strong>Tip:</strong> Keeping a food and symptom diary for a few weeks can help you and your healthcare team identify patterns and triggers specific to you.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>NHS. <em>Irritable bowel syndrome (IBS)</em>. nhs.uk</li>
+          <li>NICE CG61. <em>Irritable bowel syndrome in adults</em>. nice.org.uk</li>
+          <li>Guts UK Charity. gutscharity.org.uk</li>
+          <li>The IBS Network. theibsnetwork.org</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+
+      /* ─────────────────────────────────────────
+         COLORECTAL CANCER (v2)
+         ───────────────────────────────────────── */
+      case 'colorectal-cancer': ?>
+
+      <section class="gi-cp-section" id="what-is-crc">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🎯</div><h2>What is Colorectal Cancer?</h2></div>
+        <div class="gi-cp-card">
+          <p>Colorectal cancer, also called bowel cancer, starts in the large bowel (colon) or back passage (rectum). Most bowel cancers develop slowly from small growths called <strong>polyps</strong> on the bowel lining.</p>
+          <p>Not all polyps become cancer, and finding and removing them — often during screening — can stop a cancer from ever forming.</p>
+          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Most bowel cancers grow slowly from polyps. Finding and removing polyps during screening can prevent cancer from developing.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-crc.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Colorectal Cancer symptoms"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Bleeding from the back passage, or blood in the stool</li>
+                <li>A lasting change in bowel habit, looser stools, or going more often</li>
+                <li>Tummy pain, bloating or discomfort, especially after eating</li>
+                <li>Unintended weight loss</li>
+                <li>Tiredness or breathlessness from unexplained anaemia</li>
+              </ul>
+              <div class="gi-cp-reassurance"><p><strong>Don't panic:</strong> Most of the time these symptoms are caused by something far less serious than cancer. If they last more than a few weeks, see your GP.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="risk-factors">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Risk factors</h2></div>
+        <div class="gi-cp-card">
+          <p>Several factors can increase the risk of developing bowel cancer:</p>
+          <div class="gi-cp-grid">
+            <div class="gi-cp-tile"><h4>Age</h4><p>Risk rises from around the age of 50</p></div>
+            <div class="gi-cp-tile"><h4>Family history</h4><p>A family history of bowel cancer, or certain inherited conditions</p></div>
+            <div class="gi-cp-tile"><h4>Inflammatory bowel disease</h4><p>A long history of IBD increases the risk over time</p></div>
+            <div class="gi-cp-tile"><h4>Lifestyle</h4><p>Diets high in red and processed meat and low in fibre, being overweight, smoking and drinking a lot of alcohol</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="screening">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📨</div><h2>Screening</h2></div>
+        <div class="gi-cp-card">
+          <p>Screening looks for early signs of cancer in people who have no symptoms. This is the <strong>single most effective way</strong> to catch bowel cancer early.</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/screening-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing the bowel cancer screening process"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-step-cards">
+                <div class="gi-cp-step-card"><div class="gi-cp-step-num">1</div><h4>Kit arrives by post</h4><p>An NHS bowel screening kit is posted to eligible adults within the screening age range</p></div>
+                <div class="gi-cp-step-card"><div class="gi-cp-step-num">2</div><h4>FIT test at home</h4><p>The faecal immunochemical test takes a few minutes and detects tiny traces of blood</p></div>
+                <div class="gi-cp-step-card"><div class="gi-cp-step-num">3</div><h4>Colonoscopy if needed</h4><p>If the test is positive, a colonoscopy examines the bowel and can remove polyps</p></div>
+              </div>
+              <div class="gi-cp-highlight" style="margin-top:20px"><p><strong>If you receive a screening kit, use it.</strong> It takes only a few minutes at home and can detect changes long before any symptoms appear.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <p>If bowel cancer is suspected, the main test is a <strong>colonoscopy</strong>, which lets the bowel be examined and biopsies taken.</p>
+          <p>Scans such as CT then check the size of the cancer and whether it has spread (its stage), which guides treatment.</p>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment</h2></div>
+        <div class="gi-cp-card">
+          <p>Treatment depends on where the cancer is, its stage and a person's general health. The main options, often used in combination, are:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing Colorectal Cancer treatment options"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-grid">
+                <div class="gi-cp-tile"><h4>Surgery</h4><p>To remove the affected part of the bowel — the most common treatment</p></div>
+                <div class="gi-cp-tile"><h4>Chemotherapy</h4><p>Medicines that kill cancer cells, often given after surgery</p></div>
+                <div class="gi-cp-tile"><h4>Radiotherapy</h4><p>Particularly for rectal cancer, using radiation to target cancer cells</p></div>
+                <div class="gi-cp-tile"><h4>Targeted &amp; immunotherapy</h4><p>Newer medicines for some cancers that target specific cell changes</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="prevention">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🛡️</div><h2>Prevention</h2></div>
+        <div class="gi-cp-card">
+          <p>You can lower your risk with healthy lifestyle choices:</p>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/prevention-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing bowel cancer prevention through healthy lifestyle"></div>
+            <div class="gi-cp-row-text">
+              <ul class="gi-cp-list">
+                <li>Eating plenty of fibre, fruit and vegetables</li>
+                <li>Limiting red and processed meat and alcohol</li>
+                <li>Keeping to a healthy weight</li>
+                <li>Staying physically active</li>
+                <li>Not smoking</li>
+                <li>Taking part in screening when invited</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>NHS. <em>Bowel cancer</em>. nhs.uk</li>
+          <li>NHS. <em>Bowel cancer screening</em>. nhs.uk</li>
+          <li>Bowel Cancer UK. bowelcanceruk.org.uk</li>
+          <li>Cancer Research UK. <em>Bowel cancer</em>. cancerresearchuk.org</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+
+      /* ─────────────────────────────────────────
+         DIVERTICULAR DISEASE (v2)
+         ───────────────────────────────────────── */
+      case 'diverticular-disease': ?>
+
+      <section class="gi-cp-section" id="what-is-dd">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💡</div><h2>What is diverticular disease?</h2></div>
+        <div class="gi-cp-card">
+          <p>Diverticular disease and diverticulitis affect the large bowel (colon). Over time, small pouches called <strong>diverticula</strong> can develop in the bowel wall. Having these pouches is extremely common as we age and is known as <strong>diverticulosis</strong>.</p>
+          <p>Most people with diverticula never know they have them. When the pouches cause symptoms such as tummy pain, it is called <strong>diverticular disease</strong>. If a pouch becomes inflamed or infected, this is <strong>diverticulitis</strong>.</p>
+          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Diverticula are a normal part of getting older for many people and usually cause no problems at all. Simple steps, including eating enough fibre, can help ease symptoms and keep them away.</p></div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="terms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📋</div><h2>Three terms explained</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/terms-dd.jpg' ); ?>" loading="lazy" alt="Illustration showing the three stages: diverticulosis, diverticular disease, diverticulitis"></div>
+            <div class="gi-cp-row-text">
+              <table class="gi-compare-table">
+                <thead><tr><th>Term</th><th>What it means</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Diverticulosis</strong></td><td>Pouches are present in the bowel, but cause no symptoms</td></tr>
+                  <tr><td><strong>Diverticular disease</strong></td><td>The pouches cause symptoms such as tummy pain</td></tr>
+                  <tr><td><strong>Diverticulitis</strong></td><td>One or more pouches become inflamed or infected</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="symptoms">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-dd.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Diverticular Disease symptoms"></div>
+            <div class="gi-cp-row-text">
+              <h3>Diverticular disease</h3>
+              <ul class="gi-cp-list">
+                <li>Tummy pain, usually in the lower left side</li>
+                <li>Pain that often eases after passing wind or having a poo</li>
+                <li>Bloating</li>
+                <li>Constipation, diarrhoea, or both</li>
+                <li>Occasionally, blood in the stool</li>
+              </ul>
+              <h3>Diverticulitis (more serious)</h3>
+              <ul class="gi-cp-list">
+                <li>More severe, constant tummy pain (usually on the left)</li>
+                <li>A high temperature (fever)</li>
+                <li>Feeling sick or being sick</li>
+                <li>A change in bowel habit, sometimes with blood or mucus</li>
+                <li>Feeling generally tired and unwell</li>
+              </ul>
+              <div class="gi-cp-warning"><p><strong>When to seek help:</strong> See your GP if you have ongoing tummy pain or a change in bowel habit. Seek urgent medical advice if you have severe tummy pain with a fever, as diverticulitis sometimes needs prompt treatment.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="causes">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧬</div><h2>Causes &amp; risk factors</h2></div>
+        <div class="gi-cp-card">
+          <p>Diverticula are thought to form when weak spots in the bowel wall give way under pressure, for example from straining with constipation. Factors linked to a higher risk include:</p>
+          <div class="gi-cp-grid">
+            <div class="gi-cp-tile"><h4>Low-fibre diet</h4><p>Not eating enough fibre increases pressure in the bowel</p></div>
+            <div class="gi-cp-tile"><h4>Getting older</h4><p>The bowel wall naturally weakens with age</p></div>
+            <div class="gi-cp-tile"><h4>Constipation &amp; straining</h4><p>Increases pressure on the bowel wall</p></div>
+            <div class="gi-cp-tile"><h4>Being overweight</h4><p>Excess weight is linked to higher risk</p></div>
+            <div class="gi-cp-tile"><h4>Lack of physical activity</h4><p>Not being very physically active contributes to risk</p></div>
+            <div class="gi-cp-tile"><h4>Smoking &amp; NSAIDs</h4><p>Smoking and some painkillers (anti-inflammatories) increase risk</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="diagnosis">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🩺</div><h2>Diagnosis</h2></div>
+        <div class="gi-cp-card">
+          <ul class="gi-cp-list">
+            <li>Diverticulosis is often found by chance during tests done for another reason</li>
+            <li>A <strong>CT scan</strong> is the main test if diverticulitis is suspected</li>
+            <li>A colonoscopy or CT colonography may be used to look at the bowel lining</li>
+            <li>Blood tests can check for signs of infection</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="treatment">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-dd.jpg' ); ?>" loading="lazy" alt="Illustration showing Diverticular Disease treatment approaches"></div>
+            <div class="gi-cp-row-text">
+              <div class="gi-cp-split">
+                <div class="gi-cp-split-col">
+                  <h4>Diverticular disease</h4>
+                  <ul>
+                    <li>A high-fibre diet and plenty of fluids, increasing fibre gradually</li>
+                    <li>Managing constipation</li>
+                    <li>Simple pain relief such as paracetamol</li>
+                    <li>Avoid NSAIDs and opioid painkillers, which can upset the bowel</li>
+                  </ul>
+                </div>
+                <div class="gi-cp-split-col">
+                  <h4>Diverticulitis</h4>
+                  <ul>
+                    <li>Mild cases can often be managed at home, sometimes with antibiotics</li>
+                    <li>More serious cases may need hospital treatment</li>
+                    <li>Occasionally surgery to treat or prevent complications</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gi-cp-section" id="living">
+        <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🌱</div><h2>Living with it &amp; prevention</h2></div>
+        <div class="gi-cp-card">
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-dd.jpg' ); ?>" loading="lazy" alt="Illustration showing positive lifestyle for managing Diverticular Disease"></div>
+            <div class="gi-cp-row-text">
+              <p>Most people with diverticular disease manage well with simple changes:</p>
+              <ul class="gi-cp-list">
+                <li>Eating plenty of fibre (fruit, vegetables, wholegrains)</li>
+                <li>Drinking enough fluids</li>
+                <li>Staying physically active</li>
+                <li>Keeping to a healthy weight</li>
+              </ul>
+              <div class="gi-cp-highlight"><p><strong>Tip:</strong> These simple lifestyle changes can reduce symptoms and lower the chance of future flare-ups. Increase fibre gradually to avoid bloating.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="gi-references">
+        <h2>References &amp; further reading</h2>
+        <ol>
+          <li>NHS. <em>Diverticular disease and diverticulitis</em>. nhs.uk</li>
+          <li>Guts UK Charity. <em>Diverticular disease</em>. gutscharity.org.uk</li>
+          <li>NICE NG147. <em>Diverticular disease: diagnosis and management</em>. nice.org.uk</li>
+        </ol>
+        <p class="gi-disclaimer">This page is for general information and does not replace advice from your doctor or specialist team.</p>
+      </div>
+
+      <?php break;
+    } // end switch ?>
+
+    <!-- ===== Explore related conditions ===== -->
+    <section class="gi-cp-explore">
+      <h2><?php echo esc_html( $cp_explore_h2 ); ?></h2>
+      <p><?php echo esc_html( $cp_explore_p ); ?></p>
+      <div class="gi-cp-explore-links">
+        <?php foreach ( $cp_explore[ $slug ] as $link ) : ?>
+        <a href="<?php echo esc_url( vance_gi_cond_url( $link[0] ) ); ?>"><?php echo esc_html( $link[1] ); ?></a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+  </div><!-- .gi-cp-container -->
+  <?php endif; // $is_redesigned ?>
 </main>
 
 <script>

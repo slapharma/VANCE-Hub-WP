@@ -34,13 +34,12 @@ $hero_bg        = $cm( 'vance_gi_hub_hero_bg_image', '' );
 $hero_overlay   = absint( $cm( 'vance_gi_hub_hero_bg_overlay', '70' ) );
 
 /* ── Grid ── */
-$grid_eyebrow   = $cm( 'vance_gi_hub_grid_eyebrow', 'GI Health' );
-$grid_heading   = $cm( 'vance_gi_hub_grid_heading', 'Learn more about common GI conditions.' );
+$grid_heading   = $cm( 'vance_gi_hub_grid_heading', 'Learn more about common GI conditions' );
+$grid_subtitle  = $cm( 'vance_gi_hub_grid_subtitle', 'Understanding your digestive health, one condition at a time' );
 
 /* ── Stats ── */
-$stats_eyebrow  = $cm( 'vance_gi_hub_stats_eyebrow', 'Understanding your gut' );
-$stats_heading  = $cm( 'vance_gi_hub_stats_heading', 'Digestive conditions are more common than you might think' );
-$stats_desc     = $cm( 'vance_gi_hub_stats_desc', 'The gut does far more than digest food, it influences immunity, mood and overall wellbeing. Millions of people live with a digestive condition, and most can be well managed with the right information and care.' );
+$stats_heading  = $cm( 'vance_gi_hub_stats_heading', "You're not alone" );
+$stats_desc     = $cm( 'vance_gi_hub_stats_desc', "Digestive conditions are more common than you might think. You're in good company." );
 $stat1_num      = $cm( 'vance_gi_hub_stat1_num', '1 in 7' );
 $stat1_lbl      = $cm( 'vance_gi_hub_stat1_label', 'UK adults live with IBS symptoms' );
 $stat2_num      = $cm( 'vance_gi_hub_stat2_num', '500,000' );
@@ -66,43 +65,43 @@ function vance_gi_page_url( string $slug ): string {
 $conditions = [
     [
         'slug'  => 'inflammatory-bowel-disease',
-        'icon'  => 'medkit.svg',
+        'image' => 'ibd-ai.jpg',
         'title' => 'Inflammatory Bowel Disease (IBD)',
         'desc'  => "The umbrella term for long-term conditions, mainly Crohn\u{2019}s disease and ulcerative colitis, that cause ongoing inflammation of the digestive tract.",
     ],
     [
         'slug'  => 'ulcerative-colitis',
-        'icon'  => 'pulse.svg',
+        'image' => 'ulcerative-colitis-ai.jpg',
         'title' => 'Ulcerative Colitis (UC)',
         'desc'  => 'A form of IBD causing inflammation and ulcers in the lining of the colon and rectum.',
     ],
     [
         'slug'  => 'crohns-disease',
-        'icon'  => 'dna.svg',
+        'image' => 'crohns-ai.jpg',
         'title' => "Crohn\u{2019}s Disease",
         'desc'  => 'A form of IBD that can inflame any part of the gut, from mouth to anus, often the small intestine.',
     ],
     [
         'slug'  => 'microscopic-colitis',
-        'icon'  => 'microscope.svg',
+        'image' => 'microscopic-colitis-ai.jpg',
         'title' => 'Microscopic Colitis',
         'desc'  => 'Inflammation of the colon visible only under a microscope, causing chronic watery diarrhoea.',
     ],
     [
         'slug'  => 'irritable-bowel-syndrome',
-        'icon'  => 'apple.svg',
+        'image' => 'ibs-ai.jpg',
         'title' => 'Irritable Bowel Syndrome (IBS)',
         'desc'  => 'A common, long-term condition affecting how the gut works, causing abdominal pain, bloating, and bouts of diarrhoea, constipation or both.',
     ],
     [
         'slug'  => 'colorectal-cancer',
-        'icon'  => 'scale.svg',
+        'image' => 'colorectal-cancer-ai.jpg',
         'title' => 'Colorectal Cancer',
         'desc'  => 'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps.',
     ],
     [
         'slug'  => 'diverticular-disease',
-        'icon'  => 'pill.svg',
+        'image' => 'diverticular-disease-ai.jpg',
         'title' => 'Diverticular Disease &amp; Diverticulitis',
         'desc'  => 'Small pouches that form in the wall of the colon, which can sometimes cause pain or become inflamed.',
     ],
@@ -133,59 +132,62 @@ $conditions = [
     </div>
   </section>
 
-  <!-- ===== Conditions grid ===== -->
+  <!-- ===== "You're not alone" — stats card ===== -->
+  <section class="section-padding" style="padding-bottom:0" id="understanding">
+    <div class="container">
+      <div class="gi-stats-card gi-reveal">
+        <h2><?php echo esc_html( $stats_heading ); ?></h2>
+        <p class="gi-stats-card-subtitle"><?php echo esc_html( $stats_desc ); ?></p>
+
+        <div class="gi-stats-card-grid">
+          <div class="gi-stats-card-item">
+            <div class="gi-stats-card-num"><?php echo esc_html( $stat1_num ); ?></div>
+            <div class="gi-stats-card-label"><?php echo esc_html( $stat1_lbl ); ?></div>
+          </div>
+          <div class="gi-stats-card-item">
+            <div class="gi-stats-card-num"><?php echo esc_html( $stat2_num ); ?></div>
+            <div class="gi-stats-card-label"><?php echo esc_html( $stat2_lbl ); ?></div>
+          </div>
+          <div class="gi-stats-card-item">
+            <div class="gi-stats-card-num"><?php echo esc_html( $stat3_num ); ?></div>
+            <div class="gi-stats-card-label"><?php echo esc_html( $stat3_lbl ); ?></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Conditions list ===== -->
   <section class="section-padding" id="conditions">
     <div class="container">
 
       <div class="gi-section-head gi-reveal">
-        <span class="eyebrow"><?php echo esc_html( $grid_eyebrow ); ?></span>
-        <h2 style="font-size:clamp(26px,4vw,36px);margin-top:8px"><?php echo esc_html( $grid_heading ); ?></h2>
+        <h2 style="font-size:clamp(26px,4vw,36px)"><?php echo esc_html( $grid_heading ); ?></h2>
+        <?php if ( $grid_subtitle ) : ?>
+          <p style="margin-top:10px"><?php echo esc_html( $grid_subtitle ); ?></p>
+        <?php endif; ?>
       </div>
 
-      <div class="gi-grid-3">
+      <div class="gi-conditions-list">
         <?php foreach ( $conditions as $i => $c ) :
           $delay = ( $i % 3 === 0 ) ? '0s' : ( $i % 3 === 1 ? '.08s' : '.16s' );
         ?>
         <a href="<?php echo esc_url( vance_gi_page_url( $c['slug'] ) ); ?>"
-           class="gi-card gi-reveal"
+           class="gi-condition-row gi-reveal"
            style="--reveal-delay:<?php echo esc_attr( $delay ); ?>">
-          <div class="gi-card-icon">
-            <img src="<?php echo esc_url( $tmpl . '/assets/img/icons/' . $c['icon'] ); ?>"
-                 width="30" height="30" alt="">
+          <div class="gi-condition-row-image">
+            <img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/' . $c['image'] ); ?>"
+                 loading="lazy" alt="<?php echo esc_attr( wp_strip_all_tags( $c['title'] ) ); ?> illustration">
           </div>
-          <h3><?php echo wp_kses_post( $c['title'] ); ?></h3>
-          <p><?php echo esc_html( $c['desc'] ); ?></p>
-          <span class="gi-card-link">Learn more <span class="gi-arrow">→</span></span>
+          <div class="gi-condition-row-content">
+            <h3><?php echo wp_kses_post( $c['title'] ); ?></h3>
+            <p><?php echo esc_html( $c['desc'] ); ?></p>
+            <span class="gi-card-link">Learn more <span class="gi-arrow">→</span></span>
+          </div>
         </a>
         <?php endforeach; ?>
       </div>
 
-    </div>
-  </section>
-
-  <!-- ===== Understanding your gut — stat band ===== -->
-  <section class="gi-stat-band" id="understanding">
-    <div class="container">
-      <div class="gi-reveal" style="max-width:64ch">
-        <span class="eyebrow"><?php echo esc_html( $stats_eyebrow ); ?></span>
-        <h2 style="margin-top:8px"><?php echo esc_html( $stats_heading ); ?></h2>
-        <p style="color:rgba(255,255,255,0.82);margin-top:12px"><?php echo esc_html( $stats_desc ); ?></p>
-      </div>
-
-      <div class="gi-stat-grid">
-        <div class="gi-stat gi-reveal">
-          <div class="gi-stat-num"><?php echo esc_html( $stat1_num ); ?></div>
-          <div class="gi-stat-label"><?php echo esc_html( $stat1_lbl ); ?></div>
-        </div>
-        <div class="gi-stat gi-reveal" style="--reveal-delay:.08s">
-          <div class="gi-stat-num"><?php echo esc_html( $stat2_num ); ?></div>
-          <div class="gi-stat-label"><?php echo esc_html( $stat2_lbl ); ?></div>
-        </div>
-        <div class="gi-stat gi-reveal" style="--reveal-delay:.16s">
-          <div class="gi-stat-num"><?php echo esc_html( $stat3_num ); ?></div>
-          <div class="gi-stat-label"><?php echo esc_html( $stat3_lbl ); ?></div>
-        </div>
-      </div>
     </div>
   </section>
 
