@@ -280,7 +280,12 @@
 	VHH.setCommenting = setCommenting;
 
 	function onMouseUp() {
-		if ( ! state.commenting || state.popover ) { return; }
+		// Listing views (homepage, category pages) have no single post of
+		// their own to attach a text quote to — cfg.postId is 0 there (see
+		// class-vhh-frontend.php::gate()). Only card-level comments work on
+		// those pages; offering the text-selection pill would just lead to a
+		// guaranteed "This post cannot be annotated" save failure.
+		if ( ! cfg.postId || ! state.commenting || state.popover ) { return; }
 		// Defer: the selection isn't final until after mouseup completes.
 		setTimeout( function () {
 			var sel = window.getSelection();

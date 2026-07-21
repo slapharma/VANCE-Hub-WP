@@ -106,16 +106,23 @@ class VHH_Todos_CPT {
 		register_post_type(
 			self::CPT,
 			array(
-				'label'           => __( 'Claude To-dos', 'vhh-annotations' ),
+				'label'           => __( 'Content Feedback', 'vhh-annotations' ),
 				'labels'          => array(
-					'name'          => __( 'Claude To-dos', 'vhh-annotations' ),
-					'singular_name' => __( 'Claude To-do', 'vhh-annotations' ),
+					'name'          => __( 'Content Feedback', 'vhh-annotations' ),
+					'singular_name' => __( 'Content Feedback Item', 'vhh-annotations' ),
+					'menu_name'     => __( 'Content Feedback', 'vhh-annotations' ),
+					'all_items'     => __( 'Content Feedback', 'vhh-annotations' ),
 				),
 				'public'          => false,
 				'show_ui'         => true,
-				'show_in_menu'    => true,
-				'menu_icon'       => 'dashicons-clipboard',
-				'menu_position'   => 26,
+				// Nested under the theme's "VanceHealthHub" menu (parent slug
+				// 'vance-content-hub', created by vance_register_content_hub_menu()
+				// in the theme); core's _add_post_type_submenus attaches it there.
+				// This briefly appeared to "vanish"/403 earlier, but that was two
+				// unrelated, now-fixed causes — Hostinger LSAPI serving stale
+				// bytecode after deploys, and the 'practitioner' role revoking
+				// edit_posts from multi-role admins — NOT the nesting itself.
+				'show_in_menu'    => 'vance-content-hub',
 				'supports'        => array( 'title', 'editor' ),
 				'capability_type' => 'post',
 				'map_meta_cap'    => true,
@@ -225,19 +232,16 @@ class VHH_Todos_CPT {
 			if ( (int) get_comment_meta( $c->comment_ID, '_vhh_claude_task_id', true ) ) {
 				continue; // already in a to-do
 			}
-			if ( get_comment_meta( $c->comment_ID, '_vhh_overall', true ) ) {
-				$quote = __( 'Overall feedback', 'vhh-annotations' );
-			} else {
-				$sel   = json_decode( (string) get_comment_meta( $c->comment_ID, '_vhh_selector', true ), true );
-				$quote = ( is_array( $sel ) && ! empty( $sel['exact'] ) ) ? $sel['exact'] : __( 'Comment', 'vhh-annotations' );
-			}
+			$quote = VHH_Annotation_Store::quote_for( $c );
 			$title = wp_trim_words( $c->comment_content, 10, '…' ) . ' — ' . wp_trim_words( $quote, 8, '…' );
+			// thread_text = comment + its replies; a reply often narrows or
+			// corrects the request, so it must reach the to-do and the AI.
 			$detail = sprintf(
 				"Comment #%d on \"%s\":\n\n> %s\n\n%s",
 				$c->comment_ID,
 				get_the_title( $c->comment_post_ID ),
 				$quote,
-				$c->comment_content
+				VHH_Annotation_Store::thread_text( $c )
 			);
 			$todo_id = wp_insert_post(
 				wp_slash(

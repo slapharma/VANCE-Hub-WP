@@ -489,4 +489,59 @@ body.vhh-mode-on .vhh-img-overlay {
 	opacity: 0;
 	transition: opacity 0.2s ease;
 }
-body.vhh-mode-on .vhh-img-wrap:hover .vhh-img-hint { opacity: 1; }
+body.vhh-mode-on .vhh-img-wrap:hover .vhh-img-hint,
+body.vhh-mode-on .vhh-bg-wrap:hover .vhh-img-hint { opacity: 1; }
+
+/* --------------------------- insertion points --------------------------- */
+
+.vhh-insert-gap {
+	position: absolute;
+	z-index: 99989;
+	display: none;
+	height: 0;
+	border-top: 2px dashed var(--vhh-accent);
+	opacity: 0.85;
+}
+.vhh-insert-gap-btn {
+	position: absolute;
+	top: -13px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	border: none;
+	background: var(--vhh-accent);
+	color: #fff;
+	font-size: 16px;
+	font-weight: 800;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.vhh-insert-gap-btn:hover { filter: brightness(1.1); }
+
+.vhh-insert-marker {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: fit-content;
+	margin: 6px 0;
+	padding: 4px 10px;
+	border: 1px dashed var(--vhh-accent);
+	border-radius: 6px;
+	background: color-mix(in srgb, var(--vhh-accent) 10%, transparent);
+	color: var(--vhh-accent);
+	font-size: 12px;
+	font-weight: 700;
+	cursor: pointer;
+}
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+	.vhh-insert-marker { background: rgba(0, 128, 128, 0.1); }
+}
+.vhh-insert-marker:hover { filter: brightness(1.1); }
+.vhh-insert-marker--resolved { opacity: 0.4; }
+.vhh-insert-marker--pulse { animation: vhh-pulse-insert 0.8s ease 2; }
+@keyframes vhh-pulse-insert {
+	50% { background: color-mix(in srgb, var(--vhh-accent) 40%, transparent); }
+}

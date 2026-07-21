@@ -8,6 +8,19 @@
  * Interaction (commenting mode only): drag = marquee region; plain click =
  * "comment on whole image". The overlay is pointer-transparent outside
  * commenting mode so linked images keep working.
+ *
+ * Also covers CSS background-image containers (currently just the article
+ * hero) via a hardcoded class allowlist — that template renders a background
+ * div, not an <img>, so there's nothing for querySelectorAll('img') to find.
+ * Deliberately not a blanket getComputedStyle scan: that would also catch
+ * decorative chrome backgrounds that were never meant to be commentable.
+ * Any image/background inside a card that links to a DIFFERENT post
+ * (Related Articles, Read Next, homepage cards) is deliberately skipped here
+ * — see CARD_SELECTOR below — and handled by card-annotator.js's whole-card
+ * overlay instead, so a click attributes to the card's own linked post
+ * rather than this page's post. Registering them here too would just stack
+ * a second, wrongly-attributed, unreachable overlay underneath the
+ * card-level one.
  */
 (function () {
 	'use strict';
@@ -16,8 +29,12 @@
 	var VHH = window.VHH;
 	var cfg = VHH.cfg;
 	var DRAG_MIN = 6; // px before a drag counts as a marquee
+	var BG_SELECTOR = '.oped-hero-image';
+	// Kept in sync with card-annotator.js's CARD_SELECTOR — images/backgrounds
+	// inside one of these belong to a different post than this page.
+	var CARD_SELECTOR = '.bento-cell-featured, .latest-list-item, .oped-related-item, .oped-readnext-item, .news-card, .va-poster-link';
 
-	var overlays = []; // { img, overlay, attachmentId, src }
+	var overlays = []; // { img?, bgEl?, overlay, attachmentId, src }
 
 	function el( tag, className, text ) {
 		var node = document.createElement( tag );
@@ -35,6 +52,21 @@
 
 	function baseSrc( img ) {
 		return ( img.currentSrc || img.src || '' ).split( '?' )[ 0 ];
+	}
+
+	/** Extract the photo URL from a (possibly gradient-layered) CSS background-image. */
+	function bgSrc( el ) {
+		var value = getComputedStyle( el ).backgroundImage || '';
+		var matches = value.match( /url\((['"]?)(.*?)\1\)/g ) || [];
+		if ( ! matches.length ) { return ''; }
+		// The overlay gradient (if any) is listed first, the photo last.
+		var last = matches[ matches.length - 1 ].match( /url\((['"]?)(.*?)\1\)/ );
+		return last ? last[ 2 ].split( '?' )[ 0 ] : '';
+	}
+
+	/** Current reference src for an overlay entry, whether backed by <img> or a background div. */
+	function entrySrc( entry ) {
+		return entry.img ? baseSrc( entry.img ) : bgSrc( entry.bgEl );
 	}
 
 	function selectorMatches( sel, entry ) {
@@ -91,7 +123,7 @@
 					selector: {
 						type: 'ImageRegionSelector',
 						attachmentId: entry.attachmentId,
-						src: baseSrc( entry.img ),
+						src: entrySrc( entry ),
 						region: region,
 						wholeImage: region.x === 0 && region.y === 0 && region.w === 1 && region.h === 1
 					},
@@ -111,6 +143,15 @@
 		var overlay = entry.overlay;
 		var marquee = null;
 		var start = null;
+
+		// Images the editor set to "Link To: Media File/Attachment Page" put
+		// our overlay inside a native <a>. preventDefault() on pointerdown
+		// does NOT suppress the browser's own click-driven navigation, so a
+		// plain click both opens the save popover AND navigates away before
+		// the user can use it — looks exactly like "clicking does nothing."
+		overlay.addEventListener( 'click', function ( e ) {
+			if ( VHH.state.commenting ) { e.preventDefault(); }
+		} );
 
 		overlay.addEventListener( 'pointerdown', function ( e ) {
 			if ( ! VHH.state.commenting || e.button !== 0 ) { return; }
@@ -197,16 +238,56 @@
 		wireOverlay( entry );
 	}
 
+	/**
+	 * Same overlay/region machinery as setup(), for a CSS background-image
+	 * container instead of an <img>. These are already block-level boxes with
+	 * their own size, so — unlike setup() — nothing gets re-parented: the
+	 * overlay is appended directly as a child, after ensuring a positioning
+	 * context exists for it to pin to.
+	 */
+	function setupBg( bgEl ) {
+		if ( bgEl.classList.contains( 'vhh-bg-wrap' ) ) { return; }
+		bgEl.classList.add( 'vhh-bg-wrap' );
+		if ( getComputedStyle( bgEl ).position === 'static' ) {
+			bgEl.style.position = 'relative';
+		}
+
+		var overlay = el( 'div', 'vhh-ui vhh-img-overlay' );
+		bgEl.appendChild( overlay );
+		bgEl.appendChild( el( 'span', 'vhh-ui vhh-img-hint', '📌 ' + cfg.i18n.wholeImage ) );
+
+		var entry = {
+			bgEl: bgEl,
+			overlay: overlay,
+			attachmentId: 0,
+			src: bgSrc( bgEl )
+		};
+		overlays.push( entry );
+		wireOverlay( entry );
+	}
+
 	function init() {
 		var root = document.querySelector( '[data-vhh-annotatable]' );
 		if ( ! root ) { return; }
 
+		// Listing views (homepage, category pages) have no single post of
+		// their own — cfg.postId is 0 there — so direct <img>/background
+		// commenting (always posts to cfg.postId) has nothing to attach to.
+		// Card-level comments (card-annotator.js) are unaffected — they never
+		// depend on cfg.postId.
+		if ( ! cfg.postId ) { return; }
+
 		root.querySelectorAll( 'img' ).forEach( function ( img ) {
+			if ( img.closest( CARD_SELECTOR ) ) { return; } // handled by card-annotator.js instead
 			if ( img.complete ) {
 				setup( img );
 			} else {
 				img.addEventListener( 'load', function () { setup( img ); }, { once: true } );
 			}
+		} );
+
+		root.querySelectorAll( BG_SELECTOR ).forEach( function ( bgEl ) {
+			if ( bgSrc( bgEl ) ) { setupBg( bgEl ); } // skip empty placeholders (e.g. "More coming soon")
 		} );
 
 		VHH.bus.on( 'ready', renderRegions );

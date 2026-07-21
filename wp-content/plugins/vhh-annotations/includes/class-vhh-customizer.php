@@ -135,6 +135,7 @@ class VHH_Customizer {
 
 		/* Feature toggles */
 		self::add_checkbox( $wp_customize, 'image_annotation', __( 'Enable image annotation', 'vhh-annotations' ) );
+		self::add_checkbox( $wp_customize, 'insertion_annotation', __( 'Enable insertion-point annotation', 'vhh-annotations' ), __( 'Lets reviewers flag "add a new paragraph here" between existing blocks, not just comment on existing text/images.', 'vhh-annotations' ) );
 		self::add_checkbox( $wp_customize, 'email_review', __( 'Enable email review links', 'vhh-annotations' ) );
 
 		$wp_customize->add_setting(

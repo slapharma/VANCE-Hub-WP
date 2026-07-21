@@ -22,6 +22,7 @@ define( 'VHH_ANN_URL', plugin_dir_url( __FILE__ ) );
 require_once VHH_ANN_DIR . 'includes/class-vhh-capabilities.php';
 require_once VHH_ANN_DIR . 'includes/class-vhh-selector.php';
 require_once VHH_ANN_DIR . 'includes/class-vhh-annotation-store.php';
+require_once VHH_ANN_DIR . 'includes/class-vhh-site-feedback.php';
 require_once VHH_ANN_DIR . 'includes/class-vhh-rate-limiter.php';
 require_once VHH_ANN_DIR . 'includes/class-vhh-rest-annotations.php';
 require_once VHH_ANN_DIR . 'includes/class-vhh-frontend.php';

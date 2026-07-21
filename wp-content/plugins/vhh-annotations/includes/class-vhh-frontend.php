@@ -27,19 +27,32 @@ class VHH_Frontend {
 
 	/** The single gate every front-end surface checks. */
 	public static function gate() {
-		if ( ! VHH_Plugin::enabled() || ! is_singular() ) {
-			return false;
-		}
-		$post = get_queried_object();
-		if ( ! $post instanceof WP_Post || ! VHH_Plugin::post_type_allowed( $post->post_type ) ) {
-			return false;
-		}
-		if ( 'publish' !== $post->post_status ) {
+		if ( ! VHH_Plugin::enabled() ) {
 			return false;
 		}
 		// Any logged-in user can see and use the comment panel (collaborative
 		// review). Logged-out visitors still get zero annotation output.
-		return is_user_logged_in();
+		if ( is_singular() ) {
+			$post = get_queried_object();
+			if ( ! $post instanceof WP_Post || ! VHH_Plugin::post_type_allowed( $post->post_type ) || 'publish' !== $post->post_status ) {
+				return false;
+			}
+			return is_user_logged_in();
+		}
+		// Listing views have no WP_Post of their own — get_queried_object()
+		// returns null (a "latest posts" home) or a WP_Term (a category) — so
+		// only whole-card component comments make sense here; each card
+		// attributes to ITS OWN linked post via a client-supplied post ID
+		// (card-annotator.js), never to this page. is_home() is included
+		// alongside is_front_page() because which one is true for "the
+		// homepage" flips depending on the site's Reading settings (a
+		// "latest posts" home vs. a static front page) — covering both keeps
+		// this correct either way. Other listing views (search, author,
+		// date archives) stay excluded — not requested.
+		if ( is_front_page() || is_home() || is_category() ) {
+			return is_user_logged_in();
+		}
+		return false;
 	}
 
 	public static function body_class( $classes ) {
@@ -70,7 +83,14 @@ class VHH_Frontend {
 		}
 
 		$post = get_queried_object();
-		$css  = VHH_ANN_DIR . 'assets/css/annotations.css';
+		// The homepage has no WP_Post of its own (show_on_front=posts on
+		// this site) — give it its dedicated feedback bucket instead of the
+		// 0/null postId that only allows card-level comments.
+		if ( ! $post instanceof WP_Post && ( is_front_page() || is_home() ) ) {
+			$id   = VHH_Site_Feedback::homepage_post_id();
+			$post = $id ? get_post( $id ) : null;
+		}
+		$css = VHH_ANN_DIR . 'assets/css/annotations.css';
 
 		wp_enqueue_style(
 			'vhh-annotations',
@@ -87,6 +107,10 @@ class VHH_Frontend {
 		);
 		if ( VHH_Plugin::get( 'image_annotation' ) ) {
 			$scripts['vhh-image'] = array( 'assets/js/image-annotator.js', array( 'vhh-annotator' ) );
+			$scripts['vhh-card']  = array( 'assets/js/card-annotator.js', array( 'vhh-annotator' ) );
+		}
+		if ( VHH_Plugin::get( 'insertion_annotation' ) ) {
+			$scripts['vhh-insertion'] = array( 'assets/js/insertion-annotator.js', array( 'vhh-annotator' ) );
 		}
 		foreach ( $scripts as $handle => $def ) {
 			wp_enqueue_script(
@@ -106,20 +130,27 @@ class VHH_Frontend {
 	 * the email-review template reuses it with overrides (token, anonymous
 	 * user) so the two surfaces can never drift.
 	 *
-	 * @param WP_Post $post      Annotated post.
-	 * @param array   $overrides Deep-merged over the defaults.
+	 * @param WP_Post|WP_Term|null $post      Annotated post, or whatever
+	 *                                        get_queried_object() returns for
+	 *                                        a listing view (null for a
+	 *                                        "latest posts" home, WP_Term for
+	 *                                        a category) — those only ever
+	 *                                        carry card-level comments, which
+	 *                                        don't depend on postId.
+	 * @param array                 $overrides Deep-merged over the defaults.
 	 * @return array
 	 */
-	public static function client_config( WP_Post $post, array $overrides = array() ) {
+	public static function client_config( $post, array $overrides = array() ) {
 		$config = array(
 			'restUrl'  => esc_url_raw( rest_url( 'vhh/v1' ) ),
 			'nonce'    => wp_create_nonce( 'wp_rest' ),
-			'postId'   => $post->ID,
+			'postId'   => ( $post instanceof WP_Post ) ? $post->ID : 0,
 			'settings' => array(
-				'highlightColor'  => (string) VHH_Plugin::get( 'highlight_color' ),
-				'resolvedStyle'   => (string) VHH_Plugin::get( 'resolved_style' ),
-				'sidebarPosition' => (string) VHH_Plugin::get( 'sidebar_position' ),
-				'imageEnabled'    => (bool) VHH_Plugin::get( 'image_annotation' ),
+				'highlightColor'   => (string) VHH_Plugin::get( 'highlight_color' ),
+				'resolvedStyle'    => (string) VHH_Plugin::get( 'resolved_style' ),
+				'sidebarPosition'  => (string) VHH_Plugin::get( 'sidebar_position' ),
+				'imageEnabled'     => (bool) VHH_Plugin::get( 'image_annotation' ),
+				'insertionEnabled' => (bool) VHH_Plugin::get( 'insertion_annotation' ),
 			),
 			'user'     => array(
 				'id'          => get_current_user_id(),
@@ -140,6 +171,8 @@ class VHH_Frontend {
 				'saveFailed'    => __( 'Could not save — try again.', 'vhh-annotations' ),
 				'wholeImage'    => __( 'Comment on whole image', 'vhh-annotations' ),
 				'imageNote'     => __( 'Image note', 'vhh-annotations' ),
+				'insertHere'    => __( 'Insert comment here', 'vhh-annotations' ),
+				'insertionNote' => __( 'Insertion point', 'vhh-annotations' ),
 				'comments'      => __( 'Comments', 'vhh-annotations' ),
 				'confirmDelete' => __( 'Delete this note?', 'vhh-annotations' ),
 				'done'          => __( 'Done', 'vhh-annotations' ),

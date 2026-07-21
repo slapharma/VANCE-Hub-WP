@@ -163,7 +163,28 @@ class VHH_Apply {
 		}
 
 		$instruction = $todo->post_title . "\n\n" . $todo->post_content;
-		$source      = $post->post_content;
+
+		// The to-do body is a snapshot from extraction time. Replies left on
+		// the source comments since then routinely refine or correct the
+		// request ("remove this" → reply: "the whole sentence"), so re-read
+		// the live threads and hand the model the full, current context.
+		$threads = '';
+		foreach ( (array) get_post_meta( $todo_id, '_vhh_source_annotations', true ) as $sid ) {
+			$c = VHH_Annotation_Store::get( (int) $sid );
+			if ( ! $c ) {
+				continue;
+			}
+			$threads .= sprintf(
+				"- Anchor: %s\n  Feedback: %s\n",
+				VHH_Annotation_Store::quote_for( $c ),
+				str_replace( "\n", "\n  ", VHH_Annotation_Store::thread_text( $c ) )
+			);
+		}
+		if ( '' !== $threads ) {
+			$instruction .= "\n\nSOURCE FEEDBACK THREADS (current, authoritative — replies refine or correct the original request):\n" . $threads;
+		}
+
+		$source = $post->post_content;
 
 		$system = 'You are a meticulous copy editor for a medical content website (Vance Medical Hub). '
 			. 'You receive the full HTML body of a published article and ONE editing instruction. '
@@ -334,8 +355,14 @@ class VHH_Apply {
 			echo '<p style="margin-bottom:2px;"><strong>' . esc_html__( 'From comments:', 'vhh-annotations' ) . '</strong></p><ul style="margin:0 0 8px 14px;list-style:disc;">';
 			foreach ( $sources as $sid ) {
 				$c = get_comment( (int) $sid );
-				if ( $c ) {
-					echo '<li>' . esc_html( wp_trim_words( $c->comment_content, 24 ) ) . '</li>';
+				if ( ! $c ) {
+					continue;
+				}
+				echo '<li>' . esc_html( wp_trim_words( $c->comment_content, 24 ) ) . '</li>';
+				// Replies refine the request — show them so the human sees the
+				// same context the AI prompt gets.
+				foreach ( VHH_Annotation_Store::get_replies( (int) $sid ) as $r ) {
+					echo '<li style="list-style:none;color:#64748b;">↳ ' . esc_html( $r['author']['name'] . ': ' . wp_trim_words( $r['comment'], 20 ) ) . '</li>';
 				}
 			}
 			echo '</ul>';

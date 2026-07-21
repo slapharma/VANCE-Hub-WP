@@ -142,6 +142,9 @@ $vhh_cfg = VHH_Frontend::client_config(
 	<?php if ( VHH_Plugin::get( 'image_annotation' ) ) : ?>
 	<script src="<?php echo $vhh_asset( 'assets/js/image-annotator.js' ); ?>"></script>
 	<?php endif; ?>
+	<?php if ( VHH_Plugin::get( 'insertion_annotation' ) ) : ?>
+	<script src="<?php echo $vhh_asset( 'assets/js/insertion-annotator.js' ); ?>"></script>
+	<?php endif; ?>
 	<script>
 		// Reviewers start in commenting mode with the panel open.
 		window.addEventListener( 'load', function () {

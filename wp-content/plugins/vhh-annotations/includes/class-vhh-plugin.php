@@ -30,6 +30,7 @@ class VHH_Plugin {
 		add_action( 'rest_api_init', array( 'VHH_REST_Todos', 'register_routes' ) );
 		add_action( 'rest_api_init', array( 'VHH_REST_Review', 'register_routes' ) );
 
+		VHH_Site_Feedback::init();
 		VHH_Frontend::init();
 		VHH_Customizer::init();
 		VHH_Todos_CPT::init();
@@ -61,22 +62,23 @@ class VHH_Plugin {
 
 	public static function defaults() {
 		return array(
-			'enabled'           => false,
-			'image_annotation'  => true,
-			'email_review'      => false,
-			'email_expiry_days' => 7,
-			'pt_post'           => true,   // pt_{post_type} flags → post_types
-			'highlight_color'   => '#008080',
-			'resolved_style'    => 'dim',   // dim | hide
-			'sidebar_position'  => 'right', // right | sheet | floating
-			'notify_author'     => false,
-			'claude_export'     => false,
-			'claude_bot_user'   => 0,
-			'auto_resolve'      => true,
+			'enabled'              => false,
+			'image_annotation'     => true,
+			'insertion_annotation' => true,
+			'email_review'         => false,
+			'email_expiry_days'    => 7,
+			'pt_post'              => true,   // pt_{post_type} flags → post_types
+			'highlight_color'      => '#008080',
+			'resolved_style'       => 'dim',   // dim | hide
+			'sidebar_position'     => 'right', // right | sheet | floating
+			'notify_author'        => false,
+			'claude_export'        => false,
+			'claude_bot_user'      => 0,
+			'auto_resolve'         => true,
 			// AI-edit engine: blank = reuse the theme's Ask AI OpenRouter
 			// key/model (vance_askai_api_key / vance_askai_model).
-			'openrouter_key'    => '',
-			'ai_edit_model'     => '',
+			'openrouter_key'       => '',
+			'ai_edit_model'        => '',
 			// allow_role_{role} flags extend vhh_annotate beyond Admin/Editor.
 		);
 	}
@@ -134,6 +136,11 @@ class VHH_Plugin {
 	}
 
 	public static function post_type_allowed( $post_type ) {
+		// The homepage's internal feedback bucket is plugin bookkeeping, not
+		// user-facing content — it's never in the customizer's per-type list.
+		if ( VHH_Site_Feedback::POST_TYPE === $post_type ) {
+			return true;
+		}
 		return in_array( $post_type, (array) self::get( 'post_types' ), true );
 	}
 

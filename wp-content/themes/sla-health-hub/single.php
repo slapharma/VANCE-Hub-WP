@@ -563,7 +563,7 @@ while ( have_posts() ) :
                             if ( $related->have_posts() ) :
                                 while ( $related->have_posts() ) : $related->the_post();
                             ?>
-                                <a href="<?php the_permalink(); ?>" class="oped-related-item">
+                                <a href="<?php the_permalink(); ?>" class="oped-related-item" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
                                     <div class="oped-related-thumb" style="background-image: url('<?php echo get_the_post_thumbnail_url(get_the_ID(), 'thumbnail'); ?>'); background-size: cover;"></div>
                                     <div class="oped-related-info">
                                         <span class="oped-related-title"><?php the_title(); ?></span>
@@ -607,8 +607,8 @@ while ( have_posts() ) :
                     while ( $related_query->have_posts() ) : $related_query->the_post();
                         $thumb = get_the_post_thumbnail_url(get_the_ID(), 'medium');
                 ?>
-                    <a href="<?php the_permalink(); ?>" style="text-decoration: none; display: flex; flex-direction: column; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; border: 1px solid #e2e8f0;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="position: relative; height: 200px; background-color: #cbd5e1; background-image: url('<?php echo $thumb; ?>'); background-size: cover; background-position: center;">
+                    <a href="<?php the_permalink(); ?>" class="oped-readnext-item" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>" style="text-decoration: none; display: flex; flex-direction: column; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; border: 1px solid #e2e8f0;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="oped-readnext-thumb" style="position: relative; height: 200px; background-color: #cbd5e1; background-image: url('<?php echo $thumb; ?>'); background-size: cover; background-position: center;">
                             <?php echo vance_card_eyebrow_html( get_the_ID() ); ?>
                         </div>
                         <div style="padding: 24px; flex: 1; display: flex; flex-direction: column;">

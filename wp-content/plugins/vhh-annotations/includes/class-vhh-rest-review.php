@@ -115,7 +115,7 @@ class VHH_REST_Review {
 					),
 					'target_type' => array(
 						'type'    => 'string',
-						'enum'    => array( 'text', 'image' ),
+						'enum'    => array( 'text', 'image', 'insertion' ),
 						'default' => 'text',
 					),
 					'selector'    => array( 'required' => false ),

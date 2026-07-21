@@ -296,6 +296,51 @@ class VHH_Annotation_Store {
 	}
 
 	/**
+	 * Human-readable anchor description for any annotation: text quote,
+	 * image note, insertion-point context, or overall feedback.
+	 */
+	public static function quote_for( WP_Comment $c ) {
+		if ( get_comment_meta( $c->comment_ID, '_vhh_overall', true ) ) {
+			return __( 'Overall feedback', 'vhh-annotations' );
+		}
+		$type = (string) get_comment_meta( $c->comment_ID, '_vhh_target_type', true );
+		$sel  = json_decode( (string) get_comment_meta( $c->comment_ID, '_vhh_selector', true ), true );
+		$sel  = is_array( $sel ) ? $sel : array();
+		if ( 'image' === $type ) {
+			$file = empty( $sel['src'] ) ? '' : wp_basename( (string) wp_parse_url( $sel['src'], PHP_URL_PATH ) );
+			return trim( __( 'Image note', 'vhh-annotations' ) . ( $file ? ' (' . $file . ')' : '' ) );
+		}
+		if ( 'insertion' === $type ) {
+			return sprintf(
+				/* translators: 1: text before the insertion point, 2: text after it */
+				__( 'Insertion point: …%1$s ⟨INSERT HERE⟩ %2$s…', 'vhh-annotations' ),
+				(string) ( $sel['prefix'] ?? '' ),
+				(string) ( $sel['suffix'] ?? '' )
+			);
+		}
+		return empty( $sel['exact'] ) ? __( 'Comment', 'vhh-annotations' ) : $sel['exact'];
+	}
+
+	/**
+	 * Comment body plus its reply thread as one text blob. Replies routinely
+	 * refine or correct the original note ("remove this" → reply: "the whole
+	 * sentence"), so every consumer that ACTS on a comment — to-do
+	 * generation, the AI-edit prompt, the merged export — must read them.
+	 */
+	public static function thread_text( WP_Comment $c ) {
+		$text = $c->comment_content;
+		foreach ( self::get_replies( (int) $c->comment_ID ) as $r ) {
+			$text .= "\n" . sprintf(
+				/* translators: 1: reply author, 2: reply text */
+				__( '↳ Reply from %1$s: %2$s', 'vhh-annotations' ),
+				$r['author']['name'],
+				$r['comment']
+			);
+		}
+		return $text;
+	}
+
+	/**
 	 * Incremental export for the Claude workflow.
 	 *
 	 * @param int|null $post_id Restrict to one post, or null for all.
@@ -369,9 +414,16 @@ class VHH_Annotation_Store {
 			// Term names can carry HTML entities (e.g. "Food &amp; Nutrition").
 			// The sidebar renders via textContent, so send decoded plain text.
 			$category = wp_specialchars_decode( $category, ENT_QUOTES );
+			// The homepage's internal feedback bucket (VHH_Site_Feedback) isn't
+			// publicly queryable — its own permalink wouldn't resolve to a real
+			// page, so cross-page links should go to the actual homepage.
+			$post_type = get_post_type( $post_id );
+			$permalink = ( VHH_Site_Feedback::POST_TYPE === $post_type )
+				? home_url( '/' )
+				: (string) get_permalink( $post_id );
 			$cache[ $post_id ] = array(
 				'title'     => get_the_title( $post_id ),
-				'permalink' => (string) get_permalink( $post_id ),
+				'permalink' => $permalink,
 				'category'  => $category,
 			);
 		}

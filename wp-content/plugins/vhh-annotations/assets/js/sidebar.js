@@ -121,6 +121,8 @@
 			card.appendChild( el( 'div', 'vhh-card-kind', cfg.i18n.overall ) );
 		} else if ( a.target_type === 'image' ) {
 			card.appendChild( el( 'div', 'vhh-card-kind', '📌 ' + cfg.i18n.imageNote ) );
+		} else if ( a.target_type === 'insertion' ) {
+			card.appendChild( el( 'div', 'vhh-card-kind', '➕ ' + cfg.i18n.insertionNote ) );
 		} else if ( a.selector && a.selector.exact ) {
 			var quote = el( 'blockquote', 'vhh-card-quote' );
 			quote.textContent = a.selector.exact.length > 120 ? a.selector.exact.slice( 0, 120 ) + '…' : a.selector.exact;
@@ -188,7 +190,8 @@
 		card.addEventListener( 'click', function () {
 			// No mark exists on THIS page's DOM for a cross-page annotation.
 			if ( crossPage || a.overall || a.orphan ) { return; }
-			VHH.bus.emit( a.target_type === 'image' ? 'focus:image' : 'focus:mark', String( a.id ) );
+			var focusEvent = a.target_type === 'image' ? 'focus:image' : ( a.target_type === 'insertion' ? 'focus:insertion' : 'focus:mark' );
+			VHH.bus.emit( focusEvent, String( a.id ) );
 		} );
 
 		return card;
@@ -302,27 +305,33 @@
 		head.appendChild( close );
 		ui.panel.appendChild( head );
 
-		var overallBtn = el( 'button', 'vhh-btn vhh-btn--block', '+ ' + cfg.i18n.overall );
-		overallBtn.type = 'button';
-		overallBtn.addEventListener( 'click', function () {
-			VHH.openPopover( {
-				quote: null,
-				rect: overallBtn.getBoundingClientRect(),
-				onSave: function ( text ) {
-					return VHH.api.create( {
-						post: cfg.postId,
-						comment: text,
-						overall: true
-					} ).then( function ( created ) {
-						VHH.state.items[ created.id ] = created;
-						VHH.insertInOrder( created );
-						VHH.closePopover();
-						renderList();
-					} );
-				}
+		// Listing views (homepage, category pages) have no single post of
+		// their own — cfg.postId is 0 there — so "overall feedback about
+		// this post" has nothing to attach to. Only card-level comments work
+		// on those pages.
+		if ( cfg.postId ) {
+			var overallBtn = el( 'button', 'vhh-btn vhh-btn--block', '+ ' + cfg.i18n.overall );
+			overallBtn.type = 'button';
+			overallBtn.addEventListener( 'click', function () {
+				VHH.openPopover( {
+					quote: null,
+					rect: overallBtn.getBoundingClientRect(),
+					onSave: function ( text ) {
+						return VHH.api.create( {
+							post: cfg.postId,
+							comment: text,
+							overall: true
+						} ).then( function ( created ) {
+							VHH.state.items[ created.id ] = created;
+							VHH.insertInOrder( created );
+							VHH.closePopover();
+							renderList();
+						} );
+					}
+				} );
 			} );
-		} );
-		ui.panel.appendChild( overallBtn );
+			ui.panel.appendChild( overallBtn );
+		}
 
 		ui.list = el( 'div', 'vhh-panel-list' );
 		ui.panel.appendChild( ui.list );
@@ -355,6 +364,14 @@
 
 		VHH.bus.on( 'items:changed', renderList );
 		VHH.bus.on( 'ready', renderList );
+		// card-annotator.js: a comment saved for a DIFFERENT post than this
+		// page (a related-article/homepage card) belongs in the cross-page
+		// list, not the per-page registry — same section as "Other pages".
+		VHH.bus.on( 'cross:created', function ( annotation ) {
+			otherItems = otherItems.filter( function ( a ) { return a.id !== annotation.id; } );
+			otherItems.unshift( annotation );
+			renderList();
+		} );
 		VHH.bus.on( 'focus:card', function ( id ) {
 			setOpen( true );
 			renderList();

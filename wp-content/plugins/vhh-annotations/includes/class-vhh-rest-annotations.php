@@ -53,7 +53,7 @@ class VHH_REST_Annotations {
 						),
 						'target_type' => array(
 							'type'    => 'string',
-							'enum'    => array( 'text', 'image' ),
+							'enum'    => array( 'text', 'image', 'insertion' ),
 							'default' => 'text',
 						),
 						'selector'    => array(
@@ -243,6 +243,9 @@ class VHH_REST_Annotations {
 			if ( 'image' === $target_type && ! VHH_Plugin::get( 'image_annotation' ) ) {
 				return new WP_Error( 'vhh_disabled', 'Image annotation is disabled.', array( 'status' => 403 ) );
 			}
+			if ( 'insertion' === $target_type && ! VHH_Plugin::get( 'insertion_annotation' ) ) {
+				return new WP_Error( 'vhh_disabled', 'Insertion-point annotation is disabled.', array( 'status' => 403 ) );
+			}
 			$selector = VHH_Selector::validate( $request->get_param( 'selector' ), $target_type );
 			if ( is_wp_error( $selector ) ) {
 				return $selector;
@@ -334,11 +337,20 @@ class VHH_REST_Annotations {
 						continue;
 					}
 					$quote = isset( $a['selector']['exact'] ) ? $a['selector']['exact'] : '[image note]';
-					$blob .= '> "' . $quote . '"' . "\n" . '↳ ' . $a['comment'] . "\n\n";
+					$blob .= '> "' . $quote . '"' . "\n" . '↳ ' . $a['comment'] . "\n";
+					// Replies routinely refine or correct the original note —
+					// fold them into the blob or the Claude workflow never sees them.
+					foreach ( (array) $a['replies'] as $r ) {
+						$blob .= '  ↳ ' . $r['author']['name'] . ': ' . $r['comment'] . "\n";
+					}
+					$blob .= "\n";
 				}
 				foreach ( $entry['annotations'] as $a ) {
 					if ( ! empty( $a['overall'] ) ) {
 						$blob .= $a['comment'] . "\n";
+						foreach ( (array) $a['replies'] as $r ) {
+							$blob .= '  ↳ ' . $r['author']['name'] . ': ' . $r['comment'] . "\n";
+						}
 					}
 				}
 				$entry['merged'] = rtrim( $blob ) . "\n";

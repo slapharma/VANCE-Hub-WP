@@ -2,10 +2,13 @@
 /**
  * Selector validation for VHH Annotations.
  *
- * Two selector shapes (W3C Web Annotation-style):
+ * Three selector shapes (W3C Web Annotation-style):
  *
- *   TextQuoteSelector  { type, exact (1..1000), prefix (0..64), suffix (0..64) }
- *   ImageRegionSelector{ type, attachmentId, src?, region {x,y,w,h} 0..1, wholeImage? }
+ *   TextQuoteSelector      { type, exact (1..1000), prefix (0..64), suffix (0..64) }
+ *   ImageRegionSelector    { type, attachmentId, src?, region {x,y,w,h} 0..1, wholeImage? }
+ *   InsertionPointSelector { type, prefix (0..64), suffix (0..64) } — zero-width caret
+ *                            position ("insert new content here"); at least one of
+ *                            prefix/suffix required.
  *
  * IMPORTANT: exact/prefix/suffix must preserve internal whitespace exactly as
  * selected — sanitize_textarea_field() collapses whitespace and would break
@@ -45,6 +48,9 @@ class VHH_Selector {
 		}
 		if ( 'image' === $target_type ) {
 			return self::validate_image( $selector );
+		}
+		if ( 'insertion' === $target_type ) {
+			return self::validate_insertion( $selector );
 		}
 		return new WP_Error( 'vhh_target_invalid', 'Unknown target type.', array( 'status' => 400 ) );
 	}
@@ -116,6 +122,40 @@ class VHH_Selector {
 		}
 		if ( ! $out['attachmentId'] && empty( $out['src'] ) ) {
 			return new WP_Error( 'vhh_selector_invalid', 'Image selector needs attachmentId or src.', array( 'status' => 400 ) );
+		}
+		return $out;
+	}
+
+	/**
+	 * A zero-width caret position between two blocks — "insert new content
+	 * here" — anchored the same way as TextQuoteSelector's context (prefix =
+	 * tail of the block before, suffix = head of the block after) but with
+	 * no `exact` span. Either may be empty at the very start/end of the
+	 * article; both empty means there's nothing to anchor to.
+	 */
+	private static function validate_insertion( array $sel ) {
+		$allowed = array( 'type', 'prefix', 'suffix' );
+		if ( array_diff( array_keys( $sel ), $allowed ) ) {
+			return new WP_Error( 'vhh_selector_invalid', 'Unknown selector keys.', array( 'status' => 400 ) );
+		}
+		if ( ! isset( $sel['type'] ) || 'InsertionPointSelector' !== $sel['type'] ) {
+			return new WP_Error( 'vhh_selector_invalid', 'Expected InsertionPointSelector.', array( 'status' => 400 ) );
+		}
+
+		$out = array( 'type' => 'InsertionPointSelector' );
+		foreach ( array( 'prefix', 'suffix' ) as $key ) {
+			if ( isset( $sel[ $key ] ) && '' !== $sel[ $key ] ) {
+				$val = self::clean_quote_string( $sel[ $key ] );
+				if ( mb_strlen( $val ) > self::MAX_CONTEXT ) {
+					$val = mb_substr( $val, 0, self::MAX_CONTEXT );
+				}
+				if ( '' !== $val ) {
+					$out[ $key ] = $val;
+				}
+			}
+		}
+		if ( empty( $out['prefix'] ) && empty( $out['suffix'] ) ) {
+			return new WP_Error( 'vhh_selector_invalid', 'Insertion point needs prefix or suffix context.', array( 'status' => 400 ) );
 		}
 		return $out;
 	}
