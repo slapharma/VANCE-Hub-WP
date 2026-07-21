@@ -171,7 +171,7 @@ function vance_health_hub_scripts() {
     // 2026-06-03: bumped to 2.6.0 to ship the sub-category grouped-archive layouts
     // (.va-layout-grid/bento/asymmetric/posters). filemtime() suffix guarantees the
     // edge/browser cache busts whenever main.css changes from here on.
-    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.6.0-subcat-layouts-' . ( @filemtime( get_template_directory() . '/assets/css/main.css' ) ?: '1' ) );
+    wp_enqueue_style( 'vance-main-style', get_template_directory_uri() . '/assets/css/main.css', array(), '2.8.0-subcat-layouts-' . ( @filemtime( get_template_directory() . '/assets/css/main.css' ) ?: '1' ) );
 
     // Phase 1 mobile hardening overrides. Enqueued AFTER main.css so equal-specificity
     // rules here win the cascade. See assets/css/mobile-base.css + MOBILE-PLAN.md §1.
@@ -4232,6 +4232,60 @@ function vance_customize_register( $wp_customize ) {
                 ),
             ) );
 
+            // Posters sub-option (only takes effect when Layout = Posters)
+            $wp_customize->add_setting( "vance_subcat_posters_cols_{$vance_sub->term_id}", array(
+                'default'           => '3',
+                'sanitize_callback' => 'vance_sanitize_posters_cols',
+            ) );
+            $wp_customize->add_control( "vance_subcat_posters_cols_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Posters per row', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'How many poster cards per row (Posters only).', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'select',
+                'choices'     => array(
+                    '3' => __( '3 per row', 'sla-health-hub' ),
+                    '4' => __( '4 per row', 'sla-health-hub' ),
+                ),
+            ) );
+
+            // Standard Grid sub-option (only takes effect when Layout = Standard Grid)
+            $wp_customize->add_setting( "vance_subcat_grid_cols_{$vance_sub->term_id}", array(
+                'default'           => '3',
+                'sanitize_callback' => 'vance_sanitize_grid_cols',
+            ) );
+            $wp_customize->add_control( "vance_subcat_grid_cols_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Grid columns', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'Articles per row (Standard Grid only).', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'select',
+                'choices'     => array(
+                    '3' => __( '3 per row', 'sla-health-hub' ),
+                    '4' => __( '4 per row', 'sla-health-hub' ),
+                    '5' => __( '5 per row', 'sla-health-hub' ),
+                ),
+            ) );
+
+            // Rows cap (applies to Standard Grid, Posters, Asymmetric)
+            $wp_customize->add_setting( "vance_subcat_rows_{$vance_sub->term_id}", array(
+                'default'           => '0',
+                'sanitize_callback' => 'vance_sanitize_rows',
+            ) );
+            $wp_customize->add_control( "vance_subcat_rows_{$vance_sub->term_id}", array(
+                'label'       => sprintf( __( '%1$s → %2$s: Rows to show', 'sla-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
+                'description' => __( 'Limit how many rows appear (Standard Grid, Posters, Asymmetric). Extra articles stay reachable via “View all”. Choose All to show everything.', 'sla-health-hub' ),
+                'section'     => 'vance_subcategory_layouts',
+                'type'        => 'select',
+                'choices'     => array(
+                    '0' => __( 'All rows', 'sla-health-hub' ),
+                    '1' => __( '1 row', 'sla-health-hub' ),
+                    '2' => __( '2 rows', 'sla-health-hub' ),
+                    '3' => __( '3 rows', 'sla-health-hub' ),
+                    '4' => __( '4 rows', 'sla-health-hub' ),
+                    '5' => __( '5 rows', 'sla-health-hub' ),
+                    '6' => __( '6 rows', 'sla-health-hub' ),
+                ),
+            ) );
+
             // Description block
             $wp_customize->add_setting( "vance_subcat_desc_{$vance_sub->term_id}", array(
                 'default'           => '',
@@ -4831,10 +4885,11 @@ function vance_sanitize_checkbox( $checked ) {
  */
 function vance_subcat_layout_choices() {
     return array(
-        'grid'       => __( 'Standard Grid', 'sla-health-hub' ),
-        'bento'      => __( 'Bento', 'sla-health-hub' ),
-        'asymmetric' => __( 'Asymmetric', 'sla-health-hub' ),
-        'posters'    => __( 'Posters', 'sla-health-hub' ),
+        'grid'          => __( 'Standard Grid', 'sla-health-hub' ),
+        'bento'         => __( 'Bento', 'sla-health-hub' ),
+        'asymmetric'    => __( 'Asymmetric', 'sla-health-hub' ),
+        'posters'       => __( 'Posters', 'sla-health-hub' ),
+        'featured_list' => __( 'Featured + List (homepage style)', 'sla-health-hub' ),
     );
 }
 
@@ -4934,6 +4989,44 @@ function vance_get_subcat_bento_count( $term_id ) {
 }
 function vance_get_subcat_bento_side( $term_id ) {
     return vance_sanitize_bento_side( (string) vance_get_theme_mod( "vance_subcat_bento_side_{$term_id}", 'left' ) );
+}
+
+/**
+ * Posters sub-option. Columns = how many poster cards sit in each row (3 or 4).
+ * Only takes effect when the sub-category Layout = Posters.
+ */
+function vance_sanitize_posters_cols( $v ) {
+    return in_array( $v, array( '3', '4' ), true ) ? $v : '3';
+}
+function vance_get_subcat_posters_cols( $term_id ) {
+    return vance_sanitize_posters_cols( (string) vance_get_theme_mod( "vance_subcat_posters_cols_{$term_id}", '3' ) );
+}
+
+/**
+ * Standard Grid sub-option. Columns = how many article cards sit in each row
+ * (3, 4 or 5). Only takes effect when the sub-category Layout = Standard Grid.
+ */
+function vance_sanitize_grid_cols( $v ) {
+    return in_array( $v, array( '3', '4', '5' ), true ) ? $v : '3';
+}
+function vance_get_subcat_grid_cols( $term_id ) {
+    return vance_sanitize_grid_cols( (string) vance_get_theme_mod( "vance_subcat_grid_cols_{$term_id}", '3' ) );
+}
+
+/**
+ * "Rows to show" cap for the Standard Grid, Posters and Asymmetric layouts.
+ * The article limit is rows x per-row (per-row depends on the layout's column
+ * count); 0 means show every article in the group. Extras remain reachable via
+ * the group's "View all" link.
+ */
+function vance_sanitize_rows( $v ) {
+    $v = (int) $v;
+    if ( $v < 0 ) { $v = 0; }
+    if ( $v > 6 ) { $v = 6; }
+    return (string) $v;
+}
+function vance_get_subcat_rows( $term_id ) {
+    return (int) vance_get_theme_mod( "vance_subcat_rows_{$term_id}", 0 );
 }
 
 /**

@@ -2673,6 +2673,13 @@ h6 {
     grid-template-columns: repeat(3, 1fr);
     gap: 28px;
 }
+/* Per-sub-category "Grid columns" option (3 default, or 4 / 5). */
+.va-layout-grid.va-grid--cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+.va-layout-grid.va-grid--cols-5 {
+    grid-template-columns: repeat(5, 1fr);
+}
 
 /* --- 2. Bento: one large main feature + 2 or 4 small cards beside it --- */
 /* Layout is driven by markup (.va-bento-main / .va-bento-side), not by nth-child,
@@ -2723,6 +2730,19 @@ h6 {
 .va-bento-side .card-image { height: 120px; }
 .va-bento-side .card-content { padding: 14px 16px; }
 .va-bento-side .entry-title a { font-size: 15px !important; }
+/* Side cards are title + meta only — the excerpt lives on the main feature. */
+.va-bento-side .entry-content { display: none; }
+
+/* Bento cards are outside .va-sub-grid, so give them the same lift-on-hover
+   animation and full-card click affordance as the standard grid cards. */
+.va-bento .news-card {
+    background: #fff;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.va-bento .news-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px -10px rgba(10, 25, 41, 0.25);
+}
 
 /* Overflow row beneath the bento feature */
 .va-bento-overflow { margin-top: 22px; }
@@ -2748,10 +2768,19 @@ h6 {
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
 }
+/* Per-sub-category "Posters per row" option (3 default, or 4). */
+.va-layout-posters.va-posters--cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
 .va-poster-card {
     position: relative;
     border-radius: var(--radius-md, 8px);
     overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.va-poster-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px -12px rgba(10, 25, 41, 0.45);
 }
 .va-poster-link {
     display: block;
@@ -2794,11 +2823,159 @@ h6 {
     text-decoration: underline;
 }
 
+/* --- 5. Featured + List: one large hero article beside a compact list of the
+   rest (the homepage "Latest" bento, minus the Featured Tools column). --- */
+.va-featured-list {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+    border: 1.5px solid #e2e8f0;
+}
+.va-featured-list--solo {
+    grid-template-columns: 1fr;
+}
+/* Hero cell: zooming image behind a gradient shade + overlaid copy. */
+.va-fl-featured {
+    position: relative;
+    display: block;
+    min-height: 400px;
+    overflow: hidden;
+    background-color: #1e293b;
+    text-decoration: none;
+}
+.va-fl-media {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.5s ease;
+}
+.va-fl-featured:hover .va-fl-media {
+    transform: scale(1.06);
+}
+.va-fl-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(10, 25, 41, 0) 30%, rgba(10, 25, 41, 0.88) 100%);
+}
+.va-fl-featured-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    padding: 28px;
+}
+.va-fl-featured-title {
+    color: #fff;
+    font-size: 26px;
+    line-height: 1.25;
+    font-weight: 700;
+    margin: 0 0 10px;
+}
+.va-fl-featured:hover .va-fl-featured-title {
+    text-decoration: underline;
+}
+.va-fl-featured-excerpt {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.va-fl-featured-meta {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+/* Side list: category eyebrow + title + postage-stamp thumbnail per row. */
+.va-fl-list {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    overflow: hidden;
+}
+.va-fl-item {
+    flex: 1 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    text-decoration: none;
+    border-bottom: 1px solid #e2e8f0;
+    transition: background 0.2s ease;
+}
+.va-fl-item:last-child { border-bottom: none; }
+.va-fl-item:hover { background: #f8fafc; }
+.va-fl-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+.va-fl-cat {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary-color, #008080);
+    line-height: 1.2;
+}
+.va-fl-title {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #0f172a;
+    transition: color 0.2s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.va-fl-item:hover .va-fl-title { color: var(--primary-color, #008080); }
+.va-fl-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+.va-fl-overflow { margin-top: 22px; }
+
 /* --- Responsive --- */
+/* 5-across grids need room; step 5 -> 4 on laptops before the tablet collapse. */
+@media (max-width: 1200px) {
+    .va-layout-grid.va-grid--cols-5 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
 @media (max-width: 900px) {
     .va-layout-grid,
     .va-layout-posters {
         grid-template-columns: repeat(2, 1fr);
+    }
+    /* Two-class selectors need their own collapse or they out-specify the above. */
+    .va-layout-posters.va-posters--cols-4,
+    .va-layout-grid.va-grid--cols-4,
+    .va-layout-grid.va-grid--cols-5 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    /* Stack the hero above the list. */
+    .va-featured-list {
+        grid-template-columns: 1fr;
     }
     /* Bento: stack main above the side cards; side becomes a 2-up row */
     .va-bento,
@@ -2823,6 +3000,11 @@ h6 {
 @media (max-width: 560px) {
     .va-layout-grid,
     .va-layout-posters {
+        grid-template-columns: 1fr;
+    }
+    .va-layout-posters.va-posters--cols-4,
+    .va-layout-grid.va-grid--cols-4,
+    .va-layout-grid.va-grid--cols-5 {
         grid-template-columns: 1fr;
     }
     .va-bento-side,

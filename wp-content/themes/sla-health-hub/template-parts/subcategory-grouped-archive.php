@@ -7,7 +7,9 @@
  * the current query's posts by their child (sub-)category. Each group shows an
  * editable description block and is laid out using the per-sub-category layout
  * chosen in Customizer → Content & Knowledge Base → Sub-Category Layouts:
- * Standard Grid, Bento, Asymmetric, or Posters.
+ * Standard Grid, Bento, Asymmetric, Posters (3 or 4 per row), or
+ * Featured + List (one large hero article beside a compact scannable list of
+ * the rest, mirroring the homepage "Latest" bento minus the Featured Tools).
  *
  * Posts that belong only to the parent category (no child term) are surfaced
  * only when there are no sub-category groups: a parent with no child categories
@@ -251,11 +253,93 @@ if ( $vance_cat instanceof WP_Term ) {
                                 <?php $vance_ri = 0; foreach ( $vance_rest as $vpid ) { $post = get_post( $vpid ); setup_postdata( $post ); vance_render_subcat_card( 'grid', $vance_ri ); $vance_ri++; } wp_reset_postdata(); ?>
                             </div>
                         <?php endif; ?>
-                    <?php else : ?>
-                        <div class="va-sub-grid va-layout-<?php echo esc_attr( $vance_layout ); ?>">
+                    <?php elseif ( 'featured_list' === $vance_layout ) :
+                        // Featured + List = the homepage "Latest" bento minus the
+                        // Featured Tools column: one large hero article on the left,
+                        // a compact category+title+thumb list of the next few beside
+                        // it, and any remaining posts flowing into a standard grid.
+                        $vance_ids  = $vance_post_ids;
+                        $vance_feat = array_shift( $vance_ids );
+                        $vance_list = array_splice( $vance_ids, 0, 6 ); // up to 6 rows beside the hero
+                        $vance_rest = $vance_ids;
+                        $vance_solo = empty( $vance_list );
+                        ?>
+                        <div class="va-featured-list<?php echo $vance_solo ? ' va-featured-list--solo' : ''; ?>">
+                            <?php
+                            $post = get_post( $vance_feat ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride
+                            setup_postdata( $post );
+                            $vance_ft_thumb = get_the_post_thumbnail_url( get_the_ID(), 'large' );
+                            $vance_ft_read  = function_exists( 'vance_get_read_time' ) ? (int) vance_get_read_time( get_the_ID() ) : 0;
+                            ?>
+                            <a class="va-fl-featured" href="<?php the_permalink(); ?>" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
+                                <span class="va-fl-media" style="background-image: url('<?php echo esc_url( $vance_ft_thumb ); ?>');" aria-hidden="true"></span>
+                                <span class="va-fl-shade" aria-hidden="true"></span>
+                                <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
+                                <div class="va-fl-featured-body">
+                                    <h3 class="va-fl-featured-title"><?php the_title(); ?></h3>
+                                    <p class="va-fl-featured-excerpt"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 24 ) ); ?></p>
+                                    <div class="va-fl-featured-meta"><?php echo esc_html( get_the_date() ); ?><?php if ( $vance_ft_read > 0 ) : ?> &middot; <?php echo (int) $vance_ft_read; ?> min read<?php endif; ?></div>
+                                </div>
+                            </a>
+                            <?php wp_reset_postdata(); ?>
+                            <?php if ( ! $vance_solo ) : ?>
+                                <div class="va-fl-list">
+                                    <?php foreach ( $vance_list as $vpid ) :
+                                        $post = get_post( $vpid ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride
+                                        setup_postdata( $post );
+                                        $vance_li_thumb = get_the_post_thumbnail_url( get_the_ID(), 'thumbnail' );
+                                        $vance_li_cat   = get_term( vance_post_overlay_main_category_id( get_the_ID() ), 'category' );
+                                        $vance_li_color = vance_post_eyebrow_color( get_the_ID() );
+                                        ?>
+                                        <a class="va-fl-item" href="<?php the_permalink(); ?>" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
+                                            <div class="va-fl-text">
+                                                <?php if ( $vance_li_cat && ! is_wp_error( $vance_li_cat ) ) : ?>
+                                                    <span class="va-fl-cat" style="color: <?php echo esc_attr( $vance_li_color ); ?>;"><?php echo esc_html( $vance_li_cat->name ); ?></span>
+                                                <?php endif; ?>
+                                                <h4 class="va-fl-title"><?php the_title(); ?></h4>
+                                            </div>
+                                            <?php if ( $vance_li_thumb ) : ?>
+                                                <img class="va-fl-thumb" src="<?php echo esc_url( $vance_li_thumb ); ?>" alt="" loading="lazy">
+                                            <?php endif; ?>
+                                        </a>
+                                    <?php endforeach; wp_reset_postdata(); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ( ! empty( $vance_rest ) ) : ?>
+                            <div class="va-sub-grid va-layout-grid va-fl-overflow">
+                                <?php $vance_ri = 0; foreach ( $vance_rest as $vpid ) { $post = get_post( $vpid ); setup_postdata( $post ); vance_render_subcat_card( 'grid', $vance_ri ); $vance_ri++; } wp_reset_postdata(); ?>
+                            </div>
+                        <?php endif; ?>
+                    <?php else :
+                        // Standard Grid / Asymmetric / Posters.
+                        //  - Grid    → columns modifier (3/4/5 per row).
+                        //  - Posters → columns modifier (3/4 per row).
+                        //  - Asymmetric → fixed two-column rhythm.
+                        // "Rows to show" then optionally caps the article count
+                        // to (rows x per-row); 0 = show all. Trimmed articles
+                        // stay reachable via the group's "View all" link.
+                        $vance_grid_extra = '';
+                        $vance_per_row    = 3;
+                        if ( 'grid' === $vance_layout ) {
+                            $vance_per_row    = (int) vance_get_subcat_grid_cols( $tid );
+                            $vance_grid_extra = ' va-grid--cols-' . $vance_per_row;
+                        } elseif ( 'posters' === $vance_layout ) {
+                            $vance_per_row    = (int) vance_get_subcat_posters_cols( $tid );
+                            $vance_grid_extra = ' va-posters--cols-' . $vance_per_row;
+                        } elseif ( 'asymmetric' === $vance_layout ) {
+                            $vance_per_row    = 2; // fixed 3fr/2fr two-column rhythm
+                        }
+                        $vance_rows  = (int) vance_get_subcat_rows( $tid );
+                        $vance_items = $vance_post_ids;
+                        if ( $vance_rows > 0 ) {
+                            $vance_items = array_slice( $vance_items, 0, $vance_rows * $vance_per_row );
+                        }
+                        ?>
+                        <div class="va-sub-grid va-layout-<?php echo esc_attr( $vance_layout ); ?><?php echo esc_attr( $vance_grid_extra ); ?>">
                             <?php
                             $vance_i = 0;
-                            foreach ( $vance_post_ids as $vpid ) {
+                            foreach ( $vance_items as $vpid ) {
                                 $post = get_post( $vpid ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride
                                 setup_postdata( $post );
                                 vance_render_subcat_card( $vance_layout, $vance_i );
