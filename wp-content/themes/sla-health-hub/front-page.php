@@ -2060,6 +2060,24 @@ body {
                             <?php endfor; ?>
                         </div>
                     </div>
+                <?php elseif ($layout === 'posters' && count($posts_array) >= 1): ?>
+                    <div class="va-sub-grid va-layout-posters va-posters--cols-3">
+                        <?php foreach ($posts_array as $p):
+                            $poster_thumb = get_the_post_thumbnail_url($p->ID, 'large');
+                            $poster_read  = vance_get_read_time($p->ID);
+                        ?>
+                        <article class="va-poster-card">
+                            <a class="va-poster-link" href="<?php echo esc_url(get_permalink($p->ID)); ?>" data-vhh-post-id="<?php echo (int) $p->ID; ?>" style="background-image: url('<?php echo esc_url($poster_thumb); ?>');">
+                                <span class="va-poster-shade" aria-hidden="true"></span>
+                                <?php echo vance_card_eyebrow_html($p->ID, true); ?>
+                                <div class="va-poster-body">
+                                    <div class="va-poster-meta"><?php echo esc_html(get_the_date('', $p->ID)); ?> &middot; <?php echo (int) $poster_read; ?> min read</div>
+                                    <h3 class="va-poster-title"><?php echo esc_html(get_the_title($p->ID)); ?></h3>
+                                </div>
+                            </a>
+                        </article>
+                        <?php endforeach; ?>
+                    </div>
                 <?php else: ?>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;">
                         <?php foreach ($posts_array as $p): ?>

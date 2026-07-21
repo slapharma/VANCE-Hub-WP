@@ -169,6 +169,20 @@ h6 {
     object-fit: contain;
 }
 
+/* Desktop-only: logo sits inline with the menu here, so size/offset are
+   scoped to min-width:768px to avoid overflowing the fixed 70px mobile header. */
+@media (min-width: 768px) {
+    .logo-area {
+        position: relative;
+        top: 10px;
+    }
+
+    .logo-area img {
+        width: 259px; /* +15% from 225px */
+        max-height: 75px; /* +15% from 65px */
+    }
+}
+
 .main-nav ul {
     display: flex;
     gap: 24px;
@@ -179,6 +193,24 @@ h6 {
     font-weight: 500;
     color: var(--text-main);
     padding: 8px 0;
+}
+
+.main-nav > ul > li > a {
+    font-weight: 700;
+}
+
+/* Live nav is rendered by Mega Menu Pro (body.mega-menu-primary-menu), which
+   replaces the plain wp_nav_menu markup above with its own #mega-menu-primary-menu
+   structure — top-level items are `li > a.mega-menu-link` directly under the
+   menu ul; sub-menu items sit inside a nested ul.mega-sub-menu two levels deeper,
+   so this child-combinator selector still targets only the top level.
+   Mega Menu Pro's own plugin CSS sets font-weight:400 on this same top-level
+   link via a double-ID selector (#mega-menu-wrap-primary-menu #mega-menu-primary-menu
+   > li.mega-menu-item > a.mega-menu-link), which outranks a single-ID selector —
+   match that specificity (plus !important, since load order between the plugin's
+   stylesheet and this one isn't guaranteed) to win reliably. */
+#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li > a.mega-menu-link {
+    font-weight: 700 !important;
 }
 
 .main-nav a:hover {
@@ -313,6 +345,14 @@ h6 {
     min-height: 460px;
     position: relative;
     overflow: hidden;
+}
+
+/* Homepage hero only (scoped via body.home) — -15% from the shared .hero
+   defaults above, which are also used by page-patients.php, page-healthcare-
+   professionals.php etc. via the same "hero patient-hero" classes. */
+body.home .hero {
+    padding: 85px 0 136px; /* -15% from 100px/160px */
+    min-height: 391px; /* -15% from 460px */
 }
 
 .hero-content {
