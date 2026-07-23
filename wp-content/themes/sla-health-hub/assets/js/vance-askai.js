@@ -68,6 +68,10 @@
 		return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	}
 
+	function now() {
+		return (window.performance && window.performance.now) ? window.performance.now() : Date.now();
+	}
+
 	// =====================================================================
 	// Persistence
 	// =====================================================================
@@ -231,7 +235,7 @@
 		}
 		// Split keeping the separators, so spacing and newlines survive.
 		var tokens = String(state.messages[index].content).split(/(\s+)/);
-		state.reveal = { index: index, tokens: tokens, shown: 0 };
+		state.reveal = { index: index, tokens: tokens, shown: 0, startedAt: now() };
 		render();
 		tickReveal();
 	}
@@ -242,12 +246,24 @@
 		scrollLogs();
 	}
 
+	/**
+	 * Advance the reveal to wherever elapsed time says it should be.
+	 *
+	 * Driven by the clock rather than by a fixed step per tick, because browsers
+	 * clamp timers to roughly one per second in a background tab. A fixed step
+	 * would leave a long answer crawling for minutes after the reader came back;
+	 * this simply catches up to the correct position instead.
+	 */
 	function tickReveal() {
 		var r = state.reveal;
 		if (!r) {
 			return;
 		}
-		r.shown += 2; // one word plus its trailing whitespace token
+
+		// Two tokens (a word and its trailing space) per REVEAL_MS.
+		var due = Math.floor(((now() - r.startedAt) / REVEAL_MS) * 2);
+		r.shown = Math.min(Math.max(r.shown + 2, due), r.tokens.length);
+
 		if (r.shown >= r.tokens.length) {
 			finishReveal();
 			return;
