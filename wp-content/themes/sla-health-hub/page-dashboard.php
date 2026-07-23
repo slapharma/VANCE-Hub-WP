@@ -102,6 +102,10 @@ get_header();
     $theme_primary = $is_practitioner ? '#0A1929' : '#008080'; // Navy vs Orange
     $theme_sidebar = $is_practitioner ? '#0A1929' : '#FFFFFF';
     $theme_sidebar_text = $is_practitioner ? '#94a3b8' : '#64748B';
+    // Lighter visual weight for the Member sidebar: less-bold labels/items than
+    // Practitioner's, while keeping the same (accessible-contrast) text color.
+    $nav_label_weight = $is_practitioner ? '700' : '600';
+    $nav_item_weight = $is_practitioner ? '500' : '400';
     $sidebar_logo_color = $is_practitioner ? '#FFFFFF' : '#0A1929';
     $nav_hover_bg = $is_practitioner ? 'rgba(255,255,255,0.1)' : '#F1F5F9';
     $nav_active_color = $is_practitioner ? '#008080' : '#008080';
@@ -150,8 +154,8 @@ get_header();
 .dash-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px; color: <?php echo $sidebar_logo_color; ?>; display: flex; align-items: center; gap: 8px; text-decoration: none; }
 .dash-nav { padding: 20px 12px; flex: 1; }
 .nav-section { margin-bottom: 24px; }
-.nav-label { font-size: 11px; font-weight: 700; color: <?php echo $theme_sidebar_text; ?>; text-transform: uppercase; margin: 0 0 8px 12px; letter-spacing: 0.5px; opacity: 0.8; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: <?php echo $theme_sidebar_text; ?>; text-decoration: none; border-radius: 0; font-size: 14px; font-weight: 500; transition: all 0.2s; margin-bottom: 2px; }
+.nav-label { font-size: 11px; font-weight: <?php echo $nav_label_weight; ?>; color: <?php echo $theme_sidebar_text; ?>; text-transform: uppercase; margin: 0 0 8px 12px; letter-spacing: 0.5px; opacity: <?php echo $is_practitioner ? '0.8' : '0.7'; ?>; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: <?php echo $theme_sidebar_text; ?>; text-decoration: none; border-radius: 0; font-size: 14px; font-weight: <?php echo $nav_item_weight; ?>; transition: all 0.2s; margin-bottom: 2px; }
 .nav-item:hover { background: <?php echo $nav_hover_bg; ?>; color: <?php echo $is_practitioner ? 'white' : 'var(--dash-primary)'; ?>; }
 .nav-item.active { background: <?php echo $nav_active_bg; ?>; color: <?php echo $nav_active_color; ?>; }
 
@@ -321,32 +325,29 @@ get_header();
                     </style>
 
                     <div class="dash-grid-v2">
-                        <!-- 1. ACTIVE COURSES (Wide) -->
+                        <!-- 1. READING LIST (Wide) -->
                         <div class="d-card d-col-8">
                              <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">🎓</span> Active Courses</div>
-                                <a href="?tab=courses" class="card-link">View All</a>
+                                <div class="d-card-title"><span class="d-icon-box">📚</span> Reading List</div>
+                                <a href="?tab=reading-list" class="card-link">Library</a>
                              </div>
-                             <div style="display: flex; flex-direction: column; gap: 16px;">
-                                 <div>
-                                     <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:8px; color:#334155;">
-                                         <span>Advanced Gut Health Protocol</span>
-                                         <span style="color:#008080;">75%</span>
-                                     </div>
-                                     <div style="background:#F1F5F9; height:8px; border-radius:0; overflow:hidden;">
-                                         <div style="background:#008080; width:75%; height:100%;"></div>
-                                     </div>
-                                 </div>
-                                 <div>
-                                     <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:8px; color:#334155;">
-                                            <span>IBD & Fasting Basics</span>
-                                         <span style="color:#008080;">30%</span>
-                                     </div>
-                                     <div style="background:#F1F5F9; height:8px; border-radius:0; overflow:hidden;">
-                                         <div style="background:#008080; width:30%; height:100%;"></div>
-                                     </div>
-                                 </div>
-                             </div>
+                             <?php if(empty($bookmarks)): ?>
+                                <div class="msg-empty-state">No saved articles.</div>
+                             <?php else: ?>
+                                <div class="dash-list">
+                                    <?php
+                                    $b_query = new WP_Query(array('post__in' => array_reverse($bookmarks), 'post_type' => 'any', 'posts_per_page' => 5, 'orderby' => 'post__in'));
+                                    while($b_query->have_posts()): $b_query->the_post();
+                                    ?>
+                                    <div class="list-item">
+                                        <div style="flex:1; overflow:hidden;">
+                                            <div class="item-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></div>
+                                            <div class="item-meta"><?php echo get_the_date('M j'); ?></div>
+                                        </div>
+                                    </div>
+                                    <?php endwhile; wp_reset_postdata(); ?>
+                                </div>
+                             <?php endif; ?>
                         </div>
 
                         <!-- 2. MESSAGES (Tall/Side) — admin-broadcast messages live here -->
@@ -412,27 +413,30 @@ get_header();
                             </div>
                         </div>
 
-                        <!-- 4. SAVED ARTICLES -->
+                        <!-- 4. MY VANCE-AI -->
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">📚</span> Reading List</div>
-                                <a href="?tab=reading-list" class="card-link">Library</a>
+                                <div class="d-card-title"><span class="d-icon-box">🤖</span> My VANCE-Ai</div>
+                                <a href="?tab=ai-chats" class="card-link">View All</a>
                             </div>
-                            <?php if(empty($bookmarks)): ?>
-                                <div class="msg-empty-state">No saved articles.</div>
+                            <?php
+                            $home_ai_chats = get_user_meta($current_user->ID, '_sla_saved_chats', true);
+                            if (!is_array($home_ai_chats)) $home_ai_chats = array();
+                            if(empty($home_ai_chats)): ?>
+                                <div class="msg-empty-state">No VANCE-Ai conversations yet.</div>
                             <?php else: ?>
                                 <div class="dash-list">
-                                    <?php 
-                                    $b_query = new WP_Query(array('post__in' => $bookmarks, 'post_type' => 'any', 'posts_per_page' => 3));
-                                    while($b_query->have_posts()): $b_query->the_post();
+                                    <?php foreach(array_slice(array_reverse($home_ai_chats), 0, 3) as $home_chat):
+                                        $home_chat_title = !empty($home_chat['title']) ? wp_trim_words($home_chat['title'], 6, '...') : 'VANCE-Ai conversation';
+                                        $home_chat_date = !empty($home_chat['updated']) ? $home_chat['updated'] : ( !empty($home_chat['date']) ? $home_chat['date'] : '' );
                                     ?>
                                     <div class="list-item">
                                         <div style="flex:1; overflow:hidden;">
-                                            <div class="item-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></div>
-                                            <div class="item-meta"><?php echo get_the_date('M j'); ?></div>
+                                            <div class="item-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo esc_html($home_chat_title); ?></div>
+                                            <div class="item-meta"><?php echo $home_chat_date ? esc_html(date('M j', strtotime($home_chat_date))) : ''; ?></div>
                                         </div>
                                     </div>
-                                    <?php endwhile; wp_reset_postdata(); ?>
+                                    <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -767,7 +771,7 @@ get_header();
                          <?php else: ?>
                             <div class="dash-list">
                                 <?php 
-                                $b_query = new WP_Query(array('post__in' => $bookmarks, 'post_type' => 'any', 'posts_per_page' => -1));
+                                $b_query = new WP_Query(array('post__in' => array_reverse($bookmarks), 'post_type' => 'any', 'posts_per_page' => -1, 'orderby' => 'post__in'));
                                 while($b_query->have_posts()): $b_query->the_post();
                                 $p_link = get_permalink();
                                 $p_title = get_the_title();
@@ -950,7 +954,7 @@ get_header();
                                 <!-- Messages will go here -->
                             </div>
                             <div style="padding:20px; border-top:1px solid #E2E8F0; background:white; display:flex; justify-content:flex-end;">
-                                <button onclick="closeChatModal()" class="btn-primary" style="background:#0A1929; color:white; border:none; padding:10px 24px; border-radius:0; cursor:pointer; font-weight:600;">Close</button>
+                                <button onclick="closeChatModal()" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:0; cursor:pointer; font-weight:600;">Close</button>
                             </div>
                         </div>
                     </div>
@@ -1223,8 +1227,8 @@ get_header();
                     avatar.innerText = 'USR';
                 } else {
                     avatar.style.background = 'white';
-                    avatar.style.color = '#fd4f00';
-                    avatar.style.border = '1px solid #fd4f00';
+                    avatar.style.color = 'var(--dash-primary)';
+                    avatar.style.border = '1px solid var(--dash-primary)';
                     avatar.innerText = '🤖';
                 }
                 
