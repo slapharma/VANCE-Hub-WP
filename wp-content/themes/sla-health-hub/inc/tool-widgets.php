@@ -48,33 +48,49 @@ function vance_tool_widgets_emit_modal_css_once() {
 		// here: the chat they styled moved to the shared Ask AI surface.
 	?>
 	<style>
+		/* Frosted surfaces. The tints come from the customizer colours at reduced
+		   alpha (see vance_rgba) so admin colour choices still drive the look;
+		   only the transparency and blur are added here. */
 		.vance-tw-modal {
 			position: fixed; inset: 0;
 			z-index: 99999;
 			display: none;
 			align-items: center; justify-content: center;
-			background: <?php echo $c_backdrop; ?>;
+			padding: 16px;
+			background: <?php echo vance_rgba( $c_backdrop, 0.62 ); ?>;
+			-webkit-backdrop-filter: blur(8px);
+			backdrop-filter: blur(8px);
 			opacity: 0;
 			transition: opacity 0.25s ease;
 		}
 		.vance-tw-modal.is-open { display: flex; opacity: 1; }
 		.vance-tw-modal__panel {
 			position: relative;
-			width: min(720px, 96vw);
-			max-height: min(86vh, 800px);
-			background: <?php echo $c_panel_bg; ?>;
+			width: min(1000px, 100%);
+			max-height: min(90vh, 860px);
+			background: <?php echo vance_rgba( $c_panel_bg, 0.82 ); ?>;
+			-webkit-backdrop-filter: blur(28px) saturate(150%);
+			backdrop-filter: blur(28px) saturate(150%);
 			color: <?php echo $c_text; ?>;
 			border-radius: 0;
-			box-shadow: 0 40px 80px rgba(0, 0, 0, 0.40);
+			border: 1px solid rgba(255,255,255,0.55);
+			box-shadow: 0 30px 90px rgba(10,25,41,0.38), inset 0 1px 0 rgba(255,255,255,0.70);
 			overflow: hidden;
 			display: flex; flex-direction: column;
-			border: 1px solid rgba(255,255,255,0.08);
+		}
+		/* Without backdrop-filter the tint alone would let the page bleed through
+		   and drop text contrast, so fall back to near-opaque surfaces. */
+		@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+			.vance-tw-modal { background: <?php echo vance_rgba( $c_backdrop, 0.92 ); ?>; }
+			.vance-tw-modal__panel { background: <?php echo $c_panel_bg; ?>; }
 		}
 		.vance-tw-modal__header {
 			display: flex; align-items: center; justify-content: space-between;
-			padding: 14px 22px;
-			background: <?php echo $c_header_bg; ?>;
-			border-bottom: 1px solid rgba(255,255,255,0.10);
+			padding: 14px 24px;
+			background: <?php echo vance_rgba( $c_header_bg, 0.80 ); ?>;
+			-webkit-backdrop-filter: blur(20px);
+			backdrop-filter: blur(20px);
+			border-bottom: 1px solid rgba(255,255,255,0.18);
 		}
 		.vance-tw-modal__title {
 			margin: 0;
@@ -97,13 +113,23 @@ function vance_tool_widgets_emit_modal_css_once() {
 		/* Filter chips and their labels are styled by the renderer itself
 		   (vance_discovery_facet_css in functions.php), so they stay correct
 		   wherever they are used. Only the surrounding form furniture is here. */
-		.vance-tw-modal .filters-intro {
-			margin: 0 0 20px;
-			font-size: 15px; line-height: 1.55;
-			color: #475569;
+		/* Chips sit on frosted glass rather than flat white, so they get a touch
+		   of translucency of their own. The selected state stays fully opaque:
+		   its contrast has to be predictable whatever shows through behind. */
+		.vance-tw-modal .vance-facets {
+			--vf-chip-bg: rgba(255,255,255,0.72);
+			--vf-chip-border: rgba(15,23,42,0.16);
+			--vf-chip-hover-bg: rgba(255,255,255,0.95);
+			--vf-chip-hover-border: rgba(15,23,42,0.32);
 		}
+		.vance-tw-modal .filters-intro {
+			margin: 0 0 18px;
+			font-size: 15px; line-height: 1.5;
+			color: #3f4d5f;
+		}
+		.vance-tw-modal .keyword-field { flex: 1 1 260px; min-width: 0; }
 		.vance-tw-modal .keyword-label {
-			display: block; margin: 0 0 8px;
+			display: block; margin: 0 0 6px;
 			font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800;
 			color: #334155;
 			text-transform: uppercase; letter-spacing: 1px;
@@ -111,19 +137,26 @@ function vance_tool_widgets_emit_modal_css_once() {
 		.vance-tw-modal .keyword-input {
 			width: 100%; box-sizing: border-box;
 			min-height: 44px; padding: 11px 14px;
-			background: #ffffff; color: #0f172a;
-			border: 1px solid #cbd5e1; border-radius: 0;
+			background: rgba(255,255,255,0.85); color: #0f172a;
+			border: 1px solid rgba(15,23,42,0.16); border-radius: 0;
 			font-size: 16px;
 		}
 		.vance-tw-modal .keyword-input::placeholder { color: #64748b; }
 		.vance-tw-modal .keyword-input:focus {
 			outline: 3px solid #008080; outline-offset: 2px;
-			border-color: #008080;
+			border-color: #008080; background: #ffffff;
 		}
+		/* Keyword and both buttons share one band pinned to the bottom of the
+		   panel, so the primary action stays reachable even on a short viewport
+		   where the filters above it have to scroll. */
 		.vance-tw-modal .filters-actions {
-			display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-			margin-top: 22px; padding-top: 18px;
-			border-top: 1px solid #e2e8f0;
+			position: sticky; bottom: -22px; z-index: 2;
+			display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+			margin: 20px -24px -22px; padding: 16px 24px;
+			background: rgba(255,255,255,0.68);
+			-webkit-backdrop-filter: blur(20px);
+			backdrop-filter: blur(20px);
+			border-top: 1px solid rgba(15,23,42,0.10);
 		}
 		.vance-tw-modal .vance-tw-btn-go {
 			min-height: 44px; padding: 11px 28px;
@@ -327,7 +360,7 @@ function vance_tw_render_content_filters_body() {
 	?>
 	<form action="<?php echo esc_url( home_url( '/discovery-results/' ) ); ?>" method="GET" class="vance-tw-filters-form">
 
-		<p class="filters-intro">Narrow the library by any combination below, then show the matching articles. Leave a group untouched to include everything in it.</p>
+		<p class="filters-intro">Pick any combination below. A group you leave untouched includes everything in it.</p>
 
 		<?php
 		/* Section / Topic / Condition / Written-for, built from terms that carry
@@ -335,12 +368,11 @@ function vance_tw_render_content_filters_body() {
 		vance_discovery_render_facets();
 		?>
 
-		<div class="filter-group" style="margin-bottom: 0;">
-			<label class="keyword-label" for="vance-tw-keyword">Keyword</label>
-			<input type="text" id="vance-tw-keyword" name="s" class="keyword-input" placeholder="Optional, for example bloating or biologics">
-		</div>
-
 		<div class="filters-actions">
+			<div class="keyword-field">
+				<label class="keyword-label" for="vance-tw-keyword">Keyword</label>
+				<input type="text" id="vance-tw-keyword" name="s" class="keyword-input" placeholder="Optional, for example bloating">
+			</div>
 			<button type="submit" class="vance-tw-btn-go">Show results</button>
 			<button type="reset" class="vance-tw-btn-text" onclick="var f=this.closest('form'); setTimeout(function(){ f.querySelectorAll('.text-chip').forEach(function(el){ var i=el.querySelector('input'); el.classList.toggle('selected', !!(i &amp;&amp; i.checked)); }); }, 0);">Reset</button>
 		</div>

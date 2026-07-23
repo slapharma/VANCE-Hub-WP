@@ -189,6 +189,36 @@ function vance_discovery_facets() {
 }
 
 /**
+ * Turn a customizer colour into an rgba() string at the given alpha.
+ *
+ * Customizer colour controls only store opaque hex, so translucent surfaces
+ * (the frosted modal, for instance) cannot be expressed as a setting. Deriving
+ * the alpha here keeps the admin's chosen colour in charge of the tint instead
+ * of hardcoding a second palette that would silently ignore it. Values that are
+ * already rgba()/named are passed through untouched.
+ */
+function vance_rgba( $color, $alpha ) {
+    $color = trim( (string) $color );
+    if ( '' === $color || '#' !== $color[0] ) {
+        return $color;
+    }
+    $hex = ltrim( $color, '#' );
+    if ( 3 === strlen( $hex ) ) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+        return $color;
+    }
+    return sprintf(
+        'rgba(%d, %d, %d, %s)',
+        hexdec( substr( $hex, 0, 2 ) ),
+        hexdec( substr( $hex, 2, 2 ) ),
+        hexdec( substr( $hex, 4, 2 ) ),
+        rtrim( rtrim( number_format( (float) $alpha, 2, '.', '' ), '0' ), '.' )
+    );
+}
+
+/**
  * Styles for the facet chips, emitted once alongside the markup.
  *
  * These live with the renderer on purpose. They used to sit in the modal's
@@ -206,7 +236,9 @@ function vance_discovery_facet_css() {
     <style>
         .vance-facets {
             --vf-label: #334155;
-            --vf-hint: #64748b;
+            /* Slate-600, not the lighter slate-500 that reads fine on flat white:
+               against the frosted panel that only reached 3.39:1. */
+            --vf-hint: #475569;
             --vf-chip-bg: #ffffff;
             --vf-chip-border: #cbd5e1;
             --vf-chip-text: #0f172a;
@@ -216,7 +248,8 @@ function vance_discovery_facet_css() {
             --vf-accent-hover: #006666;
             --vf-accent-text: #ffffff;
         }
-        .vance-facets .filter-group { margin: 0 0 22px; }
+        .vance-facets .filter-group { margin: 0 0 18px; }
+        .vance-facets .filter-group:last-child { margin-bottom: 0; }
         .vance-facets .filter-label {
             display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
             margin: 0 0 10px;
@@ -473,6 +506,35 @@ function vance_health_hub_scripts() {
 add_action( 'wp_enqueue_scripts', 'vance_health_hub_scripts' );
 
 /**
+ * Keep the per-user dashboard views out of every page cache.
+ *
+ * LiteSpeed's "cache logged-in users" private cache is enabled with a 30 minute
+ * TTL and no URI or role exclusions, so /dashboard/ was being served from a
+ * per-user snapshot. Saved VANCE-Ai chats, notes, bookmarks and calculator
+ * results are all written by REST/AJAX calls that never purge that snapshot, so
+ * a brand new entry stayed invisible for up to half an hour and read as "it did
+ * not save". These pages are unique per user and change on every write; they
+ * must never be cached.
+ *
+ * Matched by slug as well as by assigned template: they resolve through
+ * WordPress's page-{slug}.php hierarchy rather than a saved template, so
+ * is_page_template() alone returns false.
+ */
+function vance_no_cache_account_pages() {
+    $slugs     = array( 'dashboard', 'my-notes' );
+    $templates = array( 'page-dashboard.php', 'page-my-notes.php' );
+
+    if ( ! is_page( $slugs ) && ! is_page_template( $templates ) ) {
+        return;
+    }
+
+    nocache_headers();
+    // No-op when LiteSpeed is inactive.
+    do_action( 'litespeed_control_set_nocache', 'per-user account page' );
+}
+add_action( 'template_redirect', 'vance_no_cache_account_pages' );
+
+/**
  * Config handed to assets/js/vance-askai.js.
  *
  * The REST nonce is always printed so the chat endpoint can identify a
@@ -510,7 +572,7 @@ function vance_askai_script_data() {
         $foot = sprintf(
             /* translators: %s: dashboard URL */
             __( 'Saved to <a href="%s">your dashboard</a>. General information from this hub only, not personal medical advice.', 'sla-health-hub' ),
-            esc_url( home_url( '/dashboard/?section=ai-chats' ) )
+            esc_url( home_url( '/dashboard/?tab=ai-chats' ) )
         );
     } else {
         $foot = sprintf(
