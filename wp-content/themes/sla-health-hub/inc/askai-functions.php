@@ -259,13 +259,21 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 	if ( $context_post_id ) {
 		$post = get_post( $context_post_id );
 		if ( $post instanceof WP_Post && 'publish' === $post->post_status && in_array( $post->post_type, $types, true ) ) {
-			$sources[] = array(
-				'id'      => $post->ID,
-				'title'   => get_the_title( $post ),
-				'url'     => get_permalink( $post ),
-				'excerpt' => vance_ai_build_excerpt( $post, $terms, 1200 ),
-				'primary' => true,
-			);
+			$primary_excerpt = vance_ai_build_excerpt( $post, $terms, 1200 );
+
+			// Template-driven pages (the Ask AI page itself, the GI Health
+			// condition pages) carry little or no post_content. Adding one as an
+			// empty PRIMARY SOURCE is worse than adding nothing: it presents the
+			// model with a titled, authoritative-looking block and no facts.
+			if ( str_word_count( $primary_excerpt ) >= 20 ) {
+				$sources[] = array(
+					'id'      => $post->ID,
+					'title'   => get_the_title( $post ),
+					'url'     => get_permalink( $post ),
+					'excerpt' => $primary_excerpt,
+					'primary' => true,
+				);
+			}
 			$exclude[] = $post->ID;
 		}
 	}

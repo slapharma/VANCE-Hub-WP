@@ -247,7 +247,11 @@ function vance_askai_script_data() {
     // No article context on the front page (its <article> elements are teaser
     // cards, not reading copy) or on the dedicated Ask AI page, which hosts the
     // full inline chat. Both would otherwise arm the selection pill.
-    if ( $post_id && ( is_front_page() || is_page_template( 'page-ask-ai.php' ) ) ) {
+    //
+    // The Ask AI page is matched by slug as well as by assigned template: it
+    // resolves through WordPress's page-{slug}.php hierarchy rather than a saved
+    // template, so is_page_template() alone returns false there.
+    if ( $post_id && ( is_front_page() || is_page_template( 'page-ask-ai.php' ) || is_page( 'ask-ai' ) ) ) {
         $post_id = 0;
     }
 
