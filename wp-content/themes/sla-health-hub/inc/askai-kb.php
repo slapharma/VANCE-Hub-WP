@@ -155,6 +155,8 @@ function vance_kb_render_meta_box( $post ) {
 	</p>
 
 	<p>
+		<?php // Companion marker: lets the save handler tell "checkbox unticked" apart from "this form never had the field". ?>
+		<input type="hidden" name="vance_kb_always_present" value="1">
 		<label>
 			<input type="checkbox" name="vance_kb_always" value="1" <?php checked( $always, '1' ); ?>>
 			<strong><?php esc_html_e( 'Always include', 'sla-health-hub' ); ?></strong>
@@ -216,7 +218,13 @@ function vance_kb_save_meta( $post_id ) {
 	$url = isset( $_POST['vance_kb_source_url'] ) ? esc_url_raw( wp_unslash( $_POST['vance_kb_source_url'] ) ) : '';
 	update_post_meta( $post_id, '_vance_kb_source_url', $url );
 
-	update_post_meta( $post_id, '_vance_kb_always', isset( $_POST['vance_kb_always'] ) ? '1' : '' );
+	// Only rewrite the flag when the settings box was actually part of this
+	// submission. An unchecked checkbox posts nothing, which is indistinguishable
+	// from a form that never rendered the field, and that ambiguity silently
+	// cleared three "always include" entries when they were first published.
+	if ( isset( $_POST['vance_kb_always_present'] ) ) {
+		update_post_meta( $post_id, '_vance_kb_always', isset( $_POST['vance_kb_always'] ) ? '1' : '' );
+	}
 
 	$pdf_id = isset( $_POST['vance_kb_pdf_id'] ) ? absint( $_POST['vance_kb_pdf_id'] ) : 0;
 	update_post_meta( $post_id, '_vance_kb_pdf_id', $pdf_id );
