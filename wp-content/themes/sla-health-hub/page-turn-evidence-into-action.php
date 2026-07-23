@@ -159,7 +159,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     $proc_defaults = array(
         1 => array( 'Synthesise', 'Our medical writing team combines primary studies, guidelines, and registry data into a single graded position — with conflicts of interest and limitations flagged openly.' ),
         2 => array( 'Translate',  'We convert each position into two companion artefacts: a clinician-facing protocol card and a plain-language patient brief vetted by a patient advisory panel.' ),
-        3 => array( 'Apply',      'Protocols feed the Vance Medical dashboard, the Ask AI assistant, and downloadable handouts — so evidence becomes a concrete decision at the point of care.' ),
+        3 => array( 'Apply',      'Protocols feed the Vance Medical dashboard, VANCE-ai, and downloadable handouts — so evidence becomes a concrete decision at the point of care.' ),
     );
     ?>
     <section class="section-padding" style="background: <?php echo esc_attr( $evd_proc_bg ?: 'white' ); ?>;">
@@ -238,7 +238,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     <!-- CTA -->
     <?php
     $cta_title = vance_get_theme_mod( 'vance_evidence_cta_title', 'Put Evidence to Work for Your Patients' );
-    $cta_desc  = vance_get_theme_mod( 'vance_evidence_cta_desc',  'Free registration unlocks the full protocol library, the Ask AI clinical assistant, and printable patient handouts branded to your practice.' );
+    $cta_desc  = vance_get_theme_mod( 'vance_evidence_cta_desc',  'Free registration unlocks the full protocol library, VANCE-ai, and printable patient handouts branded to your practice.' );
     $cta_btn1  = vance_get_theme_mod( 'vance_evidence_cta_btn1_text', 'Register Free' );
     $cta_btn1_link = vance_get_theme_mod( 'vance_evidence_cta_btn1_link', '/register/' );
     $cta_btn2  = vance_get_theme_mod( 'vance_evidence_cta_btn2_text', 'Talk to Our Team' );

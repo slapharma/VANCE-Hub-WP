@@ -49,7 +49,7 @@ $vbn_active = function ( $cond ) {
     </a>
     <a class="vbn-tab<?php $vbn_active( $vbn_is_askai ); ?>" href="<?php echo esc_url( $vbn_askai ); ?>">
         <svg class="vbn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.6A8 8 0 1 1 21 12Z" /><circle cx="8.5" cy="12" r="1.1" /><circle cx="12" cy="12" r="1.1" /><circle cx="15.5" cy="12" r="1.1" /></svg>
-        <span class="vbn-label"><?php esc_html_e( 'Ask AI', 'sla-health-hub' ); ?></span>
+        <span class="vbn-label"><?php esc_html_e( 'VANCE-ai', 'sla-health-hub' ); ?></span>
     </a>
     <a class="vbn-tab<?php $vbn_active( $vbn_is_dash ); ?>" href="<?php echo esc_url( $vbn_dashboard ); ?>">
         <svg class="vbn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg>

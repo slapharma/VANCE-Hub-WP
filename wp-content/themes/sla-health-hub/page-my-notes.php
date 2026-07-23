@@ -110,7 +110,7 @@ if ( is_array( $saved_chats ) ) {
         <div style="width: 1px; background: #e2e8f0; margin: 0 4px;"></div>
         <button onclick="document.execCommand('backColor',false,'#fef3c7')" title="Highlight">🖊️</button>
         <div style="width: 1px; background: #e2e8f0; margin: 0 4px;"></div>
-        <button id="attach-ref-btn" onclick="toggleRefPanel(event)" title="Attach saved article or AI chat" style="display:flex; align-items:center; gap:6px; color:#008080; font-weight:700;">🔗 Attach Reference</button>
+        <button id="attach-ref-btn" onclick="toggleRefPanel(event)" title="Attach saved article or VANCE-ai chat" style="display:flex; align-items:center; gap:6px; color:#008080; font-weight:700;">🔗 Attach Reference</button>
     </div>
 
     <!-- Reference panel -->
@@ -122,9 +122,9 @@ if ( is_array( $saved_chats ) ) {
             <button type="button" onclick='insertRef({ kind: "article", title: <?php echo wp_json_encode( $a["title"] ); ?>, url: <?php echo wp_json_encode( $a["url"] ); ?> })' style="display:block; width:100%; text-align:left; padding:10px 14px; border:none; background:white; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px; color:#0f172a;">📄 <?php echo esc_html( $a['title'] ); ?></button>
         <?php endforeach; endif; ?>
 
-        <div style="padding:10px 14px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:6px;">From your AI Chats</div>
+        <div style="padding:10px 14px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-top:6px;">From your VANCE-ai Chats</div>
         <?php if ( empty( $vance_ai_refs ) ) : ?>
-            <div style="padding:14px; color:#94a3b8; font-size:13px;">No saved AI chats yet.</div>
+            <div style="padding:14px; color:#94a3b8; font-size:13px;">No saved VANCE-ai chats yet.</div>
         <?php else : foreach ( $vance_ai_refs as $c ) : ?>
             <button type="button" onclick='insertRef({ kind: "ai", title: <?php echo wp_json_encode( $c["title"] ); ?>, date: <?php echo wp_json_encode( $c["date"] ); ?>, id: <?php echo wp_json_encode( $c["id"] ); ?> })' style="display:block; width:100%; text-align:left; padding:10px 14px; border:none; background:white; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px; color:#0f172a;">🤖 <?php echo esc_html( $c['title'] ); ?><?php if ( $c['date'] ) echo ' <span style="color:#94a3b8; font-size:11px;">— ' . esc_html( date( 'M j', strtotime( $c['date'] ) ) ) . '</span>'; ?></button>
         <?php endforeach; endif; ?>

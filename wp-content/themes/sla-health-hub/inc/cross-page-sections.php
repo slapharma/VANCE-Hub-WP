@@ -83,7 +83,7 @@ function vance_render_section_patients_benefits() {
 function vance_render_section_patients_tools() {
 	$tool_title = vance_get_theme_mod( 'vance_pat_tool_title', 'Innovative Tools at Your Fingertips' );
 	$tool_defaults = array(
-		1 => array( 'Ask Vance-i Expert',      'Interact with our AI intelligence trained specifically in clinical gastro conditions for instant, reliable answers to your health questions.' ),
+		1 => array( 'Ask VANCE-ai',      'Interact with our AI intelligence trained specifically in clinical gastro conditions for instant, reliable answers to your health questions.' ),
 		2 => array( 'Bookmark & Clip',        'Easily save important articles, clip vital paragraphs, and create your own customized research notes directly in your portal.' ),
 		3 => array( 'History & AI Tracking',  'Upload your medical history documents to allow Vance-i to securely analyze data, track your ongoing wellness, and spot trends.' ),
 		4 => array( 'Healthcare Calculators', 'Evaluate potential malnutrition, calculate BMI, and score related healthcare symptoms to stay on top of your physical needs.' ),

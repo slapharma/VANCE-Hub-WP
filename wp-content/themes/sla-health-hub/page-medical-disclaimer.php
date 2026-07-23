@@ -51,7 +51,7 @@ get_header(); ?>
                 Medical Disclaimer
             </h1>
             <p style="color: rgba(255,255,255,0.78); font-size: 18px; line-height: 1.6; max-width: 560px; margin: 0;">
-                Please read this before using Vance Medical Hub, its articles, tools or AI assistant.
+                Please read this before using Vance Medical Hub, its articles, tools or VANCE-ai.
             </p>
         </div>
     </div>
@@ -74,9 +74,9 @@ get_header(); ?>
         The interactive tools on this site (including our calculators and quiz) are general references to help you understand your health and prepare for conversations with your healthcare team. They do not provide a medical diagnosis and are not a substitute for assessment by a qualified healthcare professional. Any results are estimates based only on the information you enter and the general method described, and may not be accurate for your individual circumstances.
     </p>
 
-    <h2>Our AI assistant</h2>
+    <h2>VANCE-ai</h2>
     <p>
-        Our AI assistant gives general information only. It is automated, can be wrong or out of date, does not know your personal medical history, and does not provide a diagnosis, prescription or treatment plan. Please do not enter information that identifies you. It is not a substitute for advice from your own healthcare team.
+        VANCE-ai gives general information only. It is automated, can be wrong or out of date, does not know your personal medical history, and does not provide a diagnosis, prescription or treatment plan. Please do not enter information that identifies you. It is not a substitute for advice from your own healthcare team.
     </p>
 
     <h2>In an emergency</h2>

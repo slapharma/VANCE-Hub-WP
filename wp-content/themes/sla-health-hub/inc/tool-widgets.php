@@ -154,7 +154,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 			text-transform: uppercase; letter-spacing: 0.4px;
 		}
 		/* The chat bubble/input rules that used to live here went with the inline
-		   Vance AI modal — that card now opens the shared Ask AI surface, which
+		   Vance AI modal — that card now opens the shared VANCE-ai surface, which
 		   brings its own stylesheet (assets/css/vance-askai.css). */
 	</style>
 	<script>
@@ -430,7 +430,7 @@ function vance_render_tool_widget_vance_ai() {
 	vance_tool_widgets_emit_modal_css_once();
 
 	vance_tool_widget_card( array(
-		'title'    => vance_get_theme_mod( $prefix . 'title',  'Vance AI' ),
+		'title'    => vance_get_theme_mod( $prefix . 'title',  'VANCE-ai' ),
 		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Ask any gastro health question and get an evidence-backed answer in seconds. Powered by curated clinical content — available 24/7.' ),
 		'cta'      => vance_get_theme_mod( $prefix . 'cta',    'Open Chat' ),
 		'accent'   => vance_get_theme_mod( $prefix . 'accent', '#0EA5E9' ),
@@ -501,7 +501,7 @@ function vance_render_tool_widgets_row() {
 			'modal_id' => 'vance-tw-modal-vance-ai',
 			'eyebrow'  => vance_get_theme_mod( 'vance_twrow_card2_eyebrow', 'AI assistant' ),
 			'title'    => vance_get_theme_mod( 'vance_twrow_card2_title', '' )
-				?: vance_get_theme_mod( 'vance_tw_vance_ai_title', 'Vance AI' ),
+				?: vance_get_theme_mod( 'vance_tw_vance_ai_title', 'VANCE-ai' ),
 			'desc'     => vance_get_theme_mod( 'vance_twrow_card2_desc', '' )
 				?: vance_get_theme_mod( 'vance_tw_vance_ai_desc',
 					'Evidence-backed answers in seconds.' ),
@@ -668,7 +668,7 @@ add_filter( 'vance_homepage_sections', function ( $sections ) {
 		'hidden'   => true,
 	);
 	$sections[ 'tool-widget-vance-ai' ] = array(
-		'label'    => 'Tool Widget: Vance AI (legacy single)',
+		'label'    => 'Tool Widget: VANCE-ai (legacy single)',
 		'group'    => 'Tool Widgets',
 		'render'   => 'vance_render_tool_widget_vance_ai',
 		'hidden'   => true,

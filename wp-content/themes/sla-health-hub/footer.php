@@ -130,6 +130,12 @@
 
     <?php include get_template_directory() . '/inc/quiz-modal.php'; ?>
     <?php include get_template_directory() . '/inc/clinical-info-modal.php'; ?>
+    <?php
+    // Quick-signup modal. Its own include guard makes this safe alongside
+    // inc/tool-page-shell.php, which also loads it; loading it here is what lets
+    // the VANCE-ai article popup offer "Register for FREE" without a page change.
+    get_template_part( 'inc/register-modal' );
+    ?>
 
     <script>
     function openGuestModal() {

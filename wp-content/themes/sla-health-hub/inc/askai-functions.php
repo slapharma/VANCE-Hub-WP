@@ -253,6 +253,13 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 	$sources = array();
 	$exclude = array();
 
+	// The curated knowledge base comes first: glossary definitions and the facts
+	// about Vance Medical Hub, Vance Medical Foods and SLA Pharma that no article
+	// covers. It has its own budget so it never crowds out article sources.
+	$kb_sources = function_exists( 'vance_kb_retrieve_sources' )
+		? vance_kb_retrieve_sources( $messages, $terms )
+		: array();
+
 	// The article the reader is looking at is always the primary source, and gets
 	// a much larger budget — highlight-to-ask depends on it.
 	$context_post_id = absint( $context_post_id );
@@ -337,7 +344,7 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 		);
 	}
 
-	return array_slice( $sources, 0, $max );
+	return array_merge( $kb_sources, array_slice( $sources, 0, $max ) );
 }
 
 // =========================================================================
@@ -345,40 +352,91 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 // =========================================================================
 
 /**
- * Assemble the system instruction: the rules, then the retrieved sources.
+ * The reading levels a reader can pick from with the on-screen slider.
  *
- * @param array[] $sources Output of vance_ai_retrieve_sources().
+ * Keys are stored/sent by the client; each entry carries the label shown in the
+ * UI and the instruction handed to the model.
+ *
+ * @return array<string,array{label:string,instruction:string}>
+ */
+function vance_ai_reading_levels() {
+	return array(
+		'simple'        => array(
+			'label'       => __( 'Simple', 'sla-health-hub' ),
+			'instruction' => 'READING LEVEL: SIMPLE. Write for someone with no medical background and no prior knowledge of the condition. Use short sentences and everyday words. Never use a clinical or Latin term without immediately explaining it in plain English in the same sentence. Prefer "gut" over "gastrointestinal tract", "swelling" over "inflammation" (you may give the medical word in brackets once). Avoid statistics and study detail unless they are essential; if you give a number, say plainly what it means. Keep the whole answer short.',
+		),
+		'knowledgeable' => array(
+			'label'       => __( 'Knowledgeable', 'sla-health-hub' ),
+			'instruction' => 'READING LEVEL: KNOWLEDGEABLE. Write for an informed reader who already lives with or works around this condition. You may use common clinical terms (inflammation, remission, flare, biologics, mucosa) without defining them, but briefly gloss anything more specialist the first time it appears. Include relevant detail and nuance, and mention figures or study findings where the sources give them.',
+		),
+		'expert'        => array(
+			'label'       => __( 'Expert', 'sla-health-hub' ),
+			'instruction' => 'READING LEVEL: EXPERT. Write for a healthcare professional. Use precise clinical terminology without simplification or glossing. Reference mechanisms, drug classes and named agents, disease phenotypes, scoring systems and study findings exactly as the sources present them. Be concise and information-dense; do not pad with lay explanations or reassurance.',
+		),
+	);
+}
+
+/**
+ * Normalise a client-supplied reading level to a known key.
+ *
+ * @param mixed $level Raw value.
  * @return string
  */
-function vance_ai_system_prompt( $sources ) {
-	$rules = <<<'PROMPT'
-You are the Vance Medical Hub assistant on vancehealthhub.co.uk — a library of articles about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
+function vance_ai_normalise_reading_level( $level ) {
+	$level  = is_string( $level ) ? strtolower( trim( $level ) ) : '';
+	$levels = vance_ai_reading_levels();
+	return isset( $levels[ $level ] ) ? $level : 'knowledgeable';
+}
 
-You answer ONLY from the SOURCES below. The SOURCES are extracts from articles published on this hub. They are your entire world: you have no other knowledge and no access to the internet.
+/**
+ * Assemble the system instruction: the rules, the reading level, then the sources.
+ *
+ * @param array[] $sources       Output of vance_ai_retrieve_sources().
+ * @param string  $reading_level One of the vance_ai_reading_levels() keys.
+ * @return string
+ */
+function vance_ai_system_prompt( $sources, $reading_level = 'knowledgeable' ) {
+	$rules = <<<'PROMPT'
+You are VANCE-ai, the assistant on the Vance Medical Hub (vancehealthhub.co.uk) — a library of articles about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
+
+The SOURCES below are extracts from this hub's own library and reference material. They are your primary and strongly preferred basis for answering.
 
 RULES
-1. Ground every statement in the SOURCES. Never introduce facts, figures, drug names, guidelines or study results that do not appear in them.
-2. If the SOURCES do not answer the question, say so plainly — for example: "I could not find anything in the Vance Medical Hub library that covers that." Then either point to a related topic the SOURCES do cover, or invite the reader to rephrase. Never fall back on general knowledge.
-3. Never mention, cite, recommend or link to any website, journal, organisation, guideline body or study outside this hub. Do not write "according to the NHS", "research shows" or similar unless those exact claims appear in a SOURCE.
-4. Cite what you used. End your answer with the articles you drew on, one per line, in exactly this form:
+1. Ground every substantive statement in the SOURCES. Never introduce clinical facts, figures, drug names, guidelines or study results that do not appear in them.
+2. If the SOURCES do not cover the question:
+   a. For a basic, uncontroversial factual or definitional question — what an abbreviation stands for, what a common word or term means, a general-knowledge fact — answer it briefly and correctly from your own general knowledge. When you do, add this on its own line, worded exactly like this:
+      Note: that last part is general knowledge, not taken from the Vance Medical Hub library.
+   b. For anything clinical or health-related — symptoms, causes, diagnosis, treatment, medicines, dosing, prognosis, diet or lifestyle advice, interpreting results — do NOT answer from general knowledge. Say plainly that you could not find it in the library, then point to a related topic the SOURCES do cover or invite the reader to rephrase.
+3. Never cite, recommend or link to any website, journal, organisation, guideline body or study outside this hub. Do not write "according to the NHS" or "research shows" unless that exact claim appears in a SOURCE.
+4. Cite what you used. End your answer with the hub articles you drew on, one per line, in exactly this form:
 Read more: <article title> — <URL>
-Copy each URL character-for-character from its SOURCE header. Never invent, shorten or guess a URL, and never cite a source you did not actually use.
+Copy each URL character-for-character from its SOURCE header. Never invent, shorten or guess a URL, and never cite a source you did not actually use. Reference entries that carry no URL are not cited this way.
 5. This is general information, not personal medical advice. Do not diagnose, do not recommend or adjust treatment or dosing, and do not interpret a reader's own test results. Point anything urgent to their clinical team, NHS 111, or 999 in an emergency.
-6. Tone: professional, clinical, warm and plain-spoken. Translate jargon into everyday language.
+6. Tone: professional, clinical, warm and plain-spoken.
 7. FORMATTING: clean, readable prose. Do NOT use Markdown headings or any "#" characters. You may use **bold** for key terms and simple hyphen (-) bullet points for short lists. No tables, no code blocks.
 PROMPT;
 
+	$levels = vance_ai_reading_levels();
+	$key    = vance_ai_normalise_reading_level( $reading_level );
+	$rules .= "\n\n" . $levels[ $key ]['instruction'];
+
 	if ( empty( $sources ) ) {
-		return $rules . "\n\nSOURCES\nNo articles in the Vance Medical Hub library matched this question. Tell the reader you could not find hub content covering it and invite them to rephrase or ask about a different topic. Do NOT answer from general knowledge, and do not cite anything.\n";
+		return $rules . "\n\nSOURCES\nNothing in the Vance Medical Hub library matched this question. Follow rule 2: answer only if it is a basic definitional or general-knowledge question, with the required note; otherwise say you could not find hub content covering it. Do not cite anything.\n";
 	}
 
 	$block = "\n\nSOURCES\n\n";
 	foreach ( $sources as $source ) {
-		$label = ! empty( $source['primary'] )
-			? 'PRIMARY SOURCE (the article the reader is currently reading)'
-			: 'SOURCE';
+		if ( ! empty( $source['reference'] ) ) {
+			$label = 'REFERENCE (Vance Medical Hub knowledge base — authoritative, but not a public article)';
+		} elseif ( ! empty( $source['primary'] ) ) {
+			$label = 'PRIMARY SOURCE (the article the reader is currently reading)';
+		} else {
+			$label = 'SOURCE';
+		}
 
-		$block .= '--- ' . $label . ': ' . $source['title'] . ' | URL: ' . $source['url'] . " ---\n";
+		$block .= '--- ' . $label . ': ' . $source['title'];
+		$block .= ! empty( $source['url'] ) ? ' | URL: ' . $source['url'] : ' | (no public URL — do not cite a link for this entry)';
+		$block .= " ---\n";
 		$block .= $source['excerpt'] . "\n";
 		$block .= "--- END SOURCE ---\n\n";
 	}
@@ -519,8 +577,67 @@ add_action(
 				'permission_callback' => '__return_true', // Guests may chat; only logged-in chats are stored.
 			)
 		);
+
+		// Used by the chat's "Clear" button to drop a stored conversation.
+		register_rest_route(
+			'vance-health/v1',
+			'/ai-chat/clear',
+			array(
+				'methods'             => 'POST',
+				'callback'            => 'vance_rest_ai_chat_clear',
+				'permission_callback' => function () {
+					return is_user_logged_in();
+				},
+			)
+		);
 	}
 );
+
+/**
+ * Delete one stored conversation.
+ *
+ * The client clears its own view regardless; this removes the saved copy so a
+ * cleared conversation does not linger in Dashboard → My AI Chats.
+ *
+ * @param WP_REST_Request $request Request.
+ * @return array|WP_Error
+ */
+function vance_rest_ai_chat_clear( $request ) {
+	$params          = (array) $request->get_json_params();
+	$conversation_id = isset( $params['conversation_id'] ) ? (string) $params['conversation_id'] : '';
+
+	if ( ! preg_match( '/^[a-z0-9-]{8,40}$/', $conversation_id ) ) {
+		return new WP_Error( 'bad_conversation', __( 'Invalid conversation id.', 'sla-health-hub' ), array( 'status' => 400 ) );
+	}
+
+	$user_id = get_current_user_id();
+	$chats   = get_user_meta( $user_id, '_sla_saved_chats', true );
+	if ( ! is_array( $chats ) ) {
+		return array(
+			'success' => true,
+			'removed' => 0,
+		);
+	}
+
+	$key  = 'chat_' . $conversation_id;
+	$kept = array();
+	foreach ( $chats as $chat ) {
+		if ( is_array( $chat ) && isset( $chat['id'] ) && $chat['id'] === $key ) {
+			continue;
+		}
+		$kept[] = $chat;
+	}
+
+	$removed = count( $chats ) - count( $kept );
+	if ( $removed > 0 ) {
+		update_user_meta( $user_id, '_sla_saved_chats', $kept );
+	}
+
+	return array(
+		'success' => true,
+		'removed' => $removed,
+	);
+}
 
 /**
  * Handle a chat turn: retrieve hub sources, ask the model, store the result.
@@ -569,16 +686,17 @@ function vance_rest_ai_chat( $request ) {
 		$conversation_id = '';
 	}
 	$context_post_id = isset( $params['context_post_id'] ) ? absint( $params['context_post_id'] ) : 0;
+	$reading_level   = vance_ai_normalise_reading_level( isset( $params['reading_level'] ) ? $params['reading_level'] : '' );
 
 	// --- Credentials -------------------------------------------------------
-	// Read from the Customizer (Appearance → Customize → Ask AI Configuration).
+	// Read from the Customizer (Appearance → Customize → VANCE-ai Configuration).
 	// Do NOT hardcode keys here; they end up in public git history and on the
 	// deployed web server.
 	$api_key = vance_get_theme_mod( 'vance_askai_api_key', '' );
 	if ( empty( $api_key ) ) {
 		return new WP_Error(
 			'ai_api_key_missing',
-			__( 'AI API key is not configured. Site admin: set it in Appearance → Customize → Ask AI Configuration.', 'sla-health-hub' ),
+			__( 'AI API key is not configured. Site admin: set it in Appearance → Customize → VANCE-ai Configuration.', 'sla-health-hub' ),
 			array( 'status' => 503 )
 		);
 	}
@@ -594,7 +712,7 @@ function vance_rest_ai_chat( $request ) {
 	$payload_messages = array(
 		array(
 			'role'    => 'system',
-			'content' => vance_ai_system_prompt( $sources ),
+			'content' => vance_ai_system_prompt( $sources, $reading_level ),
 		),
 	);
 	// Only the recent turns go to the model — the full transcript is still stored.

@@ -244,15 +244,15 @@ get_header(); ?>
 
     <h3>Health information (special category data)</h3>
     <p>
-        Some of the information you choose to give us is health information, which UK GDPR treats as a "special category" needing extra protection. This includes anything you enter into our calculators, quiz or the Ask AI assistant, and any results you choose to save to your account (for example from the malnutrition calculator, blood-test reference tool or omega-3 calculator).
+        Some of the information you choose to give us is health information, which UK GDPR treats as a "special category" needing extra protection. This includes anything you enter into our calculators, quiz or VANCE-ai, and any results you choose to save to your account (for example from the malnutrition calculator, blood-test reference tool or omega-3 calculator).
     </p>
     <p>
         We only process this health information with your explicit consent, which you give when you choose to save a result or use a feature that stores it. We do not use it for advertising, and we do not share it with third parties for marketing. You can withdraw your consent and delete your saved results at any time from your dashboard, or by contacting us.
     </p>
 
-    <h3>The Ask AI assistant</h3>
+    <h3>VANCE-ai</h3>
     <p>
-        When you use Ask AI, the questions and messages you type are sent to a third-party artificial-intelligence processing provider to generate a response. Your conversation may be stored to operate and improve the service. Please do not enter information that identifies you or another person. Ask AI gives general information only and is described further in our <a href="https://vancehealthhub.co.uk/medical-disclaimer/">Medical Disclaimer</a>.
+        When you use VANCE-ai, the questions and messages you type are sent to a third-party artificial-intelligence processing provider to generate a response. Your conversation may be stored to operate and improve the service. Please do not enter information that identifies you or another person. Ask AI gives general information only and is described further in our <a href="https://vancehealthhub.co.uk/medical-disclaimer/">Medical Disclaimer</a>.
     </p>
 
     <h2 id="how-we-use">3. How We Use Your Information</h2>
@@ -301,7 +301,7 @@ get_header(); ?>
     <h2 id="sharing">5. Sharing Your Data</h2>
     <p>We do not sell your personal data. We may share your information with:</p>
     <ul>
-        <li><strong>Service providers acting as data processors on our behalf</strong>, under written data processing agreements. These include website hosting, website analytics, email and newsletter delivery, and the third-party AI provider that powers Ask AI. Each is contractually required to protect your data and to use it only on our documented instructions.</li>
+        <li><strong>Service providers acting as data processors on our behalf</strong>, under written data processing agreements. These include website hosting, website analytics, email and newsletter delivery, and the third-party AI provider that powers VANCE-ai. Each is contractually required to protect your data and to use it only on our documented instructions.</li>
         <li><strong>Professional advisors</strong> — such as lawyers or auditors — where necessary and under confidentiality obligations</li>
         <li><strong>Regulatory or legal authorities</strong> — where required by law or to protect the rights of Vance Medical or others</li>
     </ul>
@@ -351,7 +351,7 @@ get_header(); ?>
     <ul>
         <li><strong>Account data</strong> is retained for the life of your account and for up to 2 years after deletion, for legal and audit purposes.</li>
         <li><strong>Saved tool results and health information</strong> are kept while your account is open and until you delete them. You can delete saved results at any time from your dashboard. When you close your account we delete or anonymise them, except where we must keep limited records by law.</li>
-        <li><strong>Ask AI conversations</strong> are retained only as long as needed to operate and improve the service, and then deleted or anonymised.</li>
+        <li><strong>VANCE-ai conversations</strong> are retained only as long as needed to operate and improve the service, and then deleted or anonymised.</li>
         <li><strong>Consent records</strong> (what you agreed to, and when) are kept for as long as needed to demonstrate compliance, typically for the life of your account plus up to 2 years.</li>
         <li><strong>Contact form data</strong> is retained for up to 12 months.</li>
         <li><strong>Analytics data</strong> is retained in aggregated, anonymised form indefinitely.</li>
