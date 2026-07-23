@@ -215,7 +215,7 @@ function vance_health_hub_scripts() {
         );
     }
 
-    // Ask AI — loaded site-wide: the modal can be opened from any page, and the
+    // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the
     // highlight-to-ask pill needs to be live on every article.
     wp_enqueue_style(
         'vance-askai',
@@ -241,14 +241,25 @@ add_action( 'wp_enqueue_scripts', 'vance_health_hub_scripts' );
  * logged-in user and auto-save their conversation; the JS falls back to an
  * anonymous request if a cached page ever serves a stale nonce.
  */
+/**
+ * How often the article intro popup may appear for one visitor.
+ *
+ * @return string One of x_per_day, daily, weekly, monthly.
+ */
+function vance_askai_intro_frequency() {
+    $allowed = array( 'x_per_day', 'daily', 'weekly', 'monthly' );
+    $value   = (string) vance_get_theme_mod( 'vance_askai_intro_frequency', 'monthly' );
+    return in_array( $value, $allowed, true ) ? $value : 'monthly';
+}
+
 function vance_askai_script_data() {
     $post_id = is_singular( vance_ai_source_post_types() ) ? get_queried_object_id() : 0;
 
     // No article context on the front page (its <article> elements are teaser
-    // cards, not reading copy) or on the dedicated VANCE-ai page, which hosts the
+    // cards, not reading copy) or on the dedicated VANCE-Ai page, which hosts the
     // full inline chat. Both would otherwise arm the selection pill.
     //
-    // The VANCE-ai page is matched by slug as well as by assigned template: it
+    // The VANCE-Ai page is matched by slug as well as by assigned template: it
     // resolves through WordPress's page-{slug}.php hierarchy rather than a saved
     // template, so is_page_template() alone returns false there.
     if ( $post_id && ( is_front_page() || is_page_template( 'page-ask-ai.php' ) || is_page( 'ask-ai' ) ) ) {
@@ -260,32 +271,44 @@ function vance_askai_script_data() {
     if ( is_user_logged_in() ) {
         $foot = sprintf(
             /* translators: %s: dashboard URL */
-            __( 'Saved to <a href="%s">your dashboard</a>. General information from this hub only — not personal medical advice.', 'sla-health-hub' ),
+            __( 'Saved to <a href="%s">your dashboard</a>. General information from this hub only, not personal medical advice.', 'sla-health-hub' ),
             esc_url( home_url( '/dashboard/?section=ai-chats' ) )
         );
     } else {
         $foot = sprintf(
             /* translators: %s: registration URL */
-            __( '<a href="%s">Register for FREE</a> to save your conversations. General information from this hub only — not personal medical advice.', 'sla-health-hub' ),
+            __( '<a href="%s">Register for FREE</a> to save your conversations. General information from this hub only, not personal medical advice.', 'sla-health-hub' ),
             esc_url( home_url( '/register/' ) )
         );
     }
 
-    // Shown behind a "Important — how to use this assistant" disclosure in the
+    // Shown behind a "Important: how to use this assistant" disclosure in the
     // chat, so the full caveats travel with every surface the chat appears on
-    // rather than living only on the VANCE-ai page.
+    // rather than living only on the VANCE-Ai page.
     $disclaimer = sprintf(
         /* translators: %s: medical disclaimer page URL */
-        __( '<p><strong>VANCE-ai gives general information only.</strong> It answers from articles published on this hub and a curated reference library. It is an automated assistant: it can be wrong, incomplete or out of date.</p>
+        __( '<p><strong>VANCE-Ai gives general information only.</strong> It answers from articles published on this hub and a curated reference library. It is an automated assistant: it can be wrong, incomplete or out of date.</p>
 <p>It does not know your medical history, and it does not provide a diagnosis, a prescription or a treatment plan. It is not a substitute for advice from your own healthcare team, and must not be used for urgent or emergency needs. <strong>If you feel unwell or think you may have a medical emergency, call 999, or NHS 111 now.</strong></p>
 <p>Where an answer draws on general knowledge rather than this hub\'s library, it will say so on the line concerned.</p>
 <p>Please do not type anything that identifies you or another person. Conversations are processed by a third-party AI provider and may be stored to improve the service. If you are signed in, your conversations are saved to your account and you can delete them at any time.</p>
-<p>By using VANCE-ai you accept that it is for general information only. <a href="%s" target="_blank" rel="noopener">Read the full medical disclaimer</a>.</p>', 'sla-health-hub' ),
+<p>By using VANCE-Ai you accept that it is for general information only. <a href="%s" target="_blank" rel="noopener">Read the full medical disclaimer</a>.</p>', 'sla-health-hub' ),
         esc_url( home_url( '/medical-disclaimer/' ) )
     );
 
-    $intro_body = __( '<p>This article mentions clinical terms and research findings. <strong>VANCE-ai</strong> can explain any of it in your own words.</p>
-<p>Highlight any word, phrase or paragraph as you read and an <strong>Ask VANCE-ai</strong> button appears — or open the chat any time and ask a question. Answers come from this hub\'s own library, with links to the articles used, and you can set how much detail you want.</p>', 'sla-health-hub' );
+    // Popup copy is Customizer-editable; these are the fallbacks.
+    $intro_title_default = __( 'New to this topic? Ask VANCE-Ai as you read.', 'sla-health-hub' );
+    $intro_body_default  = __( '<p>This article mentions clinical terms and research findings. <strong>VANCE-Ai</strong> can explain any of it in your own words.</p>
+<p>Highlight any word, phrase or paragraph as you read and an <strong>Ask VANCE-Ai</strong> button appears, or open the chat any time and ask a question. Answers come from this hub\'s own library, with links to the articles used, and you can set how much detail you want.</p>', 'sla-health-hub' );
+
+    // Fall back when the setting exists but was saved empty, not just when unset.
+    $intro_title = trim( (string) vance_get_theme_mod( 'vance_askai_intro_title', '' ) );
+    $intro_body  = trim( (string) vance_get_theme_mod( 'vance_askai_intro_body', '' ) );
+    if ( '' === $intro_title ) {
+        $intro_title = $intro_title_default;
+    }
+    if ( '' === $intro_body ) {
+        $intro_body = $intro_body_default;
+    }
 
     $levels = array();
     foreach ( vance_ai_reading_levels() as $key => $level ) {
@@ -305,13 +328,16 @@ function vance_askai_script_data() {
         'postTitle'     => $post_id ? get_the_title( $post_id ) : '',
         'highlight'     => (bool) vance_get_theme_mod( 'vance_askai_highlight_enable', true ),
         'introEnabled'  => (bool) vance_get_theme_mod( 'vance_askai_intro_popup', true ),
+        'introFrequency' => vance_askai_intro_frequency(),
+        'introPerDay'   => max( 1, absint( vance_get_theme_mod( 'vance_askai_intro_per_day', 2 ) ) ),
+        'introImage'    => esc_url( vance_get_theme_mod( 'vance_askai_intro_image', '' ) ),
         'levels'        => $levels,
         'defaultLevel'  => 'knowledgeable',
-        'title'         => __( 'VANCE-ai', 'sla-health-hub' ),
+        'title'         => __( 'VANCE-Ai', 'sla-health-hub' ),
         'subtitle'      => __( 'Answers from the Vance Medical Hub library', 'sla-health-hub' ),
         'placeholder'   => __( 'Ask about IBD, gut health or nutrition…', 'sla-health-hub' ),
         'intro'         => __( 'Ask a question and I will answer using articles published on this hub, with links to the ones I used.', 'sla-health-hub' ),
-        'introTitle'    => __( 'New to this topic? Ask VANCE-ai as you read.', 'sla-health-hub' ),
+        'introTitle'    => $intro_title,
         'introBody'     => wp_kses_post( $intro_body ),
         'footNote'      => wp_kses( $foot, $allowed_links ),
         'disclaimer'    => wp_kses_post( $disclaimer ),
@@ -321,13 +347,13 @@ function vance_askai_script_data() {
             __( 'What is the difference between Crohn\'s and ulcerative colitis?', 'sla-health-hub' ),
         ),
         'i18n'          => array(
-            'askPill'         => __( 'Ask VANCE-ai', 'sla-health-hub' ),
+            'askPill'         => __( 'Ask VANCE-Ai', 'sla-health-hub' ),
             'send'            => __( 'Send', 'sla-health-hub' ),
             'newChat'         => __( 'New chat', 'sla-health-hub' ),
             'clearChat'       => __( 'Clear', 'sla-health-hub' ),
             'clearConfirm'    => __( 'Clear this conversation? It will also be removed from your saved chats.', 'sla-health-hub' ),
             'levelLabel'      => __( 'Answer detail', 'sla-health-hub' ),
-            'disclaimerTitle' => __( 'Important — how to use this assistant', 'sla-health-hub' ),
+            'disclaimerTitle' => __( 'Important: how to use this assistant', 'sla-health-hub' ),
             'register'        => __( 'Register for FREE', 'sla-health-hub' ),
             'tryIt'           => __( 'Try it now', 'sla-health-hub' ),
             'failed'          => __( 'The assistant is unavailable right now. Please try again shortly.', 'sla-health-hub' ),
@@ -3120,7 +3146,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Pathway Content (Featured Tools)', 'sla-health-hub' ),
         'priority'    => 31.7,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'Cloned Pathway Tiles block with Healthcare Quiz + VANCE-ai cards. Showing/hiding controlled by Homepage Order — add or remove "pathway_content" from that list.', 'sla-health-hub' ),
+        'description' => __( 'Cloned Pathway Tiles block with Healthcare Quiz + VANCE-Ai cards. Showing/hiding controlled by Homepage Order — add or remove "pathway_content" from that list.', 'sla-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -3256,20 +3282,20 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_control( 'vance_hquiz_tile_link', array( 'label' => 'Healthcare Quiz — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     // Card 2: Ask AI
-    $wp_customize->add_setting( 'vance_askai_tile_title', array( 'default' => 'VANCE-ai', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_title', array( 'label' => 'VANCE-ai — Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_setting( 'vance_askai_tile_title', array( 'default' => 'VANCE-Ai', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_askai_tile_title', array( 'label' => 'VANCE-Ai — Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_desc', array( 'default' => 'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.', 'sanitize_callback' => 'sanitize_textarea_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_desc', array( 'label' => 'VANCE-ai — Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
+    $wp_customize->add_control( 'vance_askai_tile_desc', array( 'label' => 'VANCE-Ai — Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_extra', array( 'default' => 'Personalised answers, 24/7', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_extra', array( 'label' => 'VANCE-ai — Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_askai_tile_extra', array( 'label' => 'VANCE-Ai — Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
-    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_tile_image', array( 'label' => 'VANCE-ai — Image', 'section' => 'vance_pathway_content_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_tile_image', array( 'label' => 'VANCE-Ai — Image', 'section' => 'vance_pathway_content_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_link', array( 'default' => '/ask-ai/', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_link', array( 'label' => 'VANCE-ai — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_askai_tile_link', array( 'label' => 'VANCE-Ai — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     // Pathway Content — Latest Content (right column)
     $wp_customize->add_setting( 'vance_pwc_latest_title', array( 'default' => 'LATEST CONTENT', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -3696,7 +3722,7 @@ function vance_customize_register( $wp_customize ) {
     // Per-card controls (1 = Content Filters, 2 = Vance AI).
     foreach ( array(
         1 => array( 'label' => 'Card 1 (Content Filters)', 'eyebrow_default' => 'Filter content', 'fallback_prefix' => 'vance_tw_content_filters_' ),
-        2 => array( 'label' => 'Card 2 (VANCE-ai)',        'eyebrow_default' => 'AI assistant',   'fallback_prefix' => 'vance_tw_vance_ai_'        ),
+        2 => array( 'label' => 'Card 2 (VANCE-Ai)',        'eyebrow_default' => 'AI assistant',   'fallback_prefix' => 'vance_tw_vance_ai_'        ),
     ) as $n => $meta ) {
         $prefix = 'vance_twrow_card' . $n . '_';
 
@@ -3785,7 +3811,7 @@ function vance_customize_register( $wp_customize ) {
 
     // 2.9 Ask AI Settings
     $wp_customize->add_section( 'vance_askai_settings', array(
-        'title'    => __( 'VANCE-ai Configuration', 'sla-health-hub' ),
+        'title'    => __( 'VANCE-Ai Configuration', 'sla-health-hub' ),
         'priority' => 31.9,
         'panel'    => 'vance_content_panel',
     ) );
@@ -3801,7 +3827,7 @@ function vance_customize_register( $wp_customize ) {
     ) ) );
 
     $wp_customize->add_setting( 'vance_askai_hero_title', array(
-        'default'           => 'VANCE-ai',
+        'default'           => 'VANCE-Ai',
         'sanitize_callback' => 'sanitize_text_field',
     ) );
     $wp_customize->add_control( 'vance_askai_hero_title', array(
@@ -3870,7 +3896,7 @@ function vance_customize_register( $wp_customize ) {
     }
     $wp_customize->add_control( 'vance_askai_model', array(
         'label'       => __( 'AI Model', 'sla-health-hub' ),
-        'description' => __( 'Pulled live from OpenRouter. Pick the model the VANCE-ai chat should use. The list refreshes every 12 hours.', 'sla-health-hub' ),
+        'description' => __( 'Pulled live from OpenRouter. Pick the model the VANCE-Ai chat should use. The list refreshes every 12 hours.', 'sla-health-hub' ),
         'section'     => 'vance_askai_settings',
         'type'        => 'select',
         'choices'     => $vance_model_choices,
@@ -3895,7 +3921,7 @@ function vance_customize_register( $wp_customize ) {
     ) );
     $wp_customize->add_control( 'vance_askai_highlight_enable', array(
         'label'       => __( 'Highlight-to-ask', 'sla-health-hub' ),
-        'description' => __( 'Show an "Ask VANCE-ai" button when a reader selects a word, phrase or passage in an article, opening the chat pre-filled with it.', 'sla-health-hub' ),
+        'description' => __( 'Show an "Ask VANCE-Ai" button when a reader selects a word, phrase or passage in an article, opening the chat pre-filled with it.', 'sla-health-hub' ),
         'section'     => 'vance_askai_settings',
         'type'        => 'checkbox',
     ) );
@@ -3906,15 +3932,75 @@ function vance_customize_register( $wp_customize ) {
     ) );
     $wp_customize->add_control( 'vance_askai_intro_popup', array(
         'label'       => __( 'Article intro popup', 'sla-health-hub' ),
-        'description' => __( 'On a reader\'s first article visit, show a short popup explaining how VANCE-ai can help them understand it. Shown once per visitor per 30 days.', 'sla-health-hub' ),
+        'description' => __( 'Show a short popup on articles explaining how VANCE-Ai can help the reader understand what they are about to read.', 'sla-health-hub' ),
         'section'     => 'vance_askai_settings',
         'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_frequency', array(
+        'default'           => 'monthly',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_frequency', array(
+        'label'       => __( 'Popup: how often', 'sla-health-hub' ),
+        'description' => __( 'How often one visitor may see the popup. Counted per browser.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'select',
+        'choices'     => array(
+            'x_per_day' => __( 'A set number of times per day', 'sla-health-hub' ),
+            'daily'     => __( 'Once per day', 'sla-health-hub' ),
+            'weekly'    => __( 'Once per week', 'sla-health-hub' ),
+            'monthly'   => __( 'Once per month', 'sla-health-hub' ),
+        ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_per_day', array(
+        'default'           => 2,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_per_day', array(
+        'label'       => __( 'Popup: times per day', 'sla-health-hub' ),
+        'description' => __( 'Only used when "How often" is set to a number of times per day.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 1, 'max' => 20, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_image', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_intro_image', array(
+        'label'       => __( 'Popup: image', 'sla-health-hub' ),
+        'description' => __( 'Shown in the right-hand column of the popup. Leave empty to show a branded placeholder. Landscape or square images around 600x600 work best.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_title', array(
+        'default'           => 'New to this topic? Ask VANCE-Ai as you read.',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_title', array(
+        'label'   => __( 'Popup: heading', 'sla-health-hub' ),
+        'section' => 'vance_askai_settings',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_body', array(
+        'default'           => '',
+        'sanitize_callback' => 'wp_kses_post',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_body', array(
+        'label'       => __( 'Popup: body text', 'sla-health-hub' ),
+        'description' => __( 'Basic HTML is allowed. Leave empty to use the built-in copy.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'textarea',
     ) );
 
 
     // Vance AI Modal — colour customization
     $wp_customize->add_section( 'vance_modal_colors', array(
-        'title'    => __( 'VANCE-ai — Modal Colours', 'sla-health-hub' ),
+        'title'    => __( 'VANCE-Ai — Modal Colours', 'sla-health-hub' ),
         'panel'    => 'vance_content_panel',
         'priority' => 161,
     ) );
@@ -4037,10 +4123,10 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_control( 'vance_discovery_subtitle_text', array( 'label' => 'Subtitle Text', 'section' => 'vance_discovery_styling', 'type' => 'textarea' ) );
 
     $wp_customize->add_setting( 'vance_askai_text_size', array( 'default' => 15, 'sanitize_callback' => 'absint' ) );
-    $wp_customize->add_control( 'vance_askai_text_size', array( 'label' => 'VANCE-ai Text Size (px)', 'section' => 'vance_discovery_styling', 'type' => 'number', 'input_attrs' => array('min' => 10, 'max' => 24) ) );
+    $wp_customize->add_control( 'vance_askai_text_size', array( 'label' => 'VANCE-Ai Text Size (px)', 'section' => 'vance_discovery_styling', 'type' => 'number', 'input_attrs' => array('min' => 10, 'max' => 24) ) );
 
     $wp_customize->add_setting( 'vance_askai_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_text_color', array( 'label' => 'VANCE-ai Text Color (Hex or RGBA)', 'section' => 'vance_discovery_styling', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_askai_text_color', array( 'label' => 'VANCE-Ai Text Color (Hex or RGBA)', 'section' => 'vance_discovery_styling', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_discovery_field_title_size', array( 'default' => 10, 'sanitize_callback' => 'absint' ) );
     $wp_customize->add_control( 'vance_discovery_field_title_size', array( 'label' => 'Filter Title Size (px)', 'section' => 'vance_discovery_styling', 'type' => 'number', 'input_attrs' => array('min' => 8, 'max' => 30) ) );

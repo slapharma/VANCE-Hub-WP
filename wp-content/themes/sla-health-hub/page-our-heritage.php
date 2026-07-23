@@ -233,7 +233,7 @@ get_header(); ?>
                 <?php 
                 $plat_defaults = [
                     1 => ["Clinical Content Hub", "Peer-reviewed research, expert opinions, and patient education curated by gastroenterologists and dietitians."],
-                    2 => ["VANCE-ai", "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety."],
+                    2 => ["VANCE-Ai", "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety."],
                     3 => ["Patient Dashboard", "A secure personal portal to track health records, manage your IBD tools, and connect with your care pathway."],
                     4 => ["HCP Professional Portal", "A dedicated space for healthcare practitioners to access protocols, CME, and collaborate with Vance experts."],
                     5 => ["Health Calculators", "Evidence-based clinical calculators for malnutrition screening, BMI, and disease activity scoring."],

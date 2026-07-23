@@ -1,6 +1,6 @@
 <?php
 /**
- * VANCE-ai Primary Knowledge Base.
+ * VANCE-Ai Primary Knowledge Base.
  *
  * A curated store of material the assistant should know but that no published
  * article covers: a glossary of medical terms, facts about Vance Medical Hub,
@@ -15,7 +15,7 @@
  * Retrieval: always-include entries first, then keyword matches, both ahead of
  * (and budgeted separately from) the article search in inc/askai-functions.php.
  *
- * Admin: Dashboard → VANCE-ai KB.
+ * Admin: Dashboard → VANCE-Ai KB.
  *
  * @package sla-health-hub
  */
@@ -39,14 +39,14 @@ function vance_kb_register() {
 		VANCE_KB_POST_TYPE,
 		array(
 			'labels'          => array(
-				'name'               => __( 'VANCE-ai KB', 'sla-health-hub' ),
+				'name'               => __( 'VANCE-Ai KB', 'sla-health-hub' ),
 				'singular_name'      => __( 'KB Entry', 'sla-health-hub' ),
 				'add_new'            => __( 'Add Entry', 'sla-health-hub' ),
 				'add_new_item'       => __( 'Add Knowledge Base Entry', 'sla-health-hub' ),
 				'edit_item'          => __( 'Edit Knowledge Base Entry', 'sla-health-hub' ),
 				'search_items'       => __( 'Search Knowledge Base', 'sla-health-hub' ),
 				'not_found'          => __( 'No knowledge base entries yet.', 'sla-health-hub' ),
-				'menu_name'          => __( 'VANCE-ai KB', 'sla-health-hub' ),
+				'menu_name'          => __( 'VANCE-Ai KB', 'sla-health-hub' ),
 			),
 			'public'          => false,           // Never served on the front end.
 			'show_ui'         => true,
@@ -91,8 +91,8 @@ function vance_kb_seed_terms() {
 	$terms = array(
 		'Glossary'          => __( 'Definitions of medical and nutritional terms, including acronyms.', 'sla-health-hub' ),
 		'About the Hub'     => __( 'What Vance Medical Hub is, what it publishes, who it is for.', 'sla-health-hub' ),
-		'Vance Medical'     => __( 'Vance Medical Foods Ltd — company, products, contact.', 'sla-health-hub' ),
-		'SLA Pharma'        => __( 'SLA Pharma — the parent entity.', 'sla-health-hub' ),
+		'Vance Medical'     => __( 'Vance Medical Foods Ltd: company, products, contact.', 'sla-health-hub' ),
+		'SLA Pharma'        => __( 'SLA Pharma: the parent entity.', 'sla-health-hub' ),
 		'Policies'          => __( 'Editorial, privacy and clinical governance positions.', 'sla-health-hub' ),
 		'Uncategorised'     => __( 'Anything not yet filed.', 'sla-health-hub' ),
 	);
@@ -125,7 +125,7 @@ function vance_kb_add_meta_boxes() {
 	);
 	add_meta_box(
 		'vance_kb_help',
-		__( 'How VANCE-ai uses this entry', 'sla-health-hub' ),
+		__( 'How VANCE-Ai uses this entry', 'sla-health-hub' ),
 		'vance_kb_render_help_box',
 		VANCE_KB_POST_TYPE,
 		'normal',
@@ -159,7 +159,7 @@ function vance_kb_render_meta_box( $post ) {
 			<input type="checkbox" name="vance_kb_always" value="1" <?php checked( $always, '1' ); ?>>
 			<strong><?php esc_html_e( 'Always include', 'sla-health-hub' ); ?></strong>
 		</label><br>
-		<span class="description"><?php esc_html_e( 'Inject this entry into every conversation, whatever the question. Use for core facts (who we are, what the hub is). Keep these few and short — they are sent on every request.', 'sla-health-hub' ); ?></span>
+		<span class="description"><?php esc_html_e( 'Inject this entry into every conversation, whatever the question. Use for core facts (who we are, what the hub is). Keep these few and short, as they are sent on every request.', 'sla-health-hub' ); ?></span>
 	</p>
 
 	<p>
@@ -173,7 +173,7 @@ function vance_kb_render_meta_box( $post ) {
 	<?php if ( $pdf_id ) : ?>
 		<p>
 			<button type="button" class="button button-secondary" id="vance-kb-pdf-extract"><?php esc_html_e( 'Pull text from PDF', 'sla-health-hub' ); ?></button>
-			<span class="description"><?php esc_html_e( 'Appends the PDF text to the entry body below, where you can tidy it. Best-effort: if extraction fails, copy and paste the text in yourself — the body is what the assistant reads.', 'sla-health-hub' ); ?></span>
+			<span class="description"><?php esc_html_e( 'Appends the PDF text to the entry body below, where you can tidy it. Best-effort: if extraction fails, copy and paste the text in yourself. The body is what the assistant reads.', 'sla-health-hub' ); ?></span>
 			<span id="vance-kb-extract-status" style="display:block;margin-top:6px;"></span>
 		</p>
 	<?php endif; ?>
@@ -186,10 +186,10 @@ function vance_kb_render_meta_box( $post ) {
 function vance_kb_render_help_box() {
 	?>
 	<p style="margin-top:0;">
-		<?php esc_html_e( 'The body text below is exactly what VANCE-ai reads. Write it as plain, factual prose — the assistant quotes and paraphrases from it, so anything vague or out of date will surface in answers.', 'sla-health-hub' ); ?>
+		<?php esc_html_e( 'The body text below is exactly what VANCE-Ai reads. Write it as plain, factual prose. The assistant quotes and paraphrases from it, so anything vague or out of date will surface in answers.', 'sla-health-hub' ); ?>
 	</p>
 	<ul style="list-style:disc;margin-left:20px;">
-		<li><?php esc_html_e( 'One topic per entry. A glossary term, a company fact, a policy — not a whole document dumped in.', 'sla-health-hub' ); ?></li>
+		<li><?php esc_html_e( 'One topic per entry. A glossary term, a company fact, a policy, not a whole document dumped in.', 'sla-health-hub' ); ?></li>
 		<li><?php esc_html_e( 'Put the words a reader would actually type into the title and the first line, so keyword matching finds it.', 'sla-health-hub' ); ?></li>
 		<li><?php esc_html_e( 'Entries have no public page. The assistant will not offer them as "Read more" links, so put anything you want linked into a published article instead.', 'sla-health-hub' ); ?></li>
 		<li><?php esc_html_e( 'Draft entries are ignored. Only published entries reach the assistant.', 'sla-health-hub' ); ?></li>
@@ -437,7 +437,7 @@ function vance_kb_ajax_extract_pdf() {
 	if ( '' === $text || strlen( $text ) < 40 ) {
 		wp_send_json_error(
 			array(
-				'message' => __( 'Could not read text from this PDF — it is most likely a scan with no text layer. Open it, copy the text, and paste it into the entry body.', 'sla-health-hub' ),
+				'message' => __( 'Could not read text from this PDF. It is most likely a scan with no text layer. Open it, copy the text, and paste it into the entry body.', 'sla-health-hub' ),
 			)
 		);
 	}
@@ -623,6 +623,6 @@ function vance_kb_column_content( $column, $post_id ) {
 	}
 	echo get_post_meta( $post_id, '_vance_kb_always', true )
 		? '<span style="color:#008080;font-weight:600;">' . esc_html__( 'Yes', 'sla-health-hub' ) . '</span>'
-		: '—';
+		: '-';
 }
 add_action( 'manage_' . VANCE_KB_POST_TYPE . '_posts_custom_column', 'vance_kb_column_content', 10, 2 );

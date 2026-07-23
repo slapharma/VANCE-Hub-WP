@@ -155,7 +155,7 @@ get_header(); ?>
         <div class="container" style="text-align: center; color: white;">
             <h2 style="color: white; margin-bottom: 16px;">Want to save your results?</h2>
             <p class="max-600" style="font-size: 18px; margin: 0 auto 32px; color: rgba(255,255,255,0.92);">
-                Free registration unlocks result history, personalised meal plans, VANCE-ai, and printable handouts — all in your private dashboard.
+                Free registration unlocks result history, personalised meal plans, VANCE-Ai, and printable handouts — all in your private dashboard.
             </p>
             <div class="hero-actions" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
                 <a href="/register/" class="btn btn-primary" style="background: white; color: #008080; border: none;">Register Free</a>

@@ -1019,7 +1019,7 @@ body {
                             'fallback_icon' => '?',
                         ),
                         array(
-                            'title'         => vance_get_theme_mod('vance_askai_tile_title', 'VANCE-ai'),
+                            'title'         => vance_get_theme_mod('vance_askai_tile_title', 'VANCE-Ai'),
                             'desc'          => vance_get_theme_mod('vance_askai_tile_desc',  'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.'),
                             'eyebrow'       => vance_get_theme_mod('vance_askai_tile_extra', 'Personalised answers, 24/7'),
                             'image'         => vance_get_theme_mod('vance_askai_tile_image'),
@@ -1311,7 +1311,7 @@ body {
     $disc_filters_text     = vance_get_theme_mod('vance_discovery_filters_label_text', 'Discovery Filters');
     $disc_filters_size     = (int) vance_get_theme_mod('vance_discovery_filters_label_size', 12);
     $disc_filters_color    = vance_get_theme_mod('vance_discovery_filters_label_color', '') ?: $border_color;
-    $disc_ai_text          = vance_get_theme_mod('vance_discovery_ai_label_text', 'VANCE-ai');
+    $disc_ai_text          = vance_get_theme_mod('vance_discovery_ai_label_text', 'VANCE-Ai');
     $disc_ai_size          = (int) vance_get_theme_mod('vance_discovery_ai_label_size', 12);
     $disc_ai_color         = vance_get_theme_mod('vance_discovery_ai_label_color', '') ?: '#ffffff';
     // Toggle on/off colours.
@@ -1509,13 +1509,13 @@ body {
                                 </div>
                             </div>
 
-                            <!-- Launcher for the shared VANCE-ai chat (assets/js/vance-askai.js).
+                            <!-- Launcher for the shared VANCE-Ai chat (assets/js/vance-askai.js).
                                  One chat surface site-wide, so a conversation started here
                                  continues on any article and saves to the user's dashboard. -->
                             <div class="askai-teaser" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 6px 0 4px;">
                                 <p style="margin: 0; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.82);">Ask a question in plain English and get an answer built only from the articles published on this hub — with a link to every source used.</p>
                                 <div>
-                                    <button type="button" class="chat-send" data-vance-askai-open style="padding: 12px 22px; font-size: 13px; cursor: pointer; <?php echo $btn_style($btn_send_bg, $btn_send_color); ?>">Open VANCE-ai</button>
+                                    <button type="button" class="chat-send" data-vance-askai-open style="padding: 12px 22px; font-size: 13px; cursor: pointer; <?php echo $btn_style($btn_send_bg, $btn_send_color); ?>">Open VANCE-Ai</button>
                                 </div>
                             </div>
                         </div>
@@ -1533,19 +1533,19 @@ body {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="agent-name">VANCE-ai</div>
+                                    <div class="agent-name">VANCE-Ai</div>
                                     <div class="agent-status"><span class="status-dot"></span> Online</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Launcher for the shared VANCE-ai chat. The old inline chat here
+                        <!-- Launcher for the shared VANCE-Ai chat. The old inline chat here
                              duplicated the element IDs used by the Explore panel above, so
                              only one of the two was ever wired up. -->
                         <div class="askai-teaser" style="padding: 24px 0 8px; display: flex; flex-direction: column; gap: 20px;">
                             <p style="margin: 0; font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.82); max-width: 620px;">Ask anything about IBD, gut health or clinical nutrition. Answers are drawn only from articles published on the Vance Medical Hub, and every answer links to the articles it used.</p>
                             <div>
-                                <button type="button" class="chat-send" data-vance-askai-open style="cursor: pointer;">Open VANCE-ai</button>
+                                <button type="button" class="chat-send" data-vance-askai-open style="cursor: pointer;">Open VANCE-Ai</button>
                             </div>
                         </div>
                     </div>

@@ -397,23 +397,24 @@ function vance_ai_normalise_reading_level( $level ) {
  */
 function vance_ai_system_prompt( $sources, $reading_level = 'knowledgeable' ) {
 	$rules = <<<'PROMPT'
-You are VANCE-ai, the assistant on the Vance Medical Hub (vancehealthhub.co.uk) — a library of articles about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
+You are VANCE-Ai, the assistant on the Vance Medical Hub (vancehealthhub.co.uk), a library of articles about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
 
 The SOURCES below are extracts from this hub's own library and reference material. They are your primary and strongly preferred basis for answering.
 
 RULES
 1. Ground every substantive statement in the SOURCES. Never introduce clinical facts, figures, drug names, guidelines or study results that do not appear in them.
 2. If the SOURCES do not cover the question:
-   a. For a basic, uncontroversial factual or definitional question — what an abbreviation stands for, what a common word or term means, a general-knowledge fact — answer it briefly and correctly from your own general knowledge. When you do, add this on its own line, worded exactly like this:
+   a. For a basic, uncontroversial factual or definitional question, such as what an abbreviation stands for, what a common word or term means, a general-knowledge fact: answer it briefly and correctly from your own general knowledge. When you do, add this on its own line, worded exactly like this:
       Note: that last part is general knowledge, not taken from the Vance Medical Hub library.
-   b. For anything clinical or health-related — symptoms, causes, diagnosis, treatment, medicines, dosing, prognosis, diet or lifestyle advice, interpreting results — do NOT answer from general knowledge. Say plainly that you could not find it in the library, then point to a related topic the SOURCES do cover or invite the reader to rephrase.
+   b. For anything clinical or health-related, such as symptoms, causes, diagnosis, treatment, medicines, dosing, prognosis, diet or lifestyle advice, interpreting results: do NOT answer from general knowledge. Say plainly that you could not find it in the library, then point to a related topic the SOURCES do cover or invite the reader to rephrase.
 3. Never cite, recommend or link to any website, journal, organisation, guideline body or study outside this hub. Do not write "according to the NHS" or "research shows" unless that exact claim appears in a SOURCE.
 4. Cite what you used. End your answer with the hub articles you drew on, one per line, in exactly this form:
-Read more: <article title> — <URL>
+Read more: <article title> | <URL>
 Copy each URL character-for-character from its SOURCE header. Never invent, shorten or guess a URL, and never cite a source you did not actually use. Reference entries that carry no URL are not cited this way.
 5. This is general information, not personal medical advice. Do not diagnose, do not recommend or adjust treatment or dosing, and do not interpret a reader's own test results. Point anything urgent to their clinical team, NHS 111, or 999 in an emergency.
 6. Tone: professional, clinical, warm and plain-spoken.
 7. FORMATTING: clean, readable prose. Do NOT use Markdown headings or any "#" characters. You may use **bold** for key terms and simple hyphen (-) bullet points for short lists. No tables, no code blocks.
+8. PUNCTUATION: never use an em dash or an en dash anywhere in your reply. Use a comma, a colon, a full stop or brackets instead. This applies to every line, including the citation lines.
 PROMPT;
 
 	$levels = vance_ai_reading_levels();
@@ -427,7 +428,7 @@ PROMPT;
 	$block = "\n\nSOURCES\n\n";
 	foreach ( $sources as $source ) {
 		if ( ! empty( $source['reference'] ) ) {
-			$label = 'REFERENCE (Vance Medical Hub knowledge base — authoritative, but not a public article)';
+			$label = 'REFERENCE (Vance Medical Hub knowledge base: authoritative, but not a public article)';
 		} elseif ( ! empty( $source['primary'] ) ) {
 			$label = 'PRIMARY SOURCE (the article the reader is currently reading)';
 		} else {
@@ -435,7 +436,7 @@ PROMPT;
 		}
 
 		$block .= '--- ' . $label . ': ' . $source['title'];
-		$block .= ! empty( $source['url'] ) ? ' | URL: ' . $source['url'] : ' | (no public URL — do not cite a link for this entry)';
+		$block .= ! empty( $source['url'] ) ? ' | URL: ' . $source['url'] : ' | (no public URL, do not cite a link for this entry)';
 		$block .= " ---\n";
 		$block .= $source['excerpt'] . "\n";
 		$block .= "--- END SOURCE ---\n\n";
@@ -689,14 +690,14 @@ function vance_rest_ai_chat( $request ) {
 	$reading_level   = vance_ai_normalise_reading_level( isset( $params['reading_level'] ) ? $params['reading_level'] : '' );
 
 	// --- Credentials -------------------------------------------------------
-	// Read from the Customizer (Appearance → Customize → VANCE-ai Configuration).
+	// Read from the Customizer (Appearance → Customize → VANCE-Ai Configuration).
 	// Do NOT hardcode keys here; they end up in public git history and on the
 	// deployed web server.
 	$api_key = vance_get_theme_mod( 'vance_askai_api_key', '' );
 	if ( empty( $api_key ) ) {
 		return new WP_Error(
 			'ai_api_key_missing',
-			__( 'AI API key is not configured. Site admin: set it in Appearance → Customize → VANCE-ai Configuration.', 'sla-health-hub' ),
+			__( 'AI API key is not configured. Site admin: set it in Appearance → Customize → VANCE-Ai Configuration.', 'sla-health-hub' ),
 			array( 'status' => 503 )
 		);
 	}

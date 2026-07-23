@@ -126,7 +126,7 @@ get_header();
         ],
         'communication' => [
             'notes'    => ['label' => 'My Notes', 'icon' => '📝'],
-            'ai-chats' => ['label' => 'My VANCE-ai Chats', 'icon' => '🤖'],
+            'ai-chats' => ['label' => 'My VANCE-Ai Chats', 'icon' => '🤖'],
             'messages' => ['label' => 'My Messages', 'icon' => '💬'],
         ],
         'misc' => [
@@ -286,7 +286,7 @@ get_header();
                             case 'clinical-profile': echo 'View your health discovery results and update your clinical profile details.'; break;
                             case 'records': echo 'Access and manage your uploaded health records and posters.'; break;
                             case 'notes': echo 'Your private clinical and personal notes.'; break;
-                            case 'ai-chats': echo 'History of your conversations with VANCE-ai.'; break;
+                            case 'ai-chats': echo 'History of your conversations with VANCE-Ai.'; break;
                             case 'high-score': echo ''; break; // Play to Win — no subtitle
                             default: echo '';
                         }
@@ -643,7 +643,7 @@ get_header();
                                     <button onclick="openQuizModal()" style="font-size:12px; color:#008080; font-weight:600; background:none; border:none; cursor:pointer;">Retake Entire Quiz &rarr;</button>
                                     <div style="display:flex; gap:12px;">
                                         <a href="/ask-ai/?context=clinical_eval" class="btn-primary" style="flex: 1; background:#0A1929; color:white; text-decoration:none; padding:12px; border-radius:0; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                            <span>🔍</span> Ask VANCE-ai
+                                            <span>🔍</span> Ask VANCE-Ai
                                         </a>
                                         <a href="/ask-ai/?context=suggest_content" class="btn-primary" style="flex: 1; background:#008080; color:white; text-decoration:none; padding:12px; border-radius:0; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
                                             <span>💡</span> Suggest Content
@@ -750,7 +750,7 @@ get_header();
                                         </div>
                                     </div>
                                     <div style="display:flex; gap:12px; align-items:center;">
-                                        <a href="/ask-ai/?context=document_eval&doc_id=<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>" class="card-link" style="color:#0A1929; font-weight:700;">Ask VANCE-ai</a>
+                                        <a href="/ask-ai/?context=document_eval&doc_id=<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>" class="card-link" style="color:#0A1929; font-weight:700;">Ask VANCE-Ai</a>
                                         <a href="/ask-ai/?context=view_eval&doc_id=<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>" class="card-link" style="color:#008080; font-weight:700;">View AI</a>
                                         <a href="<?php echo esc_url($poster['url']); ?>" target="_blank" class="card-link">View</a>
                                         <button onclick="deletePoster(<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>)" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600;">Delete</button>
@@ -967,7 +967,7 @@ get_header();
                          if (!is_array($ai_chats)) $ai_chats = array();
                          if(empty($ai_chats)): ?>
                              <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:0;">
-                                <p style="color:#64748B; margin-bottom:16px;">No VANCE-ai conversations yet. Anything you ask is saved here automatically.</p>
+                                <p style="color:#64748B; margin-bottom:16px;">No VANCE-Ai conversations yet. Anything you ask is saved here automatically.</p>
                                 <a href="/ask-ai/" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:0; font-weight:600;">Start New Consultation</a>
                             </div>
                          <?php else: ?>
@@ -975,7 +975,7 @@ get_header();
                                 <?php foreach(array_reverse($ai_chats) as $chat): 
                                     $chat_json = wp_json_encode($chat);
                                     // Make sure title doesn't overflow incredibly long if it was saved improperly
-                                    $display_title = !empty($chat['title']) ? wp_trim_words($chat['title'], 8, '...') : 'VANCE-ai conversation';
+                                    $display_title = !empty($chat['title']) ? wp_trim_words($chat['title'], 8, '...') : 'VANCE-Ai conversation';
                                 ?>
                                 <div class="list-item" style="padding:16px 0;">
                                     <div style="flex:1;">
@@ -1035,7 +1035,7 @@ get_header();
                         <div style="background:white; width:100%; max-width:800px; max-height:90vh; border-radius:0; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
                             <div style="padding:24px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:white;">
                                 <div>
-                                    <h3 id="modal-chat-title" style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">VANCE-ai Transcript</h3>
+                                    <h3 id="modal-chat-title" style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">VANCE-Ai Transcript</h3>
                                     <p id="modal-chat-date" style="margin:4px 0 0 0; font-size:12px; color:#64748B;"></p>
                                 </div>
                                 <button onclick="closeChatModal()" style="font-size:32px; border:none; background:none; cursor:pointer; color:#64748B; line-height:1;">×</button>
@@ -1364,7 +1364,7 @@ get_header();
         const date = document.getElementById('modal-chat-date');
         const content = document.getElementById('modal-chat-content');
         
-        title.innerText = chat.title || 'VANCE-ai conversation';
+        title.innerText = chat.title || 'VANCE-Ai conversation';
         date.innerText = 'Consultation date: ' + new Date(chat.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
         content.innerHTML = '';
         

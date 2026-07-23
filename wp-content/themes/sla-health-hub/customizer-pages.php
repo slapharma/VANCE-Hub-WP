@@ -136,7 +136,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_pat_tool_title", array( "label" => "Title", "section" => "vance_pat_tools", "type" => "text" ) );
     
     $tool_defaults = array(
-        1 => array("Ask VANCE-ai", "Interact with our AI intelligence trained specifically in clinical gastro conditions for instant, reliable answers to your health questions."),
+        1 => array("Ask VANCE-Ai", "Interact with our AI intelligence trained specifically in clinical gastro conditions for instant, reliable answers to your health questions."),
         2 => array("Bookmark & Clip", "Easily save important articles, clip vital paragraphs, and create your own customized research notes directly in your portal."),
         3 => array("History & AI Tracking", "Upload your medical history documents to allow Vance-i to securely analyze data, track your ongoing wellness, and spot trends."),
         4 => array("Healthcare Calculators", "Evaluate potential malnutrition, calculate BMI, and score related healthcare symptoms to stay on top of your physical needs."),
@@ -341,7 +341,7 @@ function vance_pages_customize_register( $wp_customize ) {
 
     $plat_defaults = array(
         1 => array( "Clinical Content Hub",    "Peer-reviewed research, expert opinions, and patient education curated by gastroenterologists and dietitians." ),
-        2 => array( "VANCE-ai",      "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety." ),
+        2 => array( "VANCE-Ai",      "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety." ),
         3 => array( "Patient Dashboard",       "A secure personal portal to track health records, manage your IBD tools, and connect with your care pathway." ),
         4 => array( "HCP Professional Portal", "A dedicated space for healthcare practitioners to access protocols, CME, and collaborate with Vance experts." ),
         5 => array( "Health Calculators",      "Evidence-based clinical calculators for malnutrition screening, BMI, and disease activity scoring." ),
@@ -583,7 +583,7 @@ function vance_pages_customize_register( $wp_customize ) {
 
     $plat_defaults = array(
         1 => array( "Clinical Content Hub",    "Peer-reviewed research, expert opinions, and patient education curated by gastroenterologists and dietitians." ),
-        2 => array( "VANCE-ai",      "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety." ),
+        2 => array( "VANCE-Ai",      "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety." ),
         3 => array( "Patient Dashboard",       "A secure personal portal to track health records, manage your IBD tools, and connect with your care pathway." ),
         4 => array( "HCP Professional Portal", "A dedicated space for healthcare practitioners to access protocols, CME, and collaborate with Vance experts." ),
         5 => array( "Health Calculators",      "Evidence-based clinical calculators for malnutrition screening, BMI, and disease activity scoring." ),
@@ -846,7 +846,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $extra_overlays = array(
         "vance_home_hero_overlay"     => array( "default" => 50, "label" => "Home hero overlay opacity (%)" ),
         "vance_evidence_hero_overlay" => array( "default" => 78, "label" => "Turn Evidence hero overlay opacity (%)" ),
-        "vance_askai_hero_overlay"    => array( "default" => 85, "label" => "VANCE-ai hero overlay opacity (%)" ),
+        "vance_askai_hero_overlay"    => array( "default" => 85, "label" => "VANCE-Ai hero overlay opacity (%)" ),
     );
     foreach ( $extra_overlays as $key => $cfg ) {
         $wp_customize->add_setting( $key, array(
@@ -1184,7 +1184,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $proc_defaults = array(
         1 => array( "Synthesise", "Our medical writing team combines primary studies, guidelines, and registry data into a single graded position — with conflicts of interest and limitations flagged openly." ),
         2 => array( "Translate",  "We convert each position into two companion artefacts: a clinician-facing protocol card and a plain-language patient brief vetted by a patient advisory panel." ),
-        3 => array( "Apply",      "Protocols feed the Vance Medical dashboard, VANCE-ai, and downloadable handouts — so evidence becomes a concrete decision at the point of care." ),
+        3 => array( "Apply",      "Protocols feed the Vance Medical dashboard, VANCE-Ai, and downloadable handouts — so evidence becomes a concrete decision at the point of care." ),
     );
     for ( $i = 1; $i <= 3; $i++ ) {
         $wp_customize->add_setting( "vance_evidence_proc{$i}_title", array( "default" => $proc_defaults[ $i ][0], "sanitize_callback" => "sanitize_text_field" ) );
@@ -1238,7 +1238,7 @@ function vance_pages_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( "vance_evidence_cta_title", array( "default" => "Put Evidence to Work for Your Patients", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_cta_title", array( "label" => "Title", "section" => "vance_evidence_cta", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_evidence_cta_desc",  array( "default" => "Free registration unlocks the full protocol library, VANCE-ai, and printable patient handouts branded to your practice.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_evidence_cta_desc",  array( "default" => "Free registration unlocks the full protocol library, VANCE-Ai, and printable patient handouts branded to your practice.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_evidence_cta_desc",  array( "label" => "Description", "section" => "vance_evidence_cta", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_evidence_cta_btn1_text", array( "default" => "Register Free", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_cta_btn1_text", array( "label" => "Primary Button Label", "section" => "vance_evidence_cta", "type" => "text" ) );
@@ -1289,7 +1289,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_filters_label_color", array( "label" => "Filters Header — Colour (blank = brand teal)", "section" => "vance_discovery_styling" ) ) );
 
     // Right-panel header: "AI CLINICAL INTELLIGENCE"
-    $wp_customize->add_setting( "vance_discovery_ai_label_text",  array( "default" => "VANCE-ai", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_discovery_ai_label_text",  array( "default" => "VANCE-Ai", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_discovery_ai_label_text",  array( "label" => "AI Header — Text", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_ai_label_size",  array( "default" => 12, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_discovery_ai_label_size",  array( "label" => "AI Header — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 30, "step" => 1 ) ) );
@@ -1322,11 +1322,11 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // Ask AI input box.
     $wp_customize->add_setting( "vance_discovery_askai_input_bg",     array( "default" => "rgba(255,255,255,0.06)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_askai_input_bg",     array( "label" => "VANCE-ai Input — Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_askai_input_bg",     array( "label" => "VANCE-Ai Input — Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_askai_input_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_askai_input_color", array( "label" => "VANCE-ai Input — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_askai_input_color", array( "label" => "VANCE-Ai Input — Text Colour", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_askai_input_border", array( "default" => "rgba(255,255,255,0.12)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_askai_input_border", array( "label" => "VANCE-ai Input — Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_askai_input_border", array( "label" => "VANCE-Ai Input — Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
 
     // Action buttons — solid colours (no gradient). Blank background = keep theme default.
     $wp_customize->add_setting( "vance_discovery_btn_go_bg",       array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );

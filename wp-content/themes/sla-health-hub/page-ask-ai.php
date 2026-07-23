@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: VANCE-ai Page
+ * Template Name: VANCE-Ai Page
  * Simplified with single clinical assistant and save functionality
  */
 
@@ -8,7 +8,7 @@ get_header();
 
 // Get customizer settings
 $hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri() . '/assets/img/about_hero.png');
-$hero_title = vance_get_theme_mod('vance_askai_hero_title', 'VANCE-ai');
+$hero_title = vance_get_theme_mod('vance_askai_hero_title', 'VANCE-Ai');
 $hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Ask anything about IBD, clinical nutrition and gastrointestinal health. Every answer is drawn from articles published on the Vance Medical Hub, with links to the sources used.');
 $hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Information Assistant');
 $askai_overlay = max(0, min(100, absint(vance_get_theme_mod('vance_askai_hero_overlay', 85)))) / 100;
@@ -16,7 +16,7 @@ $askai_overlay_bottom = min(1, $askai_overlay + 0.05);
 
 // Define Single AI Agent
 $agent_data = array(
-    'name' => 'VANCE-ai',
+    'name' => 'VANCE-Ai',
     'icon' => '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
     'color' => '#008080',
     'description' => 'Your Vance Medical Hub assistant. Ask anything about IBD, gut health, or clinical nutrition.',
@@ -192,7 +192,7 @@ $agent_data = array(
                         <?php echo $agent_data['icon']; ?>
                     </div>
                     <div class="agent-info">
-                        <h2>VANCE-ai</h2>
+                        <h2>VANCE-Ai</h2>
                         <div class="agent-status"><span style="width: 6px; height: 6px; background: #22C55E; border-radius: 0;"></span> ONLINE & READY</div>
                     </div>
                 </div>
@@ -217,7 +217,7 @@ $agent_data = array(
             </div>
 
             <div class="chat-container">
-                <!-- Mount point for assets/js/vance-askai.js — the same engine
+                <!-- Mount point for assets/js/vance-askai.js: the same engine
                      powers the site-wide modal and highlight-to-ask. -->
                 <div id="vance-askai-inline"></div>
             </div>

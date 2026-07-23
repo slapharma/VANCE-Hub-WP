@@ -133,7 +133,7 @@
     <?php
     // Quick-signup modal. Its own include guard makes this safe alongside
     // inc/tool-page-shell.php, which also loads it; loading it here is what lets
-    // the VANCE-ai article popup offer "Register for FREE" without a page change.
+    // the VANCE-Ai article popup offer "Register for FREE" without a page change.
     get_template_part( 'inc/register-modal' );
     ?>
 

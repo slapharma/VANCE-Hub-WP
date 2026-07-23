@@ -1,16 +1,16 @@
 /**
- * VANCE-ai — shared chat controller.
+ * VANCE-Ai — shared chat controller.
  *
  * One engine drives every chat surface on the site:
  *   - the site-wide modal   (opened by any [data-vance-askai-open] element)
- *   - the inline mount      (#vance-askai-inline on the VANCE-ai page)
+ *   - the inline mount      (#vance-askai-inline on the VANCE-Ai page)
  *   - highlight-to-ask      (select text in an article, tap the pill)
  *   - the first-visit intro popup on articles
  *
  * Conversation state is shared across surfaces and kept in sessionStorage, so a
  * reader can start a question on one article and carry it to the next. For
  * logged-in users the server auto-saves each exchange against the conversation
- * id, which is what Dashboard → My VANCE-ai Chats lists.
+ * id, which is what Dashboard → My VANCE-Ai Chats lists.
  *
  * Config comes from wp_localize_script as window.vanceAskAi.
  */
@@ -30,7 +30,8 @@
 	var MAX_TURNS = 40;
 	var MIN_SELECTION = 2;   // a single acronym like "IBD" must qualify
 	var MAX_SELECTION = 600;
-	var REVEAL_MS = 26;      // per word-ish tick
+	var AUTOGROW_MAX = 220;  // px, before the reader takes over with the handle
+	var REVEAL_MS = 34;      // per word-ish tick (30% slower than the original 26)
 
 	var LEVELS = Array.isArray(CFG.levels) && CFG.levels.length
 		? CFG.levels
@@ -173,9 +174,11 @@
 	function formatReply(raw) {
 		var text = escapeHtml(raw);
 
-		// Citations: "Read more: <title> — <url>" becomes a titled link.
+		// Citations: "Read more: <title> | <url>" becomes a titled link. The
+		// separator class still accepts dashes so conversations saved before the
+		// format changed keep rendering as links.
 		text = text.replace(
-			/^[ \t]*Read more:[ \t]*(.+?)[ \t]*[—–-][ \t]*(https?:\/\/[^\s<]+?)[ \t]*$/gim,
+			/^[ \t]*Read more:[ \t]*(.+?)[ \t]*[|—–-][ \t]*(https?:\/\/[^\s<]+?)[ \t]*$/gim,
 			'<a class="vance-askai__cite" href="$2" target="_blank" rel="noopener">$1</a>'
 		);
 
@@ -411,9 +414,31 @@
 	// Surfaces
 	// =====================================================================
 
+	/**
+	 * Grow the composer to fit its content, up to a limit.
+	 *
+	 * The textarea is also user-resizable. Once the reader drags the handle their
+	 * height wins permanently, otherwise the next keystroke would snap the box
+	 * back and the handle would feel broken. A drag is detected by comparing the
+	 * current inline height against the last one this function applied, which is
+	 * reliable even while the element is hidden (a ResizeObserver reports nothing
+	 * for a display:none subtree, so it cannot be used here).
+	 */
 	function autoGrow(input) {
+		if ('1' === input.getAttribute('data-user-resized')) {
+			return;
+		}
+
+		var applied = input.getAttribute('data-auto-height');
+		if (applied && input.style.height && input.style.height !== applied) {
+			input.setAttribute('data-user-resized', '1');
+			return;
+		}
+
 		input.style.height = 'auto';
-		input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+		var height = Math.min(input.scrollHeight, AUTOGROW_MAX) + 'px';
+		input.style.height = height;
+		input.setAttribute('data-auto-height', height);
 	}
 
 	function levelMarkup(id) {
@@ -447,7 +472,7 @@
 			'<div class="vance-askai__header">' +
 				'<span class="vance-askai__badge">' + ICON.chat + '</span>' +
 				'<div class="vance-askai__titles">' +
-					'<h2 class="vance-askai__title">' + escapeHtml(CFG.title || 'VANCE-ai') + '</h2>' +
+					'<h2 class="vance-askai__title">' + escapeHtml(CFG.title || 'VANCE-Ai') + '</h2>' +
 					'<p class="vance-askai__subtitle">' + escapeHtml(CFG.subtitle || '') + '</p>' +
 				'</div>' +
 				(options.modal
@@ -462,13 +487,13 @@
 				'<label class="screen-reader-text" for="' + inputId + '">Your question</label>' +
 				'<textarea id="' + inputId + '" class="vance-askai__input" rows="1" placeholder="' + escapeHtml(CFG.placeholder || 'Ask a question…') + '"></textarea>' +
 				'<div class="vance-askai__actions">' +
-					'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation — this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
+					'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
 					'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
 					'<button type="button" class="vance-askai__send">' + ICON.send + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.send) || 'Send') + '</span></button>' +
 				'</div>' +
 				'<div class="vance-askai__foot">' + (CFG.footNote || '') + '</div>' +
 				(CFG.disclaimer
-					? '<details class="vance-askai__disclaimer"><summary>' + escapeHtml((CFG.i18n && CFG.i18n.disclaimerTitle) || 'Important — how to use this assistant') + '</summary><div>' + CFG.disclaimer + '</div></details>'
+					? '<details class="vance-askai__disclaimer"><summary>' + escapeHtml((CFG.i18n && CFG.i18n.disclaimerTitle) || 'Important: how to use this assistant') + '</summary><div>' + CFG.disclaimer + '</div></details>'
 					: '') +
 			'</div>';
 
@@ -630,7 +655,7 @@
 		modalEl.id = 'vance-askai-modal';
 		modalEl.setAttribute('role', 'dialog');
 		modalEl.setAttribute('aria-modal', 'true');
-		modalEl.setAttribute('aria-label', CFG.title || 'VANCE-ai');
+		modalEl.setAttribute('aria-label', CFG.title || 'VANCE-Ai');
 
 		var panel = document.createElement('div');
 		panel.className = 'vance-askai-modal__panel';
@@ -733,7 +758,7 @@
 			pill = document.createElement('button');
 			pill.type = 'button';
 			pill.className = 'vance-askai-pill';
-			pill.innerHTML = ICON.spark + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.askPill) || 'Ask VANCE-ai') + '</span>';
+			pill.innerHTML = ICON.spark + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.askPill) || 'Ask VANCE-Ai') + '</span>';
 
 			// Keep the selection alive when the pill takes the press.
 			pill.addEventListener('mousedown', function (event) {
@@ -847,23 +872,58 @@
 	// First-visit intro popup on articles
 	// =====================================================================
 
-	function introAlreadySeen() {
+	function todayStamp() {
+		var d = new Date();
+		return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+	}
+
+	function readIntroRecord() {
 		try {
-			var seen = window.localStorage.getItem(INTRO_KEY);
-			return seen && (Date.now() - Number(seen)) < INTRO_TTL;
+			var raw = window.localStorage.getItem(INTRO_KEY);
+			if (!raw) {
+				return null;
+			}
+			var rec = JSON.parse(raw);
+			// Older builds stored a bare timestamp; treat it as one past showing.
+			return (rec && 'object' === typeof rec) ? rec : { last: Number(raw) || 0, day: '', count: 1 };
 		} catch (e) {
-			return false;
+			return null;
 		}
 	}
 
+	/** Does the admin-configured frequency allow showing the popup right now? */
+	function introFrequencyAllows() {
+		var rec = readIntroRecord();
+		if (!rec) {
+			return true;
+		}
+
+		var frequency = CFG.introFrequency || 'monthly';
+
+		if ('x_per_day' === frequency) {
+			var cap = Math.max(1, parseInt(CFG.introPerDay, 10) || 1);
+			return (rec.day !== todayStamp()) || ((rec.count || 0) < cap);
+		}
+
+		var days = { daily: 1, weekly: 7, monthly: 30 }[frequency] || 30;
+		return (Date.now() - (rec.last || 0)) >= days * 24 * 60 * 60 * 1000;
+	}
+
 	function markIntroSeen() {
+		var today = todayStamp();
+		var rec = readIntroRecord();
+		if (!rec || rec.day !== today) {
+			rec = { day: today, count: 0 };
+		}
+		rec.count = (rec.count || 0) + 1;
+		rec.last = Date.now();
 		try {
-			window.localStorage.setItem(INTRO_KEY, String(Date.now()));
+			window.localStorage.setItem(INTRO_KEY, JSON.stringify(rec));
 		} catch (e) {}
 	}
 
 	function initArticleIntro() {
-		if (!CFG.postId || !CFG.introEnabled || introAlreadySeen()) {
+		if (!CFG.postId || !CFG.introEnabled || !introFrequencyAllows()) {
 			return;
 		}
 		if (document.getElementById('vance-askai-inline')) {
@@ -890,15 +950,27 @@
 
 		var showRegister = !CFG.isLoggedIn;
 
+		// Two columns: copy and buttons on the left, image on the right. When no
+		// image is configured the right column shows a branded placeholder so the
+		// layout still reads as intended.
+		var media = CFG.introImage
+			? '<img src="' + escapeHtml(CFG.introImage) + '" alt="">'
+			: '<div class="vance-askai-intro__placeholder">' + ICON.spark + '<span>VANCE-Ai</span></div>';
+
 		overlay.innerHTML =
 			'<div class="vance-askai-intro">' +
 				'<button type="button" class="vance-askai-intro__close" aria-label="Close">' + ICON.close + '</button>' +
-				'<span class="vance-askai-intro__badge">' + ICON.spark + '</span>' +
-				'<h2 class="vance-askai-intro__title" id="vance-askai-intro-title">' + escapeHtml(CFG.introTitle || 'Reading something new? Ask VANCE-ai.') + '</h2>' +
-				'<div class="vance-askai-intro__body">' + (CFG.introBody || '') + '</div>' +
-				'<div class="vance-askai-intro__actions">' +
-					(showRegister ? '<button type="button" class="vance-askai-intro__btn vance-askai-intro__btn--ghost" data-askai-intro-register>' + escapeHtml((CFG.i18n && CFG.i18n.register) || 'Register free') + '</button>' : '') +
-					'<button type="button" class="vance-askai-intro__btn vance-askai-intro__btn--primary" data-askai-intro-try>' + escapeHtml((CFG.i18n && CFG.i18n.tryIt) || 'Try it now') + '</button>' +
+				'<div class="vance-askai-intro__grid">' +
+					'<div class="vance-askai-intro__col">' +
+						'<span class="vance-askai-intro__badge">' + ICON.spark + '</span>' +
+						'<h2 class="vance-askai-intro__title" id="vance-askai-intro-title">' + escapeHtml(CFG.introTitle || 'Reading something new? Ask VANCE-Ai.') + '</h2>' +
+						'<div class="vance-askai-intro__body">' + (CFG.introBody || '') + '</div>' +
+						'<div class="vance-askai-intro__actions">' +
+							(showRegister ? '<button type="button" class="vance-askai-intro__btn vance-askai-intro__btn--ghost" data-askai-intro-register>' + escapeHtml((CFG.i18n && CFG.i18n.register) || 'Register free') + '</button>' : '') +
+							'<button type="button" class="vance-askai-intro__btn vance-askai-intro__btn--primary" data-askai-intro-try>' + escapeHtml((CFG.i18n && CFG.i18n.tryIt) || 'Try it now') + '</button>' +
+						'</div>' +
+					'</div>' +
+					'<div class="vance-askai-intro__media">' + media + '</div>' +
 				'</div>' +
 			'</div>';
 

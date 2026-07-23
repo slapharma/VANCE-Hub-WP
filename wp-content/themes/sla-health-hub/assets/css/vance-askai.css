@@ -290,7 +290,7 @@
 	display: block;
 	width: 100%;
 	min-height: 46px;
-	max-height: 140px;
+	max-height: 60vh;
 	padding: 12px 14px;
 	font-family: inherit;
 	font-size: 16px; /* 16px keeps iOS from zooming on focus */
@@ -299,7 +299,9 @@
 	background: #ffffff;
 	border: 1px solid #CBD5E1;
 	border-radius: 0;
-	resize: none;
+	/* Draggable from the bottom-right corner. The script stops auto-growing the
+	   box once the reader sets their own height, so the two never fight. */
+	resize: vertical;
 	overflow-y: auto;
 }
 
@@ -357,74 +359,128 @@
 
 .vance-askai__foot a { color: var(--askai-teal-dark); text-decoration: underline; }
 
-/* --- Reading level slider ---------------------------------------------- */
+/* --- Reading level slider ----------------------------------------------
+   Deliberately prominent: a frosted glass panel so the control reads as a
+   first-class part of the composer rather than a hairline under the input. */
 
 .vance-askai__level {
-	margin: 0 0 12px;
-	padding: 0 2px;
+	position: relative;
+	margin: 0 0 14px;
+	padding: 14px 16px 12px;
+	background: linear-gradient(135deg, rgba(0, 128, 128, 0.14), rgba(174, 219, 219, 0.22));
+	border: 1px solid rgba(0, 128, 128, 0.28);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 2px 10px rgba(10, 25, 41, 0.06);
+	-webkit-backdrop-filter: blur(10px) saturate(140%);
+	backdrop-filter: blur(10px) saturate(140%);
+	overflow: hidden;
+}
+
+/* Sheen across the top edge, the "glass" cue. */
+.vance-askai__level::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 45%;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+	pointer-events: none;
 }
 
 .vance-askai__level-label {
+	position: relative;
 	display: block;
 	font-size: 13px;
+	font-weight: 600;
 	line-height: 1.4;
-	color: var(--askai-muted);
-	margin-bottom: 6px;
+	letter-spacing: 0.01em;
+	color: #0F4C4C;
+	margin-bottom: 10px;
 }
 
 .vance-askai__level-label strong {
-	color: var(--askai-teal-dark);
+	display: inline-block;
+	padding: 2px 10px;
+	margin-left: 4px;
+	font-family: var(--font-heading, 'Outfit', sans-serif);
+	font-size: 13px;
 	font-weight: 700;
+	color: #ffffff;
+	background: var(--askai-teal);
+	box-shadow: 0 1px 4px rgba(0, 128, 128, 0.4);
 }
 
 .vance-askai__level-input {
+	position: relative;
 	-webkit-appearance: none;
 	appearance: none;
 	width: 100%;
-	height: 24px;
+	height: 30px;
 	margin: 0;
 	background: transparent;
 	cursor: pointer;
 }
 
-/* Track */
+/* Track: a recessed glass channel. */
 .vance-askai__level-input::-webkit-slider-runnable-track {
-	height: 4px;
-	background: #CBD5E1;
+	height: 10px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(174, 219, 219, 0.95));
+	border: 1px solid rgba(0, 128, 128, 0.35);
+	box-shadow: inset 0 2px 4px rgba(10, 25, 41, 0.16);
 }
 .vance-askai__level-input::-moz-range-track {
-	height: 4px;
-	background: #CBD5E1;
+	height: 10px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(174, 219, 219, 0.95));
+	border: 1px solid rgba(0, 128, 128, 0.35);
+	box-shadow: inset 0 2px 4px rgba(10, 25, 41, 0.16);
 }
 
-/* Thumb — 24px so it stays comfortably tappable */
+/* Thumb: a glossy teal bead, large enough to grab on touch. */
 .vance-askai__level-input::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
-	width: 22px;
-	height: 22px;
+	width: 26px;
+	height: 26px;
 	margin-top: -9px;
-	background: var(--askai-teal);
-	border: 3px solid #ffffff;
-	box-shadow: 0 0 0 1px var(--askai-teal);
 	border-radius: 50%;
+	background:
+		radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 34%, rgba(255, 255, 255, 0) 60%),
+		linear-gradient(160deg, var(--askai-teal), var(--askai-teal-dark));
+	border: 2px solid #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 90, 90, 0.5), 0 0 0 1px rgba(0, 128, 128, 0.55);
+	transition: transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 .vance-askai__level-input::-moz-range-thumb {
-	width: 22px;
-	height: 22px;
-	background: var(--askai-teal);
-	border: 3px solid #ffffff;
-	box-shadow: 0 0 0 1px var(--askai-teal);
+	width: 26px;
+	height: 26px;
 	border-radius: 50%;
+	background:
+		radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 34%, rgba(255, 255, 255, 0) 60%),
+		linear-gradient(160deg, var(--askai-teal), var(--askai-teal-dark));
+	border: 2px solid #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 90, 90, 0.5), 0 0 0 1px rgba(0, 128, 128, 0.55);
+}
+
+.vance-askai__level-input:hover::-webkit-slider-thumb,
+.vance-askai__level-input:active::-webkit-slider-thumb {
+	transform: scale(1.08);
+	box-shadow: 0 3px 12px rgba(0, 90, 90, 0.6), 0 0 0 1px rgba(0, 128, 128, 0.7);
 }
 
 .vance-askai__level-ticks {
+	position: relative;
 	display: flex;
 	justify-content: space-between;
 	font-size: 11px;
+	font-weight: 600;
 	line-height: 1.3;
-	color: var(--askai-muted);
-	margin-top: -2px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: #0F4C4C;
+	opacity: 0.75;
+	margin-top: 2px;
 }
 
 .vance-askai__level-ticks span:last-child { text-align: right; }
@@ -539,13 +595,65 @@
 .vance-askai-intro {
 	position: relative;
 	width: 100%;
-	max-width: 460px;
-	padding: 32px 30px 26px;
+	max-width: 820px;
 	background: #ffffff;
 	border-top: 4px solid var(--primary-color, #008080);
 	box-shadow: 0 24px 60px rgba(10, 25, 41, 0.3);
 	font-family: var(--font-main, 'Inter', system-ui, sans-serif);
 	color: #1F2937;
+	overflow: hidden;
+}
+
+/* Two columns: copy and buttons left, image right. */
+.vance-askai-intro__grid {
+	display: grid;
+	grid-template-columns: 1fr 300px;
+	align-items: stretch;
+}
+
+.vance-askai-intro__col {
+	padding: 34px 32px 28px;
+	min-width: 0;
+}
+
+.vance-askai-intro__media {
+	position: relative;
+	background: var(--primary-wash, #def4f4);
+	overflow: hidden;
+}
+
+.vance-askai-intro__media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* Shown when no image has been set in the Customizer. */
+.vance-askai-intro__placeholder {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	color: var(--primary-color, #008080);
+	background:
+		linear-gradient(135deg, rgba(0, 128, 128, 0.10), rgba(0, 128, 128, 0.02)),
+		repeating-linear-gradient(45deg, rgba(0, 128, 128, 0.06) 0 10px, transparent 10px 20px);
+	border-left: 1px solid rgba(0, 128, 128, 0.18);
+}
+
+.vance-askai-intro__placeholder svg { width: 40px; height: 40px; opacity: 0.85; }
+
+.vance-askai-intro__placeholder span {
+	font-family: var(--font-heading, 'Outfit', sans-serif);
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	opacity: 0.8;
 }
 
 .vance-askai-intro__close {
@@ -711,7 +819,7 @@
 }
 
 /* =========================================================================
-   Focus visibility — never remove the ring, only restyle it
+   Focus visibility: never remove the ring, only restyle it
    ========================================================================= */
 
 .vance-askai :focus-visible,
@@ -732,6 +840,13 @@
    ========================================================================= */
 
 @media (max-width: 767.98px) {
+	/* Stack the intro popup: image first, then copy and buttons. */
+	.vance-askai-intro__grid { grid-template-columns: 1fr; }
+	.vance-askai-intro__media { order: -1; min-height: 150px; }
+	.vance-askai-intro__placeholder { border-left: 0; border-bottom: 1px solid rgba(0, 128, 128, 0.18); }
+	.vance-askai-intro__col { padding: 26px 22px 22px; }
+	.vance-askai-intro__actions { flex-direction: column; }
+
 	.vance-askai-modal { padding: 0; }
 
 	.vance-askai-modal__panel {
