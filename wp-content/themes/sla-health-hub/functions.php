@@ -189,38 +189,150 @@ function vance_discovery_facets() {
 }
 
 /**
+ * Styles for the facet chips, emitted once alongside the markup.
+ *
+ * These live with the renderer on purpose. They used to sit in the modal's
+ * stylesheet as `rgba(255,255,255,…)` values inherited from a dark panel; when
+ * the modal background was set to white in the customizer every label and
+ * unselected chip turned white-on-white and the filters became invisible.
+ * Colours are custom properties so a dark surface can override them without
+ * forking the rules again.
+ */
+function vance_discovery_facet_css() {
+    static $emitted = false;
+    if ( $emitted ) { return; }
+    $emitted = true;
+    ?>
+    <style>
+        .vance-facets {
+            --vf-label: #334155;
+            --vf-hint: #64748b;
+            --vf-chip-bg: #ffffff;
+            --vf-chip-border: #cbd5e1;
+            --vf-chip-text: #0f172a;
+            --vf-chip-hover-bg: #f1f5f9;
+            --vf-chip-hover-border: #94a3b8;
+            --vf-accent: #008080;
+            --vf-accent-hover: #006666;
+            --vf-accent-text: #ffffff;
+        }
+        .vance-facets .filter-group { margin: 0 0 22px; }
+        .vance-facets .filter-label {
+            display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+            margin: 0 0 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px; font-weight: 800;
+            color: var(--vf-label);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .vance-facets .filter-hint {
+            font-size: 12px; font-weight: 600;
+            letter-spacing: 0; text-transform: none;
+            color: var(--vf-hint);
+        }
+        .vance-facets .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .vance-facets .text-chip {
+            position: relative;
+            display: inline-flex; align-items: center; gap: 8px;
+            min-height: 44px; padding: 10px 16px; margin: 0;
+            background: var(--vf-chip-bg);
+            border: 1px solid var(--vf-chip-border);
+            color: var(--vf-chip-text);
+            font-size: 14px; font-weight: 600; line-height: 1.2;
+            cursor: pointer; user-select: none;
+            transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+        }
+        .vance-facets .text-chip:hover {
+            background: var(--vf-chip-hover-bg);
+            border-color: var(--vf-chip-hover-border);
+        }
+        /* The real control is visually hidden but still focusable, so chips stay
+           reachable and operable by keyboard. */
+        .vance-facets .chip-input {
+            position: absolute; opacity: 0;
+            width: 1px; height: 1px; margin: 0;
+            pointer-events: none;
+        }
+        .vance-facets .text-chip:focus-within {
+            outline: 3px solid var(--vf-accent);
+            outline-offset: 2px;
+        }
+        /* Selection is signalled by the tick as well as the fill, so colour is
+           never the only indicator. Space for it is always reserved, so choosing
+           a chip cannot reflow the rows around it. */
+        .vance-facets .chip-check {
+            width: 16px; height: 16px; flex: none;
+            fill: none; stroke: currentColor;
+            stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+            opacity: 0;
+            transition: opacity .18s ease;
+        }
+        .vance-facets .text-chip.selected {
+            background: var(--vf-accent);
+            border-color: var(--vf-accent);
+            color: var(--vf-accent-text);
+        }
+        .vance-facets .text-chip.selected:hover {
+            background: var(--vf-accent-hover);
+            border-color: var(--vf-accent-hover);
+        }
+        .vance-facets .text-chip.selected .chip-check { opacity: 1; }
+        @media (prefers-reduced-motion: reduce) {
+            .vance-facets .text-chip,
+            .vance-facets .chip-check { transition: none; }
+        }
+    </style>
+    <?php
+}
+
+/**
  * Render the facet chip groups. Shared so the homepage widget modal and the
  * front-page block cannot drift apart — they had already diverged into two
  * near-identical copies of the old prefix-based filter code.
  */
 function vance_discovery_render_facets() {
+    static $instance = 0;
+    $instance++;
+
+    vance_discovery_facet_css();
+
     $toggle_js = "this.parentElement.classList.toggle('selected', this.checked)";
     $pick_js   = "this.closest('.chip-grid').querySelectorAll('.text-chip').forEach(function(l){l.classList.remove('selected')}); this.parentElement.classList.add('selected')";
-
-    foreach ( vance_discovery_facets() as $facet ) {
+    ?>
+    <div class="vance-facets">
+    <?php
+    foreach ( vance_discovery_facets() as $facet_key => $facet ) {
         $is_multi = ! empty( $facet['multiple'] );
+        $label_id = 'vance-facet-' . $instance . '-' . $facet_key;
         ?>
-        <div class="filter-group">
-            <div class="filter-label"><?php echo esc_html( $facet['label'] ); ?></div>
+        <div class="filter-group" role="group" aria-labelledby="<?php echo esc_attr( $label_id ); ?>">
+            <p class="filter-label" id="<?php echo esc_attr( $label_id ); ?>">
+                <?php echo esc_html( $facet['label'] ); ?>
+                <span class="filter-hint"><?php echo $is_multi ? 'pick any' : 'pick one'; ?></span>
+            </p>
             <div class="chip-grid">
                 <?php $is_first = true; foreach ( $facet['options'] as $option_value => $option_label ) :
                     // Single-choice facets default to their first option.
                     $preselect = ( ! $is_multi && $is_first );
                 ?>
-                <label class="text-chip<?php echo $preselect ? ' selected' : ''; ?>" style="margin: 0;">
+                <label class="text-chip<?php echo $preselect ? ' selected' : ''; ?>">
                     <input type="<?php echo $is_multi ? 'checkbox' : 'radio'; ?>"
+                           class="chip-input"
                            name="<?php echo esc_attr( $facet['field'] ); ?>"
                            value="<?php echo esc_attr( $option_value ); ?>"
-                           style="display:none;"
                            <?php echo $preselect ? 'checked' : ''; ?>
                            onchange="<?php echo $is_multi ? $toggle_js : $pick_js; ?>">
-                    <span><?php echo esc_html( $option_label ); ?></span>
+                    <svg class="chip-check" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4.5 10.5l3.8 3.8L15.5 6.5"/></svg>
+                    <span class="chip-text"><?php echo esc_html( $option_label ); ?></span>
                 </label>
                 <?php $is_first = false; endforeach; ?>
             </div>
         </div>
         <?php
     }
+    ?>
+    </div>
+    <?php
 }
 
 /**

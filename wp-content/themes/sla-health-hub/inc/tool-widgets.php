@@ -38,7 +38,10 @@ function vance_tool_widgets_emit_modal_css_once() {
 	$emitted = true;
 		$c_backdrop   = vance_get_theme_mod( 'vance_modal_backdrop',        'rgba(10, 25, 41, 0.78)' );
 		$c_panel_bg   = vance_get_theme_mod( 'vance_modal_panel_bg',        '#0A1929' );
-		$c_text       = vance_get_theme_mod( 'vance_modal_text_color',      '#ffffff' );
+		// Saved as an empty string on this site, which emitted `color: ;` and left
+		// the panel with no colour of its own. Fall back to a dark ink that reads
+		// on the white panel background rather than to the old white.
+		$c_text       = vance_get_theme_mod( 'vance_modal_text_color',      '' ) ?: '#0F172A';
 		$c_header_bg  = vance_get_theme_mod( 'vance_modal_header_bg',       '#061119' );
 		$c_title      = vance_get_theme_mod( 'vance_modal_title_color',     '#ffffff' );
 		// The vance_modal_*_bubble_* / input / send colour mods are no longer read
@@ -91,67 +94,66 @@ function vance_tool_widgets_emit_modal_css_once() {
 		.vance-tw-modal__close:hover { opacity: 1; background: rgba(255,255,255,0.10); }
 		.vance-tw-modal__body { flex: 1; min-height: 0; padding: 22px 24px; overflow-y: auto; }
 		.vance-tw-modal__footer { padding: 14px 22px; border-top: 1px solid rgba(255,255,255,0.10); background: <?php echo $c_header_bg; ?>; }
-		/* Reused filter UI bits (same look as the old Discovery block) */
-		.vance-tw-modal .filter-group { margin-bottom: 22px; }
-		.vance-tw-modal .filter-label {
-			font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 800;
-			color: rgba(255,255,255,0.55); margin-bottom: 10px;
-			text-transform: uppercase; letter-spacing: 1.4px;
+		/* Filter chips and their labels are styled by the renderer itself
+		   (vance_discovery_facet_css in functions.php), so they stay correct
+		   wherever they are used. Only the surrounding form furniture is here. */
+		.vance-tw-modal .filters-intro {
+			margin: 0 0 20px;
+			font-size: 15px; line-height: 1.55;
+			color: #475569;
 		}
-		.vance-tw-modal .toggle-row { display: flex; gap: 16px; flex-wrap: wrap; }
-		.vance-tw-modal .toggle-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-		.vance-tw-modal .toggle-switch {
-			width: 40px; height: 22px;
-			background: rgba(255,255,255,0.10);
-			border: 1px solid rgba(255,255,255,0.15);
-			border-radius: 0; position: relative; transition: 0.2s;
-			flex-shrink: 0;
+		.vance-tw-modal .keyword-label {
+			display: block; margin: 0 0 8px;
+			font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800;
+			color: #334155;
+			text-transform: uppercase; letter-spacing: 1px;
 		}
-		.vance-tw-modal .toggle-switch::after {
-			content: ''; position: absolute; top: 2px; left: 2px;
-			width: 16px; height: 16px;
-			background: rgba(255,255,255,0.60);
-			border-radius: 0; transition: 0.2s;
-		}
-		.vance-tw-modal .toggle-item.active .toggle-switch { background: #008080; border-color: #008080; }
-		.vance-tw-modal .toggle-item.active .toggle-switch::after { transform: translateX(18px); background: #ffffff; }
-		.vance-tw-modal .toggle-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
-		.vance-tw-modal .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-		.vance-tw-modal .text-chip {
-			display: inline-flex; align-items: center; justify-content: center;
-			min-width: 120px; padding: 8px 16px;
-			background: rgba(255,255,255,0.06);
-			border: 1px solid rgba(255,255,255,0.12);
-			border-radius: 0; font-size: 13px; font-weight: 700;
-			color: rgba(255,255,255,0.85); cursor: pointer; user-select: none;
-			transition: all 0.15s;
-		}
-		.vance-tw-modal .text-chip:hover { background: rgba(255,255,255,0.10); }
-		.vance-tw-modal .text-chip.selected { background: rgba(0,128,128,0.30); border-color: #008080; color: #ffffff; }
 		.vance-tw-modal .keyword-input {
 			width: 100%; box-sizing: border-box;
-			padding: 11px 14px;
-			background: rgba(255,255,255,0.94); color: #1a2332;
-			border: 1px solid rgba(255,255,255,0.20); border-radius: 0;
-			font-size: 14px;
+			min-height: 44px; padding: 11px 14px;
+			background: #ffffff; color: #0f172a;
+			border: 1px solid #cbd5e1; border-radius: 0;
+			font-size: 16px;
+		}
+		.vance-tw-modal .keyword-input::placeholder { color: #64748b; }
+		.vance-tw-modal .keyword-input:focus {
+			outline: 3px solid #008080; outline-offset: 2px;
+			border-color: #008080;
+		}
+		.vance-tw-modal .filters-actions {
+			display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+			margin-top: 22px; padding-top: 18px;
+			border-top: 1px solid #e2e8f0;
 		}
 		.vance-tw-modal .vance-tw-btn-go {
-			padding: 11px 28px;
-			background: linear-gradient(135deg, #008080, #006666);
-			color: #ffffff; border: none; border-radius: 0;
-			font-family: 'Outfit', sans-serif; font-size: 14px;
-			font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
-			cursor: pointer; box-shadow: 0 4px 14px rgba(0,128,128,0.35);
+			min-height: 44px; padding: 11px 28px;
+			background: #008080;
+			color: #ffffff; border: 1px solid #008080; border-radius: 0;
+			font-family: 'Outfit', sans-serif; font-size: 15px;
+			font-weight: 800; letter-spacing: 0.3px;
+			cursor: pointer;
+			transition: background-color .18s ease, border-color .18s ease;
 		}
-		.vance-tw-modal .vance-tw-btn-go:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,128,128,0.5); }
+		.vance-tw-modal .vance-tw-btn-go:hover { background: #006666; border-color: #006666; }
 		.vance-tw-modal .vance-tw-btn-text {
-			padding: 10px 16px;
-			background: transparent;
-			border: 1px solid rgba(255,255,255,0.20);
-			color: rgba(255,255,255,0.85);
+			min-height: 44px; padding: 11px 20px;
+			background: #ffffff;
+			border: 1px solid #cbd5e1;
+			color: #334155;
 			border-radius: 0; cursor: pointer;
-			font-size: 12px; font-weight: 700;
-			text-transform: uppercase; letter-spacing: 0.4px;
+			font-family: 'Outfit', sans-serif;
+			font-size: 14px; font-weight: 700;
+			transition: background-color .18s ease, border-color .18s ease;
+		}
+		.vance-tw-modal .vance-tw-btn-text:hover { background: #f1f5f9; border-color: #94a3b8; }
+		.vance-tw-modal .vance-tw-btn-go:focus-visible,
+		.vance-tw-modal .vance-tw-btn-text:focus-visible {
+			outline: 3px solid #008080; outline-offset: 2px;
+		}
+		@media (prefers-reduced-motion: reduce) {
+			.vance-tw-modal,
+			.vance-tw-modal .vance-tw-btn-go,
+			.vance-tw-modal .vance-tw-btn-text { transition: none; }
 		}
 		/* The chat bubble/input rules that used to live here went with the inline
 		   Vance AI modal — that card now opens the shared VANCE-Ai surface, which
@@ -325,6 +327,8 @@ function vance_tw_render_content_filters_body() {
 	?>
 	<form action="<?php echo esc_url( home_url( '/discovery-results/' ) ); ?>" method="GET" class="vance-tw-filters-form">
 
+		<p class="filters-intro">Narrow the library by any combination below, then show the matching articles. Leave a group untouched to include everything in it.</p>
+
 		<?php
 		/* Section / Topic / Condition / Written-for, built from terms that carry
 		   posts. Shared with the front-page block so the two cannot drift. */
@@ -332,12 +336,13 @@ function vance_tw_render_content_filters_body() {
 		?>
 
 		<div class="filter-group" style="margin-bottom: 0;">
-			<input type="text" name="s" class="keyword-input" placeholder="Keyword Search (optional)">
+			<label class="keyword-label" for="vance-tw-keyword">Keyword</label>
+			<input type="text" id="vance-tw-keyword" name="s" class="keyword-input" placeholder="Optional, for example bloating or biologics">
 		</div>
 
-		<div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.10); display: flex; gap: 12px; align-items: center;">
-			<button type="submit" class="vance-tw-btn-go">GO</button>
-			<button type="reset" class="vance-tw-btn-text" onclick="var f=this.closest('form'); setTimeout(function(){ f.querySelectorAll('.text-chip').forEach(function(el){ var i=el.querySelector('input'); el.classList.toggle('selected', !!(i &amp;&amp; i.checked)); }); }, 0);">Clear</button>
+		<div class="filters-actions">
+			<button type="submit" class="vance-tw-btn-go">Show results</button>
+			<button type="reset" class="vance-tw-btn-text" onclick="var f=this.closest('form'); setTimeout(function(){ f.querySelectorAll('.text-chip').forEach(function(el){ var i=el.querySelector('input'); el.classList.toggle('selected', !!(i &amp;&amp; i.checked)); }); }, 0);">Reset</button>
 		</div>
 	</form>
 	<?php
