@@ -1007,19 +1007,26 @@ function vance_google_oauth_callback() {
     }
     
     $credential = sanitize_text_field( $_POST['credential'] );
-    
-    // Decode JWT token (basic decode - in production use a proper JWT library)
-    $parts = explode('.', $credential);
-    if ( count($parts) !== 3 || ! isset( $parts[1] ) ) {
-        wp_send_json_error( 'Invalid token format' );
+
+    // Verify the ID token with Google before trusting any of its claims —
+    // a locally-decoded, unverified JWT payload can be forged by anyone
+    // (the claims are just base64 JSON, no signature check without this).
+    $verify_response = wp_remote_get( 'https://oauth2.googleapis.com/tokeninfo?id_token=' . rawurlencode( $credential ) );
+    if ( is_wp_error( $verify_response ) || 200 !== wp_remote_retrieve_response_code( $verify_response ) ) {
+        wp_send_json_error( 'Could not verify Google sign-in. Please try again.' );
     }
-    
-    $payload = json_decode( base64_decode( strtr( $parts[1], '-_', '+/' ) ), true );
-    
-    if ( ! $payload || ! isset( $payload['email'] ) ) {
-        wp_send_json_error( 'Could not decode token' );
+
+    $payload = json_decode( wp_remote_retrieve_body( $verify_response ), true );
+    $client_id = defined( 'GOOGLE_CLIENT_ID' ) ? GOOGLE_CLIENT_ID : '';
+
+    if ( ! $payload || ! isset( $payload['email'] )
+        || empty( $payload['aud'] ) || $payload['aud'] !== $client_id
+        || empty( $payload['iss'] ) || ! in_array( $payload['iss'], array( 'accounts.google.com', 'https://accounts.google.com' ), true )
+        || empty( $payload['exp'] ) || (int) $payload['exp'] < time()
+    ) {
+        wp_send_json_error( 'Invalid or expired Google token.' );
     }
-    
+
     $email = sanitize_email( $payload['email'] );
     $name = isset( $payload['name'] ) ? sanitize_text_field( $payload['name'] ) : '';
     $google_id = isset( $payload['sub'] ) ? sanitize_text_field( $payload['sub'] ) : '';
@@ -1057,9 +1064,9 @@ function vance_google_oauth_callback() {
         
         update_user_meta( $user_id, 'google_id', $google_id );
 
-        // Default to Patient Role
-        update_user_meta( $user_id, '_sla_user_type', 'patient' );
-        update_user_meta( $user_id, '_sla_dashboard_role', 'patient' );
+        // Default to Member Role
+        update_user_meta( $user_id, '_sla_user_type', 'member' );
+        update_user_meta( $user_id, '_sla_dashboard_role', 'member' );
 
         // Google has already verified the email address — mark as verified.
         // Honour Google's email_verified flag if present (always true for OIDC-compliant providers).
@@ -1439,7 +1446,7 @@ add_action( 'wp_ajax_vance_email_login', 'vance_email_login_ajax' );
 /**
  * AJAX: email + password signup.
  *
- * Defaults new users to the "patient" role keys used by the Google flow so
+ * Defaults new users to the "member" role keys used by the Google flow so
  * existing dashboard logic continues to work identically.
  */
 function vance_email_signup_ajax() {
@@ -1491,8 +1498,8 @@ function vance_email_signup_ajax() {
     ) );
 
     // Match the Google flow's role assignment for dashboard compatibility
-    update_user_meta( $user_id, '_sla_user_type', 'patient' );
-    update_user_meta( $user_id, '_sla_dashboard_role', 'patient' );
+    update_user_meta( $user_id, '_sla_user_type', 'member' );
+    update_user_meta( $user_id, '_sla_dashboard_role', 'member' );
 
     // Mark email as unverified and dispatch verification email
     update_user_meta( $user_id, '_vance_email_verified', 0 );
@@ -5578,15 +5585,29 @@ add_action( 'transition_post_status', 'vance_trigger_social_share', 10, 3 );
  */
 function vance_setup_custom_roles() {
     add_role( 'practitioner', __( 'Practitioner', 'sla-health-hub' ), array(
-        'read' => true, 
+        'read' => true,
         'edit_posts' => false,
         'delete_posts' => false,
     ));
-    add_role( 'patient', __( 'Patient', 'sla-health-hub' ), array(
-        'read' => true, 
+    add_role( 'member', __( 'Member', 'sla-health-hub' ), array(
+        'read' => true,
         'edit_posts' => false,
         'delete_posts' => false,
     ));
+
+    // One-time migration: any user still on the legacy 'patient' role slug
+    // (only possible via un-overridden Google OAuth signups) gets moved to
+    // 'member', then the orphaned role definition is removed.
+    if ( ! get_option( 'vance_member_role_migrated' ) ) {
+        $legacy_patients = get_users( array( 'role' => 'patient', 'fields' => 'ID' ) );
+        foreach ( $legacy_patients as $uid ) {
+            ( new WP_User( $uid ) )->set_role( 'member' );
+            update_user_meta( $uid, '_sla_user_type', 'member' );
+            update_user_meta( $uid, '_sla_dashboard_role', 'member' );
+        }
+        remove_role( 'patient' );
+        update_option( 'vance_member_role_migrated', 1 );
+    }
 }
 add_action( 'init', 'vance_setup_custom_roles' );
 
@@ -5637,14 +5658,14 @@ function vance_login_redirect( $redirect_to, $request, $user ) {
 add_filter( 'login_redirect', 'vance_login_redirect', 10, 3 );
 
 /**
- * Default new signups to 'patient' role
+ * Default new signups to 'member' role
  */
 function vance_default_user_role_on_register( $user_id ) {
     $user = new WP_User( $user_id );
-    $user->set_role( 'patient' );
-    
-    update_user_meta( $user_id, '_sla_user_type', 'patient' );
-    update_user_meta( $user_id, '_sla_dashboard_role', 'patient' );
+    $user->set_role( 'member' );
+
+    update_user_meta( $user_id, '_sla_user_type', 'member' );
+    update_user_meta( $user_id, '_sla_dashboard_role', 'member' );
 }
 add_action( 'user_register', 'vance_default_user_role_on_register' );
 
@@ -5790,9 +5811,9 @@ function vance_set_role_from_cookie($user_id) {
             update_user_meta($user_id, '_sla_user_type', 'practitioner');
             update_user_meta($user_id, '_sla_dashboard_role', 'practitioner');
         } else {
-            $user->set_role('subscriber');
-            update_user_meta($user_id, '_sla_user_type', 'patient');
-            update_user_meta($user_id, '_sla_dashboard_role', 'patient');
+            $user->set_role('member');
+            update_user_meta($user_id, '_sla_user_type', 'member');
+            update_user_meta($user_id, '_sla_dashboard_role', 'member');
         }
         
         // Clear cookie

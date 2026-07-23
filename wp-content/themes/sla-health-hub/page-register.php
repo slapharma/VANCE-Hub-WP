@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vance_register_submit
         $errors[] = 'Passwords do not match.';
     }
     
-    if (empty($role) || !in_array($role, array('subscriber', 'practitioner'))) {
+    if (empty($role) || !in_array($role, array('member', 'practitioner'))) {
         $errors[] = 'Please select a valid role.';
     }
 
@@ -84,6 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vance_register_submit
             // Set role
             $user = new WP_User($user_id);
             $user->set_role($role);
+            update_user_meta( $user_id, '_sla_user_type', $role );
+            update_user_meta( $user_id, '_sla_dashboard_role', $role );
 
             // Record consent (UK GDPR / PECR). Keys use the _sla_* prefix per CLAUDE.md.
             update_user_meta( $user_id, '_sla_consent_terms', '1' );
@@ -343,10 +345,10 @@ get_header();
                         </div>
                     </label>
                     <label class="role-option">
-                        <input type="radio" name="user_role" value="subscriber" <?php echo (isset($_GET['role']) && $_GET['role'] === 'patient') || !isset($_GET['role']) ? 'checked' : ''; ?> required>
+                        <input type="radio" name="user_role" value="member" <?php echo (isset($_GET['role']) && $_GET['role'] === 'patient') || !isset($_GET['role']) ? 'checked' : ''; ?> required>
                         <div class="role-card">
                             <div class="role-icon">❤️</div>
-                            <div class="role-name">Patient</div>
+                            <div class="role-name">Member</div>
                         </div>
                     </label>
                 </div>
