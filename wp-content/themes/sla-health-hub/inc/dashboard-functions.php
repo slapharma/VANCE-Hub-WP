@@ -832,6 +832,11 @@ function vance_ajax_quick_register() {
         wp_send_json_error( array( 'message' => 'Submission rejected.' ), 400 );
     }
 
+    // Same signup rate limit as the email flow (prevents mass account creation).
+    if ( function_exists( 'vance_rate_limit' ) && ! vance_rate_limit( 'signup', 5, 900 ) ) {
+        wp_send_json_error( array( 'message' => 'Too many signup attempts. Please wait 15 minutes and try again.' ) );
+    }
+
     // Don't let logged-in users hit this path — would create a duplicate account.
     if ( is_user_logged_in() ) {
         wp_send_json_success( array(
@@ -846,6 +851,7 @@ function vance_ajax_quick_register() {
     $marketing_opt_in = ! empty( $_POST['consent_marketing'] );
     $role_in  = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'patient';
     $tool     = isset( $_POST['tool'] ) ? sanitize_key( wp_unslash( $_POST['tool'] ) ) : '';
+    $source   = isset( $_POST['source'] ) ? sanitize_key( wp_unslash( $_POST['source'] ) ) : '';
     $payload  = array();
 
     if ( isset( $_POST['payload'] ) && $_POST['payload'] !== '' ) {
@@ -894,14 +900,24 @@ function vance_ajax_quick_register() {
         wp_send_json_error( array( 'message' => $user_id->get_error_message() ?: 'Could not create your account.' ) );
     }
 
-    // Default WP role stays 'subscriber'; we surface the user-stated audience role
-    // under our own meta key (consistent with existing `_sla_*` user meta).
+    // The user-stated audience role lives under our own meta key (consistent
+    // with existing `_sla_*` user meta), and also drives the WP role +
+    // dashboard meta used by every other signup surface (Google flow,
+    // /register/, /login/): HCPs get the practitioner dashboard, everyone
+    // else is a member.
     $allowed_roles = array( 'patient', 'caregiver', 'hcp', 'researcher', 'other' );
     if ( ! in_array( $role_in, $allowed_roles, true ) ) {
         $role_in = 'patient';
     }
     update_user_meta( $user_id, '_sla_audience_role', $role_in );
-    update_user_meta( $user_id, '_sla_signup_source', 'tool_page:' . ( $tool ?: 'unknown' ) );
+
+    $dashboard_role = ( 'hcp' === $role_in ) ? 'practitioner' : 'member';
+    $wp_user = new WP_User( $user_id );
+    $wp_user->set_role( $dashboard_role );
+    update_user_meta( $user_id, '_sla_user_type', $dashboard_role );
+    update_user_meta( $user_id, '_sla_dashboard_role', $dashboard_role );
+
+    update_user_meta( $user_id, '_sla_signup_source', $source ?: ( 'tool_page:' . ( $tool ?: 'unknown' ) ) );
     update_user_meta( $user_id, '_sla_signup_ts',     time() );
 
     // Consent record (UK GDPR / PECR). Saving a tool result is the affirmative
@@ -924,8 +940,15 @@ function vance_ajax_quick_register() {
     wp_set_auth_cookie( $user_id, true ); // remember-me on
     do_action( 'wp_login', $login, get_userdata( $user_id ) );
 
+    // Optional caller-supplied redirect (same-origin validated) — used by the
+    // /login/ and /register/ pages to honour ?redirect_to=. Tool pages omit it.
+    $default_redirect = '/dashboard/?vance_welcome=1' . ( $tool ? '&from_tool=' . rawurlencode( $tool ) : '' );
+    $redirect = isset( $_POST['redirect'] ) && '' !== $_POST['redirect']
+        ? wp_validate_redirect( wp_unslash( $_POST['redirect'] ), $default_redirect )
+        : $default_redirect;
+
     wp_send_json_success( array(
-        'redirect' => '/dashboard/?vance_welcome=1' . ( $tool ? '&from_tool=' . rawurlencode( $tool ) : '' ),
+        'redirect' => $redirect,
         'message'  => 'Account created.',
         'user_id'  => $user_id,
     ) );
