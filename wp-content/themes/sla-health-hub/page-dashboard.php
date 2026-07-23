@@ -877,7 +877,8 @@ get_header();
                          if(empty($ai_chats)): ?>
                              <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:0;">
                                 <p style="color:#64748B; margin-bottom:16px;">No VANCE-Ai conversations yet. Anything you ask is saved here automatically.</p>
-                                <a href="/ask-ai/" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:0; font-weight:600;">Start New Consultation</a>
+                                <?php // Opens the shared VANCE-Ai modal in place rather than navigating away. ?>
+                                <button type="button" data-vance-askai-open class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; text-decoration:none; padding:10px 20px; border-radius:0; font-weight:600; font-family:inherit; font-size:inherit; cursor:pointer;">Start New Ai Chat</button>
                             </div>
                          <?php else: ?>
                              <div class="dash-list">

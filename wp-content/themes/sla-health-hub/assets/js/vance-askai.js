@@ -751,6 +751,15 @@
 			return;
 		}
 
+		// Not on the dashboard or the notes editor. Those are working screens, not
+		// reading screens, and selecting text there is almost always for copying
+		// or editing. Detected from their own markup rather than a body class,
+		// because these pages resolve through the page-{slug}.php hierarchy and so
+		// carry no page-template- class to match on.
+		if (document.querySelector('.dashboard-wrap, .dash-main, .notes-editor-container')) {
+			return;
+		}
+
 		var pill = null;
 		var timer = null;
 
