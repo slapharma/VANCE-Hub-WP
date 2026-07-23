@@ -50,6 +50,26 @@ function vance_ai_gi_condition_slugs() {
 }
 
 /**
+ * Resolve the WP page for a condition.
+ *
+ * The template assumes the conditions are children of a `gi-health` parent, but
+ * on the live site they sit at the top level, so /gi-health/<slug>/ answers with
+ * a 301 to /<slug>/. Trying the child path first keeps working if the hierarchy
+ * is ever restored; falling back to the bare slug gives the canonical permalink
+ * and the real page title, apostrophes and all, today.
+ *
+ * @param string $slug Condition slug.
+ * @return WP_Post|null
+ */
+function vance_ai_find_gi_page( $slug ) {
+	$page = get_page_by_path( 'gi-health/' . $slug );
+	if ( ! $page ) {
+		$page = get_page_by_path( $slug );
+	}
+	return ( $page instanceof WP_Post ) ? $page : null;
+}
+
+/**
  * Pull each condition's prose out of the page template.
  *
  * The template selects a condition with `switch ( $slug )`, and each case body
@@ -99,9 +119,9 @@ function vance_ai_gi_documents() {
 			continue;
 		}
 
-		$page  = get_page_by_path( 'gi-health/' . $slug );
+		$page  = vance_ai_find_gi_page( $slug );
 		$title = $page ? get_the_title( $page ) : ucwords( str_replace( '-', ' ', $slug ) );
-		$url   = $page ? get_permalink( $page ) : home_url( '/gi-health/' . $slug . '/' );
+		$url   = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
 		$url   = set_url_scheme( $url, 'https' );
 
 		$documents[] = array(
