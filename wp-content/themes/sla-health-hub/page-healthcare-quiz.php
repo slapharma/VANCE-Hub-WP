@@ -504,8 +504,8 @@ get_header();
                 <div class="register-cta">
                     <?php if ( is_user_logged_in() ) : ?>
                         <h3>Your Profile Has Been Updated</h3>
-                        <p>Your discovery quiz responses have been saved to your clinical profile.</p>
-                        <a href="<?php echo home_url('/dashboard/?tab=clinical-profile'); ?>" class="btn-quiz btn-next" style="display: inline-block; text-decoration: none;">View Your Answers</a>
+                        <p>Your discovery quiz responses have been saved to your health profile.</p>
+                        <a href="<?php echo home_url('/dashboard/?tab=health-profile'); ?>" class="btn-quiz btn-next" style="display: inline-block; text-decoration: none;">View Your Answers</a>
                     <?php else : ?>
                         <h3>Join the Vance Community</h3>
                         <p>Register for free today to access all the Vance Medical tools, clinical trackers, and your personalized dashboard.</p>

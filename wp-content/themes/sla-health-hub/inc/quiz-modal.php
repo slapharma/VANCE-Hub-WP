@@ -343,7 +343,7 @@ function handleQuizCompletion() {
         closeQuizModal();
         if (typeof openGuestModal === 'function') openGuestModal();
     <?php else: ?>
-        window.location.href = '<?php echo home_url('/dashboard/?tab=clinical-profile'); ?>';
+        window.location.href = '<?php echo home_url('/dashboard/?tab=health-profile'); ?>';
     <?php endif; ?>
 }
 
