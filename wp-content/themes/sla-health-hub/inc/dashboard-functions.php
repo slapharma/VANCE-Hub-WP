@@ -769,9 +769,14 @@ add_action( 'wp_ajax_vance_delete_note', 'vance_delete_note' );
 
 /**
  * Register REST APIs for Chat
+ *
+ * The /ai-chat route now lives in inc/askai-functions.php, alongside the
+ * retrieval and auto-save logic that grounds it in hub content.
  */
 add_action( 'rest_api_init', function () {
-    // Existing save chat endpoint
+    // Deprecated: conversations are auto-saved server-side by the /ai-chat
+    // handler, so nothing calls this any more. Kept for one deploy cycle so
+    // cached pages still serving the old inline "Save Chat" button don't 404.
     register_rest_route( 'vance-health/v1', '/save-chat', array(
         'methods' => 'POST',
         'callback' => 'vance_rest_save_chat',
@@ -779,142 +784,7 @@ add_action( 'rest_api_init', function () {
             return is_user_logged_in();
         }
     ) );
-    
-    // New AI Chat Endpoint
-    register_rest_route( 'vance-health/v1', '/ai-chat', array(
-        'methods' => 'POST',
-        'callback' => 'vance_rest_ai_chat',
-        'permission_callback' => '__return_true' // Allow guest access
-    ) );
 } );
-
-/**
- * Handle AI Chat REST Request
- */
-function vance_rest_ai_chat( $request ) {
-    $params = $request->get_json_params();
-    $messages = isset($params['messages']) ? $params['messages'] : array();
-    
-    if ( empty($messages) ) {
-        return new WP_Error( 'no_messages', 'No messages provided', array( 'status' => 400 ) );
-    }
-
-    // Grounding: Search for relevant content on gastrohealthhub.com
-    $last_user_message = '';
-    foreach (array_reverse($messages) as $m) {
-        if ($m['role'] === 'user') {
-            $last_user_message = $m['content'];
-            break;
-        }
-    }
-
-    $site_context = '';
-    if (!empty($last_user_message)) {
-        $search_query = new WP_Query(array(
-            's' => $last_user_message,
-            'posts_per_page' => 3,
-            'post_type' => array('post', 'news', 'research', 'oped', 'review', 'whitepaper', 'page'),
-            'post_status' => 'publish'
-        ));
-
-        if ($search_query->have_posts()) {
-            $site_context .= "\n\nCRITICAL KNOWLEDGE BASE CONTEXT (FROM SLAHEALTH.CO.UK):\n";
-            while ($search_query->have_posts()) {
-                $search_query->the_post();
-                $site_context .= "--- START SOURCE: " . get_the_title() . " ---\n";
-                $site_context .= wp_trim_words(get_the_content(), 200) . "\n";
-                $site_context .= "--- END SOURCE ---\n\n";
-            }
-            wp_reset_postdata();
-        }
-    }
-
-    // OpenRouter API key — read from Customizer (Appearance → Customize → Ask AI Configuration → AI API Key).
-    // Do NOT hardcode keys here; they end up in public git history and on the deployed web server.
-    $api_key = function_exists( 'vance_get_theme_mod' )
-        ? vance_get_theme_mod( 'vance_askai_api_key', '' )
-        : get_theme_mod( 'vance_askai_api_key', '' );
-    if ( empty( $api_key ) ) {
-        return new WP_Error(
-            'ai_api_key_missing',
-            __( 'AI API key is not configured. Site admin: set it in Appearance → Customize → Ask AI Configuration.', 'sla-health-hub' ),
-            array( 'status' => 503 )
-        );
-    }
-    $url = 'https://openrouter.ai/api/v1/chat/completions';
-    
-    $system_instruction = 'You are an AI assistant, an expert IBD (Inflammatory Bowel Disease) clinical assistant for the Vance Medical Gastro Health Hub platform. Your intelligence and responses MUST be strictly restricted to IBD-related content, clinical reviews, gastrointestinal health, and clinical nutrition guidelines provided within the Vance Medical Hub (gastrohealthhub.com).
-
-DIRECTIONS:
-1. Prioritize the "CRITICAL KNOWLEDGE BASE CONTEXT" provided below.
-2. If the user asks a question that cannot be answered using the provided context or general knowledge typical of gastrohealthhub.com content, politely inform them that you are restricted to Vance Medical Hub data.
-3. Maintain a professional, clinical, yet accessible tone.
-4. Do not provide personal medical advice.
-5. FORMATTING: Reply in clean, readable prose. Do NOT use Markdown headings or any "#" characters. Keep formatting light: you may use **bold** for key terms and simple hyphen (-) bullet points for short lists, but do not use heading syntax, tables, or code blocks.
-
-' . $site_context;
-
-    // Format messages for OpenRouter (OpenAI compatible)
-    $messages_formatted = array(
-        array(
-            'role' => 'system',
-            'content' => $system_instruction
-        )
-    );
-    
-    foreach ($messages as $msg) {
-        $messages_formatted[] = array(
-            'role' => ($msg['role'] === 'user') ? 'user' : 'assistant',
-            'content' => $msg['content']
-        );
-    }
-    
-    // Model — read from Customizer (Appearance → Customize → Ask AI Configuration → AI Model).
-    // The dropdown is populated live from OpenRouter; do NOT hardcode a model here.
-    $model = function_exists( 'vance_get_theme_mod' )
-        ? vance_get_theme_mod( 'vance_askai_model', '' )
-        : get_theme_mod( 'vance_askai_model', '' );
-    $model = trim( (string) $model );
-    if ( '' === $model ) {
-        $model = 'anthropic/claude-opus-4.8'; // sensible fallback if the setting is unset
-    }
-
-    $body = array(
-        'model' => $model,
-        'messages' => $messages_formatted,
-        'temperature' => 0.3, // Lower temperature to improve grounding and reduce hallucinations
-        'max_tokens' => 1000
-    );
-    
-    $response = wp_remote_post( $url, array(
-        'body'    => wp_json_encode($body),
-        'headers' => array(
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer ' . $api_key,
-            'HTTP-Referer' => home_url(),
-            'X-Title' => 'Vance Medical Hub'
-        ),
-        'timeout' => 60
-    ) );
-    
-    if ( is_wp_error( $response ) ) {
-        return new WP_Error( 'api_error', 'Failed to connect to AI service: ' . $response->get_error_message(), array( 'status' => 500 ) );
-    }
-    
-    $code = wp_remote_retrieve_response_code( $response );
-    $body_decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-    
-    if ( $code !== 200 ) {
-        return new WP_Error( 'api_error', 'AI service returned an error: ' . (isset($body_decoded['error']['message']) ? $body_decoded['error']['message'] : 'Unknown error'), array( 'status' => $code ) );
-    }
-    
-    $reply = '';
-    if ( isset($body_decoded['choices'][0]['message']['content']) ) {
-        $reply = $body_decoded['choices'][0]['message']['content'];
-    }
-    
-    return array( 'success' => true, 'reply' => $reply );
-}
 
 /**
  * Handle Save Chat REST Request

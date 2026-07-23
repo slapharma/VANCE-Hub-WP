@@ -1507,25 +1507,16 @@ body {
                                         <div class="agent-status" style="font-size: <?php echo (int) $status_ai_size; ?>px; color: <?php echo esc_attr($status_ai_color); ?>; margin-top: 1px;"><span class="status-dot"></span> Online</div>
                                     </div>
                                 </div>
-                                <?php if (is_user_logged_in()): ?>
-                                <button class="save-btn" id="save-chat-btn" style="padding: 4px 10px; font-size: 10px; flex-shrink: 0;">
-                                    <svg viewBox="0 0 24 24" style="width: 12px; height: 12px;"><path d="M17 21v-8H7v8M7 3v5h8M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg> Save
-                                </button>
-                                <?php endif; ?>
                             </div>
 
-                            <div class="chat-messages" id="vance-ai-chat-messages" style="flex: 1; padding: 0; max-height: 380px; margin-bottom: 16px;">
-                                <div class="msg bot">
-                                    <div class="msg-avatar" style="width: 24px; height: 24px;">
-                                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px;"><rect x="3" y="4" width="18" height="12" rx="2" /><line x1="8" y1="20" x2="16" y2="20" /><line x1="12" y1="16" x2="12" y2="20" /></svg>
-                                    </div>
-                                    <div class="msg-bubble" style="padding: 10px 14px;">Welcome. I can help you explore our IBD content. What would you like to know?</div>
+                            <!-- Launcher for the shared Ask AI chat (assets/js/vance-askai.js).
+                                 One chat surface site-wide, so a conversation started here
+                                 continues on any article and saves to the user's dashboard. -->
+                            <div class="askai-teaser" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 6px 0 4px;">
+                                <p style="margin: 0; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.82);">Ask a question in plain English and get an answer built only from the articles published on this hub — with a link to every source used.</p>
+                                <div>
+                                    <button type="button" class="chat-send" data-vance-askai-open style="padding: 12px 22px; font-size: 13px; cursor: pointer; <?php echo $btn_style($btn_send_bg, $btn_send_color); ?>">Open AI Chat</button>
                                 </div>
-                            </div>
-
-                            <div class="chat-input-bar" style="padding: 14px 0 0 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 14px; background: transparent;">
-                                <input type="text" id="vance-ai-chat-input" class="chat-input" placeholder="Ask AI..." style="padding: 10px 14px; font-size: 13px;">
-                                <button class="chat-send" id="vance-ai-chat-send" style="padding: 10px 18px; font-size: 13px; <?php echo $btn_style($btn_send_bg, $btn_send_color); ?>">Send</button>
                             </div>
                         </div>
                     </div>
@@ -1546,30 +1537,16 @@ body {
                                     <div class="agent-status"><span class="status-dot"></span> Online</div>
                                 </div>
                             </div>
-                            <?php if (is_user_logged_in()): ?>
-                            <button class="save-btn" id="save-chat-btn">
-                                <svg viewBox="0 0 24 24"><path d="M17 21v-8H7v8M7 3v5h8M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg> Save Chat
-                            </button>
-                            <?php endif; ?>
                         </div>
 
-                        <div class="chat-mode-toggle" style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px;">
-                            <button class="mode-btn active" data-mode="web">Restrict to Web Content</button>
-                            <button class="mode-btn" data-mode="research">Research All Published Data</button>
-                        </div>
-
-                        <div class="chat-messages" id="vance-ai-chat-messages">
-                            <div class="msg bot">
-                                <div class="msg-avatar">
-                                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2" /><line x1="8" y1="20" x2="16" y2="20" /><line x1="12" y1="16" x2="12" y2="20" /></svg>
-                                </div>
-                                <div class="msg-bubble">Welcome. I can help you explore our IBD content. What would you like to know?</div>
+                        <!-- Launcher for the shared Ask AI chat. The old inline chat here
+                             duplicated the element IDs used by the Explore panel above, so
+                             only one of the two was ever wired up. -->
+                        <div class="askai-teaser" style="padding: 24px 0 8px; display: flex; flex-direction: column; gap: 20px;">
+                            <p style="margin: 0; font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.82); max-width: 620px;">Ask anything about IBD, gut health or clinical nutrition. Answers are drawn only from articles published on the Vance Medical Hub, and every answer links to the articles it used.</p>
+                            <div>
+                                <button type="button" class="chat-send" data-vance-askai-open style="cursor: pointer;">Open AI Chat</button>
                             </div>
-                        </div>
-
-                        <div class="chat-input-bar">
-                            <input type="text" id="vance-ai-chat-input" class="chat-input" placeholder="Ask AI...">
-                            <button class="chat-send" id="vance-ai-chat-send">Send</button>
                         </div>
                     </div>
                 </div>
@@ -1770,92 +1747,6 @@ body {
             }
         }
         document.addEventListener('DOMContentLoaded', function() {
-            var chatInput = document.getElementById('vance-ai-chat-input');
-            var chatSend = document.getElementById('vance-ai-chat-send');
-            var chatMessages = document.getElementById('vance-ai-chat-messages');
-            var saveBtn = document.getElementById('save-chat-btn');
-            var messages = [];
-
-            function appendMessage(role, text) {
-                var mdText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                var msgDiv = document.createElement('div');
-                msgDiv.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
-                var avatarHtml = role === 'user' ? '<svg viewBox="0 0 24 24"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>' : '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2" /><line x1="8" y1="20" x2="16" y2="20" /><line x1="12" y1="16" x2="12" y2="20" /></svg>';
-                msgDiv.innerHTML = '<div class="msg-avatar">' + avatarHtml + '</div><div class="msg-bubble">' + mdText + '</div>';
-                chatMessages.appendChild(msgDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                if (!text.includes('typing-indicator')) messages.push({role: role, content: text});
-            }
-
-            document.querySelectorAll('.mode-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
-                    this.classList.add('active');
-                });
-            });
-
-            function sendMessage() {
-                var text = chatInput.value.trim();
-                if(!text) return;
-                appendMessage('user', text);
-                chatInput.value = '';
-                
-                var typingDiv = document.createElement('div');
-                typingDiv.className = 'msg bot typing';
-                typingDiv.id = 'vance-ai-typing';
-                typingDiv.innerHTML = '<div class="msg-avatar"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2" /></svg></div><div class="msg-bubble" style="background:transparent; border:none;"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
-                chatMessages.appendChild(typingDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                
-                chatSend.disabled = true;
-                
-                fetch('<?php echo home_url("/wp-json/vance-health/v1/ai-chat"); ?>', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ messages: messages })
-                })
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('vance-ai-typing').remove();
-                    chatSend.disabled = false;
-                    if (data.success && data.reply) appendMessage('model', data.reply);
-                    else appendMessage('model', "I'm having trouble connecting right now.");
-                })
-                .catch(err => {
-                    document.getElementById('vance-ai-typing').remove();
-                    chatSend.disabled = false;
-                    appendMessage('model', "Network error encountered.");
-                });
-            }
-
-            if(chatSend) chatSend.addEventListener('click', sendMessage);
-            if(chatInput) chatInput.addEventListener('keypress', function(e) { if(e.key === 'Enter') sendMessage(); });
-
-            if(saveBtn) {
-                saveBtn.addEventListener('click', function() {
-                    if(messages.length === 0) return alert("No conversation yet.");
-                    
-                    var dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-                    var chatName = prompt("Enter a name for this chat:", "AI Chat - " + dateStr);
-                    if (chatName === null) return; // User cancelled
-                    if (chatName.trim() === '') chatName = "AI Chat - " + dateStr;
-                    
-                    var transcriptHtml = messages.map(m => '<p><strong>' + (m.role==='user'?'You':'AI') + ':</strong><br>' + m.content + '</p>').join('');
-                    saveBtn.innerText = "Saving...";
-                    
-                    fetch('<?php echo home_url("/wp-json/vance-health/v1/save-chat"); ?>', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json', 'X-WP-Nonce': '<?php echo wp_create_nonce("wp_rest"); ?>'},
-                        body: JSON.stringify({ transcript: messages, title: chatName })
-                    })
-                    .then(r => r.json())
-                    .then(d => {
-                        if(d.success) saveBtn.innerHTML = "✅ Saved";
-                        else saveBtn.innerHTML = "Save Chat";
-                    });
-                });
-            }
-
             // Global Quiz Interceptor
             document.addEventListener('click', function(e) {
                 const link = e.target.closest('a');

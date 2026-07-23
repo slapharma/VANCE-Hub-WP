@@ -967,7 +967,7 @@ get_header();
                          if (!is_array($ai_chats)) $ai_chats = array();
                          if(empty($ai_chats)): ?>
                              <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:0;">
-                                <p style="color:#64748B; margin-bottom:16px;">No AI chat history found.</p>
+                                <p style="color:#64748B; margin-bottom:16px;">No AI conversations yet. Anything you ask the assistant is saved here automatically.</p>
                                 <a href="/ask-ai/" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:0; font-weight:600;">Start New Consultation</a>
                             </div>
                          <?php else: ?>
@@ -980,7 +980,18 @@ get_header();
                                 <div class="list-item" style="padding:16px 0;">
                                     <div style="flex:1;">
                                         <div class="item-title"><?php echo esc_html($display_title); ?></div>
-                                        <div class="item-meta">Saved on <?php echo date('M j, Y', strtotime($chat['date'])); ?></div>
+                                        <div class="item-meta"><?php
+                                            // Conversations are auto-saved and updated in place as
+                                            // the exchange continues, so show both stamps once they
+                                            // differ. Legacy entries have no 'updated' key.
+                                            $chat_started = !empty($chat['date'])    ? strtotime($chat['date'])    : 0;
+                                            $chat_updated = !empty($chat['updated']) ? strtotime($chat['updated']) : 0;
+                                            if ($chat_started && $chat_updated && date('Y-m-d', $chat_started) !== date('Y-m-d', $chat_updated)) {
+                                                echo 'Started ' . esc_html(date('M j, Y', $chat_started)) . ' &middot; updated ' . esc_html(date('M j, Y', $chat_updated));
+                                            } elseif ($chat_started) {
+                                                echo 'Saved on ' . esc_html(date('M j, Y', $chat_started));
+                                            }
+                                        ?></div>
                                     </div>
                                     <div style="display:flex; gap:12px;">
                                         <button class="card-link btn-view-ai-chat" data-chat="<?php echo esc_attr($chat_json); ?>" style="background:none; border:none; font-family:inherit; cursor:pointer; font-weight:600; color:<?php echo $theme_primary; ?>;">View Conversation</button>

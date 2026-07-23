@@ -41,13 +41,8 @@ function vance_tool_widgets_emit_modal_css_once() {
 		$c_text       = vance_get_theme_mod( 'vance_modal_text_color',      '#ffffff' );
 		$c_header_bg  = vance_get_theme_mod( 'vance_modal_header_bg',       '#061119' );
 		$c_title      = vance_get_theme_mod( 'vance_modal_title_color',     '#ffffff' );
-		$c_bot_bg     = vance_get_theme_mod( 'vance_modal_bot_bubble_bg',   'rgba(255,255,255,0.08)' );
-		$c_bot_text   = vance_get_theme_mod( 'vance_modal_bot_bubble_text', '#ffffff' );
-		$c_user_bg    = vance_get_theme_mod( 'vance_modal_user_bubble_bg',  '#008080' );
-		$c_user_text  = vance_get_theme_mod( 'vance_modal_user_bubble_text','#ffffff' );
-		$c_input_bg   = vance_get_theme_mod( 'vance_modal_input_bg',        'rgba(255,255,255,0.94)' );
-		$c_input_text = vance_get_theme_mod( 'vance_modal_input_text',      '#1a2332' );
-		$c_send_bg    = vance_get_theme_mod( 'vance_modal_send_bg',         '#008080' );
+		// The vance_modal_*_bubble_* / input / send colour mods are no longer read
+		// here: the chat they styled moved to the shared Ask AI surface.
 	?>
 	<style>
 		.vance-tw-modal {
@@ -158,31 +153,9 @@ function vance_tool_widgets_emit_modal_css_once() {
 			font-size: 12px; font-weight: 700;
 			text-transform: uppercase; letter-spacing: 0.4px;
 		}
-		/* Chat bits */
-		.vance-tw-chat-messages {
-			flex: 1; min-height: 280px; max-height: 50vh;
-			overflow-y: auto;
-			padding: 12px 4px;
-			display: flex; flex-direction: column; gap: 10px;
-		}
-		.vance-tw-chat-bubble { padding: 10px 14px; border-radius: 4px; font-size: 13px; line-height: 1.5; max-width: 86%; }
-		.vance-tw-chat-bubble.bot  { background: <?php echo $c_bot_bg; ?>; color: <?php echo $c_bot_text; ?>; align-self: flex-start; }
-		.vance-tw-chat-bubble.user { background: <?php echo $c_user_bg; ?>;                 color: <?php echo $c_user_text; ?>; align-self: flex-end; }
-		.vance-tw-chat-input-bar { display: flex; gap: 8px; }
-		.vance-tw-chat-input {
-			flex: 1; padding: 10px 14px;
-			background: <?php echo $c_input_bg; ?>; color: <?php echo $c_input_text; ?>;
-			border: 1px solid rgba(255,255,255,0.20); border-radius: 0;
-			font-size: 14px;
-		}
-		.vance-tw-chat-send {
-			padding: 10px 18px;
-			background: <?php echo $c_send_bg; ?>;
-			color: #ffffff; border: none; border-radius: 0;
-			font-family: 'Outfit', sans-serif; font-size: 13px;
-			font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
-			cursor: pointer;
-		}
+		/* The chat bubble/input rules that used to live here went with the inline
+		   Vance AI modal — that card now opens the shared Ask AI surface, which
+		   brings its own stylesheet (assets/css/vance-askai.css). */
 	</style>
 	<script>
 	(function () {
@@ -272,7 +245,7 @@ function vance_tool_widget_card( $args ) {
 					<h2 style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: <?php echo esc_attr( $title_c ); ?>; margin: 0 0 12px 0;"><?php echo esc_html( $title ); ?></h2>
 					<p style="font-size: 15px; line-height: 1.6; color: <?php echo esc_attr( $desc_c ); ?>; margin: 0 0 20px 0; max-width: 560px;"><?php echo esc_html( $desc ); ?></p>
 					<div>
-						<button type="button" class="btn btn-primary" style="background: <?php echo esc_attr( $accent ); ?>; border-color: <?php echo esc_attr( $accent ); ?>;" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>"><?php echo esc_html( $cta ); ?></button>
+						<button type="button" class="btn btn-primary" style="background: <?php echo esc_attr( $accent ); ?>; border-color: <?php echo esc_attr( $accent ); ?>;" <?php echo vance_tw_open_attr( $modal_id ); ?>><?php echo esc_html( $cta ); ?></button>
 					</div>
 				</div>
 			</div>
@@ -286,6 +259,24 @@ function vance_tool_widget_card( $args ) {
 		</style>
 	</section>
 	<?php
+}
+
+/**
+ * Attribute that wires a card or banner to the tool it opens.
+ *
+ * Vance AI no longer carries its own inline chat modal: it opens the shared Ask
+ * AI surface (assets/js/vance-askai.js), the same one used by the /ask-ai/ page
+ * and by highlight-to-ask, so a conversation is continuous wherever it starts.
+ * Every other tool still uses the local modal machinery.
+ *
+ * @param string $modal_id Modal identifier from the card definition.
+ * @return string Ready-to-print HTML attribute.
+ */
+function vance_tw_open_attr( $modal_id ) {
+	if ( 'vance-tw-modal-vance-ai' === $modal_id ) {
+		return 'data-vance-askai-open';
+	}
+	return 'data-vance-tw-open="' . esc_attr( $modal_id ) . '"';
 }
 
 /**
@@ -451,88 +442,8 @@ function vance_render_tool_widget_vance_ai() {
 		'fallback_icon_svg' => '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
 	) );
 
-	vance_tool_widget_modal( 'vance-tw-modal-vance-ai', 'Vance AI', 'vance_tw_render_vance_ai_body' );
-}
-
-function vance_tw_render_vance_ai_body() {
-	$endpoint = esc_url( home_url( '/wp-json/vance-health/v1/ai-chat' ) );
-	$nonce    = wp_create_nonce( 'wp_rest' );
-	?>
-	<div class="vance-tw-chat-messages" id="vance-tw-chat-messages">
-		<div class="vance-tw-chat-bubble bot">Welcome. I can help you explore IBD content. What would you like to know?</div>
-	</div>
-	<div class="vance-tw-chat-input-bar">
-		<input type="text" class="vance-tw-chat-input" id="vance-tw-chat-input" placeholder="Ask Vance AI…" autocomplete="off">
-		<button type="button" class="vance-tw-chat-send" id="vance-tw-chat-send">Send</button>
-	</div>
-	<script>
-	(function () {
-		'use strict';
-		var ENDPOINT = '<?php echo $endpoint; ?>';
-		var NONCE    = '<?php echo $nonce; ?>';
-		var input    = document.getElementById('vance-tw-chat-input');
-		var sendBtn  = document.getElementById('vance-tw-chat-send');
-		var area     = document.getElementById('vance-tw-chat-messages');
-		var history  = [];
-
-			function vanceEscapeHtml(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-			function vanceFormatMd(raw){
-				var t = vanceEscapeHtml(raw);
-				t = t.replace(/^[ \t]*#{1,6}[ \t]*(.+)$/gm, '<strong>$1</strong>');
-				t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-				t = t.replace(/^[ \t]*[-*][ \t]+(.+)$/gm, '\u2022 $1');
-				t = t.replace(/\n/g, '<br>');
-				return t;
-			}
-		function append(role, text) {
-			if (!area) return;
-			var bubble = document.createElement('div');
-			bubble.className = 'vance-tw-chat-bubble ' + (role === 'user' ? 'user' : 'bot');
-			if (role === 'user') { bubble.textContent = text; } else { bubble.innerHTML = vanceFormatMd(text); }
-			area.appendChild(bubble);
-			area.scrollTop = area.scrollHeight;
-		}
-
-		function send() {
-			if (!input) return;
-			var msg = (input.value || '').trim();
-			if (!msg) return;
-			append('user', msg);
-			history.push({ role: 'user', content: msg });
-			input.value = '';
-			input.disabled = true;
-			sendBtn.disabled = true;
-			append('bot', '…');
-			var thinking = area.lastElementChild;
-
-			fetch(ENDPOINT, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
-				body: JSON.stringify({ messages: history })
-			})
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (thinking && thinking.parentNode === area) { area.removeChild(thinking); }
-				var reply = (d && (d.reply || d.answer || d.content)) || 'Sorry, I could not reach the AI service just now.';
-				append('bot', reply);
-				history.push({ role: 'assistant', content: reply });
-			})
-			.catch(function () {
-				if (thinking && thinking.parentNode === area) { area.removeChild(thinking); }
-				append('bot', 'Sorry, that request failed. Please try again.');
-			})
-			.finally(function () {
-				input.disabled  = false;
-				sendBtn.disabled = false;
-				input.focus();
-			});
-		}
-
-		if (sendBtn) { sendBtn.addEventListener('click', send); }
-		if (input)   { input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); send(); } }); }
-	})();
-	</script>
-	<?php
+	// No modal emitted here: the card opens the shared Ask AI chat, which the
+	// site-wide script injects on demand.
 }
 
 // =========================================================================
@@ -658,9 +569,9 @@ function vance_render_tool_widgets_row() {
 	</style>
 
 	<?php
-	// Both modals — same scoped bodies as the standalone widgets.
+	// Content Filters keeps its local modal. The Vance AI banner opens the shared
+	// Ask AI chat instead (see vance_tw_open_attr).
 	vance_tool_widget_modal( 'vance-tw-modal-content-filters', 'Content Filters', 'vance_tw_render_content_filters_body' );
-	vance_tool_widget_modal( 'vance-tw-modal-vance-ai',        'Vance AI',        'vance_tw_render_vance_ai_body'        );
 }
 
 /**
@@ -685,7 +596,7 @@ function vance_twrow_render_banner( $card, $style ) {
 			? "background-color: " . esc_attr( $bg_end ) . "; background-image: linear-gradient(135deg, rgba(10,25,41,0.55) 0%, rgba(10,25,41,0.92) 100%), url('" . esc_url( $image ) . "'); background-position: center; background-size: cover; background-repeat: no-repeat;"
 			: "background: linear-gradient(135deg, " . esc_attr( $bg_start ) . " 0%, " . esc_attr( $bg_end ) . " 100%);";
 		?>
-		<button type="button" class="vance-twrow__banner vance-twrow__banner--image" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+		<button type="button" class="vance-twrow__banner vance-twrow__banner--image" <?php echo vance_tw_open_attr( $modal_id ); ?> aria-label="<?php echo esc_attr( $title ); ?>">
 			<div style="position: relative; padding: 28px 24px; color: white; min-height: 160px; overflow: hidden; <?php echo $bg_layers; ?>">
 				<?php if ( $eyebrow ) : ?>
 					<div style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( $accent ); ?>; opacity: 0.92; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px;"><?php echo esc_html( $eyebrow ); ?></div>
@@ -699,7 +610,7 @@ function vance_twrow_render_banner( $card, $style ) {
 	} elseif ( $style === 'pill' ) {
 		// Option 3 — minimal pill banner with right-side CTA.
 		?>
-		<button type="button" class="vance-twrow__banner vance-twrow__banner--pill" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+		<button type="button" class="vance-twrow__banner vance-twrow__banner--pill" <?php echo vance_tw_open_attr( $modal_id ); ?> aria-label="<?php echo esc_attr( $title ); ?>">
 			<!-- 2026-05-26: pill desc now wraps to multiple lines on long copy.
 			     Vertical alignment switched from `center` to `flex-start` so
 			     icon + content sit at the top when desc spans 2-3 lines.
@@ -719,7 +630,7 @@ function vance_twrow_render_banner( $card, $style ) {
 	} else {
 		// Option 1 (default) — wide horizontal banner with icon left, content right.
 		?>
-		<button type="button" class="vance-twrow__banner vance-twrow__banner--horizontal" data-vance-tw-open="<?php echo esc_attr( $modal_id ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+		<button type="button" class="vance-twrow__banner vance-twrow__banner--horizontal" <?php echo vance_tw_open_attr( $modal_id ); ?> aria-label="<?php echo esc_attr( $title ); ?>">
 			<div style="background: linear-gradient(135deg, <?php echo esc_attr( $bg_start ); ?> 0%, <?php echo esc_attr( $bg_end ); ?> 100%); padding: 24px; color: white; display: flex; align-items: center; gap: 18px; min-height: 140px;">
 				<div style="flex-shrink: 0; width: 56px; height: 56px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.20); display: flex; align-items: center; justify-content: center; color: white;">
 					<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><?php echo $svg; ?></svg>

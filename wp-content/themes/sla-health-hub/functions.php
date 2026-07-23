@@ -214,8 +214,81 @@ function vance_health_hub_scripts() {
             true
         );
     }
+
+    // Ask AI — loaded site-wide: the modal can be opened from any page, and the
+    // highlight-to-ask pill needs to be live on every article.
+    wp_enqueue_style(
+        'vance-askai',
+        get_template_directory_uri() . '/assets/css/vance-askai.css',
+        array( 'vance-main-style' ),
+        @filemtime( get_template_directory() . '/assets/css/vance-askai.css' ) ?: '1.0.0'
+    );
+    wp_enqueue_script(
+        'vance-askai',
+        get_template_directory_uri() . '/assets/js/vance-askai.js',
+        array(),
+        @filemtime( get_template_directory() . '/assets/js/vance-askai.js' ) ?: '1.0.0',
+        true
+    );
+    wp_localize_script( 'vance-askai', 'vanceAskAi', vance_askai_script_data() );
 }
 add_action( 'wp_enqueue_scripts', 'vance_health_hub_scripts' );
+
+/**
+ * Config handed to assets/js/vance-askai.js.
+ *
+ * The REST nonce is always printed so the chat endpoint can identify a
+ * logged-in user and auto-save their conversation; the JS falls back to an
+ * anonymous request if a cached page ever serves a stale nonce.
+ */
+function vance_askai_script_data() {
+    $post_id = is_singular( vance_ai_source_post_types() ) ? get_queried_object_id() : 0;
+
+    // No article context on the front page (its <article> elements are teaser
+    // cards, not reading copy) or on the dedicated Ask AI page, which hosts the
+    // full inline chat. Both would otherwise arm the selection pill.
+    if ( $post_id && ( is_front_page() || is_page_template( 'page-ask-ai.php' ) ) ) {
+        $post_id = 0;
+    }
+
+    if ( is_user_logged_in() ) {
+        $foot = sprintf(
+            /* translators: %s: dashboard URL */
+            __( 'Saved to <a href="%s">your dashboard</a>. General information from this hub only — not personal medical advice.', 'sla-health-hub' ),
+            esc_url( home_url( '/dashboard/?section=ai-chats' ) )
+        );
+    } else {
+        $foot = sprintf(
+            /* translators: %s: login URL */
+            __( '<a href="%s">Log in</a> to save your conversations. General information from this hub only — not personal medical advice.', 'sla-health-hub' ),
+            esc_url( home_url( '/login/' ) )
+        );
+    }
+
+    return array(
+        'endpoint'    => esc_url_raw( rest_url( 'vance-health/v1/ai-chat' ) ),
+        'nonce'       => wp_create_nonce( 'wp_rest' ),
+        'isLoggedIn'  => is_user_logged_in(),
+        'postId'      => $post_id,
+        'postTitle'   => $post_id ? get_the_title( $post_id ) : '',
+        'highlight'   => (bool) vance_get_theme_mod( 'vance_askai_highlight_enable', true ),
+        'title'       => __( 'Ask AI', 'sla-health-hub' ),
+        'subtitle'    => __( 'Answers drawn only from the Vance Medical Hub library', 'sla-health-hub' ),
+        'placeholder' => __( 'Ask about IBD, gut health or nutrition…', 'sla-health-hub' ),
+        'intro'       => __( 'Ask a question and I will answer using articles published on this hub, with links to the ones I used.', 'sla-health-hub' ),
+        'footNote'    => wp_kses( $foot, array( 'a' => array( 'href' => array() ) ) ),
+        'suggestions' => array(
+            __( 'What is inflammatory bowel disease?', 'sla-health-hub' ),
+            __( 'How does diet affect IBD symptoms?', 'sla-health-hub' ),
+            __( 'What is the difference between Crohn\'s and ulcerative colitis?', 'sla-health-hub' ),
+        ),
+        'i18n'        => array(
+            'askPill' => __( 'Ask AI', 'sla-health-hub' ),
+            'failed'  => __( 'The assistant is unavailable right now. Please try again shortly.', 'sla-health-hub' ),
+            'empty'   => __( 'No answer came back. Please try again.', 'sla-health-hub' ),
+        ),
+    );
+}
 
 function vance_health_hub_setup() {
     // Add default posts and comments RSS feed links to head.
@@ -1692,6 +1765,13 @@ add_action( 'wp_ajax_vance_get_calc_results', 'vance_get_calc_results' );
  * Handles User Dashboard logic (AJAX, Profiles, Bookmarks)
  */
 require get_template_directory() . '/inc/dashboard-functions.php';
+
+/**
+ * Include Ask AI Functions
+ * Grounded chat over hub content: retrieval, system prompt, REST route,
+ * and auto-save of conversations into the user's dashboard.
+ */
+require get_template_directory() . '/inc/askai-functions.php';
 
 
 /**
@@ -3747,6 +3827,30 @@ function vance_customize_register( $wp_customize ) {
         'section'     => 'vance_askai_settings',
         'type'        => 'select',
         'choices'     => $vance_model_choices,
+    ) );
+
+    // Knowledge base grounding
+    $wp_customize->add_setting( 'vance_askai_max_sources', array(
+        'default'           => 5,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_askai_max_sources', array(
+        'label'       => __( 'Articles per answer', 'sla-health-hub' ),
+        'description' => __( 'How many hub articles are retrieved and given to the AI as source material for each question. Higher means broader answers but a slower, more expensive request.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 3, 'max' => 8, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_highlight_enable', array(
+        'default'           => true,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_askai_highlight_enable', array(
+        'label'       => __( 'Highlight-to-ask', 'sla-health-hub' ),
+        'description' => __( 'Show an "Ask AI" button when a reader selects text in an article, opening the chat pre-filled with that passage.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'checkbox',
     ) );
 
 
