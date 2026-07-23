@@ -382,11 +382,11 @@
 
 .vance-askai__level {
 	position: relative;
+	/* Fills the row so there is no dead space between it and the buttons. */
 	flex: 1 1 auto;
 	min-width: 0;
-	max-width: 320px;
 	margin: 0;
-	padding: 10px 14px 8px;
+	padding: 6px 12px 4px;
 	background: linear-gradient(135deg, rgba(0, 128, 128, 0.14), rgba(174, 219, 219, 0.22));
 	border: 1px solid rgba(0, 128, 128, 0.28);
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 2px 10px rgba(10, 25, 41, 0.06);
@@ -410,12 +410,12 @@
 .vance-askai__level-label {
 	position: relative;
 	display: block;
-	font-size: 12px;
+	font-size: 11px;
 	font-weight: 600;
-	line-height: 1.4;
+	line-height: 1.3;
 	letter-spacing: 0.01em;
 	color: #0F4C4C;
-	margin-bottom: 6px;
+	margin-bottom: 1px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -438,7 +438,7 @@
 	-webkit-appearance: none;
 	appearance: none;
 	width: 100%;
-	height: 30px;
+	height: 22px;
 	margin: 0;
 	background: transparent;
 	cursor: pointer;
@@ -446,14 +446,14 @@
 
 /* Track: a recessed glass channel. */
 .vance-askai__level-input::-webkit-slider-runnable-track {
-	height: 10px;
+	height: 8px;
 	border-radius: 999px;
 	background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(174, 219, 219, 0.95));
 	border: 1px solid rgba(0, 128, 128, 0.35);
 	box-shadow: inset 0 2px 4px rgba(10, 25, 41, 0.16);
 }
 .vance-askai__level-input::-moz-range-track {
-	height: 10px;
+	height: 8px;
 	border-radius: 999px;
 	background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(174, 219, 219, 0.95));
 	border: 1px solid rgba(0, 128, 128, 0.35);
@@ -464,9 +464,9 @@
 .vance-askai__level-input::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
-	width: 26px;
-	height: 26px;
-	margin-top: -9px;
+	width: 20px;
+	height: 20px;
+	margin-top: -6px;
 	border-radius: 50%;
 	background:
 		radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 34%, rgba(255, 255, 255, 0) 60%),
@@ -476,8 +476,8 @@
 	transition: transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 .vance-askai__level-input::-moz-range-thumb {
-	width: 26px;
-	height: 26px;
+	width: 20px;
+	height: 20px;
 	border-radius: 50%;
 	background:
 		radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 34%, rgba(255, 255, 255, 0) 60%),
@@ -497,38 +497,44 @@
 	display: flex;
 	justify-content: space-between;
 	gap: 4px;
-	font-size: 10px;
+	font-size: 9px;
 	font-weight: 600;
-	line-height: 1.3;
+	line-height: 1.2;
 	letter-spacing: 0.01em;
 	text-transform: uppercase;
 	color: #0F4C4C;
 	opacity: 0.75;
-	margin-top: 0;
+	margin-top: -2px;
 }
 
 .vance-askai__level-ticks span:last-child { text-align: right; }
 
 /* --- Action row (New chat / Clear / Send) ------------------------------- */
 
-/* Send, New chat and Clear stacked one above another, beside the slider. */
+/* Send on top, New chat and Clear sharing the row beneath it. Keeps Send
+   dominant while halving the height of three full-width stacked buttons. */
 .vance-askai__actions {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 4px;
 	flex: 0 0 auto;
-	width: 150px;
-	margin-left: auto;
+	width: 210px;
+}
+
+.vance-askai__actions-row {
+	display: flex;
+	gap: 4px;
 }
 
 .vance-askai__minibtn {
 	display: inline-flex;
 	align-items: center;
-	justify-content: flex-start;
-	gap: 8px;
-	width: 100%;
-	height: 36px;
-	padding: 0 12px;
+	justify-content: center;
+	gap: 6px;
+	flex: 1 1 0;
+	min-width: 0;
+	height: 30px;
+	padding: 0 8px;
 	font-family: inherit;
 	font-size: 13px;
 	font-weight: 600;
@@ -544,13 +550,14 @@
 	border-color: var(--askai-teal);
 }
 
-.vance-askai__minibtn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.vance-askai__minibtn svg { width: 13px; height: 13px; flex: 0 0 auto; }
+.vance-askai__minibtn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Send leads the stack and stays the prominent action. */
+/* Send leads the block and stays the prominent action. */
 .vance-askai__actions .vance-askai__send {
 	width: 100%;
-	height: 44px;
-	justify-content: flex-start;
+	height: 34px;
+	justify-content: center;
 	padding: 0 12px;
 }
 
@@ -899,10 +906,9 @@
 		border: 0;
 	}
 
-	/* Not enough width for slider and button stack side by side. */
+	/* Not enough width for the slider and the button block side by side. */
 	.vance-askai__controls { flex-direction: column; }
-	.vance-askai__level { max-width: none; }
-	.vance-askai__actions { width: 100%; margin-left: 0; }
+	.vance-askai__actions { width: 100%; }
 
 	.vance-askai__msg { max-width: 92%; }
 	.vance-askai__log { padding: 16px; }

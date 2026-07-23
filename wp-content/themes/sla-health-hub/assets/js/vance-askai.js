@@ -508,10 +508,15 @@
 				// Slider sits under the input, sharing its row with the button stack.
 				'<div class="vance-askai__controls">' +
 					levelMarkup(levelId) +
+					// Send leads, with the two secondary actions sharing the row
+					// beneath it. Three full-width buttons stacked made the whole
+					// control area twice as tall as it needed to be.
 					'<div class="vance-askai__actions">' +
 						'<button type="button" class="vance-askai__send">' + ICON.send + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.send) || 'Send') + '</span></button>' +
-						'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
-						'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
+						'<div class="vance-askai__actions-row">' +
+							'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
+							'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
+						'</div>' +
 					'</div>' +
 				'</div>' +
 				'<div class="vance-askai__foot">' + (CFG.footNote || '') + '</div>' +
