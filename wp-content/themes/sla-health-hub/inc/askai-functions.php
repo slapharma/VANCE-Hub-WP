@@ -415,6 +415,7 @@ Copy each URL character-for-character from its SOURCE header. Never invent, shor
 6. Tone: professional, clinical, warm and plain-spoken.
 7. FORMATTING: clean, readable prose. Do NOT use Markdown headings or any "#" characters. You may use **bold** for key terms and simple hyphen (-) bullet points for short lists. No tables, no code blocks.
 8. PUNCTUATION: never use an em dash or an en dash anywhere in your reply. Use a comma, a colon, a full stop or brackets instead. This applies to every line, including the citation lines.
+9. LENGTH: keep answers focused, around 300 words, unless the reader explicitly asks for more depth. Never let the answer run so long that the citation lines get cut off: the "Read more" lines matter more than the last paragraph, so finish the prose early enough to write them in full.
 PROMPT;
 
 	$levels = vance_ai_reading_levels();
@@ -763,8 +764,10 @@ function vance_rest_ai_chat( $request ) {
 					'messages'    => $payload_messages,
 					'temperature' => 0.2, // Low, to keep the model on the supplied sources.
 					// Headroom for the answer plus its citation lines. At 1000 a
-					// long answer ran out mid-URL and shipped a broken link.
-					'max_tokens'  => (int) apply_filters( 'vance_ai_max_tokens', 1600 ),
+					// long answer ran out mid-URL and shipped a broken link; at
+					// 1600 a verbose "explain in detail" answer still lost its
+					// citations to the truncation guard.
+					'max_tokens'  => (int) apply_filters( 'vance_ai_max_tokens', 2000 ),
 				)
 			),
 			'headers' => array(
