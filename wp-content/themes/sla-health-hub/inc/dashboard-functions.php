@@ -818,6 +818,42 @@ function vance_append_tool_history( $user_id, $tool_slug, $payload ) {
 }
 
 /**
+ * Read a user's saved results for one tool, newest first.
+ *
+ * Counterpart to vance_append_tool_history() — same `_sla_<tool>_history` meta
+ * key. Entries are {ts, payload}; payload shape varies by tool and by capture
+ * method (structured postMessage, DOM snapshot, or placeholder), so callers
+ * must degrade gracefully on missing keys.
+ *
+ * @param int    $user_id
+ * @param string $tool_slug  Must be one of vance_known_tool_slugs().
+ * @param int    $limit      Max entries to return (0 = all).
+ * @return array[] List of {ts, payload}. Empty array if none or invalid slug.
+ */
+function vance_get_tool_history( $user_id, $tool_slug, $limit = 0 ) {
+    $user_id = (int) $user_id;
+    if ( $user_id <= 0 || ! in_array( $tool_slug, vance_known_tool_slugs(), true ) ) {
+        return array();
+    }
+
+    $meta_key = '_sla_' . str_replace( '-', '_', $tool_slug ) . '_history';
+    $entries  = get_user_meta( $user_id, $meta_key, true );
+    if ( ! is_array( $entries ) ) {
+        return array();
+    }
+
+    // Drop malformed rows so templates can assume {ts, payload}.
+    $entries = array_values( array_filter( $entries, function ( $e ) {
+        return is_array( $e ) && isset( $e['payload'] ) && is_array( $e['payload'] );
+    } ) );
+
+    if ( $limit > 0 && count( $entries ) > $limit ) {
+        $entries = array_slice( $entries, 0, $limit );
+    }
+    return $entries;
+}
+
+/**
  * AJAX: anonymous quick-register from a tool page.
  *
  * Expects POST: nonce, email, password, role, tool (optional), payload (optional JSON).

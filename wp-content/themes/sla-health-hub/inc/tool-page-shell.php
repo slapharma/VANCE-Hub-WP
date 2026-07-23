@@ -352,13 +352,45 @@ get_template_part( 'inc/register-modal' );
 
     /**
      * Iframes that cooperate by emitting postMessage get the richer payload.
-     * Iframe contract: postMessage({ type: 'VANCE_TOOL_RESULT', tool: '<slug>', payload: {...} }, '*')
+     * Iframe contract:
+     *   in  ← { type: 'VANCE_TOOL_RESULT',       tool: '<slug>', payload: {...} }
+     *   in  ← { type: 'VANCE_TOOL_SAVE_REQUEST', tool: '<slug>', payload: {...} }
+     *   out → { type: 'VANCE_TOOL_SAVE_RESULT',  tool: '<slug>', ok, pending, message }
+     *
+     * `VANCE_SAVE_MALNUTRITION_RESULT` is the malnutrition bundle's legacy flat
+     * message (type + result fields at the top level, no `payload` wrapper).
      */
+    function replyToIframe(msg) {
+        try {
+            if (iframeEl && iframeEl.contentWindow) {
+                iframeEl.contentWindow.postMessage(Object.assign({ type: 'VANCE_TOOL_SAVE_RESULT', tool: slug }, msg), '*');
+            }
+        } catch (e) { /* iframe gone — nothing to tell */ }
+    }
+
     window.addEventListener('message', function (e) {
         var d = e && e.data;
         if (!d || typeof d !== 'object') return;
+        // Only trust our own iframe — these messages trigger a write.
+        if (iframeEl && e.source !== iframeEl.contentWindow) return;
+
         if (d.type === 'VANCE_TOOL_RESULT' && d.tool === slug) {
             pendingPayload = d.payload || {};
+            return;
+        }
+        if (d.type === 'VANCE_SAVE_MALNUTRITION_RESULT' && slug === 'malnutrition-calculator') {
+            var flat = Object.assign({}, d);
+            delete flat.type;
+            pendingPayload = flat;
+            return;
+        }
+        // The iframe's own save button — run the exact same save path as the
+        // wrapper button so there is one code path and one source of truth.
+        if (d.type === 'VANCE_TOOL_SAVE_REQUEST' && d.tool === slug) {
+            if (d.payload && Object.keys(d.payload).length > 0) {
+                pendingPayload = d.payload;
+            }
+            doSave(buildPayloadAtSaveTime(), replyToIframe);
         }
     });
 
@@ -372,51 +404,69 @@ get_template_part( 'inc/register-modal' );
         return { kind: 'placeholder', note: 'No iframe data captured', capturedAt: new Date().toISOString() };
     }
 
+    /**
+     * Single save path, shared by the wrapper button and the iframe's own save
+     * button. `report` (optional) is called with { ok, pending, message } so the
+     * caller can reflect the true outcome — never assume success.
+     */
+    function doSave(payload, report) {
+        report = report || function () {};
+
+        // Anonymous → open register modal with the payload. Nothing is persisted
+        // until the account exists, so report back as pending, not saved.
+        if (!loggedIn) {
+            if (window.VanceRegisterModal && typeof window.VanceRegisterModal.open === 'function') {
+                window.VanceRegisterModal.open({
+                    tool: slug,
+                    payload: payload,
+                    onSuccess: function (resp) {
+                        report({ ok: true });
+                        showToast('Account created — opening your dashboard…', 4000);
+                        setTimeout(function () {
+                            window.location.href = (resp && resp.redirect) || '/dashboard/?vance_welcome=1';
+                        }, 600);
+                    }
+                });
+                report({ ok: false, pending: true, message: '💾 Create your free account to save' });
+            } else {
+                // Modal partial missing — graceful fallback.
+                window.location.href = '/register/?from_tool=' + encodeURIComponent(slug);
+            }
+            return;
+        }
+
+        // Logged-in → AJAX save direct.
+        if (saveBtn) saveBtn.disabled = true;
+        var fd = new FormData();
+        fd.append('action', 'vance_save_tool_result');
+        fd.append('nonce', nonce);
+        fd.append('tool', slug);
+        fd.append('payload', JSON.stringify(payload));
+        fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function (j) {
+                if (j && j.success) {
+                    report({ ok: true });
+                    showToast('Saved to your dashboard ✓', 3500);
+                    if (saveBtn) saveBtn.disabled = false;
+                } else {
+                    var msg = (j && j.data && j.data.message) || 'Could not save — please try again.';
+                    report({ ok: false, message: msg });
+                    showToast(msg, 4500);
+                    if (saveBtn) saveBtn.disabled = false;
+                }
+            })
+            .catch(function () {
+                report({ ok: false, message: 'Network error — please try again.' });
+                showToast('Network error — please try again.', 4500);
+                if (saveBtn) saveBtn.disabled = false;
+            });
+    }
+
     // Manual save click handler.
     if (saveBtn) {
         saveBtn.addEventListener('click', function () {
-            var payload = buildPayloadAtSaveTime();
-
-            // Anonymous → open register modal with the payload.
-            if (!loggedIn) {
-                if (window.VanceRegisterModal && typeof window.VanceRegisterModal.open === 'function') {
-                    window.VanceRegisterModal.open({
-                        tool: slug,
-                        payload: payload,
-                        onSuccess: function (resp) {
-                            showToast('Account created — opening your dashboard…', 4000);
-                            setTimeout(function () {
-                                window.location.href = (resp && resp.redirect) || '/dashboard/?vance_welcome=1';
-                            }, 600);
-                        }
-                    });
-                } else {
-                    // Modal partial missing — graceful fallback.
-                    window.location.href = '/register/?from_tool=' + encodeURIComponent(slug);
-                }
-                return;
-            }
-            // Logged-in → AJAX save direct.
-            saveBtn.disabled = true;
-            var fd = new FormData();
-            fd.append('action', 'vance_save_tool_result');
-            fd.append('nonce', nonce);
-            fd.append('tool', slug);
-            fd.append('payload', JSON.stringify(payload));
-            fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
-                .then(function (r) { return r.json(); })
-                .then(function (j) {
-                    if (j && j.success) {
-                        showToast('Saved to your dashboard ✓', 3500);
-                    } else {
-                        showToast((j && j.data && j.data.message) || 'Could not save — please try again.', 4500);
-                        saveBtn.disabled = false;
-                    }
-                })
-                .catch(function () {
-                    showToast('Network error — please try again.', 4500);
-                    saveBtn.disabled = false;
-                });
+            doSave(buildPayloadAtSaveTime());
         });
     }
 })();

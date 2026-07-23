@@ -741,6 +741,11 @@
             background: #16a34a;
         }
 
+        .btn-save:disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+
         /* Footer */
         .app-footer {
             text-align: center;
@@ -934,6 +939,7 @@
                         el.style.width = el.dataset.w + '%';
                     });
                 }, 100);
+                emitResult();
                 return;
             }
 
@@ -1148,7 +1154,7 @@
     </div>
 
     <!-- Save Results -->
-    <button class="btn-save" id="save-btn" onclick="saveResults(${total}, '${res.label}', '${res.level}', ${JSON.stringify(res.label)})">
+    <button class="btn-save" id="save-btn" onclick="saveResults()">
       💾 Save Results to My Dashboard
     </button>
 
@@ -1289,32 +1295,87 @@
         }
 
         // ── Save Results (posts to parent WP via postMessage) ─────────────────────────
-        function saveResults(score, label, level, riskLabel) {
+        // Contract with inc/tool-page-shell.php (see CLAUDE.md constraint #5):
+        //   out → { type: 'VANCE_TOOL_RESULT',       tool: SLUG, payload }  (structured result)
+        //   out → { type: 'VANCE_TOOL_SAVE_REQUEST', tool: SLUG, payload }  (user asked to save)
+        //   in  ← { type: 'VANCE_TOOL_SAVE_RESULT',  tool: SLUG, ok, pending, message }
+        const TOOL_SLUG = 'malnutrition-calculator';
+
+        const SAVE_BTN_LABEL = '💾 Save Results to My Dashboard';
+
+        function buildResultPayload() {
             const inp = state.lastInputs;
+            if (!inp) return null;
             const bmi = calcBMI(inp.kg, inp.cm);
-            const resultData = {
-                type: 'VANCE_SAVE_MALNUTRITION_RESULT',
+            const bmiS = scoreBMI(bmi);
+            const wlS = scoreWeightLoss(inp.weightLoss);
+            const acS = scoreAcute(inp.noIntake);
+            const ibdS = scoreSymptoms(inp);
+            const total = bmiS + wlS + acS + ibdS;
+            const res = getRecommendations(total);
+            return {
                 id: 'mc_' + Date.now(),
                 date: new Date().toISOString(),
-                score: score,
-                riskLevel: level,
-                riskLabel: label,
+                score: total,
+                maxScore: 8,
+                riskLevel: res.level,
+                riskLabel: res.label,
+                breakdown: { bmi: bmiS, weightLoss: wlS, acuteDisease: acS, ibdSymptoms: ibdS },
                 bmi: bmi,
                 bmiCat: getBMICat(bmi),
                 ibdType: inp.ibdType
             };
+        }
 
-            // Post to parent window (WP dashboard listens for this)
-            window.parent.postMessage(resultData, '*');
+        /**
+         * Push the current result up to the wrapper page as soon as it renders, so
+         * the wrapper's own "Save my screening result" button has structured data
+         * to send even if the user never clicks the button inside the iframe.
+         */
+        function emitResult() {
+            if (window.parent === window) return;
+            const payload = buildResultPayload();
+            if (!payload) return;
+            window.parent.postMessage({ type: 'VANCE_TOOL_RESULT', tool: TOOL_SLUG, payload: payload }, '*');
+            // Legacy message type — kept so any older listener keeps working.
+            window.parent.postMessage(Object.assign({ type: 'VANCE_SAVE_MALNUTRITION_RESULT' }, payload), '*');
+        }
 
-            // Visual feedback
+        function saveResults() {
+            const payload = buildResultPayload();
+            if (!payload) return;
+
             const btn = document.getElementById('save-btn');
-            if (btn) {
+
+            // Opened standalone (full-screen link) — there is no wrapper to save into.
+            if (window.parent === window) {
+                if (btn) btn.textContent = 'Open the calculator on the site to save your result';
+                return;
+            }
+
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+            window.parent.postMessage({ type: 'VANCE_TOOL_RESULT', tool: TOOL_SLUG, payload: payload }, '*');
+            window.parent.postMessage({ type: 'VANCE_TOOL_SAVE_REQUEST', tool: TOOL_SLUG, payload: payload }, '*');
+        }
+
+        // The wrapper page reports back whether the save actually persisted. Only
+        // then do we show the success state — never assume it worked.
+        window.addEventListener('message', function (e) {
+            const d = e && e.data;
+            if (!d || typeof d !== 'object') return;
+            if (d.type !== 'VANCE_TOOL_SAVE_RESULT' || d.tool !== TOOL_SLUG) return;
+            const btn = document.getElementById('save-btn');
+            if (!btn) return;
+            if (d.ok) {
                 btn.textContent = '✅ Results Saved!';
                 btn.classList.add('saved');
                 btn.disabled = true;
+                return;
             }
-        }
+            btn.disabled = false;
+            btn.classList.remove('saved');
+            btn.textContent = d.message || SAVE_BTN_LABEL;
+        });
 
         // ── Init ─────────────────────────────────────────────────────────────────────
         render();

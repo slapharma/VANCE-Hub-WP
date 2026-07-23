@@ -586,6 +586,10 @@ get_header();
                 case 'health-profile':
                     $quiz_results = get_user_meta($current_user->ID, '_sla_healthcare_quiz_results', true) ?: array();
                     $clinical_profile = get_user_meta($current_user->ID, '_sla_clinical_profile', true) ?: array();
+                    // Saved malnutrition screenings (written by vance_save_tool_result).
+                    $malnutrition_history = function_exists('vance_get_tool_history')
+                        ? vance_get_tool_history($current_user->ID, 'malnutrition-calculator', 10)
+                        : array();
                     
                     // Defaults for form
                     $defaults = array(
@@ -697,6 +701,57 @@ get_header();
                                 </form>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Malnutrition screening history -->
+                    <div class="dash-card" style="margin-top:32px;">
+                        <div class="card-header">
+                            <h3 class="card-title">Malnutrition Screening Results</h3>
+                            <a href="/malnutrition-calculator/" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white; text-decoration:none; color:#475569;"><?php echo $malnutrition_history ? 'Screen again' : 'Start screening'; ?></a>
+                        </div>
+                        <?php if (empty($malnutrition_history)): ?>
+                            <div style="text-align:center; padding:40px;">
+                                <p style="color:#64748B; margin-bottom:20px;">You haven't saved a malnutrition screening yet. Complete the calculator and choose &ldquo;Save Results&rdquo; to track your score here over time.</p>
+                                <a href="/malnutrition-calculator/" class="btn-primary" style="display:inline-block; background:#008080; color:white; text-decoration:none; padding:10px 24px; border-radius:0; font-weight:600;">Open the Calculator</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="dash-list">
+                                <?php foreach ($malnutrition_history as $entry):
+                                    $p     = $entry['payload'];
+                                    $ts    = !empty($entry['ts']) ? (int) $entry['ts'] : 0;
+                                    $when  = $ts ? date_i18n('j M Y', $ts) : '';
+                                    // Structured payloads carry a score; snapshot/placeholder saves don't.
+                                    $has_score = isset($p['score']) && is_numeric($p['score']);
+                                    $level     = isset($p['riskLevel']) ? strtolower((string) $p['riskLevel']) : '';
+                                    $level_col = $level === 'low' ? '#16a34a' : ($level === 'medium' ? '#d97706' : '#008080');
+                                    ?>
+                                    <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; flex-wrap:wrap;">
+                                            <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html($when); ?></span>
+                                            <?php if ($has_score): ?>
+                                                <span style="display:inline-flex; align-items:center; gap:10px;">
+                                                    <span style="font-size:12px; font-weight:700; color:<?php echo esc_attr($level_col); ?>; background:<?php echo esc_attr($level_col); ?>1A; padding:4px 12px;"><?php echo esc_html($p['riskLabel'] ?? ucfirst($level) . ' risk'); ?></span>
+                                                    <span style="font-size:14px; color:#0F172A; font-weight:700;">Score <?php echo esc_html($p['score']); ?><?php echo isset($p['maxScore']) ? '/' . esc_html($p['maxScore']) : ''; ?></span>
+                                                </span>
+                                            <?php else: ?>
+                                                <span style="font-size:13px; color:#64748B;">Saved result</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($has_score): ?>
+                                            <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:13px; color:#475569;">
+                                                <?php if (!empty($p['bmi'])): ?>
+                                                    <span>BMI <strong style="color:#0F172A;"><?php echo esc_html($p['bmi']); ?></strong><?php echo !empty($p['bmiCat']) ? ' (' . esc_html($p['bmiCat']) . ')' : ''; ?></span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($p['ibdType'])): ?>
+                                                    <span>IBD type <strong style="color:#0F172A;"><?php echo esc_html($p['ibdType']); ?></strong></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your healthcare team.</p>
+                        <?php endif; ?>
                     </div>
                     <script>
                     jQuery('#dashboard-additional-details-form').on('submit', function(e) {
