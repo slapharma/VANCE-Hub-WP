@@ -98,18 +98,18 @@ get_header();
     $user_roles = (array) $current_user->roles;
     $is_practitioner = in_array( 'practitioner', $user_roles );
     
-    // Theme Vars based on Role
-    $theme_primary = $is_practitioner ? '#0A1929' : '#008080'; // Navy vs Orange
-    $theme_sidebar = $is_practitioner ? '#0A1929' : '#FFFFFF';
-    $theme_sidebar_text = $is_practitioner ? '#94a3b8' : '#64748B';
-    // Lighter visual weight for the Member sidebar: less-bold labels/items than
-    // Practitioner's, while keeping the same (accessible-contrast) text color.
-    $nav_label_weight = $is_practitioner ? '700' : '600';
-    $nav_item_weight = $is_practitioner ? '500' : '400';
-    $sidebar_logo_color = $is_practitioner ? '#FFFFFF' : '#0A1929';
-    $nav_hover_bg = $is_practitioner ? 'rgba(255,255,255,0.1)' : '#F1F5F9';
-    $nav_active_color = $is_practitioner ? '#008080' : '#008080';
-    $nav_active_bg = $is_practitioner ? 'rgba(0,128,128,0.1)' : '#def4f4';
+    // Theme Vars — the refreshed light/teal design applies to every role now;
+    // $is_practitioner is only used below for a couple of content differences
+    // (professional title, home greeting), not for styling.
+    $theme_primary = '#008080';
+    $theme_sidebar = '#FFFFFF';
+    $theme_sidebar_text = '#64748B';
+    $nav_label_weight = '600';
+    $nav_item_weight = '400';
+    $sidebar_logo_color = '#0A1929';
+    $nav_hover_bg = '#F1F5F9';
+    $nav_active_color = '#008080';
+    $nav_active_bg = '#def4f4';
 
     // Navigation Configuration (Global)
     $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'home';
@@ -154,9 +154,9 @@ get_header();
 .dash-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px; color: <?php echo $sidebar_logo_color; ?>; display: flex; align-items: center; gap: 8px; text-decoration: none; }
 .dash-nav { padding: 20px 12px; flex: 1; }
 .nav-section { margin-bottom: 24px; }
-.nav-label { font-size: 11px; font-weight: <?php echo $nav_label_weight; ?>; color: <?php echo $theme_sidebar_text; ?>; text-transform: uppercase; margin: 0 0 8px 12px; letter-spacing: 0.5px; opacity: <?php echo $is_practitioner ? '0.8' : '0.7'; ?>; }
+.nav-label { font-size: 11px; font-weight: <?php echo $nav_label_weight; ?>; color: <?php echo $theme_sidebar_text; ?>; text-transform: uppercase; margin: 0 0 8px 12px; letter-spacing: 0.5px; opacity: 0.7; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: <?php echo $theme_sidebar_text; ?>; text-decoration: none; border-radius: 0; font-size: 14px; font-weight: <?php echo $nav_item_weight; ?>; transition: all 0.2s; margin-bottom: 2px; }
-.nav-item:hover { background: <?php echo $nav_hover_bg; ?>; color: <?php echo $is_practitioner ? 'white' : 'var(--dash-primary)'; ?>; }
+.nav-item:hover { background: <?php echo $nav_hover_bg; ?>; color: var(--dash-primary); }
 .nav-item.active { background: <?php echo $nav_active_bg; ?>; color: <?php echo $nav_active_color; ?>; }
 
 /* Header */
@@ -176,7 +176,7 @@ get_header();
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .card-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px; margin: 0; }
 .card-icon { width: 36px; height: 36px; background: #F8FAFC; border-radius: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--dash-primary); }
-.card-link { font-size: 13px; font-weight: 600; color: <?php echo $is_practitioner ? '#0369A1' : '#008080'; ?>; text-decoration: none; cursor: pointer; border: none; background: none; }
+.card-link { font-size: 13px; font-weight: 600; color: #008080; text-decoration: none; cursor: pointer; border: none; background: none; }
 
 /* List Items */
 .dash-list { display: flex; flex-direction: column; gap: 0; }
@@ -203,7 +203,7 @@ get_header();
             <a href="/" class="dash-logo" style="display: flex; align-items: center; gap: 0; text-decoration: none;">
                 <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 50px; width: auto; object-fit: contain;">
             </a>
-            <button class="mobile-toggle" style="margin-left: auto; color: <?php echo $is_practitioner ? 'white' : '#0A1929'; ?>;" onclick="toggleSidebar()">✕</button>
+            <button class="mobile-toggle" style="margin-left: auto; color: #0A1929;" onclick="toggleSidebar()">✕</button>
         </div>
 
         <!-- Nav Items Loop -->
