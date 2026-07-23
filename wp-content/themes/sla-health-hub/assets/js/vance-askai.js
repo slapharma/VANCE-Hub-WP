@@ -177,8 +177,12 @@
 		// Citations: "Read more: <title> | <url>" becomes a titled link. The
 		// separator class still accepts dashes so conversations saved before the
 		// format changed keep rendering as links.
+		//
+		// The URL must carry a path segment after the host. That rejects an
+		// address the model was cut off part-way through, which would otherwise
+		// render as a confident link to nowhere.
 		text = text.replace(
-			/^[ \t]*Read more:[ \t]*(.+?)[ \t]*[|—–-][ \t]*(https?:\/\/[^\s<]+?)[ \t]*$/gim,
+			/^[ \t]*Read more:[ \t]*(.+?)[ \t]*[|—–-][ \t]*(https?:\/\/[^\s<\/]+\/[^\s<]*?)[ \t]*$/gim,
 			'<a class="vance-askai__cite" href="$2" target="_blank" rel="noopener">$1</a>'
 		);
 

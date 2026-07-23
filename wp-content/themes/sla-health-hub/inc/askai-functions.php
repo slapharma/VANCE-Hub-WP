@@ -641,6 +641,39 @@ function vance_rest_ai_chat_clear( $request ) {
 }
 
 /**
+ * Drop a citation line that the model ran out of tokens part-way through.
+ *
+ * A reply cut off mid-URL would otherwise be rendered as a link to a truncated
+ * address, which looks authoritative and goes nowhere. Only the trailing line is
+ * considered, and only when the model actually hit the length limit.
+ *
+ * @param string $reply  Raw reply.
+ * @param string $finish finish_reason reported by the API.
+ * @return string
+ */
+function vance_ai_drop_truncated_citation( $reply, $finish ) {
+	if ( 'length' !== $finish ) {
+		return $reply;
+	}
+
+	$lines = explode( "\n", rtrim( $reply ) );
+	$last  = trim( (string) end( $lines ) );
+
+	if ( 0 !== stripos( $last, 'Read more:' ) ) {
+		return $reply;
+	}
+
+	// A complete citation ends in a URL with a path or a trailing slash. Anything
+	// shorter than that was cut off mid-address.
+	if ( preg_match( '#https?://[^\s]+\.[a-z]{2,}(?:\.[a-z]{2,})?/\S*$#i', $last ) ) {
+		return $reply;
+	}
+
+	array_pop( $lines );
+	return rtrim( implode( "\n", $lines ) );
+}
+
+/**
  * Handle a chat turn: retrieve hub sources, ask the model, store the result.
  *
  * @param WP_REST_Request $request Request.
@@ -729,7 +762,9 @@ function vance_rest_ai_chat( $request ) {
 					'model'       => $model,
 					'messages'    => $payload_messages,
 					'temperature' => 0.2, // Low, to keep the model on the supplied sources.
-					'max_tokens'  => 1000,
+					// Headroom for the answer plus its citation lines. At 1000 a
+					// long answer ran out mid-URL and shipped a broken link.
+					'max_tokens'  => (int) apply_filters( 'vance_ai_max_tokens', 1600 ),
 				)
 			),
 			'headers' => array(
@@ -766,6 +801,9 @@ function vance_rest_ai_chat( $request ) {
 	if ( '' === trim( $reply ) ) {
 		return new WP_Error( 'api_error', __( 'The AI service returned an empty reply.', 'sla-health-hub' ), array( 'status' => 502 ) );
 	}
+
+	$finish = isset( $decoded['choices'][0]['finish_reason'] ) ? $decoded['choices'][0]['finish_reason'] : '';
+	$reply  = vance_ai_drop_truncated_citation( $reply, $finish );
 
 	// --- Store the conversation -------------------------------------------
 	$saved = false;
