@@ -111,12 +111,13 @@ get_header();
     $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'home';
     // Back-compat: legacy ?tab=calculators links resolve to the new tools tab.
     if ( $current_tab === 'calculators' ) { $current_tab = 'tools'; }
+    // Back-compat: legacy ?tab=clinical-profile links resolve to the renamed Health Profile tab.
+    if ( $current_tab === 'clinical-profile' ) { $current_tab = 'health-profile'; }
     $nav_items = [
         'main' => [
             'home'        => ['label' => 'Dashboard', 'icon' => '📊'],
             'profile'     => ['label' => 'My Profile', 'icon' => '👤'],
-            'clinical-profile' => ['label' => 'Clinical Profile', 'icon' => '🩺'],
-            'records'     => ['label' => 'My Records', 'icon' => '📋'],
+            'health-profile' => ['label' => 'Health Profile', 'icon' => '🩺'],
             'tools' => ['label' => 'My Tools', 'icon' => '🧮'],
         ],
         'learning' => [
@@ -126,12 +127,9 @@ get_header();
         ],
         'communication' => [
             'notes'    => ['label' => 'My Notes', 'icon' => '📝'],
-            'ai-chats' => ['label' => 'My VANCE-Ai Chats', 'icon' => '🤖'],
+            'ai-chats' => ['label' => 'My VANCE-Ai', 'icon' => '🤖'],
             'messages' => ['label' => 'My Messages', 'icon' => '💬'],
         ],
-        'misc' => [
-            'high-score' => ['label' => 'Play to Win', 'icon' => '🏆'],
-        ]
     ];
 ?>
 
@@ -160,7 +158,6 @@ get_header();
 /* Header */
 .dash-header { height: 64px; background: white; border-bottom: 1px solid var(--dash-border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 998; }
 .page-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: #0A1929; display: flex; align-items: center; gap: 8px; }
-.role-badge { background: <?php echo $is_practitioner ? '#E0F2FE' : '#aedbdb'; ?>; color: <?php echo $is_practitioner ? '#0369A1' : '#9A3412'; ?>; font-size: 11px; padding: 2px 8px; border-radius: 0; text-transform: uppercase; font-weight: 700; border: 1px solid <?php echo $is_practitioner ? '#BAE6FD' : '#78bfbf'; ?>; }
 .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .profile-avatar { width: 32px; height: 32px; border-radius: 0; object-fit: cover; border: 1px solid #E2E8F0; }
 
@@ -222,9 +219,6 @@ get_header();
             <?php endforeach; ?>
 
             <div class="nav-section" style="margin-top: auto; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 20px;">
-                <div class="nav-item" style="cursor: pointer;" onclick="switchRole('<?php echo $is_practitioner ? 'subscriber' : 'practitioner'; ?>')">
-                    <span style="width:20px;text-align:center;">🔄</span> Switch to <?php echo $is_practitioner ? 'Patient' : 'Practitioner'; ?>
-                </div>
                 <a href="<?php echo wp_logout_url(home_url()); ?>" class="nav-item"><span style="width:20px;text-align:center;">🚪</span> Log Out</a>
             </div>
         </nav>
@@ -244,18 +238,12 @@ get_header();
                             break;
                         }
                     }
-                    echo $tab_label; 
-                    ?> 
-                    <span class="role-badge"><?php echo $is_practitioner ? 'Practitioner' : 'Patient'; ?></span>
+                    echo $tab_label;
+                    ?>
                 </div>
             </div>
-            
+
             <div style="display: flex; align-items: center; gap: 20px;">
-                 <!-- Toggle in Header as backup/quick access -->
-                 <button onclick="switchRole('<?php echo $is_practitioner ? 'subscriber' : 'practitioner'; ?>')" style="font-size:12px; border:1px solid #E2E8F0; background:white; padding:4px 10px; border-radius:0; cursor:pointer; color:#64748B;">
-                    View as <?php echo $is_practitioner ? 'Patient' : 'Pro'; ?>
-                 </button>
-                
                 <div class="user-profile">
                     <div class="dash-user-meta">
                         <div style="font-size: 14px; font-weight: 600; color: #0F172A;"><?php echo esc_html($first_name); ?></div>
@@ -283,11 +271,9 @@ get_header();
                         <?php 
                         switch($current_tab) {
                             case 'home': echo $is_practitioner ? 'You have 3 patient updates pending review.' : "Hi {$first_name}, welcome back to your Gastro Health Hub."; break;
-                            case 'clinical-profile': echo 'View your health discovery results and update your clinical profile details.'; break;
-                            case 'records': echo 'Access and manage your uploaded health records and posters.'; break;
+                            case 'health-profile': echo 'View your health discovery results and update your health profile details.'; break;
                             case 'notes': echo 'Your private clinical and personal notes.'; break;
                             case 'ai-chats': echo 'History of your conversations with VANCE-Ai.'; break;
-                            case 'high-score': echo ''; break; // Play to Win — no subtitle
                             default: echo '';
                         }
                         ?>
@@ -451,17 +437,18 @@ get_header();
                             <?php endif; ?>
                         </div>
 
-                        <!-- 5. GAME SCORE -->
-                        <div class="d-card d-col-4">
+                        <!-- 5. HEALTH PROFILE PROMO -->
+                        <?php $has_health_profile = (bool) get_user_meta( $current_user->ID, '_sla_clinical_profile', true ); ?>
+                        <div class="d-card d-col-4" style="background: linear-gradient(135deg, #008080, #0A1929); color: white; border: none;">
                             <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">🏆</span> Top Score</div>
-                                <a href="?tab=high-score" class="card-link">Play</a>
+                                <div class="d-card-title" style="color: white;"><span class="d-icon-box" style="background: rgba(255,255,255,0.15);">🩺</span> Health Profile</div>
                             </div>
-                            <div style="text-align:center; padding:10px;">
-                                <?php $high_score = get_user_meta($current_user->ID, '_sla_high_score', true) ?: 0; ?>
-                                <div style="font-size:36px; font-weight:800; color:#008080; line-height:1; margin-bottom:8px;"><?php echo number_format($high_score); ?></div>
-                                <div style="font-size:11px; color:#64748B; text-transform:uppercase; font-weight:600;">Battleship EPA Points</div>
-                            </div>
+                            <p style="font-size:13px; color:rgba(255,255,255,0.85); line-height:1.5; margin: 0 0 16px 0;">
+                                <?php echo $has_health_profile
+                                    ? 'Keep your Health Profile up to date so your care stays personalised.'
+                                    : 'Complete your Health Profile to get personalised content and tools.'; ?>
+                            </p>
+                            <a href="?tab=health-profile" class="card-link" style="color:white; font-weight:700;"><?php echo $has_health_profile ? 'Update Health Profile →' : 'Complete Health Profile →'; ?></a>
                         </div>
                     </div>
                 <?php break;
@@ -593,7 +580,7 @@ get_header();
                     </script>
                 <?php break;
 
-                case 'clinical-profile':
+                case 'health-profile':
                     $quiz_results = get_user_meta($current_user->ID, '_sla_healthcare_quiz_results', true) ?: array();
                     $clinical_profile = get_user_meta($current_user->ID, '_sla_clinical_profile', true) ?: array();
                     
@@ -609,14 +596,14 @@ get_header();
                         <!-- Quiz Results Section -->
                         <div class="dash-card">
                             <div class="card-header">
-                                <h3 class="card-title">My Clinical Profile Responses</h3>
+                                <h3 class="card-title">My Health Profile Responses</h3>
                                 <?php if($quiz_results): ?>
                                     <button onclick="openQuizModal(1)" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white;">Edit Answers</button>
                                 <?php endif; ?>
                             </div>
                             <?php if(empty($quiz_results)): ?>
                                 <div style="text-align:center; padding:40px;">
-                                    <p style="color:#64748B; margin-bottom:20px;">You haven't completed your clinical profile responses yet.</p>
+                                    <p style="color:#64748B; margin-bottom:20px;">You haven't completed your health profile responses yet.</p>
                                     <button onclick="openQuizModal()" class="btn-primary" style="display:inline-block; background:#008080; color:white; border:none; padding:10px 24px; border-radius:0; font-weight:600; cursor:pointer;">Start Discovery Quiz</button>
                                 </div>
                             <?php else: ?>
@@ -660,7 +647,7 @@ get_header();
                         <!-- Combined Profile Details Section -->
                         <div class="dash-card">
                             <div class="card-header">
-                                <h3 class="card-title">Clinical Details & Lifestyle</h3>
+                                <h3 class="card-title">Health Details & Lifestyle</h3>
                                 <button onclick="openClinicalInfoModal()" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white;">Update Details</button>
                             </div>
                             
@@ -723,96 +710,15 @@ get_header();
                     </script>
                 <?php break;
 
-                case 'records': ?>
-                    <div class="dash-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                            <h3 class="card-title">My Documents</h3>
-                            <button onclick="triggerPosterUpload()" style="background:#F1F5F9; border:1px dashed #CBD5E1; color:#0A1929; padding:8px 16px; border-radius:0; cursor:pointer; font-weight:600; font-size:13px;">+ Upload PDF</button>
-                            <input type="file" id="poster-uploader" style="display:none;" accept=".pdf" onchange="uploadPoster(this)">
-                        </div>
-                        <?php 
-                        $posters = get_user_meta($current_user->ID, '_sla_posters', true) ?: array();
-                        if(empty($posters)): ?>
-                            <div style="text-align:center; padding:48px; background:#F8FAFC; border:2px dashed #E2E8F0; border-radius:0;">
-                                <p style="color:#64748B; margin-bottom:16px;">No records found. Upload your health posters or medical records.</p>
-                            </div>
-                        <?php else: ?>
-                            <div class="dash-list">
-                                <?php 
-                                $posters_safe = is_array($posters) ? $posters : array();
-                                foreach(array_reverse($posters_safe) as $poster): ?>
-                                <div class="list-item" style="padding:16px 0;">
-                                    <div style="display:flex; gap:16px; align-items:center; flex:1;">
-                                        <div style="width:48px; height:48px; background:#F1F5F9; border-radius:0; display:flex; align-items:center; justify-content:center; font-size:24px;">📄</div>
-                                        <div>
-                                            <div class="item-title"><?php echo esc_html($poster['name']); ?></div>
-                                            <div class="item-meta">Uploaded on <?php echo date('M j, Y', strtotime($poster['date'])); ?></div>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex; gap:12px; align-items:center;">
-                                        <a href="/ask-ai/?context=document_eval&doc_id=<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>" class="card-link" style="color:#0A1929; font-weight:700;">Ask VANCE-Ai</a>
-                                        <a href="/ask-ai/?context=view_eval&doc_id=<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>" class="card-link" style="color:#008080; font-weight:700;">View AI</a>
-                                        <a href="<?php echo esc_url($poster['url']); ?>" target="_blank" class="card-link">View</a>
-                                        <button onclick="deletePoster(<?php echo isset($poster['id']) ? $poster['id'] : 0; ?>)" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600;">Delete</button>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Blood Test Analyzer -->
-                    <style>
-                        .bt-section-header { display:flex; align-items:center; justify-content:space-between; margin:32px 0 16px; }
-                        .bt-section-title { font-size:18px; font-weight:800; color:#0A1929; font-family:'Outfit',sans-serif; display:flex; align-items:center; gap:10px; }
-                        .bt-section-badge { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; background:#def4f4; color:#008080; border:1px solid rgba(0,128,128,0.2); padding:3px 10px; border-radius:0; }
-                        .bt-tool-card { background:white; border:1px solid #E2E8F0; border-radius:0; overflow:hidden; box-shadow:0 4px 16px rgba(10,25,41,0.06); }
-                        .bt-tool-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; }
-                        .bt-tool-bar-left { display:flex; align-items:center; gap:10px; }
-                        .bt-tool-icon { width:30px; height:30px; background:linear-gradient(135deg,#fd4f00,#ff7a33); border-radius:0; display:flex; align-items:center; justify-content:center; font-size:14px; }
-                        .bt-tool-name { font-size:13px; font-weight:700; color:#0f172a; }
-                        .bt-tool-sub { font-size:11px; color:#64748b; }
-                        .bt-tool-bar-right { display:flex; gap:8px; }
-                        .bt-tool-btn { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; background:white; border:1px solid #e2e8f0; border-radius:0; font-size:12px; font-weight:600; color:#475569; cursor:pointer; text-decoration:none; transition:all 0.2s; }
-                        .bt-tool-btn:hover { background:#f1f5f9; }
-                        .bt-iframe { width:100%; height:820px; border:none; display:block; }
-                        @media (max-width:768px) { .bt-iframe { height:650px; } .bt-tool-bar { flex-direction:column; gap:10px; align-items:flex-start; } }
-                    </style>
-                    <div class="bt-section-header">
-                        <div class="bt-section-title">🩸 Blood Test Analyser <span class="bt-section-badge">Clinical Tool</span></div>
-                        <a href="/blood-test/" class="bt-tool-btn" style="font-size:11px;">Open Full Page →</a>
-                    </div>
-                    <div class="bt-tool-card">
-                        <div class="bt-tool-bar">
-                            <div class="bt-tool-bar-left">
-                                <div class="bt-tool-icon">🧪</div>
-                                <div>
-                                    <div class="bt-tool-name">IBD Blood Test Analyser</div>
-                                    <div class="bt-tool-sub">Vance Medical · Precision Diagnostics</div>
-                                </div>
-                            </div>
-                            <div class="bt-tool-bar-right">
-                                <button class="bt-tool-btn" onclick="document.getElementById('bt-iframe').contentWindow.location.reload()">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                                    Reset
-                                </button>
-                            </div>
-                        </div>
-                        <iframe id="bt-iframe" class="bt-iframe" src="<?php echo get_template_directory_uri(); ?>/assets/tools/blood-test/index.html" loading="lazy" title="Blood Test Analyser" allow="clipboard-write"></iframe>
-                    </div>
-                <?php break;
-
                 case 'tools':
                     // Mirror the public /tools-resources/ card grid so logged-in users
                     // see the same tool catalogue with consistent brand styling. Cards
                     // link to the per-tool wrapper pages; saving results from the
                     // wrappers is now logged-in-aware (see vance_save_tool_result).
                     $dash_tools = array(
-                        array( 'slug' => 'omega-3-calculator',     'page_url' => '/omega-3-calculator/',     'name' => 'Omega-3 Calculator',     'tag' => 'Nutrition',        'desc' => 'EPA + DHA dosage optimiser based on body weight, dietary intake, and clinical guidance.',                                  'colors' => array( '#008080', '#006666', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12c2.5-3.5 6.5-5 9-5s6.5 1.5 9 5c-2.5 3.5-6.5 5-9 5s-6.5-1.5-9-5zm12 0a3 3 0 11-6 0 3 3 0 016 0z"/>' ),
-                        array( 'slug' => 'malnutrition-calculator','page_url' => '/malnutrition-calculator/','name' => 'Malnutrition Calculator','tag' => 'IBD Screening',    'desc' => '11-step risk screener combining MUST, IBD-NST, and GLIM criteria into one actionable score.',                                'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' ),
-                        array( 'slug' => 'blood-test',             'page_url' => '/blood-test/',             'name' => 'Blood Test Analyser',    'tag' => 'Lab Results',      'desc' => 'Plain-language analysis of your blood panel results, flagging anything outside reference ranges.',                            'colors' => array( '#aedbdb', '#88c5c5', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>' ),
-                        array( 'slug' => 'ibd-recipes',            'page_url' => '/ibd-recipies/',            'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'EPA-rich, gut-friendly recipes with full nutrition data and weekly plan builder.',                                            'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
-                        array( 'slug' => 'healthcare-quiz',        'page_url' => '/healthcare-quiz/',         'name' => 'IBD Health Quiz',        'tag' => 'Self-Assessment',  'desc' => 'Short evidence-based questionnaire on symptoms, triggers, and lifestyle factors. Get an instant clinician-shareable summary.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
+                        array( 'slug' => 'healthcare-quiz',        'page_url' => '/healthcare-quiz/',         'name' => 'IBD Health Quiz',        'tag' => 'Self-Assessment',  'desc' => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
+                        array( 'slug' => 'ibd-recipes',            'page_url' => '/ibd-recipies/',            'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely — saving plans prompts a quick signup.', 'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
+                        array( 'slug' => 'malnutrition-calculator','page_url' => '/malnutrition-calculator/','name' => 'Malnutrition Calculator','tag' => 'IBD Screening',    'desc' => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.', 'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' ),
                     );
                     ?>
                     <style>
@@ -1192,92 +1098,14 @@ get_header();
                     </div>
                 <?php break;
 
-                case 'high-score': ?>
-                    <div class="dash-grid-v2">
-                        <div class="d-card d-col-8">
-                            <iframe src="<?php echo get_template_directory_uri(); ?>/assets/games/pacman-vance/index.html?user=<?php echo urlencode($first_name); ?>" style="width:100%; height:600px; border:none; border-radius:0; background:#F0F9FF; display:block;" scrolling="no" allow="autoplay; fullscreen"></iframe>
-                        </div>
-                        <div class="d-card d-col-4">
-                            <div class="d-card-header">
-                                <div class="d-card-title">🏆 Leaderboard</div>
-                            </div>
-                            <div style="font-size:13px; color:#64748B; background:#F8FAFC; padding:12px; border-radius:0; text-align:center;">
-                                <strong>Top Agents</strong><br><br>
-                                <?php 
-                                $leaderboard = get_option('vance_game_leaderboard', array());
-                                if(empty($leaderboard)) echo 'Be the first to score!';
-                                else {
-                                    echo '<div style="text-align:left;">';
-                                    foreach(array_slice($leaderboard, 0, 10) as $i => $entry) {
-                                        echo '<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee;">';
-                                        echo '<span>' . ($i+1) . '. ' . esc_html($entry['user']) . '</span>';
-                                        echo '<span style="font-weight:700; color:#008080;">' . number_format($entry['score']) . '</span>';
-                                        echo '</div>';
-                                    }
-                                    echo '</div>';
-                                }
-                                ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php break;
-
             endswitch; ?>
         </div>
     </main>
 </div>
 
 <script>
-    // Game Listener
-    window.addEventListener('message', function(e) {
-        if(e.data.type === 'GAME_SCORE') {
-            // Save Score
-            jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                action: 'vance_save_game_score',
-                score: e.data.score,
-                nonce: '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>'
-            }, function(res) {
-                if(res.success) {
-                    console.log('Score saved!');
-                    // Optionally refresh leaderboard here
-                    if(location.search.includes('high-score')) location.reload();
-                }
-            });
-        }
-    });
-
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('active');
-    }
-    
-    // Role Switching
-    function switchRole(role) {
-        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-            action: 'vance_switch_role', role: role, nonce: '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>'
-        }, function(res) {
-            if(res.success) location.reload(); else alert('Error: ' + res.data);
-        });
-    }
-
-    // Records/Posters
-    function triggerPosterUpload() { document.getElementById('poster-uploader').click(); }
-    function uploadPoster(input) {
-        if (input.files[0]) {
-            var fd = new FormData();
-            fd.append('action', 'vance_upload_poster');
-            fd.append('poster', input.files[0]);
-            fd.append('nonce', '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>');
-            jQuery.ajax({
-                url: '<?php echo admin_url('admin-ajax.php'); ?>', type: 'POST', data: fd, processData: false, contentType: false,
-                success: function(res) { if(res.success) location.reload(); else alert(res.data); }
-            });
-        }
-    }
-    function deletePoster(id) {
-         if(!confirm('Delete this file?')) return;
-         jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-            action: 'vance_delete_poster', id: id, nonce: '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>'
-        }, function(res) { if(res.success) location.reload(); else alert(res.data); });
     }
 
     // Bookmarks
