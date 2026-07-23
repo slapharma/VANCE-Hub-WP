@@ -2,7 +2,8 @@
  * VANCE-Ai — shared chat controller.
  *
  * One engine drives every chat surface on the site:
- *   - the site-wide modal   (opened by any [data-vance-askai-open] element)
+ *   - the site-wide modal   (opened by any [data-vance-askai-open] element;
+ *                            set the value to "new" to start a fresh chat)
  *   - the inline mount      (#vance-askai-inline on the VANCE-Ai page)
  *   - highlight-to-ask      (select text in an article, tap the pill)
  *   - the first-visit intro popup on articles
@@ -1061,6 +1062,13 @@
 			var trigger = event.target.closest('[data-vance-askai-open]');
 			if (trigger) {
 				event.preventDefault();
+				// data-vance-askai-open="new" starts a fresh conversation instead
+				// of reopening the one still held in this tab's session. Used by
+				// the dashboard's "New Chat" action, where reopening the previous
+				// exchange would contradict the label.
+				if ('new' === trigger.getAttribute('data-vance-askai-open')) {
+					resetConversation();
+				}
 				openModal();
 			}
 		});

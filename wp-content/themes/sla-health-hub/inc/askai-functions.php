@@ -571,6 +571,12 @@ function vance_ai_autosave_conversation( $user_id, $conversation_id, $transcript
 	}
 
 	update_user_meta( $user_id, '_sla_saved_chats', $chats );
+
+	// This write happens in a REST request, so nothing else invalidates the
+	// caller's cached dashboard. Drop their private cache copy so the new
+	// conversation is visible the moment they open it. No-op without LiteSpeed.
+	do_action( 'litespeed_purge_private_all' );
+
 	return true;
 }
 

@@ -203,7 +203,7 @@ $agent_data = array(
                         printf(
                             /* translators: %s: dashboard URL */
                             esc_html__( 'Conversations save automatically to %s.', 'sla-health-hub' ),
-                            '<a href="' . esc_url( home_url( '/dashboard/?section=ai-chats' ) ) . '">' . esc_html__( 'your dashboard', 'sla-health-hub' ) . '</a>'
+                            '<a href="' . esc_url( home_url( '/dashboard/?tab=ai-chats' ) ) . '">' . esc_html__( 'your dashboard', 'sla-health-hub' ) . '</a>'
                         );
                     } else {
                         printf(
