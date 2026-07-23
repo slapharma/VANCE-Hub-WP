@@ -784,6 +784,8 @@ function vance_admin_messages_for_user( $user_id, $include_read = false ) {
 
     $now = time();
     $user_role_meta = get_user_meta( $user_id, '_sla_audience_role', true );
+    $user_data = get_userdata( $user_id );
+    $joined_ts = $user_data ? strtotime( $user_data->user_registered ) : 0;
 
     $posts = get_posts( array(
         'post_type'      => 'vance_message',
@@ -795,6 +797,9 @@ function vance_admin_messages_for_user( $user_id, $include_read = false ) {
 
     $out = array();
     foreach ( $posts as $p ) {
+        // Only show messages sent on or after the day this user joined.
+        if ( $joined_ts && strtotime( $p->post_date ) < strtotime( 'midnight', $joined_ts ) ) continue;
+
         $exp = (int) get_post_meta( $p->ID, '_sla_msg_expires', true );
         if ( $exp && $exp < $now ) continue;
 
