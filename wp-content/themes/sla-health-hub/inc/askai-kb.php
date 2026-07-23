@@ -492,7 +492,7 @@ function vance_kb_source_from_post( $post, $terms, $budget ) {
 
 	return array(
 		'id'        => $post->ID,
-		'title'     => get_the_title( $post ),
+		'title'     => vance_ai_clean_title( get_the_title( $post ) ),
 		'url'       => (string) get_post_meta( $post->ID, '_vance_kb_source_url', true ),
 		'excerpt'   => $excerpt,
 		'primary'   => false,

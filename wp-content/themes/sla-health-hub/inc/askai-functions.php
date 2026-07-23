@@ -197,6 +197,21 @@ function vance_ai_build_excerpt( $post, $terms, $budget = 300 ) {
 }
 
 /**
+ * Decode a post title for use in a source header and a citation line.
+ *
+ * WordPress texturises titles, so a possessive arrives as "Crohn&#8217;s". The
+ * client escapes ampersands before rendering, which would print the entity
+ * verbatim in the "Read more" link, so titles are decoded here at the source.
+ *
+ * @param string $title Raw title.
+ * @return string
+ */
+function vance_ai_clean_title( $title ) {
+	$title = html_entity_decode( (string) $title, ENT_QUOTES, 'UTF-8' );
+	return trim( preg_replace( '/\s+/u', ' ', $title ) );
+}
+
+/**
  * Flatten a chunk of HTML into readable plain text.
  *
  * @param string $html Raw HTML.
@@ -309,7 +324,7 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 			if ( str_word_count( $primary_excerpt ) >= 20 ) {
 				$sources[] = array(
 					'id'      => $post->ID,
-					'title'   => get_the_title( $post ),
+					'title'   => vance_ai_clean_title( get_the_title( $post ) ),
 					'url'     => get_permalink( $post ),
 					'excerpt' => $primary_excerpt,
 					'primary' => true,
@@ -371,7 +386,7 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 
 		$sources[] = array(
 			'id'      => $post->ID,
-			'title'   => get_the_title( $post ),
+			'title'   => vance_ai_clean_title( get_the_title( $post ) ),
 			'url'     => get_permalink( $post ),
 			'excerpt' => $excerpt,
 			'primary' => false,

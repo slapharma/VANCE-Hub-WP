@@ -120,7 +120,7 @@ function vance_ai_gi_documents() {
 		}
 
 		$page  = vance_ai_find_gi_page( $slug );
-		$title = $page ? get_the_title( $page ) : ucwords( str_replace( '-', ' ', $slug ) );
+		$title = $page ? vance_ai_clean_title( get_the_title( $page ) ) : ucwords( str_replace( '-', ' ', $slug ) );
 		$url   = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
 		$url   = set_url_scheme( $url, 'https' );
 
