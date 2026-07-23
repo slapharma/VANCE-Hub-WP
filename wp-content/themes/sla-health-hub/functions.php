@@ -1167,7 +1167,9 @@ function vance_auth_modal_shortcode( $atts ) {
     $nonces = array(
         'google' => wp_create_nonce( 'google_oauth_nonce' ),
         'login'  => wp_create_nonce( 'vance_login_nonce' ),
-        'signup' => wp_create_nonce( 'vance_signup_nonce' ),
+        // Sign-up tab posts to the same vance_quick_register handler as the
+        // tool-page / VANCE-Ai register modal (constraint #5: paired names).
+        'signup' => wp_create_nonce( 'vance_quick_register' ),
     );
 
     $ajax_url    = admin_url( 'admin-ajax.php' );
@@ -1205,6 +1207,11 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-field label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:6px}
     .vance-auth-field input{width:100%;padding:11px 14px;border:1.5px solid #e0e6e6;border-radius:8px;font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
     .vance-auth-field input:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
+    .vance-auth-field select{width:100%;padding:11px 14px;border:1.5px solid #e0e6e6;border-radius:8px;font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
+    .vance-auth-field select:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
+    .vance-auth-consent{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#666;line-height:1.55;cursor:pointer;margin:0 0 12px;font-weight:400}
+    .vance-auth-consent input{width:auto;margin-top:2px}
+    .vance-auth-consent a{color:#008080}
     .vance-auth-forgot{text-align:right;margin:-6px 0 14px}
     .vance-auth-forgot a{color:#008080;text-decoration:none;font-size:13px}
     .vance-auth-forgot a:hover{text-decoration:underline}
@@ -1268,17 +1275,35 @@ function vance_auth_modal_shortcode( $atts ) {
 
             <form class="vance-auth-form" id="vance-signup" novalidate>
                 <div class="vance-auth-field">
-                    <label for="vance-signup-name">Full name</label>
-                    <input id="vance-signup-name" type="text" name="name" required autocomplete="name">
-                </div>
-                <div class="vance-auth-field">
                     <label for="vance-signup-email">Email</label>
-                    <input id="vance-signup-email" type="email" name="email" required autocomplete="email">
+                    <input id="vance-signup-email" type="email" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
                 </div>
                 <div class="vance-auth-field">
                     <label for="vance-signup-password">Password (min 8 characters)</label>
-                    <input id="vance-signup-password" type="password" name="password" minlength="8" required autocomplete="new-password">
+                    <input id="vance-signup-password" type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="••••••••">
                 </div>
+                <div class="vance-auth-field">
+                    <label for="vance-signup-role">I am a…</label>
+                    <select id="vance-signup-role" name="role">
+                        <option value="patient">Patient</option>
+                        <option value="caregiver">Caregiver / family</option>
+                        <option value="hcp">Healthcare professional</option>
+                        <option value="researcher">Researcher</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <!-- Honeypot — bots fill anything visible; real users don't fill display:none fields -->
+                <div style="position:absolute;left:-5000px;" aria-hidden="true">
+                    <input type="text" name="vance_hp" tabindex="-1" value="">
+                </div>
+                <label class="vance-auth-consent">
+                    <input type="checkbox" name="consent_terms" value="1" required>
+                    <span>I agree to the <a href="<?php echo esc_url( home_url( '/terms-of-use/' ) ); ?>" target="_blank">Terms</a> and <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>" target="_blank">Privacy Policy</a>, and to any results or health information I save being stored so I can see them in my dashboard.</span>
+                </label>
+                <label class="vance-auth-consent">
+                    <input type="checkbox" name="consent_marketing" value="1">
+                    <span>Email me occasional updates about new tools and resources. Optional, unsubscribe anytime.</span>
+                </label>
                 <button type="submit" class="vance-auth-submit" data-label="Create account">Create account</button>
             </form>
 
@@ -1353,19 +1378,31 @@ function vance_auth_modal_shortcode( $atts ) {
             }).catch(function(){ showError('Network error — try again'); unlockButton(btn); });
         });
 
-        // Email signup
+        // Email signup — same form + vance_quick_register handler as the
+        // tool-page / VANCE-Ai register modal.
         document.getElementById('vance-signup').addEventListener('submit', function(e){
             e.preventDefault();
             clearError();
+            var termsEl = this.querySelector('input[name="consent_terms"]');
+            if (termsEl && !termsEl.checked) {
+                showError('Please agree to the Terms and Privacy Policy to continue.');
+                termsEl.focus();
+                return;
+            }
             var btn = this.querySelector('.vance-auth-submit');
             lockButton(btn, 'Creating account…');
-            postForm('vance_email_signup', CFG.nonces.signup, {
-                name: this.name.value.trim(),
+            postForm('vance_quick_register', CFG.nonces.signup, {
                 email: this.email.value.trim(),
-                password: this.password.value
+                password: this.password.value,
+                role: this.role.value,
+                consent_terms: termsEl && termsEl.checked ? '1' : '',
+                consent_marketing: this.consent_marketing.checked ? '1' : '',
+                vance_hp: this.vance_hp.value,
+                source: 'login_page',
+                redirect: CFG.redirectTo
             }).then(function(data){
                 if (data.success) {
-                    window.location.href = (data.data && data.data.redirect_to) || CFG.redirectTo;
+                    window.location.href = (data.data && (data.data.redirect || data.data.redirect_to)) || CFG.redirectTo;
                 } else {
                     showError((data.data && (data.data.message || data.data)) || 'Signup failed');
                     unlockButton(btn);

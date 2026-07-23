@@ -1,7 +1,12 @@
 <?php
 /**
  * Template Name: Custom Registration
- * Custom registration page with role selection and password field
+ *
+ * Standalone /register/ page. Renders the SAME account creation form as the
+ * tool-page / VANCE-Ai register modal (inc/register-modal.php): email,
+ * password, "I am a…" audience dropdown, terms + marketing consent, honeypot.
+ * Submits via AJAX to the shared `vance_quick_register` handler in
+ * inc/dashboard-functions.php (constraint #5: action + nonce names paired).
  */
 
 // Redirect if already logged in
@@ -10,102 +15,37 @@ if (is_user_logged_in()) {
     exit;
 }
 
-// Handle registration form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vance_register_submit'])) {
-    $errors = array();
-    
-    // Verify nonce
-    if (!isset($_POST['vance_register_nonce']) || !wp_verify_nonce($_POST['vance_register_nonce'], 'vance_register_action')) {
-        $errors[] = 'Security check failed. Please try again.';
-    }
-    
-    // Get form data
-    $email = sanitize_email($_POST['user_email']);
-    $password = $_POST['user_password'];
-    $password_confirm = $_POST['user_password_confirm'];
-    $role = sanitize_text_field($_POST['user_role']);
-    $first_name = sanitize_text_field($_POST['first_name']);
-    $last_name = sanitize_text_field($_POST['last_name']);
+$register_nonce = wp_create_nonce( 'vance_quick_register' );
+$ajax_url       = admin_url( 'admin-ajax.php' );
 
-    // Consent capture (UK GDPR / PECR). Stored under _sla_* on success.
-    $consent_terms    = isset( $_POST['vance_consent_terms'] );
-    $marketing_opt_in = isset( $_POST['vance_consent_marketing'] );
-    $consent_version  = '2026-06-01';
-    
-    // Validation
-    if (empty($email) || !is_email($email)) {
-        $errors[] = 'Please enter a valid email address.';
-    }
-    
-    if (email_exists($email)) {
-        $errors[] = 'This email is already registered.';
-    }
-    
-    if (empty($password) || strlen($password) < 8) {
-        $errors[] = 'Password must be at least 8 characters long.';
-    }
-    
-    if ($password !== $password_confirm) {
-        $errors[] = 'Passwords do not match.';
-    }
-    
-    if (empty($role) || !in_array($role, array('member', 'practitioner'))) {
-        $errors[] = 'Please select a valid role.';
-    }
+// Prefill email from ?user_email= (used by cross-page CTAs).
+$prefill_email = isset( $_GET['user_email'] ) ? sanitize_email( wp_unslash( $_GET['user_email'] ) ) : '';
 
-    if ( ! $consent_terms ) {
-        $errors[] = 'Please agree to the Terms of Use and Privacy Policy to create an account.';
-    }
-    
-    // If no errors, create user
-    if (empty($errors)) {
-        $username = sanitize_user(strstr($email, '@', true));
-        $username = str_replace('.', '_', $username);
-        
-        // Make username unique
-        $base_username = $username;
-        $i = 1;
-        while (username_exists($username)) {
-            $username = $base_username . $i;
-            $i++;
-        }
-        
-        $user_id = wp_create_user($username, $password, $email);
-        
-        if (!is_wp_error($user_id)) {
-            // Update user data
-            wp_update_user(array(
-                'ID' => $user_id,
-                'first_name' => $first_name,
-                'last_name' => $last_name,
-                'display_name' => $first_name . ' ' . $last_name,
-            ));
-            
-            // Set role
-            $user = new WP_User($user_id);
-            $user->set_role($role);
-            update_user_meta( $user_id, '_sla_user_type', $role );
-            update_user_meta( $user_id, '_sla_dashboard_role', $role );
-
-            // Record consent (UK GDPR / PECR). Keys use the _sla_* prefix per CLAUDE.md.
-            update_user_meta( $user_id, '_sla_consent_terms', '1' );
-            update_user_meta( $user_id, '_sla_consent_terms_at', current_time( 'mysql' ) );
-            update_user_meta( $user_id, '_sla_consent_terms_version', $consent_version );
-            update_user_meta( $user_id, '_sla_marketing_opt_in', $marketing_opt_in ? '1' : '0' );
-            update_user_meta( $user_id, '_sla_marketing_opt_in_at', current_time( 'mysql' ) );
-            
-            // Log user in
-            wp_set_current_user($user_id);
-            wp_set_auth_cookie($user_id, true);
-            
-            // Redirect to dashboard
-            wp_redirect(home_url('/dashboard/'));
-            exit;
-        } else {
-            $errors[] = $user_id->get_error_message();
-        }
+// Back-compat: old links used ?role=practitioner|patient — map onto the
+// audience dropdown values used by the shared form.
+$prefill_role = 'patient';
+if ( isset( $_GET['role'] ) ) {
+    $role_map = array(
+        'practitioner' => 'hcp',
+        'hcp'          => 'hcp',
+        'patient'      => 'patient',
+        'caregiver'    => 'caregiver',
+        'researcher'   => 'researcher',
+        'other'        => 'other',
+    );
+    $requested = sanitize_key( wp_unslash( $_GET['role'] ) );
+    if ( isset( $role_map[ $requested ] ) ) {
+        $prefill_role = $role_map[ $requested ];
     }
 }
+
+$audience_roles = array(
+    'patient'    => 'Patient',
+    'caregiver'  => 'Caregiver / family',
+    'hcp'        => 'Healthcare professional',
+    'researcher' => 'Researcher',
+    'other'      => 'Other',
+);
 
 get_header();
 ?>
@@ -127,6 +67,7 @@ get_header();
     max-width: 500px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    border-top: 4px solid var(--primary-color);
 }
 
 .register-header {
@@ -182,6 +123,8 @@ get_header();
     font-size: 14px;
     transition: all 0.2s;
     font-family: inherit;
+    background: #fff;
+    box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -190,46 +133,10 @@ get_header();
     box-shadow: 0 0 0 3px rgba(0,128,128, 0.1);
 }
 
-.role-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.role-option {
-    position: relative;
-    cursor: pointer;
-}
-
-.role-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-}
-
-.role-card {
-    padding: 16px;
-    border: 2px solid #E2E8F0;
-    border-radius: 0;
-    text-align: center;
-    transition: all 0.2s;
-    background: #F8FAFC;
-}
-
-.role-option input[type="radio"]:checked + .role-card {
-    border-color: var(--primary-color);
-    background: #def4f4;
-}
-
-.role-icon {
-    font-size: 32px;
-    margin-bottom: 8px;
-}
-
-.role-name {
-    font-weight: 700;
-    font-size: 13px;
-    color: #334155;
+.form-hint {
+    font-weight: 400;
+    text-transform: none;
+    opacity: 0.7;
 }
 
 .submit-btn {
@@ -249,27 +156,31 @@ get_header();
 }
 
 .submit-btn:hover {
-    background: #e65100;
+    background: #006666;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0,128,128, 0.3);
 }
 
+.submit-btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .error-message {
+    display: none;
     background: #FEE2E2;
     border-left: 4px solid #EF4444;
     padding: 12px 16px;
     border-radius: 0;
     margin-bottom: 20px;
-}
-
-.error-message ul {
-    margin: 0;
-    padding-left: 20px;
-}
-
-.error-message li {
     color: #991B1B;
     font-size: 14px;
+}
+
+.error-message.is-visible {
+    display: block;
 }
 
 .login-link {
@@ -291,159 +202,133 @@ get_header();
     text-decoration: underline;
 }
 
-.password-strength {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #64748B;
+.consent-label {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.6;
+    cursor: pointer;
+    font-weight: 400;
 }
 
-.strength-bar {
-    height: 4px;
-    background: #E2E8F0;
-    border-radius: 0;
-    margin-top: 4px;
-    overflow: hidden;
+.consent-label input {
+    width: auto;
+    margin-top: 3px;
 }
 
-.strength-fill {
-    height: 100%;
-    width: 0%;
-    transition: all 0.3s;
-    border-radius: 0;
+.consent-label a {
+    color: var(--primary-color);
+    font-weight: 600;
 }
 </style>
 
 <div class="vance-register-page">
     <div class="register-container">
         <div class="register-header">
-            <div class="register-logo">S</div>
+            <div class="register-logo">V</div>
             <h1 class="register-title">Create Your Account</h1>
             <p class="register-subtitle">Join the Vance Medical community today</p>
         </div>
 
-        <?php if (!empty($errors)): ?>
-        <div class="error-message">
-            <ul>
-                <?php foreach ($errors as $error): ?>
-                    <li><?php echo esc_html($error); ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-        <?php endif; ?>
+        <div class="error-message" id="vance-register-error" role="alert"></div>
 
-        <form method="POST" action="">
-            <?php wp_nonce_field('vance_register_action', 'vance_register_nonce'); ?>
-            
+        <form id="vance-register-form" autocomplete="on" novalidate>
             <div class="form-group">
-                <label class="form-label">I am a:</label>
-                <div class="role-selector">
-                    <label class="role-option">
-                        <input type="radio" name="user_role" value="practitioner" <?php echo (isset($_GET['role']) && $_GET['role'] === 'practitioner') ? 'checked' : ''; ?> required>
-                        <div class="role-card">
-                            <div class="role-icon">🩺</div>
-                            <div class="role-name">Practitioner</div>
-                        </div>
-                    </label>
-                    <label class="role-option">
-                        <input type="radio" name="user_role" value="member" <?php echo (isset($_GET['role']) && $_GET['role'] === 'patient') || !isset($_GET['role']) ? 'checked' : ''; ?> required>
-                        <div class="role-card">
-                            <div class="role-icon">❤️</div>
-                            <div class="role-name">Member</div>
-                        </div>
-                    </label>
-                </div>
+                <label class="form-label" for="user_email">Email</label>
+                <input type="email" id="user_email" name="email" class="form-input" value="<?php echo esc_attr( $prefill_email ); ?>" required autocomplete="email" inputmode="email" placeholder="you@example.com">
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="first_name">First Name</label>
-                <input type="text" id="first_name" name="first_name" class="form-input" value="<?php echo isset($_POST['first_name']) ? esc_attr($_POST['first_name']) : ''; ?>" required>
+                <label class="form-label" for="user_password">Password <span class="form-hint">(8 characters minimum)</span></label>
+                <input type="password" id="user_password" name="password" class="form-input" required minlength="8" autocomplete="new-password" placeholder="••••••••">
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="last_name">Last Name</label>
-                <input type="text" id="last_name" name="last_name" class="form-input" value="<?php echo isset($_POST['last_name']) ? esc_attr($_POST['last_name']) : ''; ?>" required>
+                <label class="form-label" for="user_role">I am a…</label>
+                <select id="user_role" name="role" class="form-input">
+                    <?php foreach ( $audience_roles as $value => $label ) : ?>
+                        <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $prefill_role, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Honeypot — bots fill anything visible; real users don't fill display:none fields -->
+            <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                <input type="text" name="vance_hp" tabindex="-1" value="">
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="user_email">Email Address</label>
-                <?php
-                $prefill_email = '';
-                if ( isset( $_POST['user_email'] ) ) {
-                    $prefill_email = wp_unslash( $_POST['user_email'] );
-                } elseif ( isset( $_GET['user_email'] ) ) {
-                    $prefill_email = sanitize_email( wp_unslash( $_GET['user_email'] ) );
-                }
-                ?>
-                <input type="email" id="user_email" name="user_email" class="form-input" value="<?php echo esc_attr( $prefill_email ); ?>" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="user_password">Password</label>
-                <input type="password" id="user_password" name="user_password" class="form-input" required minlength="8" onkeyup="checkPasswordStrength(this.value)">
-                <div class="password-strength">
-                    <span id="strength-text">Minimum 8 characters</span>
-                    <div class="strength-bar">
-                        <div class="strength-fill" id="strength-fill"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="user_password_confirm">Confirm Password</label>
-                <input type="password" id="user_password_confirm" name="user_password_confirm" class="form-input" required minlength="8">
-            </div>
-
-            <div class="form-group">
-                <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#475569; line-height:1.6; cursor:pointer; font-weight:400;">
-                    <input type="checkbox" name="vance_consent_terms" value="1" style="margin-top:3px;" <?php echo isset($_POST['vance_consent_terms']) ? 'checked' : ''; ?> required>
-                    <span>I have read and agree to the <a href="<?php echo esc_url( home_url('/terms-of-use/') ); ?>" target="_blank" style="color:var(--primary-color); font-weight:600;">Terms of Use</a> and <a href="<?php echo esc_url( home_url('/privacy-policy/') ); ?>" target="_blank" style="color:var(--primary-color); font-weight:600;">Privacy Policy</a>.</span>
+                <label class="consent-label">
+                    <input type="checkbox" name="consent_terms" id="vance-register-terms" value="1" required>
+                    <span>I agree to the <a href="<?php echo esc_url( home_url('/terms-of-use/') ); ?>" target="_blank">Terms of Use</a> and <a href="<?php echo esc_url( home_url('/privacy-policy/') ); ?>" target="_blank">Privacy Policy</a>, and to any results or health information I save being stored so I can see them in my dashboard.</span>
                 </label>
             </div>
 
             <div class="form-group">
-                <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#475569; line-height:1.6; cursor:pointer; font-weight:400;">
-                    <input type="checkbox" name="vance_consent_marketing" value="1" style="margin-top:3px;" <?php echo isset($_POST['vance_consent_marketing']) ? 'checked' : ''; ?>>
-                    <span>Send me occasional emails about new articles, tools and resources from Vance Medical Hub. I can unsubscribe at any time. <span style="color:#94a3b8;">(Optional)</span></span>
+                <label class="consent-label">
+                    <input type="checkbox" name="consent_marketing" value="1">
+                    <span>Email me occasional updates about new tools and resources. Optional, unsubscribe anytime.</span>
                 </label>
             </div>
 
             <p style="font-size:12px; color:#94a3b8; margin:0 0 18px; line-height:1.6;">Vance Medical Hub is intended for members of the public aged 18 and over in the United Kingdom.</p>
 
-            <button type="submit" name="vance_register_submit" class="submit-btn">Create Account</button>
+            <button type="submit" class="submit-btn" id="vance-register-submit">Create Account</button>
         </form>
 
         <div class="login-link">
-            Already have an account? <a href="<?php echo wp_login_url(); ?>">Sign In</a>
+            Already have an account? <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>">Sign In</a>
         </div>
     </div>
 </div>
 
 <script>
-function checkPasswordStrength(password) {
-    const strengthFill = document.getElementById('strength-fill');
-    const strengthText = document.getElementById('strength-text');
-    
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (password.length >= 12) strength++;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
-    if (/[^a-zA-Z\d]/.test(password)) strength++;
-    
-    const percentage = (strength / 5) * 100;
-    strengthFill.style.width = percentage + '%';
-    
-    if (strength <= 1) {
-        strengthFill.style.background = '#EF4444';
-        strengthText.textContent = 'Weak password';
-    } else if (strength <= 3) {
-        strengthFill.style.background = '#F59E0B';
-        strengthText.textContent = 'Medium strength';
-    } else {
-        strengthFill.style.background = '#22C55E';
-        strengthText.textContent = 'Strong password';
-    }
-}
+(function () {
+    var form    = document.getElementById('vance-register-form');
+    var submit  = document.getElementById('vance-register-submit');
+    var errBox  = document.getElementById('vance-register-error');
+    var ajaxUrl = <?php echo wp_json_encode( $ajax_url ); ?>;
+    var nonce   = <?php echo wp_json_encode( $register_nonce ); ?>;
+
+    function showErr(msg) { errBox.textContent = msg; errBox.classList.add('is-visible'); }
+    function clearErr() { errBox.textContent = ''; errBox.classList.remove('is-visible'); }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearErr();
+
+        var email = (form.email.value || '').trim();
+        var pw    = form.password.value || '';
+        if (!email || email.indexOf('@') < 1) { showErr('Please enter a valid email.'); form.email.focus(); return; }
+        if (pw.length < 8) { showErr('Password must be at least 8 characters.'); form.password.focus(); return; }
+        var termsEl = document.getElementById('vance-register-terms');
+        if (termsEl && !termsEl.checked) { showErr('Please agree to the Terms and Privacy Policy to continue.'); termsEl.focus(); return; }
+
+        submit.disabled = true;
+        submit.textContent = 'Creating your account…';
+
+        var fd = new FormData(form);
+        fd.set('action', 'vance_quick_register');
+        fd.set('nonce', nonce);
+        fd.set('source', 'register_page');
+
+        fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+            .then(function (r) { return r.json(); })
+            .catch(function () { return null; })
+            .then(function (j) {
+                submit.disabled = false;
+                submit.textContent = 'Create Account';
+                if (j && j.success) {
+                    window.location.href = (j.data && j.data.redirect) || '/dashboard/?vance_welcome=1';
+                } else {
+                    var msg = (j && j.data && j.data.message) || 'Something went wrong. Please try again.';
+                    showErr(msg);
+                }
+            });
+    });
+})();
 </script>
 
 <?php get_footer(); ?>
