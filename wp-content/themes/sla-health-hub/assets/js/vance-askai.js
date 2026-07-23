@@ -30,7 +30,6 @@
 	var MAX_TURNS = 40;
 	var MIN_SELECTION = 2;   // a single acronym like "IBD" must qualify
 	var MAX_SELECTION = 600;
-	var AUTOGROW_MAX = 220;  // px, before the reader takes over with the handle
 	var REVEAL_MS = 34;      // per word-ish tick (30% slower than the original 26)
 
 	var LEVELS = Array.isArray(CFG.levels) && CFG.levels.length
@@ -434,38 +433,19 @@
 	// Surfaces
 	// =====================================================================
 
+	// Auto-grow was removed with the side-by-side layout: the input now fills the
+	// full height of its row from the outset and scrolls past that, so there is
+	// nothing to grow into, and setting an inline height would break the flex
+	// stretch that makes it match the slider and button column. Dragging the
+	// resize handle still works, natively.
+
 	/**
-	 * Grow the composer to fit its content, up to a limit.
+	 * The level control, simplified for the narrow column beside the input.
 	 *
-	 * The textarea is also user-resizable. Once the reader drags the handle their
-	 * height wins permanently, otherwise the next keystroke would snap the box
-	 * back and the handle would feel broken. A drag is detected by comparing the
-	 * current inline height against the last one this function applied, which is
-	 * reliable even while the element is hidden (a ResizeObserver reports nothing
-	 * for a display:none subtree, so it cannot be used here).
+	 * The tick row was dropped: the label already names the current level, so
+	 * three more labels underneath repeated it and cost vertical space.
 	 */
-	function autoGrow(input) {
-		if ('1' === input.getAttribute('data-user-resized')) {
-			return;
-		}
-
-		var applied = input.getAttribute('data-auto-height');
-		if (applied && input.style.height && input.style.height !== applied) {
-			input.setAttribute('data-user-resized', '1');
-			return;
-		}
-
-		input.style.height = 'auto';
-		var height = Math.min(input.scrollHeight, AUTOGROW_MAX) + 'px';
-		input.style.height = height;
-		input.setAttribute('data-auto-height', height);
-	}
-
 	function levelMarkup(id) {
-		var ticks = LEVELS.map(function (l) {
-			return '<span>' + escapeHtml(l.label) + '</span>';
-		}).join('');
-
 		return '<div class="vance-askai__level">' +
 			'<label class="vance-askai__level-label" for="' + id + '">' +
 				escapeHtml((CFG.i18n && CFG.i18n.levelLabel) || 'Answer detail') +
@@ -473,7 +453,6 @@
 			'</label>' +
 			'<input type="range" class="vance-askai__level-input" id="' + id + '" min="1" max="' + LEVELS.length + '" step="1" value="2" ' +
 				'aria-label="' + escapeHtml((CFG.i18n && CFG.i18n.levelLabel) || 'Answer detail') + '">' +
-			'<div class="vance-askai__level-ticks">' + ticks + '</div>' +
 		'</div>';
 	}
 
@@ -511,18 +490,18 @@
 			'<div class="vance-askai__log" role="log" aria-live="polite"></div>' +
 			'<div class="vance-askai__composer">' +
 				'<label class="screen-reader-text" for="' + inputId + '">Your question</label>' +
-				'<textarea id="' + inputId + '" class="vance-askai__input" rows="1" placeholder="' + escapeHtml(CFG.placeholder || 'Ask a question…') + '"></textarea>' +
-				// Slider sits under the input, sharing its row with the button stack.
-				'<div class="vance-askai__controls">' +
-					levelMarkup(levelId) +
-					// Send leads, with the two secondary actions sharing the row
-					// beneath it. Three full-width buttons stacked made the whole
-					// control area twice as tall as it needed to be.
-					'<div class="vance-askai__actions">' +
-						'<button type="button" class="vance-askai__send">' + ICON.send + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.send) || 'Send') + '</span></button>' +
-						'<div class="vance-askai__actions-row">' +
-							'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
-							'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
+				// One row: a tall input on the left, and a column on the right
+				// holding the level slider above the buttons.
+				'<div class="vance-askai__entry">' +
+					'<textarea id="' + inputId + '" class="vance-askai__input" rows="1" placeholder="' + escapeHtml(CFG.placeholder || 'Ask a question…') + '"></textarea>' +
+					'<div class="vance-askai__side">' +
+						levelMarkup(levelId) +
+						'<div class="vance-askai__actions">' +
+							'<button type="button" class="vance-askai__send">' + ICON.send + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.send) || 'Send') + '</span></button>' +
+							'<div class="vance-askai__actions-row">' +
+								'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
+								'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
+							'</div>' +
 						'</div>' +
 					'</div>' +
 				'</div>' +
@@ -553,9 +532,6 @@
 			}
 		});
 
-		surface.input.addEventListener('input', function () {
-			autoGrow(surface.input);
-		});
 
 		// Dragging updates the label live; releasing commits and re-answers.
 		surface.level.addEventListener('input', function () {
@@ -587,7 +563,6 @@
 			return;
 		}
 		surface.input.value = '';
-		autoGrow(surface.input);
 		ask(value);
 	}
 
@@ -749,7 +724,6 @@
 
 		window.setTimeout(function () {
 			modalSurface.input.focus();
-			autoGrow(modalSurface.input);
 			modalSurface.log.scrollTop = modalSurface.log.scrollHeight;
 		}, 30);
 	}
