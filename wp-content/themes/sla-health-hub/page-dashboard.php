@@ -590,7 +590,11 @@ get_header();
                     $malnutrition_history = function_exists('vance_get_tool_history')
                         ? vance_get_tool_history($current_user->ID, 'malnutrition-calculator', 10)
                         : array();
-                    
+                    // Saved meal plans from the IBD Recipes planner (same save path).
+                    $meal_plan_history = function_exists('vance_get_tool_history')
+                        ? vance_get_tool_history($current_user->ID, 'ibd-recipes', 10)
+                        : array();
+
                     // Defaults for form
                     $defaults = array(
                         'digital_apps' => '', 'medication' => '', 'supplements' => '', 
@@ -751,6 +755,82 @@ get_header();
                                 <?php endforeach; ?>
                             </div>
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your healthcare team.</p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Saved meal plans (IBD Recipes planner) -->
+                    <div class="dash-card" style="margin-top:32px;">
+                        <div class="card-header">
+                            <h3 class="card-title">Saved Meal Plans</h3>
+                            <a href="/ibd-recipies/" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white; text-decoration:none; color:#475569;"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
+                        </div>
+                        <?php if (empty($meal_plan_history)): ?>
+                            <div style="text-align:center; padding:40px;">
+                                <p style="color:#64748B; margin-bottom:20px;">You haven't saved a meal plan yet. Build a week in the planner and choose &ldquo;Save this meal plan&rdquo; to keep it here.</p>
+                                <a href="/ibd-recipies/" class="btn-primary" style="display:inline-block; background:#008080; color:white; text-decoration:none; padding:10px 24px; border-radius:0; font-weight:600;">Open the Planner</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="dash-list">
+                                <?php foreach ($meal_plan_history as $entry):
+                                    $p    = $entry['payload'];
+                                    $ts   = !empty($entry['ts']) ? (int) $entry['ts'] : 0;
+                                    $when = $ts ? date_i18n('j M Y', $ts) : '';
+                                    // Structured saves carry days/totals. Older saves are a DOM
+                                    // snapshot with only a text blob, so degrade to a plain row.
+                                    $is_structured = isset($p['kind']) && $p['kind'] === 'meal-plan' && !empty($p['days']) && is_array($p['days']);
+                                    $totals = $is_structured && isset($p['totals']) && is_array($p['totals']) ? $p['totals'] : array();
+                                    ?>
+                                    <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                                        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; flex-wrap:wrap;">
+                                            <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html($when); ?></span>
+                                            <?php if ($is_structured): ?>
+                                                <span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                                    <span style="font-size:12px; font-weight:700; color:#008080; background:#0080801A; padding:4px 12px;"><?php
+                                                        $d = isset($totals['days']) ? (int) $totals['days'] : count($p['days']);
+                                                        $m = isset($totals['meals']) ? (int) $totals['meals'] : 0;
+                                                        printf(
+                                                            /* translators: 1: number of days, 2: number of meals */
+                                                            esc_html__('%1$d days, %2$d meals', 'sla-health-hub'),
+                                                            $d,
+                                                            $m
+                                                        );
+                                                    ?></span>
+                                                    <?php if (!empty($totals['calories'])): ?>
+                                                        <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo esc_html(number_format_i18n((int) $totals['calories'])); ?> kcal</span>
+                                                    <?php endif; ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span style="font-size:13px; color:#64748B;">Saved plan</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($is_structured): ?>
+                                            <details style="width:100%;">
+                                                <summary style="font-size:12px; color:#008080; font-weight:600; cursor:pointer;">View the week</summary>
+                                                <div style="margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+                                                    <?php foreach ($p['days'] as $day):
+                                                        if (empty($day['meals']) || !is_array($day['meals'])) { continue; } ?>
+                                                        <div style="border:1px solid #E2E8F0; padding:10px 12px;">
+                                                            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:6px;">
+                                                                <strong style="font-size:13px; color:#0F172A;"><?php echo esc_html(isset($day['day']) ? $day['day'] : ''); ?></strong>
+                                                                <?php if (!empty($day['calories'])): ?>
+                                                                    <span style="font-size:12px; color:#64748B;"><?php echo esc_html(number_format_i18n((int) $day['calories'])); ?> kcal</span>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <?php foreach ($day['meals'] as $meal): ?>
+                                                                <div style="font-size:12px; color:#475569; line-height:1.5;">
+                                                                    <span style="color:#94A3B8;"><?php echo esc_html(isset($meal['slot']) ? $meal['slot'] : ''); ?></span>
+                                                                    <?php echo esc_html(isset($meal['name']) ? $meal['name'] : ''); ?>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </details>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your healthcare team.</p>
                         <?php endif; ?>
                     </div>
                     <script>

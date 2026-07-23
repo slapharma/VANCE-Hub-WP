@@ -321,6 +321,118 @@ get_template_part( 'inc/register-modal' );
     }
 
     /**
+     * Per-tool structured extractors, keyed by slug. Tried before the generic
+     * DOM snapshot so the dashboard gets real data instead of a text blob.
+     *
+     * These live here rather than inside the tool bundles on purpose: the
+     * bundles are build artifacts that get text-patched in place (CLAUDE.md
+     * constraint 6), so anything injected into them is lost on the next
+     * rebuild. The iframes are same-origin, so the wrapper can read their DOM
+     * directly and the logic stays in version control.
+     *
+     * An extractor returns a payload object, or null if the current view has
+     * nothing worth saving (e.g. the user is on the recipe list, not the
+     * planner) — null falls through to snapshotIframe().
+     */
+    var MEAL_PLAN_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+    /**
+     * IBD Recipes planner → { kind:'meal-plan', days:[…], totals:{…} }.
+     *
+     * The bundle ships no stable hooks — only inline styles and the
+     * `.recipe-print-card` print helper — so we anchor on the one class that
+     * exists plus the day names, and read positionally within a card:
+     *   card > [0] header (h2 = day, span = "1360 kcal")
+     *        > [1] slot grid > cell > [0] "🌅 BREAKFAST" > [1] recipe or + Add button
+     * Anything unrecognised is skipped rather than guessed at.
+     */
+    function extractMealPlan(doc, win) {
+        var cards = [].slice.call(doc.querySelectorAll('.recipe-print-card'));
+        if (!cards.length) return null;
+
+        var kcalOf = function (el) {
+            var m = (el && (el.innerText || el.textContent) || '').match(/([\d,]+)\s*kcal/);
+            return m ? parseInt(m[1].replace(/,/g, ''), 10) : null;
+        };
+
+        var days = [];
+        cards.forEach(function (card) {
+            var h2 = card.querySelector('h2');
+            var name = h2 ? h2.textContent.trim() : '';
+            // Day cards only — the planner also renders a recipe-detail appendix.
+            if (MEAL_PLAN_DAYS.indexOf(name) === -1) return;
+
+            var grid = card.children[1];
+            var meals = [];
+            if (grid) {
+                [].slice.call(grid.children).forEach(function (cell) {
+                    var label = cell.children[0];
+                    var body  = cell.children[1];
+                    // Empty slots render a "+ Add …" button instead of a recipe div.
+                    if (!label || !body || body.tagName === 'BUTTON') return;
+                    var titleEl = body.children[0];
+                    if (!titleEl) return;
+                    var meta = (body.innerText || '');
+                    var mins = meta.match(/(\d+)\s*min/);
+                    meals.push({
+                        slot:     (label.textContent || '').replace(/[^A-Za-z ]/g, '').trim(),
+                        name:     (titleEl.textContent || '').trim(),
+                        calories: kcalOf(body),
+                        minutes:  mins ? parseInt(mins[1], 10) : null
+                    });
+                });
+            }
+
+            days.push({
+                day:      name,
+                calories: kcalOf(card.children[0]),
+                meals:    meals
+            });
+        });
+
+        // No day cards means we're on the recipe list, not the planner.
+        if (!days.length) return null;
+
+        var mealCount = 0, kcal = 0;
+        days.forEach(function (d) {
+            mealCount += d.meals.length;
+            if (d.calories) kcal += d.calories;
+        });
+        // An untouched planner is not worth a history row.
+        if (mealCount === 0) return null;
+
+        return {
+            kind:       'meal-plan',
+            version:    1,
+            url:        win.location && win.location.href,
+            title:      doc.title || '',
+            days:       days,
+            totals:     { days: days.length, meals: mealCount, calories: kcal },
+            capturedAt: new Date().toISOString()
+        };
+    }
+
+    var TOOL_EXTRACTORS = { 'ibd-recipes': extractMealPlan };
+
+    /**
+     * Run the extractor registered for this tool, if any. Never throws — a
+     * broken extractor must not cost the user their save, it just degrades to
+     * the generic snapshot.
+     */
+    function extractStructured() {
+        var fn = TOOL_EXTRACTORS[slug];
+        if (!fn || !iframeEl) return null;
+        try {
+            var doc = iframeEl.contentDocument;
+            var win = iframeEl.contentWindow;
+            if (!doc || !win) return null;
+            return fn(doc, win);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
      * Best-effort iframe snapshot. Same-origin only — cross-origin returns null.
      * Returns { kind: 'dom-snapshot', url, title, text } or null on failure.
      * Truncates text to 16k chars to keep the AJAX payload sensible.
@@ -399,6 +511,9 @@ get_template_part( 'inc/register-modal' );
         if (pendingPayload && Object.keys(pendingPayload).length > 0) {
             return Object.assign({ kind: 'postmessage' }, pendingPayload);
         }
+        // Then a per-tool structured extractor, for bundles that don't postMessage.
+        var structured = extractStructured();
+        if (structured) return structured;
         var snap = snapshotIframe();
         if (snap) return snap;
         return { kind: 'placeholder', note: 'No iframe data captured', capturedAt: new Date().toISOString() };
