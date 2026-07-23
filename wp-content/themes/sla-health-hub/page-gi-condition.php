@@ -31,15 +31,11 @@ function vance_gi_cond_url( string $cond_slug ): string {
 }
 
 /* Conditions for the sidebar nav */
-$nav_conditions = [
-    ['slug' => 'inflammatory-bowel-disease',  'data' => 'ibd',          'label' => 'Inflammatory Bowel Disease'],
-    ['slug' => 'ulcerative-colitis',           'data' => 'uc',           'label' => 'Ulcerative Colitis'],
-    ['slug' => 'crohns-disease',               'data' => 'crohns',       'label' => 'Crohn\'s Disease'],
-    ['slug' => 'microscopic-colitis',          'data' => 'mc',           'label' => 'Microscopic Colitis'],
-    ['slug' => 'irritable-bowel-syndrome',     'data' => 'ibs',          'label' => 'Irritable Bowel Syndrome'],
-    ['slug' => 'colorectal-cancer',            'data' => 'crc',          'label' => 'Colorectal Cancer'],
-    ['slug' => 'diverticular-disease',         'data' => 'diverticular', 'label' => 'Diverticular Disease'],
-];
+$gi_conditions  = vance_gi_conditions();
+$nav_conditions = [];
+foreach ( $gi_conditions as $cond_slug => $cond ) {
+    $nav_conditions[] = [ 'slug' => $cond_slug, 'data' => $cond['nav'], 'label' => $cond['label'] ];
+}
 
 /* Image-led redesign (v2): single-column layout with in-page jump nav
    instead of the sidebar + table-of-contents shell used by the rest
@@ -53,15 +49,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
   <!-- ===== Hero ===== -->
   <?php
   /* Resolve customizer values early so the hero can use them */
-  $cond_key_map = [
-      'inflammatory-bowel-disease' => 'ibd',
-      'ulcerative-colitis'         => 'uc',
-      'crohns-disease'             => 'crohns',
-      'microscopic-colitis'        => 'mc',
-      'irritable-bowel-syndrome'   => 'ibs',
-      'colorectal-cancer'          => 'crc',
-      'diverticular-disease'       => 'div',
-  ];
+  $cond_key_map = wp_list_pluck( $gi_conditions, 'key' );
   $cond_defaults = [
       'ibd'    => [ 'Inflammatory Bowel Disease (IBD)',      'A chronic condition of the digestive tract. There is no single cure, but with the right plan, many people live well in long, stable remission.' ],
       'uc'     => [ 'Ulcerative Colitis',                    'A type of inflammatory bowel disease that causes inflammation and ulcers in the lining of the colon and rectum. Many people with UC lead full, active lives with the right treatment.' ],
@@ -1144,6 +1132,52 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
 
       <?php break;
     } // end switch ?>
+
+    <!-- ===== Latest articles on this condition ===== -->
+    <?php
+    /* Articles are linked to a condition by a post_tag whose slug matches this
+       page's slug — see vance_gi_conditions(), which is what keeps the page slug,
+       the tag and the Discovery Suite's condition[] value identical. Renders
+       nothing at all until at least one article carries the tag. */
+    $cond_articles = new WP_Query( array(
+        'post_type'           => vance_discovery_post_types(),
+        'post_status'         => 'publish',
+        'posts_per_page'      => 4,
+        'ignore_sticky_posts' => true,
+        'no_found_rows'       => true,
+        'tax_query'           => array( array(
+            'taxonomy' => 'post_tag',
+            'field'    => 'slug',
+            'terms'    => $slug,
+        ) ),
+    ) );
+    $cond_label = isset( $gi_conditions[ $slug ] ) ? $gi_conditions[ $slug ]['label'] : get_the_title();
+    if ( $cond_articles->have_posts() ) : ?>
+    <style>
+      .gi-cp-articles { margin: 48px 0 0; }
+      .gi-cp-articles h2 { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; color: #0F172A; margin: 0 0 20px; }
+      .gi-cp-article-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+      .gi-cp-article { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #fff; border: 1px solid #E2E8F0; border-left: 3px solid #008080; text-decoration: none; transition: box-shadow .2s, transform .2s; }
+      .gi-cp-article:hover { box-shadow: 0 6px 18px rgba(0,0,0,.08); transform: translateY(-2px); }
+      .gi-cp-article-meta { font-size: 12px; color: #94A3B8; }
+      .gi-cp-article-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #0F172A; line-height: 1.35; }
+      .gi-cp-article:hover .gi-cp-article-title { color: #008080; }
+      .gi-cp-article-all { display: inline-block; margin-top: 18px; font-size: 14px; font-weight: 700; color: #008080; text-decoration: none; }
+      .gi-cp-article-all:hover { text-decoration: underline; }
+    </style>
+    <section class="gi-cp-articles">
+      <h2>Latest articles on <?php echo esc_html( $cond_label ); ?></h2>
+      <div class="gi-cp-article-grid">
+        <?php while ( $cond_articles->have_posts() ) : $cond_articles->the_post(); ?>
+        <a class="gi-cp-article" href="<?php the_permalink(); ?>">
+          <span class="gi-cp-article-meta"><?php echo esc_html( get_the_date() ); ?> &middot; <?php echo (int) vance_get_read_time( get_the_ID() ); ?> min read</span>
+          <span class="gi-cp-article-title"><?php the_title(); ?></span>
+        </a>
+        <?php endwhile; ?>
+      </div>
+      <a class="gi-cp-article-all" href="<?php echo esc_url( home_url( '/discovery-results/?condition%5B%5D=' . rawurlencode( $slug ) ) ); ?>">See all articles on this condition &rarr;</a>
+    </section>
+    <?php endif; wp_reset_postdata(); ?>
 
     <!-- ===== Explore related conditions ===== -->
     <section class="gi-cp-explore">

@@ -98,6 +98,132 @@ function vance_get_read_time( $post_id ) {
 }
 
 /**
+ * The seven GI Health conditions, keyed by the slug used in three places that
+ * must agree: the /gi-health/<slug>/ child page, the `post_tag` applied to
+ * articles about the condition, and the `condition[]` value the Discovery Suite
+ * submits. Keeping them identical is what lets a condition page list its own
+ * articles without a separate mapping table.
+ *
+ * Two short keys travel with each condition and they are NOT interchangeable —
+ * diverticular disease is `div` in one and `diverticular` in the other:
+ *   `key` names the customizer sections/settings (vance_gi_cond_<key>_*), so it
+ *         is bound to admin-saved values already in the database.
+ *   `nav` is the data-cond attribute the sidebar icons are selected on
+ *         (assets/css/gi-health.css).
+ */
+function vance_gi_conditions() {
+    return array(
+        'inflammatory-bowel-disease' => array( 'key' => 'ibd',    'nav' => 'ibd',          'label' => 'Inflammatory Bowel Disease' ),
+        'ulcerative-colitis'         => array( 'key' => 'uc',     'nav' => 'uc',           'label' => 'Ulcerative Colitis' ),
+        'crohns-disease'             => array( 'key' => 'crohns', 'nav' => 'crohns',       'label' => 'Crohn\'s Disease' ),
+        'microscopic-colitis'        => array( 'key' => 'mc',     'nav' => 'mc',           'label' => 'Microscopic Colitis' ),
+        'irritable-bowel-syndrome'   => array( 'key' => 'ibs',    'nav' => 'ibs',          'label' => 'Irritable Bowel Syndrome' ),
+        'colorectal-cancer'          => array( 'key' => 'crc',    'nav' => 'crc',          'label' => 'Colorectal Cancer' ),
+        'diverticular-disease'       => array( 'key' => 'div',    'nav' => 'diverticular', 'label' => 'Diverticular Disease' ),
+    );
+}
+
+/**
+ * The facets the Discovery Suite offers, and their options.
+ *
+ * Every option is built from a term that actually carries posts, so anything a
+ * visitor can tick returns results. The category tree supplies two of the axes:
+ * top-level categories are the section, their children are the topic.
+ *
+ * Keys of `options` are the submitted values; values are the visible labels.
+ * `field` is the form field name — the section facet is still submitted as
+ * content_type[] so links and saved searches predating the rebuild keep working.
+ */
+function vance_discovery_facets() {
+    $facets = array();
+
+    /* hide_empty is the only filter applied. Do not also exclude the default
+       category: on this site that option points at Healthcare News, a real
+       section carrying articles, so excluding it silently dropped a whole
+       facet option. Anything genuinely unused is already removed by hide_empty. */
+    if ( vance_get_theme_mod( 'vance_discovery_show_section', true ) ) {
+        $options = array();
+        foreach ( get_categories( array( 'parent' => 0, 'hide_empty' => true ) ) as $cat ) {
+            $options[ $cat->slug ] = $cat->name;
+        }
+        if ( $options ) {
+            $facets['section'] = array( 'label' => 'Section', 'field' => 'content_type[]', 'multiple' => true, 'options' => $options );
+        }
+    }
+
+    if ( vance_get_theme_mod( 'vance_discovery_show_topic', true ) ) {
+        $options = array();
+        foreach ( get_categories( array( 'hide_empty' => true ) ) as $cat ) {
+            if ( $cat->parent ) {
+                $options[ $cat->slug ] = $cat->name;
+            }
+        }
+        if ( $options ) {
+            $facets['topic'] = array( 'label' => 'Topic', 'field' => 'topic[]', 'multiple' => true, 'options' => $options );
+        }
+    }
+
+    if ( vance_get_theme_mod( 'vance_discovery_show_condition', true ) ) {
+        $options = array();
+        foreach ( vance_gi_conditions() as $cond_slug => $cond ) {
+            $term = get_term_by( 'slug', $cond_slug, 'post_tag' );
+            if ( $term && ! is_wp_error( $term ) && $term->count > 0 ) {
+                $options[ $cond_slug ] = $cond['label'];
+            }
+        }
+        if ( $options ) {
+            $facets['condition'] = array( 'label' => 'Condition', 'field' => 'condition[]', 'multiple' => true, 'options' => $options );
+        }
+    }
+
+    if ( vance_get_theme_mod( 'vance_discovery_show_audience', true ) ) {
+        $facets['audience'] = array(
+            'label'    => 'Written for',
+            'field'    => 'audience',
+            'multiple' => false,
+            'options'  => array( '' => 'Everyone', 'patient' => 'Patients & carers', 'hcp' => 'Healthcare professionals' ),
+        );
+    }
+
+    return $facets;
+}
+
+/**
+ * Render the facet chip groups. Shared so the homepage widget modal and the
+ * front-page block cannot drift apart — they had already diverged into two
+ * near-identical copies of the old prefix-based filter code.
+ */
+function vance_discovery_render_facets() {
+    $toggle_js = "this.parentElement.classList.toggle('selected', this.checked)";
+    $pick_js   = "this.closest('.chip-grid').querySelectorAll('.text-chip').forEach(function(l){l.classList.remove('selected')}); this.parentElement.classList.add('selected')";
+
+    foreach ( vance_discovery_facets() as $facet ) {
+        $is_multi = ! empty( $facet['multiple'] );
+        ?>
+        <div class="filter-group">
+            <div class="filter-label"><?php echo esc_html( $facet['label'] ); ?></div>
+            <div class="chip-grid">
+                <?php $is_first = true; foreach ( $facet['options'] as $option_value => $option_label ) :
+                    // Single-choice facets default to their first option.
+                    $preselect = ( ! $is_multi && $is_first );
+                ?>
+                <label class="text-chip<?php echo $preselect ? ' selected' : ''; ?>" style="margin: 0;">
+                    <input type="<?php echo $is_multi ? 'checkbox' : 'radio'; ?>"
+                           name="<?php echo esc_attr( $facet['field'] ); ?>"
+                           value="<?php echo esc_attr( $option_value ); ?>"
+                           style="display:none;"
+                           <?php echo $preselect ? 'checked' : ''; ?>
+                           onchange="<?php echo $is_multi ? $toggle_js : $pick_js; ?>">
+                    <span><?php echo esc_html( $option_label ); ?></span>
+                </label>
+                <?php $is_first = false; endforeach; ?>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+/**
  * Strip leftover Markdown syntax from excerpt text.
  *
  * Post bodies are authored in Markdown and converted to HTML on `the_content`,
@@ -403,11 +529,8 @@ add_filter( 'get_the_archive_title', 'vance_remove_category_prefix' );
 function vance_include_cpts_in_category_archives( $query ) {
     // Only modify the main query on category archives
     if ( ! is_admin() && $query->is_main_query() && is_category() ) {
-        // Get all registered CPTs
-        $cpts = array( 'news', 'research', 'oped', 'review', 'whitepaper', 'podcast', 'webinar', 'course', 'infographic' );
-        
         // Include both standard posts and all CPTs
-        $query->set( 'post_type', array_merge( array( 'post' ), $cpts ) );
+        $query->set( 'post_type', vance_discovery_post_types() );
     }
 }
 add_action( 'pre_get_posts', 'vance_include_cpts_in_category_archives' );
@@ -416,8 +539,8 @@ add_action( 'pre_get_posts', 'vance_include_cpts_in_category_archives' );
  * Register Custom Post Types
  * News, Clinical Research Reviews, Op-Eds, Product reviews, White papers, Podcasts, Webinars, Courses, Infographics
  */
-function vance_register_cpts() {
-    $cpts = array(
+function vance_content_cpts() {
+    return array(
         'news' => 'Healthcare News',
         'research' => 'Clinical Reviews',
         'oped' => 'Expert Opinions',
@@ -428,8 +551,20 @@ function vance_register_cpts() {
         'course' => 'Education Courses',
         'infographic' => 'Infographic Gallery'
     );
+}
 
-    foreach ($cpts as $slug => $name) {
+/**
+ * Every post type the Discovery Suite and the category archives search over.
+ * Both used to carry their own copy of this list and had drifted — the results
+ * page searched `any` (so it also picked up unrelated public types) while the
+ * archives used an explicit list.
+ */
+function vance_discovery_post_types() {
+    return array_merge( array( 'post' ), array_keys( vance_content_cpts() ) );
+}
+
+function vance_register_cpts() {
+    foreach (vance_content_cpts() as $slug => $name) {
         $labels = array(
             'name'                  => _x( $name . 's', 'Post Type General Name', 'sla-health-hub' ),
             'singular_name'         => _x( $name, 'Post Type Singular Name', 'sla-health-hub' ),
@@ -477,8 +612,7 @@ function vance_grant_cpt_caps() {
     $role = get_role( 'administrator' );
     if ( ! $role ) return;
 
-    $cpts = array('news', 'research', 'oped', 'review', 'whitepaper', 'podcast', 'webinar', 'course', 'infographic');
-    foreach ($cpts as $cpt) {
+    foreach (array_keys(vance_content_cpts()) as $cpt) {
         $role->add_cap( "edit_{$cpt}" );
         $role->add_cap( "read_{$cpt}" );
         $role->add_cap( "delete_{$cpt}" );
@@ -2806,211 +2940,30 @@ function vance_customize_register( $wp_customize ) {
         'panel'    => 'vance_discovery_panel',
     ) );
 
-    $wp_customize->add_section( 'vance_discovery_reading', array(
-        'title'    => __( 'Reading Levels', 'sla-health-hub' ),
-        'panel'    => 'vance_discovery_panel',
-        'priority' => 20,
-    ) );
+    /* Which facets the Discovery Suite offers.
 
-    $wp_customize->add_section( 'vance_discovery_type', array(
-        'title'    => __( 'Content Types', 'sla-health-hub' ),
-        'panel'    => 'vance_discovery_panel',
-        'priority' => 30,
-    ) );
-
-    $wp_customize->add_section( 'vance_discovery_path', array(
-        'title'    => __( 'Healthcare Pathways', 'sla-health-hub' ),
-        'panel'    => 'vance_discovery_panel',
-        'priority' => 40,
-    ) );
-
-    $wp_customize->add_section( 'vance_discovery_focus', array(
-        'title'    => __( 'IBD Research Focus', 'sla-health-hub' ),
-        'panel'    => 'vance_discovery_panel',
-        'priority' => 50,
-    ) );
-
-    // Get all tags for Discovery Suite configuration
-    $all_tags = get_terms( array(
-        'taxonomy'   => 'post_tag',
-        'hide_empty' => false,
-    ) );
-
-    // Ensure we have an array
-    if ( is_wp_error( $all_tags ) || ! is_array( $all_tags ) ) {
-        $all_tags = array();
-    }
-    
-    // Filter tags by prefix (Case-insensitive check of both name and slug)
-    $reading_tags = array_filter($all_tags, function($tag) {
-        return stripos($tag->name, 'reading-') === 0 || stripos($tag->slug, 'reading-') === 0;
-    });
-    
-    $path_tags = array_filter($all_tags, function($tag) {
-        return stripos($tag->name, 'path-') === 0 || stripos($tag->slug, 'path-') === 0;
-    });
-    
-    $indication_tags = array_filter($all_tags, function($tag) {
-        return stripos($tag->name, 'indication-') === 0 || stripos($tag->slug, 'indication-') === 0;
-    });
-    
-    // Get categories for Content Types
-    $categories = get_categories(array('hide_empty' => false));
-    
-    // Reading Level Tags (reading- prefix)
-    if (empty($reading_tags)) {
-        $wp_customize->get_section('vance_discovery_reading')->description = __('No tags found with "reading-" prefix. Please create tags like "reading-novice" in the WordPress admin to see options here.', 'sla-health-hub');
-    }
-    
-    foreach ($reading_tags as $tag) {
-        // Show/Hide Toggle
-        $wp_customize->add_setting("vance_discovery_reading_show_{$tag->term_id}", array(
-            'default'           => false,
+       This used to be configured per-term: a show/label/order trio for every tag
+       and category, with the tag options sourced from `reading-`, `path-` and
+       `indication-` prefixes. No tag with those prefixes was ever created on this
+       site, so that UI configured filters that could never match anything. Facets
+       are now built directly from the terms that actually carry posts, which
+       leaves only the question of which facets to offer. */
+    $discovery_facets = array(
+        'section'   => __( 'Show the Section filter (top-level categories)', 'sla-health-hub' ),
+        'topic'     => __( 'Show the Topic filter (child categories)', 'sla-health-hub' ),
+        'condition' => __( 'Show the Condition filter (GI Health conditions)', 'sla-health-hub' ),
+        'audience'  => __( 'Show the "Written for" filter (patients / professionals)', 'sla-health-hub' ),
+    );
+    foreach ( $discovery_facets as $facet_key => $facet_label ) {
+        $wp_customize->add_setting( "vance_discovery_show_{$facet_key}", array(
+            'default'           => true,
             'sanitize_callback' => 'vance_sanitize_checkbox',
-        ));
-        $wp_customize->add_control("vance_discovery_reading_show_{$tag->term_id}", array(
-            'label'   => sprintf(__('Show: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_reading',
+        ) );
+        $wp_customize->add_control( "vance_discovery_show_{$facet_key}", array(
+            'label'   => $facet_label,
+            'section' => 'vance_discovery_general',
             'type'    => 'checkbox',
-        ));
-        
-        // Display Text
-        $wp_customize->add_setting("vance_discovery_reading_text_{$tag->term_id}", array(
-            'default'           => str_replace('reading-', '', $tag->name),
-            'sanitize_callback' => 'sanitize_text_field',
-        ));
-        $wp_customize->add_control("vance_discovery_reading_text_{$tag->term_id}", array(
-            'label'   => sprintf(__('Display Text: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_reading',
-            'type'    => 'text',
-        ));
-        
-        // Display Order
-        $wp_customize->add_setting("vance_discovery_reading_order_{$tag->term_id}", array(
-            'default'           => 10,
-            'sanitize_callback' => 'absint',
-        ));
-        $wp_customize->add_control("vance_discovery_reading_order_{$tag->term_id}", array(
-            'label'   => sprintf(__('Order: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_reading',
-            'type'    => 'number',
-        ));
-    }
-    
-    // Content Type Categories
-    foreach ($categories as $cat) {
-        // Show/Hide Toggle
-        $wp_customize->add_setting("vance_discovery_type_show_{$cat->term_id}", array(
-            'default'           => false,
-            'sanitize_callback' => 'vance_sanitize_checkbox',
-        ));
-        $wp_customize->add_control("vance_discovery_type_show_{$cat->term_id}", array(
-            'label'   => sprintf(__('Show: %s', 'sla-health-hub'), $cat->name),
-            'section' => 'vance_discovery_type',
-            'type'    => 'checkbox',
-        ));
-        
-        // Display Text
-        $wp_customize->add_setting("vance_discovery_type_text_{$cat->term_id}", array(
-            'default'           => $cat->name,
-            'sanitize_callback' => 'sanitize_text_field',
-        ));
-        $wp_customize->add_control("vance_discovery_type_text_{$cat->term_id}", array(
-            'label'   => sprintf(__('Display Text: %s', 'sla-health-hub'), $cat->name),
-            'section' => 'vance_discovery_type',
-            'type'    => 'text',
-        ));
-        
-        // Display Order
-        $wp_customize->add_setting("vance_discovery_type_order_{$cat->term_id}", array(
-            'default'           => 10,
-            'sanitize_callback' => 'absint',
-        ));
-        $wp_customize->add_control("vance_discovery_type_order_{$cat->term_id}", array(
-            'label'   => sprintf(__('Order: %s', 'sla-health-hub'), $cat->name),
-            'section' => 'vance_discovery_type',
-            'type'    => 'number',
-        ));
-    }
-    
-    // IBD Research Path Tags (path- prefix)
-    if (empty($path_tags)) {
-        $wp_customize->get_section('vance_discovery_path')->description = __('No tags found with "path-" prefix. Please create tags like "path-clinical" in the WordPress admin to see options here.', 'sla-health-hub');
-    }
-    
-    foreach ($path_tags as $tag) {
-        // Show/Hide Toggle
-        $wp_customize->add_setting("vance_discovery_path_show_{$tag->term_id}", array(
-            'default'           => false,
-            'sanitize_callback' => 'vance_sanitize_checkbox',
-        ));
-        $wp_customize->add_control("vance_discovery_path_show_{$tag->term_id}", array(
-            'label'   => sprintf(__('Show: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_path',
-            'type'    => 'checkbox',
-        ));
-        
-        // Display Text
-        $wp_customize->add_setting("vance_discovery_path_text_{$tag->term_id}", array(
-            'default'           => str_replace('path-', '', $tag->name),
-            'sanitize_callback' => 'sanitize_text_field',
-        ));
-        $wp_customize->add_control("vance_discovery_path_text_{$tag->term_id}", array(
-            'label'   => sprintf(__('Display Text: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_path',
-            'type'    => 'text',
-        ));
-        
-        // Display Order
-        $wp_customize->add_setting("vance_discovery_path_order_{$tag->term_id}", array(
-            'default'           => 10,
-            'sanitize_callback' => 'absint',
-        ));
-        $wp_customize->add_control("vance_discovery_path_order_{$tag->term_id}", array(
-            'label'   => sprintf(__('Order: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_path',
-            'type'    => 'number',
-        ));
-    }
-    
-    // IBD Research Focus Tags (indication- prefix)
-    if (empty($indication_tags)) {
-        $wp_customize->get_section('vance_discovery_focus')->description = __('No tags found with "indication-" prefix. Please create tags like "indication-cardio" in the WordPress admin to see options here.', 'sla-health-hub');
-    }
-    
-    foreach ($indication_tags as $tag) {
-        // Show/Hide Toggle
-        $wp_customize->add_setting("vance_discovery_focus_show_{$tag->term_id}", array(
-            'default'           => false,
-            'sanitize_callback' => 'vance_sanitize_checkbox',
-        ));
-        $wp_customize->add_control("vance_discovery_focus_show_{$tag->term_id}", array(
-            'label'   => sprintf(__('Show: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_focus',
-            'type'    => 'checkbox',
-        ));
-        
-        // Display Text
-        $wp_customize->add_setting("vance_discovery_focus_text_{$tag->term_id}", array(
-            'default'           => str_replace('indication-', '', $tag->name),
-            'sanitize_callback' => 'sanitize_text_field',
-        ));
-        $wp_customize->add_control("vance_discovery_focus_text_{$tag->term_id}", array(
-            'label'   => sprintf(__('Display Text: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_focus',
-            'type'    => 'text',
-        ));
-        
-        // Display Order
-        $wp_customize->add_setting("vance_discovery_focus_order_{$tag->term_id}", array(
-            'default'           => 10,
-            'sanitize_callback' => 'absint',
-        ));
-        $wp_customize->add_control("vance_discovery_focus_order_{$tag->term_id}", array(
-            'label'   => sprintf(__('Order: %s', 'sla-health-hub'), $tag->name),
-            'section' => 'vance_discovery_focus',
-            'type'    => 'number',
-        ));
+        ) );
     }
 
     // 2.6 Pathway Tile Settings
@@ -4256,29 +4209,6 @@ function vance_customize_register( $wp_customize ) {
         'section'  => 'vance_discovery_styling',
         'type'     => 'text',
     ));
-
-    // --- DISCOVERY SUITE GRID LOGIC ---
-    $wp_customize->add_setting( 'vance_discovery_path_cols', array(
-        'default'           => 4,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_discovery_path_cols', array(
-        'label'   => __( 'Discovery: Path Columns', 'sla-health-hub' ),
-        'section' => 'vance_discovery_path',
-        'type'    => 'number',
-        'input_attrs' => array('min' => 1, 'max' => 6),
-    ) );
-
-    $wp_customize->add_setting( 'vance_discovery_type_cols', array(
-        'default'           => 6,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_discovery_type_cols', array(
-        'label'   => __( 'Discovery: Type Columns', 'sla-health-hub' ),
-        'section' => 'vance_discovery_type',
-        'type'    => 'number',
-        'input_attrs' => array('min' => 1, 'max' => 10),
-    ) );
 
     // --- INDIVIDUAL CARD CONTROLS ---
     $categories = get_categories( array( 'hide_empty' => false ) );

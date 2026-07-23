@@ -343,7 +343,10 @@ function vance_dashboard_save_search() {
         'id'     => uniqid(),
         'name'   => $name,
         'params' => $params,
-        'url'    => home_url( '/pathway-results/?' . $params ),
+        // Replay on the same template the search was run on. This pointed at
+        // /pathway-results/, so a search saved from the Discovery Suite came back
+        // through a different template that reads different query params.
+        'url'    => home_url( '/discovery-results/?' . $params ),
         'date'   => current_time( 'mysql' )
     );
 

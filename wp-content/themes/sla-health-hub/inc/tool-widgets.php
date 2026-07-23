@@ -307,7 +307,7 @@ function vance_render_tool_widget_content_filters() {
 
 	vance_tool_widget_card( array(
 		'title'    => vance_get_theme_mod( $prefix . 'title',  'Content Filters' ),
-		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Filter the knowledge base by reading level, pathway, content type and keywords — find exactly the article, study, or guide you need in seconds.' ),
+		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Filter the knowledge base by section, topic, condition and audience — find exactly the article, study, or guide you need in seconds.' ),
 		'cta'      => vance_get_theme_mod( $prefix . 'cta',    'Open Filters' ),
 		'accent'   => vance_get_theme_mod( $prefix . 'accent', '#008080' ),
 		'bg_color' => vance_get_theme_mod( $prefix . 'bg_color',    '#ffffff' ),
@@ -322,93 +322,14 @@ function vance_render_tool_widget_content_filters() {
 }
 
 function vance_tw_render_content_filters_body() {
-	$all_tags       = get_terms( array( 'taxonomy' => 'post_tag', 'hide_empty' => false ) );
-	if ( is_wp_error( $all_tags ) ) { $all_tags = array(); }
-	$all_categories = get_categories( array( 'hide_empty' => false ) );
-
-	// Reading levels (tags prefixed reading-)
-	$reading_tags = array();
-	foreach ( $all_tags as $tag ) {
-		if ( ( stripos( $tag->name, 'reading-' ) === 0 || stripos( $tag->slug, 'reading-' ) === 0 ) && vance_get_theme_mod( "vance_discovery_reading_show_{$tag->term_id}" ) ) {
-			$reading_tags[] = array(
-				'tag'   => $tag,
-				'order' => vance_get_theme_mod( "vance_discovery_reading_order_{$tag->term_id}", 10 ),
-				'text'  => vance_get_theme_mod( "vance_discovery_reading_text_{$tag->term_id}", str_replace( 'reading-', '', $tag->name ) ),
-			);
-		}
-	}
-	usort( $reading_tags, function ( $a, $b ) { return $a['order'] - $b['order']; } );
-
-	// Healthcare pathway chips (tags prefixed path-)
-	$path_tags = array();
-	foreach ( $all_tags as $tag ) {
-		if ( ( stripos( $tag->name, 'path-' ) === 0 || stripos( $tag->slug, 'path-' ) === 0 ) && vance_get_theme_mod( "vance_discovery_path_show_{$tag->term_id}" ) ) {
-			$path_tags[] = array(
-				'tag'   => $tag,
-				'order' => vance_get_theme_mod( "vance_discovery_path_order_{$tag->term_id}", 10 ),
-				'text'  => vance_get_theme_mod( "vance_discovery_path_text_{$tag->term_id}", str_replace( 'path-', '', $tag->name ) ),
-			);
-		}
-	}
-	usort( $path_tags, function ( $a, $b ) { return $a['order'] - $b['order']; } );
-
-	// Content type chips (categories)
-	$type_cats = array();
-	foreach ( $all_categories as $cat ) {
-		if ( vance_get_theme_mod( "vance_discovery_type_show_{$cat->term_id}" ) ) {
-			$type_cats[] = array(
-				'cat'   => $cat,
-				'order' => vance_get_theme_mod( "vance_discovery_type_order_{$cat->term_id}", 10 ),
-				'text'  => vance_get_theme_mod( "vance_discovery_type_text_{$cat->term_id}", $cat->name ),
-			);
-		}
-	}
-	usort( $type_cats, function ( $a, $b ) { return $a['order'] - $b['order']; } );
 	?>
 	<form action="<?php echo esc_url( home_url( '/discovery-results/' ) ); ?>" method="GET" class="vance-tw-filters-form">
 
-		<?php if ( ! empty( $reading_tags ) ) : ?>
-		<div class="filter-group">
-			<div class="filter-label">Reading Level</div>
-			<div class="toggle-row">
-				<?php foreach ( $reading_tags as $item ) : ?>
-				<label class="toggle-item">
-					<input type="checkbox" name="reading_level[]" value="<?php echo esc_attr( $item['tag']->slug ); ?>" style="display:none;" onchange="this.parentElement.classList.toggle('active', this.checked)">
-					<div class="toggle-switch"></div>
-					<span class="toggle-label"><?php echo esc_html( $item['text'] ); ?></span>
-				</label>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php endif; ?>
-
-		<?php if ( ! empty( $path_tags ) ) : ?>
-		<div class="filter-group">
-			<div class="filter-label">Healthcare Pathway</div>
-			<div class="chip-grid">
-				<?php foreach ( $path_tags as $item ) : ?>
-				<label class="text-chip">
-					<input type="checkbox" name="pathway_tag[]" value="<?php echo esc_attr( $item['tag']->slug ); ?>" style="display:none;" onchange="this.parentElement.classList.toggle('selected', this.checked)">
-					<span><?php echo esc_html( $item['text'] ); ?></span>
-				</label>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php endif; ?>
-
-		<?php if ( ! empty( $type_cats ) ) : ?>
-		<div class="filter-group">
-			<div class="filter-label">Content Type</div>
-			<div class="chip-grid">
-				<?php foreach ( $type_cats as $item ) : ?>
-				<label class="text-chip">
-					<input type="checkbox" name="content_type[]" value="<?php echo esc_attr( $item['cat']->slug ); ?>" style="display:none;" onchange="this.parentElement.classList.toggle('selected', this.checked)">
-					<span><?php echo esc_html( $item['text'] ); ?></span>
-				</label>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php endif; ?>
+		<?php
+		/* Section / Topic / Condition / Written-for, built from terms that carry
+		   posts. Shared with the front-page block so the two cannot drift. */
+		vance_discovery_render_facets();
+		?>
 
 		<div class="filter-group" style="margin-bottom: 0;">
 			<input type="text" name="s" class="keyword-input" placeholder="Keyword Search (optional)">
@@ -416,7 +337,7 @@ function vance_tw_render_content_filters_body() {
 
 		<div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.10); display: flex; gap: 12px; align-items: center;">
 			<button type="submit" class="vance-tw-btn-go">GO</button>
-			<button type="reset" class="vance-tw-btn-text" onclick="this.closest('form').querySelectorAll('.toggle-item.active, .text-chip.selected').forEach(function(el){ el.classList.remove('active','selected'); });">Clear</button>
+			<button type="reset" class="vance-tw-btn-text" onclick="var f=this.closest('form'); setTimeout(function(){ f.querySelectorAll('.text-chip').forEach(function(el){ var i=el.querySelector('input'); el.classList.toggle('selected', !!(i &amp;&amp; i.checked)); }); }, 0);">Clear</button>
 		</div>
 	</form>
 	<?php

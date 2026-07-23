@@ -6,48 +6,65 @@
 
 get_header();
 
-// Get search parameters
-$reading_levels = isset($_GET['reading_level']) ? (array)$_GET['reading_level'] : array();
-$pathway_tags = isset($_GET['pathway_tag']) ? (array)$_GET['pathway_tag'] : array();
-$content_types = isset($_GET['content_type']) ? (array)$_GET['content_type'] : array();
-$indication_tags = isset($_GET['indication_tag']) ? (array)$_GET['indication_tag'] : array();
-$search_query = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+/**
+ * Filter parameters.
+ *
+ * The pre-rebuild suite also submitted reading_level[], pathway_tag[] and
+ * indication_tag[], which matched `reading-`/`path-`/`indication-` prefixed tags
+ * that were never created on this site. Those params are read by nobody now: an
+ * old link or saved search widens to a broader result set rather than returning
+ * an empty page, which is the more useful failure.
+ */
+$content_types = isset($_GET['content_type']) ? array_map('sanitize_title', (array) $_GET['content_type']) : array();
+$topics        = isset($_GET['topic'])        ? array_map('sanitize_title', (array) $_GET['topic'])        : array();
+$conditions    = isset($_GET['condition'])    ? array_map('sanitize_title', (array) $_GET['condition'])    : array();
+$audience      = isset($_GET['audience'])     ? sanitize_key($_GET['audience'])                            : '';
+$search_query  = isset($_GET['s'])            ? sanitize_text_field($_GET['s'])                            : '';
+$sort          = isset($_GET['sort'])         ? sanitize_key($_GET['sort'])                                : '';
 
-// Build query args
+// Only honour condition slugs the site actually defines.
+$conditions = array_values(array_intersect($conditions, array_keys(vance_gi_conditions())));
+
+$audience_tags = array('patient' => 'audience-patient', 'hcp' => 'audience-hcp');
+
 $args = array(
-    'post_type' => 'any',
-    'post_status' => 'publish',
+    'post_type'      => vance_discovery_post_types(),
+    'post_status'    => 'publish',
     'posts_per_page' => 20,
-    'paged' => get_query_var('paged') ? get_query_var('paged') : 1,
+    'paged'          => get_query_var('paged') ? get_query_var('paged') : 1,
 );
 
-// Add keyword search
 if (!empty($search_query)) {
     $args['s'] = $search_query;
 }
 
-// Combine all tags for tax_query
-$tag_slugs = array_merge($reading_levels, $pathway_tags, $indication_tags);
-$category_slugs = $content_types;
-
-$tax_query = array('relation' => 'AND');
-
-if (!empty($tag_slugs)) {
-    $tax_query[] = array(
-        'taxonomy' => 'post_tag',
-        'field' => 'slug',
-        'terms' => $tag_slugs,
-        'operator' => 'IN',
-    );
+/* Newest-first by default. The one exception is an un-sorted keyword search,
+   where WordPress's own relevance ordering is more useful than the date. */
+if ('oldest' === $sort) {
+    $args['orderby'] = 'date';
+    $args['order']   = 'ASC';
+} elseif ('newest' === $sort || '' === $search_query) {
+    $args['orderby'] = 'date';
+    $args['order']   = 'DESC';
 }
 
-if (!empty($category_slugs)) {
-    $tax_query[] = array(
-        'taxonomy' => 'category',
-        'field' => 'slug',
-        'terms' => $category_slugs,
-        'operator' => 'IN',
-    );
+/* Each facet is its own clause, ANDed together: picking a section and a
+   condition narrows to posts matching both. Within a facet the terms are ORed.
+   Category clauses keep include_children on, so choosing a section also matches
+   posts filed only under one of its child topics. */
+$tax_query = array('relation' => 'AND');
+
+if (!empty($content_types)) {
+    $tax_query[] = array('taxonomy' => 'category', 'field' => 'slug', 'terms' => $content_types, 'operator' => 'IN');
+}
+if (!empty($topics)) {
+    $tax_query[] = array('taxonomy' => 'category', 'field' => 'slug', 'terms' => $topics, 'operator' => 'IN');
+}
+if (!empty($conditions)) {
+    $tax_query[] = array('taxonomy' => 'post_tag', 'field' => 'slug', 'terms' => $conditions, 'operator' => 'IN');
+}
+if (isset($audience_tags[$audience])) {
+    $tax_query[] = array('taxonomy' => 'post_tag', 'field' => 'slug', 'terms' => array($audience_tags[$audience]), 'operator' => 'IN');
 }
 
 if (count($tax_query) > 1) {
@@ -57,7 +74,10 @@ if (count($tax_query) > 1) {
 $query = new WP_Query($args);
 
 // Get current URL for sharing
-$current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$current_url = home_url(add_query_arg(array()));
+
+// Condition slug => display label, for rendering tag pills readably.
+$condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 ?>
 
 <style>
@@ -158,6 +178,29 @@ $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https"
     font-size: 18px;
     font-weight: 700;
     color: #0F172A;
+}
+
+.results-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748B;
+}
+
+.results-sort select {
+    padding: 8px 12px;
+    border: 1px solid #E2E8F0;
+    border-radius: 0;
+    background: white;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.results-sort select:hover {
+    border-color: var(--primary-color);
 }
 
 .result-item {
@@ -292,6 +335,12 @@ $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https"
 }
 
 @media (max-width: 768px) {
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
     .result-item {
         flex-direction: column;
     }
@@ -354,6 +403,25 @@ $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https"
                 <div class="results-count">
                     Showing <?php echo $query->post_count; ?> of <?php echo $query->found_posts; ?> results
                 </div>
+                <div class="results-sort">
+                    <label for="results-sort-select">Sort</label>
+                    <?php
+                    /* Rewriting the current URL keeps every active filter and drops the
+                       page number, so sorting always lands back on page one. */
+                    $sort_selected = in_array($sort, array('newest', 'oldest'), true)
+                        ? $sort
+                        : ('' === $search_query ? 'newest' : 'relevance');
+                    $sort_options = array('newest' => 'Newest first', 'oldest' => 'Oldest first');
+                    if ('' !== $search_query) {
+                        $sort_options = array('relevance' => 'Best match') + $sort_options;
+                    }
+                    ?>
+                    <select id="results-sort-select" onchange="var u=new URL(window.location.href); if(this.value==='relevance'){u.searchParams.delete('sort');}else{u.searchParams.set('sort',this.value);} u.searchParams.delete('paged'); window.location.href=u.toString();">
+                        <?php foreach ($sort_options as $sort_value => $sort_label) : ?>
+                        <option value="<?php echo esc_attr($sort_value); ?>" <?php selected($sort_selected, $sort_value); ?>><?php echo esc_html($sort_label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
 
             <?php while ($query->have_posts()): $query->the_post(); ?>
@@ -376,6 +444,7 @@ $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https"
                         <div class="result-meta">
                             <span>📅 <?php echo get_the_date(); ?></span>
                             <span>✍️ <?php the_author(); ?></span>
+                            <span>⏱️ <?php echo (int) vance_get_read_time(get_the_ID()); ?> min read</span>
                             <?php if (get_post_type() !== 'post'): ?>
                                 <span>📁 <?php echo get_post_type_object(get_post_type())->labels->singular_name; ?></span>
                             <?php endif; ?>
@@ -385,21 +454,24 @@ $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https"
                             <?php echo wp_trim_words(get_the_excerpt(), 30); ?>
                         </div>
                         
-                        <?php 
-                        $tags = get_the_tags();
+                        <?php
                         $cats = get_the_category();
+                        /* Audience tags drive filtering; they are not a label a reader gains
+                           anything from, so they stay out of the pills. */
+                        $tags = array_filter((array) get_the_tags(), function ($tag) {
+                            return 0 !== strpos($tag->slug, 'audience-');
+                        });
                         if ($tags || $cats): ?>
                         <div class="result-tags">
-                            <?php 
+                            <?php
                             if ($cats) {
                                 foreach (array_slice($cats, 0, 3) as $cat) {
                                     echo '<span class="result-tag">' . esc_html($cat->name) . '</span>';
                                 }
                             }
-                            if ($tags) {
-                                foreach (array_slice($tags, 0, 3) as $tag) {
-                                    echo '<span class="result-tag">' . esc_html($tag->name) . '</span>';
-                                }
+                            foreach (array_slice($tags, 0, 3) as $tag) {
+                                $tag_label = isset($condition_labels[$tag->slug]) ? $condition_labels[$tag->slug] : $tag->name;
+                                echo '<span class="result-tag">' . esc_html($tag_label) . '</span>';
                             }
                             ?>
                         </div>

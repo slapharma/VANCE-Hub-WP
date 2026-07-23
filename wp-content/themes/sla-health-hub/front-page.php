@@ -1336,8 +1336,6 @@ body {
     $btn_go_color    = vance_get_theme_mod('vance_discovery_btn_go_color',    '#ffffff');
     $btn_clear_bg    = vance_get_theme_mod('vance_discovery_btn_clear_bg',    '');
     $btn_clear_color = vance_get_theme_mod('vance_discovery_btn_clear_color', '#ffffff');
-    $btn_save_bg     = vance_get_theme_mod('vance_discovery_btn_save_bg',     '');
-    $btn_save_color  = vance_get_theme_mod('vance_discovery_btn_save_color',  '#ffffff');
     $btn_send_bg     = vance_get_theme_mod('vance_discovery_btn_send_bg',     '');
     $btn_send_color  = vance_get_theme_mod('vance_discovery_btn_send_color',  '#ffffff');
 
@@ -1392,88 +1390,13 @@ body {
                             <form action="<?php echo home_url('/discovery-results/'); ?>" method="GET" id="discovery-form" style="display: flex; flex-direction: column; flex: 1;">
                             <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
 
-                                <!-- READING LEVEL -->
-                                <div class="filter-group">
-                                    <div class="filter-label">Reading Level</div>
-                                    <div class="toggle-row">
-                                        <?php 
-                                        $all_tags = get_terms(array('taxonomy' => 'post_tag', 'hide_empty' => false));
-                                        if (is_wp_error($all_tags)) $all_tags = array();
-                                        $reading_tags = array();
-                                        foreach($all_tags as $tag) {
-                                            if((stripos($tag->name, 'reading-') === 0 || stripos($tag->slug, 'reading-') === 0) && vance_get_theme_mod("vance_discovery_reading_show_{$tag->term_id}")) {
-                                                $reading_tags[] = array(
-                                                    'tag' => $tag,
-                                                    'order' => vance_get_theme_mod("vance_discovery_reading_order_{$tag->term_id}", 10),
-                                                    'text' => vance_get_theme_mod("vance_discovery_reading_text_{$tag->term_id}", str_replace('reading-', '', $tag->name))
-                                                );
-                                            }
-                                        }
-                                        usort($reading_tags, function($a, $b) { return $a['order'] - $b['order']; });
-                                        foreach($reading_tags as $item) : 
-                                            $tag = $item['tag'];
-                                        ?>
-                                        <label class="toggle-item" style="cursor: pointer;">
-                                            <input type="checkbox" name="reading_level[]" value="<?php echo esc_attr($tag->slug); ?>" style="display: none;" onchange="this.parentElement.classList.toggle('active', this.checked)">
-                                            <div class="toggle-switch"></div>
-                                            <span class="toggle-label"><?php echo esc_html($item['text']); ?></span>
-                                        </label>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
+                                <?php
+                                /* Section / Topic / Condition / Written-for, built from terms that
+                                   carry posts. Shared with the homepage Content Filters widget
+                                   (inc/tool-widgets.php) so the two cannot drift apart. */
+                                vance_discovery_render_facets();
+                                ?>
 
-                                <!-- HEALTHCARE PATHWAY -->
-                                <div class="filter-group">
-                                    <div class="filter-label">Healthcare Pathway</div>
-                                    <div class="chip-grid">
-                                        <?php 
-                                        $path_tags = array();
-                                        foreach($all_tags as $tag) {
-                                            if((stripos($tag->name, 'path-') === 0 || stripos($tag->slug, 'path-') === 0) && vance_get_theme_mod("vance_discovery_path_show_{$tag->term_id}")) {
-                                                $path_tags[] = array(
-                                                    'tag' => $tag,
-                                                    'order' => vance_get_theme_mod("vance_discovery_path_order_{$tag->term_id}", 10),
-                                                    'text' => vance_get_theme_mod("vance_discovery_path_text_{$tag->term_id}", str_replace('path-', '', $tag->name))
-                                                );
-                                            }
-                                        }
-                                        usort($path_tags, function($a, $b) { return $a['order'] - $b['order']; });
-                                        foreach($path_tags as $item) :
-                                        ?>
-                                        <label class="text-chip" style="margin: 0;">
-                                            <input type="checkbox" name="pathway_tag[]" value="<?php echo esc_attr($item['tag']->slug); ?>" style="display: none;" onchange="this.parentElement.classList.toggle('selected', this.checked)">
-                                            <span><?php echo esc_html($item['text']); ?></span>
-                                        </label>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-
-                                <!-- CONTENT TYPE -->
-                                <div class="filter-group">
-                                    <div class="filter-label">Content Type</div>
-                                    <div class="chip-grid">
-                                        <?php 
-                                        $type_cats = array();
-                                        $all_categories = get_categories(array('hide_empty' => false));
-                                        foreach($all_categories as $cat) {
-                                            if(vance_get_theme_mod("vance_discovery_type_show_{$cat->term_id}")) {
-                                                $type_cats[] = array(
-                                                    'cat' => $cat,
-                                                    'order' => vance_get_theme_mod("vance_discovery_type_order_{$cat->term_id}", 10),
-                                                    'text' => vance_get_theme_mod("vance_discovery_type_text_{$cat->term_id}", $cat->name)
-                                                );
-                                            }
-                                        }
-                                        usort($type_cats, function($a, $b) { return $a['order'] - $b['order']; });
-                                        foreach($type_cats as $item) :
-                                        ?>
-                                        <label class="text-chip" style="margin: 0;">
-                                            <input type="checkbox" name="content_type[]" value="<?php echo esc_attr($item['cat']->slug); ?>" style="display: none;" onchange="this.parentElement.classList.toggle('selected', this.checked)">
-                                            <span><?php echo esc_html($item['text']); ?></span>
-                                        </label>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
 
                                 <!-- KEYWORD SEARCH -->
                                 <div class="filter-group" style="margin-bottom:0;">
@@ -1488,7 +1411,6 @@ body {
                             <div class="action-row" style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 14px;">
                                     <button type="submit" class="btn-go" style="<?php echo $btn_style($btn_go_bg, $btn_go_color); ?>">GO</button>
                                     <button type="reset" class="btn-text" onclick="setTimeout(()=>window.location.reload(), 100)" style="<?php echo $btn_style($btn_clear_bg, $btn_clear_color); ?>">Clear</button>
-                                    <button type="button" class="btn-text" onclick="openSaveSearchModal()" style="<?php echo $btn_style($btn_save_bg, $btn_save_color); ?>">Save Search</button>
                                 </div>
                             </form>
                         </div>
