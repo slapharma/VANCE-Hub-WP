@@ -144,6 +144,11 @@ h6 {
     position: sticky;
     top: 0;
     z-index: 1000;
+    /* Promotes the sticky header to its own compositing layer. Sticky elements
+       sitting directly above an overflow:hidden section (the hero) are a known
+       Chromium trigger for a stale-paint flash beneath the header on first
+       render, which clears on the repaint scroll/click forces. */
+    transform: translateZ(0);
 }
 
 .header-content {
@@ -343,6 +348,12 @@ h6 {
     min-height: 460px;
     position: relative;
     overflow: hidden;
+    /* Own paint containment: without this, Chromium occasionally leaves stale
+       pixels from elsewhere on the page briefly visible in this section on
+       first paint (right under the sticky header), clearing on the repaint
+       that scroll/click triggers. contain:paint forces the section to always
+       paint from its own layer instead of reusing/blending a neighbouring one. */
+    contain: paint;
 }
 
 /* Homepage hero only (scoped via body.home) — cumulatively -15% twice from the

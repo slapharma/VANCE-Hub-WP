@@ -1846,6 +1846,7 @@ require get_template_directory() . '/inc/dashboard-functions.php';
  */
 require get_template_directory() . '/inc/askai-kb.php';
 require get_template_directory() . '/inc/askai-functions.php';
+require get_template_directory() . '/inc/askai-content-sources.php';
 
 
 /**

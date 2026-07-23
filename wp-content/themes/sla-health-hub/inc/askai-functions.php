@@ -187,14 +187,41 @@ function vance_ai_query_ids( $search, $types, $limit, $exclude = array() ) {
  */
 function vance_ai_build_excerpt( $post, $terms, $budget = 300 ) {
 	$content = strip_shortcodes( (string) $post->post_content );
-	$content = preg_replace( '#<(script|style)\b[^>]*>.*?</\1>#is', ' ', $content );
-	$content = wp_strip_all_tags( $content );
-	$content = html_entity_decode( $content, ENT_QUOTES, 'UTF-8' );
-	$content = trim( preg_replace( '/\s+/u', ' ', (string) $content ) );
+	$content = vance_ai_html_to_text( $content );
 
 	if ( '' === $content ) {
 		$content = trim( wp_strip_all_tags( (string) $post->post_excerpt ) );
 	}
+
+	return vance_ai_excerpt_from_text( $content, $terms, $budget );
+}
+
+/**
+ * Flatten a chunk of HTML into readable plain text.
+ *
+ * @param string $html Raw HTML.
+ * @return string
+ */
+function vance_ai_html_to_text( $html ) {
+	$text = preg_replace( '#<(script|style)\b[^>]*>.*?</\1>#is', ' ', (string) $html );
+	$text = wp_strip_all_tags( $text );
+	$text = html_entity_decode( $text, ENT_QUOTES, 'UTF-8' );
+	return trim( preg_replace( '/\s+/u', ' ', (string) $text ) );
+}
+
+/**
+ * Take a readable window out of plain text, centred on the first term hit.
+ *
+ * Shared by post excerpts and by the virtual sources in askai-content-sources.php,
+ * so every source block is trimmed the same way.
+ *
+ * @param string   $content Plain text.
+ * @param string[] $terms   Search terms to centre on.
+ * @param int      $budget  Approximate word budget.
+ * @return string Extract, or '' when there is no usable text.
+ */
+function vance_ai_excerpt_from_text( $content, $terms, $budget = 300 ) {
+	$content = trim( (string) $content );
 	if ( '' === $content ) {
 		return '';
 	}
@@ -209,8 +236,8 @@ function vance_ai_build_excerpt( $post, $terms, $budget = 300 ) {
 	$hit = -1;
 	foreach ( $words as $index => $word ) {
 		$lower = strtolower( $word );
-		foreach ( $terms as $term ) {
-			if ( false !== strpos( $lower, $term ) ) {
+		foreach ( (array) $terms as $term ) {
+			if ( '' !== $term && false !== strpos( $lower, $term ) ) {
 				$hit = $index;
 				break 2;
 			}
@@ -258,6 +285,13 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 	// covers. It has its own budget so it never crowds out article sources.
 	$kb_sources = function_exists( 'vance_kb_retrieve_sources' )
 		? vance_kb_retrieve_sources( $messages, $terms )
+		: array();
+
+	// GI Health conditions and IBD recipes, neither of which lives in
+	// post_content and so cannot be found by the searches below. Also on its own
+	// budget. See inc/askai-content-sources.php.
+	$virtual_sources = function_exists( 'vance_ai_virtual_sources' )
+		? vance_ai_virtual_sources( $messages, $terms )
 		: array();
 
 	// The article the reader is looking at is always the primary source, and gets
@@ -344,7 +378,7 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 		);
 	}
 
-	return array_merge( $kb_sources, array_slice( $sources, 0, $max ) );
+	return array_merge( $kb_sources, $virtual_sources, array_slice( $sources, 0, $max ) );
 }
 
 // =========================================================================
