@@ -79,23 +79,20 @@ get_header(); ?>
         // (page-omega-3-calculator.php → /omega-3-calculator/) and its asset
         // bundle still exist and remain reachable by direct URL; only the card
         // on this Tools & Resources listing was pulled.
+        //
+        // Blood Test Analyser card removed 2026-07-23 per request. The tool page
+        // (page-blood-test.php → /blood-test/) and its asset bundle still exist
+        // and remain reachable by direct URL; only the card on this listing was pulled.
         array(
-            'slug'     => 'malnutrition-calculator',
-            'page_url' => '/malnutrition-calculator/',
-            'name'     => 'Malnutrition Calculator',
-            'tag'      => 'IBD Screening',
-            'desc'     => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.',
-            'colors'   => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
-            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
-        ),
-        array(
-            'slug'     => 'blood-test',
-            'page_url' => '/blood-test/',
-            'name'     => 'Blood Test Analyser',
-            'tag'      => 'Lab Results',
-            'desc'     => 'Drop in your blood panel results and get plain-language analysis flagging anything outside reference ranges. Designed to help you prepare for your next clinic appointment.',
-            'colors'   => array( '#aedbdb', '#88c5c5', '#008080' ),
-            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+            // IBD Health Quiz lives as a PHP page template (page-healthcare-quiz.php),
+            // not as a /assets/tools/ bundle — so we just link to /healthcare-quiz/.
+            'slug'     => 'healthcare-quiz',
+            'page_url' => '/healthcare-quiz/',
+            'name'     => 'IBD Health Quiz',
+            'tag'      => 'Self-Assessment',
+            'desc'     => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.',
+            'colors'   => array( '#78bfbf', '#aedbdb', '#008080' ),
+            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>',
         ),
         array(
             'slug'     => 'ibd-recipes',
@@ -109,23 +106,21 @@ get_header(); ?>
             'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />',
         ),
         array(
-            // IBD Health Quiz lives as a PHP page template (page-healthcare-quiz.php),
-            // not as a /assets/tools/ bundle — so we just link to /healthcare-quiz/.
-            'slug'     => 'healthcare-quiz',
-            'page_url' => '/healthcare-quiz/',
-            'name'     => 'IBD Health Quiz',
-            'tag'      => 'Self-Assessment',
-            'desc'     => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.',
-            'colors'   => array( '#78bfbf', '#aedbdb', '#008080' ),
-            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>',
+            'slug'     => 'malnutrition-calculator',
+            'page_url' => '/malnutrition-calculator/',
+            'name'     => 'Malnutrition Calculator',
+            'tag'      => 'IBD Screening',
+            'desc'     => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.',
+            'colors'   => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
+            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
         ),
     );
     ?>
     <section id="tools-grid" class="section-padding tools-grid-section" style="background: var(--accent-color);">
         <div class="container">
-            <div class="tools-card-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;">
+            <div class="tools-card-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;">
                 <?php foreach ( $tools as $tool ) : ?>
-                <a class="tool-card tool-card--<?php echo esc_attr( $tool['slug'] ); ?>" href="<?php echo esc_url( $tool['page_url'] ); ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid <?php echo esc_attr( $tool['colors'][0] ); ?>; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;">
+                <a class="tool-card tool-card--<?php echo esc_attr( $tool['slug'] ); ?>" href="<?php echo esc_url( $tool['page_url'] ); ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid #008080; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;">
                     <div class="tool-card__head" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
                         <div class="tool-card__icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $tool['colors'][0] ); ?>, <?php echo esc_attr( $tool['colors'][1] ); ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                             <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $tool['colors'][2] ); ?>" viewBox="0 0 24 24"><?php echo $tool['icon']; ?></svg>
@@ -147,9 +142,10 @@ get_header(); ?>
 
     <style>
         .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,25,41,0.10) !important; }
-        /* Two tools per row on desktop (set inline); collapse to one on narrow
-           screens. !important is needed to beat the inline grid-template-columns. */
-        @media (max-width: 640px) {
+        /* Three tools per row on desktop (set inline); collapse straight to one
+           column below tablet width (a 2-col stage would orphan the 3rd card).
+           !important is needed to beat the inline grid-template-columns. */
+        @media (max-width: 900px) {
             .tools-card-grid { grid-template-columns: 1fr !important; }
         }
     </style>
