@@ -778,65 +778,173 @@ get_header();
                                     $p    = $entry['payload'];
                                     $ts   = !empty($entry['ts']) ? (int) $entry['ts'] : 0;
                                     $when = $ts ? date_i18n('j M Y', $ts) : '';
+                                    // Same handle the rename/delete handlers resolve against, so
+                                    // rows saved before ids existed stay addressable by timestamp.
+                                    $key  = function_exists('vance_tool_history_key') ? vance_tool_history_key($entry) : '';
                                     // Structured saves carry days/totals. Older saves are a DOM
                                     // snapshot with only a text blob, so degrade to a plain row.
                                     $is_structured = isset($p['kind']) && $p['kind'] === 'meal-plan' && !empty($p['days']) && is_array($p['days']);
                                     $totals = $is_structured && isset($p['totals']) && is_array($p['totals']) ? $p['totals'] : array();
+                                    // Every plan reads as named: user label if renamed, else the date.
+                                    $plan_name = !empty($p['name'])
+                                        ? $p['name']
+                                        : 'Meal plan' . ($when ? ', ' . $when : '');
+                                    // Meta line: "Saved on 23 Jul 2026 · 7 days, 28 meals · 8,975 kcal"
+                                    $meta_bits = array();
+                                    if ($when) { $meta_bits[] = 'Saved on ' . $when; }
+                                    if ($is_structured) {
+                                        $d = isset($totals['days'])  ? (int) $totals['days']  : count($p['days']);
+                                        $m = isset($totals['meals']) ? (int) $totals['meals'] : 0;
+                                        $meta_bits[] = sprintf(
+                                            /* translators: 1: number of days, 2: number of meals */
+                                            esc_html__('%1$d days, %2$d meals', 'sla-health-hub'),
+                                            $d,
+                                            $m
+                                        );
+                                        if (!empty($totals['calories'])) {
+                                            $meta_bits[] = number_format_i18n((int) $totals['calories']) . ' kcal';
+                                        }
+                                    } else {
+                                        $meta_bits[] = 'Saved plan';
+                                    }
+                                    // The modal renders from this, mirroring the saved-chats rows.
+                                    $plan_json = wp_json_encode(array(
+                                        'name' => $plan_name,
+                                        'when' => $when,
+                                        'days' => $is_structured ? $p['days'] : array(),
+                                    ));
                                     ?>
-                                    <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                                        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; flex-wrap:wrap;">
-                                            <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html($when); ?></span>
+                                    <div class="list-item" style="padding:16px 0;">
+                                        <div style="flex:1; min-width:0;">
                                             <?php if ($is_structured): ?>
-                                                <span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                                    <span style="font-size:12px; font-weight:700; color:#008080; background:#0080801A; padding:4px 12px;"><?php
-                                                        $d = isset($totals['days']) ? (int) $totals['days'] : count($p['days']);
-                                                        $m = isset($totals['meals']) ? (int) $totals['meals'] : 0;
-                                                        printf(
-                                                            /* translators: 1: number of days, 2: number of meals */
-                                                            esc_html__('%1$d days, %2$d meals', 'sla-health-hub'),
-                                                            $d,
-                                                            $m
-                                                        );
-                                                    ?></span>
-                                                    <?php if (!empty($totals['calories'])): ?>
-                                                        <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo esc_html(number_format_i18n((int) $totals['calories'])); ?> kcal</span>
-                                                    <?php endif; ?>
-                                                </span>
+                                                <button type="button" class="item-title btn-view-meal-plan"
+                                                        data-plan="<?php echo esc_attr($plan_json); ?>"
+                                                        style="background:none; border:none; padding:0; font-family:inherit; font-size:inherit; font-weight:inherit; color:inherit; text-align:left; cursor:pointer;">
+                                                    <?php echo esc_html($plan_name); ?>
+                                                </button>
                                             <?php else: ?>
-                                                <span style="font-size:13px; color:#64748B;">Saved plan</span>
+                                                <div class="item-title"><?php echo esc_html($plan_name); ?></div>
                                             <?php endif; ?>
+                                            <div class="item-meta"><?php echo esc_html(implode(' · ', $meta_bits)); ?></div>
                                         </div>
-                                        <?php if ($is_structured): ?>
-                                            <details style="width:100%;">
-                                                <summary style="font-size:12px; color:#008080; font-weight:600; cursor:pointer;">View the week</summary>
-                                                <div style="margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
-                                                    <?php foreach ($p['days'] as $day):
-                                                        if (empty($day['meals']) || !is_array($day['meals'])) { continue; } ?>
-                                                        <div style="border:1px solid #E2E8F0; padding:10px 12px;">
-                                                            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:6px;">
-                                                                <strong style="font-size:13px; color:#0F172A;"><?php echo esc_html(isset($day['day']) ? $day['day'] : ''); ?></strong>
-                                                                <?php if (!empty($day['calories'])): ?>
-                                                                    <span style="font-size:12px; color:#64748B;"><?php echo esc_html(number_format_i18n((int) $day['calories'])); ?> kcal</span>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                            <?php foreach ($day['meals'] as $meal): ?>
-                                                                <div style="font-size:12px; color:#475569; line-height:1.5;">
-                                                                    <span style="color:#94A3B8;"><?php echo esc_html(isset($meal['slot']) ? $meal['slot'] : ''); ?></span>
-                                                                    <?php echo esc_html(isset($meal['name']) ? $meal['name'] : ''); ?>
-                                                                </div>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            </details>
-                                        <?php endif; ?>
+                                        <div style="display:flex; gap:12px;">
+                                            <?php if ($is_structured): ?>
+                                                <button type="button" class="card-link btn-view-meal-plan"
+                                                        data-plan="<?php echo esc_attr($plan_json); ?>"
+                                                        style="background:none; border:none; font-family:inherit; cursor:pointer; font-weight:600; color:<?php echo $theme_primary; ?>;">View</button>
+                                            <?php endif; ?>
+                                            <button type="button" onclick="renameMealPlan('<?php echo esc_js($key); ?>', '<?php echo esc_js($plan_name); ?>')" style="color:#0EA5E9; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit;">Rename</button>
+                                            <button type="button" onclick="deleteMealPlan('<?php echo esc_js($key); ?>')" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit;">Delete</button>
+                                        </div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your healthcare team.</p>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Meal Plan Viewer Modal (mirrors #chat-modal on the VANCE-Ai tab) -->
+                    <div id="meal-plan-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10001; align-items:center; justify-content:center; padding:20px;">
+                        <div style="background:white; width:100%; max-width:800px; max-height:90vh; border-radius:0; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+                            <div style="padding:24px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:white;">
+                                <div>
+                                    <h3 id="modal-meal-plan-title" style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">Meal plan</h3>
+                                    <p id="modal-meal-plan-date" style="margin:4px 0 0 0; font-size:12px; color:#64748B;"></p>
+                                </div>
+                                <button onclick="closeMealPlanModal()" style="font-size:32px; border:none; background:none; cursor:pointer; color:#64748B; line-height:1;">&times;</button>
+                            </div>
+                            <div id="modal-meal-plan-content" style="flex:1; overflow-y:auto; padding:32px; background:#F8FAFC; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-content:start;">
+                                <!-- Days are rendered here on open -->
+                            </div>
+                            <div style="padding:20px; border-top:1px solid #E2E8F0; background:white; display:flex; justify-content:flex-end;">
+                                <button onclick="closeMealPlanModal()" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:0; cursor:pointer; font-weight:600;">Close</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <script>
+                    // Saved meal plans: view / rename / delete. Follows the saved-chats
+                    // handlers on the VANCE-Ai tab (prompt or confirm, post, reload).
+                    (function () {
+                        var ajaxUrl = <?php echo wp_json_encode( admin_url('admin-ajax.php') ); ?>;
+                        var nonce   = <?php echo wp_json_encode( wp_create_nonce('vance_dashboard_nonce') ); ?>;
+
+                        function esc(s) {
+                            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+                            });
+                        }
+
+                        window.openMealPlanModal = function (btn) {
+                            var plan;
+                            try { plan = JSON.parse(btn.getAttribute('data-plan')); } catch (e) { return; }
+
+                            document.getElementById('modal-meal-plan-title').textContent = plan.name || 'Meal plan';
+                            document.getElementById('modal-meal-plan-date').textContent  = plan.when ? ('Saved on ' + plan.when) : '';
+
+                            var html = (plan.days || []).filter(function (d) {
+                                return d && d.meals && d.meals.length;
+                            }).map(function (d) {
+                                var meals = d.meals.map(function (m) {
+                                    return '<div style="font-size:12px; color:#475569; line-height:1.6;">' +
+                                           '<span style="color:#94A3B8;">' + esc(m.slot) + '</span> ' + esc(m.name) +
+                                           (m.calories ? ' <span style="color:#94A3B8;">' + esc(m.calories) + ' kcal</span>' : '') +
+                                           '</div>';
+                                }).join('');
+                                return '<div style="background:white; border:1px solid #E2E8F0; padding:14px 16px;">' +
+                                       '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:8px;">' +
+                                       '<strong style="font-size:13px; color:#0F172A;">' + esc(d.day) + '</strong>' +
+                                       (d.calories ? '<span style="font-size:12px; color:#64748B;">' + esc(d.calories) + ' kcal</span>' : '') +
+                                       '</div>' + meals + '</div>';
+                            }).join('');
+
+                            document.getElementById('modal-meal-plan-content').innerHTML =
+                                html || '<p style="color:#64748B; font-size:13px;">This plan has no meals saved against it.</p>';
+                            document.getElementById('meal-plan-modal').style.display = 'flex';
+                            document.body.style.overflow = 'hidden';
+                        };
+
+                        window.closeMealPlanModal = function () {
+                            document.getElementById('meal-plan-modal').style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                        };
+
+                        window.renameMealPlan = function (id, currentName) {
+                            var name = prompt('Enter a new name for this meal plan:', currentName);
+                            if (name === null) { return; }
+                            name = name.trim();
+                            if (name === '' || name === currentName) { return; }
+                            jQuery.post(ajaxUrl, {
+                                action: 'vance_rename_tool_entry',
+                                tool: 'ibd-recipes', id: id, name: name, nonce: nonce
+                            }, function (res) {
+                                if (res.success) { location.reload(); } else { alert(res.data); }
+                            });
+                        };
+
+                        window.deleteMealPlan = function (id) {
+                            if (!confirm('Delete this meal plan permanently?')) { return; }
+                            jQuery.post(ajaxUrl, {
+                                action: 'vance_delete_tool_entry',
+                                tool: 'ibd-recipes', id: id, nonce: nonce
+                            }, function (res) {
+                                if (res.success) { location.reload(); } else { alert(res.data); }
+                            });
+                        };
+
+                        document.addEventListener('click', function (e) {
+                            var btn = e.target.closest ? e.target.closest('.btn-view-meal-plan') : null;
+                            if (btn) { window.openMealPlanModal(btn); }
+                        });
+                        // Click the backdrop to dismiss, same as clicking Close.
+                        var overlay = document.getElementById('meal-plan-modal');
+                        if (overlay) {
+                            overlay.addEventListener('click', function (e) {
+                                if (e.target === overlay) { window.closeMealPlanModal(); }
+                            });
+                        }
+                    })();
+
                     jQuery('#dashboard-additional-details-form').on('submit', function(e) {
                         e.preventDefault();
                         const btn = jQuery(this).find('button');

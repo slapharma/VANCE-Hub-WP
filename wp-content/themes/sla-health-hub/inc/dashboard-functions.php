@@ -804,8 +804,11 @@ function vance_append_tool_history( $user_id, $tool_slug, $payload ) {
         $existing = array();
     }
 
-    // Newest first; keep last 50 entries.
+    // Newest first; keep last 50 entries. `id` gives each row a stable handle
+    // for rename/delete — entries written before this existed are addressed by
+    // timestamp instead, see vance_tool_history_key().
     array_unshift( $existing, array(
+        'id'      => uniqid( 'th_' ),
         'ts'      => time(),
         'payload' => wp_unslash( $payload ),
     ) );
@@ -852,6 +855,133 @@ function vance_get_tool_history( $user_id, $tool_slug, $limit = 0 ) {
     }
     return $entries;
 }
+
+/**
+ * Stable handle for one tool-history row, used by both the templates and the
+ * rename/delete handlers so the two sides always agree on identity.
+ *
+ * Rows written since vance_append_tool_history() started stamping `id` use it
+ * directly. Older rows have no id, so they fall back to their timestamp. That
+ * avoids a migration; the only cost is that two rows saved in the same second
+ * would share a key, which cannot happen through the UI (one save per click).
+ *
+ * @param array $entry A {ts, payload} history row.
+ * @return string
+ */
+function vance_tool_history_key( $entry ) {
+    if ( ! empty( $entry['id'] ) ) {
+        return (string) $entry['id'];
+    }
+    return 'ts_' . ( isset( $entry['ts'] ) ? (int) $entry['ts'] : 0 );
+}
+
+/**
+ * Shared front half of the tool-history mutation handlers: auth, nonce and slug
+ * checks, then load the rows. Sends the JSON error and exits on any failure, so
+ * callers can assume a valid array on return.
+ *
+ * @return array {string $meta_key, array $entries, string $id, int $user_id}
+ */
+function vance_tool_history_request() {
+    check_ajax_referer( 'vance_dashboard_nonce', 'nonce' );
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( 'Not logged in' );
+    }
+
+    $tool = isset( $_POST['tool'] ) ? sanitize_key( wp_unslash( $_POST['tool'] ) ) : '';
+    // Validate before touching meta, same guard as vance_ajax_save_tool_result().
+    if ( ! in_array( $tool, vance_known_tool_slugs(), true ) ) {
+        wp_send_json_error( 'Unknown tool' );
+    }
+
+    $id = isset( $_POST['id'] ) ? sanitize_text_field( wp_unslash( $_POST['id'] ) ) : '';
+    if ( '' === $id ) {
+        wp_send_json_error( 'Missing ID' );
+    }
+
+    $user_id  = get_current_user_id();
+    $meta_key = '_sla_' . str_replace( '-', '_', $tool ) . '_history';
+    $entries  = get_user_meta( $user_id, $meta_key, true );
+    if ( ! is_array( $entries ) ) {
+        $entries = array();
+    }
+
+    return array(
+        'meta_key' => $meta_key,
+        'entries'  => $entries,
+        'id'       => $id,
+        'user_id'  => $user_id,
+    );
+}
+
+/**
+ * AJAX: delete one saved tool result.
+ *
+ * Expects POST: nonce ('vance_dashboard_nonce'), tool, id.
+ */
+function vance_delete_tool_entry() {
+    $req = vance_tool_history_request();
+
+    $remaining = array();
+    foreach ( $req['entries'] as $entry ) {
+        if ( is_array( $entry ) && vance_tool_history_key( $entry ) === $req['id'] ) {
+            continue;
+        }
+        $remaining[] = $entry;
+    }
+
+    if ( count( $remaining ) === count( $req['entries'] ) ) {
+        wp_send_json_error( 'Not found' );
+    }
+
+    update_user_meta( $req['user_id'], $req['meta_key'], $remaining );
+    wp_send_json_success( 'Deleted' );
+}
+add_action( 'wp_ajax_vance_delete_tool_entry', 'vance_delete_tool_entry' );
+
+/**
+ * AJAX: rename one saved tool result.
+ *
+ * The label lives at payload['name'] rather than alongside `ts`, so the shared
+ * {ts, payload} history schema stays untouched for the other tools that read it.
+ *
+ * Expects POST: nonce ('vance_dashboard_nonce'), tool, id, name.
+ */
+function vance_rename_tool_entry() {
+    $req = vance_tool_history_request();
+
+    $name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+    if ( '' === $name ) {
+        wp_send_json_error( 'Missing name' );
+    }
+    if ( function_exists( 'mb_substr' ) ) {
+        $name = mb_substr( $name, 0, 120 );
+    } else {
+        $name = substr( $name, 0, 120 );
+    }
+
+    $entries = $req['entries'];
+    $updated = false;
+    foreach ( $entries as &$entry ) {
+        if ( is_array( $entry ) && vance_tool_history_key( $entry ) === $req['id'] ) {
+            if ( ! isset( $entry['payload'] ) || ! is_array( $entry['payload'] ) ) {
+                $entry['payload'] = array();
+            }
+            $entry['payload']['name'] = $name;
+            $updated = true;
+            break;
+        }
+    }
+    unset( $entry ); // break the reference before reusing $entries
+
+    if ( ! $updated ) {
+        wp_send_json_error( 'Not found' );
+    }
+
+    update_user_meta( $req['user_id'], $req['meta_key'], $entries );
+    wp_send_json_success( 'Renamed' );
+}
+add_action( 'wp_ajax_vance_rename_tool_entry', 'vance_rename_tool_entry' );
 
 /**
  * AJAX: anonymous quick-register from a tool page.
