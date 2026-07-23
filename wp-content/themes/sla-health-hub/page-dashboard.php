@@ -221,10 +221,6 @@ get_header();
                     <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
-
-            <div class="nav-section" style="margin-top: auto; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 20px;">
-                <a href="<?php echo wp_logout_url(home_url()); ?>" class="nav-item"><span style="width:20px;text-align:center;">🚪</span> Log Out</a>
-            </div>
         </nav>
     </aside>
 
@@ -255,6 +251,7 @@ get_header();
                     </div>
                     <img src="<?php echo esc_url($profile_img); ?>" class="profile-avatar">
                 </div>
+                <a href="<?php echo wp_logout_url(home_url()); ?>" title="Log Out" aria-label="Log Out" style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #E2E8F0; border-radius:0; color:#64748B; text-decoration:none; font-size:16px; transition:all 0.2s;" onmouseover="this.style.background='#F1F5F9'; this.style.color='#EF4444';" onmouseout="this.style.background=''; this.style.color='#64748B';">🚪</a>
             </div>
         </header>
 
