@@ -127,7 +127,7 @@ function renderQuizStep(num) {
         
         // Option HTML
         optionsHtml += `
-            <label class="modal-option-item ${isSelected ? 'selected' : ''}" style="padding:16px 20px; border:2px solid ${isSelected?'#008080':'#e2e8f0'}; display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; background:${isSelected?'#def4f4':'white'};" onclick="handleOptionClick(this, ${num-1}, ${idx})">
+            <label class="modal-option-item ${isSelected ? 'selected' : ''}" style="padding:16px 20px; border:2px solid ${isSelected?'#008080':'#e2e8f0'}; display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; background:${isSelected?'#def4f4':'white'};" onclick="handleOptionClick(this, ${num-1}, ${idx}, event)">
                 <input type="${typeStr}" name="${data.field}" value="${val}" ${isSelected ? 'checked' : ''} style="display:none;">
                 <div style="width:20px; height:20px; border:2px solid ${isSelected?'#008080':'#cbd5e1'}; border-radius:${shapeStr}; display:flex; align-items:center; justify-content:center; background:${isSelected?'#008080':'transparent'};">
                     ${isSelected ? (isMulti ? '<span style="color:white;font-size:12px;">✓</span>' : '<div style="width:10px;height:10px;background:white;border-radius:50%;"></div>') : ''}
@@ -206,7 +206,14 @@ function renderQuizStep(num) {
     checkModalValidity();
 }
 
-function handleOptionClick(el, stepIdx, optIdx) {
+function handleOptionClick(el, stepIdx, optIdx, e) {
+    // The option is a <label> wrapping a hidden input, so one user click fires
+    // this twice: once for the click itself, then again when the label forwards
+    // a synthetic click to the input. Radio steps survived it (same value
+    // reassigned), but checkbox steps toggled the answer straight back off, so
+    // nothing could be selected. Ignore the forwarded click.
+    if (e && e.target && e.target.tagName === 'INPUT') return;
+
     const data = quizStepsContent[stepIdx];
     const isMulti = data.type === 'checkbox';
     const opt = data.opts[optIdx];

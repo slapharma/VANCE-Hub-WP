@@ -559,11 +559,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (checkedInputs.length > 0) {
             isValid = true;
             
-            // Check dependent inputs (if they are visible, they must be filled)
-            const visibleDeps = activeStep.querySelectorAll('.dep-container[style*="display: block"], .dep-container[style*="display: block;"], .dep-container:not([style*="display: none"])');
+            // Check dependent inputs (if they are visible, they must be filled).
+            // Test real layout rather than the inline style string: the markup
+            // writes `display:none` with no space, so an attribute selector
+            // looking for `display: none` read every hidden block as visible and
+            // demanded its empty text field. offsetParent also correctly skips
+            // containers nested inside a hidden parent.
+            const visibleDeps = Array.from(activeStep.querySelectorAll('.dep-container'))
+                .filter(dep => dep.offsetParent !== null);
             visibleDeps.forEach(dep => {
+                // Only a text box that is actually on screen is required. The
+                // supplements block nests its own hidden "Other" field, which
+                // would otherwise be picked up here as the outer block's
+                // required input and could never be satisfied.
                 const textInput = dep.querySelector('.dep-input:not([type="checkbox"]):not([type="radio"])');
-                if (textInput && textInput.value.trim() === '') {
+                if (textInput && textInput.offsetParent !== null && textInput.value.trim() === '') {
                     isValid = false;
                 }
                 
@@ -579,26 +589,26 @@ document.addEventListener('DOMContentLoaded', function() {
         nextBtn.disabled = !isValid;
     }
 
-    // Add click events to option items
-    document.querySelectorAll('.option-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            // Prevent double firing
-            if (e.target.tagName === 'INPUT') return;
-            
-            const input = this.querySelector('input');
-            const isRadio = input.type === 'radio';
-            
+    // React to the input's own change event rather than the label's click.
+    // Each option is a <label> wrapping a hidden input, so the label already
+    // toggles that input natively; assigning input.checked on click as well
+    // cancelled the native toggle out and left every checkbox permanently
+    // unchecked (radios were immune, which is why only the multi-select steps
+    // could never satisfy the Next button).
+    document.querySelectorAll('.option-item input').forEach(input => {
+        input.addEventListener('change', function() {
+            const item = this.closest('.option-item');
+            const isRadio = this.type === 'radio';
+
             if (isRadio) {
-                input.checked = true;
-                this.parentElement.querySelectorAll('.option-item').forEach(i => {
+                item.parentElement.querySelectorAll('.option-item').forEach(i => {
                     if(i.querySelector('input[type="radio"]')) i.classList.remove('selected');
                 });
-                this.classList.add('selected');
+                item.classList.add('selected');
             } else {
-                input.checked = !input.checked;
-                this.classList.toggle('selected');
+                item.classList.toggle('selected', this.checked);
             }
-            
+
             // Handle dependent visibility
             if (input.classList.contains('toggle-dep')) {
                 if (isRadio) {
