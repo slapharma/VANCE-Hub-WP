@@ -722,8 +722,20 @@ get_header();
                                 <a href="/malnutrition-calculator/" class="btn-primary" style="display:inline-block; background:#008080; color:white; text-decoration:none; padding:10px 24px; border-radius:0; font-weight:600;">Open the Calculator</a>
                             </div>
                         <?php else: ?>
+                            <?php
+                            // View-models for the detail modal, built alongside the rows so the
+                            // row markup and the modal can never drift out of sync.
+                            $mc_view_data = array();
+                            // Per-category maximums come from the calculator's own scoring.
+                            $mc_breakdown_map = array(
+                                'bmi'          => array( 'BMI', 2 ),
+                                'weightLoss'   => array( 'Weight loss', 2 ),
+                                'acuteDisease' => array( 'Acute disease', 2 ),
+                                'ibdSymptoms'  => array( 'IBD symptoms', 4 ),
+                            );
+                            ?>
                             <div class="dash-list">
-                                <?php foreach ($malnutrition_history as $entry):
+                                <?php foreach ($malnutrition_history as $idx => $entry):
                                     $p     = $entry['payload'];
                                     $ts    = !empty($entry['ts']) ? (int) $entry['ts'] : 0;
                                     $when  = $ts ? date_i18n('j M Y', $ts) : '';
@@ -731,18 +743,55 @@ get_header();
                                     $has_score = isset($p['score']) && is_numeric($p['score']);
                                     $level     = isset($p['riskLevel']) ? strtolower((string) $p['riskLevel']) : '';
                                     $level_col = $level === 'low' ? '#16a34a' : ($level === 'medium' ? '#d97706' : '#008080');
+                                    $risk_text = $has_score ? ($p['riskLabel'] ?? ucfirst($level) . ' risk') : '';
+
+                                    $mc_rows = array();
+                                    if (isset($p['breakdown']) && is_array($p['breakdown'])) {
+                                        foreach ($mc_breakdown_map as $bk => $bm) {
+                                            if (isset($p['breakdown'][$bk]) && is_numeric($p['breakdown'][$bk])) {
+                                                $mc_rows[] = array('label' => $bm[0], 'value' => (float) $p['breakdown'][$bk], 'max' => $bm[1]);
+                                            }
+                                        }
+                                    }
+                                    // Older saves are a DOM snapshot with only a text blob.
+                                    $mc_note = '';
+                                    if (!$has_score) {
+                                        $raw     = isset($p['text']) ? (string) $p['text'] : (isset($p['note']) ? (string) $p['note'] : '');
+                                        $mc_note = $raw !== '' ? wp_trim_words($raw, 150) : '';
+                                    }
+                                    $mc_view_data[] = array(
+                                        'when'      => $ts ? date_i18n('j F Y \a\t H:i', $ts) : '',
+                                        'hasScore'  => (bool) $has_score,
+                                        'score'     => $has_score ? 0 + $p['score'] : null,
+                                        'maxScore'  => isset($p['maxScore']) && is_numeric($p['maxScore']) ? (int) $p['maxScore'] : 8,
+                                        'riskLabel' => $risk_text,
+                                        'riskColor' => $level_col,
+                                        'bmi'       => isset($p['bmi']) ? (string) $p['bmi'] : '',
+                                        'bmiCat'    => isset($p['bmiCat']) ? (string) $p['bmiCat'] : '',
+                                        'ibdType'   => isset($p['ibdType']) ? (string) $p['ibdType'] : '',
+                                        'breakdown' => $mc_rows,
+                                        'note'      => $mc_note,
+                                    );
                                     ?>
                                     <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:8px;">
                                         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; flex-wrap:wrap;">
                                             <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html($when); ?></span>
-                                            <?php if ($has_score): ?>
-                                                <span style="display:inline-flex; align-items:center; gap:10px;">
-                                                    <span style="font-size:12px; font-weight:700; color:<?php echo esc_attr($level_col); ?>; background:<?php echo esc_attr($level_col); ?>1A; padding:4px 12px;"><?php echo esc_html($p['riskLabel'] ?? ucfirst($level) . ' risk'); ?></span>
+                                            <span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                                <?php if ($has_score): ?>
+                                                    <span style="font-size:12px; font-weight:700; color:<?php echo esc_attr($level_col); ?>; background:<?php echo esc_attr($level_col); ?>1A; padding:4px 12px;"><?php echo esc_html($risk_text); ?></span>
                                                     <span style="font-size:14px; color:#0F172A; font-weight:700;">Score <?php echo esc_html($p['score']); ?><?php echo isset($p['maxScore']) ? '/' . esc_html($p['maxScore']) : ''; ?></span>
-                                                </span>
-                                            <?php else: ?>
-                                                <span style="font-size:13px; color:#64748B;">Saved result</span>
-                                            <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span style="font-size:13px; color:#64748B;">Saved result</span>
+                                                <?php endif; ?>
+                                                <button type="button" class="vance-mc-view"
+                                                        onclick="openMalnutritionResult(<?php echo (int) $idx; ?>, this)"
+                                                        aria-label="View full screening result from <?php echo esc_attr($when); ?>">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                                    </svg>
+                                                    View
+                                                </button>
+                                            </span>
                                         </div>
                                         <?php if ($has_score): ?>
                                             <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:13px; color:#475569;">
@@ -760,6 +809,152 @@ get_header();
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your healthcare team.</p>
                         <?php endif; ?>
                     </div>
+
+                    <?php if (!empty($malnutrition_history)): ?>
+                    <style>
+                        .vance-mc-view {
+                            display:inline-flex; align-items:center; gap:6px;
+                            min-height:34px; padding:6px 14px;
+                            font-size:12px; font-weight:700; font-family:inherit;
+                            color:#008080; background:white; border:1px solid #008080; border-radius:0;
+                            cursor:pointer; transition:background-color .2s, color .2s;
+                        }
+                        .vance-mc-view:hover { background:#008080; color:white; }
+                        .vance-mc-view:focus-visible,
+                        .vance-mc-close:focus-visible { outline:2px solid #008080; outline-offset:2px; }
+                        .vance-mc-close {
+                            position:absolute; top:12px; right:12px;
+                            width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+                            font-size:24px; line-height:1; color:#64748B;
+                            background:none; border:none; border-radius:0; cursor:pointer;
+                            transition:color .2s;
+                        }
+                        .vance-mc-close:hover { color:#0F172A; }
+                        .vance-mc-bar-track { height:8px; background:#F1F5F9; width:100%; }
+                        .vance-mc-bar-fill  { height:8px; background:#008080; transition:width .4s ease; }
+                        @media (prefers-reduced-motion: reduce) {
+                            .vance-mc-bar-fill { transition:none; }
+                            #vance-mc-result-modal .dash-card { animation:none !important; }
+                        }
+                    </style>
+
+                    <div id="vance-mc-result-modal" class="vance-modal" role="dialog" aria-modal="true" aria-labelledby="vance-mc-modal-title"
+                         style="display:none; position:fixed; inset:0; background:rgba(10,25,41,0.95); z-index:10000; overflow-y:auto; padding:20px; align-items:center; justify-content:center;">
+                        <div class="dash-card" id="vance-mc-modal-panel" tabindex="-1"
+                             style="max-width:560px; width:100%; background:white; border-radius:0; padding:40px; position:relative; animation:slideUp 0.4s ease;">
+                            <button type="button" class="vance-mc-close" onclick="closeMalnutritionResult()" aria-label="Close screening result">&times;</button>
+                            <h3 id="vance-mc-modal-title" class="card-title" style="margin:0 0 4px; font-family:'Outfit'; font-size:24px;">Screening Result</h3>
+                            <p id="vance-mc-modal-date" style="margin:0 0 24px; font-size:13px; color:#64748B;"></p>
+                            <div id="vance-mc-modal-body"></div>
+                            <p style="margin:24px 0 0; padding-top:16px; border-top:1px solid #E2E8F0; font-size:12px; color:#94A3B8; line-height:1.5;">This is a screening estimate, not a diagnosis. Discuss any concerns with your healthcare team.</p>
+                        </div>
+                    </div>
+
+                    <script>
+                    var VANCE_MC_RESULTS = <?php echo json_encode($mc_view_data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+                    (function () {
+                        var modal = document.getElementById('vance-mc-result-modal');
+                        var panel = document.getElementById('vance-mc-modal-panel');
+                        var lastTrigger = null;
+
+                        function esc(v) {
+                            return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+                                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+                            });
+                        }
+
+                        function statRow(label, value) {
+                            return '<div style="display:flex; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px solid #F1F5F9;">' +
+                                   '<span style="font-size:13px; font-weight:600; color:#64748B;">' + esc(label) + '</span>' +
+                                   '<span style="font-size:14px; font-weight:700; color:#0F172A; text-align:right;">' + esc(value) + '</span>' +
+                                   '</div>';
+                        }
+
+                        function buildBody(d) {
+                            // Snapshot-only saves have no score to show.
+                            if (!d.hasScore) {
+                                return '<p style="font-size:14px; color:#475569; line-height:1.6; margin:0;">' +
+                                       (d.note ? esc(d.note)
+                                               : 'This result was saved before the calculator recorded structured scores, so only the date is available. Run the screening again to capture a full score.') +
+                                       '</p>';
+                            }
+
+                            var pct = d.maxScore ? Math.round((d.score / d.maxScore) * 100) : 0;
+                            var html = '';
+
+                            // Headline score + risk band.
+                            html += '<div style="text-align:center; padding:24px; background:' + esc(d.riskColor) + '14; border:1px solid ' + esc(d.riskColor) + '33; margin-bottom:24px;">' +
+                                    '<div style="font-family:\'Outfit\',sans-serif; font-size:48px; font-weight:800; line-height:1; color:#0F172A;">' + esc(d.score) +
+                                    '<span style="font-size:20px; color:#64748B; font-weight:700;">/' + esc(d.maxScore) + '</span></div>' +
+                                    '<div style="margin-top:10px; display:inline-block; font-size:13px; font-weight:700; padding:5px 16px; color:' + esc(d.riskColor) + '; background:' + esc(d.riskColor) + '1A;">' + esc(d.riskLabel) + '</div>' +
+                                    '</div>';
+
+                            // Key values.
+                            html += '<div style="margin-bottom:24px;">';
+                            if (d.bmi)     html += statRow('BMI', d.bmi + (d.bmiCat ? ' (' + d.bmiCat + ')' : ''));
+                            if (d.ibdType) html += statRow('IBD type', d.ibdType);
+                            html += statRow('Total score', d.score + ' out of ' + d.maxScore + ' (' + pct + '%)');
+                            html += '</div>';
+
+                            // Per-category breakdown, mirroring the calculator's own bars.
+                            if (d.breakdown && d.breakdown.length) {
+                                html += '<h4 style="font-family:\'Outfit\',sans-serif; font-size:14px; font-weight:700; color:#0A1929; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Score breakdown</h4>';
+                                d.breakdown.forEach(function (b) {
+                                    var w = b.max ? Math.round((b.value / b.max) * 100) : 0;
+                                    html += '<div style="margin-bottom:14px;">' +
+                                            '<div style="display:flex; justify-content:space-between; margin-bottom:6px;">' +
+                                            '<span style="font-size:13px; color:#475569;">' + esc(b.label) + '</span>' +
+                                            '<span style="font-size:13px; font-weight:700; color:#0F172A;">' + esc(b.value) + '/' + esc(b.max) + '</span>' +
+                                            '</div>' +
+                                            '<div class="vance-mc-bar-track"><div class="vance-mc-bar-fill" style="width:' + w + '%"></div></div>' +
+                                            '</div>';
+                                });
+                            }
+                            return html;
+                        }
+
+                        window.openMalnutritionResult = function (i, trigger) {
+                            var d = VANCE_MC_RESULTS[i];
+                            if (!d) return;
+                            lastTrigger = trigger || null;
+                            document.getElementById('vance-mc-modal-date').textContent = d.when || '';
+                            document.getElementById('vance-mc-modal-body').innerHTML = buildBody(d);
+                            modal.style.display = 'flex';
+                            document.body.style.overflow = 'hidden';
+                            panel.focus();
+                        };
+
+                        window.closeMalnutritionResult = function () {
+                            modal.style.display = 'none';
+                            document.body.style.overflow = '';
+                            // Return focus to the View button that opened this.
+                            if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus();
+                            lastTrigger = null;
+                        };
+
+                        // Click the backdrop (not the panel) to dismiss.
+                        modal.addEventListener('click', function (e) {
+                            if (e.target === modal) window.closeMalnutritionResult();
+                        });
+
+                        document.addEventListener('keydown', function (e) {
+                            if (modal.style.display !== 'flex') return;
+                            if (e.key === 'Escape') { window.closeMalnutritionResult(); return; }
+                            // Keep Tab inside the dialog while it is open.
+                            if (e.key === 'Tab') {
+                                var f = panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                                if (!f.length) { e.preventDefault(); panel.focus(); return; }
+                                var first = f[0], last = f[f.length - 1];
+                                if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+                                    e.preventDefault(); last.focus();
+                                } else if (!e.shiftKey && document.activeElement === last) {
+                                    e.preventDefault(); first.focus();
+                                }
+                            }
+                        });
+                    })();
+                    </script>
+                    <?php endif; ?>
 
                     <!-- Saved meal plans (IBD Recipes planner) -->
                     <div class="dash-card" style="margin-top:32px;">
