@@ -341,10 +341,11 @@ function vance_askai_script_data() {
         'introBody'     => wp_kses_post( $intro_body ),
         'footNote'      => wp_kses( $foot, $allowed_links ),
         'disclaimer'    => wp_kses_post( $disclaimer ),
+        // Kept short: they sit on a single row under the intro line.
         'suggestions'   => array(
-            __( 'What is inflammatory bowel disease?', 'sla-health-hub' ),
-            __( 'How does diet affect IBD symptoms?', 'sla-health-hub' ),
-            __( 'What is the difference between Crohn\'s and ulcerative colitis?', 'sla-health-hub' ),
+            __( 'What is IBD?', 'sla-health-hub' ),
+            __( 'Diet and IBD symptoms', 'sla-health-hub' ),
+            __( 'Crohn\'s vs colitis', 'sla-health-hub' ),
         ),
         'i18n'          => array(
             'askPill'         => __( 'Ask VANCE-Ai', 'sla-health-hub' ),
