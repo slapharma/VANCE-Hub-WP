@@ -102,6 +102,7 @@ function vance_ai_gi_documents() {
 		$page  = get_page_by_path( 'gi-health/' . $slug );
 		$title = $page ? get_the_title( $page ) : ucwords( str_replace( '-', ' ', $slug ) );
 		$url   = $page ? get_permalink( $page ) : home_url( '/gi-health/' . $slug . '/' );
+		$url   = set_url_scheme( $url, 'https' );
 
 		$documents[] = array(
 			'id'    => 'gi:' . $slug,
@@ -133,7 +134,10 @@ function vance_ai_recipe_documents() {
 		return array();
 	}
 
-	$base      = get_template_directory_uri() . '/assets/tools/ibd-recipes/recipes/';
+	// Force https: siteurl in the database is still http, so the theme URI comes
+	// back unencrypted and every citation would cost the reader a redirect hop.
+	// Fixing siteurl itself is a separate, site-wide change.
+	$base      = set_url_scheme( get_template_directory_uri(), 'https' ) . '/assets/tools/ibd-recipes/recipes/';
 	$documents = array();
 
 	foreach ( (array) glob( $root . '/*', GLOB_ONLYDIR ) as $dir ) {
