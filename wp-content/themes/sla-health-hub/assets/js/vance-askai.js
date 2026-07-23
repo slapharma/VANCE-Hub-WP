@@ -488,19 +488,26 @@
 			root.classList.add('vance-askai--inline');
 		}
 
+		// The inline mount has no header: the VANCE-Ai page already carries the
+		// name and strapline in its own hero and agent bar, so repeating them
+		// inside the chat just pushed the conversation down the page.
+		var headerHtml = options.inline
+			? ''
+			: '<div class="vance-askai__header">' +
+					'<span class="vance-askai__badge">' + ICON.chat + '</span>' +
+					'<div class="vance-askai__titles">' +
+						'<h2 class="vance-askai__title">' + escapeHtml(CFG.title || 'VANCE-Ai') + '</h2>' +
+						'<p class="vance-askai__subtitle">' + escapeHtml(CFG.subtitle || '') + '</p>' +
+					'</div>' +
+					(options.modal
+						? '<div class="vance-askai__header-actions">' +
+							'<button type="button" class="vance-askai__iconbtn" data-askai-close aria-label="Close" title="Close">' + ICON.close + '</button>' +
+						  '</div>'
+						: '') +
+				'</div>';
+
 		root.innerHTML =
-			'<div class="vance-askai__header">' +
-				'<span class="vance-askai__badge">' + ICON.chat + '</span>' +
-				'<div class="vance-askai__titles">' +
-					'<h2 class="vance-askai__title">' + escapeHtml(CFG.title || 'VANCE-Ai') + '</h2>' +
-					'<p class="vance-askai__subtitle">' + escapeHtml(CFG.subtitle || '') + '</p>' +
-				'</div>' +
-				(options.modal
-					? '<div class="vance-askai__header-actions">' +
-						'<button type="button" class="vance-askai__iconbtn" data-askai-close aria-label="Close" title="Close">' + ICON.close + '</button>' +
-					  '</div>'
-					: '') +
-			'</div>' +
+			headerHtml +
 			'<div class="vance-askai__log" role="log" aria-live="polite"></div>' +
 			'<div class="vance-askai__composer">' +
 				'<label class="screen-reader-text" for="' + inputId + '">Your question</label>' +
