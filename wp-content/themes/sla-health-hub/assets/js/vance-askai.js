@@ -503,13 +503,16 @@
 			'</div>' +
 			'<div class="vance-askai__log" role="log" aria-live="polite"></div>' +
 			'<div class="vance-askai__composer">' +
-				levelMarkup(levelId) +
 				'<label class="screen-reader-text" for="' + inputId + '">Your question</label>' +
 				'<textarea id="' + inputId + '" class="vance-askai__input" rows="1" placeholder="' + escapeHtml(CFG.placeholder || 'Ask a question…') + '"></textarea>' +
-				'<div class="vance-askai__actions">' +
-					'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
-					'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
-					'<button type="button" class="vance-askai__send">' + ICON.send + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.send) || 'Send') + '</span></button>' +
+				// Slider sits under the input, sharing its row with the button stack.
+				'<div class="vance-askai__controls">' +
+					levelMarkup(levelId) +
+					'<div class="vance-askai__actions">' +
+						'<button type="button" class="vance-askai__send">' + ICON.send + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.send) || 'Send') + '</span></button>' +
+						'<button type="button" class="vance-askai__minibtn" data-askai-new title="Start a new conversation, this one stays saved">' + ICON.fresh + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.newChat) || 'New chat') + '</span></button>' +
+						'<button type="button" class="vance-askai__minibtn" data-askai-clear title="Clear this conversation and delete it">' + ICON.trash + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.clearChat) || 'Clear') + '</span></button>' +
+					'</div>' +
 				'</div>' +
 				'<div class="vance-askai__foot">' + (CFG.footNote || '') + '</div>' +
 				(CFG.disclaimer
