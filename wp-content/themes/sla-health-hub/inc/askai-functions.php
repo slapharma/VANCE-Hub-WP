@@ -411,11 +411,11 @@ function vance_ai_retrieve_sources( $messages, $context_post_id = 0 ) {
 function vance_ai_reading_levels() {
 	return array(
 		'simple'        => array(
-			'label'       => __( 'Simple', 'sla-health-hub' ),
+			'label'       => __( 'Basic', 'sla-health-hub' ),
 			'instruction' => 'READING LEVEL: SIMPLE. Write for someone with no medical background and no prior knowledge of the condition. Use short sentences and everyday words. Never use a clinical or Latin term without immediately explaining it in plain English in the same sentence. Prefer "gut" over "gastrointestinal tract", "swelling" over "inflammation" (you may give the medical word in brackets once). Avoid statistics and study detail unless they are essential; if you give a number, say plainly what it means. Keep the whole answer short.',
 		),
 		'knowledgeable' => array(
-			'label'       => __( 'Knowledgeable', 'sla-health-hub' ),
+			'label'       => __( 'Advanced', 'sla-health-hub' ),
 			'instruction' => 'READING LEVEL: KNOWLEDGEABLE. Write for an informed reader who already lives with or works around this condition. You may use common clinical terms (inflammation, remission, flare, biologics, mucosa) without defining them, but briefly gloss anything more specialist the first time it appears. Include relevant detail and nuance, and mention figures or study findings where the sources give them.',
 		),
 		'expert'        => array(
