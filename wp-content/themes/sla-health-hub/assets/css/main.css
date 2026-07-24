@@ -111,16 +111,18 @@ h6 {
     transform: translateY(-1px);
 }
 
-/* Header "My Dashboard" CTA — sized 30% down from the base .btn */
-.header-actions .btn-primary {
-    padding: 8px 17px;
-    font-size: 10px;
+/* Header "My Dashboard" CTA — plain bold teal text link (not a button) */
+.header-dashboard-link {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.2s;
 }
 
-.header-actions .btn-primary svg {
-    width: 13px;
-    height: 13px;
-    margin-right: 6px;
+.header-dashboard-link:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
 }
 
 .btn-outline {

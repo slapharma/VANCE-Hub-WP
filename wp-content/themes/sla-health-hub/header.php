@@ -90,15 +90,7 @@
                 if ( vance_get_theme_mod( 'vance_show_dashboard_btn', true ) ) :
                     $dashboard_url = is_user_logged_in() ? home_url('/dashboard/') : wp_login_url(home_url('/dashboard/'));
                 ?>
-                <a href="<?php echo esc_url($dashboard_url); ?>" class="btn btn-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                    My Dashboard
-                </a>
+                <a href="<?php echo esc_url($dashboard_url); ?>" class="header-dashboard-link">My Dashboard</a>
                 <?php endif; ?>
             </div>
         </div>
