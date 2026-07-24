@@ -47,7 +47,11 @@
 		trash: SVG_OPEN + '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
 		send: SVG_OPEN + '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
 		note: SVG_OPEN + '<path d="M4 4a2 2 0 0 1 2-2h11l3 3v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h4"/></svg>',
-		check: SVG_OPEN + '<path d="M20 6L9 17l-5-5"/></svg>'
+		check: SVG_OPEN + '<path d="M20 6L9 17l-5-5"/></svg>',
+		// Intro popup feature/trust glyphs (Lucide-style).
+		highlighter: SVG_OPEN + '<path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>',
+		sliders: SVG_OPEN + '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>',
+		shield: SVG_OPEN + '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>'
 	};
 
 	var state = {
@@ -1311,6 +1315,39 @@
 		}, 1400);
 	}
 
+	/**
+	 * Decorative right-column illustration, shown when no popup image is set.
+	 * Mirrors the mockup: a mock article with a highlighted term and a small
+	 * VANCE-Ai answer card. Purely visual, so the whole block is aria-hidden.
+	 */
+	function introIllustration() {
+		return '' +
+			'<div class="vance-askai-illus" aria-hidden="true">' +
+				'<div class="vance-askai-illus__doc">' +
+					'<span class="vance-askai-illus__doc-title">Understanding Hypertension</span>' +
+					'<span class="vance-askai-illus__line"></span>' +
+					'<span class="vance-askai-illus__line"></span>' +
+					'<span class="vance-askai-illus__row">' +
+						'<span class="vance-askai-illus__line is-short"></span>' +
+						'<span class="vance-askai-illus__term">hypertension</span>' +
+					'</span>' +
+					'<span class="vance-askai-illus__line"></span>' +
+					'<span class="vance-askai-illus__line is-short"></span>' +
+				'</div>' +
+				'<div class="vance-askai-illus__card">' +
+					'<div class="vance-askai-illus__card-head">' +
+						'<span class="vance-askai-illus__card-badge">' + ICON.spark + '</span>' +
+						'<span class="vance-askai-illus__card-name">VANCE-Ai</span>' +
+					'</div>' +
+					'<div class="vance-askai-illus__card-body">' +
+						'<span class="vance-askai-illus__line"></span>' +
+						'<span class="vance-askai-illus__line"></span>' +
+						'<span class="vance-askai-illus__line is-short"></span>' +
+					'</div>' +
+				'</div>' +
+			'</div>';
+	}
+
 	function showIntro() {
 		markIntroSeen();
 
@@ -1322,25 +1359,74 @@
 
 		var showRegister = !CFG.isLoggedIn;
 
-		// Two columns: copy and buttons on the left, image on the right. When no
-		// image is configured the right column shows a branded placeholder so the
-		// layout still reads as intended.
+		// Logo: a configured wordmark image, else a plain text fallback.
+		var logo = CFG.introLogo
+			? '<img class="vance-askai-intro__logo-img" src="' + escapeHtml(CFG.introLogo) + '" alt="' + escapeHtml(CFG.title || 'VANCE') + '">'
+			: '<span class="vance-askai-intro__logo-text">VANCE</span>';
+
+		// Two structured feature rows. The glyphs are fixed by position so the copy
+		// stays fully Customizer-editable without exposing an icon picker.
+		var features = (Array.isArray(CFG.introFeatures) && CFG.introFeatures.length)
+			? CFG.introFeatures.slice(0, 2)
+			: [
+				{ title: 'Highlight to explain', desc: 'Get clear, instant explanations for any medical term.' },
+				{ title: 'Personalized reading levels', desc: 'Content tailored to your health literacy and preferences.' }
+			];
+		var featureIcons = [ ICON.highlighter, ICON.sliders ];
+		var featuresHtml = '';
+		features.forEach(function (feature, i) {
+			if (!feature || (!feature.title && !feature.desc)) {
+				return;
+			}
+			featuresHtml +=
+				'<li class="vance-askai-intro__feature">' +
+					'<span class="vance-askai-intro__feature-icon" aria-hidden="true">' + (featureIcons[i] || ICON.spark) + '</span>' +
+					'<span class="vance-askai-intro__feature-text">' +
+						'<strong>' + escapeHtml(feature.title || '') + '</strong>' +
+						(feature.desc ? '<span>' + escapeHtml(feature.desc) + '</span>' : '') +
+					'</span>' +
+				'</li>';
+		});
+
+		// Right column: a configured image, else a built-in decorative illustration
+		// that echoes the mockup (an article with a highlighted term + an answer card).
 		var media = CFG.introImage
 			? '<img src="' + escapeHtml(CFG.introImage) + '" alt="">'
-			: '<div class="vance-askai-intro__placeholder">' + ICON.spark + '<span>VANCE-Ai</span></div>';
+			: introIllustration();
+
+		// The single ACTIVATE button is the mockup's one call to action. For a
+		// logged-out reader the sign-up path survives as a quiet text link, not a
+		// competing button, so the intended hierarchy is preserved.
+		var registerHtml = showRegister
+			? '<button type="button" class="vance-askai-intro__register" data-askai-intro-register>' +
+				escapeHtml((CFG.i18n && CFG.i18n.introRegister) || 'New here? Register for free') +
+			  '</button>'
+			: '';
 
 		overlay.innerHTML =
 			'<div class="vance-askai-intro">' +
-				'<button type="button" class="vance-askai-intro__close" aria-label="Close">' + ICON.close + '</button>' +
+				'<button type="button" class="vance-askai-intro__close" aria-label="' + escapeHtml((CFG.i18n && CFG.i18n.close) || 'Close') + '">' + ICON.close + '</button>' +
 				'<div class="vance-askai-intro__grid">' +
 					'<div class="vance-askai-intro__col">' +
-						'<span class="vance-askai-intro__badge">' + ICON.spark + '</span>' +
-						'<h2 class="vance-askai-intro__title" id="vance-askai-intro-title">' + escapeHtml(CFG.introTitle || 'Reading something new? Ask VANCE-Ai.') + '</h2>' +
-						'<div class="vance-askai-intro__body">' + (CFG.introBody || '') + '</div>' +
-						'<div class="vance-askai-intro__actions">' +
-							(showRegister ? '<button type="button" class="vance-askai-intro__btn vance-askai-intro__btn--ghost" data-askai-intro-register>' + escapeHtml((CFG.i18n && CFG.i18n.register) || 'Register free') + '</button>' : '') +
-							'<button type="button" class="vance-askai-intro__btn vance-askai-intro__btn--primary" data-askai-intro-try>' + escapeHtml((CFG.i18n && CFG.i18n.tryIt) || 'Try it now') + '</button>' +
+						'<div class="vance-askai-intro__logo">' + logo + '</div>' +
+						'<h2 class="vance-askai-intro__title" id="vance-askai-intro-title">' +
+							escapeHtml(CFG.introTitle || 'Demystify Your Health Journey') +
+							'<span class="vance-askai-intro__title-spark" aria-hidden="true">' + ICON.spark + '</span>' +
+						'</h2>' +
+						(CFG.introSubtitle ? '<p class="vance-askai-intro__subtitle">' + escapeHtml(CFG.introSubtitle) + '</p>' : '') +
+						(featuresHtml ? '<ul class="vance-askai-intro__features">' + featuresHtml + '</ul>' : '') +
+						'<div class="vance-askai-intro__cta-wrap">' +
+							(CFG.introLead ? '<p class="vance-askai-intro__lead">' + escapeHtml(CFG.introLead) + '</p>' : '') +
+							'<button type="button" class="vance-askai-intro__activate" data-askai-intro-try>' +
+								'<span class="vance-askai-intro__activate-icon" aria-hidden="true">' + ICON.spark + '</span>' +
+								'<span>' + escapeHtml(CFG.introCta || 'ACTIVATE') + '</span>' +
+							'</button>' +
 						'</div>' +
+						'<p class="vance-askai-intro__trust">' +
+							'<span class="vance-askai-intro__trust-icon" aria-hidden="true">' + ICON.shield + '</span>' +
+							'<span>' + escapeHtml(CFG.introTrust || 'Secure. Private. Always by your side.') + '</span>' +
+						'</p>' +
+						registerHtml +
 					'</div>' +
 					'<div class="vance-askai-intro__media">' + media + '</div>' +
 				'</div>' +

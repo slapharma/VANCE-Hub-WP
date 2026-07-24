@@ -76,6 +76,12 @@
                     ?>
                 </div>
 
+                <!-- VANCE-Ai: opens the shared chat modal (assets/js/vance-askai.js,
+                     enqueued site-wide). Same style as the popup ACTIVATE button. -->
+                <button type="button" class="vance-nav-askai" data-vance-askai-open aria-haspopup="dialog">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
+                    <span>VANCE-Ai</span>
+                </button>
 
                 <?php
                 // My Dashboard button — gated by Customizer toggle.
