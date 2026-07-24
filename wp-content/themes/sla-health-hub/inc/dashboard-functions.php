@@ -472,9 +472,48 @@ function vance_append_to_note() {
     }
 
     update_user_meta( $user_id, '_sla_user_notes', $notes );
-    wp_send_json_success( array( 'id' => $saved_id, 'created' => ! $found ) );
+    wp_send_json_success( array(
+        'id'      => $saved_id,
+        'created' => ! $found,
+        'url'     => home_url( '/my-notes/?id=' . rawurlencode( $saved_id ) ),
+    ) );
 }
 add_action( 'wp_ajax_vance_append_to_note', 'vance_append_to_note' );
+
+/**
+ * List the current user's notes (id, title, date) for "add to note" pickers.
+ *
+ * Titles only — note bodies can be long and the picker never renders them.
+ * Used by the article highlight pill in assets/js/vance-askai.js.
+ */
+function vance_list_notes() {
+    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( 'Invalid nonce' );
+    }
+
+    $notes = get_user_meta( get_current_user_id(), '_sla_user_notes', true );
+    if ( ! is_array( $notes ) ) { $notes = array(); }
+
+    $out = array();
+    foreach ( $notes as $n ) {
+        if ( empty( $n['id'] ) ) { continue; }
+        $title = isset( $n['title'] ) ? trim( (string) $n['title'] ) : '';
+        $out[] = array(
+            'id'    => (string) $n['id'],
+            'title' => ( '' !== $title ) ? $title : __( 'Untitled Note', 'sla-health-hub' ),
+            'date'  => isset( $n['date'] ) ? (string) $n['date'] : '',
+        );
+    }
+
+    // Most recently touched first — that is nearly always the note in progress.
+    usort( $out, function ( $a, $b ) {
+        return strcmp( $b['date'], $a['date'] );
+    } );
+
+    wp_send_json_success( $out );
+}
+add_action( 'wp_ajax_vance_list_notes', 'vance_list_notes' );
 
 /**
  * Save / update practitioner profile (specialty, bio, availability, calendar slots).

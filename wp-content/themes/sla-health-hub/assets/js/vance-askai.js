@@ -45,7 +45,9 @@
 		close: SVG_OPEN + '<path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>',
 		fresh: SVG_OPEN + '<path d="M12 5v14"/><path d="M5 12h14"/></svg>',
 		trash: SVG_OPEN + '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
-		send: SVG_OPEN + '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>'
+		send: SVG_OPEN + '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+		note: SVG_OPEN + '<path d="M4 4a2 2 0 0 1 2-2h11l3 3v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h4"/></svg>',
+		check: SVG_OPEN + '<path d="M20 6L9 17l-5-5"/></svg>'
 	};
 
 	var state = {
@@ -742,7 +744,7 @@
 	}
 
 	// =====================================================================
-	// Highlight-to-ask
+	// Selection actions — highlight-to-ask, and highlight-to-note
 	// =====================================================================
 
 	function initHighlight() {
@@ -761,33 +763,344 @@
 			return;
 		}
 
-		var pill = null;
+		var bar = null;    // floating action group shown against the selection
+		var panel = null;  // note picker, open only after "Add to note"
 		var timer = null;
+		var notes = null;  // cached [{id, title, date}]; null until first fetch
 
-		function hidePill() {
-			if (pill && pill.parentNode) {
-				pill.parentNode.removeChild(pill);
-			}
-			pill = null;
+		function t(key, fallback) {
+			return (CFG.i18n && CFG.i18n[key]) || fallback;
 		}
 
-		function showPill(rect, text) {
-			hidePill();
+		function el(tag, className, text) {
+			var node = document.createElement(tag);
+			if (className) { node.className = className; }
+			if (text) { node.textContent = text; }
+			return node;
+		}
 
-			pill = document.createElement('button');
-			pill.type = 'button';
-			pill.className = 'vance-askai-pill';
-			pill.innerHTML = ICON.spark + '<span>' + escapeHtml((CFG.i18n && CFG.i18n.askPill) || 'Ask VANCE-Ai') + '</span>';
+		// -----------------------------------------------------------------
+		// admin-ajax transport. Notes live in user meta behind the dashboard
+		// nonce, not behind the REST chat endpoint the rest of this file uses.
+		// -----------------------------------------------------------------
 
-			// Keep the selection alive when the pill takes the press.
-			pill.addEventListener('mousedown', function (event) {
+		function ajax(action, params) {
+			var body = 'action=' + encodeURIComponent(action) +
+				'&nonce=' + encodeURIComponent(CFG.notesNonce || '');
+
+			Object.keys(params || {}).forEach(function (key) {
+				body += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+			});
+
+			return fetch(CFG.ajaxUrl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+				body: body
+			}).then(function (response) {
+				return response.json();
+			}).then(function (payload) {
+				if (!payload || !payload.success) {
+					throw new Error((payload && payload.data) ? String(payload.data) : 'request failed');
+				}
+				return payload.data;
+			});
+		}
+
+		// -----------------------------------------------------------------
+		// Note picker
+		// -----------------------------------------------------------------
+
+		/**
+		 * What gets appended to the note: the quote, then a line citing the
+		 * article it came from. Inline styles because note bodies are stored as
+		 * raw HTML and rendered in the editor without the theme stylesheet —
+		 * the same approach the editor's own "Attach Reference" uses.
+		 */
+		function excerptHtml(text) {
+			var title = CFG.postTitle || 'this article';
+			var cite = CFG.postUrl
+				? '<a href="' + escapeHtml(CFG.postUrl) + '" target="_blank" rel="noopener" style="color:#008080; font-weight:600;">' + escapeHtml(title) + '</a>'
+				: escapeHtml(title);
+
+			return '<blockquote style="margin:18px 0 6px; padding:6px 0 6px 16px; border-left:3px solid #008080; color:#334155;">' +
+				escapeHtml(text) +
+				'</blockquote>' +
+				'<p style="margin:0 0 18px; font-size:12px; color:#94a3b8;">' +
+				escapeHtml(t('noteFrom', 'From')) + ' ' + cite +
+				'</p>';
+		}
+
+		function noteDate(value) {
+			// WordPress hands back 'Y-m-d H:i:s'; Safari needs the T separator.
+			var parsed = new Date(String(value).replace(' ', 'T'));
+			if (isNaN(parsed.getTime())) { return ''; }
+			return parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+		}
+
+		function closePanel(restoreFocus) {
+			if (panel && panel.parentNode) {
+				panel.parentNode.removeChild(panel);
+			}
+			panel = null;
+			if (restoreFocus && bar) {
+				var noteBtn = bar.querySelector('[data-askai-note]');
+				if (noteBtn) { noteBtn.focus(); }
+			}
+		}
+
+		function positionPanel() {
+			if (!panel || !bar) { return; }
+
+			var anchor = bar.getBoundingClientRect();
+			var viewportWidth = document.documentElement.clientWidth;
+			var viewportHeight = document.documentElement.clientHeight;
+
+			var left = window.pageXOffset + anchor.left + (anchor.width / 2) - (panel.offsetWidth / 2);
+			var maxLeft = window.pageXOffset + viewportWidth - panel.offsetWidth - 8;
+			left = Math.max(window.pageXOffset + 8, Math.min(left, maxLeft));
+
+			// Prefer below the buttons; flip above only when there is room there
+			// and not below, so the panel never runs off the fold.
+			var top = window.pageYOffset + anchor.bottom + 8;
+			if ((viewportHeight - anchor.bottom) < (panel.offsetHeight + 16) && anchor.top > (panel.offsetHeight + 16)) {
+				top = window.pageYOffset + anchor.top - panel.offsetHeight - 8;
+			}
+
+			panel.style.top = Math.round(top) + 'px';
+			panel.style.left = Math.round(left) + 'px';
+		}
+
+		function openPanel(text) {
+			closePanel(false);
+
+			var busy = false;
+
+			panel = el('div', 'vance-askai-notes');
+			panel.setAttribute('role', 'dialog');
+			panel.setAttribute('aria-label', t('noteTitle', 'Add highlight to a note'));
+
+			// The panel takes clicks; the selection underneath is allowed to go.
+			panel.addEventListener('mousedown', function (event) {
+				if ('INPUT' !== event.target.tagName) { event.preventDefault(); }
+			});
+
+			var head = el('div', 'vance-askai-notes__head');
+			head.appendChild(el('span', 'vance-askai-notes__title', t('noteTitle', 'Add highlight to a note')));
+			var closeBtn = el('button', 'vance-askai-notes__close');
+			closeBtn.type = 'button';
+			closeBtn.setAttribute('aria-label', t('close', 'Close'));
+			closeBtn.innerHTML = ICON.close;
+			closeBtn.addEventListener('click', function () { closePanel(false); });
+			head.appendChild(closeBtn);
+			panel.appendChild(head);
+
+			panel.appendChild(el('blockquote', 'vance-askai-notes__quote', text));
+
+			var status = el('p', 'vance-askai-notes__status');
+			status.setAttribute('role', 'status');
+
+			function setStatus(message, tone) {
+				status.textContent = message || '';
+				status.className = 'vance-askai-notes__status' + (tone ? ' is-' + tone : '');
+			}
+
+			if (!CFG.isLoggedIn) {
+				panel.appendChild(el('p', 'vance-askai-notes__signedout', t('noteSignedOut', 'Register for FREE to save highlights straight into your own notes.')));
+
+				var register = el('button', 'vance-askai-notes__create', t('register', 'Register for FREE'));
+				register.type = 'button';
+				register.addEventListener('click', function () {
+					closePanel(false);
+					hideBar();
+					if (window.VanceRegisterModal && 'function' === typeof window.VanceRegisterModal.open) {
+						window.VanceRegisterModal.open({ tool: '', payload: {} });
+					} else if (CFG.registerUrl) {
+						window.location.href = CFG.registerUrl;
+					}
+				});
+				panel.appendChild(register);
+
+				document.body.appendChild(panel);
+				positionPanel();
+				register.focus();
+				return;
+			}
+
+			var body = el('div', 'vance-askai-notes__body');
+			body.appendChild(el('p', 'vance-askai-notes__label', t('noteExisting', 'Your notes')));
+			var list = el('div', 'vance-askai-notes__list');
+			list.appendChild(el('p', 'vance-askai-notes__empty', t('noteLoading', 'Loading your notes…')));
+			body.appendChild(list);
+			panel.appendChild(body);
+
+			var newWrap = el('div', 'vance-askai-notes__new');
+			var inputId = 'vance-askai-note-title-' + (++uid);
+			var label = el('label', 'vance-askai-notes__label', t('noteNewLabel', 'Or create a new note'));
+			label.setAttribute('for', inputId);
+			newWrap.appendChild(label);
+
+			var row = el('div', 'vance-askai-notes__newrow');
+			var input = el('input', 'vance-askai-notes__input');
+			input.type = 'text';
+			input.id = inputId;
+			input.maxLength = 120;
+			input.placeholder = t('noteNewHint', 'Note title');
+			input.value = CFG.postTitle || '';
+			var create = el('button', 'vance-askai-notes__create', t('noteCreate', 'Create note'));
+			create.type = 'button';
+			row.appendChild(input);
+			row.appendChild(create);
+			newWrap.appendChild(row);
+			panel.appendChild(newWrap);
+
+			panel.appendChild(status);
+
+			function setBusy(on) {
+				busy = on;
+				panel.classList.toggle('is-busy', on);
+				Array.prototype.forEach.call(panel.querySelectorAll('button, input'), function (node) {
+					if (node === closeBtn) { return; }
+					node.disabled = on;
+				});
+			}
+
+			function showSaved(data) {
+				panel.innerHTML = '';
+				panel.classList.add('is-done');
+
+				var done = el('div', 'vance-askai-notes__done');
+				var icon = el('span', 'vance-askai-notes__doneicon');
+				icon.innerHTML = ICON.check;
+				done.appendChild(icon);
+				done.appendChild(el('span', null, t('noteSaved', 'Added to your note.')));
+				panel.appendChild(done);
+
+				var open = el('a', 'vance-askai-notes__open', t('noteOpen', 'Open note'));
+				open.href = (data && data.url) ? data.url : (CFG.notesUrl || '/my-notes/');
+				panel.appendChild(open);
+
+				positionPanel();
+
+				window.setTimeout(function () {
+					if (panel && panel.classList.contains('is-done')) {
+						closePanel(false);
+						hideBar();
+					}
+				}, 3600);
+			}
+
+			function save(targetId, newTitle) {
+				if (busy) { return; }
+				setBusy(true);
+				setStatus(t('noteSaving', 'Saving…'), '');
+
+				// The close button stays live during a save, so every callback
+				// has to check the panel it started against is still the open one.
+				var mine = panel;
+
+				ajax('vance_append_to_note', {
+					target_id: targetId || '',
+					new_title: newTitle || CFG.postTitle || 'Untitled Note',
+					content: excerptHtml(text)
+				}).then(function (data) {
+					notes = null; // titles and dates have moved on
+					if (panel !== mine) { return; }
+					showSaved(data);
+				}).catch(function () {
+					if (panel !== mine) { return; }
+					setBusy(false);
+					setStatus(t('noteFailed', 'Could not save to your note. Please try again.'), 'error');
+				});
+			}
+
+			function renderList() {
+				list.innerHTML = '';
+
+				if (!notes.length) {
+					list.appendChild(el('p', 'vance-askai-notes__empty', t('noteNone', 'You have no notes yet. Create your first one below.')));
+					return;
+				}
+
+				notes.forEach(function (note) {
+					var item = el('button', 'vance-askai-notes__item');
+					item.type = 'button';
+					item.appendChild(el('span', 'vance-askai-notes__itemtitle', note.title));
+					if (note.date) {
+						item.appendChild(el('span', 'vance-askai-notes__itemdate', noteDate(note.date)));
+					}
+					item.addEventListener('click', function () { save(note.id, ''); });
+					list.appendChild(item);
+				});
+			}
+
+			create.addEventListener('click', function () {
+				save('', input.value.trim());
+			});
+			input.addEventListener('keydown', function (event) {
+				if ('Enter' === event.key) {
+					event.preventDefault();
+					save('', input.value.trim());
+				}
+			});
+
+			document.body.appendChild(panel);
+			positionPanel();
+
+			if (notes) {
+				renderList();
+				positionPanel();
+			} else {
+				var mine = panel;
+				ajax('vance_list_notes', {}).then(function (data) {
+					notes = Array.isArray(data) ? data : [];
+					if (panel !== mine) { return; }
+					renderList();
+					positionPanel();
+				}).catch(function () {
+					if (panel !== mine) { return; }
+					list.innerHTML = '';
+					list.appendChild(el('p', 'vance-askai-notes__empty', t('noteListFailed', 'Could not load your notes.')));
+					positionPanel();
+				});
+			}
+		}
+
+		// -----------------------------------------------------------------
+		// Floating action bar
+		// -----------------------------------------------------------------
+
+		function hideBar() {
+			if (bar && bar.parentNode) {
+				bar.parentNode.removeChild(bar);
+			}
+			bar = null;
+		}
+
+		function dismissAll() {
+			closePanel(false);
+			hideBar();
+		}
+
+		function showBar(rect, text) {
+			hideBar();
+
+			bar = document.createElement('div');
+			bar.className = 'vance-askai-pillbar';
+
+			// Keep the selection alive when a button takes the press.
+			bar.addEventListener('mousedown', function (event) {
 				event.preventDefault();
 			});
 
-			pill.addEventListener('click', function (event) {
+			var ask = document.createElement('button');
+			ask.type = 'button';
+			ask.className = 'vance-askai-pill';
+			ask.innerHTML = ICON.spark + '<span>' + escapeHtml(t('askPill', 'Ask VANCE-Ai')) + '</span>';
+			ask.addEventListener('click', function (event) {
 				event.preventDefault();
 				event.stopPropagation();
-				hidePill();
+				dismissAll();
 
 				// A single word or acronym reads better as "what does X mean".
 				var isTerm = text.split(/\s+/).length <= 3;
@@ -797,40 +1110,59 @@
 
 				openModal(question);
 			});
+			bar.appendChild(ask);
 
-			document.body.appendChild(pill);
+			var note = document.createElement('button');
+			note.type = 'button';
+			note.className = 'vance-askai-pill vance-askai-pill--ghost';
+			note.setAttribute('data-askai-note', '');
+			note.innerHTML = ICON.note + '<span>' + escapeHtml(t('notePill', 'Add to note')) + '</span>';
+			note.addEventListener('click', function (event) {
+				event.preventDefault();
+				event.stopPropagation();
+				openPanel(text);
+			});
+			bar.appendChild(note);
+
+			document.body.appendChild(bar);
 
 			var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-			var top = window.pageYOffset + rect.top - pill.offsetHeight - 10;
+			var top = window.pageYOffset + rect.top - bar.offsetHeight - 10;
 			// On touch the native selection handles sit above; drop below instead.
 			if (coarse || top < window.pageYOffset + 8) {
 				top = window.pageYOffset + rect.bottom + 12;
 			}
 
-			var left = window.pageXOffset + rect.left + (rect.width / 2) - (pill.offsetWidth / 2);
-			var maxLeft = window.pageXOffset + document.documentElement.clientWidth - pill.offsetWidth - 8;
+			var left = window.pageXOffset + rect.left + (rect.width / 2) - (bar.offsetWidth / 2);
+			var maxLeft = window.pageXOffset + document.documentElement.clientWidth - bar.offsetWidth - 8;
 			left = Math.max(window.pageXOffset + 8, Math.min(left, maxLeft));
 
-			pill.style.top = Math.round(top) + 'px';
-			pill.style.left = Math.round(left) + 'px';
+			bar.style.top = Math.round(top) + 'px';
+			bar.style.left = Math.round(left) + 'px';
 		}
 
 		function evaluateSelection() {
+			// The picker owns the screen once it is open, and opening it clears
+			// the selection that produced it.
+			if (panel) {
+				return;
+			}
+
 			// vhh-annotations owns text selection while commenting mode is on.
 			if (document.body.classList.contains('vhh-mode-on')) {
-				hidePill();
+				hideBar();
 				return;
 			}
 
 			var selection = window.getSelection();
 			if (!selection || selection.isCollapsed || !selection.rangeCount) {
-				hidePill();
+				hideBar();
 				return;
 			}
 
 			var text = selection.toString().replace(/\s+/g, ' ').trim();
 			if (text.length < MIN_SELECTION || text.length > MAX_SELECTION) {
-				hidePill();
+				hideBar();
 				return;
 			}
 
@@ -838,27 +1170,27 @@
 			var node = range.commonAncestorContainer;
 			var element = (1 === node.nodeType) ? node : node.parentElement;
 			if (!element || !element.closest) {
-				hidePill();
+				hideBar();
 				return;
 			}
 
-			if (element.closest('.vhh-ui, .vance-askai, .vance-askai-modal, .vance-askai-intro, input, textarea, select, button, nav, header, footer, .site-header, .site-footer')) {
-				hidePill();
+			if (element.closest('.vhh-ui, .vance-askai, .vance-askai-modal, .vance-askai-intro, .vance-askai-notes, input, textarea, select, button, nav, header, footer, .site-header, .site-footer')) {
+				hideBar();
 				return;
 			}
 
 			if (!element.closest('article, main, .entry-content, .gi-cond-main, .post-content')) {
-				hidePill();
+				hideBar();
 				return;
 			}
 
 			var rect = range.getBoundingClientRect();
 			if (!rect || (!rect.width && !rect.height)) {
-				hidePill();
+				hideBar();
 				return;
 			}
 
-			showPill(rect, text);
+			showBar(rect, text);
 		}
 
 		function schedule(delay) {
@@ -878,13 +1210,34 @@
 		});
 
 		document.addEventListener('mousedown', function (event) {
-			if (pill && !pill.contains(event.target)) {
-				hidePill();
-			}
+			if (bar && bar.contains(event.target)) { return; }
+			if (panel && panel.contains(event.target)) { return; }
+			dismissAll();
 		});
 
-		document.addEventListener('scroll', hidePill, true);
-		window.addEventListener('resize', hidePill);
+		document.addEventListener('keydown', function (event) {
+			if ('Escape' !== event.key) { return; }
+			if (panel) {
+				closePanel(true);
+				return;
+			}
+			hideBar();
+		});
+
+		document.addEventListener('scroll', function () {
+			// The picker is positioned in page coordinates, so it travels with
+			// the text it came from; only the bare bar is dismissed on scroll.
+			if (panel) { return; }
+			hideBar();
+		}, true);
+
+		window.addEventListener('resize', function () {
+			if (panel) {
+				positionPanel();
+				return;
+			}
+			hideBar();
+		});
 	}
 
 	// =====================================================================
