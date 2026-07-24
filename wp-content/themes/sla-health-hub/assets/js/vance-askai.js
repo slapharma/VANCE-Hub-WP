@@ -51,7 +51,10 @@
 		// Intro popup feature/trust glyphs (Lucide-style).
 		highlighter: SVG_OPEN + '<path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>',
 		sliders: SVG_OPEN + '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>',
-		shield: SVG_OPEN + '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>'
+		shield: SVG_OPEN + '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>',
+		// Feedback glyphs for the "VANCE-Ai in use" illustration.
+		thumbUp: SVG_OPEN + '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
+		thumbDown: SVG_OPEN + '<path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
 	};
 
 	var state = {
@@ -1321,16 +1324,12 @@
 	 * VANCE-Ai answer card. Purely visual, so the whole block is aria-hidden.
 	 */
 	function introIllustration() {
+		var minus = SVG_OPEN + '<path d="M5 12h14"/></svg>';
 		return '' +
 			'<div class="vance-askai-illus" aria-hidden="true">' +
 				'<div class="vance-askai-illus__doc">' +
 					'<span class="vance-askai-illus__doc-title">Understanding Hypertension</span>' +
-					'<span class="vance-askai-illus__line"></span>' +
-					'<span class="vance-askai-illus__line"></span>' +
-					'<span class="vance-askai-illus__row">' +
-						'<span class="vance-askai-illus__line is-short"></span>' +
-						'<span class="vance-askai-illus__term">hypertension</span>' +
-					'</span>' +
+					'<p class="vance-askai-illus__para">Blood pressure is the force of blood pushing against your artery walls. When it stays too high, doctors call it <span class="vance-askai-illus__mark">hypertension</span>.</p>' +
 					'<span class="vance-askai-illus__line"></span>' +
 					'<span class="vance-askai-illus__line is-short"></span>' +
 				'</div>' +
@@ -1338,12 +1337,10 @@
 					'<div class="vance-askai-illus__card-head">' +
 						'<span class="vance-askai-illus__card-badge">' + ICON.spark + '</span>' +
 						'<span class="vance-askai-illus__card-name">VANCE-Ai</span>' +
+						'<span class="vance-askai-illus__card-ctrls">' + minus + ICON.close + '</span>' +
 					'</div>' +
-					'<div class="vance-askai-illus__card-body">' +
-						'<span class="vance-askai-illus__line"></span>' +
-						'<span class="vance-askai-illus__line"></span>' +
-						'<span class="vance-askai-illus__line is-short"></span>' +
-					'</div>' +
+					'<p class="vance-askai-illus__card-text">Hypertension, or high blood pressure, is when the force of blood against your artery walls stays too high. Over time it can raise the risk of heart disease and stroke.</p>' +
+					'<div class="vance-askai-illus__card-foot">' + ICON.thumbUp + ICON.thumbDown + '</div>' +
 				'</div>' +
 			'</div>';
 	}
