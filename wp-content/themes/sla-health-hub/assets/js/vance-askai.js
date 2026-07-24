@@ -1414,10 +1414,16 @@
 						(featuresHtml ? '<ul class="vance-askai-intro__features">' + featuresHtml + '</ul>' : '') +
 						'<div class="vance-askai-intro__cta-wrap">' +
 							(CFG.introLead ? '<p class="vance-askai-intro__lead">' + escapeHtml(CFG.introLead) + '</p>' : '') +
-							'<button type="button" class="vance-askai-intro__activate" data-askai-intro-try>' +
-								'<span class="vance-askai-intro__activate-icon" aria-hidden="true">' + ICON.spark + '</span>' +
-								'<span>' + escapeHtml(CFG.introCta || 'ACTIVATE') + '</span>' +
-							'</button>' +
+							'<div class="vance-askai-intro__cta-row">' +
+								'<button type="button" class="vance-askai-intro__activate" data-askai-intro-activate>' +
+									'<span class="vance-askai-intro__activate-icon" aria-hidden="true">' + ICON.spark + '</span>' +
+									'<span class="vance-askai-intro__activate-label">' + escapeHtml(CFG.introCta || 'ACTIVATE') + '</span>' +
+								'</button>' +
+								'<button type="button" class="vance-askai-intro__activate vance-askai-intro__activate--try" data-askai-intro-try>' +
+									'<span class="vance-askai-intro__activate-icon" aria-hidden="true">' + ICON.spark + '</span>' +
+									'<span class="vance-askai-intro__activate-label">' + escapeHtml(CFG.introCta2 || 'ACTIVATE & TRY') + '</span>' +
+								'</button>' +
+							'</div>' +
 						'</div>' +
 						'<p class="vance-askai-intro__trust">' +
 							'<span class="vance-askai-intro__trust-icon" aria-hidden="true">' + ICON.shield + '</span>' +
@@ -1454,9 +1460,29 @@
 		overlay.querySelector('.vance-askai-intro__close').addEventListener('click', dismiss);
 		document.addEventListener('keydown', onKey);
 
+		// Both buttons play the same confirmation (turn green, swap to a tick and the
+		// 'ACTIVATED' label) for ~1s. ACTIVATE then just closes; ACTIVATE & TRY closes
+		// and opens the chat. `activating` guards against a second click mid-animation.
+		var activating = false;
+		function runActivate(btn, openAfter) {
+			if (activating) { return; }
+			activating = true;
+			btn.classList.add('is-activated');
+			var icon = btn.querySelector('.vance-askai-intro__activate-icon');
+			if (icon) { icon.innerHTML = ICON.check; }
+			var label = btn.querySelector('.vance-askai-intro__activate-label');
+			if (label) { label.textContent = CFG.introActivated || 'ACTIVATED'; }
+			window.setTimeout(function () {
+				dismiss();
+				if (openAfter) { openModal(); }
+			}, 1000);
+		}
+
+		overlay.querySelector('[data-askai-intro-activate]').addEventListener('click', function () {
+			runActivate(this, false);
+		});
 		overlay.querySelector('[data-askai-intro-try]').addEventListener('click', function () {
-			dismiss();
-			openModal();
+			runActivate(this, true);
 		});
 
 		var registerBtn = overlay.querySelector('[data-askai-intro-register]');
@@ -1472,7 +1498,7 @@
 		}
 
 		window.setTimeout(function () {
-			var focusTarget = overlay.querySelector('[data-askai-intro-try]');
+			var focusTarget = overlay.querySelector('[data-askai-intro-activate]');
 			if (focusTarget) {
 				focusTarget.focus();
 			}

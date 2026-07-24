@@ -803,18 +803,25 @@
 	color: var(--primary-hover, #006666);
 }
 
+/* Two side-by-side CTAs: ACTIVATE (closes) and ACTIVATE & TRY (opens the chat). */
+.vance-askai-intro__cta-row {
+	display: flex;
+	gap: 10px;
+}
+
 .vance-askai-intro__activate {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 10px;
-	width: 100%;
-	min-height: 56px;
-	padding: 0 24px;
+	gap: 8px;
+	flex: 1 1 0;
+	min-width: 0;
+	min-height: 54px;
+	padding: 0 14px;
 	font-family: var(--font-heading, 'Outfit', sans-serif);
-	font-size: 17px;
+	font-size: 15px;
 	font-weight: 700;
-	letter-spacing: 0.08em;
+	letter-spacing: 0.03em;
 	color: #ffffff;
 	background: var(--primary-color, #008080);
 	border: 0;
@@ -830,8 +837,30 @@
 	box-shadow: 0 10px 26px rgba(0, 128, 128, 0.36);
 }
 
-.vance-askai-intro__activate-icon { display: inline-flex; }
-.vance-askai-intro__activate-icon svg { width: 20px; height: 20px; }
+.vance-askai-intro__activate-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Clicked: settle to success green with a tick + 'ACTIVATED' and a brief pop. */
+.vance-askai-intro__activate.is-activated,
+.vance-askai-intro__activate.is-activated:hover {
+	background: #10B981;
+	box-shadow: 0 8px 22px rgba(16, 185, 129, 0.38);
+	transform: none;
+	cursor: default;
+	animation: vance-askai-activated 500ms ease-out;
+}
+
+@keyframes vance-askai-activated {
+	0%   { transform: scale(1); }
+	35%  { transform: scale(1.06); }
+	100% { transform: scale(1); }
+}
+
+.vance-askai-intro__activate-icon { display: inline-flex; flex: 0 0 auto; }
+.vance-askai-intro__activate-icon svg { width: 19px; height: 19px; }
 
 /* Trust line */
 .vance-askai-intro__trust {
@@ -1409,6 +1438,7 @@
 	.vance-askai-intro__title-spark svg { width: 22px; height: 22px; }
 	.vance-askai-intro__subtitle { margin-bottom: 20px; }
 	.vance-askai-intro__features { margin-bottom: 22px; }
+	.vance-askai-intro__cta-row { flex-direction: column; }
 
 	.vance-askai-modal { padding: 0; }
 
@@ -1438,6 +1468,7 @@
 	.vance-askai-intro-overlay { animation: none; }
 	.vance-askai__typing span { animation: none; opacity: 0.6; }
 	.vance-askai__caret { animation: none; }
+	.vance-askai-intro__activate.is-activated { animation: none; }
 
 	.vance-askai *,
 	.vance-askai-notes *,

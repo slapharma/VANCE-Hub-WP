@@ -606,7 +606,9 @@ function vance_askai_script_data() {
         'feat2_t'  => __( 'Personalized reading levels', 'sla-health-hub' ),
         'feat2_d'  => __( 'Content tailored to your health literacy and preferences.', 'sla-health-hub' ),
         'lead'     => __( 'Enable Vance-Ai by Clicking Below', 'sla-health-hub' ),
-        'cta'      => __( 'ACTIVATE', 'sla-health-hub' ),
+        'cta'       => __( 'ACTIVATE', 'sla-health-hub' ),
+        'cta2'      => __( 'ACTIVATE & TRY', 'sla-health-hub' ),
+        'activated' => __( 'ACTIVATED', 'sla-health-hub' ),
         'trust'    => __( 'Secure. Private. Always by your side.', 'sla-health-hub' ),
     );
 
@@ -620,7 +622,9 @@ function vance_askai_script_data() {
     $intro_title    = $intro_field( 'vance_askai_intro_title', $intro_defaults['title'] );
     $intro_subtitle = $intro_field( 'vance_askai_intro_subtitle', $intro_defaults['subtitle'] );
     $intro_lead     = $intro_field( 'vance_askai_intro_lead', $intro_defaults['lead'] );
-    $intro_cta      = $intro_field( 'vance_askai_intro_cta', $intro_defaults['cta'] );
+    $intro_cta       = $intro_field( 'vance_askai_intro_cta', $intro_defaults['cta'] );
+    $intro_cta2      = $intro_field( 'vance_askai_intro_cta2', $intro_defaults['cta2'] );
+    $intro_activated = $intro_field( 'vance_askai_intro_activated', $intro_defaults['activated'] );
     $intro_trust    = $intro_field( 'vance_askai_intro_trust', $intro_defaults['trust'] );
 
     $intro_features = array(
@@ -679,6 +683,8 @@ function vance_askai_script_data() {
         'introFeatures' => $intro_features,
         'introLead'     => $intro_lead,
         'introCta'      => $intro_cta,
+        'introCta2'     => $intro_cta2,
+        'introActivated' => $intro_activated,
         'introTrust'    => $intro_trust,
         'introLogo'     => esc_url( $intro_logo ),
         'footNote'      => wp_kses( $foot, $allowed_links ),
@@ -4313,9 +4319,32 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'sanitize_text_field',
     ) );
     $wp_customize->add_control( 'vance_askai_intro_cta', array(
-        'label'   => __( 'Popup: button label', 'sla-health-hub' ),
-        'section' => 'vance_askai_settings',
-        'type'    => 'text',
+        'label'       => __( 'Popup: button 1 label', 'sla-health-hub' ),
+        'description' => __( 'First button. Activates and closes the popup without opening the chat.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_cta2', array(
+        'default'           => 'ACTIVATE & TRY',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_cta2', array(
+        'label'       => __( 'Popup: button 2 label', 'sla-health-hub' ),
+        'description' => __( 'Second button. Activates, then opens the VANCE-Ai chat.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_activated', array(
+        'default'           => 'ACTIVATED',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_activated', array(
+        'label'       => __( 'Popup: activated label', 'sla-health-hub' ),
+        'description' => __( 'Shown briefly on a button after it is clicked (the confirmation state).', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
     ) );
 
     $wp_customize->add_setting( 'vance_askai_intro_trust', array(
