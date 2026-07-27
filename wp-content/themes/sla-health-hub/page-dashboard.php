@@ -1428,15 +1428,39 @@ get_header();
                             </div>
                          <?php else: ?>
                             <div class="dash-list">
-                                <?php 
+                                <?php
                                 $notes_safe = is_array($my_notes) ? $my_notes : array();
+
+                                // Payload for the read-only View modal. Note bodies are HTML
+                                // (the /my-notes/ editor is contenteditable and saves innerHTML,
+                                // and "Add to Note" appends blockquote markup), so run each one
+                                // through wp_kses_post before it reaches the page — same
+                                // treatment the PDF/Print view gives it.
+                                $notes_view_data = array();
+                                foreach ($notes_safe as $n) {
+                                    if (empty($n['id'])) { continue; }
+                                    $notes_view_data[(string) $n['id']] = array(
+                                        'title' => ($n['title'] !== '' ? $n['title'] : 'Untitled Note'),
+                                        'date'  => !empty($n['date']) ? date('M j, Y \a\t H:i', strtotime($n['date'])) : '',
+                                        'html'  => wp_kses_post(isset($n['content']) ? $n['content'] : ''),
+                                    );
+                                }
+
                                 foreach(array_reverse($notes_safe) as $note): ?>
                                 <div class="list-item" style="padding:16px 0;">
                                     <div style="flex:1;">
                                         <div class="item-title"><?php echo esc_html($note['title'] ?: 'Untitled Note'); ?></div>
                                         <div class="item-meta">Last edited on <?php echo date('M j, Y', strtotime($note['date'])); ?></div>
                                     </div>
-                                    <div style="display:flex; gap:12px;">
+                                    <div style="display:flex; gap:12px; align-items:center;">
+                                        <button type="button" class="vance-btn-glass vance-btn--sm vance-note-view"
+                                                onclick="openNoteView('<?php echo esc_js($note['id']); ?>', this)"
+                                                aria-label="View note <?php echo esc_attr($note['title'] ?: 'Untitled Note'); ?>">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                            View
+                                        </button>
                                         <a href="?print_note=<?php echo $note['id']; ?>" target="_blank" class="card-link" style="color:#0EA5E9;">PDF/Print</a>
                                         <a href="/my-notes/?id=<?php echo $note['id']; ?>" class="card-link">Edit</a>
                                         <button onclick="deleteNote('<?php echo $note['id']; ?>')" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600;">Delete</button>
@@ -1444,6 +1468,111 @@ get_header();
                                 </div>
                                 <?php endforeach; ?>
                             </div>
+
+                            <style>
+                                .vance-note-view { display:inline-flex; align-items:center; gap:7px; cursor:pointer; }
+                                .vance-note-view svg { flex:0 0 auto; }
+                                #vance-note-modal-panel { animation:vanceNotePop .34s cubic-bezier(.2,.8,.2,1); }
+                                @keyframes vanceNotePop { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+                                .vance-note-close {
+                                    position:absolute; top:18px; right:18px; width:36px; height:36px;
+                                    display:flex; align-items:center; justify-content:center;
+                                    font-size:26px; line-height:1; color:#475569; cursor:pointer;
+                                    background:rgba(255,255,255,0.6); border:1px solid rgba(0,128,128,0.18);
+                                    border-radius:0; transition:background .2s ease, color .2s ease;
+                                }
+                                .vance-note-close:hover { background:#008080; color:#fff; }
+                                .vance-note-close:focus-visible { outline:3px solid var(--primary-pale, #B2D8D8); outline-offset:2px; }
+                                /* Long free-text bodies: cap the measure for readability and let the
+                                   body scroll inside the panel rather than the panel growing off-screen. */
+                                #vance-note-modal-body {
+                                    font-size:16px; line-height:1.7; color:#334155;
+                                    max-width:68ch; overflow-y:auto; overscroll-behavior:contain;
+                                    max-height:min(58vh, 620px); padding-right:6px; word-wrap:break-word; overflow-wrap:anywhere;
+                                }
+                                #vance-note-modal-body > *:first-child { margin-top:0; }
+                                #vance-note-modal-body > *:last-child { margin-bottom:0; }
+                                #vance-note-modal-body img { max-width:100%; height:auto; }
+                                #vance-note-modal-body a { color:#008080; }
+                                @media (prefers-reduced-motion: reduce) {
+                                    #vance-note-modal-panel { animation:none !important; }
+                                    .vance-note-close { transition:none; }
+                                }
+                            </style>
+
+                            <div id="vance-note-view-modal" class="vance-modal vance-glass-scrim" role="dialog" aria-modal="true" aria-labelledby="vance-note-modal-title"
+                                 style="display:none; position:fixed; inset:0; z-index:10000; overflow-y:auto; padding:20px; align-items:center; justify-content:center;">
+                                <div class="vance-glass-panel" id="vance-note-modal-panel" tabindex="-1"
+                                     style="max-width:720px; width:100%; padding:40px; position:relative;">
+                                    <button type="button" class="vance-note-close" onclick="closeNoteView()" aria-label="Close note">&times;</button>
+                                    <h3 id="vance-note-modal-title" class="card-title" style="margin:0 0 4px; padding-right:44px; font-family:'Outfit'; font-size:24px;"></h3>
+                                    <p id="vance-note-modal-date" style="margin:0 0 24px; font-size:13px; color:#64748B;"></p>
+                                    <div id="vance-note-modal-body"></div>
+                                    <div style="margin-top:24px; padding-top:20px; border-top:1px solid #E2E8F0; display:flex; gap:12px; flex-wrap:wrap;">
+                                        <a id="vance-note-modal-edit" href="#" class="vance-btn-inverted vance-btn--sm">Edit this note</a>
+                                        <a id="vance-note-modal-print" href="#" target="_blank" class="vance-btn-glass vance-btn--sm">PDF/Print</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <script>
+                            var VANCE_NOTES = <?php echo json_encode($notes_view_data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+                            (function () {
+                                var modal = document.getElementById('vance-note-view-modal');
+                                var panel = document.getElementById('vance-note-modal-panel');
+                                var lastTrigger = null;
+
+                                window.openNoteView = function (id, trigger) {
+                                    var d = VANCE_NOTES[id];
+                                    if (!d) { return; }
+                                    lastTrigger = trigger || null;
+
+                                    document.getElementById('vance-note-modal-title').textContent = d.title;
+                                    document.getElementById('vance-note-modal-date').textContent = d.date ? 'Last edited on ' + d.date : '';
+
+                                    // Already sanitised with wp_kses_post server-side; the note body is
+                                    // genuine HTML so it is injected rather than escaped.
+                                    var body = document.getElementById('vance-note-modal-body');
+                                    body.innerHTML = d.html && d.html.trim()
+                                        ? d.html
+                                        : '<p style="margin:0; color:#94A3B8;">This note is empty.</p>';
+
+                                    document.getElementById('vance-note-modal-edit').href  = '/my-notes/?id=' + encodeURIComponent(id);
+                                    document.getElementById('vance-note-modal-print').href = '?print_note=' + encodeURIComponent(id);
+
+                                    modal.style.display = 'flex';
+                                    modal.classList.add('is-open');
+                                    modal.setAttribute('aria-hidden', 'false');
+                                    document.body.style.overflow = 'hidden';
+                                    // Must come after the panel is displayed — scrollTop is a no-op
+                                    // on a display:none element, which would strand a reopened long
+                                    // note at the previous reader's scroll position.
+                                    body.scrollTop = 0;
+                                    panel.focus();
+                                };
+
+                                window.closeNoteView = function () {
+                                    modal.style.display = 'none';
+                                    modal.classList.remove('is-open');
+                                    modal.setAttribute('aria-hidden', 'true');
+                                    document.body.style.overflow = '';
+                                    // Hand focus back to the row the user came from.
+                                    if (lastTrigger && document.contains(lastTrigger) && typeof lastTrigger.focus === 'function') {
+                                        lastTrigger.focus();
+                                    }
+                                    lastTrigger = null;
+                                };
+
+                                // Click the scrim (not the panel) to dismiss.
+                                modal.addEventListener('click', function (e) {
+                                    if (e.target === modal) { window.closeNoteView(); }
+                                });
+
+                                document.addEventListener('keydown', function (e) {
+                                    if (e.key === 'Escape' && modal.style.display === 'flex') { window.closeNoteView(); }
+                                });
+                            })();
+                            </script>
                          <?php endif; ?>
                     </div>
                 <?php break;
