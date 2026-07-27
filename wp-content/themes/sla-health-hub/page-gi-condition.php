@@ -188,7 +188,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
 
     $cp_facts = [
         'inflammatory-bowel-disease' => [ 2, [ [ '500,000', 'People in the UK are estimated to live with IBD' ], [ 'Any age', 'IBD can be diagnosed at any age and is becoming more common' ] ] ],
-        'crohns-disease'           => [ 3, [ [ '115,000–250,000', 'People in the UK are estimated to live with Crohn\'s disease' ], [ 'Any part', 'Can affect anywhere from mouth to anus, most commonly the terminal ileum' ] ] ],
+        'crohns-disease'           => [ 2, [ [ '115,000–250,000', 'People in the UK are estimated to live with Crohn\'s disease' ], [ 'Any part', 'Can affect anywhere from mouth to anus, most commonly the terminal ileum' ] ] ],
         'ulcerative-colitis'       => [ 2, [ [ '1 in 420', 'People in the UK are estimated to live with UC' ], [ 'Any age', 'Often first diagnosed in younger adults, but can occur at any age' ] ] ],
         'microscopic-colitis'      => [ 3, [ [ 'Women 60+', 'Most commonly affects women over the age of 60' ], [ 'Normal scope', 'Colon looks completely normal during colonoscopy' ], [ 'Treatable', 'Symptoms often settle well with targeted treatment' ] ] ],
         'irritable-bowel-syndrome' => [ 3, [ [ '1 in 7', 'Adults are thought to have IBS symptoms' ], [ '~2x more', 'Common in women than in men' ], [ '3 types', 'IBS-D, IBS-C and IBS-M' ] ] ],

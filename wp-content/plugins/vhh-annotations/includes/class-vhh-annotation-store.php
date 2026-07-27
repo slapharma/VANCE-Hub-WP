@@ -368,11 +368,17 @@ class VHH_Annotation_Store {
 		$items = array();
 		if ( $ids ) {
 			// One batched fetch with primed meta cache instead of per-ID queries.
+			// Status must be the ARRAY form: WP_Comment_Query maps the string
+			// 'all' to comment_approved IN ('0','1'), which drops our custom
+			// 'vhh-resolved' rows — so ?status=all silently returned only open
+			// annotations even though the query above selected resolved ones.
+			// The ID set is already status-filtered above; this just must not
+			// narrow it further.
 			$comments = get_comments(
 				array(
 					'comment__in'               => array_map( 'intval', $ids ),
 					'type'                      => self::TYPE,
-					'status'                    => 'all',
+					'status'                    => array( 'approve', self::STATUS_RESOLVED ),
 					'orderby'                   => 'comment_ID',
 					'order'                     => 'ASC',
 					'update_comment_meta_cache' => true,
