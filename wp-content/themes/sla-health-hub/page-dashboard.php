@@ -612,7 +612,7 @@ get_header();
                             <div class="card-header">
                                 <h3 class="card-title">My Health Profile Responses</h3>
                                 <?php if($quiz_results): ?>
-                                    <button onclick="openQuizModal(1)" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white;">Edit Answers</button>
+                                    <button type="button" onclick="openQuizModal(1)" class="vance-btn-inverted vance-btn--sm">Edit Answers</button>
                                 <?php endif; ?>
                             </div>
                             <?php if(empty($quiz_results)): ?>
@@ -640,16 +640,8 @@ get_header();
                                         </div>
                                     <?php endif; endforeach; ?>
                                 </div>
-                                <div style="margin-top:24px; text-align:center; display:flex; flex-direction:column; gap:12px;">
+                                <div style="margin-top:24px; text-align:center;">
                                     <button onclick="openQuizModal()" style="font-size:12px; color:#008080; font-weight:600; background:none; border:none; cursor:pointer;">Retake Entire Quiz &rarr;</button>
-                                    <div style="display:flex; gap:12px;">
-                                        <a href="/ask-ai/?context=clinical_eval" class="btn-primary" style="flex: 1; background:#0A1929; color:white; text-decoration:none; padding:12px; border-radius:0; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                            <span>🔍</span> Ask VANCE-Ai
-                                        </a>
-                                        <a href="/ask-ai/?context=suggest_content" class="btn-primary" style="flex: 1; background:#008080; color:white; text-decoration:none; padding:12px; border-radius:0; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                            <span>💡</span> Suggest Content
-                                        </a>
-                                    </div>
                                 </div>
                                 <style>
                                     .list-item:hover .edit-hint { opacity: 1 !important; }
@@ -662,7 +654,7 @@ get_header();
                         <div class="dash-card">
                             <div class="card-header">
                                 <h3 class="card-title">Health Details & Lifestyle</h3>
-                                <button onclick="openClinicalInfoModal()" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white;">Update Details</button>
+                                <button type="button" onclick="openClinicalInfoModal()" class="vance-btn-inverted vance-btn--sm">Edit Details</button>
                             </div>
                             
                             <div class="dash-list">
@@ -711,15 +703,15 @@ get_header();
                     </div>
 
                     <!-- Malnutrition screening history -->
-                    <div class="dash-card" style="margin-top:32px;">
+                    <div class="dash-card vance-mc-card" style="margin-top:32px;">
                         <div class="card-header">
                             <h3 class="card-title">Malnutrition Screening Results</h3>
-                            <a href="/malnutrition-calculator/" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white; text-decoration:none; color:#475569;"><?php echo $malnutrition_history ? 'Screen again' : 'Start screening'; ?></a>
+                            <a href="/malnutrition-calculator/" class="vance-btn-glass vance-btn--sm" data-vance-tool-open="malnutrition-calculator"><?php echo $malnutrition_history ? 'Screen again' : 'Start screening'; ?></a>
                         </div>
                         <?php if (empty($malnutrition_history)): ?>
                             <div style="text-align:center; padding:40px;">
                                 <p style="color:#64748B; margin-bottom:20px;">You haven't saved a malnutrition screening yet. Complete the calculator and choose &ldquo;Save Results&rdquo; to track your score here over time.</p>
-                                <a href="/malnutrition-calculator/" class="btn-primary" style="display:inline-block; background:#008080; color:white; text-decoration:none; padding:10px 24px; border-radius:0; font-weight:600;">Open the Calculator</a>
+                                <a href="/malnutrition-calculator/" class="vance-btn-inverted" data-vance-tool-open="malnutrition-calculator">Open the Calculator</a>
                             </div>
                         <?php else: ?>
                             <?php
@@ -778,7 +770,7 @@ get_header();
                                             <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html($when); ?></span>
                                             <span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;">
                                                 <?php if ($has_score): ?>
-                                                    <span style="font-size:12px; font-weight:700; color:<?php echo esc_attr($level_col); ?>; background:<?php echo esc_attr($level_col); ?>1A; padding:4px 12px;"><?php echo esc_html($risk_text); ?></span>
+                                                    <span class="vance-mc-pill" style="color:<?php echo esc_attr($level_col); ?>; background:<?php echo esc_attr($level_col); ?>1A;"><?php echo esc_html($risk_text); ?></span>
                                                     <span style="font-size:14px; color:#0F172A; font-weight:700;">Score <?php echo esc_html($p['score']); ?><?php echo isset($p['maxScore']) ? '/' . esc_html($p['maxScore']) : ''; ?></span>
                                                 <?php else: ?>
                                                     <span style="font-size:13px; color:#64748B;">Saved result</span>
@@ -812,36 +804,59 @@ get_header();
 
                     <?php if (!empty($malnutrition_history)): ?>
                     <style>
+                        /* Glassmorphism screening card (overrides .dash-card here; this
+                           scoped block loads after main.css so it wins the cascade). */
+                        .vance-mc-card {
+                            background: var(--glass-fill) !important;
+                            -webkit-backdrop-filter: var(--glass-blur);
+                            backdrop-filter: var(--glass-blur);
+                            border: var(--glass-border-tint) !important;
+                            box-shadow: var(--glass-shadow) !important;
+                            border-radius: var(--glass-radius) !important;
+                        }
+                        .vance-mc-card .list-item {
+                            border-bottom: 1px solid rgba(0,128,128,0.10);
+                        }
                         .vance-mc-view {
                             display:inline-flex; align-items:center; gap:6px;
-                            min-height:34px; padding:6px 14px;
-                            font-size:12px; font-weight:700; font-family:inherit;
-                            color:#008080; background:white; border:1px solid #008080; border-radius:0;
-                            cursor:pointer; transition:background-color .2s, color .2s;
+                            min-height:38px; padding:8px 16px;
+                            font-size:13px; font-weight:700; font-family:inherit;
+                            color:#008080;
+                            background:rgba(255,255,255,0.55);
+                            -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+                            border:1px solid rgba(0,128,128,0.35); border-radius:0 !important;
+                            cursor:pointer; transition:background-color .2s, color .2s, transform .15s;
                         }
-                        .vance-mc-view:hover { background:#008080; color:white; }
+                        .vance-mc-view:hover { background:#008080; color:white; transform:translateY(-1px); }
                         .vance-mc-view:focus-visible,
-                        .vance-mc-close:focus-visible { outline:2px solid #008080; outline-offset:2px; }
-                        .vance-mc-close {
-                            position:absolute; top:12px; right:12px;
-                            width:36px; height:36px; display:flex; align-items:center; justify-content:center;
-                            font-size:24px; line-height:1; color:#64748B;
-                            background:none; border:none; border-radius:0; cursor:pointer;
-                            transition:color .2s;
+                        .vance-mc-close:focus-visible { outline:3px solid var(--primary-pale); outline-offset:2px; }
+                        .vance-mc-pill {
+                            font-size:12px; font-weight:700; padding:5px 14px;
+                            border-radius:0; border:1px solid currentColor;
                         }
-                        .vance-mc-close:hover { color:#0F172A; }
-                        .vance-mc-bar-track { height:8px; background:#F1F5F9; width:100%; }
-                        .vance-mc-bar-fill  { height:8px; background:#008080; transition:width .4s ease; }
+                        .vance-mc-close {
+                            position:absolute; top:16px; right:16px;
+                            width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+                            font-size:24px; line-height:1; color:#0A1929;
+                            background:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.6);
+                            border-radius:0 !important; cursor:pointer;
+                            transition:background-color .2s, transform .15s;
+                        }
+                        .vance-mc-close:hover { background:rgba(255,255,255,0.85); }
+                        .vance-mc-bar-track { height:8px; background:rgba(10,25,41,0.08); width:100%; border-radius:0; overflow:hidden; }
+                        .vance-mc-bar-fill  { height:8px; background:linear-gradient(90deg,#00a3a3,#008080); border-radius:0; transition:width .5s ease; }
+                        @keyframes vanceMcPop { from { opacity:0; transform:translateY(24px) scale(.98); } to { opacity:1; transform:none; } }
+                        #vance-mc-modal-panel { animation:vanceMcPop .38s cubic-bezier(.2,.8,.2,1); }
                         @media (prefers-reduced-motion: reduce) {
-                            .vance-mc-bar-fill { transition:none; }
-                            #vance-mc-result-modal .dash-card { animation:none !important; }
+                            .vance-mc-bar-fill, .vance-mc-view, .vance-mc-close { transition:none; }
+                            #vance-mc-modal-panel { animation:none !important; }
                         }
                     </style>
 
-                    <div id="vance-mc-result-modal" class="vance-modal" role="dialog" aria-modal="true" aria-labelledby="vance-mc-modal-title"
-                         style="display:none; position:fixed; inset:0; background:rgba(10,25,41,0.95); z-index:10000; overflow-y:auto; padding:20px; align-items:center; justify-content:center;">
-                        <div class="dash-card" id="vance-mc-modal-panel" tabindex="-1"
-                             style="max-width:560px; width:100%; background:white; border-radius:0; padding:40px; position:relative; animation:slideUp 0.4s ease;">
+                    <div id="vance-mc-result-modal" class="vance-modal vance-glass-scrim" role="dialog" aria-modal="true" aria-labelledby="vance-mc-modal-title"
+                         style="display:none; position:fixed; inset:0; z-index:10000; overflow-y:auto; padding:20px; align-items:center; justify-content:center;">
+                        <div class="vance-glass-panel" id="vance-mc-modal-panel" tabindex="-1"
+                             style="max-width:560px; width:100%; padding:40px; position:relative;">
                             <button type="button" class="vance-mc-close" onclick="closeMalnutritionResult()" aria-label="Close screening result">&times;</button>
                             <h3 id="vance-mc-modal-title" class="card-title" style="margin:0 0 4px; font-family:'Outfit'; font-size:24px;">Screening Result</h3>
                             <p id="vance-mc-modal-date" style="margin:0 0 24px; font-size:13px; color:#64748B;"></p>
@@ -882,11 +897,11 @@ get_header();
                             var pct = d.maxScore ? Math.round((d.score / d.maxScore) * 100) : 0;
                             var html = '';
 
-                            // Headline score + risk band.
-                            html += '<div style="text-align:center; padding:24px; background:' + esc(d.riskColor) + '14; border:1px solid ' + esc(d.riskColor) + '33; margin-bottom:24px;">' +
-                                    '<div style="font-family:\'Outfit\',sans-serif; font-size:48px; font-weight:800; line-height:1; color:#0F172A;">' + esc(d.score) +
+                            // Headline score + risk band (frosted, rounded).
+                            html += '<div style="text-align:center; padding:28px 24px; background:' + esc(d.riskColor) + '14; border:1px solid ' + esc(d.riskColor) + '33; border-radius:0; margin-bottom:24px; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);">' +
+                                    '<div style="font-family:\'Outfit\',sans-serif; font-size:52px; font-weight:800; line-height:1; color:#0F172A;">' + esc(d.score) +
                                     '<span style="font-size:20px; color:#64748B; font-weight:700;">/' + esc(d.maxScore) + '</span></div>' +
-                                    '<div style="margin-top:10px; display:inline-block; font-size:13px; font-weight:700; padding:5px 16px; color:' + esc(d.riskColor) + '; background:' + esc(d.riskColor) + '1A;">' + esc(d.riskLabel) + '</div>' +
+                                    '<div style="margin-top:12px; display:inline-block; font-size:13px; font-weight:700; padding:6px 18px; border-radius:0; color:' + esc(d.riskColor) + '; background:' + esc(d.riskColor) + '1A; border:1px solid ' + esc(d.riskColor) + '55;">' + esc(d.riskLabel) + '</div>' +
                                     '</div>';
 
                             // Key values.
@@ -957,19 +972,37 @@ get_header();
                     <?php endif; ?>
 
                     <!-- Saved meal plans (IBD Recipes planner) -->
-                    <div class="dash-card" style="margin-top:32px;">
+                    <div class="dash-card vance-mp-cardwrap" style="margin-top:32px;">
                         <div class="card-header">
                             <h3 class="card-title">Saved Meal Plans</h3>
-                            <a href="/ibd-recipies/" class="card-link" style="font-size:12px; border:1px solid #E2E8F0; padding:4px 10px; border-radius:0; background:white; text-decoration:none; color:#475569;"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
+                            <a href="/ibd-recipies/" class="vance-btn-glass vance-btn--sm" data-vance-tool-open="ibd-recipes"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
                         </div>
                         <?php if (empty($meal_plan_history)): ?>
                             <div style="text-align:center; padding:40px;">
                                 <p style="color:#64748B; margin-bottom:20px;">You haven't saved a meal plan yet. Build a week in the planner and choose &ldquo;Save this meal plan&rdquo; to keep it here.</p>
-                                <a href="/ibd-recipies/" class="btn-primary" style="display:inline-block; background:#008080; color:white; text-decoration:none; padding:10px 24px; border-radius:0; font-weight:600;">Open the Planner</a>
+                                <a href="/ibd-recipies/" class="vance-btn-inverted" data-vance-tool-open="ibd-recipes">Open the Planner</a>
                             </div>
                         <?php else: ?>
-                            <div class="dash-list">
-                                <?php foreach ($meal_plan_history as $entry):
+                            <style>
+                                .vance-mp-list { display:flex; flex-direction:column; gap:16px; }
+                                .vance-mp-card { padding:0; overflow:hidden; }
+                                .vance-mp-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:18px 20px; }
+                                .vance-mp-toggle { display:inline-flex; align-items:center; gap:10px; background:none; border:none; cursor:pointer; font-family:inherit; padding:0; text-align:left; }
+                                .vance-mp-toggle:focus-visible { outline:3px solid var(--primary-pale); outline-offset:3px; }
+                                .vance-mp-title { font-family:'Outfit',sans-serif; font-size:16px; font-weight:700; color:#0F172A; }
+                                .vance-mp-meta { font-size:12px; color:#64748B; }
+                                .vance-mp-panel-inner { padding:0 20px 20px; }
+                                .vance-mp-img { width:100%; max-height:220px; object-fit:cover; border-radius:0 !important; margin-bottom:16px; }
+                                .vance-mp-days { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+                                .vance-mp-daychip { font-size:12px; color:#475569; background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.16); padding:6px 12px; border-radius:0; }
+                                .vance-mp-daychip strong { color:#0F172A; }
+                                .vance-mp-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+                                .vance-mp-textbtn { background:none; border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:#0EA5E9; padding:8px 6px; }
+                                .vance-mp-textbtn.vance-mp-danger { color:#EF4444; }
+                                .vance-mp-textbtn:focus-visible { outline:2px solid var(--primary-color); outline-offset:2px; }
+                            </style>
+                            <div class="vance-mp-list">
+                                <?php foreach ($meal_plan_history as $mp_i => $entry):
                                     $p    = $entry['payload'];
                                     $ts   = !empty($entry['ts']) ? (int) $entry['ts'] : 0;
                                     $when = $ts ? date_i18n('j M Y', $ts) : '';
@@ -1002,34 +1035,60 @@ get_header();
                                     } else {
                                         $meta_bits[] = 'Saved plan';
                                     }
-                                    // The modal renders from this, mirroring the saved-chats rows.
+                                    // Plan-level image: explicit (extractor v2+), else first captured meal image.
+                                    $plan_image = !empty($p['image']) ? (string) $p['image'] : '';
+                                    if ('' === $plan_image && $is_structured) {
+                                        foreach ($p['days'] as $dd) {
+                                            if (!empty($dd['meals']) && is_array($dd['meals'])) {
+                                                foreach ($dd['meals'] as $mm) {
+                                                    if (!empty($mm['image'])) { $plan_image = (string) $mm['image']; break 2; }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    // The full-view modal renders from this.
                                     $plan_json = wp_json_encode(array(
-                                        'name' => $plan_name,
-                                        'when' => $when,
-                                        'days' => $is_structured ? $p['days'] : array(),
+                                        'name'  => $plan_name,
+                                        'when'  => $when,
+                                        'image' => $plan_image,
+                                        'days'  => $is_structured ? $p['days'] : array(),
                                     ));
+                                    $panel_id = 'vance-mp-panel-' . (int) $mp_i;
                                     ?>
-                                    <div class="list-item" style="padding:16px 0;">
-                                        <div style="flex:1; min-width:0;">
-                                            <?php if ($is_structured): ?>
-                                                <button type="button" class="item-title btn-view-meal-plan"
-                                                        data-plan="<?php echo esc_attr($plan_json); ?>"
-                                                        style="background:none; border:none; padding:0; font-family:inherit; font-size:inherit; font-weight:inherit; color:inherit; text-align:left; cursor:pointer;">
-                                                    <?php echo esc_html($plan_name); ?>
-                                                </button>
-                                            <?php else: ?>
-                                                <div class="item-title"><?php echo esc_html($plan_name); ?></div>
-                                            <?php endif; ?>
-                                            <div class="item-meta"><?php echo esc_html(implode(' · ', $meta_bits)); ?></div>
+                                    <div class="vance-mp-card vance-glass">
+                                        <div class="vance-mp-head">
+                                            <button type="button" class="vance-mp-toggle vance-expand-toggle" aria-expanded="false" aria-controls="<?php echo esc_attr($panel_id); ?>">
+                                                <svg class="vance-expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>
+                                                <span class="vance-mp-title"><?php echo esc_html($plan_name); ?></span>
+                                            </button>
+                                            <div class="vance-mp-meta"><?php echo esc_html(implode(' · ', $meta_bits)); ?></div>
                                         </div>
-                                        <div style="display:flex; gap:12px;">
-                                            <?php if ($is_structured): ?>
-                                                <button type="button" class="card-link btn-view-meal-plan"
-                                                        data-plan="<?php echo esc_attr($plan_json); ?>"
-                                                        style="background:none; border:none; font-family:inherit; cursor:pointer; font-weight:600; color:<?php echo $theme_primary; ?>;">View</button>
-                                            <?php endif; ?>
-                                            <button type="button" onclick="renameMealPlan('<?php echo esc_js($key); ?>', '<?php echo esc_js($plan_name); ?>')" style="color:#0EA5E9; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit;">Rename</button>
-                                            <button type="button" onclick="deleteMealPlan('<?php echo esc_js($key); ?>')" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit;">Delete</button>
+                                        <div id="<?php echo esc_attr($panel_id); ?>" class="vance-expand-panel vance-mp-panel">
+                                            <div class="vance-mp-panel-inner">
+                                                <?php if ($plan_image): ?>
+                                                    <img class="vance-mp-img" src="<?php echo esc_url($plan_image); ?>" alt="<?php echo esc_attr($plan_name); ?>" loading="lazy">
+                                                <?php endif; ?>
+                                                <?php if ($is_structured): ?>
+                                                    <div class="vance-mp-days">
+                                                        <?php foreach ($p['days'] as $dd):
+                                                            if (empty($dd['day'])) { continue; }
+                                                            $dcal   = !empty($dd['calories']) ? $dd['calories'] : '';
+                                                            $dmeals = !empty($dd['meals']) && is_array($dd['meals']) ? count($dd['meals']) : 0;
+                                                            ?>
+                                                            <span class="vance-mp-daychip"><strong><?php echo esc_html($dd['day']); ?></strong> &middot; <?php echo (int) $dmeals; ?> meals<?php echo $dcal ? ' &middot; ' . esc_html($dcal) . ' kcal' : ''; ?></span>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="vance-mp-actions">
+                                                    <?php if ($is_structured): ?>
+                                                        <button type="button" class="vance-btn-inverted vance-btn--sm" data-vance-tool-open="ibd-recipes" data-plan-key="<?php echo esc_attr($key); ?>">Edit meal plan</button>
+                                                        <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan="<?php echo esc_attr($plan_json); ?>">Download PDF</button>
+                                                        <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan="<?php echo esc_attr($plan_json); ?>">View full</button>
+                                                    <?php endif; ?>
+                                                    <button type="button" class="vance-mp-textbtn" onclick="renameMealPlan('<?php echo esc_js($key); ?>', '<?php echo esc_js($plan_name); ?>')">Rename</button>
+                                                    <button type="button" class="vance-mp-textbtn vance-mp-danger" onclick="deleteMealPlan('<?php echo esc_js($key); ?>')">Delete</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -1038,24 +1097,25 @@ get_header();
                         <?php endif; ?>
                     </div>
 
-                    <!-- Meal Plan Viewer Modal (mirrors #chat-modal on the VANCE-Ai tab) -->
-                    <div id="meal-plan-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10001; align-items:center; justify-content:center; padding:20px;">
-                        <div style="background:white; width:100%; max-width:800px; max-height:90vh; border-radius:0; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
-                            <div style="padding:24px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:white;">
+                    <!-- Meal Plan Viewer Modal (glass) -->
+                    <div id="meal-plan-modal" class="vance-glass-scrim" style="display:none; position:fixed; inset:0; z-index:10001; align-items:center; justify-content:center; padding:20px;">
+                        <div class="vance-glass-panel" style="width:100%; max-width:800px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+                            <div style="padding:24px; border-bottom:1px solid rgba(0,128,128,0.16); display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <h3 id="modal-meal-plan-title" style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">Meal plan</h3>
                                     <p id="modal-meal-plan-date" style="margin:4px 0 0 0; font-size:12px; color:#64748B;"></p>
                                 </div>
-                                <button onclick="closeMealPlanModal()" style="font-size:32px; border:none; background:none; cursor:pointer; color:#64748B; line-height:1;">&times;</button>
+                                <button onclick="closeMealPlanModal()" aria-label="Close" style="font-size:24px; border:1px solid rgba(255,255,255,0.6); background:rgba(255,255,255,0.5); cursor:pointer; color:#0A1929; line-height:1; width:40px; height:40px; border-radius:0; display:flex; align-items:center; justify-content:center;">&times;</button>
                             </div>
-                            <div id="modal-meal-plan-content" style="flex:1; overflow-y:auto; padding:32px; background:#F8FAFC; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-content:start;">
+                            <div id="modal-meal-plan-content" style="flex:1; overflow-y:auto; padding:32px; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-content:start;">
                                 <!-- Days are rendered here on open -->
                             </div>
-                            <div style="padding:20px; border-top:1px solid #E2E8F0; background:white; display:flex; justify-content:flex-end;">
-                                <button onclick="closeMealPlanModal()" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:0; cursor:pointer; font-weight:600;">Close</button>
+                            <div style="padding:20px; border-top:1px solid rgba(0,128,128,0.16); display:flex; justify-content:flex-end;">
+                                <button onclick="closeMealPlanModal()" class="vance-btn-inverted vance-btn--sm">Close</button>
                             </div>
                         </div>
                     </div>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
                     <script>
                     // Saved meal plans: view / rename / delete. Follows the saved-chats
@@ -1093,8 +1153,11 @@ get_header();
                                        '</div>' + meals + '</div>';
                             }).join('');
 
+                            var imgHtml = plan.image
+                                ? '<img src="' + esc(plan.image) + '" alt="" style="grid-column:1/-1; width:100%; max-height:260px; object-fit:cover; border-radius:0;">'
+                                : '';
                             document.getElementById('modal-meal-plan-content').innerHTML =
-                                html || '<p style="color:#64748B; font-size:13px;">This plan has no meals saved against it.</p>';
+                                imgHtml + (html || '<p style="color:#64748B; font-size:13px;">This plan has no meals saved against it.</p>');
                             document.getElementById('meal-plan-modal').style.display = 'flex';
                             document.body.style.overflow = 'hidden';
                         };
@@ -1127,9 +1190,84 @@ get_header();
                             });
                         };
 
+                        // Expand / collapse a saved plan card (animated max-height).
+                        function toggleMealPlanPanel(toggle) {
+                            var id = toggle.getAttribute('aria-controls');
+                            var panel = id ? document.getElementById(id) : null;
+                            if (!panel) { return; }
+                            var isOpen = toggle.getAttribute('aria-expanded') === 'true';
+                            if (isOpen) {
+                                panel.style.maxHeight = panel.scrollHeight + 'px';
+                                requestAnimationFrame(function () {
+                                    panel.style.maxHeight = '0px';
+                                    panel.classList.remove('is-open');
+                                });
+                                toggle.setAttribute('aria-expanded', 'false');
+                            } else {
+                                panel.classList.add('is-open');
+                                panel.style.maxHeight = panel.scrollHeight + 'px';
+                                toggle.setAttribute('aria-expanded', 'true');
+                                panel.addEventListener('transitionend', function te(ev) {
+                                    if (ev.propertyName === 'max-height' && toggle.getAttribute('aria-expanded') === 'true') {
+                                        panel.style.maxHeight = 'none'; // let it grow (e.g. once the image loads)
+                                    }
+                                    panel.removeEventListener('transitionend', te);
+                                });
+                            }
+                        }
+
+                        // Build a branded PDF of a saved plan (html2pdf, mirrors My Notes).
+                        function downloadMealPlanPDF(btn) {
+                            var plan;
+                            try { plan = JSON.parse(btn.getAttribute('data-plan')); } catch (e) { return; }
+                            if (typeof html2pdf === 'undefined') {
+                                alert('The PDF library is still loading — please try again in a moment.');
+                                return;
+                            }
+                            var daysHtml = (plan.days || []).filter(function (d) {
+                                return d && d.meals && d.meals.length;
+                            }).map(function (d) {
+                                var rows = d.meals.map(function (m) {
+                                    return '<tr>' +
+                                        '<td style="padding:6px 10px; color:#94a3b8; font-size:11px; text-transform:uppercase; white-space:nowrap; vertical-align:top;">' + esc(m.slot || '') + '</td>' +
+                                        '<td style="padding:6px 10px; color:#334155;">' + esc(m.name || '') + (m.calories ? ' <span style="color:#94a3b8;">(' + esc(m.calories) + ' kcal)</span>' : '') + '</td>' +
+                                        '</tr>';
+                                }).join('');
+                                return '<div style="margin-bottom:18px; break-inside:avoid;">' +
+                                    '<div style="font-weight:700; color:#0f172a; border-bottom:2px solid #008080; padding-bottom:4px; margin-bottom:8px;">' + esc(d.day) +
+                                    (d.calories ? ' <span style="font-weight:400; color:#64748b; font-size:12px;">' + esc(d.calories) + ' kcal</span>' : '') + '</div>' +
+                                    '<table style="width:100%; border-collapse:collapse; font-size:13px;">' + rows + '</table></div>';
+                            }).join('');
+                            var el = document.createElement('div');
+                            el.innerHTML =
+                                '<div style="padding:40px; font-family:Helvetica,Arial,sans-serif; color:#334155;">' +
+                                '<div style="border-bottom:2px solid #008080; padding-bottom:20px; margin-bottom:24px;">' +
+                                '<div style="font-size:22px; font-weight:800; color:#0A1929; text-transform:uppercase; letter-spacing:1px;">Meal Plan</div>' +
+                                '<div style="font-size:12px; color:#64748b; margin-top:4px;">Vance Medical Hub' + (plan.when ? ' &bull; Saved ' + esc(plan.when) : '') + '</div>' +
+                                '</div>' +
+                                '<h1 style="color:#0f172a; margin:0 0 20px; font-size:26px;">' + esc(plan.name || 'Meal plan') + '</h1>' +
+                                (plan.image ? '<img src="' + esc(plan.image) + '" style="width:100%; max-height:240px; object-fit:cover; margin-bottom:20px;">' : '') +
+                                (daysHtml || '<p style="color:#64748b;">No meals recorded against this plan.</p>') +
+                                '<div style="margin-top:40px; font-size:10px; color:#cbd5e1; border-top:1px solid #e2e8f0; padding-top:12px; text-align:center;">Generated from Vance Medical Hub. General guidance, not personalised dietary advice.</div>' +
+                                '</div>';
+                            var opt = {
+                                margin:      0.5,
+                                filename:    (plan.name || 'meal-plan').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf',
+                                image:       { type: 'jpeg', quality: 0.98 },
+                                html2canvas: { scale: 2, useCORS: true },
+                                jsPDF:       { unit: 'in', format: 'letter', orientation: 'portrait' }
+                            };
+                            html2pdf().set(opt).from(el).save();
+                        }
+
                         document.addEventListener('click', function (e) {
-                            var btn = e.target.closest ? e.target.closest('.btn-view-meal-plan') : null;
-                            if (btn) { window.openMealPlanModal(btn); }
+                            if (!e.target.closest) { return; }
+                            var viewBtn = e.target.closest('.btn-view-meal-plan');
+                            if (viewBtn) { window.openMealPlanModal(viewBtn); return; }
+                            var pdfBtn = e.target.closest('.vance-mp-pdf');
+                            if (pdfBtn) { downloadMealPlanPDF(pdfBtn); return; }
+                            var toggle = e.target.closest('.vance-mp-toggle');
+                            if (toggle) { toggleMealPlanPanel(toggle); return; }
                         });
                         // Click the backdrop to dismiss, same as clicking Close.
                         var overlay = document.getElementById('meal-plan-modal');

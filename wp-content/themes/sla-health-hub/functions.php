@@ -32,6 +32,10 @@ require_once get_template_directory() . '/inc/tool-widgets.php';
 // tool-widgets-row, patients-*, hcp-*) silently failed to render on the
 // frontend.
 require_once get_template_directory() . '/inc/customizer-sortable-control.php';
+// Category promo block — configurable glass promo card on category archives.
+// Renderer used by archive.php + template-parts/subcategory-grouped-archive.php;
+// per-category Customizer controls are registered further down (Category Promo Blocks).
+require_once get_template_directory() . '/inc/category-promo.php';
 
 /**
  * Rebrand migration helper.
@@ -4796,6 +4800,111 @@ function vance_customize_register( $wp_customize ) {
             'label'   => sprintf( __( '%s: Title Override', 'sla-health-hub' ), $cat->name ),
             'section' => 'vance_category_heroes',
             'type'    => 'text',
+        ) );
+    }
+
+    // 5.4 Category Promo Blocks
+    // A configurable glass promo card shown just below the inner-category nav on
+    // each category archive. Keyed by term id so values survive renames. The CTA
+    // can open one of the interactive tools in the unified tool modal, or link
+    // anywhere. Front-end: vance_render_category_promo() (inc/category-promo.php).
+    $wp_customize->add_section( 'vance_category_promos', array(
+        'title'       => __( 'Category Promo Blocks', 'sla-health-hub' ),
+        'description' => __( 'Add a promotional card to each category page (below the sub-category nav, above the articles). Tick "Show" and set a heading. The button can open an interactive tool in a modal, or link to any URL.', 'sla-health-hub' ),
+        'priority'    => 34.4,
+        'panel'       => 'vance_content_panel',
+    ) );
+
+    $vance_promo_tool_choices = array(
+        ''                        => __( '— Link to a custom URL —', 'sla-health-hub' ),
+        'ibd-recipes'             => __( 'Open: Recipes & Meal Planner', 'sla-health-hub' ),
+        'malnutrition-calculator' => __( 'Open: Malnutrition Screener', 'sla-health-hub' ),
+        'healthcare-quiz'         => __( 'Open: Health Discovery Quiz', 'sla-health-hub' ),
+    );
+
+    foreach ( $categories as $cat ) {
+        $vance_promo_prefix = sprintf( '%s — ', $cat->name );
+
+        $wp_customize->add_setting( "vance_cat_promo_show_{$cat->term_id}", array(
+            'default'           => false,
+            'sanitize_callback' => 'vance_sanitize_checkbox',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_show_{$cat->term_id}", array(
+            'label'   => $vance_promo_prefix . __( 'Show promo block', 'sla-health-hub' ),
+            'section' => 'vance_category_promos',
+            'type'    => 'checkbox',
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_eyebrow_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_eyebrow_{$cat->term_id}", array(
+            'label'   => $vance_promo_prefix . __( 'Eyebrow (small label)', 'sla-health-hub' ),
+            'section' => 'vance_category_promos',
+            'type'    => 'text',
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_heading_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_heading_{$cat->term_id}", array(
+            'label'   => $vance_promo_prefix . __( 'Heading', 'sla-health-hub' ),
+            'section' => 'vance_category_promos',
+            'type'    => 'text',
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_text_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_text_{$cat->term_id}", array(
+            'label'   => $vance_promo_prefix . __( 'Body text', 'sla-health-hub' ),
+            'section' => 'vance_category_promos',
+            'type'    => 'textarea',
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_image_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_cat_promo_image_{$cat->term_id}", array(
+            'label'       => $vance_promo_prefix . __( 'Image (optional)', 'sla-health-hub' ),
+            'description' => __( 'Shown on the left of the card. Recommended ~600x400px.', 'sla-health-hub' ),
+            'section'     => 'vance_category_promos',
+        ) ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_cta_label_{$cat->term_id}", array(
+            'default'           => 'Explore',
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_cta_label_{$cat->term_id}", array(
+            'label'   => $vance_promo_prefix . __( 'Button label', 'sla-health-hub' ),
+            'section' => 'vance_category_promos',
+            'type'    => 'text',
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_tool_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_key',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_tool_{$cat->term_id}", array(
+            'label'   => $vance_promo_prefix . __( 'Button action', 'sla-health-hub' ),
+            'section' => 'vance_category_promos',
+            'type'    => 'select',
+            'choices' => $vance_promo_tool_choices,
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_link_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_link_{$cat->term_id}", array(
+            'label'       => $vance_promo_prefix . __( 'Custom URL', 'sla-health-hub' ),
+            'description' => __( 'Used only when Button action is "Link to a custom URL".', 'sla-health-hub' ),
+            'section'     => 'vance_category_promos',
+            'type'        => 'url',
         ) );
     }
 

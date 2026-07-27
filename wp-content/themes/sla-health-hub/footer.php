@@ -136,6 +136,11 @@
     // the VANCE-Ai article popup offer "Register for FREE" without a page change.
     get_template_part( 'inc/register-modal' );
     ?>
+    <?php
+    // Unified glass tool modal — recipes / malnutrition open in an iframe overlay,
+    // the quiz reuses its own inline modal. Lets any tool link open from anywhere.
+    include get_template_directory() . '/inc/tool-modal.php';
+    ?>
 
     <script>
     function openGuestModal() {

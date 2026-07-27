@@ -3,9 +3,9 @@
  * Vance Medical Quiz Modal Template
  */
 ?>
-<div id="vance-quiz-modal" class="vance-modal" style="display:none; position:fixed; inset:0; background:rgba(10, 25, 41, 0.95); z-index:10000; overflow-y:auto; padding:20px; align-items:flex-start; justify-content:center;">
-    <div class="quiz-container" style="max-width: 800px; width:100%; background: white; border-radius: 0; overflow: hidden; position: relative; margin: 40px auto; animation: slideUp 0.4s ease;">
-        <span onclick="closeQuizModal()" style="position:absolute; top:20px; right:20px; font-size:32px; color:white; cursor:pointer; z-index:10001; background:rgba(0,0,0,0.3); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:0;">&times;</span>
+<div id="vance-quiz-modal" class="vance-modal vance-glass-scrim" style="display:none; position:fixed; inset:0; z-index:10000; overflow-y:auto; padding:20px; align-items:flex-start; justify-content:center;">
+    <div class="quiz-container vance-glass-panel" style="max-width: 800px; width:100%; overflow: hidden; position: relative; margin: 40px auto; animation: slideUp 0.4s ease;">
+        <span onclick="closeQuizModal()" style="position:absolute; top:20px; right:20px; font-size:28px; color:white; cursor:pointer; z-index:10001; background:rgba(0,0,0,0.3); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:0;">&times;</span>
         
         <div class="quiz-header" style="background: #0A1929; color: white; padding: 40px; text-align: center;">
             <h2 id="modal-quiz-title" style="font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">Vance Medical Discovery</h2>

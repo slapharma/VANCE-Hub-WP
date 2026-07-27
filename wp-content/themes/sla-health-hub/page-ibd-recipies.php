@@ -11,7 +11,9 @@
  * correct spelling `assets/tools/ibd-recipes/` — we override the iframe URL
  * accordingly via $vance_tool_iframe_src below.
  */
-get_header();
+// Chromeless when opened inside the unified tool modal (inc/tool-modal.php).
+$vance_embed = ( isset( $_GET['tool_embed'] ) && $_GET['tool_embed'] === '1' );
+get_header( $vance_embed ? 'embed' : '' );
 
 require_once get_template_directory() . '/inc/tool-brand-css.php';
 
@@ -41,4 +43,4 @@ $vance_tool_iframe_src    = get_template_directory_uri() . '/assets/tools/ibd-re
 
 require get_template_directory() . '/inc/tool-page-shell.php';
 
-get_footer();
+get_footer( $vance_embed ? 'embed' : '' );

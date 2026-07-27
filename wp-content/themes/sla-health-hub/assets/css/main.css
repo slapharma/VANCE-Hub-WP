@@ -177,14 +177,33 @@ h6 {
 }
 
 /* Desktop-only: logo sits inline with the menu here, so size is scoped to
-   min-width:768px to avoid overflowing the fixed 70px mobile header. No vertical
-   offset — .header-content is align-items:center, so the enlarged logo stays
-   vertically centred on the same line as the nav (the earlier +10px drop was
-   removed 2026-07-21 per request to line the logo up with the menu). */
+   min-width:768px to avoid overflowing the fixed 70px mobile header.
+   2026-07-24: per request, the nav is dropped to align with the BOTTOM of the
+   logo instead of being vertically centred. .header-content stays
+   align-items:center (logo + header-actions remain centred); only .main-nav is
+   pinned to flex-end. The reduced link bottom-padding pulls the menu text down
+   so its baseline meets the logo's bottom edge (logo bottom sits ~2.5px above
+   the header bottom in the 80px header). Mobile is untouched — the mobile nav is
+   a fixed off-canvas drawer, not a flex child, so align-self has no effect there. */
 @media (min-width: 768px) {
     .logo-area img {
         width: 259px; /* +15% from 225px */
         max-height: 75px; /* +15% from 65px */
+    }
+    /* Drop the primary nav to the bottom of the header row (logo's baseline). */
+    .main-nav {
+        align-self: flex-end;
+    }
+    .main-nav a {
+        padding-bottom: 2px; /* was 8px — lower the text to meet the logo bottom */
+    }
+    /* Mega Menu Pro renders inside .main-nav; if its wrapper is ever hoisted to a
+       direct flex child, keep it bottom-aligned too. Nudge its bar down to match. */
+    #mega-menu-wrap-primary-menu {
+        align-self: flex-end;
+    }
+    #mega-menu-wrap-primary-menu #mega-menu-primary-menu {
+        margin-bottom: 2px;
     }
 }
 
@@ -3079,4 +3098,222 @@ body.home .hero {
     .va-subcat-title {
         font-size: 24px;
     }
+}
+
+/* =====================================================================
+   VANCE GLASSMORPHISM DESIGN SYSTEM  (added 2026-07-24)
+   Shared frosted-glass surfaces, inverted-teal buttons, and expand/collapse
+   affordances used by the dashboard result cards, saved meal-plan cards, the
+   unified tool modal, and the category promo block.
+
+   Light UI on white pages: a pure translucent-white glass is nearly invisible
+   on a white background, so surfaces use a white -> teal-wash gradient fill plus
+   a soft layered shadow. The frost reads best over varied backdrops (the modal
+   scrim, coloured sections); on plain white it degrades gracefully to a premium
+   frosted-white card.
+
+   NOTE: main.css line ~45 forces `border-radius:0 !important` on buttons/img/.btn.
+   Every rounded glass surface below therefore re-declares radius with !important.
+   ===================================================================== */
+:root {
+    --glass-fill:        linear-gradient(135deg, rgba(255,255,255,0.80) 0%, rgba(222,244,244,0.62) 100%);
+    --glass-fill-strong: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(222,244,244,0.78) 100%);
+    --glass-border:      1px solid rgba(255,255,255,0.65);
+    --glass-border-tint: 1px solid rgba(0,128,128,0.18);
+    --glass-shadow:      0 8px 32px rgba(10,25,41,0.12), inset 0 1px 0 rgba(255,255,255,0.7);
+    --glass-shadow-lg:   0 24px 64px rgba(10,25,41,0.28), inset 0 1px 0 rgba(255,255,255,0.7);
+    --glass-blur:        blur(16px) saturate(120%);
+    --glass-radius:      0; /* square corners to match the theme's flat aesthetic */
+}
+
+/* --- Glass surfaces --- */
+.vance-glass {
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: var(--glass-border-tint);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--glass-radius) !important;
+}
+.vance-glass--strong { background: var(--glass-fill-strong); }
+.vance-glass--interactive { transition: transform .2s ease, box-shadow .2s ease; }
+.vance-glass--interactive:hover { transform: translateY(-2px); box-shadow: var(--glass-shadow-lg); }
+
+/* Frosted panel for modals — heavier shadow, floats above the scrim */
+.vance-glass-panel {
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: blur(24px) saturate(130%);
+    backdrop-filter: blur(24px) saturate(130%);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow-lg);
+    border-radius: 0 !important;
+}
+
+/* Modal scrim — teal->navy wash so a frosted panel reads clearly on top */
+.vance-glass-scrim {
+    background: radial-gradient(120% 120% at 30% 12%, rgba(0,128,128,0.34) 0%, rgba(10,25,41,0.74) 68%);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+/* --- Buttons --- */
+/* Inverted (filled) teal button: teal fill / white text, large touch target */
+.vance-btn-inverted {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 13px 26px;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 0 !important;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color .2s ease, transform .15s ease, box-shadow .2s ease;
+    box-shadow: 0 4px 14px rgba(0,128,128,0.28);
+}
+.vance-btn-inverted:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,128,128,0.34);
+}
+.vance-btn-inverted:active { transform: translateY(0); }
+.vance-btn-inverted:focus-visible { outline: 3px solid var(--primary-pale); outline-offset: 2px; }
+
+/* Glass (secondary) button: frosted, teal text -> fills teal on hover */
+.vance-btn-glass {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 13px 24px;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--primary-color);
+    background: rgba(255,255,255,0.55);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid rgba(0,128,128,0.35);
+    border-radius: 0 !important;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color .2s ease, color .2s ease, transform .15s ease;
+}
+.vance-btn-glass:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-1px);
+}
+.vance-btn-glass:focus-visible { outline: 3px solid var(--primary-pale); outline-offset: 2px; }
+.vance-btn-inverted.vance-btn--sm,
+.vance-btn-glass.vance-btn--sm { min-height: 40px; padding: 9px 18px; font-size: 14px; }
+.vance-btn-inverted.vance-btn--block,
+.vance-btn-glass.vance-btn--block { display: flex; width: 100%; }
+
+/* --- Expand / collapse affordance (JS sets max-height to scrollHeight) --- */
+.vance-expand-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+.vance-expand-chevron {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    transition: transform .25s ease;
+}
+.vance-expand-toggle[aria-expanded="true"] .vance-expand-chevron { transform: rotate(180deg); }
+.vance-expand-panel {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height .32s ease, opacity .25s ease;
+}
+.vance-expand-panel.is-open { opacity: 1; }
+
+/* --- Accessibility fallbacks --- */
+/* Opaque fallback where backdrop-filter is unsupported (older browsers) */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    .vance-glass, .vance-glass--strong, .vance-glass-panel, .vance-btn-glass { background: #ffffff; }
+    .vance-glass-scrim { background: rgba(10,25,41,0.92); }
+}
+/* Respect the OS "reduce transparency" setting */
+@media (prefers-reduced-transparency: reduce) {
+    .vance-glass, .vance-glass--strong, .vance-glass-panel {
+        background: #ffffff !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+    .vance-btn-glass {
+        background: #ffffff !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+    .vance-glass-scrim {
+        background: rgba(10,25,41,0.94) !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .vance-btn-inverted, .vance-btn-glass,
+    .vance-glass--interactive,
+    .vance-expand-chevron, .vance-expand-panel { transition: none !important; }
+}
+
+/* --- Category promo block (inc/category-promo.php) --- */
+.vance-cat-promo { padding: 8px 0 28px; }
+.vance-cat-promo__inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    padding: 32px 36px;
+}
+.vance-cat-promo__inner.has-image {
+    grid-template-columns: minmax(220px, 320px) 1fr;
+    padding: 0;
+    align-items: stretch;
+}
+.vance-cat-promo__media { min-height: 220px; background-size: cover; background-position: center; }
+.vance-cat-promo__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+}
+.vance-cat-promo__inner.has-image .vance-cat-promo__body { padding: 32px 36px; }
+.vance-cat-promo__eyebrow {
+    font-size: 12px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--primary-color);
+}
+.vance-cat-promo__title {
+    font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800;
+    color: #0A1929; margin: 0; line-height: 1.15;
+}
+.vance-cat-promo__text { font-size: 15px; line-height: 1.6; color: #475569; margin: 0; max-width: 60ch; }
+.vance-cat-promo__body .vance-btn-inverted { margin-top: 6px; }
+@media (max-width: 767.98px) {
+    .vance-cat-promo__inner.has-image { grid-template-columns: 1fr; }
+    .vance-cat-promo__media { min-height: 160px; }
+    .vance-cat-promo__inner,
+    .vance-cat-promo__inner.has-image .vance-cat-promo__body { padding: 24px; }
+    .vance-cat-promo__title { font-size: 22px; }
 }

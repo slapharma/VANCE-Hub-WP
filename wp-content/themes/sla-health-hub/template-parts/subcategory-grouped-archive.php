@@ -155,6 +155,13 @@ if ( $vance_cat instanceof WP_Term ) {
     }
     ?>
 
+    <?php
+    // Configurable per-category promo block (Customizer → Content → Category Promo Blocks).
+    if ( is_category() && function_exists( 'vance_render_category_promo' ) ) {
+        vance_render_category_promo( get_queried_object_id() );
+    }
+    ?>
+
     <div class="container" style="padding: 60px 20px;">
         <?php if ( have_posts() ) : ?>
             <?php

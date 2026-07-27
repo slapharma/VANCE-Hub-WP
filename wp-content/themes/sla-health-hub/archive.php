@@ -157,6 +157,13 @@ if ( is_category() ) {
 
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
 
+    <?php
+    // Configurable per-category promo block (Customizer → Content → Category Promo Blocks).
+    if ( is_category() && function_exists( 'vance_render_category_promo' ) ) {
+        vance_render_category_promo( get_queried_object_id() );
+    }
+    ?>
+
     <div class="container" style="padding: 60px 20px;">
         <?php if ( have_posts() ) : ?>
 

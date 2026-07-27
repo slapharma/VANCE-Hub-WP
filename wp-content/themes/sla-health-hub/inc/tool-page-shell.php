@@ -47,6 +47,17 @@ $save_enabled  = isset( $vance_tool_save_enabled ) ? (bool) $vance_tool_save_ena
 $autoresize    = isset( $vance_tool_autoresize ) ? (bool) $vance_tool_autoresize : false;
 $brand_css     = isset( $vance_tool_brand_css ) ? (string) $vance_tool_brand_css : '';
 
+// Chromeless "embed" mode — the tool is loaded inside the unified glass tool
+// modal (inc/tool-modal.php) via an iframe pointed at this page + ?tool_embed=1.
+// In embed mode we drop the tall hero and let the tool fill the modal viewport;
+// the tool card head (with the Save button) sticks to the top. Autoresize is
+// forced off so the bundle scrolls inside the fixed modal instead of growing the
+// whole document (which would scroll the Save button out of reach).
+$embed = ( isset( $_GET['tool_embed'] ) && $_GET['tool_embed'] === '1' );
+if ( $embed ) {
+    $autoresize = false;
+}
+
 // Optional caller overrides for badge / title / subtitle styling — empty string means "use default".
 $tool_title_color    = isset( $vance_tool_title_color )    ? (string) $vance_tool_title_color    : '';
 $tool_title_size     = isset( $vance_tool_title_size )     ? absint( $vance_tool_title_size )    : 0;
@@ -146,9 +157,26 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
     .tool-page-hero p { font-size: 16px; }
     .tool-page-iframe { height: <?php echo (int) ( $iframe_height * 0.85 ); ?>px; }
 }
+
+/* --- Chromeless embed (inside the unified tool modal) --- */
+.tool-page--embed { background: #fff; min-height: 100vh; }
+.tool-page--embed .tool-page-hero,
+.tool-page--embed .tool-page-disclaimer,
+.tool-page--embed .tool-page-container > p { display: none; }
+.tool-page--embed .tool-page-container {
+    max-width: none; margin: 0; padding: 0; z-index: auto;
+    display: flex; flex-direction: column; min-height: 100vh;
+}
+.tool-page--embed .tool-page-card {
+    border: 0; box-shadow: none; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
+}
+.tool-page--embed .tool-page-card__head {
+    position: sticky; top: 0; z-index: 5; /* keep Save reachable while the tool scrolls */
+}
+.tool-page--embed .tool-page-iframe { flex: 1 1 auto; height: auto; min-height: 60vh; }
 </style>
 
-<div class="tool-page">
+<div class="tool-page<?php echo $embed ? ' tool-page--embed' : ''; ?>">
 
     <?php
     // Build optional inline-style strings (only emit declarations when an override is set).
@@ -162,6 +190,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
     if ( $tool_subtitle_color ) { $sub_inline .= 'color:' . esc_attr( $tool_subtitle_color ) . ';'; }
     if ( $tool_subtitle_size  ) { $sub_inline .= 'font-size:' . (int) $tool_subtitle_size . 'px;'; }
     ?>
+    <?php if ( ! $embed ) : ?>
     <section class="tool-page-hero">
         <div class="container">
             <div class="tool-page-badge" style="<?php echo $badge_inline; ?>">
@@ -174,6 +203,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
             <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
 
     <div class="tool-page-container">
         <div class="tool-page-card">
@@ -374,11 +404,16 @@ get_template_part( 'inc/register-modal' );
                     if (!titleEl) return;
                     var meta = (body.innerText || '');
                     var mins = meta.match(/(\d+)\s*min/);
+                    // Capture the recipe thumbnail if the card renders one, so the
+                    // dashboard can show it in the expanded meal-plan view.
+                    var imgEl = body.querySelector ? body.querySelector('img') : null;
+                    if (!imgEl && cell.querySelector) { imgEl = cell.querySelector('img'); }
                     meals.push({
                         slot:     (label.textContent || '').replace(/[^A-Za-z ]/g, '').trim(),
                         name:     (titleEl.textContent || '').trim(),
                         calories: kcalOf(body),
-                        minutes:  mins ? parseInt(mins[1], 10) : null
+                        minutes:  mins ? parseInt(mins[1], 10) : null,
+                        image:    (imgEl && imgEl.src) ? imgEl.src : ''
                     });
                 });
             }
@@ -393,19 +428,21 @@ get_template_part( 'inc/register-modal' );
         // No day cards means we're on the recipe list, not the planner.
         if (!days.length) return null;
 
-        var mealCount = 0, kcal = 0;
+        var mealCount = 0, kcal = 0, planImage = '';
         days.forEach(function (d) {
             mealCount += d.meals.length;
             if (d.calories) kcal += d.calories;
+            d.meals.forEach(function (m) { if (!planImage && m.image) { planImage = m.image; } });
         });
         // An untouched planner is not worth a history row.
         if (mealCount === 0) return null;
 
         return {
             kind:       'meal-plan',
-            version:    1,
+            version:    2,
             url:        win.location && win.location.href,
             title:      doc.title || '',
+            image:      planImage,
             days:       days,
             totals:     { days: days.length, meals: mealCount, calories: kcal },
             capturedAt: new Date().toISOString()

@@ -25,6 +25,8 @@
     </footer>
     <?php include get_template_directory() . '/inc/quiz-modal.php'; ?>
     <?php include get_template_directory() . '/inc/clinical-info-modal.php'; ?>
+    <?php // Unified glass tool modal — lets any tool link open in an overlay. ?>
+    <?php include get_template_directory() . '/inc/tool-modal.php'; ?>
 
     <script>
     function openGuestModal() {

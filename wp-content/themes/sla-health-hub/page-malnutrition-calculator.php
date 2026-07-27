@@ -8,7 +8,9 @@
  * To activate: create a Page titled "Malnutrition Calculator", slug
  * `malnutrition-calculator`, template = "Malnutrition Calculator (Public)".
  */
-get_header();
+// Chromeless when opened inside the unified tool modal (inc/tool-modal.php).
+$vance_embed = ( isset( $_GET['tool_embed'] ) && $_GET['tool_embed'] === '1' );
+get_header( $vance_embed ? 'embed' : '' );
 
 require_once get_template_directory() . '/inc/tool-brand-css.php';
 
@@ -30,4 +32,4 @@ $vance_tool_brand_css    = vance_tool_brand_css_calculator();
 
 require get_template_directory() . '/inc/tool-page-shell.php';
 
-get_footer();
+get_footer( $vance_embed ? 'embed' : '' );
