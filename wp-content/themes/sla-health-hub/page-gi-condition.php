@@ -187,7 +187,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
   <?php if ( $is_redesigned ) :
 
     $cp_facts = [
-        'inflammatory-bowel-disease' => [ 3, [ [ '500,000', 'People in the UK are estimated to live with IBD' ], [ 'Any age', 'IBD can be diagnosed at any age and is becoming more common' ], [ '3 types', 'Crohn\'s, ulcerative colitis and microscopic colitis' ] ] ],
+        'inflammatory-bowel-disease' => [ 2, [ [ '500,000', 'People in the UK are estimated to live with IBD' ], [ 'Any age', 'IBD can be diagnosed at any age and is becoming more common' ] ] ],
         'crohns-disease'           => [ 3, [ [ '115,000–250,000', 'People in the UK are estimated to live with Crohn\'s disease' ], [ 'Any part', 'Can affect anywhere from mouth to anus, most commonly the terminal ileum' ] ] ],
         'ulcerative-colitis'       => [ 2, [ [ '1 in 420', 'People in the UK are estimated to live with UC' ], [ 'Any age', 'Often first diagnosed in younger adults, but can occur at any age' ] ] ],
         'microscopic-colitis'      => [ 3, [ [ 'Women 60+', 'Most commonly affects women over the age of 60' ], [ 'Normal scope', 'Colon looks completely normal during colonoscopy' ], [ 'Treatable', 'Symptoms often settle well with targeted treatment' ] ] ],
@@ -252,7 +252,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
       <section class="gi-cp-section" id="what-is-ibd">
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📖</div><h2>What is IBD?</h2></div>
         <div class="gi-cp-card">
-          <p>Inflammatory bowel disease (IBD) is the umbrella term for a group of long-term conditions in which the immune system causes ongoing inflammation of the digestive tract. The three main types are Crohn's disease, ulcerative colitis and microscopic colitis.</p>
+          <p>IBD is the umbrella term for a group of long-term conditions in which the immune system causes ongoing inflammation of the digestive tract. The two main types are Crohn's disease and ulcerative colitis; microscopic colitis is a less common, related form.</p>
           <p>IBD usually follows a <strong>relapsing-remitting pattern</strong>: flares, when symptoms are active, followed by periods of remission, when symptoms settle.</p>
           <div class="gi-cp-highlight"><p><strong>Key fact:</strong> There isn't a single cure for IBD, but it can be managed well. Treatment can control inflammation, ease symptoms and help many people stay in long, stable remission. It is about finding the right management plan rather than a one-size-fits-all cure.</p></div>
         </div>
@@ -262,17 +262,17 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔍</div><h2>Types of IBD</h2></div>
         <div class="gi-cp-card">
           <p>Where each type affects the gut:</p>
-          <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd.jpg' ); ?>" loading="lazy" alt="Comparison of the three types of IBD showing where each affects the gut"></div>
-            <div class="gi-cp-row-text">
-              <div class="gi-cp-grid is-cols-1">
-                <div class="gi-cp-tile is-centered"><h4>Crohn's Disease</h4><p>Can affect any part of the gut, from mouth to anus, in patches. Most often the end of the small intestine.</p></div>
-                <div class="gi-cp-tile is-centered"><h4>Ulcerative Colitis</h4><p>Affects only the large bowel (colon) and rectum, causing inflammation and ulcers in the lining.</p></div>
-                <div class="gi-cp-tile is-centered"><h4>Microscopic Colitis</h4><p>A less widely known form where inflammation of the colon is only visible under a microscope.</p></div>
-              </div>
+          <div class="gi-cp-grid">
+            <div class="gi-cp-tile is-centered">
+              <img class="gi-cp-tile-img" src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd-crohns.jpg' ); ?>" loading="lazy" alt="Diagram of the digestive tract showing patchy areas of inflammation in Crohn's disease">
+              <h4>Crohn's Disease</h4><p>Can affect any part of the gut, from mouth to anus, in patches. Most often the end of the small intestine.</p>
+            </div>
+            <div class="gi-cp-tile is-centered">
+              <img class="gi-cp-tile-img" src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd-uc.jpg' ); ?>" loading="lazy" alt="Diagram of the digestive tract showing continuous inflammation of the large bowel in ulcerative colitis">
+              <h4>Ulcerative Colitis</h4><p>Affects only the large bowel (colon) and rectum, causing inflammation and ulcers in the lining.</p>
             </div>
           </div>
-          <p style="margin-top:20px">Crohn's disease and ulcerative colitis are the two most common forms. In a small number of people the pattern doesn't fit neatly into either and is described as IBD-unclassified.</p>
+          <p style="margin-top:20px">Crohn's disease and ulcerative colitis are the two most common forms. In a small number of people the pattern doesn't fit neatly into either and is described as IBD-unclassified. <a href="<?php echo esc_url( home_url( '/microscopic-colitis/' ) ); ?>">Microscopic colitis</a> is a less common, related form covered on its own page.</p>
         </div>
       </section>
 
@@ -632,9 +632,14 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
       <section class="gi-cp-section" id="what-is-mc">
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔬</div><h2>What is Microscopic Colitis?</h2></div>
         <div class="gi-cp-card">
-          <p>Microscopic colitis is a type of inflammatory bowel disease affecting the large bowel. Its defining feature is that the colon usually looks <strong>completely normal</strong> during a colonoscopy. The inflammation only shows up when a small tissue sample (a biopsy) is examined under a microscope.</p>
-          <p>Because the bowel looks normal, it is often mistaken for irritable bowel syndrome. It is a common and treatable cause of ongoing watery diarrhoea, particularly in older adults.</p>
-          <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Microscopic colitis is more common in women, especially over the age of 60, and is confirmed by taking a biopsy even when the colon looks normal.</p></div>
+          <div class="gi-cp-row">
+            <div class="gi-cp-row-image is-portrait"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/what-is-mc.jpg' ); ?>" loading="lazy" alt="Diagram of the digestive tract in microscopic colitis, with the colon looking normal and inflammation only visible under a magnifying glass"></div>
+            <div class="gi-cp-row-text">
+              <p>Microscopic colitis is a type of inflammatory bowel disease affecting the large bowel. Its defining feature is that the colon usually looks <strong>completely normal</strong> during a colonoscopy. The inflammation only shows up when a small tissue sample (a biopsy) is examined under a microscope.</p>
+              <p>Because the bowel looks normal, it is often mistaken for irritable bowel syndrome. It is a common and treatable cause of ongoing watery diarrhoea, particularly in older adults.</p>
+            </div>
+          </div>
+          <div class="gi-cp-highlight" style="margin-top:25px"><p><strong>Key fact:</strong> Microscopic colitis is more common in women, especially over the age of 60, and is confirmed by taking a biopsy even when the colon looks normal.</p></div>
         </div>
       </section>
 

@@ -469,6 +469,9 @@
 .gi-cp-row { display: flex; gap: 30px; align-items: center; margin-top: 25px; }
 .gi-cp-row-image { width: 45%; min-width: 45%; }
 .gi-cp-row-image img { width: 100%; height: auto; display: block; }
+/* portrait illustrations: narrower column, capped so they don't tower over the text */
+.gi-cp-row-image.is-portrait { width: 32%; min-width: 32%; }
+.gi-cp-row-image.is-portrait img { max-width: 280px; margin: 0 auto; }
 .gi-cp-row-text { width: 55%; }
 
 /* bulleted symptom-style list */
@@ -486,6 +489,7 @@
 .gi-cp-tile-eyebrow { font-size: 12px; color: var(--gi-primary-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 .gi-cp-tile-big { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 26px; color: var(--gi-primary); margin-bottom: 6px; }
 .gi-cp-tile h4 { color: var(--gi-primary); font-size: 15px; margin-bottom: 6px; font-weight: 600; }
+.gi-cp-tile-img { width: 100%; max-width: 240px; height: auto; display: block; margin: 0 auto 16px; }
 .gi-cp-tile p { font-size: 14px; color: #4a6a6a; margin-bottom: 0; line-height: 1.6; }
 
 /* numbered diagnosis-style steps */
@@ -565,6 +569,8 @@
     .gi-cp-facts { grid-template-columns: 1fr !important; }
     .gi-cp-row { flex-direction: column; }
     .gi-cp-row-image, .gi-cp-row-text { width: 100%; }
+    .gi-cp-row-image.is-portrait { width: 100%; min-width: 0; }
+    .gi-cp-row-image.is-portrait img { max-width: 220px; }
     .gi-cp-grid, .gi-cp-tips, .gi-cp-step-cards, .gi-cp-split { grid-template-columns: 1fr !important; }
     .gi-cp-explore-links { flex-direction: column; align-items: center; }
     .gi-cp-card { padding: 25px 20px; }
