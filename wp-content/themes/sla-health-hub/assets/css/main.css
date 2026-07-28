@@ -169,11 +169,24 @@ h6 {
     font-family: var(--font-heading);
 }
 
+/* logo.png is the VANCE wordmark on a padded 16:9 canvas (~28% transparent
+   margin above and below the mark — see the same note in vance-askai.css by
+   .vance-askai-intro__logo-img). With object-fit:contain the old box
+   (225x65) was wider than the scaled image needed to be, so the image was
+   never cropped, just letterboxed: it rendered at its full padded height
+   (65px) and only ~114x29px of that was the actual visible wordmark, with
+   width being pure empty letterbox space that had no effect on visual size.
+   object-fit:cover instead fills the box exactly — box dimensions ARE the
+   rendered glyph — so the box below is sized to that same ~114x29 visible
+   glyph directly (not the old, mostly-empty 225x65 container), cropping out
+   the vertical padding without inflating how big the logo actually looks.
+   (First attempt at this fix kept the old 225x65 box, which made cover fill
+   that whole box with wordmark — ~2x too big; corrected 2026-07-28.) */
 .logo-area img {
-    width: 225px;
-    height: auto;
-    max-height: 65px;
-    object-fit: contain;
+    width: 114px;
+    height: 29px;
+    object-fit: cover;
+    object-position: center;
 }
 
 /* Desktop-only: logo sits inline with the menu here, so size is scoped to
@@ -182,13 +195,17 @@ h6 {
    logo instead of being vertically centred. .header-content stays
    align-items:center (logo + header-actions remain centred); only .main-nav is
    pinned to flex-end. The reduced link bottom-padding pulls the menu text down
-   so its baseline meets the logo's bottom edge (logo bottom sits ~2.5px above
-   the header bottom in the 80px header). Mobile is untouched — the mobile nav is
+   so its baseline meets the logo's bottom edge. This only lines up now that
+   the logo box above is cropped to its visible content (see note there) —
+   with the old object-fit:contain box, "the logo's bottom edge" was ~20px of
+   transparent padding below the actual mark, and the flex-end nav lined up
+   with that instead, reading as dropped far below the logo (reported
+   2026-07-28). Mobile is untouched — the mobile nav is
    a fixed off-canvas drawer, not a flex child, so align-self has no effect there. */
 @media (min-width: 768px) {
     .logo-area img {
-        width: 259px; /* +15% from 225px */
-        max-height: 75px; /* +15% from 65px */
+        width: 132px; /* +15% from 114px, same glyph aspect ratio */
+        height: 33px; /* +15% from 29px */
     }
     /* Drop the primary nav to the bottom of the header row (logo's baseline). */
     .main-nav {
@@ -2295,7 +2312,14 @@ body.home .hero {
     }
 
     .site-logo {
-        width: 264px !important; /* +20% from 220px */
+        /* This "+20% from 220px" width bump never actually changed how big the
+           logo looked: with the old object-fit:contain, a box wider than the
+           scaled image needed to be is pure invisible letterbox, so only
+           .logo-area img's height (unaffected by this rule) drove visual
+           size. Kept at the same 114x29 as the base rule so cover doesn't
+           newly enlarge the mobile logo now that width matters again. */
+        width: 114px !important;
+        height: 29px !important;
     }
 
     .main-nav {
@@ -2457,7 +2481,12 @@ body.home .hero {
 
 @media (max-width: 767.98px) {
     .site-logo {
-        width: 264px !important; /* +20% from 220px */
+        /* Never actually enlarged the logo under the old object-fit:contain
+           (see the duplicate rule earlier in this file for why) — kept at
+           the base rule's 114x29 so object-fit:cover doesn't newly inflate
+           the mobile logo now that this width override actually renders. */
+        width: 114px !important;
+        height: 29px !important;
     }
 }
 
