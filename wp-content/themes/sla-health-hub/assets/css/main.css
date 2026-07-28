@@ -163,17 +163,17 @@ h6 {
 /* logo.png is the VANCE wordmark on a padded 16:9 canvas (~28% transparent
    margin above and below the mark — see the same note in vance-askai.css by
    .vance-askai-intro__logo-img). .logo-area is the crop viewport: fixed to
-   the wordmark's actual visible size (114x29) with overflow:hidden, while
-   the <img> inside keeps its full natural width (114px, height auto ≈65px)
+   the wordmark's actual visible size (125x32) with overflow:hidden, while
+   the <img> inside keeps its full natural width (125px, height auto ≈70px)
    — align-items:center + the overflow clip crop away the top/bottom padding
    symmetrically, the same as object-fit:cover would, but by rasterizing the
    image at its full natural size and only clipping the paint, not by asking
-   the browser to decode straight down to a ~29px-tall target. A first pass
-   at this fix used object-fit:cover sized directly to 114x29, which was
-   pixelated — that tiny a target gave the compositor very little to
+   the browser to decode straight down to a ~32px-tall target. A first pass
+   at this fix used object-fit:cover sized directly to the target box, which
+   was pixelated — that tiny a target gave the compositor very little to
    antialias the wordmark's diagonal arrow edge with, especially inside
    .site-header's transform:translateZ(0) GPU layer (see that rule's note).
-   Corrected 2026-07-28. */
+   Corrected 2026-07-28; +10% (114→125) requested same day. */
 .logo-area {
     display: flex;
     align-items: center;
@@ -181,13 +181,13 @@ h6 {
     font-weight: 700;
     font-size: 24px;
     font-family: var(--font-heading);
-    width: 114px;
-    height: 29px;
+    width: 125px; /* +10% from 114px */
+    height: 32px; /* +10% from 29px */
     overflow: hidden;
 }
 
 .logo-area img {
-    width: 114px;
+    width: 125px;
     height: auto;
 }
 
@@ -206,11 +206,11 @@ h6 {
    a fixed off-canvas drawer, not a flex child, so align-self has no effect there. */
 @media (min-width: 768px) {
     .logo-area {
-        width: 132px; /* +15% from 114px, same glyph aspect ratio */
-        height: 33px; /* +15% from 29px */
+        width: 145px; /* +15% from 125px, same glyph aspect ratio */
+        height: 36px; /* +15% from 32px */
     }
     .logo-area img {
-        width: 132px;
+        width: 145px;
         height: auto;
     }
     /* Drop the primary nav to the bottom of the header row (logo's baseline). */
@@ -2322,11 +2322,12 @@ body.home .hero {
            logo looked: with the old object-fit:contain, a box wider than the
            scaled image needed to be is pure invisible letterbox, so only
            .logo-area's height (the crop viewport, unaffected by this rule)
-           drove visual size. Kept at the same 114px as the base .logo-area
-           img rule — no !important height here, since the img needs its
-           natural aspect ratio (height:auto) for .logo-area's overflow:hidden
-           crop to work; forcing a height on the img itself would squash it. */
-        width: 114px !important;
+           drove visual size. Kept matching the base .logo-area img rule's
+           125px (114→125, +10% requested 2026-07-28) — no !important height
+           here, since the img needs its natural aspect ratio (height:auto)
+           for .logo-area's overflow:hidden crop to work; forcing a height on
+           the img itself would squash it. */
+        width: 125px !important;
     }
 
     .main-nav {
@@ -2489,11 +2490,12 @@ body.home .hero {
 @media (max-width: 767.98px) {
     .site-logo {
         /* Never actually enlarged the logo under the old object-fit:contain
-           (see the duplicate rule earlier in this file for why) — kept at
-           the base .logo-area img rule's 114px. No !important height: the
-           img needs height:auto so .logo-area's overflow:hidden crop (not
-           the img itself) is what controls the visible size. */
-        width: 114px !important;
+           (see the duplicate rule earlier in this file for why) — kept
+           matching the base .logo-area img rule's 125px (114→125, +10%
+           requested 2026-07-28). No !important height: the img needs
+           height:auto so .logo-area's overflow:hidden crop (not the img
+           itself) is what controls the visible size. */
+        width: 125px !important;
     }
 }
 
