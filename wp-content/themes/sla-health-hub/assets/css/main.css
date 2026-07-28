@@ -228,6 +228,27 @@ h6 {
     #mega-menu-wrap-primary-menu #mega-menu-primary-menu {
         margin-bottom: 2px;
     }
+    /* The .main-nav a padding-bottom trick above only reaches the plain
+       wp_nav_menu fallback markup — Mega Menu Pro's real top-level link sets
+       its own line-height (currently 40px, matching the menu bar's full
+       height) with no padding, which CENTERS the text in that box instead of
+       sitting it at the bottom. The bar itself was correctly bottom-aligned
+       to the logo, but the text inside it wasn't, reading as "the menu is
+       too high" / not level with the logo's underline (reported 2026-07-28).
+       Same double-ID + !important specificity as the font-weight override
+       below: switch the link to a flex container so its text sits flush
+       against the bottom of the bar regardless of the plugin's line-height. */
+    #mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item > a.mega-menu-link {
+        display: flex !important;
+        align-items: flex-end !important;
+        /* height:100% was circular — the <li> derives ITS height from this
+           same link's line-height, so shrinking line-height below also
+           shrank the 100% target. Pin to the plugin's own original 40px
+           instead, so flex-end has the full bar to push the text against. */
+        height: 40px !important;
+        line-height: 1.2 !important;
+        padding-bottom: 2px !important;
+    }
 }
 
 .main-nav ul {
