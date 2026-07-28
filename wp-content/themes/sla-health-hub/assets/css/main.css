@@ -160,6 +160,20 @@ h6 {
     width: 100%;
 }
 
+/* logo.png is the VANCE wordmark on a padded 16:9 canvas (~28% transparent
+   margin above and below the mark — see the same note in vance-askai.css by
+   .vance-askai-intro__logo-img). .logo-area is the crop viewport: fixed to
+   the wordmark's actual visible size (114x29) with overflow:hidden, while
+   the <img> inside keeps its full natural width (114px, height auto ≈65px)
+   — align-items:center + the overflow clip crop away the top/bottom padding
+   symmetrically, the same as object-fit:cover would, but by rasterizing the
+   image at its full natural size and only clipping the paint, not by asking
+   the browser to decode straight down to a ~29px-tall target. A first pass
+   at this fix used object-fit:cover sized directly to 114x29, which was
+   pixelated — that tiny a target gave the compositor very little to
+   antialias the wordmark's diagonal arrow edge with, especially inside
+   .site-header's transform:translateZ(0) GPU layer (see that rule's note).
+   Corrected 2026-07-28. */
 .logo-area {
     display: flex;
     align-items: center;
@@ -167,26 +181,14 @@ h6 {
     font-weight: 700;
     font-size: 24px;
     font-family: var(--font-heading);
-}
-
-/* logo.png is the VANCE wordmark on a padded 16:9 canvas (~28% transparent
-   margin above and below the mark — see the same note in vance-askai.css by
-   .vance-askai-intro__logo-img). With object-fit:contain the old box
-   (225x65) was wider than the scaled image needed to be, so the image was
-   never cropped, just letterboxed: it rendered at its full padded height
-   (65px) and only ~114x29px of that was the actual visible wordmark, with
-   width being pure empty letterbox space that had no effect on visual size.
-   object-fit:cover instead fills the box exactly — box dimensions ARE the
-   rendered glyph — so the box below is sized to that same ~114x29 visible
-   glyph directly (not the old, mostly-empty 225x65 container), cropping out
-   the vertical padding without inflating how big the logo actually looks.
-   (First attempt at this fix kept the old 225x65 box, which made cover fill
-   that whole box with wordmark — ~2x too big; corrected 2026-07-28.) */
-.logo-area img {
     width: 114px;
     height: 29px;
-    object-fit: cover;
-    object-position: center;
+    overflow: hidden;
+}
+
+.logo-area img {
+    width: 114px;
+    height: auto;
 }
 
 /* Desktop-only: logo sits inline with the menu here, so size is scoped to
@@ -203,9 +205,13 @@ h6 {
    2026-07-28). Mobile is untouched — the mobile nav is
    a fixed off-canvas drawer, not a flex child, so align-self has no effect there. */
 @media (min-width: 768px) {
-    .logo-area img {
+    .logo-area {
         width: 132px; /* +15% from 114px, same glyph aspect ratio */
         height: 33px; /* +15% from 29px */
+    }
+    .logo-area img {
+        width: 132px;
+        height: auto;
     }
     /* Drop the primary nav to the bottom of the header row (logo's baseline). */
     .main-nav {
@@ -2315,11 +2321,12 @@ body.home .hero {
         /* This "+20% from 220px" width bump never actually changed how big the
            logo looked: with the old object-fit:contain, a box wider than the
            scaled image needed to be is pure invisible letterbox, so only
-           .logo-area img's height (unaffected by this rule) drove visual
-           size. Kept at the same 114x29 as the base rule so cover doesn't
-           newly enlarge the mobile logo now that width matters again. */
+           .logo-area's height (the crop viewport, unaffected by this rule)
+           drove visual size. Kept at the same 114px as the base .logo-area
+           img rule — no !important height here, since the img needs its
+           natural aspect ratio (height:auto) for .logo-area's overflow:hidden
+           crop to work; forcing a height on the img itself would squash it. */
         width: 114px !important;
-        height: 29px !important;
     }
 
     .main-nav {
@@ -2483,10 +2490,10 @@ body.home .hero {
     .site-logo {
         /* Never actually enlarged the logo under the old object-fit:contain
            (see the duplicate rule earlier in this file for why) — kept at
-           the base rule's 114x29 so object-fit:cover doesn't newly inflate
-           the mobile logo now that this width override actually renders. */
+           the base .logo-area img rule's 114px. No !important height: the
+           img needs height:auto so .logo-area's overflow:hidden crop (not
+           the img itself) is what controls the visible size. */
         width: 114px !important;
-        height: 29px !important;
     }
 }
 
