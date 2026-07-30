@@ -20,7 +20,24 @@ if ( is_category() ) {
             'number'     => 1,
             'fields'     => 'ids',
         ) );
-        if ( ! empty( $vance_arch_children ) ) {
+        $vance_arch_grouped = ! empty( $vance_arch_children );
+
+        /*
+         * A leaf sub-category of a grouped parent routes here too, so its own
+         * page is laid out with the layout picked in Customizer → Sub-Category
+         * Layouts instead of always falling through to the flat grid below.
+         * Without this, a sub-category set to Posters looked right inside its
+         * parent archive and reverted to standard cards on its own page.
+         */
+        if ( ! $vance_arch_grouped && $vance_arch_cat->parent && function_exists( 'vance_grouped_archive_parent_slugs' ) ) {
+            $vance_arch_parent = get_term( $vance_arch_cat->parent, 'category' );
+            if ( $vance_arch_parent instanceof WP_Term
+                && in_array( $vance_arch_parent->slug, vance_grouped_archive_parent_slugs(), true ) ) {
+                $vance_arch_grouped = true;
+            }
+        }
+
+        if ( $vance_arch_grouped ) {
             get_template_part( 'template-parts/subcategory-grouped-archive' );
             get_footer();
             return;
