@@ -18,9 +18,11 @@ get_header();
 $tmpl = get_template_directory_uri();
 $slug = get_post_field( 'post_name', get_queried_object_id() );
 
-/* Hub page URL */
-$hub_url = home_url( '/gi-health/' );
-$hub_page = get_page_by_path( 'gi-health' );
+/* Hub page URL. The hub lives at /gastro-health-explained/ on the live site;
+   the original `gi-health` slug is tried as a fallback in case it is restored. */
+$hub_url  = home_url( '/gastro-health-explained/' );
+$hub_page = get_page_by_path( 'gastro-health-explained' );
+if ( ! $hub_page ) { $hub_page = get_page_by_path( 'gi-health' ); }
 if ( $hub_page ) { $hub_url = get_permalink( $hub_page ); }
 
 /* Helper: condition child-page URL */
