@@ -85,6 +85,12 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
      *                               would have nowhere left to be reached from.
      */
     function vance_render_subcat_layout( $tid, $vance_post_ids, $vance_layout, $vance_cap_rows = true ) {
+        // Required: the card renderer and every template tag below read the
+        // GLOBAL $post. This body used to run inline in the template, where
+        // `$post = get_post( $vpid )` assigned that global; inside a function it
+        // would assign a local instead and every card would render whichever
+        // post the main loop happened to leave behind.
+        global $post;
         ?>
     <?php if ( 'bento' === $vance_layout ) :
         // Bento = one large main feature + 2 or 4 small cards beside
