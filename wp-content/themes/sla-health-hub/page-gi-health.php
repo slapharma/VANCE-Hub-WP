@@ -53,13 +53,19 @@ $cta_desc       = $cm( 'vance_gi_hub_cta_desc', 'The Vance Health Hub dashboard 
 $cta_btn_txt    = $cm( 'vance_gi_hub_cta_btn_text', 'Go to My Dashboard' );
 $cta_btn_url    = $cm( 'vance_gi_hub_cta_btn_url', home_url( '/dashboard/' ) );
 
-/* Helper: resolve a child-page URL by slug. Falls back to home_url() path. */
+/* Helper: resolve a condition page URL by slug. The conditions sit at the top
+   level on the live site, so the child path is tried first (in case the
+   hierarchy is restored) and the bare slug gives the canonical permalink today,
+   avoiding the /gi-health/<slug>/ 301 hop. */
 function vance_gi_page_url( string $slug ): string {
     $page = get_page_by_path( 'gi-health/' . $slug );
+    if ( ! $page ) {
+        $page = get_page_by_path( $slug );
+    }
     if ( $page ) {
         return get_permalink( $page );
     }
-    return home_url( '/gi-health/' . $slug . '/' );
+    return home_url( '/' . $slug . '/' );
 }
 
 $conditions = [

@@ -18,18 +18,28 @@ get_header();
 $tmpl = get_template_directory_uri();
 $slug = get_post_field( 'post_name', get_queried_object_id() );
 
-/* Hub page URL. The hub lives at /gastro-health-explained/ on the live site;
-   the original `gi-health` slug is tried as a fallback in case it is restored. */
-$hub_url  = home_url( '/gastro-health-explained/' );
-$hub_page = get_page_by_path( 'gastro-health-explained' );
+/* Hub page URL and label. The hub lives at /gastro-health-explained/ on the live
+   site; the original `gi-health` slug is tried as a fallback in case it is
+   restored. The breadcrumb label follows the hub page's own title so the two
+   never drift apart again. */
+$hub_url   = home_url( '/gastro-health-explained/' );
+$hub_label = 'Gastro Health Explained';
+$hub_page  = get_page_by_path( 'gastro-health-explained' );
 if ( ! $hub_page ) { $hub_page = get_page_by_path( 'gi-health' ); }
-if ( $hub_page ) { $hub_url = get_permalink( $hub_page ); }
+if ( $hub_page ) {
+    $hub_url   = get_permalink( $hub_page );
+    $hub_label = get_the_title( $hub_page );
+}
 
-/* Helper: condition child-page URL */
+/* Helper: condition page URL. The conditions sit at the top level on the live
+   site, so the child path is tried first (in case the hierarchy is restored)
+   and the bare slug gives the canonical permalink today — linking straight
+   there instead of bouncing through the /gi-health/<slug>/ 301. */
 function vance_gi_cond_url( string $cond_slug ): string {
     $page = get_page_by_path( 'gi-health/' . $cond_slug );
+    if ( ! $page ) { $page = get_page_by_path( $cond_slug ); }
     if ( $page ) { return get_permalink( $page ); }
-    return home_url( '/gi-health/' . $cond_slug . '/' );
+    return home_url( '/' . $cond_slug . '/' );
 }
 
 /* Conditions for the sidebar nav */
@@ -89,7 +99,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
   ?>
   <?php if ( $is_redesigned ) : ?>
   <section class="gi-cp-hero">
-    <p class="gi-cp-breadcrumb"><a href="<?php echo esc_url( $hub_url ); ?>">GI Health</a> &nbsp;&rarr;&nbsp; <?php echo wp_kses_post( $cond_title ); ?></p>
+    <p class="gi-cp-breadcrumb"><a href="<?php echo esc_url( $hub_url ); ?>"><?php echo esc_html( $hub_label ); ?></a> &nbsp;&rarr;&nbsp; <?php echo wp_kses_post( $cond_title ); ?></p>
     <h1><?php echo wp_kses_post( $cond_title ); ?></h1>
     <?php if ( $cond_lede ) : ?>
     <p class="gi-cp-subtitle"><?php echo esc_html( $cond_lede ); ?></p>
