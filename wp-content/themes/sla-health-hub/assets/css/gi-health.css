@@ -410,15 +410,13 @@
     position: relative;
     background: linear-gradient(160deg, var(--gi-primary) 0%, var(--gi-primary-light) 60%, var(--gi-primary-pale) 100%);
     color: #fff;
-    padding: 60px 20px 40px;
+    padding: 40px 20px 34px;
     text-align: center;
 }
 .gi-cp-breadcrumb { font-size: 13.5px; opacity: 0.85; margin-bottom: 15px; }
 .gi-cp-breadcrumb a { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.4); }
 .gi-cp-hero h1 { color: #fff; font-size: clamp(28px, 4vw, 42px); font-weight: 700; margin-bottom: 15px; letter-spacing: -0.5px; }
 .gi-cp-hero .gi-cp-subtitle { font-size: clamp(15px, 1.8vw, 18.5px); opacity: 0.95; max-width: 700px; margin: 0 auto; font-weight: 300; line-height: 1.6; }
-.gi-cp-hero-image { width: 100%; max-width: 900px; margin: 30px auto 0; }
-.gi-cp-hero-image img { width: 100%; height: 200px; object-fit: cover; opacity: 0.92; display: block; }
 
 .gi-cp-container { max-width: 1000px; margin: 0 auto; padding: 20px 20px 60px; }
 

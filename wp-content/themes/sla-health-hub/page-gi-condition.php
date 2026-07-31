@@ -85,17 +85,6 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
   } else {
       $cond_hero_bg = 'linear-gradient(135deg,#003d3d 0%,#006666 45%,#008080 100%)';
   }
-
-  /* v2 hero banner images (bundled with the redesign, not customizer-managed) */
-  $cond_hero_images = [
-      'inflammatory-bowel-disease' => 'hero-ibd.jpg',
-      'crohns-disease'           => 'hero-crohns.jpg',
-      'ulcerative-colitis'       => 'hero-uc.jpg',
-      'microscopic-colitis'      => 'hero-mc.jpg',
-      'irritable-bowel-syndrome' => 'hero-ibs.jpg',
-      'colorectal-cancer'        => 'hero-crc.jpg',
-      'diverticular-disease'     => 'hero-dd.jpg',
-  ];
   ?>
   <?php if ( $is_redesigned ) : ?>
   <section class="gi-cp-hero">
@@ -103,12 +92,6 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
     <h1><?php echo wp_kses_post( $cond_title ); ?></h1>
     <?php if ( $cond_lede ) : ?>
     <p class="gi-cp-subtitle"><?php echo esc_html( $cond_lede ); ?></p>
-    <?php endif; ?>
-    <?php if ( ! empty( $cond_hero_images[ $slug ] ) ) : ?>
-    <div class="gi-cp-hero-image">
-      <img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/' . $cond_hero_images[ $slug ] ); ?>"
-           alt="<?php echo esc_attr( wp_strip_all_tags( $cond_title ) ); ?> illustration">
-    </div>
     <?php endif; ?>
   </section>
   <?php else : ?>

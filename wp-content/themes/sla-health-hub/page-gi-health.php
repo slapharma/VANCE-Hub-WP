@@ -71,43 +71,50 @@ function vance_gi_page_url( string $slug ): string {
 $conditions = [
     [
         'slug'  => 'inflammatory-bowel-disease',
-        'image' => 'ibd-ai.jpg',
+        'image' => 'ibd.jpg',
+        'alt'   => 'Two men sitting on a sofa at home, talking and smiling together',
         'title' => 'Inflammatory Bowel Disease (IBD)',
         'desc'  => "The umbrella term for long-term conditions, mainly Crohn\u{2019}s disease and ulcerative colitis, that cause ongoing inflammation of the digestive tract.",
     ],
     [
         'slug'  => 'ulcerative-colitis',
-        'image' => 'ulcerative-colitis-ai.jpg',
+        'image' => 'ulcerative-colitis.jpg',
+        'alt'   => 'Two women walking and talking together on a sunlit city street',
         'title' => 'Ulcerative Colitis (UC)',
         'desc'  => 'A form of IBD causing inflammation and ulcers in the lining of the colon and rectum.',
     ],
     [
         'slug'  => 'crohns-disease',
-        'image' => 'crohns-ai.jpg',
+        'image' => 'crohns.jpg',
+        'alt'   => 'A woman resting on a sofa at home under a blanket, holding a warm drink',
         'title' => "Crohn\u{2019}s Disease",
         'desc'  => 'A form of IBD that can inflame any part of the gut, from mouth to anus, often the small intestine.',
     ],
     [
         'slug'  => 'microscopic-colitis',
-        'image' => 'microscopic-colitis-ai.jpg',
+        'image' => 'microscopic-colitis.jpg',
+        'alt'   => 'An older woman wrapped in a blanket on a sofa, drinking from a mug',
         'title' => 'Microscopic Colitis',
         'desc'  => 'Inflammation of the colon visible only under a microscope, causing chronic watery diarrhoea.',
     ],
     [
         'slug'  => 'irritable-bowel-syndrome',
-        'image' => 'ibs-ai.jpg',
+        'image' => 'ibs.jpg',
+        'alt'   => 'A man and his dog looking out across the water from a waterfront pier',
         'title' => 'Irritable Bowel Syndrome (IBS)',
         'desc'  => 'A common, long-term condition affecting how the gut works, causing abdominal pain, bloating, and bouts of diarrhoea, constipation or both.',
     ],
     [
         'slug'  => 'colorectal-cancer',
-        'image' => 'colorectal-cancer-ai.jpg',
+        'image' => 'colorectal-cancer.jpg',
+        'alt'   => 'A carer handing a glass of water to an older woman sitting on a sofa',
         'title' => 'Colorectal Cancer',
         'desc'  => 'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps.',
     ],
     [
         'slug'  => 'diverticular-disease',
-        'image' => 'diverticular-disease-ai.jpg',
+        'image' => 'diverticular-disease.jpg',
+        'alt'   => 'Four friends sitting and talking around a table in a cafe',
         'title' => 'Diverticular Disease &amp; Diverticulitis',
         'desc'  => 'Small pouches that form in the wall of the colon, which can sometimes cause pain or become inflamed.',
     ],
@@ -183,7 +190,7 @@ $conditions = [
            style="--reveal-delay:<?php echo esc_attr( $delay ); ?>">
           <div class="gi-condition-row-image">
             <img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/' . $c['image'] ); ?>"
-                 loading="lazy" alt="<?php echo esc_attr( wp_strip_all_tags( $c['title'] ) ); ?> illustration">
+                 loading="lazy" alt="<?php echo esc_attr( $c['alt'] ); ?>">
           </div>
           <div class="gi-condition-row-content">
             <h3><?php echo wp_kses_post( $c['title'] ); ?></h3>
