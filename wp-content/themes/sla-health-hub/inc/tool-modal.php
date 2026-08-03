@@ -58,7 +58,7 @@ $vance_tm_paths = array(
         <div class="vance-tool-modal__bar">
             <h2 id="vance-tool-modal-title" class="vance-tool-modal__title">Tool</h2>
             <div class="vance-tool-modal__bar-actions">
-                <a class="vance-tool-modal__fullscreen" href="#" target="_blank" rel="noopener" data-no-tool-modal>Open full page &#8599;</a>
+                <a class="vance-tool-modal__fullscreen" href="#" target="_blank" rel="noopener" data-no-tool-modal>Open full page <svg class="vance-tool-modal__fullscreen-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>
                 <button type="button" class="vance-tool-modal__close" data-vance-tool-close aria-label="Close tool">&times;</button>
             </div>
         </div>
@@ -108,8 +108,9 @@ $vance_tm_paths = array(
     margin: 0;
 }
 .vance-tool-modal__bar-actions { display: flex; align-items: center; gap: 14px; }
-.vance-tool-modal__fullscreen { font-size: 13px; font-weight: 700; color: var(--primary-color); text-decoration: none; white-space: nowrap; }
+.vance-tool-modal__fullscreen { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--primary-color); text-decoration: none; white-space: nowrap; }
 .vance-tool-modal__fullscreen:hover { text-decoration: underline; }
+.vance-tool-modal__fullscreen-icon { flex: 0 0 auto; }
 .vance-tool-modal__close {
     width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
