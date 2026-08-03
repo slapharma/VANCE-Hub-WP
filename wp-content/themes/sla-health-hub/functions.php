@@ -548,10 +548,10 @@ add_action( 'template_redirect', 'vance_no_cache_account_pages' );
 /**
  * How often the article intro popup may appear for one visitor.
  *
- * @return string One of x_per_day, daily, weekly, monthly.
+ * @return string One of x_per_hour, hourly, x_per_day, daily, weekly, monthly.
  */
 function vance_askai_intro_frequency() {
-    $allowed = array( 'x_per_day', 'daily', 'weekly', 'monthly' );
+    $allowed = array( 'x_per_hour', 'hourly', 'x_per_day', 'daily', 'weekly', 'monthly' );
     $value   = (string) vance_get_theme_mod( 'vance_askai_intro_frequency', 'monthly' );
     return in_array( $value, $allowed, true ) ? $value : 'monthly';
 }
@@ -649,6 +649,24 @@ function vance_askai_script_data() {
         $intro_logo = get_template_directory_uri() . '/assets/img/logo.png';
     }
 
+    $intro_image = trim( (string) vance_get_theme_mod( 'vance_askai_intro_image', '' ) );
+
+    // Logged-in visitors already skip the "Register for free" link (below); when
+    // this variant is switched on, an admin can also swap the headline copy,
+    // image and buttons so returning members see a distinct message instead of
+    // a sign-up pitch aimed at strangers.
+    if ( is_user_logged_in() && (bool) vance_get_theme_mod( 'vance_askai_intro_loggedin_enable', false ) ) {
+        $intro_title    = $intro_field( 'vance_askai_intro_loggedin_title', $intro_title );
+        $intro_subtitle = $intro_field( 'vance_askai_intro_loggedin_subtitle', $intro_subtitle );
+        $intro_lead     = $intro_field( 'vance_askai_intro_loggedin_lead', $intro_lead );
+        $intro_cta      = $intro_field( 'vance_askai_intro_loggedin_cta', $intro_cta );
+        $intro_cta2     = $intro_field( 'vance_askai_intro_loggedin_cta2', $intro_cta2 );
+        $loggedin_image = trim( (string) vance_get_theme_mod( 'vance_askai_intro_loggedin_image', '' ) );
+        if ( '' !== $loggedin_image ) {
+            $intro_image = $loggedin_image;
+        }
+    }
+
     $levels = array();
     foreach ( vance_ai_reading_levels() as $key => $level ) {
         $levels[] = array(
@@ -675,7 +693,8 @@ function vance_askai_script_data() {
         'introEnabled'  => (bool) vance_get_theme_mod( 'vance_askai_intro_popup', true ),
         'introFrequency' => vance_askai_intro_frequency(),
         'introPerDay'   => max( 1, absint( vance_get_theme_mod( 'vance_askai_intro_per_day', 2 ) ) ),
-        'introImage'    => esc_url( vance_get_theme_mod( 'vance_askai_intro_image', '' ) ),
+        'introPerHour'  => max( 1, absint( vance_get_theme_mod( 'vance_askai_intro_per_hour', 2 ) ) ),
+        'introImage'    => esc_url( $intro_image ),
         'levels'        => $levels,
         'defaultLevel'  => 'knowledgeable',
         'title'         => __( 'VANCE-Ai', 'sla-health-hub' ),
@@ -4206,11 +4225,25 @@ function vance_customize_register( $wp_customize ) {
         'section'     => 'vance_askai_settings',
         'type'        => 'select',
         'choices'     => array(
-            'x_per_day' => __( 'A set number of times per day', 'sla-health-hub' ),
-            'daily'     => __( 'Once per day', 'sla-health-hub' ),
-            'weekly'    => __( 'Once per week', 'sla-health-hub' ),
-            'monthly'   => __( 'Once per month', 'sla-health-hub' ),
+            'x_per_hour' => __( 'A set number of times per hour', 'sla-health-hub' ),
+            'hourly'     => __( 'Once per hour', 'sla-health-hub' ),
+            'x_per_day'  => __( 'A set number of times per day', 'sla-health-hub' ),
+            'daily'      => __( 'Once per day', 'sla-health-hub' ),
+            'weekly'     => __( 'Once per week', 'sla-health-hub' ),
+            'monthly'    => __( 'Once per month', 'sla-health-hub' ),
         ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_per_hour', array(
+        'default'           => 2,
+        'sanitize_callback' => 'absint',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_per_hour', array(
+        'label'       => __( 'Popup: times per hour', 'sla-health-hub' ),
+        'description' => __( 'Only used when "How often" is set to a number of times per hour.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 1, 'max' => 60, 'step' => 1 ),
     ) );
 
     $wp_customize->add_setting( 'vance_askai_intro_per_day', array(
@@ -4359,6 +4392,87 @@ function vance_customize_register( $wp_customize ) {
         'label'   => __( 'Popup: trust line', 'sla-health-hub' ),
         'section' => 'vance_askai_settings',
         'type'    => 'text',
+    ) );
+
+    // --- Logged-in variant --------------------------------------------------
+    // Off by default: a signed-in reader sees the same popup as everyone else,
+    // minus the "Register for free" link. Switching this on lets an admin swap
+    // the headline, image and buttons for something aimed at existing members
+    // instead of a sign-up pitch.
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_enable', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_loggedin_enable', array(
+        'label'       => __( 'Popup: show a different version to logged-in visitors', 'sla-health-hub' ),
+        'description' => __( 'When on, the fields below replace the heading, image and buttons for signed-in readers. Leave any field blank to keep the standard version for that field.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_title', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_loggedin_title', array(
+        'label'       => __( 'Popup (logged-in): heading', 'sla-health-hub' ),
+        'description' => __( 'Blank = use the standard heading above.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_subtitle', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_loggedin_subtitle', array(
+        'label'       => __( 'Popup (logged-in): subtitle', 'sla-health-hub' ),
+        'description' => __( 'Blank = use the standard subtitle above.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'textarea',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_image', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_intro_loggedin_image', array(
+        'label'       => __( 'Popup (logged-in): image', 'sla-health-hub' ),
+        'description' => __( 'Blank = use the standard popup image (or placeholder) above.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+    ) ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_lead', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_loggedin_lead', array(
+        'label'       => __( 'Popup (logged-in): button lead-in', 'sla-health-hub' ),
+        'description' => __( 'Blank = use the standard lead-in above.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_cta', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_loggedin_cta', array(
+        'label'       => __( 'Popup (logged-in): button 1 label', 'sla-health-hub' ),
+        'description' => __( 'Blank = use the standard button 1 label above.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_intro_loggedin_cta2', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_intro_loggedin_cta2', array(
+        'label'       => __( 'Popup (logged-in): button 2 label', 'sla-health-hub' ),
+        'description' => __( 'Blank = use the standard button 2 label above.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'text',
     ) );
 
     // Legacy freeform body: superseded by the structured fields above and no

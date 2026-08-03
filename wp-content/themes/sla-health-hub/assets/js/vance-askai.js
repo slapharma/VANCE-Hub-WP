@@ -1256,6 +1256,14 @@
 		return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 	}
 
+	/** Stamp identifying the current period ('hour' or 'day') for the x-per-N counters. */
+	function periodStamp(unit) {
+		if ('hour' === unit) {
+			return todayStamp() + '-' + new Date().getHours();
+		}
+		return todayStamp();
+	}
+
 	function readIntroRecord() {
 		try {
 			var raw = window.localStorage.getItem(INTRO_KEY);
@@ -1263,8 +1271,15 @@
 				return null;
 			}
 			var rec = JSON.parse(raw);
-			// Older builds stored a bare timestamp; treat it as one past showing.
-			return (rec && 'object' === typeof rec) ? rec : { last: Number(raw) || 0, day: '', count: 1 };
+			if (!rec || 'object' !== typeof rec) {
+				// Older builds stored a bare timestamp; treat it as one past showing.
+				return { last: Number(raw) || 0, period: '', count: 1 };
+			}
+			// Older builds keyed the counter as `day`; carry it forward as `period`.
+			if (rec.period === undefined && rec.day !== undefined) {
+				rec.period = rec.day;
+			}
+			return rec;
 		} catch (e) {
 			return null;
 		}
@@ -1279,20 +1294,27 @@
 
 		var frequency = CFG.introFrequency || 'monthly';
 
-		if ('x_per_day' === frequency) {
-			var cap = Math.max(1, parseInt(CFG.introPerDay, 10) || 1);
-			return (rec.day !== todayStamp()) || ((rec.count || 0) < cap);
+		if ('x_per_hour' === frequency) {
+			var hourCap = Math.max(1, parseInt(CFG.introPerHour, 10) || 1);
+			return (rec.period !== periodStamp('hour')) || ((rec.count || 0) < hourCap);
 		}
 
-		var days = { daily: 1, weekly: 7, monthly: 30 }[frequency] || 30;
+		if ('x_per_day' === frequency) {
+			var dayCap = Math.max(1, parseInt(CFG.introPerDay, 10) || 1);
+			return (rec.period !== periodStamp('day')) || ((rec.count || 0) < dayCap);
+		}
+
+		var days = { hourly: 1 / 24, daily: 1, weekly: 7, monthly: 30 }[frequency] || 30;
 		return (Date.now() - (rec.last || 0)) >= days * 24 * 60 * 60 * 1000;
 	}
 
 	function markIntroSeen() {
-		var today = todayStamp();
+		var frequency = CFG.introFrequency || 'monthly';
+		var unit = ('x_per_hour' === frequency) ? 'hour' : 'day';
+		var stamp = periodStamp(unit);
 		var rec = readIntroRecord();
-		if (!rec || rec.day !== today) {
-			rec = { day: today, count: 0 };
+		if (!rec || rec.period !== stamp) {
+			rec = { period: stamp, count: 0 };
 		}
 		rec.count = (rec.count || 0) + 1;
 		rec.last = Date.now();
