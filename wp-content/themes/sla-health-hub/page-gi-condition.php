@@ -1142,7 +1142,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
     $cond_articles = new WP_Query( array(
         'post_type'           => vance_discovery_post_types(),
         'post_status'         => 'publish',
-        'posts_per_page'      => 4,
+        'posts_per_page'      => 5,
         'ignore_sticky_posts' => true,
         'no_found_rows'       => true,
         'tax_query'           => array( array(
@@ -1154,24 +1154,37 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
     $cond_label = isset( $gi_conditions[ $slug ] ) ? $gi_conditions[ $slug ]['label'] : get_the_title();
     if ( $cond_articles->have_posts() ) : ?>
     <style>
-      .gi-cp-articles { margin: 48px 0 0; }
+      /* Uniform 5-up row: fixed column count (not auto-fit) so every card is the
+         same width, and equal-height cards via stretch + flex bodies. */
+      .gi-cp-articles { margin: 48px 0 0; padding-bottom: 100px; }
       .gi-cp-articles h2 { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; color: #0F172A; margin: 0 0 20px; }
-      .gi-cp-article-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-      .gi-cp-article { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #fff; border: 1px solid #E2E8F0; border-left: 3px solid #008080; text-decoration: none; transition: box-shadow .2s, transform .2s; }
-      .gi-cp-article:hover { box-shadow: 0 6px 18px rgba(0,0,0,.08); transform: translateY(-2px); }
-      .gi-cp-article-meta { font-size: 12px; color: #94A3B8; }
-      .gi-cp-article-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #0F172A; line-height: 1.35; }
-      .gi-cp-article:hover .gi-cp-article-title { color: #008080; }
-      .gi-cp-article-all { display: inline-block; margin-top: 18px; font-size: 14px; font-weight: 700; color: #008080; text-decoration: none; }
+      .gi-cp-article-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: stretch; }
+      .gi-cp-article { display: flex; flex-direction: column; background: #fff; border: 1px solid #E2E8F0; border-top: 3px solid #2f4f6f; text-decoration: none; overflow: hidden; transition: box-shadow .2s, transform .2s; }
+      .gi-cp-article:hover { box-shadow: 0 6px 18px rgba(47,79,111,.14); transform: translateY(-2px); }
+      .gi-cp-article-thumb { aspect-ratio: 16 / 10; background-color: #E0F3FF; background-size: cover; background-position: center; }
+      .gi-cp-article-body { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 18px; }
+      .gi-cp-article-meta { font-size: 12px; color: #64748B; }
+      .gi-cp-article-title { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: #0F172A; line-height: 1.35; }
+      .gi-cp-article:hover .gi-cp-article-title { color: #2f4f6f; }
+      .gi-cp-article-all { display: inline-block; margin-top: 18px; font-size: 14px; font-weight: 700; color: #2f4f6f; text-decoration: none; }
       .gi-cp-article-all:hover { text-decoration: underline; }
+      @media (max-width: 900px) { .gi-cp-article-grid { grid-template-columns: repeat(3, 1fr); } }
+      @media (max-width: 600px) { .gi-cp-article-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
     <section class="gi-cp-articles">
       <h2>Latest articles on <?php echo esc_html( $cond_label ); ?></h2>
       <div class="gi-cp-article-grid">
-        <?php while ( $cond_articles->have_posts() ) : $cond_articles->the_post(); ?>
+        <?php while ( $cond_articles->have_posts() ) : $cond_articles->the_post();
+          /* Same fallback as the archive cards: a flat wash when a post has no
+             featured image, so the row stays uniform. */
+          $cp_thumb = get_the_post_thumbnail_url( get_the_ID(), 'medium_large' );
+        ?>
         <a class="gi-cp-article" href="<?php the_permalink(); ?>">
-          <span class="gi-cp-article-meta"><?php echo esc_html( get_the_date() ); ?> &middot; <?php echo (int) vance_get_read_time( get_the_ID() ); ?> min read</span>
-          <span class="gi-cp-article-title"><?php the_title(); ?></span>
+          <span class="gi-cp-article-thumb"<?php echo $cp_thumb ? ' style="background-image:url(\'' . esc_url( $cp_thumb ) . '\')"' : ''; ?> aria-hidden="true"></span>
+          <span class="gi-cp-article-body">
+            <span class="gi-cp-article-meta"><?php echo esc_html( get_the_date() ); ?></span>
+            <span class="gi-cp-article-title"><?php the_title(); ?></span>
+          </span>
         </a>
         <?php endwhile; ?>
       </div>
