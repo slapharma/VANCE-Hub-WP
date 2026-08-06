@@ -117,46 +117,24 @@ get_header();
     if ( $current_tab === 'calculators' ) { $current_tab = 'tools'; }
     // Back-compat: legacy ?tab=clinical-profile links resolve to the renamed Health Profile tab.
     if ( $current_tab === 'clinical-profile' ) { $current_tab = 'health-profile'; }
-    $nav_items = [
-        'main' => [
-            'home'        => ['label' => 'Dashboard', 'icon' => '📊'],
-            'profile'     => ['label' => 'My Profile', 'icon' => '👤'],
-            'health-profile' => ['label' => 'Health Profile', 'icon' => '🩺'],
-            'tools' => ['label' => 'My Tools', 'icon' => '🧮'],
-        ],
-        'learning' => [
-            'reading-list' => ['label' => 'My Reading List', 'icon' => '📚'],
-            'courses'      => ['label' => 'My Courses', 'icon' => '🎓'],
-            'searches'     => ['label' => 'My Searches', 'icon' => '🔍'],
-        ],
-        'communication' => [
-            'notes'     => ['label' => 'My Notes', 'icon' => '📝'],
-            'ai-chats'  => ['label' => 'My VANCE-Ai', 'icon' => '🤖'],
-            'messages'  => ['label' => 'My Messages', 'icon' => '💬'],
-            'documents' => ['label' => 'My Documents', 'icon' => '📄'],
-        ],
-    ];
+    // The sidebar is built from the feature registry, not hardcoded here:
+    // Appearance → Customize → Member Dashboard controls which tabs exist, what
+    // they are called and which group they sit in. See inc/dashboard-features.php.
+    // Building it in one place is what keeps the sidebar, the breadcrumb, the
+    // router and the home grid from disagreeing about any of that.
+    $nav_items = vance_dashboard_nav_items();
 
-    // Feature toggles — Appearance → Customize → Dashboard Features.
-    // See inc/dashboard-features.php. Applied here, once, so the sidebar, the
-    // breadcrumb, the router and the home grid all read the same answer.
-    if ( function_exists('vance_dashboard_filter_nav') ) {
-        $nav_items = vance_dashboard_filter_nav($nav_items);
-    }
-    // A disabled tab must not render just because someone kept the link: an
+    // A hidden tab must not render just because someone kept the link: an
     // external page, an old bookmark and a couple of in-theme buttons all point
     // straight at ?tab=ai-chats and friends. Fall back to home rather than
     // showing an empty shell with a breadcrumb for a feature that is off.
-    if ( function_exists('vance_dashboard_feature_enabled')
-        && ! vance_dashboard_feature_enabled($current_tab) ) {
+    if ( ! vance_dashboard_feature_enabled($current_tab) ) {
         $current_tab = 'home';
     }
-    // Small helper for the home grid below, which shows a summary card per
-    // feature and must drop the card when its tab is gone.
-    $dash_on = function ( $slug ) {
-        return ! function_exists('vance_dashboard_feature_enabled')
-            || vance_dashboard_feature_enabled($slug);
-    };
+    // Shorthands for the home grid below, which shows a summary card per
+    // feature: the card goes when the tab does, and carries the tab's name.
+    $dash_on    = 'vance_dashboard_feature_enabled';
+    $dash_label = 'vance_dashboard_feature_label';
 ?>
 
 <!-- DASHBOARD STYLES (Scoped) -->
@@ -339,14 +317,18 @@ get_header();
         <!-- Nav Items Loop -->
 
         <nav class="dash-nav">
-            <?php foreach($nav_items as $section => $items): ?>
+            <?php foreach($nav_items as $section => $items):
+                // Editable per section, and empty for the top group, which sits
+                // under the logo where a heading reads as clutter.
+                $section_heading = vance_dashboard_section_label($section);
+                ?>
                 <div class="nav-section">
-                    <?php if($section !== 'main'): ?>
-                        <div class="nav-label"><?php echo ucfirst($section === 'misc' ? '' : $section); ?></div>
+                    <?php if($section_heading !== ''): ?>
+                        <div class="nav-label"><?php echo esc_html($section_heading); ?></div>
                     <?php endif; ?>
                     <?php foreach($items as $slug => $data): ?>
-                        <a href="?tab=<?php echo $slug; ?>" class="nav-item <?php echo $current_tab === $slug ? 'active' : ''; ?>">
-                            <span style="width:20px;text-align:center;"><?php echo $data['icon']; ?></span> <?php echo $data['label']; ?>
+                        <a href="?tab=<?php echo esc_attr($slug); ?>" class="nav-item <?php echo $current_tab === $slug ? 'active' : ''; ?>">
+                            <span style="width:20px;text-align:center;"><?php echo $data['icon']; ?></span> <?php echo esc_html($data['label']); ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -362,13 +344,11 @@ get_header();
                 <?php
                 // Resolved once here and reused by the content H1 below, rather
                 // than the two separate copies of this loop that used to drift.
-                $tab_label = 'Overview';
-                foreach($nav_items as $sec => $its) {
-                    if(isset($its[$current_tab])) {
-                        $tab_label = $its[$current_tab]['label'];
-                        break;
-                    }
-                }
+                // Read from the registry rather than from $nav_items so a renamed
+                // tab still titles its own page even in the cases where it is not
+                // in the sidebar.
+                $tab_label = vance_dashboard_feature_label($current_tab);
+                if ('' === $tab_label) { $tab_label = 'Overview'; }
                 // On the home tab the trail would read "My Dashboard › Dashboard",
                 // so the root stands alone there instead of repeating itself.
                 $is_dash_root = ( 'home' === $current_tab );
@@ -473,7 +453,7 @@ get_header();
                         <?php if ($dash_on('reading-list')): ?>
                         <div class="d-card d-col-8">
                              <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">📚</span> Reading List</div>
+                                <div class="d-card-title"><span class="d-icon-box">📚</span> <?php echo esc_html($dash_label("reading-list")); ?></div>
                                 <a href="?tab=reading-list" class="card-link">Library</a>
                              </div>
                              <?php if(empty($bookmarks)): ?>
@@ -500,7 +480,7 @@ get_header();
                         <?php if ($dash_on('messages')): ?>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">💬</span> Messages</div>
+                                <div class="d-card-title"><span class="d-icon-box">💬</span> <?php echo esc_html($dash_label("messages")); ?></div>
                                 <span style="font-size:12px; font-weight:700; padding:4px 10px; border-radius:0;
                                     <?php echo $vance_unread_count > 0
                                         ? 'background:#008080; color:white;'
@@ -540,7 +520,7 @@ get_header();
                         <?php if ($dash_on('notes')): ?>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">📝</span> My Notes</div>
+                                <div class="d-card-title"><span class="d-icon-box">📝</span> <?php echo esc_html($dash_label("notes")); ?></div>
                                 <a href="?tab=notes" class="card-link">All Notes</a>
                             </div>
                             <div class="dash-list">
@@ -567,7 +547,7 @@ get_header();
                         <?php if ($dash_on('ai-chats')): ?>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">🤖</span> My VANCE-Ai</div>
+                                <div class="d-card-title"><span class="d-icon-box">🤖</span> <?php echo esc_html($dash_label("ai-chats")); ?></div>
                                 <a href="?tab=ai-chats" class="card-link">View All</a>
                             </div>
                             <?php
@@ -598,7 +578,7 @@ get_header();
                         <?php $has_health_profile = (bool) get_user_meta( $current_user->ID, '_sla_clinical_profile', true ); ?>
                         <div class="d-card d-col-4" style="background: linear-gradient(135deg, #008080, #0A1929); color: white; border: none;">
                             <div class="d-card-header">
-                                <div class="d-card-title" style="color: white;"><span class="d-icon-box" style="background: rgba(255,255,255,0.15);">🩺</span> Health Profile</div>
+                                <div class="d-card-title" style="color: white;"><span class="d-icon-box" style="background: rgba(255,255,255,0.15);">🩺</span> <?php echo esc_html($dash_label("health-profile")); ?></div>
                             </div>
                             <p style="font-size:13px; color:rgba(255,255,255,0.85); line-height:1.5; margin: 0 0 16px 0;">
                                 <?php echo $has_health_profile
@@ -649,7 +629,7 @@ get_header();
                                     <?php // Signposts a tab that may be switched off, so it follows the toggle. ?>
                                     <?php if ($dash_on('documents')): ?>
                                     <div style="margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-                                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">My Documents</label>
+                                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;"><?php echo esc_html($dash_label("documents")); ?></label>
                                         <p style="font-size:12px; color:#64748B; line-height:1.5; margin:0 0 12px;">
                                             <?php if ( $profile_doc_count ) : ?>
                                                 You have <?php echo (int) $profile_doc_count; ?> saved document<?php echo 1 === $profile_doc_count ? '' : 's'; ?>.
@@ -657,7 +637,7 @@ get_header();
                                                 Upload letters, test results and care plans, then ask VANCE-Ai about them.
                                             <?php endif; ?>
                                         </p>
-                                        <a href="?tab=documents" class="rl-btn" style="width:100%; justify-content:center; box-sizing:border-box;">Go to My Documents</a>
+                                        <a href="?tab=documents" class="rl-btn" style="width:100%; justify-content:center; box-sizing:border-box;"><?php echo esc_html(sprintf('Go to %s', $dash_label('documents'))); ?></a>
                                     </div>
                                     <?php endif; ?>
                                 </div>
