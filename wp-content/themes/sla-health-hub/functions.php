@@ -456,7 +456,10 @@ function vance_health_hub_scripts() {
     // @media (max-width:767.98px) AND behind Customizer toggles that default OFF,
     // so this file is inert on desktop and until a feature is explicitly enabled.
     // See MOBILE-PLAN.md §2.
-    wp_enqueue_style( 'vance-mobile-components', get_template_directory_uri() . '/assets/css/mobile-components.css', array( 'vance-mobile-base' ), '2.5.0-vance-mobile-phase3' );
+    // The fixed version string alone would not bust the edge cache when this file
+    // changes (2026-08-06: navy dividers), so it now carries a filemtime() suffix
+    // like main.css does, and every later edit busts itself.
+    wp_enqueue_style( 'vance-mobile-components', get_template_directory_uri() . '/assets/css/mobile-components.css', array( 'vance-mobile-base' ), '2.5.0-vance-mobile-phase3-' . ( @filemtime( get_template_directory() . '/assets/css/mobile-components.css' ) ?: '1' ) );
 
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
@@ -1677,7 +1680,7 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-google{display:flex;justify-content:center;margin-bottom:10px;min-height:44px}
     .vance-auth-divider{text-align:center;margin:10px 0;color:#999;position:relative;font-size:12px;text-transform:uppercase;letter-spacing:1px}
     .vance-auth-divider span{background:#fff;padding:0 12px;position:relative;z-index:1}
-    .vance-auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#e5ebeb}
+    .vance-auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#2f4f6f}
     .vance-auth-tabs{display:flex;gap:4px;margin-bottom:14px;background:#f1f5f5;padding:4px;border-radius:10px}
     .vance-auth-tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;border-radius:7px;font-weight:600;color:#666;transition:all .15s;font-size:14px}
     .vance-auth-tab.active{background:#fff;color:#008080;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
@@ -5339,7 +5342,7 @@ function vance_customize_register( $wp_customize ) {
 
     // -- Look config (shared across all dividers) --
     $wp_customize->add_setting( 'vance_divider_color', array(
-        'default'           => '#e2e8f0',
+        'default'           => '#2f4f6f',
         'sanitize_callback' => 'sanitize_hex_color',
     ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_divider_color', array(

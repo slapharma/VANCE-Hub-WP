@@ -30,7 +30,7 @@
 
 /* GI condition pages already give .gi-references a top divider + padding;
    the card border replaces it, so neutralise the old treatment. */
-.gi-references.vref { padding-top: 0; margin-top: 48px; border-top: 1px solid var(--vref-line); }
+.gi-references.vref { padding-top: 0; margin-top: 48px; border-top: 1px solid #2f4f6f; }
 
 /* ---------- Trigger ---------- */
 .vref__toggle {
@@ -107,7 +107,7 @@
 
 .vref__inner {
     padding: 6px 18px 18px;
-    border-top: 1px solid var(--vref-line);
+    border-top: 1px solid #2f4f6f;
 }
 .vref .vref__inner > :first-child { margin-top: 14px; }
 .vref .vref__inner ol,

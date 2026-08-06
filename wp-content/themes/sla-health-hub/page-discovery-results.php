@@ -175,7 +175,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
     align-items: center;
     margin-bottom: 32px;
     padding-bottom: 16px;
-    border-bottom: 2px solid #E2E8F0;
+    border-bottom: 2px solid #2f4f6f;
 }
 
 .results-count {

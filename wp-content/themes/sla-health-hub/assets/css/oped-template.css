@@ -222,7 +222,7 @@
    ============================================ */
 
 .oped-asset {
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #2f4f6f;
     padding: 32px 48px 40px;
 }
 
@@ -348,7 +348,7 @@
    ============================================ */
 
 .oped-author-bio-section {
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #2f4f6f;
     padding: 40px 48px;
     background: #F8FAFC;
 }
@@ -509,7 +509,7 @@
     display: flex;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #F3F4F6;
+    border-bottom: 1px solid #2f4f6f;
     transition: background 0.2s;
 }
 
@@ -581,7 +581,7 @@
 
 .oped-navigation {
     background: white;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #2f4f6f;
     padding: 40px 0;
 }
 

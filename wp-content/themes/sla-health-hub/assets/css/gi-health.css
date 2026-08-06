@@ -393,7 +393,7 @@
 .gi-compare-table td:first-child { font-weight: 600; color: var(--gi-primary-hover); }
 
 /* references */
-.gi-references { border-top: 1px solid #eee; padding-top: 24px; margin-top: 48px; }
+.gi-references { border-top: 1px solid #2f4f6f; padding-top: 24px; margin-top: 48px; }
 .gi-references h2 { font-size: 20px; font-family: 'Outfit', sans-serif; font-weight: 700; }
 .gi-references ol { padding-left: 20px; color: #6B7280; font-size: 14px; }
 .gi-references li { margin-bottom: 8px; }

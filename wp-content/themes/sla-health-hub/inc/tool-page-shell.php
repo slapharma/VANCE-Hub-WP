@@ -117,7 +117,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 .tool-page-container { max-width: 1100px; margin: -40px auto 0; padding: 0 20px 40px; position: relative; z-index: 10; }
 .tool-page-card { background: white; border: 2px solid var(--primary-color); border-radius: 0; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.10); overflow: hidden; }
 .tool-page-card__head {
-    padding: 18px 24px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
+    padding: 18px 24px; background: #F8FAFC; border-bottom: 1px solid #2f4f6f;
     display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;
 }
 .tool-page-card__title { margin: 0; font-size: 17px; color: var(--secondary-color); font-weight: 700; }
@@ -125,7 +125,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 .tool-page-iframe { width: 100%; height: <?php echo (int) $iframe_height; ?>px; border: 0; display: block; background: #fff; }
 
 .tool-page-disclaimer-top {
-    background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
+    background: #F8FAFC; border-bottom: 1px solid #2f4f6f;
     padding: 12px 24px; font-size: 12.5px; color: #64748b; line-height: 1.6;
 }
 .tool-page-disclaimer {
@@ -179,7 +179,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
     padding: 10px 18px;
     gap: 14px;
     background: #F8FAFC;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid #2f4f6f;
     flex-wrap: nowrap;
 }
 .tool-page-card__note {

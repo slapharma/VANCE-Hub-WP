@@ -99,7 +99,7 @@ while ( have_posts() ) :
     $va_btn_attrs = 'data-post-id="' . esc_attr( get_the_ID() ) . '" data-nonce="' . esc_attr( $va_nonce ) . '" data-logged-in="' . ( $va_logged_in ? '1' : '0' ) . '"';
     ?>
     <style>
-        .va-article-header { background:#fff; border-bottom:1px solid #e2e8f0; }
+        .va-article-header { background:#fff; border-bottom:1px solid #2f4f6f; }
         .va-article-header .container { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-top:16px; padding-bottom:16px; }
         .va-article-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:14px; color:#64748b; }
         .va-article-meta .va-cat { background:#8e7dbe; color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:4px; }
@@ -113,7 +113,7 @@ while ( have_posts() ) :
         .vance-save-btn .va-save-icon { font-size:18px; }
 
         /* Slim sticky Save bar — revealed once the header scrolls out of view. */
-        .va-sticky-save { position:fixed; top:0; left:0; right:0; z-index:997; background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 2px 12px rgba(15,23,42,.08); transform:translateY(-100%); transition:transform .25s ease; }
+        .va-sticky-save { position:fixed; top:0; left:0; right:0; z-index:997; background:#fff; border-bottom:1px solid #2f4f6f; box-shadow:0 2px 12px rgba(15,23,42,.08); transform:translateY(-100%); transition:transform .25s ease; }
         .va-sticky-save.is-visible { transform:translateY(0); }
         .va-sticky-save .container { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:10px; padding-bottom:10px; }
         .va-sticky-save .va-sticky-title { font-weight:700; color:#0f172a; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

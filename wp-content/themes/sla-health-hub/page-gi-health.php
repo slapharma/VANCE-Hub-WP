@@ -72,7 +72,7 @@ $conditions = [
     [
         'slug'  => 'inflammatory-bowel-disease',
         'image' => 'ibd.jpg',
-        'alt'   => 'Two men sitting on a sofa at home, talking and smiling together',
+        'alt'   => 'Four friends sitting and talking around a table in a cafe',
         'title' => 'Inflammatory Bowel Disease (IBD)',
         'desc'  => "The umbrella term for long-term conditions, mainly Crohn\u{2019}s disease and ulcerative colitis, that cause ongoing inflammation of the digestive tract.",
     ],
@@ -86,7 +86,7 @@ $conditions = [
     [
         'slug'  => 'crohns-disease',
         'image' => 'crohns.jpg',
-        'alt'   => 'A woman resting on a sofa at home under a blanket, holding a warm drink',
+        'alt'   => 'A man sitting at his kitchen table, reading a letter over a cup of tea',
         'title' => "Crohn\u{2019}s Disease",
         'desc'  => 'A form of IBD that can inflame any part of the gut, from mouth to anus, often the small intestine.',
     ],
@@ -106,14 +106,14 @@ $conditions = [
     ],
     [
         'slug'  => 'colorectal-cancer',
-        'image' => 'diverticular-disease.jpg',
-        'alt'   => 'Four friends sitting and talking around a table in a cafe',
+        'image' => 'colorectal-cancer.jpg',
+        'alt'   => 'Two men sitting on a sofa at home, talking and smiling together',
         'title' => 'Colorectal Cancer',
         'desc'  => 'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps.',
     ],
     [
         'slug'  => 'diverticular-disease',
-        'image' => 'colorectal-cancer.jpg',
+        'image' => 'diverticular-disease.jpg',
         'alt'   => 'A carer handing a glass of water to an older woman sitting on a sofa',
         'title' => 'Diverticular Disease &amp; Diverticulitis',
         'desc'  => 'Small pouches that form in the wall of the colon, which can sometimes cause pain or become inflamed.',
@@ -184,12 +184,28 @@ $conditions = [
       <div class="gi-conditions-list">
         <?php foreach ( $conditions as $i => $c ) :
           $delay = ( $i % 3 === 0 ) ? '0s' : ( $i % 3 === 1 ? '.08s' : '.16s' );
+
+          /* The row photos are swapped in place from time to time, keeping the
+             filename. Hostinger serves them with a long max-age, so a browser
+             that already has one will never re-ask and would keep showing the
+             old picture. Stamp the file's mtime on the URL: it changes when the
+             file is rewritten, and is stable across deploys (tar -p preserves
+             mtimes), so re-deploying does not needlessly re-bust the cache.
+             CAVEAT: if you swap two photos with a copy that preserves mtime
+             (cp -p, shutil.copy2, rsync -t), the stamp travels with the old
+             bytes and the URL will not change. `touch` the files afterwards. */
+          $img_rel  = '/assets/img/gi-health/' . $c['image'];
+          $img_src  = $tmpl . $img_rel;
+          $img_file = get_template_directory() . $img_rel;
+          if ( file_exists( $img_file ) ) {
+              $img_src = add_query_arg( 'v', filemtime( $img_file ), $img_src );
+          }
         ?>
         <a href="<?php echo esc_url( vance_gi_page_url( $c['slug'] ) ); ?>"
            class="gi-condition-row gi-reveal"
            style="--reveal-delay:<?php echo esc_attr( $delay ); ?>">
           <div class="gi-condition-row-image">
-            <img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/' . $c['image'] ); ?>"
+            <img src="<?php echo esc_url( $img_src ); ?>"
                  loading="lazy" alt="<?php echo esc_attr( $c['alt'] ); ?>">
           </div>
           <div class="gi-condition-row-content">

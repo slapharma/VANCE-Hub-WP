@@ -246,7 +246,7 @@ get_header();
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid #2f4f6f;
 }
 
 .btn-quiz {

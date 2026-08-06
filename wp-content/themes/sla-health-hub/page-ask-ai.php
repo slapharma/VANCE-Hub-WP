@@ -103,7 +103,7 @@ $agent_data = array(
 .agent-profile {
     padding: 24px 32px;
     background: #F8FAFC;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid #2f4f6f;
     display: flex;
     align-items: center;
     justify-content: space-between;

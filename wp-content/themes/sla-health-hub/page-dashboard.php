@@ -214,7 +214,7 @@ get_header();
 
 /* List Items */
 .dash-list { display: flex; flex-direction: column; gap: 0; }
-.list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
+.list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2f4f6f; }
 .list-item:last-child { border-bottom: none; }
 .item-title { font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 2px; }
 .item-meta { font-size: 12px; color: #64748B; }
@@ -243,7 +243,7 @@ get_header();
 .rl-reader { position: fixed; inset: 0; z-index: 10002; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(10,25,41,0.55); }
 .rl-reader.is-open { display: flex; }
 .rl-reader__panel { background: #FFFFFF; width: 100%; max-width: 780px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-.rl-reader__head { padding: 20px 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.rl-reader__head { padding: 20px 24px; border-bottom: 1px solid #2f4f6f; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .rl-reader__title { margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; line-height: 1.3; color: #0A1929; }
 .rl-reader__meta { margin: 4px 0 0; font-size: 12px; color: #64748B; }
 .rl-reader__close { font-size: 26px; line-height: 1; border: 1px solid #E2E8F0; background: #FFFFFF; color: #64748B; cursor: pointer; width: 38px; height: 38px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
@@ -258,7 +258,7 @@ get_header();
 .rl-reader__body blockquote { margin: 1.2em 0; padding: 2px 0 2px 16px; border-left: 3px solid var(--dash-primary); color: #475569; }
 .rl-reader__body table { width: 100%; border-collapse: collapse; margin: 0 0 1.1em; }
 .rl-reader__body td, .rl-reader__body th { border: 1px solid #E2E8F0; padding: 8px 10px; text-align: left; }
-.rl-reader__foot { padding: 14px 24px; border-top: 1px solid #E2E8F0; display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+.rl-reader__foot { padding: 14px 24px; border-top: 1px solid #2f4f6f; display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
 .rl-reader__hero { width: 100%; height: 200px; object-fit: cover; display: block; margin: 0 0 22px; }
 .rl-reader__state { padding: 48px 24px; text-align: center; color: #64748B; }
 @media (max-width: 640px) {
@@ -271,19 +271,19 @@ get_header();
    it. Appended to <body> rather than the button's parent so it is never
    clipped by the chat modal's own overflow:hidden. */
 .vn-pick { position: absolute; z-index: 10050; width: 300px; max-width: calc(100vw - 24px); background: #FFFFFF; border: 1px solid #E2E8F0; box-shadow: 0 12px 32px rgba(10,25,41,0.18); font-family: 'Inter', sans-serif; }
-.vn-pick__head { padding: 12px 14px; border-bottom: 1px solid #F1F5F9; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748B; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.vn-pick__head { padding: 12px 14px; border-bottom: 1px solid #2f4f6f; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748B; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .vn-pick__close { border: none; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: #94A3B8; padding: 0; }
 .vn-pick__close:hover { color: #EF4444; }
 .vn-pick__list { max-height: 210px; overflow-y: auto; }
-.vn-pick__item { display: block; width: 100%; text-align: left; border: none; background: none; padding: 10px 14px; cursor: pointer; font-family: inherit; font-size: 13.5px; color: #0F172A; border-bottom: 1px solid #F8FAFC; }
+.vn-pick__item { display: block; width: 100%; text-align: left; border: none; background: none; padding: 10px 14px; cursor: pointer; font-family: inherit; font-size: 13.5px; color: #0F172A; border-bottom: 1px solid #2f4f6f; }
 .vn-pick__item:hover { background: #F1F5F9; color: var(--dash-primary); }
 .vn-pick__item span { display: block; font-size: 11px; color: #94A3B8; margin-top: 2px; }
 .vn-pick__empty { padding: 14px; font-size: 13px; color: #64748B; }
-.vn-pick__new { padding: 12px 14px; border-top: 1px solid #F1F5F9; background: #F8FAFC; display: flex; gap: 8px; }
+.vn-pick__new { padding: 12px 14px; border-top: 1px solid #2f4f6f; background: #F8FAFC; display: flex; gap: 8px; }
 .vn-pick__new input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #E2E8F0; border-radius: 0; font-family: inherit; font-size: 13px; }
 .vn-pick__new input:focus { outline: none; border-color: var(--dash-primary); }
 .vn-pick__new button { border: none; background: var(--dash-primary); color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; cursor: pointer; }
-.vn-pick__status { padding: 10px 14px; font-size: 12.5px; color: #64748B; border-top: 1px solid #F1F5F9; }
+.vn-pick__status { padding: 10px 14px; font-size: 12.5px; color: #64748B; border-top: 1px solid #2f4f6f; }
 .vn-pick__status--error { color: #B91C1C; }
 .vn-pick__status--ok { color: #047857; }
 .vn-pick.is-busy { opacity: 0.6; pointer-events: none; }
@@ -1149,7 +1149,7 @@ get_header();
                                 .vance-mv-dayhead { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:12px 16px; background:var(--primary-color, #008080); color:#fff; }
                                 .vance-mv-dayhead strong { font-family:'Outfit',sans-serif; font-size:15px; font-weight:700; }
                                 .vance-mv-dayhead span { font-size:12px; color:rgba(255,255,255,0.92); }
-                                .vance-mv-meal { display:flex; gap:12px; padding:12px 16px; border-top:1px solid #E2E8F0; align-items:flex-start; }
+                                .vance-mv-meal { display:flex; gap:12px; padding:12px 16px; border-top:1px solid #2f4f6f; align-items:flex-start; }
                                 .vance-mv-meal:first-of-type { border-top:none; }
                                 .vance-mv-thumb { width:72px; height:72px; flex:0 0 72px; object-fit:cover; border:1px solid #E2E8F0; background:#F1F5F9; }
                                 .vance-mv-thumb--empty { display:flex; align-items:center; justify-content:center; color:#94A3B8; }
@@ -1841,7 +1841,11 @@ get_header();
                                     (daysHtml || '<p style="color:' + PDF_MUTE + ';">No meals recorded against this plan.</p>') +
                                     shoppingHtml +
                                     recipesHtml +
-                                    '<div style="margin-top:26px; border-top:1px solid #E2E8F0; padding-top:10px; font-size:9px; color:' + PDF_MUTE + '; line-height:1.5;">' +
+                                    // pdf-block so the disclaimer and the photo credit are not
+                                    // split across the fold. Without it a real 12-page export put
+                                    // the disclaimer at the foot of page 11 and stranded the credit
+                                    // alone on a near-empty page 12.
+                                    '<div class="pdf-block" style="margin-top:26px; border-top:1px solid #E2E8F0; padding-top:10px; font-size:9px; color:' + PDF_MUTE + '; line-height:1.5;">' +
                                         'Generated from Vance Medical Hub. Meal plans are general guidance, not personalised dietary advice — check any dietary change with your healthcare team.' +
                                         // Unsplash licence: credit travels with the photos.
                                         (plan.credit ? '<div style="margin-top:5px; color:#94A3B8;">' + esc(plan.credit) + '</div>' : '') +
@@ -3028,6 +3032,13 @@ get_header();
                 <?php break;
 
                 case 'documents':
+                    // Documents uploaded before this tab existed have never been
+                    // through text extraction. Do it now, once, so they can be
+                    // asked about like anything else — see
+                    // vance_user_docs_backfill_text().
+                    if (function_exists('vance_user_docs_backfill_text')) {
+                        vance_user_docs_backfill_text($current_user->ID);
+                    }
                     $docs      = function_exists('vance_user_docs_get') ? vance_user_docs_get($current_user->ID) : array();
                     $doc_nonce = wp_create_nonce('vance_dashboard_nonce');
                     $doc_max   = defined('VANCE_DOCS_MAX') ? VANCE_DOCS_MAX : 10;

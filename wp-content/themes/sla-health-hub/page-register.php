@@ -187,7 +187,7 @@ get_header();
     text-align: center;
     margin-top: 24px;
     padding-top: 24px;
-    border-top: 1px solid #E2E8F0;
+    border-top: 1px solid #2f4f6f;
     font-size: 14px;
     color: #64748B;
 }

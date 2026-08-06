@@ -142,7 +142,7 @@ h6 {
     height: var(--header-height);
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #2f4f6f;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -624,7 +624,7 @@ body.home .hero {
     align-items: center;
     margin-bottom: 48px;
     padding-bottom: 24px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #2f4f6f;
 }
 
 .category-title-group {
@@ -863,7 +863,7 @@ body.home .hero {
     flex-wrap: nowrap;
     margin-top: auto;
     padding-top: 14px;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #2f4f6f;
     font-size: 12px;
     font-weight: 500;
     color: #94a3b8;
@@ -876,7 +876,7 @@ body.home .hero {
 }
 .card-meta-footer .card-meta-item:first-child { padding-left: 0; }
 .card-meta-footer .card-meta-item:last-child { padding-right: 0; }
-.card-meta-footer .card-meta-item + .card-meta-item { border-left: 1px solid #e2e8f0; }
+.card-meta-footer .card-meta-item + .card-meta-item { border-left: 1px solid #2f4f6f; }
 
 .card-meta {
     font-size: 12px;
@@ -884,7 +884,7 @@ body.home .hero {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #F3F4F6;
+    border-top: 1px solid #2f4f6f;
     padding-top: 12px;
     gap: 12px;
 }
@@ -1290,7 +1290,7 @@ body.home .hero {
 .main-footer {
     padding: 80px 0 40px;
     background: white;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #2f4f6f;
 }
 
 .footer-grid {
@@ -1332,7 +1332,7 @@ body.home .hero {
 .footer-bottom {
     margin-top: 64px;
     padding-top: 32px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #2f4f6f;
     display: flex;
     justify-content: space-between;
     font-size: 12px;
@@ -1524,7 +1524,7 @@ body.home .hero {
 
 /* Op-Ed Assets */
 .oped-asset {
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #2f4f6f;
     padding: 32px 48px 40px;
 }
 
@@ -1635,7 +1635,7 @@ body.home .hero {
 
 /* Author Bio */
 .oped-author-bio-section {
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #2f4f6f;
     padding: 40px 48px;
     background: #F8FAFC;
 }
@@ -1755,7 +1755,7 @@ body.home .hero {
     display: flex;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #F3F4F6;
+    border-bottom: 1px solid #2f4f6f;
 }
 
 .oped-related-item:last-child {
@@ -1792,7 +1792,7 @@ body.home .hero {
 /* Navigation */
 .oped-navigation {
     background: white;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #2f4f6f;
     padding: 40px 0;
 }
 
@@ -2390,7 +2390,7 @@ body.home .hero {
     .main-nav ul li a {
         display: block;
         padding: 15px 0;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #2f4f6f;
         font-size: 18px;
     }
 
@@ -2765,7 +2765,7 @@ body.home .hero {
 .va-subcat-head {
     margin-bottom: 28px;
     padding-bottom: 16px;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid #2f4f6f;
 }
 .va-subcat-title {
     font-size: 30px;
@@ -3064,7 +3064,7 @@ body.home .hero {
     gap: 12px;
     padding: 12px 18px;
     text-decoration: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #2f4f6f;
     transition: background 0.2s ease;
 }
 .va-fl-item:last-child { border-bottom: none; }

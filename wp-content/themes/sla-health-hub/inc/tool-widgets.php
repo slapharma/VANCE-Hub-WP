@@ -99,7 +99,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 			background: rgba(255,255,255,0.94);
 			-webkit-backdrop-filter: blur(16px);
 			backdrop-filter: blur(16px);
-			border-top: 1px solid #E2E8F0;
+			border-top: 1px solid #2f4f6f;
 			border-radius: 0 0 16px 16px;
 		}
 		.vance-tw-modal .vance-tw-btn-go {

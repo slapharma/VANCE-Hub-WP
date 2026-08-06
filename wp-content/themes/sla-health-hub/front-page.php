@@ -117,7 +117,7 @@ body {
        still runs the full width flush to the featured image. */
     padding: 10px 20px 10px 0;
     text-decoration: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #2f4f6f;
     transition: background 0.2s ease;
 }
 .latest-list-item:last-child { border-bottom: none; }
@@ -1691,7 +1691,7 @@ body {
             border-left: none !important;
             padding-left: 0 !important;
             padding-top: 40px;
-            border-top: 1px solid #E2E8F0;
+            border-top: 1px solid #2f4f6f;
         }
     }
     </style>
@@ -1969,7 +1969,7 @@ body {
         // -------------------------------------------------------------
         $divider_key = 'vance_divider_after_' . str_replace( '-', '_', $section_id );
         if ( vance_get_theme_mod( $divider_key, false ) ) {
-            $div_color     = vance_get_theme_mod( 'vance_divider_color',     '#e2e8f0' );
+            $div_color     = vance_get_theme_mod( 'vance_divider_color',     '#2f4f6f' );
             $div_bg_color  = vance_get_theme_mod( 'vance_divider_bg_color',  '' );
             $div_thickness = absint( vance_get_theme_mod( 'vance_divider_thickness', 1 ) );
             $div_width_pct = absint( vance_get_theme_mod( 'vance_divider_width',     100 ) );

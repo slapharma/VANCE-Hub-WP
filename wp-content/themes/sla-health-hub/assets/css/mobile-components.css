@@ -36,7 +36,7 @@
         padding: 0;
         padding-bottom: env(safe-area-inset-bottom);
         background: #ffffff;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid #2f4f6f;
         box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
     }
 
@@ -158,7 +158,7 @@
         padding: 0;
     }
     .vbn-sheet-links li + li {
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid #2f4f6f;
     }
     .vbn-sheet-links a {
         display: block;

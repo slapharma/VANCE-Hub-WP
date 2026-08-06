@@ -55,7 +55,7 @@ if ( is_array( $saved_chats ) ) {
     <?php wp_head(); ?>
     <style>
         body { margin: 0; background: #f8fafc; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; }
-        .notes-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .notes-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: white; border-bottom: 1px solid #2f4f6f; }
         .notes-editor-container { flex: 1; display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; width: 100%; padding: 40px 20px; }
         .note-title-input { font-size: 24px; font-weight: 700; border: none; outline: none; width: 100%; margin-bottom: 20px; background: transparent; font-family: 'Outfit', sans-serif; color: #0f172a; }
         .toolbar { display: flex; gap: 8px; margin-bottom: 16px; padding: 8px; background: white; border-radius: 0; border: 1px solid #e2e8f0; }
