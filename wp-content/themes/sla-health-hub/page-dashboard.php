@@ -1155,12 +1155,6 @@ get_header();
                                 .vance-mp-textbtn.vance-mp-danger { color:#EF4444; }
                                 .vance-mp-textbtn:focus-visible { outline:2px solid var(--primary-color); outline-offset:2px; }
 
-                                /* Thumbnail strip on the collapsed card — a glance at what is
-                                   in the plan without opening the full viewer. */
-                                .vance-mp-strip { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
-                                .vance-mp-strip img { width:64px; height:64px; object-fit:cover; border:1px solid rgba(0,128,128,0.16); }
-                                .vance-mp-strip-more { width:64px; height:64px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#0F172A; background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.16); }
-
                                 /* --- Meal plan viewer --- */
                                 .vance-mv-day { border:1px solid #E2E8F0; background:#fff; }
                                 .vance-mv-dayhead { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:12px 16px; background:var(--primary-color, #008080); color:#fff; }
@@ -1280,19 +1274,6 @@ get_header();
                                         $plan_slugs
                                     ));
 
-                                    // Up to six thumbnails on the collapsed card, deduplicated so a
-                                    // week that repeats a recipe still shows six different dishes.
-                                    $strip = array();
-                                    foreach ($exp_days as $dd) {
-                                        foreach ($dd['meals'] as $mm) {
-                                            if ($mm['image'] && !in_array($mm['image'], $strip, true)) {
-                                                $strip[] = $mm['image'];
-                                            }
-                                        }
-                                    }
-                                    $strip_total = count($strip);
-                                    $strip       = array_slice($strip, 0, 6);
-
                                     $panel_id = 'vance-mp-panel-' . (int) $mp_i;
                                     ?>
                                     <div class="vance-mp-card vance-glass">
@@ -1308,13 +1289,19 @@ get_header();
                                                 <?php if ($plan_image): ?>
                                                     <img class="vance-mp-img" src="<?php echo esc_url($plan_image); ?>" alt="<?php echo esc_attr($plan_name); ?>" loading="lazy">
                                                 <?php endif; ?>
-                                                <?php if ($strip): ?>
-                                                    <div class="vance-mp-strip">
-                                                        <?php foreach ($strip as $thumb): ?>
-                                                            <img src="<?php echo esc_url($thumb); ?>" alt="" loading="lazy" decoding="async">
-                                                        <?php endforeach; ?>
-                                                        <?php if ($strip_total > count($strip)): ?>
-                                                            <span class="vance-mp-strip-more">+<?php echo (int) ($strip_total - count($strip)); ?></span>
+                                                <?php if ($is_structured):
+                                                    $t_days  = isset($totals['days'])  ? (int) $totals['days']  : 0;
+                                                    $t_meals = isset($totals['meals']) ? (int) $totals['meals'] : 0;
+                                                    $t_kcal  = !empty($totals['calories']) ? (int) $totals['calories'] : 0;
+                                                    ?>
+                                                    <div class="vance-mv-stats" style="margin-bottom:18px;">
+                                                        <div class="vance-mv-stat"><b><?php echo esc_html(number_format_i18n($t_days)); ?></b><span>Days</span></div>
+                                                        <div class="vance-mv-stat"><b><?php echo esc_html(number_format_i18n($t_meals)); ?></b><span>Meals</span></div>
+                                                        <?php if ($t_kcal): ?>
+                                                            <div class="vance-mv-stat"><b><?php echo esc_html(number_format_i18n($t_kcal)); ?></b><span>Total kcal</span></div>
+                                                        <?php endif; ?>
+                                                        <?php if ($t_kcal && $t_days): ?>
+                                                            <div class="vance-mv-stat"><b><?php echo esc_html(number_format_i18n((int) round($t_kcal / $t_days))); ?></b><span>kcal / day</span></div>
                                                         <?php endif; ?>
                                                     </div>
                                                 <?php endif; ?>
