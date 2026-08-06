@@ -799,6 +799,21 @@ function vance_rest_ai_chat( $request ) {
 	// --- Ground the answer in hub content ----------------------------------
 	$sources = vance_ai_retrieve_sources( $messages, $context_post_id );
 
+	/**
+	 * Last chance to add or reorder grounding sources.
+	 *
+	 * Used by My Documents to make a member's own uploaded document the primary
+	 * source for the conversation. Anything added here must already be in the
+	 * {id, title, url, excerpt, primary} shape vance_ai_system_prompt() expects,
+	 * and a filter that adds a `primary` source is responsible for demoting any
+	 * existing one.
+	 *
+	 * @param array[]         $sources  Retrieved sources.
+	 * @param array           $messages The conversation so far.
+	 * @param WP_REST_Request $request  The originating request.
+	 */
+	$sources = apply_filters( 'vance_ai_sources', $sources, $messages, $request );
+
 	$payload_messages = array(
 		array(
 			'role'    => 'system',

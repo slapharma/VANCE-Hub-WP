@@ -876,7 +876,13 @@ function vance_admin_messages_render( $post, $context = 'banner' ) {
     <article class="vance-msg vance-msg--<?php echo esc_attr( $sev ); ?>" data-msg-id="<?php echo (int) $post->ID; ?>"
              style="padding: 16px 20px; background: <?php echo esc_attr( $p['bg'] ); ?>; color: <?php echo esc_attr( $p['fg'] ); ?>; border-left: 4px solid <?php echo esc_attr( $p['accent'] ); ?>; <?php echo $banner_extra; ?>">
         <header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: inherit;"><?php echo esc_html( $post->post_title ); ?></h4>
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: inherit;">
+                <?php if ( get_post_meta( $post->ID, '_sla_msg_inbound', true ) ) : ?>
+                    <?php // Member-initiated: say so, or a thread you started reads as one the team sent you. ?>
+                    <span style="display: inline-block; background: rgba(10,25,41,0.08); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 7px; margin-right: 6px; vertical-align: middle;">You sent</span>
+                <?php endif; ?>
+                <?php echo esc_html( $post->post_title ); ?>
+            </h4>
             <small style="opacity: 0.72; font-size: 11px;"><?php echo esc_html( get_the_date( 'M j, Y', $post ) ); ?></small>
         </header>
         <div style="font-size: 14px; line-height: 1.6;"><?php echo $body; ?></div>
@@ -1051,3 +1057,101 @@ function vance_msg_ajax_user_delete() {
     wp_send_json_success( array( 'message' => 'Removed from your inbox.' ) );
 }
 add_action( 'wp_ajax_vance_msg_user_delete', 'vance_msg_ajax_user_delete' );
+
+/* ============================================================================
+ * USER-SIDE AJAX: start a new thread with the Vance team
+ * ============================================================================ */
+
+/**
+ * AJAX: a member sends a new message to the Vance team.
+ *
+ * Stored as a normal `vance_message` so it lands in the same admin tool, and
+ * the same thread UI, as anything the team sends out — the team replies with
+ * the existing reply flow and the member sees it in their inbox. The audience
+ * is pinned to the sender alone, so an inbound message is never broadcast to
+ * anyone else; `_sla_msg_inbound` is what tells the renderers to label it as
+ * sent rather than received.
+ *
+ * POST: nonce, subject, body
+ */
+function vance_msg_ajax_user_new() {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Please sign in to send a message.' ), 401 );
+    }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_msg_user_new' ) ) {
+        wp_send_json_error( array( 'message' => 'Security check failed.' ), 403 );
+    }
+
+    $subject = isset( $_POST['subject'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['subject'] ) ) ) : '';
+    $body    = isset( $_POST['body'] ) ? trim( wp_kses_post( wp_unslash( $_POST['body'] ) ) ) : '';
+
+    if ( strlen( $subject ) < 3 ) {
+        wp_send_json_error( array( 'message' => 'Please give your message a subject.' ) );
+    }
+    if ( strlen( $subject ) > 150 ) {
+        wp_send_json_error( array( 'message' => 'Subject too long, 150 characters maximum.' ) );
+    }
+    if ( strlen( $body ) < 10 ) {
+        wp_send_json_error( array( 'message' => 'Please write a little more, at least 10 characters.' ) );
+    }
+    if ( strlen( $body ) > 4000 ) {
+        wp_send_json_error( array( 'message' => 'Message too long, 4000 characters maximum.' ) );
+    }
+
+    $user = wp_get_current_user();
+
+    $msg_id = wp_insert_post( array(
+        'post_type'    => 'vance_message',
+        'post_status'  => 'publish',
+        'post_author'  => (int) $user->ID,
+        'post_title'   => $subject,
+        'post_content' => $body,
+    ), true );
+
+    if ( is_wp_error( $msg_id ) ) {
+        wp_send_json_error( array( 'message' => $msg_id->get_error_message() ) );
+    }
+
+    // Visible to the sender only. Without this the default audience is 'all',
+    // which would put one member's private question in every member's inbox.
+    update_post_meta( $msg_id, '_sla_msg_audience', 'users' );
+    update_post_meta( $msg_id, '_sla_msg_user_ids', array( (int) $user->ID ) );
+    update_post_meta( $msg_id, '_sla_msg_severity', 'info' );
+    update_post_meta( $msg_id, '_sla_msg_inbound', 1 );
+    update_post_meta( $msg_id, '_sla_msg_from_user', (int) $user->ID );
+    // Flags it for the team in the admin tool, same meta the reply flow uses.
+    update_post_meta( $msg_id, '_sla_msg_has_new_reply', time() );
+
+    // The sender wrote it, so it must not come back to them as "1 new".
+    vance_admin_messages_mark_read( (int) $user->ID, array( $msg_id ) );
+
+    /**
+     * Notify the team. Filterable so the address can be redirected, and
+     * returning an empty value switches the email off entirely and leaves the
+     * dashboard/admin record as the only channel.
+     *
+     * @param string $to      Destination address.
+     * @param int    $msg_id  The stored message.
+     */
+    $to = apply_filters( 'vance_msg_team_notification_email', get_option( 'admin_email' ), $msg_id );
+    if ( $to ) {
+        wp_mail(
+            $to,
+            sprintf( '[Vance Medical Hub] New member message: %s', $subject ),
+            sprintf(
+                "%s (%s) sent a message from their dashboard.\n\nSubject: %s\n\n%s\n\nReply from: %s",
+                $user->display_name,
+                $user->user_email,
+                $subject,
+                wp_strip_all_tags( $body ),
+                admin_url( 'admin.php?page=vance-user-messages' )
+            )
+        );
+    }
+
+    wp_send_json_success( array(
+        'message' => 'Message sent. The Vance team will reply here in My Messages.',
+        'id'      => (int) $msg_id,
+    ) );
+}
+add_action( 'wp_ajax_vance_msg_user_new', 'vance_msg_ajax_user_new' );

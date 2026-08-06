@@ -2397,6 +2397,15 @@ require get_template_directory() . '/inc/askai-kb.php';
 require get_template_directory() . '/inc/askai-functions.php';
 require get_template_directory() . '/inc/askai-content-sources.php';
 
+/**
+ * Include My Documents
+ * Member-uploaded documents: upload, ownership-checked streaming, text
+ * extraction, and the `vance_ai_sources` filter that makes a member's own
+ * document the primary source when they ask VANCE-Ai about it. Must load
+ * after askai-functions.php, which declares that filter.
+ */
+require get_template_directory() . '/inc/user-documents.php';
+
 
 /**
  * Increase maximum upload size to 10MB

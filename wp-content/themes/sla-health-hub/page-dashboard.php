@@ -130,9 +130,10 @@ get_header();
             'searches'     => ['label' => 'My Searches', 'icon' => '🔍'],
         ],
         'communication' => [
-            'notes'    => ['label' => 'My Notes', 'icon' => '📝'],
-            'ai-chats' => ['label' => 'My VANCE-Ai', 'icon' => '🤖'],
-            'messages' => ['label' => 'My Messages', 'icon' => '💬'],
+            'notes'     => ['label' => 'My Notes', 'icon' => '📝'],
+            'ai-chats'  => ['label' => 'My VANCE-Ai', 'icon' => '🤖'],
+            'messages'  => ['label' => 'My Messages', 'icon' => '💬'],
+            'documents' => ['label' => 'My Documents', 'icon' => '📄'],
         ],
     ];
 ?>
@@ -175,6 +176,26 @@ get_header();
 /* Header */
 .dash-header { height: 64px; background: white; border-bottom: 1px solid var(--dash-border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 998; }
 .page-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: #0A1929; display: flex; align-items: center; gap: 8px; }
+
+/* Header breadcrumb — "My Dashboard › My Profile".
+   The trail is only ever two deep (the dashboard has no nested tabs), so this
+   is a flat list rather than anything recursive. The separator is a real
+   element with aria-hidden rather than a ::before, so screen readers get
+   "My Dashboard, My Profile" instead of the chevron being announced. */
+.dash-crumbs { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; }
+.dash-crumbs li { display: flex; align-items: center; gap: 8px; }
+.dash-crumbs a { color: #64748B; text-decoration: none; transition: color 0.2s; }
+.dash-crumbs a:hover, .dash-crumbs a:focus-visible { color: var(--dash-primary); text-decoration: underline; }
+.dash-crumb-sep { color: #CBD5E1; font-weight: 400; }
+.dash-crumb-current { color: #0A1929; }
+@media (max-width: 640px) {
+    /* The root crumb is the one thing a phone header can afford to lose — the
+       sidebar toggle sits immediately to its left and does the same job. Only
+       the linked form is dropped: on the home tab the root IS the current page,
+       and hiding that would leave an empty breadcrumb. */
+    .dash-crumbs { font-size: 16px; }
+    .dash-crumbs .dash-crumb-root--link { display: none; }
+}
 .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .profile-avatar { width: 32px; height: 32px; border-radius: 0; object-fit: cover; border: 1px solid #E2E8F0; }
 
@@ -197,6 +218,80 @@ get_header();
 .list-item:last-child { border-bottom: none; }
 .item-title { font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 2px; }
 .item-meta { font-size: 12px; color: #64748B; }
+
+/* Reading list row actions.
+   These were four elements styled inline — two <a>, two <button> — and the
+   buttons came out in the browser's default UI font while the anchors
+   inherited Inter, so "Copy Link" sat visibly wrong next to "Open in New Tab".
+   A shared class with an explicit `font: inherit` is the fix; keep new row
+   actions on it rather than reintroducing inline styles. */
+.rl-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rl-btn {
+    font-family: inherit; font-size: 13px; font-weight: 500; line-height: 1.2;
+    padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 0;
+    background: #FFFFFF; color: #475569; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+}
+.rl-btn:hover { border-color: var(--dash-primary); color: var(--dash-primary); }
+.rl-btn:focus-visible { outline: 2px solid var(--dash-primary); outline-offset: 2px; }
+.rl-btn--primary { background: var(--dash-primary); border-color: var(--dash-primary); color: #FFFFFF; font-weight: 600; }
+.rl-btn--primary:hover { background: #006A6A; border-color: #006A6A; color: #FFFFFF; }
+.rl-btn--text { border-color: transparent; background: none; color: #EF4444; font-weight: 600; }
+.rl-btn--text:hover { border-color: transparent; color: #B91C1C; text-decoration: underline; }
+
+/* Minimalist article reader — body copy only, no sidebar/footer/read-next. */
+.rl-reader { position: fixed; inset: 0; z-index: 10002; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(10,25,41,0.55); }
+.rl-reader.is-open { display: flex; }
+.rl-reader__panel { background: #FFFFFF; width: 100%; max-width: 780px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+.rl-reader__head { padding: 20px 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.rl-reader__title { margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; line-height: 1.3; color: #0A1929; }
+.rl-reader__meta { margin: 4px 0 0; font-size: 12px; color: #64748B; }
+.rl-reader__close { font-size: 26px; line-height: 1; border: 1px solid #E2E8F0; background: #FFFFFF; color: #64748B; cursor: pointer; width: 38px; height: 38px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.rl-reader__close:hover { color: #EF4444; border-color: #EF4444; }
+.rl-reader__body { flex: 1; overflow-y: auto; padding: 28px 32px; color: #334155; font-size: 16px; line-height: 1.7; }
+.rl-reader__body img { max-width: 100%; height: auto; }
+.rl-reader__body h1, .rl-reader__body h2, .rl-reader__body h3 { font-family: 'Outfit', sans-serif; color: #0F172A; line-height: 1.3; margin: 1.6em 0 0.5em; }
+.rl-reader__body h1 { font-size: 24px; } .rl-reader__body h2 { font-size: 20px; } .rl-reader__body h3 { font-size: 17px; }
+.rl-reader__body p { margin: 0 0 1.1em; }
+.rl-reader__body a { color: var(--dash-primary); }
+.rl-reader__body ul, .rl-reader__body ol { margin: 0 0 1.1em 1.3em; }
+.rl-reader__body blockquote { margin: 1.2em 0; padding: 2px 0 2px 16px; border-left: 3px solid var(--dash-primary); color: #475569; }
+.rl-reader__body table { width: 100%; border-collapse: collapse; margin: 0 0 1.1em; }
+.rl-reader__body td, .rl-reader__body th { border: 1px solid #E2E8F0; padding: 8px 10px; text-align: left; }
+.rl-reader__foot { padding: 14px 24px; border-top: 1px solid #E2E8F0; display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+.rl-reader__hero { width: 100%; height: 200px; object-fit: cover; display: block; margin: 0 0 22px; }
+.rl-reader__state { padding: 48px 24px; text-align: center; color: #64748B; }
+@media (max-width: 640px) {
+    .rl-reader { padding: 0; }
+    .rl-reader__panel { max-width: none; max-height: 100vh; height: 100vh; }
+    .rl-reader__body { padding: 20px; }
+}
+
+/* "Add to Note" picker — a small popover anchored to whichever button opened
+   it. Appended to <body> rather than the button's parent so it is never
+   clipped by the chat modal's own overflow:hidden. */
+.vn-pick { position: absolute; z-index: 10050; width: 300px; max-width: calc(100vw - 24px); background: #FFFFFF; border: 1px solid #E2E8F0; box-shadow: 0 12px 32px rgba(10,25,41,0.18); font-family: 'Inter', sans-serif; }
+.vn-pick__head { padding: 12px 14px; border-bottom: 1px solid #F1F5F9; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748B; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.vn-pick__close { border: none; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: #94A3B8; padding: 0; }
+.vn-pick__close:hover { color: #EF4444; }
+.vn-pick__list { max-height: 210px; overflow-y: auto; }
+.vn-pick__item { display: block; width: 100%; text-align: left; border: none; background: none; padding: 10px 14px; cursor: pointer; font-family: inherit; font-size: 13.5px; color: #0F172A; border-bottom: 1px solid #F8FAFC; }
+.vn-pick__item:hover { background: #F1F5F9; color: var(--dash-primary); }
+.vn-pick__item span { display: block; font-size: 11px; color: #94A3B8; margin-top: 2px; }
+.vn-pick__empty { padding: 14px; font-size: 13px; color: #64748B; }
+.vn-pick__new { padding: 12px 14px; border-top: 1px solid #F1F5F9; background: #F8FAFC; display: flex; gap: 8px; }
+.vn-pick__new input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #E2E8F0; border-radius: 0; font-family: inherit; font-size: 13px; }
+.vn-pick__new input:focus { outline: none; border-color: var(--dash-primary); }
+.vn-pick__new button { border: none; background: var(--dash-primary); color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; cursor: pointer; }
+.vn-pick__status { padding: 10px 14px; font-size: 12.5px; color: #64748B; border-top: 1px solid #F1F5F9; }
+.vn-pick__status--error { color: #B91C1C; }
+.vn-pick__status--ok { color: #047857; }
+.vn-pick.is-busy { opacity: 0.6; pointer-events: none; }
+
+/* Small round icon button sitting under each VANCE-Ai answer. */
+.vn-save-answer { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 10px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #64748B; font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; border-radius: 0; }
+.vn-save-answer:hover { border-color: var(--dash-primary); color: var(--dash-primary); }
+.vn-save-answer svg { width: 13px; height: 13px; }
 
 /* Mobile */
 @media (max-width: 768px) {
@@ -243,18 +338,35 @@ get_header();
         <header class="dash-header">
             <div style="display:flex; align-items:center;">
                 <span class="mobile-toggle" onclick="toggleSidebar()" style="color:#0f172a;">☰</span>
-                <div class="page-title">
-                    <?php 
-                    $tab_label = 'Overview';
-                    foreach($nav_items as $sec => $its) {
-                        if(isset($its[$current_tab])) {
-                            $tab_label = $its[$current_tab]['label'];
-                            break;
-                        }
+                <?php
+                // Resolved once here and reused by the content H1 below, rather
+                // than the two separate copies of this loop that used to drift.
+                $tab_label = 'Overview';
+                foreach($nav_items as $sec => $its) {
+                    if(isset($its[$current_tab])) {
+                        $tab_label = $its[$current_tab]['label'];
+                        break;
                     }
-                    echo $tab_label;
-                    ?>
-                </div>
+                }
+                // On the home tab the trail would read "My Dashboard › Dashboard",
+                // so the root stands alone there instead of repeating itself.
+                $is_dash_root = ( 'home' === $current_tab );
+                ?>
+                <nav class="page-title" aria-label="Breadcrumb">
+                    <ol class="dash-crumbs">
+                        <li class="dash-crumb-root<?php echo $is_dash_root ? '' : ' dash-crumb-root--link'; ?>">
+                            <?php if ( $is_dash_root ) : ?>
+                                <span class="dash-crumb-current" aria-current="page">My Dashboard</span>
+                            <?php else : ?>
+                                <a href="?tab=home">My Dashboard</a>
+                                <span class="dash-crumb-sep" aria-hidden="true">&rsaquo;</span>
+                            <?php endif; ?>
+                        </li>
+                        <?php if ( ! $is_dash_root ) : ?>
+                            <li><span class="dash-crumb-current" aria-current="page"><?php echo esc_html($tab_label); ?></span></li>
+                        <?php endif; ?>
+                    </ol>
+                </nav>
             </div>
 
             <div style="display: flex; align-items: center; gap: 20px;">
@@ -272,18 +384,10 @@ get_header();
         </header>
 
         <div class="dash-content">
-            <?php 
-            $tab_label = 'Overview';
-            foreach($nav_items as $sec => $its) {
-                if(isset($its[$current_tab])) {
-                    $tab_label = $its[$current_tab]['label'];
-                    break;
-                }
-            }
-            ?>
+            <?php // $tab_label is resolved once alongside the header breadcrumb above. ?>
             <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
-                    <h1 style="font-family:'Outfit'; font-size:28px; color:#0F172A; margin:0 0 8px 0;"><?php echo $tab_label; ?></h1>
+                    <h1 style="font-family:'Outfit'; font-size:28px; color:<?php echo $theme_primary; ?>; margin:0 0 8px 0;"><?php echo esc_html($tab_label); ?></h1>
                     <p style="color:#64748B; margin:0;">
                         <?php 
                         switch($current_tab) {
@@ -499,21 +603,25 @@ get_header();
                                         <input type="file" id="avatar-input" style="display: none;" accept="image/*" onchange="uploadAvatar(this)">
                                     </div>
                                     
-                                    <!-- Documents Section -->
+                                    <?php
+                                    // Document upload moved to its own My Documents tab, where it
+                                    // has room for a reader, the Ask VANCE-Ai flow and the
+                                    // disclaimers that belong with health records. The signpost
+                                    // stays so anyone who uploaded here before still finds them —
+                                    // the files themselves did not move, both views read the same
+                                    // _sla_profile_docs meta.
+                                    $profile_doc_count = count( $profile_docs );
+                                    ?>
                                     <div style="margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-                                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:10px;">My Documents (Max 5)</label>
-                                        <div id="doc-list" style="margin-bottom: 12px;">
-                                            <?php foreach($profile_docs as $doc): ?>
-                                                <div class="doc-item" style="display:flex; justify-content:space-between; font-size:12px; background:#F8FAFC; padding:8px; border-radius:0; margin-bottom:4px;">
-                                                    <a href="<?php echo esc_url($doc['url']); ?>" target="_blank" style="text-decoration:none; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;"><?php echo esc_html($doc['name']); ?></a>
-                                                    <span onclick="deleteProfileDoc(<?php echo $doc['id']; ?>)" style="color:#EF4444; cursor:pointer; font-weight:700;">×</span>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                        <?php if(count($profile_docs) < 5): ?>
-                                            <button type="button" onclick="document.getElementById('profile-doc-up').click()" style="font-size:12px; width:100%; padding:8px; border:1px dashed #CBD5E1; background:white; color:#64748B; border-radius:0; cursor:pointer;">+ Upload Document</button>
-                                            <input type="file" id="profile-doc-up" style="display:none;" onchange="uploadProfileDoc(this)">
-                                        <?php endif; ?>
+                                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">My Documents</label>
+                                        <p style="font-size:12px; color:#64748B; line-height:1.5; margin:0 0 12px;">
+                                            <?php if ( $profile_doc_count ) : ?>
+                                                You have <?php echo (int) $profile_doc_count; ?> saved document<?php echo 1 === $profile_doc_count ? '' : 's'; ?>.
+                                            <?php else : ?>
+                                                Upload letters, test results and care plans, then ask VANCE-Ai about them.
+                                            <?php endif; ?>
+                                        </p>
+                                        <a href="?tab=documents" class="rl-btn" style="width:100%; justify-content:center; box-sizing:border-box;">Go to My Documents</a>
                                     </div>
                                 </div>
 
@@ -577,27 +685,7 @@ get_header();
                             </div>
                         </form>
                     </div>
-                    <!-- Upload Scripts -->
-                    <script>
-                    function uploadProfileDoc(input) {
-                        if (input.files[0]) {
-                            var fd = new FormData();
-                            fd.append('action', 'vance_upload_profile_doc');
-                            fd.append('doc', input.files[0]);
-                            fd.append('nonce', '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>');
-                            jQuery.ajax({
-                                url: '<?php echo admin_url('admin-ajax.php'); ?>', type: 'POST', data: fd, processData: false, contentType: false,
-                                success: function(res) { if(res.success) location.reload(); else alert(res.data); }
-                            });
-                        }
-                    }
-                    function deleteProfileDoc(id) {
-                        if(!confirm('Delete this document?')) return;
-                        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                            action: 'vance_delete_profile_doc', id: id, nonce: '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>'
-                        }, function(res) { if(res.success) location.reload(); else alert(res.data); });
-                    }
-                    </script>
+                    <?php // Document upload/delete JS moved with the feature to the documents tab. ?>
                 <?php break;
 
                 case 'health-profile':
@@ -1146,10 +1234,18 @@ get_header();
                                     $meal_plan_payloads[ $mp_i ] = array(
                                         'name'     => $plan_name,
                                         'when'     => $when,
+                                        // ISO stamp for the PDF filename. `when` is already
+                                        // localised for display ("23 Jul 2026") and sorts badly
+                                        // in a folder listing, so the filename uses this instead.
+                                        'date'     => $ts ? date('Y-m-d', $ts) : '',
                                         'image'    => $plan_image,
                                         'days'     => $exp_days,
                                         'totals'   => $totals,
                                         'shopping' => $is_structured ? vance_recipe_shopping_list($exp_days) : array(),
+                                        // Ingredients + method for each distinct recipe, keyed by
+                                        // slug. The PDF's recipe appendix reads from here; meal
+                                        // rows only carry a slug, so nothing is duplicated 28 times.
+                                        'recipes'  => $is_structured ? vance_recipe_plan_recipes($exp_days) : array(),
                                     );
 
                                     // Up to six thumbnails on the collapsed card, deduplicated so a
@@ -1406,10 +1502,16 @@ get_header();
                          * ---------------------------------------------------------------
                          * Meal plan PDF
                          * ---------------------------------------------------------------
-                         * A cover page, a per-day schedule with a photo against every meal,
-                         * and a consolidated shopping list — i.e. something you can actually
-                         * take to the kitchen and the supermarket, rather than the two-column
-                         * name/kcal table this used to emit.
+                         * A masthead carrying the Vance logo, a per-day schedule with a photo
+                         * against every meal, a consolidated shopping list, and a recipe
+                         * appendix with the ingredients and method for every dish in the plan
+                         * — i.e. something you can actually take to the kitchen and the
+                         * supermarket and cook from, rather than the two-column name/kcal
+                         * table this used to emit.
+                         *
+                         * Document order is deliberate and follows how it gets used: plan
+                         * overview, then what to eat each day, then what to buy, then how to
+                         * cook it.
                          *
                          * Three things make it work that the old version got wrong:
                          *
@@ -1425,13 +1527,84 @@ get_header();
                          */
                         var PDF_TEAL = '#008080', PDF_INK = '#0F172A', PDF_BODY = '#334155', PDF_MUTE = '#475569';
 
-                        // Wait for every <img> inside el, but never hang the download on one
-                        // that will not load — a dead remote URL resolves rather than rejects,
-                        // and simply renders as its alt-empty box.
+                        // Same-origin, so html2canvas can read it back out of the canvas
+                        // without tainting it — no crossorigin attribute needed or wanted.
+                        var PDF_LOGO = <?php echo wp_json_encode( get_template_directory_uri() . '/assets/img/logo.png' ); ?>;
+                        var PDF_USER = <?php echo wp_json_encode( $current_user->user_login ); ?>;
+
+                        /**
+                         * The logo PNG is 1024x576 with a large transparent margin baked in, so
+                         * drawing it at its own aspect ratio renders a wordmark about a third
+                         * the size of the box it sits in. The site header solves this with a
+                         * crop window (see .logo-area in main.css); the same trick is used
+                         * here, but with an explicit negative offset rather than flex centring
+                         * — box arithmetic rasterises predictably, flex alignment inside an
+                         * overflow:hidden parent does not always survive html2canvas.
+                         */
+                        function pdfLogo(width) {
+                            var natural = width * 576 / 1024;        // height if drawn uncropped
+                            var band    = Math.round(width * 0.29);  // visible strip, matches the header's crop ratio
+                            var offset  = (natural - band) / 2;
+                            return '<div style="width:' + width + 'px; height:' + band + 'px; overflow:hidden;">' +
+                                   '<img src="' + PDF_LOGO + '" alt="Vance Medical" ' +
+                                   'style="width:' + width + 'px; height:' + natural + 'px; display:block; margin-top:-' + offset + 'px;">' +
+                                   '</div>';
+                        }
+
+                        /**
+                         * VANCE_MealPlan_<username>_<plan name>_<date>.pdf
+                         *
+                         * The date is the plan's *saved* date, not today's, so re-downloading
+                         * the same plan produces the same file rather than a folder full of
+                         * near-duplicates.
+                         *
+                         * Each segment keeps only [A-Za-z0-9-] and joins the rest with
+                         * underscores. Hyphens survive deliberately: stripping them would turn
+                         * the ISO date into 2026_07_23, which no longer reads as a date and no
+                         * longer sorts as one next to anything else. Underscore stays the
+                         * segment separator, so "A - B" collapses to "A_B" rather than "A_-_B".
+                         */
+                        function pdfFilename(plan) {
+                            var clean = function (v, fallback) {
+                                var s = String(v == null ? '' : v)
+                                    .replace(/[^A-Za-z0-9-]+/g, '_')
+                                    .replace(/_-+_/g, '_')
+                                    .replace(/^[_-]+|[_-]+$/g, '');
+                                return s || fallback;
+                            };
+                            return [
+                                'VANCE_MealPlan',
+                                clean(PDF_USER, 'user'),
+                                clean(plan.name, 'meal_plan'),
+                                clean(plan.date || plan.when, 'undated')
+                            ].join('_') + '.pdf';
+                        }
+
+                        /**
+                         * A photo cropped to fill a fixed box, for the PDF only.
+                         *
+                         * NOT an <img style="object-fit:cover"> — html2canvas ignores object-fit
+                         * and stretches the image to the box instead, so every photo printed
+                         * distorted. It is subtle on a square 62px thumbnail (a 3:2 source
+                         * squeezed 33%) and gross on the full-width hero, where a 3:2 photo is
+                         * crushed into a 4.8:1 band. background-size:cover IS honoured, and
+                         * crops exactly as object-fit would. Verified side by side.
+                         *
+                         * The URL goes on data-bg too so whenImagesSettled() can preload it —
+                         * background images fire no load event of their own.
+                         */
+                        function pdfPhoto(url, css) {
+                            return '<div data-bg="' + esc(url) + '" style="' + css +
+                                   ' background-image:url(\'' + esc(url) + '\');' +
+                                   ' background-size:cover; background-position:center center;' +
+                                   ' background-repeat:no-repeat; background-color:#F1F5F9;"></div>';
+                        }
+
+                        // Wait for every photo inside el — both <img> tags and the background
+                        // images painted by pdfPhoto() — but never hang the download on one that
+                        // will not load. A dead URL resolves rather than rejects.
                         function whenImagesSettled(el) {
-                            var imgs = [].slice.call(el.querySelectorAll('img'));
-                            if (!imgs.length) { return Promise.resolve(); }
-                            return Promise.all(imgs.map(function (img) {
+                            var jobs = [].slice.call(el.querySelectorAll('img')).map(function (img) {
                                 if (img.complete && img.naturalWidth > 0) { return Promise.resolve(); }
                                 return new Promise(function (resolve) {
                                     var done = false;
@@ -1444,7 +1617,26 @@ get_header();
                                     });
                                     setTimeout(finish, 8000);
                                 });
+                            });
+
+                            jobs = jobs.concat([].slice.call(el.querySelectorAll('[data-bg]')).map(function (node) {
+                                return new Promise(function (resolve) {
+                                    var done = false;
+                                    var finish = function () { if (!done) { done = true; resolve(); } };
+                                    var probe = new Image();
+                                    probe.crossOrigin = 'anonymous';
+                                    probe.onload  = finish;
+                                    probe.onerror = function () {
+                                        // Leave the plain placeholder box rather than a broken tile.
+                                        node.style.backgroundImage = 'none';
+                                        finish();
+                                    };
+                                    setTimeout(finish, 8000);
+                                    probe.src = node.getAttribute('data-bg');
+                                });
                             }));
+
+                            return jobs.length ? Promise.all(jobs) : Promise.resolve();
                         }
 
                         function pdfStat(value, label) {
@@ -1461,12 +1653,8 @@ get_header();
                             if (m.nutrition && m.nutrition.fibre)   { facts.push(esc(m.nutrition.fibre) + 'g fibre'); }
                             if (m.servings) { facts.push('serves ' + esc(m.servings)); }
 
-                            // crossOrigin is required for html2canvas to read remote pixels back
-                            // out of the canvas; without it the whole canvas is tainted and the
-                            // export throws a security error instead of producing a file.
                             var img = m.image
-                                ? '<img src="' + esc(m.image) + '" crossorigin="anonymous" alt="" ' +
-                                  'style="width:62px; height:62px; object-fit:cover; display:block; border:1px solid #E2E8F0;">'
+                                ? pdfPhoto(m.image, 'width:62px; height:62px; border:1px solid #E2E8F0;')
                                 : '';
 
                             return '<tr>' +
@@ -1476,6 +1664,61 @@ get_header();
                                     '<div style="font-size:12.5px; font-weight:700; color:' + PDF_INK + '; margin:2px 0 3px;">' + esc(m.name || '') + '</div>' +
                                     (facts.length ? '<div style="font-size:10px; color:' + PDF_BODY + ';">' + facts.join(' &nbsp;·&nbsp; ') + '</div>' : '') +
                                 '</td></tr>';
+                        }
+
+                        // Section rule shared by the shopping list and the recipe appendix.
+                        function pdfHeading(text) {
+                            return '<div style="font-size:14px; font-weight:800; color:' + PDF_INK + '; text-transform:uppercase; letter-spacing:0.8px; border-bottom:2px solid ' + PDF_TEAL + '; padding-bottom:5px; margin-bottom:10px;">' + text + '</div>';
+                        }
+
+                        /**
+                         * One recipe: ingredients on the left, numbered method on the right.
+                         *
+                         * Ingredients arrive as [{section, items[]}] — most recipes have a
+                         * single unnamed section, but the ones that separate (say) a sauce from
+                         * the base carry a title that has to be shown or the list reads as one
+                         * undifferentiated column.
+                         */
+                        function pdfRecipeCard(r) {
+                            var meta = [];
+                            if (r.servings) { meta.push('Serves ' + num(r.servings)); }
+                            if (r.prep)     { meta.push(num(r.prep) + ' min prep'); }
+                            if (r.cook)     { meta.push(num(r.cook) + ' min cook'); }
+
+                            var ing = (r.ingredients || []).map(function (sec) {
+                                var title = sec.section
+                                    ? '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px; color:' + PDF_TEAL + '; margin:8px 0 3px;">' + esc(sec.section) + '</div>'
+                                    : '';
+                                return title + (sec.items || []).map(function (item) {
+                                    return '<div style="font-size:10.5px; color:' + PDF_BODY + '; padding:2.5px 0; border-bottom:1px solid #F1F5F9;">' +
+                                           '<span style="display:inline-block; width:8px; height:8px; border:1px solid #94A3B8; margin-right:7px;"></span>' +
+                                           esc(item) + '</div>';
+                                }).join('');
+                            }).join('');
+
+                            var steps = (r.instructions || []).map(function (step, i) {
+                                return '<tr>' +
+                                    '<td style="width:20px; vertical-align:top; padding:3px 7px 3px 0;">' +
+                                        '<span style="display:inline-block; width:15px; height:15px; background:' + PDF_TEAL + '; color:#fff; font-size:9px; font-weight:800; text-align:center; line-height:15px;">' + (i + 1) + '</span>' +
+                                    '</td>' +
+                                    '<td style="font-size:10.5px; color:' + PDF_BODY + '; line-height:1.45; padding:3px 0;">' + esc(step) + '</td>' +
+                                '</tr>';
+                            }).join('');
+
+                            return '<div class="pdf-block" style="margin-bottom:18px; border:1px solid #E2E8F0; border-top:3px solid ' + PDF_TEAL + '; padding:12px 14px;">' +
+                                '<div style="font-size:13.5px; font-weight:800; color:' + PDF_INK + ';">' + esc(r.name || '') + '</div>' +
+                                (meta.length ? '<div style="font-size:9.5px; color:' + PDF_MUTE + '; margin:3px 0 9px;">' + meta.join(' &nbsp;·&nbsp; ') + '</div>' : '<div style="height:8px;"></div>') +
+                                '<table style="width:100%; border-collapse:collapse;"><tr>' +
+                                    '<td style="width:42%; vertical-align:top; padding-right:16px;">' +
+                                        '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:' + PDF_MUTE + '; margin-bottom:4px;">Ingredients</div>' +
+                                        (ing || '<div style="font-size:10px; color:' + PDF_MUTE + ';">Not recorded.</div>') +
+                                    '</td>' +
+                                    '<td style="vertical-align:top;">' +
+                                        '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:' + PDF_MUTE + '; margin-bottom:4px;">Method</div>' +
+                                        (steps ? '<table style="width:100%; border-collapse:collapse;">' + steps + '</table>'
+                                               : '<div style="font-size:10px; color:' + PDF_MUTE + ';">Not recorded.</div>') +
+                                    '</td>' +
+                                '</tr></table></div>';
                         }
 
                         function buildMealPlanDocument(plan) {
@@ -1519,32 +1762,55 @@ get_header();
                                 };
                                 shoppingHtml =
                                     '<div class="pdf-block" style="margin-top:22px;">' +
-                                    '<div style="font-size:14px; font-weight:800; color:' + PDF_INK + '; text-transform:uppercase; letter-spacing:0.8px; border-bottom:2px solid ' + PDF_TEAL + '; padding-bottom:5px; margin-bottom:10px;">Shopping list</div>' +
+                                    pdfHeading('Shopping list') +
                                     '<div style="font-size:9.5px; color:' + PDF_MUTE + '; margin-bottom:8px;">Quantities are per recipe. &times;2 means that quantity is needed twice across the plan.</div>' +
                                     '<table style="width:100%; border-collapse:collapse;"><tr>' +
                                     cell(shopping.slice(0, half)) + cell(shopping.slice(half)) +
                                     '</tr></table></div>';
                             }
 
+                            // Recipe appendix — ingredients and method for every distinct dish,
+                            // in the order the plan first calls for it. `plan.recipes` is a
+                            // slug-keyed map; saves made before it existed simply have none, in
+                            // which case the section is omitted rather than printed empty.
+                            var recipes    = plan.recipes || {};
+                            var recipeKeys = Object.keys(recipes);
+                            var recipesHtml = '';
+                            if (recipeKeys.length) {
+                                recipesHtml =
+                                    '<div style="margin-top:26px;">' +
+                                    '<div class="pdf-block">' +
+                                        pdfHeading('Recipes') +
+                                        '<div style="font-size:9.5px; color:' + PDF_MUTE + '; margin-bottom:12px;">' +
+                                            'Ingredient quantities are for the servings shown against each recipe. Scale them up if you are cooking for more.' +
+                                        '</div>' +
+                                    '</div>' +
+                                    recipeKeys.map(function (slug) { return pdfRecipeCard(recipes[slug]); }).join('') +
+                                    '</div>';
+                            }
+
                             var el = document.createElement('div');
                             el.innerHTML =
                                 '<div style="padding:34px 38px; font-family:Helvetica,Arial,sans-serif; color:' + PDF_BODY + ';">' +
-                                    // Masthead
-                                    '<table style="width:100%; border-collapse:collapse; border-bottom:3px solid ' + PDF_TEAL + '; padding-bottom:12px;"><tr>' +
-                                        '<td style="padding-bottom:12px;">' +
-                                            '<div style="font-size:10px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase; color:' + PDF_TEAL + ';">Vance Medical Hub</div>' +
-                                            '<div style="font-size:25px; font-weight:800; color:' + PDF_INK + '; letter-spacing:-0.4px; margin-top:3px;">' + esc(plan.name || 'Meal plan') + '</div>' +
-                                        '</td>' +
-                                        '<td style="padding-bottom:12px; text-align:right; vertical-align:bottom; font-size:10px; color:' + PDF_MUTE + ';">' +
+                                    // Masthead: logo left, save date right, plan name across the
+                                    // bottom above the teal rule.
+                                    '<table style="width:100%; border-collapse:collapse;"><tr>' +
+                                        '<td style="vertical-align:middle;">' + pdfLogo(150) + '</td>' +
+                                        '<td style="text-align:right; vertical-align:middle; font-size:10px; color:' + PDF_MUTE + ';">' +
                                             (plan.when ? 'Saved ' + esc(plan.when) : '') +
                                         '</td>' +
                                     '</tr></table>' +
+                                    '<div style="border-bottom:3px solid ' + PDF_TEAL + '; padding-bottom:12px; margin-top:16px;">' +
+                                        '<div style="font-size:10px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase; color:' + PDF_TEAL + ';">Meal plan</div>' +
+                                        '<div style="font-size:25px; font-weight:800; color:' + PDF_INK + '; letter-spacing:-0.4px; margin-top:3px;">' + esc(plan.name || 'Meal plan') + '</div>' +
+                                    '</div>' +
                                     (plan.image
-                                        ? '<img src="' + esc(plan.image) + '" crossorigin="anonymous" alt="" style="width:100%; height:150px; object-fit:cover; display:block; margin:18px 0;">'
+                                        ? pdfPhoto(plan.image, 'width:100%; height:150px; margin:18px 0;')
                                         : '<div style="height:18px;"></div>') +
                                     statsRow +
                                     (daysHtml || '<p style="color:' + PDF_MUTE + ';">No meals recorded against this plan.</p>') +
                                     shoppingHtml +
+                                    recipesHtml +
                                     '<div style="margin-top:26px; border-top:1px solid #E2E8F0; padding-top:10px; font-size:9px; color:' + PDF_MUTE + '; line-height:1.5;">' +
                                         'Generated from Vance Medical Hub. Meal plans are general guidance, not personalised dietary advice — check any dietary change with your healthcare team.' +
                                     '</div>' +
@@ -1573,8 +1839,16 @@ get_header();
                             // no in-flow height, so the container measures zero and the whole
                             // export rasterises to a 0px-tall canvas — a blank PDF, with no error
                             // thrown. Verified: fixed-on-element gives 1191x0, this gives 794x5135.
+                            //
+                            // `absolute`, not `fixed`: a fixed wrapper is positioned against the
+                            // viewport, so its document-space box moves with the scroll position.
+                            // html2canvas captures from the document origin, and the gap between
+                            // that origin and the element was rasterised as leading blank pages —
+                            // a plan card sits far enough down My Tools that a real export came
+                            // back with a blank page 1 and a blank top half of page 2. An
+                            // absolute wrapper is anchored to the document, so it is always at 0.
                             var holder = document.createElement('div');
-                            holder.style.cssText = 'position:fixed; left:-10000px; top:0; width:794px;'; // 794px ≈ A4 at 96dpi
+                            holder.style.cssText = 'position:absolute; left:-10000px; top:0; width:794px;'; // 794px ≈ A4 at 96dpi
                             var el = buildMealPlanDocument(plan);
                             holder.appendChild(el);
                             document.body.appendChild(holder);
@@ -1588,9 +1862,13 @@ get_header();
                             whenImagesSettled(el).then(function () {
                                 return html2pdf().set({
                                     margin:      [10, 0, 12, 0], // mm — the inner div supplies side padding
-                                    filename:    (plan.name || 'meal-plan').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf',
+                                    filename:    pdfFilename(plan),
                                     image:       { type: 'jpeg', quality: 0.95 },
-                                    html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#FFFFFF', logging: false },
+                                    // scrollX/scrollY default to the page's current scroll offset;
+                                    // pinning them to 0 is the second half of the blank-leading-page
+                                    // fix above, and covers html2pdf re-parenting the clone into its
+                                    // own fixed overlay before html2canvas ever sees it.
+                                    html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#FFFFFF', logging: false, scrollX: 0, scrollY: 0 },
                                     jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
                                     pagebreak:   { mode: ['css', 'legacy'], avoid: '.pdf-block' }
                                 }).from(el).toPdf().get('pdf').then(function (pdf) {
@@ -1736,22 +2014,173 @@ get_header();
                                             <?php echo get_the_post_thumbnail(get_the_ID(), 'medium', array('style'=>'width:100%;height:100%;object-fit:cover;')); ?>
                                         </div>
                                         <div>
-                                            <div class="item-title"><a href="<?php the_permalink(); ?>" style="text-decoration:none; color:inherit;"><?php the_title(); ?></a></div>
+                                            <?php // Plain text, not a link — reading happens through Read Now. ?>
+                                            <div class="item-title"><?php the_title(); ?></div>
                                             <div class="item-meta"><?php echo get_the_date('M j, Y'); ?> • <?php echo get_post_type(); ?></div>
                                         </div>
                                     </div>
-                                    <div style="display:flex; gap:8px;">
-                                        <a href="<?php echo $p_link; ?>" class="card-link" style="border:1px solid #e2e8f0; padding:6px 12px; border-radius:0; color:#475569; font-weight:500;">View</a>
-                                        <a href="mailto:?subject=<?php echo rawurlencode($p_title); ?>&body=<?php echo rawurlencode($p_link); ?>" class="card-link" style="border:1px solid #e2e8f0; padding:6px 12px; border-radius:0; color:#475569; font-weight:500;">Share</a>
-                                        <button onclick="navigator.clipboard.writeText('<?php echo esc_js($p_link); ?>'); alert('Link copied!');" style="background:white; border:1px solid #e2e8f0; padding:6px 12px; border-radius:0; color:#475569; font-weight:500; cursor:pointer;">Copy Link</button>
-                                        
-                                        <button onclick="deleteBookmark(<?php echo get_the_ID(); ?>)" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; margin-left:8px;">Remove</button>
+                                    <div class="rl-actions">
+                                        <button type="button" class="rl-btn rl-btn--primary rl-read"
+                                                data-post-id="<?php echo (int) get_the_ID(); ?>">Read Now</button>
+                                        <a href="<?php echo esc_url($p_link); ?>" class="rl-btn" target="_blank" rel="noopener">Open in New Tab</a>
+                                        <button type="button" class="rl-btn rl-copy" data-url="<?php echo esc_attr($p_link); ?>">Copy Link</button>
+                                        <button type="button" class="rl-btn rl-btn--text" onclick="deleteBookmark(<?php echo (int) get_the_ID(); ?>)">Remove</button>
                                     </div>
                                 </div>
                                 <?php endwhile; wp_reset_postdata(); ?>
                             </div>
                          <?php endif; ?>
                     </div>
+
+                    <!-- Minimalist article reader -->
+                    <div id="rl-reader" class="rl-reader" role="dialog" aria-modal="true" aria-labelledby="rl-reader-title">
+                        <div class="rl-reader__panel">
+                            <div class="rl-reader__head">
+                                <div>
+                                    <h2 class="rl-reader__title" id="rl-reader-title">Loading…</h2>
+                                    <p class="rl-reader__meta" id="rl-reader-meta"></p>
+                                </div>
+                                <button type="button" class="rl-reader__close" data-rl-close aria-label="Close reader">&times;</button>
+                            </div>
+                            <div class="rl-reader__body" id="rl-reader-body">
+                                <div class="rl-reader__state">Loading article…</div>
+                            </div>
+                            <div class="rl-reader__foot">
+                                <a href="#" class="rl-btn" id="rl-reader-open" target="_blank" rel="noopener">Open in New Tab</a>
+                                <button type="button" class="rl-btn rl-btn--primary" data-rl-close>Close</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                    (function () {
+                        var ajaxUrl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+                        var nonce   = <?php echo wp_json_encode(wp_create_nonce('vance_dashboard_nonce')); ?>;
+
+                        var reader  = document.getElementById('rl-reader');
+                        if (!reader) { return; }
+                        var titleEl = document.getElementById('rl-reader-title');
+                        var metaEl  = document.getElementById('rl-reader-meta');
+                        var bodyEl  = document.getElementById('rl-reader-body');
+                        var openEl  = document.getElementById('rl-reader-open');
+                        var lastFocus = null;
+                        // Article bodies are fetched once per session — reopening the
+                        // same piece is instant and costs no second round trip.
+                        var cache = {};
+
+                        function setState(msg) {
+                            bodyEl.innerHTML = '';
+                            var d = document.createElement('div');
+                            d.className = 'rl-reader__state';
+                            d.textContent = msg;
+                            bodyEl.appendChild(d);
+                        }
+
+                        function open() {
+                            lastFocus = document.activeElement;
+                            reader.classList.add('is-open');
+                            // Stop the page behind scrolling while the reader owns the screen.
+                            document.body.style.overflow = 'hidden';
+                            var close = reader.querySelector('[data-rl-close]');
+                            if (close) { close.focus(); }
+                        }
+
+                        function close() {
+                            reader.classList.remove('is-open');
+                            document.body.style.overflow = '';
+                            if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
+                        }
+
+                        function render(data) {
+                            titleEl.textContent = data.title || 'Article';
+                            metaEl.textContent  = [data.date, data.type].filter(Boolean).join(' • ');
+                            openEl.href = data.url || '#';
+                            bodyEl.innerHTML = '';
+                            bodyEl.scrollTop = 0;
+                            if (data.image) {
+                                var img = document.createElement('img');
+                                img.className = 'rl-reader__hero';
+                                img.src = data.image;
+                                img.alt = '';
+                                bodyEl.appendChild(img);
+                            }
+                            var wrap = document.createElement('div');
+                            // Server-side wp_kses_post has already stripped scripts and
+                            // event handlers; this is the same content single.php prints.
+                            wrap.innerHTML = data.content || '';
+                            bodyEl.appendChild(wrap);
+                        }
+
+                        function load(postId) {
+                            titleEl.textContent = 'Loading…';
+                            metaEl.textContent  = '';
+                            openEl.href = '#';
+                            setState('Loading article…');
+                            open();
+
+                            if (cache[postId]) { render(cache[postId]); return; }
+
+                            var fd = new FormData();
+                            fd.append('action', 'vance_read_article');
+                            fd.append('nonce', nonce);
+                            fd.append('post_id', postId);
+
+                            fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                .then(function (r) { return r.json(); })
+                                .then(function (res) {
+                                    if (!res || !res.success) {
+                                        var m = (res && res.data && res.data.message) || 'This article could not be loaded.';
+                                        titleEl.textContent = 'Unavailable';
+                                        setState(m);
+                                        return;
+                                    }
+                                    cache[postId] = res.data;
+                                    render(res.data);
+                                })
+                                .catch(function () {
+                                    titleEl.textContent = 'Unavailable';
+                                    setState('This article could not be loaded. Please check your connection and try again.');
+                                });
+                        }
+
+                        document.addEventListener('click', function (e) {
+                            if (!e.target.closest) { return; }
+
+                            var readBtn = e.target.closest('.rl-read');
+                            if (readBtn) {
+                                e.preventDefault();
+                                load(readBtn.getAttribute('data-post-id'));
+                                return;
+                            }
+
+                            var copyBtn = e.target.closest('.rl-copy');
+                            if (copyBtn) {
+                                e.preventDefault();
+                                var url = copyBtn.getAttribute('data-url') || '';
+                                var done = function () {
+                                    // Feedback in the button beats an alert() that has to be
+                                    // dismissed before the next row can be copied.
+                                    var was = copyBtn.textContent;
+                                    copyBtn.textContent = 'Copied ✓';
+                                    setTimeout(function () { copyBtn.textContent = was; }, 1600);
+                                };
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link:', url); });
+                                } else {
+                                    window.prompt('Copy this link:', url);
+                                }
+                                return;
+                            }
+
+                            if (e.target.closest('[data-rl-close]')) { e.preventDefault(); close(); return; }
+                            if (e.target === reader) { close(); }
+                        });
+
+                        document.addEventListener('keydown', function (e) {
+                            if (e.key === 'Escape' && reader.classList.contains('is-open')) { close(); }
+                        });
+                    })();
+                    </script>
                 <?php break;
 
                 case 'courses': ?>
@@ -1764,33 +2193,60 @@ get_header();
                     </div>
                 <?php break;
 
-                case 'searches': ?>
+                case 'searches':
+                    $searches      = get_user_meta($current_user->ID, '_sla_saved_searches', true) ?: array();
+                    $searches_safe = is_array($searches) ? $searches : array();
+                    // The Discovery Suite filter modal, reused verbatim from the
+                    // homepage tool widget so the two cannot drift apart. Its form
+                    // is given target="_blank" here only: results open in a new tab
+                    // so the dashboard stays put behind them.
+                    $has_filters_modal = function_exists('vance_tool_widget_modal')
+                        && function_exists('vance_tw_render_content_filters_body');
+                    if ($has_filters_modal) { vance_tool_widgets_emit_modal_css_once(); }
+                    ?>
                     <div class="dash-card">
-                        <?php 
-                        $searches = get_user_meta($current_user->ID, '_sla_saved_searches', true) ?: array();
-                        if(empty($searches)): ?>
+                        <?php if ($has_filters_modal): ?>
+                            <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                                <button type="button" class="rl-btn rl-btn--primary" data-vance-tw-open="vance-tw-modal-new-search">+ New Search</button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if(empty($searches_safe)): ?>
                              <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:0;">
-                                <p style="color:#64748B;">You haven't saved any searches yet.</p>
+                                <p style="color:#64748B; margin:0 0 16px;">You haven't saved any searches yet.</p>
+                                <?php if ($has_filters_modal): ?>
+                                    <button type="button" class="rl-btn rl-btn--primary" data-vance-tw-open="vance-tw-modal-new-search">Start a new search</button>
+                                <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <div class="dash-list">
-                                <?php 
-                                $searches_safe = is_array($searches) ? $searches : array();
-                                foreach(array_reverse($searches_safe) as $s): ?>
+                                <?php foreach(array_reverse($searches_safe) as $s): ?>
                                 <div class="list-item" style="padding:16px 0;">
                                     <div style="flex:1;">
-                                        <div class="item-title"><a href="<?php echo esc_url($s['url']); ?>" style="text-decoration:none; color:inherit;"><?php echo esc_html($s['name']); ?></a></div>
+                                        <div class="item-title"><?php echo esc_html($s['name']); ?></div>
                                         <div class="item-meta">Saved on <?php echo date('M j, Y', strtotime($s['date'])); ?></div>
                                     </div>
-                                    <div style="display:flex; gap:12px;">
-                                        <a href="<?php echo esc_url($s['url']); ?>" class="card-link">Run Search</a>
-                                        <button onclick="deleteSearch('<?php echo $s['id']; ?>')" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600;">Delete</button>
+                                    <div class="rl-actions">
+                                        <a href="<?php echo esc_url($s['url']); ?>" class="rl-btn rl-btn--primary" target="_blank" rel="noopener">Run Search</a>
+                                        <button type="button" class="rl-btn rl-btn--text" onclick="deleteSearch('<?php echo esc_js($s['id']); ?>')">Delete</button>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
                     </div>
+
+                    <?php
+                    if ($has_filters_modal) {
+                        vance_tool_widget_modal(
+                            'vance-tw-modal-new-search',
+                            'Discovery Suite',
+                            function () { vance_tw_render_content_filters_body('_blank'); },
+                            'Vance Medical Hub · New Search',
+                            'Narrow the knowledge base down to the articles, studies and guides that apply to you. Results open in a new tab.'
+                        );
+                    }
+                    ?>
                 <?php break;
 
                 case 'notes': ?>
@@ -1989,6 +2445,8 @@ get_header();
                                     </div>
                                     <div style="display:flex; gap:12px;">
                                         <button class="card-link btn-view-ai-chat" data-chat="<?php echo esc_attr($chat_json); ?>" style="background:none; border:none; font-family:inherit; cursor:pointer; font-weight:600; color:<?php echo $theme_primary; ?>;">View Conversation</button>
+                                        <?php // Saves the whole exchange into one of the user's notes. ?>
+                                        <button type="button" class="card-link btn-chat-to-note" data-vn-open data-chat="<?php echo esc_attr($chat_json); ?>" style="background:none; border:none; font-family:inherit; cursor:pointer; font-weight:600; color:#0EA5E9;">Add to Note</button>
                                         <button onclick="renameChat('<?php echo esc_js($chat['id']); ?>', '<?php echo esc_js($display_title); ?>')" style="color:#0EA5E9; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600;">Rename</button>
                                         <button onclick="deleteChat('<?php echo esc_js($chat['id']); ?>')" style="color:#EF4444; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600;">Delete</button>
                                     </div>
@@ -2037,11 +2495,260 @@ get_header();
                             <div id="modal-chat-content" style="flex:1; overflow-y:auto; padding:32px; background:#F8FAFC; display:flex; flex-direction:column; gap:24px;">
                                 <!-- Messages will go here -->
                             </div>
-                            <div style="padding:20px; border-top:1px solid #E2E8F0; background:white; display:flex; justify-content:flex-end;">
+                            <div style="padding:20px; border-top:1px solid #E2E8F0; background:white; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                                <button type="button" id="chat-modal-to-note" class="rl-btn" data-vn-open>Add whole chat to a note</button>
                                 <button onclick="closeChatModal()" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:0; cursor:pointer; font-weight:600;">Close</button>
                             </div>
                         </div>
                     </div>
+
+                    <script>
+                    /**
+                     * "Add to Note" for VANCE-Ai conversations.
+                     *
+                     * Two entry points, one saver: a button on each session row that
+                     * captures the whole exchange, and a small button under every
+                     * VANCE-Ai answer inside the transcript modal that captures just
+                     * that answer. Both post to the same vance_append_to_note handler
+                     * the article-highlight pill already uses, so a chat excerpt and
+                     * an article excerpt land in notes looking the same.
+                     */
+                    window.VanceNoteSaver = (function () {
+                        var ajaxUrl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+                        var nonce   = <?php echo wp_json_encode(wp_create_nonce('vance_dashboard_nonce')); ?>;
+                        var notesUrl = <?php echo wp_json_encode(home_url('/my-notes/')); ?>;
+
+                        var panel = null;
+                        var notes = null;   // cached across opens; invalidated after a save
+
+                        function esc(s) {
+                            return String(s == null ? '' : s)
+                                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                        }
+
+                        // Plain text -> paragraphs. The transcript is stored as text,
+                        // so it must be escaped before it becomes note HTML.
+                        function toParagraphs(text) {
+                            return String(text == null ? '' : text)
+                                .split(/\n{2,}/)
+                                .map(function (p) { return p.trim(); })
+                                .filter(Boolean)
+                                .map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; })
+                                .join('');
+                        }
+
+                        function close() {
+                            if (panel && panel.parentNode) { panel.parentNode.removeChild(panel); }
+                            panel = null;
+                        }
+
+                        function el(tag, cls, text) {
+                            var n = document.createElement(tag);
+                            if (cls) { n.className = cls; }
+                            if (text != null) { n.textContent = text; }
+                            return n;
+                        }
+
+                        function position(anchor) {
+                            var r = anchor.getBoundingClientRect();
+                            var top = r.bottom + window.scrollY + 6;
+                            var left = r.left + window.scrollX;
+                            // Keep it on screen when the anchor sits near the right edge.
+                            var maxLeft = window.scrollX + document.documentElement.clientWidth - panel.offsetWidth - 12;
+                            panel.style.top = top + 'px';
+                            panel.style.left = Math.max(window.scrollX + 12, Math.min(left, maxLeft)) + 'px';
+                        }
+
+                        function open(anchor, payload) {
+                            close();
+
+                            panel = el('div', 'vn-pick');
+                            var head = el('div', 'vn-pick__head');
+                            head.appendChild(el('span', null, 'Add to note'));
+                            var x = el('button', 'vn-pick__close', '×');
+                            x.type = 'button';
+                            x.setAttribute('aria-label', 'Close');
+                            x.addEventListener('click', close);
+                            head.appendChild(x);
+                            panel.appendChild(head);
+
+                            var list = el('div', 'vn-pick__list');
+                            list.appendChild(el('div', 'vn-pick__empty', 'Loading your notes…'));
+                            panel.appendChild(list);
+
+                            var newWrap = el('div', 'vn-pick__new');
+                            var input = document.createElement('input');
+                            input.type = 'text';
+                            input.placeholder = 'Or start a new note…';
+                            input.value = payload.suggestedTitle || '';
+                            var create = el('button', null, 'Create');
+                            create.type = 'button';
+                            newWrap.appendChild(input);
+                            newWrap.appendChild(create);
+                            panel.appendChild(newWrap);
+
+                            var status = el('div', 'vn-pick__status');
+                            status.style.display = 'none';
+                            panel.appendChild(status);
+
+                            function say(msg, kind) {
+                                status.textContent = msg;
+                                status.className = 'vn-pick__status' + (kind ? ' vn-pick__status--' + kind : '');
+                                status.style.display = '';
+                            }
+
+                            function save(targetId, newTitle) {
+                                panel.classList.add('is-busy');
+                                say('Saving…');
+                                var mine = panel;
+
+                                var fd = new FormData();
+                                fd.append('action', 'vance_append_to_note');
+                                fd.append('nonce', nonce);
+                                fd.append('target_id', targetId || '');
+                                fd.append('new_title', newTitle || payload.suggestedTitle || 'VANCE-Ai conversation');
+                                fd.append('content', payload.html);
+
+                                fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (res) {
+                                        if (panel !== mine) { return; }
+                                        panel.classList.remove('is-busy');
+                                        if (!res || !res.success) {
+                                            say((res && res.data) || 'Could not save to your note.', 'error');
+                                            return;
+                                        }
+                                        notes = null; // titles and dates have moved on
+                                        var url = (res.data && res.data.url) || notesUrl;
+                                        status.innerHTML = 'Saved. <a href="' + esc(url) + '" style="color:#008080;font-weight:600;">Open note</a>';
+                                        status.className = 'vn-pick__status vn-pick__status--ok';
+                                        setTimeout(function () { if (panel === mine) { close(); } }, 2600);
+                                    })
+                                    .catch(function () {
+                                        if (panel !== mine) { return; }
+                                        panel.classList.remove('is-busy');
+                                        say('Could not save to your note. Please try again.', 'error');
+                                    });
+                            }
+
+                            create.addEventListener('click', function () { save('', input.value.trim()); });
+                            input.addEventListener('keydown', function (e) {
+                                if (e.key === 'Enter') { e.preventDefault(); save('', input.value.trim()); }
+                            });
+
+                            document.body.appendChild(panel);
+                            position(anchor);
+
+                            function renderList() {
+                                list.innerHTML = '';
+                                if (!notes || !notes.length) {
+                                    list.appendChild(el('div', 'vn-pick__empty', 'No notes yet — create one below.'));
+                                    return;
+                                }
+                                notes.forEach(function (n) {
+                                    var b = el('button', 'vn-pick__item');
+                                    b.type = 'button';
+                                    b.appendChild(document.createTextNode(n.title));
+                                    if (n.date) {
+                                        b.appendChild(el('span', null, new Date(n.date.replace(' ', 'T')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })));
+                                    }
+                                    b.addEventListener('click', function () { save(n.id, ''); });
+                                    list.appendChild(b);
+                                });
+                                position(anchor);
+                            }
+
+                            if (notes) { renderList(); return; }
+
+                            var mine = panel;
+                            var fd = new FormData();
+                            fd.append('action', 'vance_list_notes');
+                            fd.append('nonce', nonce);
+                            fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                .then(function (r) { return r.json(); })
+                                .then(function (res) {
+                                    if (panel !== mine) { return; }
+                                    notes = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+                                    renderList();
+                                })
+                                .catch(function () {
+                                    if (panel !== mine) { return; }
+                                    list.innerHTML = '';
+                                    list.appendChild(el('div', 'vn-pick__empty', 'Could not load your notes.'));
+                                });
+                        }
+
+                        // Dismiss on outside click / Escape.
+                        document.addEventListener('mousedown', function (e) {
+                            if (!panel) { return; }
+                            if (panel.contains(e.target)) { return; }
+                            if (e.target.closest && e.target.closest('[data-vn-open]')) { return; }
+                            close();
+                        });
+                        document.addEventListener('keydown', function (e) {
+                            if (e.key === 'Escape') { close(); }
+                        });
+
+                        function chatDateLabel(chat) {
+                            if (!chat || !chat.date) { return ''; }
+                            var d = new Date(chat.date.replace(' ', 'T'));
+                            return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                        }
+
+                        function attribution(chat) {
+                            var when = chatDateLabel(chat);
+                            return '<p><em>Saved from your VANCE-Ai conversation' + (when ? ' on ' + esc(when) : '') +
+                                   '. VANCE-Ai provides general information, not medical advice.</em></p>';
+                        }
+
+                        return {
+                            close: close,
+
+                            // Whole conversation, both sides, in order.
+                            openForChat: function (anchor, chat) {
+                                var title = chat.title || 'VANCE-Ai conversation';
+                                var body = '';
+                                if (Array.isArray(chat.transcript)) {
+                                    body = chat.transcript.map(function (m) {
+                                        var who = (m.role === 'user') ? 'You' : 'VANCE-Ai';
+                                        return '<p><strong>' + who + ':</strong></p>' + toParagraphs(m.content);
+                                    }).join('');
+                                } else {
+                                    body = toParagraphs(chat.transcript || '');
+                                }
+                                open(anchor, {
+                                    suggestedTitle: title,
+                                    html: '<h3>' + esc(title) + '</h3>' + attribution(chat) +
+                                          '<blockquote>' + body + '</blockquote>'
+                                });
+                            },
+
+                            // A single VANCE-Ai answer.
+                            openForAnswer: function (anchor, chat, text) {
+                                var title = chat.title || 'VANCE-Ai conversation';
+                                open(anchor, {
+                                    suggestedTitle: title,
+                                    html: '<h3>' + esc(title) + '</h3>' + attribution(chat) +
+                                          '<blockquote>' + toParagraphs(text) + '</blockquote>'
+                                });
+                            }
+                        };
+                    })();
+
+                    // Session rows: save the whole exchange.
+                    document.addEventListener('click', function (e) {
+                        if (!e.target.closest) { return; }
+                        var btn = e.target.closest('.btn-chat-to-note');
+                        if (!btn) { return; }
+                        e.preventDefault();
+                        try {
+                            window.VanceNoteSaver.openForChat(btn, JSON.parse(btn.getAttribute('data-chat')));
+                        } catch (err) {
+                            if (window.console) { console.error('Add to Note failed to read the chat', err); }
+                        }
+                    });
+                    </script>
                 <?php break;
 
                 case 'messages':
@@ -2061,14 +2768,47 @@ get_header();
                     <div class="dash-card" style="background: white; border: 1px solid #E2E8F0; padding: 28px;">
                         <header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px;">
                             <h2 style="margin: 0; color: #0F172A; font-size: 22px;">My Messages</h2>
-                            <?php if ( $unread_count > 0 ) : ?>
-                                <span style="background: #008080; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px;"><?php echo (int) $unread_count; ?> new</span>
-                            <?php endif; ?>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <?php if ( $unread_count > 0 ) : ?>
+                                    <span style="background: #008080; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px;"><?php echo (int) $unread_count; ?> new</span>
+                                <?php endif; ?>
+                                <button type="button" class="rl-btn rl-btn--primary" id="msg-compose-toggle">New message</button>
+                            </div>
                         </header>
+
+                        <?php // Compose a new thread to the Vance team. ?>
+                        <form id="msg-compose" data-nonce="<?php echo esc_attr( wp_create_nonce( 'vance_msg_user_new' ) ); ?>"
+                              style="display:none; margin-bottom:24px; padding:20px; background:#F8FAFC; border:1px solid #E2E8F0;">
+                            <h3 style="margin:0 0 4px; font-size:16px; color:#0F172A;">Message the Vance team</h3>
+                            <p style="margin:0 0 14px; font-size:12.5px; color:#64748B; line-height:1.55;">
+                                We usually reply within two working days, and the reply appears here in My Messages.
+                                <strong>Please don't use this for anything urgent or clinical</strong> — this is not a
+                                medical service and is not monitored around the clock. For medical advice contact your
+                                GP or care team; in an emergency call 999 or NHS 111.
+                            </p>
+                            <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:5px;" for="msg-compose-subject">Subject</label>
+                            <input type="text" id="msg-compose-subject" required minlength="3" maxlength="150"
+                                   placeholder="What is your message about?"
+                                   style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; box-sizing:border-box; font-family:inherit; margin-bottom:14px;">
+                            <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:5px;" for="msg-compose-body">Message</label>
+                            <textarea id="msg-compose-body" required minlength="10" maxlength="4000" rows="6"
+                                      placeholder="Write your message… plain text, **bold**, *italic*, and URLs work."
+                                      style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; line-height:1.55; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+                            <p style="margin:10px 0 14px; font-size:11.5px; color:#94A3B8; line-height:1.5;">
+                                Your name and email address are shared with the Vance team so they can reply. Please do
+                                not include health information you would not want held on record — see our
+                                <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>" target="_blank" rel="noopener" style="color:#008080;">privacy policy</a>.
+                            </p>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                <button type="submit" class="rl-btn rl-btn--primary">Send message</button>
+                                <button type="button" class="rl-btn" id="msg-compose-cancel">Cancel</button>
+                                <span id="msg-compose-status" style="font-size:12.5px; color:#64748B;"></span>
+                            </div>
+                        </form>
 
                         <?php if ( empty( $all_msgs ) ) : ?>
                             <div style="text-align: center; padding: 48px; background: #F8FAFC; border: 1px dashed #E2E8F0;">
-                                <p style="color: #64748B; margin: 0;">No messages yet, the team will share updates and announcements here.</p>
+                                <p style="color: #64748B; margin: 0;">No messages yet. The team shares updates and announcements here, and you can start a conversation with <strong>New message</strong> above.</p>
                             </div>
                         <?php else : ?>
                             <div class="vance-msg-list">
@@ -2184,6 +2924,449 @@ get_header();
                             </script>
                         <?php endif; ?>
                     </div>
+
+                    <script>
+                    // Compose + send a new thread to the Vance team. Lives outside the
+                    // "has messages" branch above so it also works on an empty inbox,
+                    // which is exactly when someone is most likely to want it.
+                    (function () {
+                        var form = document.getElementById('msg-compose');
+                        if (!form) { return; }
+
+                        var ajaxUrl  = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+                        var toggle   = document.getElementById('msg-compose-toggle');
+                        var cancel   = document.getElementById('msg-compose-cancel');
+                        var status   = document.getElementById('msg-compose-status');
+                        var subject  = document.getElementById('msg-compose-subject');
+                        var bodyEl   = document.getElementById('msg-compose-body');
+                        var submit   = form.querySelector('button[type="submit"]');
+
+                        function say(msg, kind) {
+                            status.textContent = msg || '';
+                            status.style.color = kind === 'error' ? '#B91C1C' : (kind === 'ok' ? '#047857' : '#64748B');
+                        }
+
+                        function show(on) {
+                            form.style.display = on ? 'block' : 'none';
+                            if (on) { subject.focus(); }
+                        }
+
+                        toggle.addEventListener('click', function () {
+                            show(form.style.display === 'none' || form.style.display === '');
+                        });
+                        cancel.addEventListener('click', function () { say(''); show(false); });
+
+                        form.addEventListener('submit', function (e) {
+                            e.preventDefault();
+                            var s = subject.value.trim();
+                            var b = bodyEl.value.trim();
+                            if (s.length < 3)  { say('Please give your message a subject.', 'error'); subject.focus(); return; }
+                            if (b.length < 10) { say('Please write a little more.', 'error'); bodyEl.focus(); return; }
+
+                            var fd = new FormData();
+                            fd.append('action', 'vance_msg_user_new');
+                            fd.append('nonce', form.getAttribute('data-nonce'));
+                            fd.append('subject', s);
+                            fd.append('body', b);
+
+                            submit.disabled = true;
+                            say('Sending…');
+
+                            fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                .then(function (r) { return r.json(); })
+                                .then(function (res) {
+                                    if (!res || !res.success) {
+                                        submit.disabled = false;
+                                        say((res && res.data && res.data.message) || 'Could not send your message.', 'error');
+                                        return;
+                                    }
+                                    say(res.data.message || 'Message sent.', 'ok');
+                                    // Reload so the new thread appears in the list with
+                                    // its reply box, rather than being invisible until
+                                    // the next visit.
+                                    setTimeout(function () { location.reload(); }, 1200);
+                                })
+                                .catch(function () {
+                                    submit.disabled = false;
+                                    say('Could not send your message. Please check your connection and try again.', 'error');
+                                });
+                        });
+                    })();
+                    </script>
+                <?php break;
+
+                case 'documents':
+                    $docs      = function_exists('vance_user_docs_get') ? vance_user_docs_get($current_user->ID) : array();
+                    $doc_nonce = wp_create_nonce('vance_dashboard_nonce');
+                    $doc_max   = defined('VANCE_DOCS_MAX') ? VANCE_DOCS_MAX : 10;
+                    // Payload for the reader and the Ask modal. `text` itself is NOT
+                    // sent to the browser — only whether we managed to read any, so a
+                    // 40k-character discharge summary is not embedded in the page.
+                    $doc_payload = array();
+                    foreach ($docs as $d) {
+                        $doc_payload[(string) $d['id']] = array(
+                            'id'        => $d['id'],
+                            'name'      => $d['name'],
+                            'mime'      => $d['mime'],
+                            'date'      => $d['date'] ? date_i18n('j M Y', strtotime($d['date'])) : '',
+                            'readerUrl' => vance_user_docs_reader_url($d['id']),
+                            'hasText'   => ('' !== trim($d['text'])),
+                            'textStatus'=> $d['text_status'],
+                        );
+                    }
+                    ?>
+                    <div class="dash-card">
+                        <header style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                            <div>
+                                <h2 style="margin:0; color:#0F172A; font-size:22px;">My Documents</h2>
+                                <p style="margin:4px 0 0; font-size:13px; color:#64748B;">
+                                    Letters, test results, care plans and photos — <?php echo count($docs); ?> of <?php echo (int) $doc_max; ?> stored.
+                                </p>
+                            </div>
+                            <?php if (count($docs) < $doc_max): ?>
+                                <div>
+                                    <button type="button" class="rl-btn rl-btn--primary" id="doc-upload-trigger">+ Upload document</button>
+                                    <input type="file" id="doc-upload-input" style="display:none;"
+                                           accept=".pdf,.doc,.docx,.txt,.csv,.jpg,.jpeg,.png,.heic">
+                                </div>
+                            <?php endif; ?>
+                        </header>
+                        <p id="doc-upload-status" style="margin:0 0 16px; font-size:13px; color:#64748B; display:none;"></p>
+
+                        <?php // ---- Disclaimers: medical first, then data. ---- ?>
+                        <div style="border:1px solid #E2E8F0; border-left:4px solid #008080; background:#F8FAFC; padding:16px 18px; margin-bottom:24px;">
+                            <p style="margin:0 0 10px; font-size:13px; font-weight:700; color:#0F172A;">Before you upload</p>
+                            <p style="margin:0 0 8px; font-size:12.5px; color:#475569; line-height:1.6;">
+                                <strong>This is not a medical service and not a medical record.</strong> Anything VANCE-Ai
+                                says about a document is general information, not a diagnosis, not a second opinion and
+                                not personalised medical advice. It can misread a document or miss something important.
+                                Always check anything that matters with the clinician who wrote it. Never rely on this
+                                area in an emergency — call 999 or NHS 111.
+                            </p>
+                            <p style="margin:0 0 8px; font-size:12.5px; color:#475569; line-height:1.6;">
+                                <strong>Your documents are special category health data.</strong> They are stored on this
+                                site's own server and are visible to you and to site administrators. Files are held in the
+                                standard WordPress uploads folder, so anyone who is given a document's direct file link
+                                could open it — please do not share those links. Delete anything you no longer want held.
+                            </p>
+                            <p style="margin:0; font-size:12.5px; color:#475569; line-height:1.6;">
+                                <strong>Asking VANCE-Ai sends that document's text to our AI provider</strong> for the
+                                length of that conversation. Nothing is sent unless you press "Ask VANCE-Ai" on a
+                                document. Consider removing names, addresses and NHS numbers first. See the
+                                <a href="<?php echo esc_url(home_url('/privacy-policy/')); ?>" target="_blank" rel="noopener" style="color:#008080;">privacy policy</a>
+                                and <a href="<?php echo esc_url(home_url('/medical-disclaimer/')); ?>" target="_blank" rel="noopener" style="color:#008080;">medical disclaimer</a>.
+                            </p>
+                        </div>
+
+                        <?php if (empty($docs)): ?>
+                            <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0;">
+                                <p style="color:#64748B; margin:0 0 16px;">You haven't uploaded any documents yet.</p>
+                                <button type="button" class="rl-btn rl-btn--primary" id="doc-upload-trigger-empty">Upload your first document</button>
+                            </div>
+                        <?php else: ?>
+                            <div class="dash-list">
+                                <?php foreach (array_reverse($docs) as $d):
+                                    $can_ask = ('' !== trim($d['text']));
+                                    ?>
+                                    <div class="list-item" style="padding:16px 0;">
+                                        <div style="flex:1; min-width:0;">
+                                            <div class="item-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo esc_html($d['name']); ?></div>
+                                            <div class="item-meta">
+                                                <?php echo $d['date'] ? esc_html(date_i18n('j M Y', strtotime($d['date']))) : ''; ?>
+                                                <?php if ($d['size']): ?> • <?php echo esc_html(size_format($d['size'])); ?><?php endif; ?>
+                                                <?php if (!$can_ask): ?>
+                                                    • <span style="color:#B45309;">no readable text<?php echo ('unsupported' === $d['text_status']) ? ' (image or scan)' : ''; ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <div class="rl-actions">
+                                            <button type="button" class="rl-btn doc-view" data-doc="<?php echo (int) $d['id']; ?>">View</button>
+                                            <button type="button" class="rl-btn rl-btn--primary doc-ask" data-doc="<?php echo (int) $d['id']; ?>"
+                                                    <?php disabled(!$can_ask); ?>
+                                                    title="<?php echo $can_ask ? 'Ask VANCE-Ai about this document' : 'No readable text could be extracted from this file'; ?>">Ask VANCE-Ai</button>
+                                            <button type="button" class="rl-btn rl-btn--text doc-delete" data-doc="<?php echo (int) $d['id']; ?>">Delete</button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Document viewer -->
+                    <div id="doc-viewer" class="rl-reader" role="dialog" aria-modal="true" aria-labelledby="doc-viewer-title">
+                        <div class="rl-reader__panel">
+                            <div class="rl-reader__head">
+                                <div style="min-width:0;">
+                                    <h2 class="rl-reader__title" id="doc-viewer-title">Document</h2>
+                                    <p class="rl-reader__meta" id="doc-viewer-meta"></p>
+                                </div>
+                                <button type="button" class="rl-reader__close" data-doc-close aria-label="Close">&times;</button>
+                            </div>
+                            <div class="rl-reader__body" id="doc-viewer-body" style="padding:0; background:#F1F5F9;"></div>
+                            <div class="rl-reader__foot">
+                                <a href="#" class="rl-btn" id="doc-viewer-download" target="_blank" rel="noopener">Open in New Tab</a>
+                                <button type="button" class="rl-btn rl-btn--primary" data-doc-close>Close</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ask VANCE-Ai about a document -->
+                    <div id="doc-ask" class="rl-reader" role="dialog" aria-modal="true" aria-labelledby="doc-ask-title">
+                        <div class="rl-reader__panel" style="max-width:720px;">
+                            <div class="rl-reader__head">
+                                <div style="min-width:0;">
+                                    <h2 class="rl-reader__title" id="doc-ask-title">Ask VANCE-Ai</h2>
+                                    <p class="rl-reader__meta" id="doc-ask-meta"></p>
+                                </div>
+                                <button type="button" class="rl-reader__close" data-doc-close aria-label="Close">&times;</button>
+                            </div>
+                            <div class="rl-reader__body" id="doc-ask-thread" style="background:#F8FAFC;">
+                                <p style="margin:0 0 14px; font-size:12.5px; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; padding:10px 12px; line-height:1.55;">
+                                    This document's text is sent to our AI provider to answer your question. Answers are
+                                    general information, not medical advice — check anything that matters with your
+                                    clinician.
+                                </p>
+                                <p id="doc-ask-empty" style="font-size:14px; color:#64748B;">
+                                    Ask anything about this document — for example "explain this in plain English",
+                                    "what do these results mean?" or "what should I ask my consultant about this?".
+                                </p>
+                            </div>
+                            <div class="rl-reader__foot" style="flex-direction:column; align-items:stretch; gap:10px;">
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="doc-ask-input" placeholder="Ask about this document…"
+                                           style="flex:1; min-width:0; padding:10px 12px; border:1px solid #CBD5E1; font-family:inherit; font-size:14px;">
+                                    <button type="button" class="rl-btn rl-btn--primary" id="doc-ask-send">Ask</button>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    <span id="doc-ask-status" style="font-size:12px; color:#64748B;"></span>
+                                    <button type="button" class="rl-btn" data-doc-close>Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                    (function () {
+                        var ajaxUrl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+                        var restUrl = <?php echo wp_json_encode(esc_url_raw(rest_url('vance-health/v1/ai-chat'))); ?>;
+                        var restNonce = <?php echo wp_json_encode(wp_create_nonce('wp_rest')); ?>;
+                        var nonce   = <?php echo wp_json_encode($doc_nonce); ?>;
+                        var DOCS    = <?php echo wp_json_encode($doc_payload); ?>;
+
+                        // ---- Upload ----------------------------------------------------
+                        var input  = document.getElementById('doc-upload-input');
+                        var status = document.getElementById('doc-upload-status');
+
+                        function say(msg, kind) {
+                            if (!status) { return; }
+                            status.textContent = msg || '';
+                            status.style.display = msg ? 'block' : 'none';
+                            status.style.color = kind === 'error' ? '#B91C1C' : (kind === 'ok' ? '#047857' : '#64748B');
+                        }
+
+                        ['doc-upload-trigger', 'doc-upload-trigger-empty'].forEach(function (id) {
+                            var b = document.getElementById(id);
+                            if (b && input) { b.addEventListener('click', function () { input.click(); }); }
+                        });
+
+                        if (input) {
+                            input.addEventListener('change', function () {
+                                if (!input.files || !input.files[0]) { return; }
+                                var fd = new FormData();
+                                fd.append('action', 'vance_doc_upload');
+                                fd.append('nonce', nonce);
+                                fd.append('doc', input.files[0]);
+                                say('Uploading…');
+                                fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (res) {
+                                        if (!res || !res.success) {
+                                            say((res && res.data && res.data.message) || 'Upload failed.', 'error');
+                                            input.value = '';
+                                            return;
+                                        }
+                                        say('Uploaded.', 'ok');
+                                        location.reload();
+                                    })
+                                    .catch(function () { say('Upload failed. Please try again.', 'error'); input.value = ''; });
+                            });
+                        }
+
+                        // ---- Shared modal plumbing ------------------------------------
+                        function openModal(el) { el.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+                        function closeModals() {
+                            ['doc-viewer', 'doc-ask'].forEach(function (id) {
+                                var m = document.getElementById(id);
+                                if (m) { m.classList.remove('is-open'); }
+                            });
+                            document.body.style.overflow = '';
+                        }
+
+                        // ---- Viewer ----------------------------------------------------
+                        var viewer = document.getElementById('doc-viewer');
+                        var vTitle = document.getElementById('doc-viewer-title');
+                        var vMeta  = document.getElementById('doc-viewer-meta');
+                        var vBody  = document.getElementById('doc-viewer-body');
+                        var vOpen  = document.getElementById('doc-viewer-download');
+
+                        function view(doc) {
+                            vTitle.textContent = doc.name;
+                            vMeta.textContent  = doc.date;
+                            vOpen.href = doc.readerUrl;
+                            vBody.innerHTML = '';
+
+                            if (doc.mime.indexOf('image/') === 0) {
+                                var img = document.createElement('img');
+                                img.src = doc.readerUrl;
+                                img.alt = doc.name;
+                                img.style.cssText = 'display:block; max-width:100%; margin:0 auto;';
+                                vBody.appendChild(img);
+                            } else if (doc.mime === 'application/pdf') {
+                                // <object> rather than <iframe>: it degrades to the fallback
+                                // child when the browser has no PDF viewer, which iframes do not.
+                                var obj = document.createElement('object');
+                                obj.data = doc.readerUrl;
+                                obj.type = 'application/pdf';
+                                obj.style.cssText = 'width:100%; height:70vh; display:block;';
+                                var fb = document.createElement('div');
+                                fb.className = 'rl-reader__state';
+                                fb.innerHTML = 'This browser cannot preview PDFs inline. ' +
+                                    '<a href="' + doc.readerUrl + '" target="_blank" rel="noopener" style="color:#008080;font-weight:600;">Open it in a new tab</a>.';
+                                obj.appendChild(fb);
+                                vBody.appendChild(obj);
+                            } else {
+                                var d = document.createElement('div');
+                                d.className = 'rl-reader__state';
+                                d.innerHTML = 'This file type cannot be previewed here. ' +
+                                    '<a href="' + doc.readerUrl + '" target="_blank" rel="noopener" style="color:#008080;font-weight:600;">Open it in a new tab</a>.';
+                                vBody.appendChild(d);
+                            }
+                            openModal(viewer);
+                        }
+
+                        // ---- Ask VANCE-Ai ----------------------------------------------
+                        var ask       = document.getElementById('doc-ask');
+                        var aMeta     = document.getElementById('doc-ask-meta');
+                        var aThread   = document.getElementById('doc-ask-thread');
+                        var aEmpty    = document.getElementById('doc-ask-empty');
+                        var aInput    = document.getElementById('doc-ask-input');
+                        var aSend     = document.getElementById('doc-ask-send');
+                        var aStatus   = document.getElementById('doc-ask-status');
+                        var askDoc    = null;
+                        var messages  = [];
+
+                        function bubble(role, text) {
+                            if (aEmpty) { aEmpty.style.display = 'none'; }
+                            var wrap = document.createElement('div');
+                            wrap.style.cssText = 'margin:0 0 14px; display:flex; justify-content:' + (role === 'user' ? 'flex-end' : 'flex-start') + ';';
+                            var b = document.createElement('div');
+                            b.style.cssText = 'max-width:85%; padding:12px 16px; font-size:14px; line-height:1.6; ' +
+                                (role === 'user'
+                                    ? 'background:#0F172A; color:#fff;'
+                                    : 'background:#fff; color:#1F2937; border:1px solid #E2E8F0;');
+                            b.textContent = text;
+                            wrap.appendChild(b);
+                            aThread.appendChild(wrap);
+                            aThread.scrollTop = aThread.scrollHeight;
+                            return b;
+                        }
+
+                        function send() {
+                            var q = (aInput.value || '').trim();
+                            if (!q || !askDoc) { return; }
+
+                            aInput.value = '';
+                            bubble('user', q);
+                            messages.push({ role: 'user', content: q });
+
+                            aSend.disabled = true;
+                            aStatus.textContent = 'VANCE-Ai is reading your document…';
+                            var pending = bubble('assistant', '…');
+
+                            fetch(restUrl, {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': restNonce },
+                                body: JSON.stringify({ messages: messages, doc_id: askDoc.id })
+                            })
+                                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+                                .then(function (res) {
+                                    aSend.disabled = false;
+                                    aStatus.textContent = '';
+                                    if (!res.ok) {
+                                        pending.textContent = (res.body && res.body.message) || 'VANCE-Ai could not answer that. Please try again.';
+                                        pending.style.color = '#B91C1C';
+                                        return;
+                                    }
+                                    var answer = (res.body && (res.body.reply || res.body.message || res.body.content)) || '';
+                                    pending.textContent = answer || 'No answer was returned.';
+                                    if (answer) { messages.push({ role: 'assistant', content: answer }); }
+                                })
+                                .catch(function () {
+                                    aSend.disabled = false;
+                                    aStatus.textContent = '';
+                                    pending.textContent = 'VANCE-Ai could not be reached. Please check your connection.';
+                                    pending.style.color = '#B91C1C';
+                                });
+                        }
+
+                        aSend.addEventListener('click', send);
+                        aInput.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') { e.preventDefault(); send(); }
+                        });
+
+                        function openAsk(doc) {
+                            askDoc = doc;
+                            messages = [];
+                            aMeta.textContent = doc.name + (doc.date ? ' • ' + doc.date : '');
+                            // Reset the thread back to the notice + prompt.
+                            Array.prototype.slice.call(aThread.children).forEach(function (n) {
+                                if (n.id !== 'doc-ask-empty' && n.tagName !== 'P') { aThread.removeChild(n); }
+                            });
+                            if (aEmpty) { aEmpty.style.display = ''; }
+                            aStatus.textContent = '';
+                            openModal(ask);
+                            aInput.focus();
+                        }
+
+                        // ---- Row actions -----------------------------------------------
+                        document.addEventListener('click', function (e) {
+                            if (!e.target.closest) { return; }
+
+                            var v = e.target.closest('.doc-view');
+                            if (v) { e.preventDefault(); var d = DOCS[v.getAttribute('data-doc')]; if (d) { view(d); } return; }
+
+                            var a = e.target.closest('.doc-ask');
+                            if (a && !a.disabled) { e.preventDefault(); var d2 = DOCS[a.getAttribute('data-doc')]; if (d2) { openAsk(d2); } return; }
+
+                            var del = e.target.closest('.doc-delete');
+                            if (del) {
+                                e.preventDefault();
+                                if (!confirm('Delete this document permanently? This cannot be undone.')) { return; }
+                                var fd = new FormData();
+                                fd.append('action', 'vance_doc_delete');
+                                fd.append('nonce', nonce);
+                                fd.append('id', del.getAttribute('data-doc'));
+                                del.disabled = true;
+                                fetch(ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (res) {
+                                        if (res && res.success) { location.reload(); }
+                                        else { del.disabled = false; alert((res && res.data && res.data.message) || 'Could not delete that document.'); }
+                                    })
+                                    .catch(function () { del.disabled = false; alert('Could not delete that document.'); });
+                                return;
+                            }
+
+                            if (e.target.closest('[data-doc-close]')) { e.preventDefault(); closeModals(); return; }
+                            if (e.target === viewer || e.target === ask) { closeModals(); }
+                        });
+
+                        document.addEventListener('keydown', function (e) {
+                            if (e.key === 'Escape') { closeModals(); }
+                        });
+                    })();
+                    </script>
                 <?php break;
 
             endswitch; ?>
@@ -2336,7 +3519,26 @@ get_header();
                 }
                 
                 bubble.innerHTML = parseMarkdown(msg.content);
-                
+
+                // Small save-to-note control under each VANCE-Ai answer. Only on
+                // the assistant side: saving your own question to a note is not
+                // something anyone asked for, and it would double the clutter.
+                if (!isUser && window.VanceNoteSaver) {
+                    const save = document.createElement('button');
+                    save.type = 'button';
+                    save.className = 'vn-save-answer';
+                    save.setAttribute('data-vn-open', '');
+                    save.setAttribute('aria-label', 'Save this answer to a note');
+                    save.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+                        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+                        '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Add to note</span>';
+                    save.addEventListener('click', function (ev) {
+                        ev.preventDefault();
+                        window.VanceNoteSaver.openForAnswer(save, chat, msg.content);
+                    });
+                    bubble.appendChild(save);
+                }
+
                 msgEl.appendChild(avatar);
                 msgEl.appendChild(bubble);
                 content.appendChild(msgEl);
@@ -2365,13 +3567,26 @@ get_header();
             content.appendChild(wrapper);
         }
         
+        // Held so the footer's "Add whole chat to a note" knows what is on screen.
+        window.__vanceOpenChat = chat;
+
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 
+    // Footer button: same whole-conversation save as the one on the list row.
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest) { return; }
+        var btn = e.target.closest('#chat-modal-to-note');
+        if (!btn || !window.VanceNoteSaver || !window.__vanceOpenChat) { return; }
+        e.preventDefault();
+        window.VanceNoteSaver.openForChat(btn, window.__vanceOpenChat);
+    });
+
     function closeChatModal() {
         document.getElementById('chat-modal').style.display = 'none';
         document.body.style.overflow = 'auto';
+        if (window.VanceNoteSaver) { window.VanceNoteSaver.close(); }
     }
 
     function deleteChat(id) {

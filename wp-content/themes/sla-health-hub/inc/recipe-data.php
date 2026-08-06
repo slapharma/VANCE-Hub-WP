@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * @return array<string, array{servings:int, prep:int, cook:int, nutrition:array<string,int>, ingredients:array}>
+ * @return array<string, array{servings:int, prep:int, cook:int, nutrition:array<string,int>, ingredients:array, instructions:array<int,string>}>
  */
 function vance_recipe_data() {
 	return array(
@@ -43,6 +43,12 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Combine chia seeds, almond milk and yogurt in a bowl or jar. Stir well.',
+				'Leave to set for 15 minutes (or refrigerate overnight).',
+				'Top with blueberries, walnuts, flaxseed and cinnamon.',
+				'Stir and enjoy. Add a drizzle of raw honey if desired.',
+			),
 		),
 		'blueberry-almond-smoothie' => array(
 			'servings' => 1,
@@ -62,6 +68,12 @@ function vance_recipe_data() {
 						'Optional: ice, 1 scoop protein powder',
 					),
 				),
+			),
+			'instructions' => array(
+				'Add all ingredients to a blender.',
+				'Blend until smooth and creamy.',
+				'Adjust consistency with extra almond milk if needed.',
+				'Serve immediately.',
 			),
 		),
 		'gf-protein-pancakes' => array(
@@ -85,6 +97,13 @@ function vance_recipe_data() {
 						'Optional toppings: fresh berries, almond butter, dairy-free yogurt',
 					),
 				),
+			),
+			'instructions' => array(
+				'Blend or whisk all ingredients together until smooth.',
+				'Heat oil in a non-stick pan over medium heat.',
+				'Pour small portions of batter (about ¼ cup each) into the pan.',
+				'Cook for 2–3 minutes per side until golden brown and cooked through.',
+				'Serve with fresh berries, nut butter or dairy-free yogurt.',
 			),
 		),
 		'gf-protein-granola' => array(
@@ -111,6 +130,17 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Preheat oven to 180°C. Line a baking tray with baking paper.',
+				'Mix all dry ingredients together in a large bowl.',
+				'Whisk coconut oil, maple syrup and vanilla in a small bowl.',
+				'Pour the wet mixture over the dry and stir well to combine.',
+				'Spread evenly on the prepared baking tray.',
+				'Bake for 18–20 minutes, stirring halfway through.',
+				'Allow to cool completely (it will crisp up as it cools).',
+				'Add any dried fruit after baking.',
+				'Serve with dairy-free yogurt and fresh berries.',
+			),
 		),
 		'harissa-eggs-avocado' => array(
 			'servings' => 1,
@@ -132,6 +162,15 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Toast the sourdough bread until golden.',
+				'Heat olive oil in a small pan over medium heat.',
+				'Crack in the eggs and cook for 2 minutes.',
+				'Spoon harissa paste around the eggs and swirl gently. Cook to your preferred doneness.',
+				'Mash avocado with a pinch of salt, pepper and lemon juice.',
+				'Spread avocado on toast and top with the harissa eggs.',
+				'Finish with optional garnishes.',
+			),
 		),
 		'mango-ginger-smoothie' => array(
 			'servings' => 1,
@@ -152,6 +191,12 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Add all ingredients to a blender.',
+				'Blend until smooth.',
+				'Adjust thickness with extra coconut milk if needed.',
+				'Serve immediately.',
+			),
 		),
 		'strawberry-chia-smoothie' => array(
 			'servings' => 1,
@@ -171,6 +216,12 @@ function vance_recipe_data() {
 						'Optional: ice, 1 scoop protein powder',
 					),
 				),
+			),
+			'instructions' => array(
+				'Add all ingredients to a blender.',
+				'Blend until smooth and creamy.',
+				'Adjust thickness with extra almond milk.',
+				'Serve immediately.',
 			),
 		),
 		'crispy-chickpea-salad' => array(
@@ -201,6 +252,16 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Preheat oven to 200°C (or air fryer to 190°C).',
+				'Pat the chickpeas dry with a paper towel.',
+				'Toss with olive oil, paprika, salt and pepper.',
+				'Roast for 15 minutes (or air fry for 10–12 minutes) until crispy.',
+				'Whisk together tahini, lemon juice, water and salt to make the dressing.',
+				'In a bowl, combine avocado, cucumber and greens.',
+				'Add the warm crispy chickpeas.',
+				'Drizzle with tahini dressing and toss gently.',
+			),
 		),
 		'sardine-avocado-bowl' => array(
 			'servings' => 1,
@@ -220,6 +281,12 @@ function vance_recipe_data() {
 						'Sea salt to taste',
 					),
 				),
+			),
+			'instructions' => array(
+				'Place cooked quinoa into a bowl.',
+				'Add sardines, avocado slices and greens.',
+				'Drizzle with olive oil and lemon juice.',
+				'Season lightly with sea salt if desired.',
 			),
 		),
 		'tuna-lentil-pasta-salad' => array(
@@ -242,6 +309,14 @@ function vance_recipe_data() {
 						'Salt and black pepper, to taste',
 					),
 				),
+			),
+			'instructions' => array(
+				'Cook red lentil pasta according to package instructions.',
+				'Drain and rinse briefly under cool water.',
+				'In a large bowl, combine pasta, tuna, cherry tomatoes, cucumber and olives.',
+				'Drizzle with olive oil and lemon juice.',
+				'Add chopped parsley and season with salt and pepper.',
+				'Toss gently to combine and serve.',
 			),
 		),
 		'ginger-chicken-stir-fry' => array(
@@ -266,6 +341,15 @@ function vance_recipe_data() {
 						'Salt and black pepper, to taste',
 					),
 				),
+			),
+			'instructions' => array(
+				'Heat oil in a large pan or wok over medium-high heat.',
+				'Cook sliced chicken for 6–8 minutes, stirring frequently, until cooked through. Remove and set aside.',
+				'Add ginger and garlic to the same pan; cook 1 minute until fragrant.',
+				'Add carrot, red pepper and courgette. Stir fry for 5–6 minutes until tender but still crisp.',
+				'Return chicken to the pan.',
+				'Stir in coconut aminos and sesame oil. Cook 1–2 more minutes.',
+				'Season with salt and pepper. Serve over brown rice.',
 			),
 		),
 		'chicken-tacos-avocado-slaw' => array(
@@ -304,6 +388,15 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Heat olive oil in a pan over medium heat.',
+				'Add chicken, cumin, paprika and garlic powder. Cook 8–10 minutes until cooked through.',
+				'Squeeze over lime juice and season with salt and pepper.',
+				'Mash avocado with lime juice and olive oil until creamy.',
+				'Add shredded cabbage and coriander; toss to combine.',
+				'Warm tortillas in a dry pan for 30–60 seconds per side.',
+				'Fill each tortilla with chicken and avocado slaw. Serve immediately.',
+			),
 		),
 		'lemon-herb-salmon' => array(
 			'servings' => 2,
@@ -323,6 +416,14 @@ function vance_recipe_data() {
 						'Salt and black pepper, to taste',
 					),
 				),
+			),
+			'instructions' => array(
+				'Preheat oven to 180°C.',
+				'Place salmon on a baking tray lined with baking paper.',
+				'Drizzle with olive oil and lemon juice; sprinkle with oregano.',
+				'Season with salt and pepper. Bake for 12–15 minutes until cooked through.',
+				'Heat a small pan with olive oil. Sauté spinach for 1–2 minutes until wilted.',
+				'Serve salmon with sautéed spinach and lentils or brown rice.',
 			),
 		),
 		'mediterranean-lentil-bowl' => array(
@@ -353,6 +454,15 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Preheat oven to 200°C.',
+				'Place courgette and red pepper on a baking tray. Drizzle with oil and oregano.',
+				'Roast for 18–20 minutes until tender.',
+				'Whisk olive oil, lemon juice, salt and pepper to make the dressing.',
+				'Divide lentils between two bowls.',
+				'Add roasted vegetables, cherry tomatoes and greens.',
+				'Drizzle with dressing, toss gently and finish with parsley.',
+			),
 		),
 		'mediterranean-seabass' => array(
 			'servings' => 2,
@@ -374,6 +484,15 @@ function vance_recipe_data() {
 						'Salt and black pepper, to taste',
 					),
 				),
+			),
+			'instructions' => array(
+				'Preheat oven to 200°C.',
+				'Place courgette, red pepper and tomatoes on a baking tray.',
+				'Drizzle with ½ tbsp olive oil, salt, pepper and oregano. Toss to coat.',
+				'Roast vegetables for 10 minutes.',
+				'Place seabass on the tray. Drizzle fish with remaining oil and lemon juice.',
+				'Roast for a further 10–12 minutes until fish flakes easily.',
+				'Sprinkle with fresh parsley before serving.',
 			),
 		),
 		'sweet-potato-ginger-soup' => array(
@@ -397,6 +516,17 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Heat olive oil in a large pot over medium heat.',
+				'Add onion and sauté for 3–4 minutes until softened.',
+				'Stir in ginger and turmeric; cook 1 minute until fragrant.',
+				'Add sweet potatoes and carrots.',
+				'Pour in vegetable broth; bring to a gentle boil.',
+				'Reduce heat and simmer for 25–30 minutes until vegetables are soft.',
+				'Blend until smooth.',
+				'Stir in plant-based milk for a creamier texture if desired.',
+				'Season with salt and pepper.',
+			),
 		),
 		'apple-almond-butter-plate' => array(
 			'servings' => 1,
@@ -415,6 +545,12 @@ function vance_recipe_data() {
 						'Optional: small drizzle of raw honey',
 					),
 				),
+			),
+			'instructions' => array(
+				'Arrange apple slices in a bowl.',
+				'Dollop almond butter over the apples.',
+				'Sprinkle with pumpkin seeds, walnuts and cinnamon.',
+				'Add a drizzle of raw honey if desired. Serve immediately.',
 			),
 		),
 		'date-nut-energy-balls' => array(
@@ -438,6 +574,14 @@ function vance_recipe_data() {
 					),
 				),
 			),
+			'instructions' => array(
+				'Pulse almonds in a food processor until finely chopped.',
+				'Add dates, nut butter, chia seeds, cocoa powder, coconut oil and vanilla.',
+				'Blend until a sticky dough forms. Add 1 tbsp water if too dry.',
+				'Roll the mixture into 10 small balls.',
+				'Optional: roll in shredded coconut.',
+				'Refrigerate in an airtight container for up to 1 week.',
+			),
 		),
 		'turmeric-roasted-chickpeas' => array(
 			'servings' => 2,
@@ -455,6 +599,12 @@ function vance_recipe_data() {
 						'Pinch of sea salt and black pepper',
 					),
 				),
+			),
+			'instructions' => array(
+				'Preheat oven to 200°C.',
+				'Pat chickpeas dry thoroughly with a paper towel.',
+				'Toss with olive oil, turmeric, paprika, salt and pepper.',
+				'Spread on a baking tray and roast for 20–25 minutes until crispy.',
 			),
 		),
 	);

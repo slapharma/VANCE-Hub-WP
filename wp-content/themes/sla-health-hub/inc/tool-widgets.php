@@ -331,9 +331,15 @@ function vance_render_tool_widget_content_filters() {
 	);
 }
 
-function vance_tw_render_content_filters_body() {
+/**
+ * @param string $target Optional form target. The dashboard passes '_blank' so a
+ *                       search launched from My Searches leaves the dashboard
+ *                       open behind it; the homepage widget passes nothing and
+ *                       navigates in place as before.
+ */
+function vance_tw_render_content_filters_body( $target = '' ) {
 	?>
-	<form action="<?php echo esc_url( home_url( '/discovery-results/' ) ); ?>" method="GET" class="vance-tw-filters-form">
+	<form action="<?php echo esc_url( home_url( '/discovery-results/' ) ); ?>" method="GET" class="vance-tw-filters-form"<?php echo $target ? ' target="' . esc_attr( $target ) . '"' : ''; ?>>
 
 		<p class="filters-intro">Pick any combination below. A group you leave untouched includes everything in it.</p>
 

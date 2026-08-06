@@ -441,6 +441,143 @@ function vance_recipe_shopping_list( $days ) {
 }
 
 /**
+ * Photographer attribution for the local recipe photos.
+ *
+ * The Unsplash licence asks for the photographer to be credited wherever the
+ * photo appears. assets/img/recipes/attribution.json carries name + profile URL
+ * for all 19; this reads it once per request.
+ *
+ * @return array<string, array{author:string, author_url:string, photo_url:string, alt:string}>
+ */
+function vance_recipe_attributions() {
+	static $data = null;
+	if ( null !== $data ) {
+		return $data;
+	}
+
+	$data = array();
+	$file = get_template_directory() . '/assets/img/recipes/attribution.json';
+	if ( is_readable( $file ) ) {
+		$decoded = json_decode( (string) file_get_contents( $file ), true );
+		if ( is_array( $decoded ) ) {
+			$data = $decoded;
+		}
+	}
+	return $data;
+}
+
+/**
+ * Distinct photographers behind a given set of recipe slugs.
+ *
+ * Deduplicated by name and sorted, so a meal plan that uses one photographer's
+ * work twice credits them once. Passing an empty array credits everyone, which
+ * is what a view showing the whole catalogue needs.
+ *
+ * @param string[] $slugs Recipe slugs, or empty for all.
+ * @return array<int, array{author:string, author_url:string}>
+ */
+function vance_recipe_credits( $slugs = array() ) {
+	$all   = vance_recipe_attributions();
+	$slugs = array_filter( (array) $slugs );
+	$out   = array();
+
+	foreach ( $all as $slug => $meta ) {
+		if ( $slugs && ! in_array( $slug, $slugs, true ) ) {
+			continue;
+		}
+		$author = isset( $meta['author'] ) ? trim( (string) $meta['author'] ) : '';
+		if ( '' === $author || isset( $out[ $author ] ) ) {
+			continue;
+		}
+		$out[ $author ] = array(
+			'author'     => $author,
+			'author_url' => isset( $meta['author_url'] ) ? (string) $meta['author_url'] : '',
+		);
+	}
+
+	ksort( $out );
+	return array_values( $out );
+}
+
+/**
+ * The credit line itself — deliberately near-invisible.
+ *
+ * Small and low-contrast by request: it satisfies the licence without competing
+ * with the content. Names link to the photographer's profile, which is the part
+ * the licence actually cares about; `$linked = false` renders plain text for
+ * contexts with no working links, such as the PDF.
+ *
+ * @param string[] $slugs  Recipe slugs in view, or empty for all.
+ * @param bool     $linked Whether to link photographer names.
+ * @return string Escaped HTML, or '' when there is nothing to credit.
+ */
+function vance_recipe_credit_line( $slugs = array(), $linked = true ) {
+	$credits = vance_recipe_credits( $slugs );
+	if ( ! $credits ) {
+		return '';
+	}
+
+	$names = array();
+	foreach ( $credits as $c ) {
+		if ( $linked && $c['author_url'] ) {
+			$names[] = '<a href="' . esc_url( $c['author_url'] ) . '" target="_blank" rel="noopener nofollow" style="color:inherit; text-decoration:none;">'
+				. esc_html( $c['author'] ) . '</a>';
+		} else {
+			$names[] = esc_html( $c['author'] );
+		}
+	}
+
+	return 'Photography: ' . implode( ', ', $names ) . ' / Unsplash';
+}
+
+/**
+ * Full method + ingredients for every distinct recipe used in a plan.
+ *
+ * Keyed by slug and returned once per recipe rather than inlined on each meal
+ * row: a 7-day plan repeats recipes freely, and the payload this feeds is
+ * already the largest thing on the page. Twenty-eight copies of an ingredient
+ * list and an eight-step method is several hundred KB of duplicated JSON for
+ * no gain — the meal rows already carry `slug`, so the PDF looks the detail up.
+ *
+ * Order follows first appearance in the plan, so the PDF's recipe appendix
+ * reads in the order the week is cooked.
+ *
+ * @param array $days Expanded days from vance_recipe_expand_plan().
+ * @return array<string, array{name:string, image:string, url:string, servings:int, prep:int, cook:int, ingredients:array, instructions:array<int,string>}>
+ */
+function vance_recipe_plan_recipes( $days ) {
+	$data = vance_recipe_data();
+	$cat  = vance_recipe_catalogue();
+	$out  = array();
+
+	foreach ( (array) $days as $day ) {
+		foreach ( (array) ( isset( $day['meals'] ) ? $day['meals'] : array() ) as $meal ) {
+			$slug = isset( $meal['slug'] ) ? (string) $meal['slug'] : '';
+			// No slug means the catalogue never matched this row (a hand-typed
+			// or retired recipe). There is nothing to look up, so skip it — the
+			// meal still renders in the day schedule, just without a method.
+			if ( '' === $slug || isset( $out[ $slug ] ) || ! isset( $data[ $slug ] ) ) {
+				continue;
+			}
+			$facts = $data[ $slug ];
+
+			$out[ $slug ] = array(
+				'name'         => isset( $cat[ $slug ]['name'] ) ? (string) $cat[ $slug ]['name'] : (string) $meal['name'],
+				'image'        => isset( $meal['image'] ) ? (string) $meal['image'] : '',
+				'url'          => vance_recipe_url( $slug ),
+				'servings'     => isset( $facts['servings'] ) ? (int) $facts['servings'] : 0,
+				'prep'         => isset( $facts['prep'] ) ? (int) $facts['prep'] : 0,
+				'cook'         => isset( $facts['cook'] ) ? (int) $facts['cook'] : 0,
+				'ingredients'  => isset( $facts['ingredients'] ) ? $facts['ingredients'] : array(),
+				'instructions' => isset( $facts['instructions'] ) ? array_values( (array) $facts['instructions'] ) : array(),
+			);
+		}
+	}
+
+	return $out;
+}
+
+/**
  * Expand a whole saved plan's days[] for the viewer and the PDF.
  *
  * Also computes the per-plan hero image (first meal that resolves to a picture)

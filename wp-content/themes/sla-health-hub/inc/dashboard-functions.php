@@ -81,57 +81,17 @@ function vance_dashboard_save_profile() {
 }
 add_action( 'wp_ajax_vance_save_profile', 'vance_dashboard_save_profile' );
 
-/**
- * Handle Profile Document Upload
+/*
+ * Profile document upload/delete used to live here (wp_ajax_vance_upload_profile_doc
+ * and wp_ajax_vance_delete_profile_doc). They were replaced by the My Documents tab
+ * — see inc/user-documents.php — and REMOVED rather than left registered: the old
+ * upload accepted anything on WordPress's default mime allowlist (archives, audio)
+ * with no size cap, so leaving it hooked would have kept a weaker second door into
+ * the same `_sla_profile_docs` meta open long after the UI stopped using it.
+ *
+ * The meta key is unchanged, so documents uploaded through the old control are
+ * still listed, readable and deletable in the new tab.
  */
-function vance_dashboard_upload_profile_doc() {
-    check_ajax_referer( 'vance_dashboard_nonce', 'nonce' );
-    if ( ! is_user_logged_in() ) wp_send_json_error( 'Not logged in' );
-    if ( ! isset( $_FILES['doc'] ) ) wp_send_json_error( 'No file' );
-
-    $user_id = get_current_user_id();
-    $docs = get_user_meta( $user_id, '_sla_profile_docs', true ) ?: array();
-    if ( count($docs) >= 5 ) wp_send_json_error( 'Limit reached (5 documents max)' );
-
-    require_once( ABSPATH . 'wp-admin/includes/file.php' );
-    require_once( ABSPATH . 'wp-admin/includes/media.php' );
-    require_once( ABSPATH . 'wp-admin/includes/image.php' );
-
-    $att_id = media_handle_upload( 'doc', 0 );
-    if ( is_wp_error( $att_id ) ) wp_send_json_error( $att_id->get_error_message() );
-
-    $docs[] = array(
-        'id' => $att_id,
-        'url' => wp_get_attachment_url( $att_id ),
-        'name' => $_FILES['doc']['name'],
-        'date' => current_time('mysql')
-    );
-    update_user_meta( $user_id, '_sla_profile_docs', $docs );
-    wp_send_json_success( 'Document uploaded' );
-}
-add_action( 'wp_ajax_vance_upload_profile_doc', 'vance_dashboard_upload_profile_doc' );
-
-/**
- * Handle Profile Document Delete
- */
-function vance_dashboard_delete_profile_doc() {
-    check_ajax_referer( 'vance_dashboard_nonce', 'nonce' );
-    if ( ! is_user_logged_in() ) wp_send_json_error( 'Not logged in' );
-    
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $user_id = get_current_user_id();
-    $docs = get_user_meta( $user_id, '_sla_profile_docs', true ) ?: array();
-    
-    $new_docs = array();
-    foreach($docs as $d) {
-        if($d['id'] != $id) $new_docs[] = $d;
-        else wp_delete_attachment($id, true);
-    }
-    
-    update_user_meta( $user_id, '_sla_profile_docs', $new_docs );
-    wp_send_json_success( 'Document deleted' );
-}
-add_action( 'wp_ajax_vance_delete_profile_doc', 'vance_dashboard_delete_profile_doc' );
 
 /**
  * Handle Article Bookmark AJAX
@@ -1230,3 +1190,65 @@ function vance_ajax_save_tool_result() {
     ) );
 }
 add_action( 'wp_ajax_vance_save_tool_result', 'vance_ajax_save_tool_result' );
+
+/**
+ * AJAX: article body for the Reading List "Read Now" modal.
+ *
+ * Returns the post's own content only — no sidebar, no footer, no read-next.
+ * Those are template furniture in single.php rather than anything hooked onto
+ * `the_content`, so running the standard filters here yields exactly the
+ * stripped-back reading view the modal wants, with shortcodes, embeds and
+ * wpautop still applied so the prose renders the way it does on the site.
+ *
+ * POST: nonce, post_id
+ */
+function vance_dashboard_read_article() {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Please sign in.' ), 401 );
+    }
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Security check failed.' ), 403 );
+    }
+
+    $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    $post    = $post_id ? get_post( $post_id ) : null;
+
+    if ( ! $post ) {
+        wp_send_json_error( array( 'message' => 'That article could not be found.' ), 404 );
+    }
+
+    // A bookmark is not an entitlement: check the post is actually readable by
+    // this user now. Drafts, private posts and anything in a non-public type
+    // are refused even if the id is still sitting in someone's reading list.
+    $type = get_post_type_object( $post->post_type );
+    if ( ! $type || ! $type->public ) {
+        wp_send_json_error( array( 'message' => 'That article is not available.' ), 403 );
+    }
+    if ( 'publish' !== $post->post_status && ! current_user_can( 'read_post', $post->ID ) ) {
+        wp_send_json_error( array( 'message' => 'That article is not available.' ), 403 );
+    }
+    if ( ! empty( $post->post_password ) ) {
+        wp_send_json_error( array( 'message' => 'That article is password protected, please open it in a new tab.' ), 403 );
+    }
+
+    // setup_postdata so shortcodes and blocks that read the global $post
+    // resolve against this article rather than the dashboard page.
+    global $wp_query;
+    $original = $GLOBALS['post'];
+    $GLOBALS['post'] = $post;
+    setup_postdata( $post );
+    $content = apply_filters( 'the_content', $post->post_content );
+    wp_reset_postdata();
+    $GLOBALS['post'] = $original;
+
+    wp_send_json_success( array(
+        'id'      => (int) $post->ID,
+        'title'   => get_the_title( $post ),
+        'date'    => get_the_date( 'j M Y', $post ),
+        'type'    => $type->labels->singular_name,
+        'url'     => get_permalink( $post ),
+        'image'   => get_the_post_thumbnail_url( $post, 'large' ) ?: '',
+        'content' => wp_kses_post( $content ),
+    ) );
+}
+add_action( 'wp_ajax_vance_read_article', 'vance_dashboard_read_article' );
