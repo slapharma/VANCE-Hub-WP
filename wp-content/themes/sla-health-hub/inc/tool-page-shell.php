@@ -404,8 +404,26 @@ get_template_part( 'inc/register-modal' );
                     if (!titleEl) return;
                     var meta = (body.innerText || '');
                     var mins = meta.match(/(\d+)\s*min/);
-                    // Capture the recipe thumbnail if the card renders one, so the
-                    // dashboard can show it in the expanded meal-plan view.
+                    // The planner's slot cells render no thumbnail — only a title,
+                    // a kcal/minutes line and a "View recipe →" link. So the slug
+                    // from that link is what makes the meal identifiable: the
+                    // dashboard resolves it against inc/recipe-catalogue.php to get
+                    // the picture and the full-recipe URL. Without it we would be
+                    // matching on the display name alone.
+                    //
+                    // Next.js prefixes hrefs with the bundle's basePath, so the DOM
+                    // href is the full /wp-content/…/recipes/<slug>/ path rather
+                    // than the /recipes/<slug> written in the source. Take the last
+                    // path segment and accept either form.
+                    var linkEl = cell.querySelector ? cell.querySelector('a[href*="/recipes/"]') : null;
+                    var slug   = '';
+                    if (linkEl) {
+                        var parts = (linkEl.getAttribute('href') || '').split('?')[0].split('#')[0]
+                                    .split('/').filter(Boolean);
+                        if (parts.length) { slug = parts[parts.length - 1]; }
+                    }
+                    // Thumbnail capture stays as a fallback in case a future build
+                    // starts rendering one; the catalogue is the primary source.
                     var imgEl = body.querySelector ? body.querySelector('img') : null;
                     if (!imgEl && cell.querySelector) { imgEl = cell.querySelector('img'); }
                     meals.push({
@@ -413,6 +431,7 @@ get_template_part( 'inc/register-modal' );
                         name:     (titleEl.textContent || '').trim(),
                         calories: kcalOf(body),
                         minutes:  mins ? parseInt(mins[1], 10) : null,
+                        slug:     slug,
                         image:    (imgEl && imgEl.src) ? imgEl.src : ''
                     });
                 });
@@ -439,7 +458,9 @@ get_template_part( 'inc/register-modal' );
 
         return {
             kind:       'meal-plan',
-            version:    2,
+            // v3 adds meals[].slug. v2 rows stay readable — the dashboard falls
+            // back to matching them on meals[].name.
+            version:    3,
             url:        win.location && win.location.href,
             title:      doc.title || '',
             image:      planImage,

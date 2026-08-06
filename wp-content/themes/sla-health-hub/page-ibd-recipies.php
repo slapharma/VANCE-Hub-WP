@@ -34,12 +34,35 @@ $vance_tool_save_label    = 'Save this meal plan';
 
 // Recipes app autoresize keeps pace with the recipe-card list as the user scrolls/filters.
 $vance_tool_autoresize    = true;
-// Brand-restyle: hides the bundle's internal header/nav (logo strip) + recolours teal.
-$vance_tool_brand_css     = vance_tool_brand_css_recipes();
+// Brand-restyle: hides the bundle's internal header/nav (logo strip) + recolours
+// teal. In modal mode it also collapses the bundle's own tall gradient hero to a
+// single band — see vance_tool_brand_css_recipes_embed().
+$vance_tool_brand_css     = vance_tool_brand_css_recipes( $vance_embed );
 
 // Asset folder uses the correct spelling; explicitly point the iframe at it
 // (overrides the auto-derived URL which would use the slug-typo path).
 $vance_tool_iframe_src    = get_template_directory_uri() . '/assets/tools/ibd-recipes/index.html';
+
+// Deep link: `/ibd-recipies/?recipe=<slug>` opens one recipe's page directly,
+// inside the normal site chrome and brand CSS. The dashboard's saved meal
+// plans link here so "open the full recipe" lands on the recipe rather than
+// the browser index.
+//
+// The slug is validated against the recipe catalogue before it reaches the
+// path — never interpolated raw — so this cannot be walked out of the bundle
+// directory. An unknown slug silently falls through to the index.
+if ( isset( $_GET['recipe'] ) ) {
+	$vance_recipe_slug = vance_recipe_resolve_slug( wp_unslash( $_GET['recipe'] ) );
+	if ( $vance_recipe_slug ) {
+		$vance_tool_iframe_src = get_template_directory_uri()
+			. '/assets/tools/ibd-recipes/recipes/' . $vance_recipe_slug . '/index.html';
+		$vance_tool_name       = vance_recipe_catalogue()[ $vance_recipe_slug ]['name'];
+		$vance_tool_subtitle   = 'Full method, ingredients and nutrition for this recipe. Browse the rest of the collection, or build it into a weekly plan.';
+		// A single recipe is a fixed-length page — it does not need the tall
+		// default reserved for the scrolling recipe browser.
+		$vance_tool_iframe_height = 900;
+	}
+}
 
 require get_template_directory() . '/inc/tool-page-shell.php';
 

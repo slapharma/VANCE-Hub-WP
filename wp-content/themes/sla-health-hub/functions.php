@@ -2297,6 +2297,14 @@ add_action( 'wp_ajax_vance_get_calc_results', 'vance_get_calc_results' );
 require get_template_directory() . '/inc/dashboard-functions.php';
 
 /**
+ * Include the Recipe Catalogue
+ * Slug → {name, image, url} mirror of the IBD Recipes bundle, so the dashboard
+ * can render meal thumbnails and full-recipe links against saved meal plans.
+ * Must load before dashboard templates that expand saved plans.
+ */
+require get_template_directory() . '/inc/recipe-catalogue.php';
+
+/**
  * Include Ask AI Functions
  * Grounded chat over hub content: retrieval, system prompt, REST route,
  * and auto-save of conversations into the user's dashboard.

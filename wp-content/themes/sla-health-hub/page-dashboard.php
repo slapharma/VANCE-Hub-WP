@@ -1000,7 +1000,46 @@ get_header();
                                 .vance-mp-textbtn { background:none; border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:#0EA5E9; padding:8px 6px; }
                                 .vance-mp-textbtn.vance-mp-danger { color:#EF4444; }
                                 .vance-mp-textbtn:focus-visible { outline:2px solid var(--primary-color); outline-offset:2px; }
+
+                                /* Thumbnail strip on the collapsed card — a glance at what is
+                                   in the plan without opening the full viewer. */
+                                .vance-mp-strip { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+                                .vance-mp-strip img { width:64px; height:64px; object-fit:cover; border:1px solid rgba(0,128,128,0.16); }
+                                .vance-mp-strip-more { width:64px; height:64px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#0F172A; background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.16); }
+
+                                /* --- Meal plan viewer --- */
+                                .vance-mv-day { border:1px solid #E2E8F0; background:#fff; }
+                                .vance-mv-dayhead { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:12px 16px; background:var(--primary-color, #008080); color:#fff; }
+                                .vance-mv-dayhead strong { font-family:'Outfit',sans-serif; font-size:15px; font-weight:700; }
+                                .vance-mv-dayhead span { font-size:12px; color:rgba(255,255,255,0.92); }
+                                .vance-mv-meal { display:flex; gap:12px; padding:12px 16px; border-top:1px solid #E2E8F0; align-items:flex-start; }
+                                .vance-mv-meal:first-of-type { border-top:none; }
+                                .vance-mv-thumb { width:72px; height:72px; flex:0 0 72px; object-fit:cover; border:1px solid #E2E8F0; background:#F1F5F9; }
+                                .vance-mv-thumb--empty { display:flex; align-items:center; justify-content:center; color:#94A3B8; }
+                                .vance-mv-body { flex:1; min-width:0; }
+                                .vance-mv-slot { font-size:11px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:#475569; }
+                                .vance-mv-name { font-size:14px; font-weight:600; color:#0F172A; line-height:1.35; margin:2px 0 4px; }
+                                .vance-mv-facts { font-size:12px; color:#475569; display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
+                                /* 44px min height keeps this a comfortable touch target. */
+                                .vance-mv-open { display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 14px; font-size:12px; font-weight:700; letter-spacing:0.3px; text-transform:uppercase; color:#fff; background:var(--primary-color, #008080); border:1px solid var(--primary-color, #008080); text-decoration:none; cursor:pointer; transition:background 200ms ease, color 200ms ease; }
+                                .vance-mv-open:hover { background:#00696B; color:#fff; }
+                                .vance-mv-open:focus-visible { outline:3px solid var(--primary-pale, #AEDBDB); outline-offset:2px; }
+                                .vance-mv-open svg { width:13px; height:13px; }
+                                /* The theme's .screen-reader-text is scoped to .vance-askai, so
+                                   the meal viewer needs its own visually-hidden helper. */
+                                .vance-mv-sr { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
+                                .vance-mv-stats { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:10px; }
+                                .vance-mv-stat { flex:1 1 120px; border:1px solid #E2E8F0; background:#F8FAFC; padding:10px 14px; }
+                                .vance-mv-stat b { display:block; font-family:'Outfit',sans-serif; font-size:19px; color:#0F172A; }
+                                .vance-mv-stat span { font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#475569; }
+                                @media (prefers-reduced-motion: reduce) {
+                                    .vance-mv-open { transition:none; }
+                                }
                             </style>
+                            <?php
+                            // Collected in the loop below, emitted as one JS object after it.
+                            $meal_plan_payloads = array();
+                            ?>
                             <div class="vance-mp-list">
                                 <?php foreach ($meal_plan_history as $mp_i => $entry):
                                     $p    = $entry['payload'];
@@ -1012,7 +1051,14 @@ get_header();
                                     // Structured saves carry days/totals. Older saves are a DOM
                                     // snapshot with only a text blob, so degrade to a plain row.
                                     $is_structured = isset($p['kind']) && $p['kind'] === 'meal-plan' && !empty($p['days']) && is_array($p['days']);
-                                    $totals = $is_structured && isset($p['totals']) && is_array($p['totals']) ? $p['totals'] : array();
+
+                                    // Expand the saved rows against inc/recipe-catalogue.php. This is
+                                    // what puts a picture and a full-recipe link on every meal: the
+                                    // planner's slot cells render neither, so the saved payload has
+                                    // only a name (and, since v3, a slug) to go on.
+                                    $plan     = $is_structured ? vance_recipe_expand_plan($p['days']) : array('days' => array(), 'image' => '', 'totals' => array());
+                                    $exp_days = $plan['days'];
+                                    $totals   = $plan['totals'];
                                     // Every plan reads as named: user label if renamed, else the date.
                                     $plan_name = !empty($p['name'])
                                         ? $p['name']
@@ -1035,24 +1081,41 @@ get_header();
                                     } else {
                                         $meta_bits[] = 'Saved plan';
                                     }
-                                    // Plan-level image: explicit (extractor v2+), else first captured meal image.
-                                    $plan_image = !empty($p['image']) ? (string) $p['image'] : '';
-                                    if ('' === $plan_image && $is_structured) {
-                                        foreach ($p['days'] as $dd) {
-                                            if (!empty($dd['meals']) && is_array($dd['meals'])) {
-                                                foreach ($dd['meals'] as $mm) {
-                                                    if (!empty($mm['image'])) { $plan_image = (string) $mm['image']; break 2; }
-                                                }
+                                    // Plan hero: first meal that resolves to a picture. The payload's
+                                    // own `image` is only a fallback — it is empty on every save made
+                                    // to date, because the planner never rendered a thumbnail to scrape.
+                                    $plan_image = $plan['image'];
+                                    if ('' === $plan_image && !empty($p['image'])) {
+                                        $plan_image = (string) $p['image'];
+                                    }
+
+                                    // The viewer and the PDF both render from this. It goes into a
+                                    // keyed JS object rather than a data-plan attribute: with a
+                                    // thumbnail, a link and a nutrition block on all 28 meals plus a
+                                    // shopping list, the JSON is far too big to sit in an attribute
+                                    // on every card.
+                                    $meal_plan_payloads[ $mp_i ] = array(
+                                        'name'     => $plan_name,
+                                        'when'     => $when,
+                                        'image'    => $plan_image,
+                                        'days'     => $exp_days,
+                                        'totals'   => $totals,
+                                        'shopping' => $is_structured ? vance_recipe_shopping_list($exp_days) : array(),
+                                    );
+
+                                    // Up to six thumbnails on the collapsed card, deduplicated so a
+                                    // week that repeats a recipe still shows six different dishes.
+                                    $strip = array();
+                                    foreach ($exp_days as $dd) {
+                                        foreach ($dd['meals'] as $mm) {
+                                            if ($mm['image'] && !in_array($mm['image'], $strip, true)) {
+                                                $strip[] = $mm['image'];
                                             }
                                         }
                                     }
-                                    // The full-view modal renders from this.
-                                    $plan_json = wp_json_encode(array(
-                                        'name'  => $plan_name,
-                                        'when'  => $when,
-                                        'image' => $plan_image,
-                                        'days'  => $is_structured ? $p['days'] : array(),
-                                    ));
+                                    $strip_total = count($strip);
+                                    $strip       = array_slice($strip, 0, 6);
+
                                     $panel_id = 'vance-mp-panel-' . (int) $mp_i;
                                     ?>
                                     <div class="vance-mp-card vance-glass">
@@ -1068,22 +1131,28 @@ get_header();
                                                 <?php if ($plan_image): ?>
                                                     <img class="vance-mp-img" src="<?php echo esc_url($plan_image); ?>" alt="<?php echo esc_attr($plan_name); ?>" loading="lazy">
                                                 <?php endif; ?>
+                                                <?php if ($strip): ?>
+                                                    <div class="vance-mp-strip">
+                                                        <?php foreach ($strip as $thumb): ?>
+                                                            <img src="<?php echo esc_url($thumb); ?>" alt="" loading="lazy" decoding="async">
+                                                        <?php endforeach; ?>
+                                                        <?php if ($strip_total > count($strip)): ?>
+                                                            <span class="vance-mp-strip-more">+<?php echo (int) ($strip_total - count($strip)); ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endif; ?>
                                                 <?php if ($is_structured): ?>
                                                     <div class="vance-mp-days">
-                                                        <?php foreach ($p['days'] as $dd):
-                                                            if (empty($dd['day'])) { continue; }
-                                                            $dcal   = !empty($dd['calories']) ? $dd['calories'] : '';
-                                                            $dmeals = !empty($dd['meals']) && is_array($dd['meals']) ? count($dd['meals']) : 0;
-                                                            ?>
-                                                            <span class="vance-mp-daychip"><strong><?php echo esc_html($dd['day']); ?></strong> &middot; <?php echo (int) $dmeals; ?> meals<?php echo $dcal ? ' &middot; ' . esc_html($dcal) . ' kcal' : ''; ?></span>
+                                                        <?php foreach ($exp_days as $dd): ?>
+                                                            <span class="vance-mp-daychip"><strong><?php echo esc_html($dd['day']); ?></strong> &middot; <?php echo count($dd['meals']); ?> meals<?php echo $dd['calories'] ? ' &middot; ' . esc_html(number_format_i18n($dd['calories'])) . ' kcal' : ''; ?></span>
                                                         <?php endforeach; ?>
                                                     </div>
                                                 <?php endif; ?>
                                                 <div class="vance-mp-actions">
                                                     <?php if ($is_structured): ?>
                                                         <button type="button" class="vance-btn-inverted vance-btn--sm" data-vance-tool-open="ibd-recipes" data-plan-key="<?php echo esc_attr($key); ?>">Edit meal plan</button>
-                                                        <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan="<?php echo esc_attr($plan_json); ?>">Download PDF</button>
-                                                        <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan="<?php echo esc_attr($plan_json); ?>">View full</button>
+                                                        <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="<?php echo (int) $mp_i; ?>">Download PDF</button>
+                                                        <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan-index="<?php echo (int) $mp_i; ?>">View full</button>
                                                     <?php endif; ?>
                                                     <button type="button" class="vance-mp-textbtn" onclick="renameMealPlan('<?php echo esc_js($key); ?>', '<?php echo esc_js($plan_name); ?>')">Rename</button>
                                                     <button type="button" class="vance-mp-textbtn vance-mp-danger" onclick="deleteMealPlan('<?php echo esc_js($key); ?>')">Delete</button>
@@ -1093,6 +1162,11 @@ get_header();
                                     </div>
                                 <?php endforeach; ?>
                             </div>
+                            <script>
+                                // Keyed by the card's data-plan-index. Built server-side so the
+                                // viewer and the PDF share one already-resolved shape.
+                                window.VANCE_MEAL_PLANS = <?php echo wp_json_encode($meal_plan_payloads); ?>;
+                            </script>
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your healthcare team.</p>
                         <?php endif; ?>
                     </div>
@@ -1107,10 +1181,13 @@ get_header();
                                 </div>
                                 <button onclick="closeMealPlanModal()" aria-label="Close" style="font-size:24px; border:1px solid rgba(255,255,255,0.6); background:rgba(255,255,255,0.5); cursor:pointer; color:#0A1929; line-height:1; width:40px; height:40px; border-radius:0; display:flex; align-items:center; justify-content:center;">&times;</button>
                             </div>
-                            <div id="modal-meal-plan-content" style="flex:1; overflow-y:auto; padding:32px; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-content:start;">
+                            <!-- minmax(320px) not 220px: each meal row carries a 72px thumbnail
+                                 and a Full recipe button, so narrower columns wrap badly. -->
+                            <div id="modal-meal-plan-content" style="flex:1; overflow-y:auto; padding:32px; display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; align-content:start;">
                                 <!-- Days are rendered here on open -->
                             </div>
-                            <div style="padding:20px; border-top:1px solid rgba(0,128,128,0.16); display:flex; justify-content:flex-end;">
+                            <div style="padding:20px; border-top:1px solid rgba(0,128,128,0.16); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                                <button type="button" id="modal-meal-plan-pdf" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="">Download PDF</button>
                                 <button onclick="closeMealPlanModal()" class="vance-btn-inverted vance-btn--sm">Close</button>
                             </div>
                         </div>
@@ -1130,34 +1207,94 @@ get_header();
                             });
                         }
 
+                        // Both the viewer and the PDF read from the server-built object.
+                        function planFor(btn) {
+                            var i = btn.getAttribute('data-plan-index');
+                            var plans = window.VANCE_MEAL_PLANS || {};
+                            return (i !== null && plans[i]) ? plans[i] : null;
+                        }
+
+                        function num(n) {
+                            return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                        }
+
+                        // Open-in-new-tab arrow, inline so it inherits currentColor. SVG rather
+                        // than a text arrow — the rest of the dashboard uses icons, not glyphs.
+                        var ICON_EXTERNAL =
+                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+                            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+                            '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>' +
+                            '<path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>';
+
+                        /**
+                         * One meal row: thumbnail, slot, name, facts, and a button that opens the
+                         * full recipe in a new tab. Meals whose recipe the catalogue does not know
+                         * still render — they just lose the picture and the link rather than
+                         * dropping out of the plan.
+                         */
+                        function mealRowHtml(m) {
+                            var thumb = m.image
+                                ? '<img class="vance-mv-thumb" src="' + esc(m.image) + '" alt="' + esc(m.name) + '" loading="lazy" decoding="async">'
+                                : '<div class="vance-mv-thumb vance-mv-thumb--empty" aria-hidden="true">' +
+                                  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' +
+                                  '<circle cx="12" cy="12" r="9"/><path d="M8 14h8M9 9h.01M15 9h.01"/></svg></div>';
+
+                            var facts = [];
+                            if (m.calories) { facts.push(esc(m.calories) + ' kcal'); }
+                            if (m.minutes)  { facts.push(esc(m.minutes) + ' min'); }
+                            if (m.nutrition && m.nutrition.protein) { facts.push(esc(m.nutrition.protein) + 'g protein'); }
+                            if (m.nutrition && m.nutrition.fibre)   { facts.push(esc(m.nutrition.fibre) + 'g fibre'); }
+
+                            var open = m.url
+                                ? '<a class="vance-mv-open" href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' +
+                                  'Full recipe' + ICON_EXTERNAL +
+                                  '<span class="vance-mv-sr"> for ' + esc(m.name) + ' (opens in a new tab)</span></a>'
+                                : '';
+
+                            return '<div class="vance-mv-meal">' + thumb +
+                                   '<div class="vance-mv-body">' +
+                                   '<div class="vance-mv-slot">' + esc(m.slot) + '</div>' +
+                                   '<div class="vance-mv-name">' + esc(m.name) + '</div>' +
+                                   (facts.length ? '<div class="vance-mv-facts">' + facts.map(function (f) {
+                                       return '<span>' + f + '</span>';
+                                   }).join('') + '</div>' : '') +
+                                   open + '</div></div>';
+                        }
+
                         window.openMealPlanModal = function (btn) {
-                            var plan;
-                            try { plan = JSON.parse(btn.getAttribute('data-plan')); } catch (e) { return; }
+                            var plan = planFor(btn);
+                            if (!plan) { return; }
 
                             document.getElementById('modal-meal-plan-title').textContent = plan.name || 'Meal plan';
                             document.getElementById('modal-meal-plan-date').textContent  = plan.when ? ('Saved on ' + plan.when) : '';
 
+                            var t = plan.totals || {};
+                            var statsHtml = '<div class="vance-mv-stats">' +
+                                '<div class="vance-mv-stat"><b>' + num(t.days || 0) + '</b><span>Days</span></div>' +
+                                '<div class="vance-mv-stat"><b>' + num(t.meals || 0) + '</b><span>Meals</span></div>' +
+                                (t.calories ? '<div class="vance-mv-stat"><b>' + num(t.calories) + '</b><span>Total kcal</span></div>' : '') +
+                                (t.calories && t.days ? '<div class="vance-mv-stat"><b>' + num(Math.round(t.calories / t.days)) + '</b><span>kcal / day</span></div>' : '') +
+                                '</div>';
+
                             var html = (plan.days || []).filter(function (d) {
                                 return d && d.meals && d.meals.length;
                             }).map(function (d) {
-                                var meals = d.meals.map(function (m) {
-                                    return '<div style="font-size:12px; color:#475569; line-height:1.6;">' +
-                                           '<span style="color:#94A3B8;">' + esc(m.slot) + '</span> ' + esc(m.name) +
-                                           (m.calories ? ' <span style="color:#94A3B8;">' + esc(m.calories) + ' kcal</span>' : '') +
-                                           '</div>';
-                                }).join('');
-                                return '<div style="background:white; border:1px solid #E2E8F0; padding:14px 16px;">' +
-                                       '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:8px;">' +
-                                       '<strong style="font-size:13px; color:#0F172A;">' + esc(d.day) + '</strong>' +
-                                       (d.calories ? '<span style="font-size:12px; color:#64748B;">' + esc(d.calories) + ' kcal</span>' : '') +
-                                       '</div>' + meals + '</div>';
+                                return '<div class="vance-mv-day">' +
+                                       '<div class="vance-mv-dayhead"><strong>' + esc(d.day) + '</strong>' +
+                                       (d.calories ? '<span>' + num(d.calories) + ' kcal</span>' : '') + '</div>' +
+                                       d.meals.map(mealRowHtml).join('') + '</div>';
                             }).join('');
 
                             var imgHtml = plan.image
                                 ? '<img src="' + esc(plan.image) + '" alt="" style="grid-column:1/-1; width:100%; max-height:260px; object-fit:cover; border-radius:0;">'
                                 : '';
                             document.getElementById('modal-meal-plan-content').innerHTML =
-                                imgHtml + (html || '<p style="color:#64748B; font-size:13px;">This plan has no meals saved against it.</p>');
+                                imgHtml + statsHtml +
+                                (html || '<p style="color:#475569; font-size:13px;">This plan has no meals saved against it.</p>');
+                            // Point the modal's own PDF button at whichever plan is open.
+                            var modalPdf = document.getElementById('modal-meal-plan-pdf');
+                            if (modalPdf) { modalPdf.setAttribute('data-plan-index', btn.getAttribute('data-plan-index')); }
+
                             document.getElementById('meal-plan-modal').style.display = 'flex';
                             document.body.style.overflow = 'hidden';
                         };
@@ -1216,48 +1353,219 @@ get_header();
                             }
                         }
 
-                        // Build a branded PDF of a saved plan (html2pdf, mirrors My Notes).
-                        function downloadMealPlanPDF(btn) {
-                            var plan;
-                            try { plan = JSON.parse(btn.getAttribute('data-plan')); } catch (e) { return; }
-                            if (typeof html2pdf === 'undefined') {
-                                alert('The PDF library is still loading — please try again in a moment.');
-                                return;
-                            }
-                            var daysHtml = (plan.days || []).filter(function (d) {
-                                return d && d.meals && d.meals.length;
-                            }).map(function (d) {
-                                var rows = d.meals.map(function (m) {
-                                    return '<tr>' +
-                                        '<td style="padding:6px 10px; color:#94a3b8; font-size:11px; text-transform:uppercase; white-space:nowrap; vertical-align:top;">' + esc(m.slot || '') + '</td>' +
-                                        '<td style="padding:6px 10px; color:#334155;">' + esc(m.name || '') + (m.calories ? ' <span style="color:#94a3b8;">(' + esc(m.calories) + ' kcal)</span>' : '') + '</td>' +
-                                        '</tr>';
-                                }).join('');
-                                return '<div style="margin-bottom:18px; break-inside:avoid;">' +
-                                    '<div style="font-weight:700; color:#0f172a; border-bottom:2px solid #008080; padding-bottom:4px; margin-bottom:8px;">' + esc(d.day) +
-                                    (d.calories ? ' <span style="font-weight:400; color:#64748b; font-size:12px;">' + esc(d.calories) + ' kcal</span>' : '') + '</div>' +
-                                    '<table style="width:100%; border-collapse:collapse; font-size:13px;">' + rows + '</table></div>';
+                        /**
+                         * ---------------------------------------------------------------
+                         * Meal plan PDF
+                         * ---------------------------------------------------------------
+                         * A cover page, a per-day schedule with a photo against every meal,
+                         * and a consolidated shopping list — i.e. something you can actually
+                         * take to the kitchen and the supermarket, rather than the two-column
+                         * name/kcal table this used to emit.
+                         *
+                         * Three things make it work that the old version got wrong:
+                         *
+                         *  1. The render element is attached to the document (off-screen) and
+                         *     every image is awaited before html2canvas runs. html2canvas
+                         *     paints whatever is decoded at the moment it fires; a detached
+                         *     node whose images are still in flight rasterises to blank boxes.
+                         *     With a photo on all 28 meals that is the difference between a
+                         *     usable document and an empty one.
+                         *  2. A4, not US Letter — this is a UK site.
+                         *  3. Explicit page-break rules, so a day block or the shopping list
+                         *     is never sliced across the fold.
+                         */
+                        var PDF_TEAL = '#008080', PDF_INK = '#0F172A', PDF_BODY = '#334155', PDF_MUTE = '#475569';
+
+                        // Wait for every <img> inside el, but never hang the download on one
+                        // that will not load — a dead remote URL resolves rather than rejects,
+                        // and simply renders as its alt-empty box.
+                        function whenImagesSettled(el) {
+                            var imgs = [].slice.call(el.querySelectorAll('img'));
+                            if (!imgs.length) { return Promise.resolve(); }
+                            return Promise.all(imgs.map(function (img) {
+                                if (img.complete && img.naturalWidth > 0) { return Promise.resolve(); }
+                                return new Promise(function (resolve) {
+                                    var done = false;
+                                    var finish = function () { if (!done) { done = true; resolve(); } };
+                                    img.addEventListener('load', finish);
+                                    img.addEventListener('error', function () {
+                                        // Drop the broken frame so it does not print as a grey box.
+                                        if (img.parentNode) { img.parentNode.removeChild(img); }
+                                        finish();
+                                    });
+                                    setTimeout(finish, 8000);
+                                });
+                            }));
+                        }
+
+                        function pdfStat(value, label) {
+                            return '<td style="padding:10px 12px; border:1px solid #E2E8F0; background:#F8FAFC; text-align:center;">' +
+                                   '<div style="font-size:19px; font-weight:800; color:' + PDF_INK + '; line-height:1.1;">' + value + '</div>' +
+                                   '<div style="font-size:9px; letter-spacing:0.6px; text-transform:uppercase; color:' + PDF_MUTE + '; margin-top:3px;">' + label + '</div></td>';
+                        }
+
+                        function pdfMealRow(m) {
+                            var facts = [];
+                            if (m.calories) { facts.push(esc(m.calories) + ' kcal'); }
+                            if (m.minutes)  { facts.push(esc(m.minutes) + ' min'); }
+                            if (m.nutrition && m.nutrition.protein) { facts.push(esc(m.nutrition.protein) + 'g protein'); }
+                            if (m.nutrition && m.nutrition.fibre)   { facts.push(esc(m.nutrition.fibre) + 'g fibre'); }
+                            if (m.servings) { facts.push('serves ' + esc(m.servings)); }
+
+                            // crossOrigin is required for html2canvas to read remote pixels back
+                            // out of the canvas; without it the whole canvas is tainted and the
+                            // export throws a security error instead of producing a file.
+                            var img = m.image
+                                ? '<img src="' + esc(m.image) + '" crossorigin="anonymous" alt="" ' +
+                                  'style="width:62px; height:62px; object-fit:cover; display:block; border:1px solid #E2E8F0;">'
+                                : '';
+
+                            return '<tr>' +
+                                '<td style="width:70px; padding:8px 10px 8px 0; vertical-align:top;">' + img + '</td>' +
+                                '<td style="padding:8px 0; vertical-align:top;">' +
+                                    '<div style="font-size:8.5px; font-weight:700; letter-spacing:0.7px; text-transform:uppercase; color:' + PDF_MUTE + ';">' + esc(m.slot || '') + '</div>' +
+                                    '<div style="font-size:12.5px; font-weight:700; color:' + PDF_INK + '; margin:2px 0 3px;">' + esc(m.name || '') + '</div>' +
+                                    (facts.length ? '<div style="font-size:10px; color:' + PDF_BODY + ';">' + facts.join(' &nbsp;·&nbsp; ') + '</div>' : '') +
+                                '</td></tr>';
+                        }
+
+                        function buildMealPlanDocument(plan) {
+                            var t = plan.totals || {};
+                            var days = (plan.days || []).filter(function (d) { return d && d.meals && d.meals.length; });
+
+                            var statsRow =
+                                '<table style="width:100%; border-collapse:separate; border-spacing:6px 0; margin:0 0 22px;"><tr>' +
+                                pdfStat(num(t.days || days.length), 'Days') +
+                                pdfStat(num(t.meals || 0), 'Meals') +
+                                (t.calories ? pdfStat(num(t.calories), 'Total kcal') : '') +
+                                (t.calories && t.days ? pdfStat(num(Math.round(t.calories / t.days)), 'kcal / day') : '') +
+                                (t.minutes ? pdfStat(num(t.minutes) + ' min', 'Kitchen time') : '') +
+                                '</tr></table>';
+
+                            var daysHtml = days.map(function (d) {
+                                return '<div class="pdf-block" style="margin-bottom:16px;">' +
+                                    '<table style="width:100%; border-collapse:collapse; background:' + PDF_TEAL + ';"><tr>' +
+                                        '<td style="padding:8px 12px; color:#fff; font-size:13px; font-weight:800; letter-spacing:0.4px;">' + esc(d.day) + '</td>' +
+                                        '<td style="padding:8px 12px; color:rgba(255,255,255,0.92); font-size:10px; text-align:right;">' +
+                                            (d.calories ? num(d.calories) + ' kcal' : '') + '</td>' +
+                                    '</tr></table>' +
+                                    '<table style="width:100%; border-collapse:collapse; border:1px solid #E2E8F0; border-top:none; padding:0 12px;">' +
+                                        d.meals.map(pdfMealRow).join('') +
+                                    '</table></div>';
                             }).join('');
+
+                            // Shopping list: two columns of tick-boxes. Quantities are per recipe
+                            // (see vance_recipe_shopping_list) — the ×N says how many times over.
+                            var shopping = plan.shopping || [];
+                            var shoppingHtml = '';
+                            if (shopping.length) {
+                                var half  = Math.ceil(shopping.length / 2);
+                                var cell  = function (list) {
+                                    return '<td style="width:50%; vertical-align:top; padding-right:14px;">' + list.map(function (s) {
+                                        return '<div style="font-size:10.5px; color:' + PDF_BODY + '; padding:3px 0; border-bottom:1px solid #F1F5F9;">' +
+                                               '<span style="display:inline-block; width:9px; height:9px; border:1px solid #94A3B8; margin-right:7px;"></span>' +
+                                               esc(s.item) + (s.count > 1 ? ' <b style="color:' + PDF_TEAL + ';">&times;' + s.count + '</b>' : '') +
+                                               '</div>';
+                                    }).join('') + '</td>';
+                                };
+                                shoppingHtml =
+                                    '<div class="pdf-block" style="margin-top:22px;">' +
+                                    '<div style="font-size:14px; font-weight:800; color:' + PDF_INK + '; text-transform:uppercase; letter-spacing:0.8px; border-bottom:2px solid ' + PDF_TEAL + '; padding-bottom:5px; margin-bottom:10px;">Shopping list</div>' +
+                                    '<div style="font-size:9.5px; color:' + PDF_MUTE + '; margin-bottom:8px;">Quantities are per recipe. &times;2 means that quantity is needed twice across the plan.</div>' +
+                                    '<table style="width:100%; border-collapse:collapse;"><tr>' +
+                                    cell(shopping.slice(0, half)) + cell(shopping.slice(half)) +
+                                    '</tr></table></div>';
+                            }
+
                             var el = document.createElement('div');
                             el.innerHTML =
-                                '<div style="padding:40px; font-family:Helvetica,Arial,sans-serif; color:#334155;">' +
-                                '<div style="border-bottom:2px solid #008080; padding-bottom:20px; margin-bottom:24px;">' +
-                                '<div style="font-size:22px; font-weight:800; color:#0A1929; text-transform:uppercase; letter-spacing:1px;">Meal Plan</div>' +
-                                '<div style="font-size:12px; color:#64748b; margin-top:4px;">Vance Medical Hub' + (plan.when ? ' &bull; Saved ' + esc(plan.when) : '') + '</div>' +
-                                '</div>' +
-                                '<h1 style="color:#0f172a; margin:0 0 20px; font-size:26px;">' + esc(plan.name || 'Meal plan') + '</h1>' +
-                                (plan.image ? '<img src="' + esc(plan.image) + '" style="width:100%; max-height:240px; object-fit:cover; margin-bottom:20px;">' : '') +
-                                (daysHtml || '<p style="color:#64748b;">No meals recorded against this plan.</p>') +
-                                '<div style="margin-top:40px; font-size:10px; color:#cbd5e1; border-top:1px solid #e2e8f0; padding-top:12px; text-align:center;">Generated from Vance Medical Hub. General guidance, not personalised dietary advice.</div>' +
+                                '<div style="padding:34px 38px; font-family:Helvetica,Arial,sans-serif; color:' + PDF_BODY + ';">' +
+                                    // Masthead
+                                    '<table style="width:100%; border-collapse:collapse; border-bottom:3px solid ' + PDF_TEAL + '; padding-bottom:12px;"><tr>' +
+                                        '<td style="padding-bottom:12px;">' +
+                                            '<div style="font-size:10px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase; color:' + PDF_TEAL + ';">Vance Medical Hub</div>' +
+                                            '<div style="font-size:25px; font-weight:800; color:' + PDF_INK + '; letter-spacing:-0.4px; margin-top:3px;">' + esc(plan.name || 'Meal plan') + '</div>' +
+                                        '</td>' +
+                                        '<td style="padding-bottom:12px; text-align:right; vertical-align:bottom; font-size:10px; color:' + PDF_MUTE + ';">' +
+                                            (plan.when ? 'Saved ' + esc(plan.when) : '') +
+                                        '</td>' +
+                                    '</tr></table>' +
+                                    (plan.image
+                                        ? '<img src="' + esc(plan.image) + '" crossorigin="anonymous" alt="" style="width:100%; height:150px; object-fit:cover; display:block; margin:18px 0;">'
+                                        : '<div style="height:18px;"></div>') +
+                                    statsRow +
+                                    (daysHtml || '<p style="color:' + PDF_MUTE + ';">No meals recorded against this plan.</p>') +
+                                    shoppingHtml +
+                                    '<div style="margin-top:26px; border-top:1px solid #E2E8F0; padding-top:10px; font-size:9px; color:' + PDF_MUTE + '; line-height:1.5;">' +
+                                        'Generated from Vance Medical Hub. Meal plans are general guidance, not personalised dietary advice — check any dietary change with your healthcare team.' +
+                                    '</div>' +
                                 '</div>';
-                            var opt = {
-                                margin:      0.5,
-                                filename:    (plan.name || 'meal-plan').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf',
-                                image:       { type: 'jpeg', quality: 0.98 },
-                                html2canvas: { scale: 2, useCORS: true },
-                                jsPDF:       { unit: 'in', format: 'letter', orientation: 'portrait' }
+                            return el;
+                        }
+
+                        function downloadMealPlanPDF(btn) {
+                            var plan = planFor(btn);
+                            if (!plan) { return; }
+                            if (typeof html2pdf === 'undefined') {
+                                alert('The PDF library is still loading, please try again in a moment.');
+                                return;
+                            }
+
+                            var label = btn.textContent;
+                            btn.disabled = true;
+                            btn.textContent = 'Building PDF…';
+
+                            // Off-screen but laid out and painted, so the images actually decode —
+                            // display:none or a detached node would not load them at all.
+                            //
+                            // The offset MUST live on a wrapper, not on the element handed to
+                            // html2pdf. html2pdf clones the element into an inline-block container
+                            // and measures it; a clone that is itself position:fixed contributes
+                            // no in-flow height, so the container measures zero and the whole
+                            // export rasterises to a 0px-tall canvas — a blank PDF, with no error
+                            // thrown. Verified: fixed-on-element gives 1191x0, this gives 794x5135.
+                            var holder = document.createElement('div');
+                            holder.style.cssText = 'position:fixed; left:-10000px; top:0; width:794px;'; // 794px ≈ A4 at 96dpi
+                            var el = buildMealPlanDocument(plan);
+                            holder.appendChild(el);
+                            document.body.appendChild(holder);
+
+                            var cleanup = function () {
+                                if (holder.parentNode) { holder.parentNode.removeChild(holder); }
+                                btn.disabled = false;
+                                btn.textContent = label;
                             };
-                            html2pdf().set(opt).from(el).save();
+
+                            whenImagesSettled(el).then(function () {
+                                return html2pdf().set({
+                                    margin:      [10, 0, 12, 0], // mm — the inner div supplies side padding
+                                    filename:    (plan.name || 'meal-plan').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf',
+                                    image:       { type: 'jpeg', quality: 0.95 },
+                                    html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#FFFFFF', logging: false },
+                                    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                                    pagebreak:   { mode: ['css', 'legacy'], avoid: '.pdf-block' }
+                                }).from(el).toPdf().get('pdf').then(function (pdf) {
+                                    // Page numbers, added after layout so the count is known.
+                                    var total = pdf.internal.getNumberOfPages();
+                                    for (var i = 1; i <= total; i++) {
+                                        pdf.setPage(i);
+                                        pdf.setFontSize(8);
+                                        pdf.setTextColor(148, 163, 184);
+                                        pdf.text(
+                                            'Page ' + i + ' of ' + total,
+                                            pdf.internal.pageSize.getWidth() / 2,
+                                            pdf.internal.pageSize.getHeight() - 5,
+                                            { align: 'center' }
+                                        );
+                                    }
+                                }).save();
+                            }).then(cleanup, function (err) {
+                                cleanup();
+                                // Say what happened rather than leaving a dead button — the old
+                                // version had no failure path at all.
+                                alert('Sorry, the PDF could not be generated. Please try again.');
+                                if (window.console) { console.error('Meal plan PDF failed', err); }
+                            });
                         }
 
                         document.addEventListener('click', function (e) {
