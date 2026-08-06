@@ -383,6 +383,26 @@ function vance_user_docs_backfill_text( $user_id ) {
 	return $changed;
 }
 
+/**
+ * Is My Documents switched on?
+ *
+ * Every endpoint below asks this first. Hiding the tab is not enough on its own:
+ * the upload, delete and stream actions are admin-ajax URLs, and anyone who
+ * bookmarked one, or who reads the JavaScript, can still call it. For a feature
+ * holding special category health data, "switched off" has to mean the server
+ * stops answering, not merely that the link is gone from the sidebar.
+ *
+ * Defaults to on when the toggle file is absent, so this feature keeps working
+ * if user-documents.php is ever used without dashboard-features.php.
+ *
+ * @return bool
+ */
+function vance_user_docs_enabled() {
+	return function_exists( 'vance_dashboard_feature_enabled' )
+		? vance_dashboard_feature_enabled( 'documents' )
+		: true;
+}
+
 /* ============================================================================
  * AJAX: upload / delete / stream / text
  * ========================================================================= */
@@ -394,6 +414,9 @@ function vance_user_docs_backfill_text( $user_id ) {
  */
 function vance_user_docs_ajax_upload() {
 	check_ajax_referer( 'vance_dashboard_nonce', 'nonce' );
+	if ( ! vance_user_docs_enabled() ) {
+		wp_send_json_error( array( 'message' => 'My Documents is not available on this site.' ) );
+	}
 	if ( ! is_user_logged_in() ) {
 		wp_send_json_error( array( 'message' => 'Please sign in.' ) );
 	}
@@ -476,6 +499,12 @@ add_action( 'wp_ajax_vance_doc_upload', 'vance_user_docs_ajax_upload' );
  */
 function vance_user_docs_ajax_delete() {
 	check_ajax_referer( 'vance_dashboard_nonce', 'nonce' );
+	// Closed along with the rest of the feature. There is no UI to reach it from
+	// once the tab is hidden, and leaving the one destructive endpoint open while
+	// the read endpoints are shut would be a strange place to draw the line.
+	if ( ! vance_user_docs_enabled() ) {
+		wp_send_json_error( array( 'message' => 'My Documents is not available on this site.' ) );
+	}
 	if ( ! is_user_logged_in() ) {
 		wp_send_json_error( array( 'message' => 'Please sign in.' ) );
 	}
@@ -517,6 +546,11 @@ add_action( 'wp_ajax_vance_doc_delete', 'vance_user_docs_ajax_delete' );
  */
 function vance_user_docs_ajax_stream() {
 	$doc_id = isset( $_GET['doc'] ) ? absint( $_GET['doc'] ) : 0;
+
+	if ( ! vance_user_docs_enabled() ) {
+		status_header( 403 );
+		exit;
+	}
 
 	if ( ! is_user_logged_in()
 		|| ! $doc_id
@@ -572,7 +606,7 @@ function vance_user_docs_ai_sources( $sources, $messages, $request ) {
 		: array();
 
 	$doc_id = isset( $params['doc_id'] ) ? absint( $params['doc_id'] ) : 0;
-	if ( ! $doc_id || ! is_user_logged_in() ) {
+	if ( ! $doc_id || ! is_user_logged_in() || ! vance_user_docs_enabled() ) {
 		return $sources;
 	}
 

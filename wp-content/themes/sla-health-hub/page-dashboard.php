@@ -136,6 +136,27 @@ get_header();
             'documents' => ['label' => 'My Documents', 'icon' => '📄'],
         ],
     ];
+
+    // Feature toggles — Appearance → Customize → Dashboard Features.
+    // See inc/dashboard-features.php. Applied here, once, so the sidebar, the
+    // breadcrumb, the router and the home grid all read the same answer.
+    if ( function_exists('vance_dashboard_filter_nav') ) {
+        $nav_items = vance_dashboard_filter_nav($nav_items);
+    }
+    // A disabled tab must not render just because someone kept the link: an
+    // external page, an old bookmark and a couple of in-theme buttons all point
+    // straight at ?tab=ai-chats and friends. Fall back to home rather than
+    // showing an empty shell with a breadcrumb for a feature that is off.
+    if ( function_exists('vance_dashboard_feature_enabled')
+        && ! vance_dashboard_feature_enabled($current_tab) ) {
+        $current_tab = 'home';
+    }
+    // Small helper for the home grid below, which shows a summary card per
+    // feature and must drop the card when its tab is gone.
+    $dash_on = function ( $slug ) {
+        return ! function_exists('vance_dashboard_feature_enabled')
+            || vance_dashboard_feature_enabled($slug);
+    };
 ?>
 
 <!-- DASHBOARD STYLES (Scoped) -->
@@ -444,8 +465,12 @@ get_header();
                         .msg-empty-state { text-align: center; padding: 32px 0; color: #94A3B8; font-size: 14px; background: #F8FAFC; border-radius: 0; border: 1px dashed #E2E8F0; }
                     </style>
 
+                    <?php // Cards follow their tab's toggle. The 12-column grid
+                          // auto-flows, so a removed card closes up rather than
+                          // leaving a hole. ?>
                     <div class="dash-grid-v2">
                         <!-- 1. READING LIST (Wide) -->
+                        <?php if ($dash_on('reading-list')): ?>
                         <div class="d-card d-col-8">
                              <div class="d-card-header">
                                 <div class="d-card-title"><span class="d-icon-box">📚</span> Reading List</div>
@@ -469,8 +494,10 @@ get_header();
                                 </div>
                              <?php endif; ?>
                         </div>
+                        <?php endif; ?>
 
                         <!-- 2. MESSAGES (Tall/Side) — admin-broadcast messages live here -->
+                        <?php if ($dash_on('messages')): ?>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
                                 <div class="d-card-title"><span class="d-icon-box">💬</span> Messages</div>
@@ -507,8 +534,10 @@ get_header();
                                 <a href="?tab=messages" style="display: block; text-align: center; margin-top: 12px; font-size: 12px; font-weight: 700; color: #008080; text-decoration: none; padding: 8px; border-top: 1px solid #E2E8F0;">View all messages →</a>
                             <?php endif; ?>
                         </div>
+                        <?php endif; ?>
 
                         <!-- 3. NOTES -->
+                        <?php if ($dash_on('notes')): ?>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
                                 <div class="d-card-title"><span class="d-icon-box">📝</span> My Notes</div>
@@ -532,8 +561,10 @@ get_header();
                                 <?php endforeach; endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
 
                         <!-- 4. MY VANCE-AI -->
+                        <?php if ($dash_on('ai-chats')): ?>
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
                                 <div class="d-card-title"><span class="d-icon-box">🤖</span> My VANCE-Ai</div>
@@ -560,8 +591,10 @@ get_header();
                                 </div>
                             <?php endif; ?>
                         </div>
+                        <?php endif; ?>
 
                         <!-- 5. HEALTH PROFILE PROMO -->
+                        <?php if ($dash_on('health-profile')): ?>
                         <?php $has_health_profile = (bool) get_user_meta( $current_user->ID, '_sla_clinical_profile', true ); ?>
                         <div class="d-card d-col-4" style="background: linear-gradient(135deg, #008080, #0A1929); color: white; border: none;">
                             <div class="d-card-header">
@@ -574,6 +607,7 @@ get_header();
                             </p>
                             <a href="?tab=health-profile" class="card-link" style="color:white; font-weight:700;"><?php echo $has_health_profile ? 'Update Health Profile →' : 'Complete Health Profile →'; ?></a>
                         </div>
+                        <?php endif; ?>
                     </div>
                 <?php break;
 
@@ -612,6 +646,8 @@ get_header();
                                     // _sla_profile_docs meta.
                                     $profile_doc_count = count( $profile_docs );
                                     ?>
+                                    <?php // Signposts a tab that may be switched off, so it follows the toggle. ?>
+                                    <?php if ($dash_on('documents')): ?>
                                     <div style="margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
                                         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">My Documents</label>
                                         <p style="font-size:12px; color:#64748B; line-height:1.5; margin:0 0 12px;">
@@ -623,6 +659,7 @@ get_header();
                                         </p>
                                         <a href="?tab=documents" class="rl-btn" style="width:100%; justify-content:center; box-sizing:border-box;">Go to My Documents</a>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Right Col: Info & Links -->

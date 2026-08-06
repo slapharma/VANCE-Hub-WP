@@ -2401,6 +2401,14 @@ require get_template_directory() . '/inc/askai-functions.php';
 require get_template_directory() . '/inc/askai-content-sources.php';
 
 /**
+ * Dashboard feature toggles
+ * One Customizer checkbox per dashboard tab. Must load before
+ * user-documents.php, which asks it whether My Documents is switched on before
+ * answering any of its endpoints.
+ */
+require get_template_directory() . '/inc/dashboard-features.php';
+
+/**
  * Include My Documents
  * Member-uploaded documents: upload, ownership-checked streaming, text
  * extraction, and the `vance_ai_sources` filter that makes a member's own
