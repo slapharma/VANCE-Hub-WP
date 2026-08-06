@@ -1336,7 +1336,7 @@ get_header();
                                 ? vance_recipe_credit_line($meal_plan_credit_slugs)
                                 : '';
                             if ($mp_credit) : ?>
-                                <p style="margin:8px 0 0; font-size:9px; line-height:1.6; color:#CBD5E1; letter-spacing:.2px;"><?php echo $mp_credit; // already escaped by vance_recipe_credit_line() ?></p>
+                                <p style="margin:8px 0 0; font-size:9px; line-height:1.6; color:#94A3B8; letter-spacing:.2px;"><?php echo $mp_credit; // already escaped by vance_recipe_credit_line() ?></p>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
@@ -1464,7 +1464,7 @@ get_header();
                                 // Unsplash licence: the modal shows a thumbnail per meal, so the
                                 // credit belongs here too. Spans the full grid, barely visible.
                                 (plan.credit
-                                    ? '<p style="grid-column:1/-1; margin:6px 0 0; font-size:9px; line-height:1.6; color:#CBD5E1; letter-spacing:.2px;">' + esc(plan.credit) + '</p>'
+                                    ? '<p style="grid-column:1/-1; margin:6px 0 0; font-size:9px; line-height:1.6; color:#94A3B8; letter-spacing:.2px;">' + esc(plan.credit) + '</p>'
                                     : '');
                             // Point the modal's own PDF button at whichever plan is open.
                             var modalPdf = document.getElementById('modal-meal-plan-pdf');
