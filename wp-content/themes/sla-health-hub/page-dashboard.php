@@ -3167,11 +3167,14 @@ get_header();
                                 <p style="margin:0 0 14px; font-size:12.5px; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; padding:10px 12px; line-height:1.55;">
                                     This document's text is sent to our AI provider to answer your question. Answers are
                                     general information, not medical advice — check anything that matters with your
-                                    clinician.
+                                    clinician. VANCE-Ai will explain what a document says and what its terms mean, but
+                                    it will not tell you whether a result is high, low or normal, or what it means for
+                                    you. Only the clinician who ordered it can do that.
                                 </p>
                                 <p id="doc-ask-empty" style="font-size:14px; color:#64748B;">
                                     Ask anything about this document — for example "explain this in plain English",
-                                    "what do these results mean?" or "what should I ask my consultant about this?".
+                                    "what does this abbreviation stand for?", "what is this test for?" or
+                                    "what should I ask my consultant about this?".
                                 </p>
                             </div>
                             <div class="rl-reader__foot" style="flex-direction:column; align-items:stretch; gap:10px;">

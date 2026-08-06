@@ -471,13 +471,43 @@ PROMPT;
 	$key    = vance_ai_normalise_reading_level( $reading_level );
 	$rules .= "\n\n" . $levels[ $key ]['instruction'];
 
+	// A document the reader uploaded themselves is not hub content, and the rules
+	// above are written entirely around hub content: rule 2b forbids answering a
+	// clinical question that is not in the library, and rule 5 forbids reading a
+	// reader's own results. Applied unchanged to My Documents they defeat the
+	// feature — the document is supplied to the model and the model declines to
+	// use it. This block is added only for those conversations, so ordinary
+	// article and Ask AI chats keep exactly the behaviour they have now.
+	$has_member_doc = false;
+	foreach ( $sources as $source ) {
+		if ( ! empty( $source['member_document'] ) ) {
+			$has_member_doc = true;
+			break;
+		}
+	}
+
+	if ( $has_member_doc ) {
+		$rules .= "\n\n" . <<<'PROMPT'
+THE READER'S OWN DOCUMENT
+The reader has uploaded a document of their own and is asking about it. It appears below marked READER'S OWN DOCUMENT. For this conversation only:
+A. That document is a legitimate source in its own right. Read it, quote it and work from it. Rule 2 does not apply to what is written in it: you do not have to find it in the hub library first, and you must not tell the reader you could not find something that is plainly in their document.
+B. What you may do: explain in plain English what the document says and how it is laid out, define its terms, abbreviations, tests, procedures and units, explain in general what a named test or measurement is for, summarise it, pull out dates, named people and stated next steps, and suggest questions the reader could put to their own clinician.
+C. What you must NOT do, and rule 5 still holds here. Do not comment on any individual value, result or measurement in the document: not whether it is high, low, normal, abnormal, inside or outside a range, not whether it is reassuring or concerning, and not what it might indicate, even where the document prints a reference range next to it. Reading the number back to the reader because they asked what the document says is fine; assessing it is not. No diagnosis, no prognosis, no opinion on how serious anything is, no treatment, dosing or medication advice, and no telling the reader what to do next beyond speaking to their clinician.
+D. When the reader asks what a result means for them, say that reading their results is for the clinician who ordered them, explain in general terms what that test measures, and offer to help them phrase the question for their appointment. Do not answer around the edges of this.
+E. The text was extracted automatically and can be imperfect. If it reads as garbled, or a section the reader asks about is clearly missing, say so plainly instead of guessing at what it said.
+F. The document has no URL. Never put it on a "Read more" line. Hub articles you also used are still cited normally.
+PROMPT;
+	}
+
 	if ( empty( $sources ) ) {
 		return $rules . "\n\nSOURCES\nNothing in the Vance Medical Hub library matched this question. Follow rule 2: answer only if it is a basic definitional or general-knowledge question, with the required note; otherwise say you could not find hub content covering it. Do not cite anything.\n";
 	}
 
 	$block = "\n\nSOURCES\n\n";
 	foreach ( $sources as $source ) {
-		if ( ! empty( $source['reference'] ) ) {
+		if ( ! empty( $source['member_document'] ) ) {
+			$label = "READER'S OWN DOCUMENT (uploaded by this reader, not hub content: see the rules above)";
+		} elseif ( ! empty( $source['reference'] ) ) {
 			$label = 'REFERENCE (Vance Medical Hub knowledge base: authoritative, but not a public article)';
 		} elseif ( ! empty( $source['primary'] ) ) {
 			$label = 'PRIMARY SOURCE (the article the reader is currently reading)';

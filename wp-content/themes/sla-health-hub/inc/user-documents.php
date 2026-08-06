@@ -51,24 +51,33 @@ const VANCE_DOCS_MAX_BYTES = 10485760; // 10 MB
 const VANCE_DOCS_MAX_TEXT = 40000;
 
 /**
- * Upload types we accept, mapped to the extension we expect.
+ * Upload types we accept, in the shape WordPress actually wants: an extension
+ * pattern mapped to the mime type it must resolve to.
+ *
+ * The KEYS have to be extension patterns, and that is load-bearing rather than
+ * stylistic. `wp_check_filetype()` wraps each key as the regex `!\.(<key>)$!i`
+ * and matches it against the filename. Hand it mime types as keys and it builds
+ * `!\.(application/pdf)$!i`, which matches no filename that has ever existed, so
+ * every upload comes back with a false ext/type and `_wp_handle_upload()`
+ * rejects it as "Sorry, you are not allowed to upload this file type" — PDFs
+ * included, which is the one format this uploader most exists to accept.
  *
  * Deliberately narrow. The WordPress default allowlist includes archives and
  * audio, none of which belongs in a health-record uploader, and every extra
  * type is another parser exposed to a hostile file.
  *
- * @return array<string,string> mime => label
+ * @return array<string,string> extension pattern => mime type
  */
-function vance_user_docs_allowed_types() {
+function vance_user_docs_upload_mimes() {
 	return array(
-		'application/pdf' => 'PDF',
-		'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'Word (.docx)',
-		'application/msword' => 'Word (.doc)',
-		'text/plain'      => 'Text',
-		'text/csv'        => 'CSV',
-		'image/jpeg'      => 'JPEG image',
-		'image/png'       => 'PNG image',
-		'image/heic'      => 'HEIC image',
+		'pdf'      => 'application/pdf',
+		'docx'     => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'doc'      => 'application/msword',
+		'txt'      => 'text/plain',
+		'csv'      => 'text/csv',
+		'jpg|jpeg' => 'image/jpeg',
+		'png'      => 'image/png',
+		'heic'     => 'image/heic',
 	);
 }
 
@@ -308,6 +317,72 @@ function vance_user_docs_extract_pdf( $path ) {
 	return (string) $out;
 }
 
+/**
+ * Extract text for any of a member's documents that has never been through
+ * extraction, and persist the result.
+ *
+ * Documents uploaded before this tab existed were written by the old profile
+ * uploader as bare {id, url, name, date} records. Nothing in the upload path
+ * ever revisits them, so without this they keep `text_status = 'legacy'`
+ * forever: "Ask VANCE-Ai" stays disabled on the row and the grounding filter
+ * bails on the empty string. The member's only route to a working document
+ * would be to delete and re-upload one they can already see in the list, which
+ * is not a thing anyone would think to try.
+ *
+ * Runs at most once per document, because it writes a definite `text_status`
+ * every time — including for the failures. A file that has gone missing under
+ * the attachment is recorded as `error` rather than retried on every page load.
+ *
+ * @param int $user_id User.
+ * @return bool True when at least one record was updated.
+ */
+function vance_user_docs_backfill_text( $user_id ) {
+	$user_id = (int) $user_id;
+	$docs    = get_user_meta( $user_id, '_sla_profile_docs', true );
+	if ( ! is_array( $docs ) || empty( $docs ) ) {
+		return false;
+	}
+
+	$changed = false;
+	foreach ( $docs as $i => $d ) {
+		if ( ! is_array( $d ) || empty( $d['id'] ) ) {
+			continue;
+		}
+		// A record that already carries a status has been processed; leave it.
+		if ( ! empty( $d['text_status'] ) ) {
+			continue;
+		}
+
+		$doc_id = (int) $d['id'];
+		$mime   = ! empty( $d['mime'] ) ? (string) $d['mime'] : (string) get_post_mime_type( $doc_id );
+		$path   = get_attached_file( $doc_id );
+
+		$docs[ $i ]['mime'] = $mime;
+
+		if ( ! $path || ! file_exists( $path ) ) {
+			$docs[ $i ]['size']        = isset( $d['size'] ) ? (int) $d['size'] : 0;
+			$docs[ $i ]['text']        = '';
+			$docs[ $i ]['text_status'] = 'error';
+			$changed                   = true;
+			continue;
+		}
+
+		list( $text, $status ) = vance_user_docs_extract_text( $path, $mime );
+
+		$size = ! empty( $d['size'] ) ? (int) $d['size'] : (int) filesize( $path );
+
+		$docs[ $i ]['size']        = $size;
+		$docs[ $i ]['text']        = $text;
+		$docs[ $i ]['text_status'] = $status;
+		$changed                   = true;
+	}
+
+	if ( $changed ) {
+		update_user_meta( $user_id, '_sla_profile_docs', $docs );
+	}
+	return $changed;
+}
+
 /* ============================================================================
  * AJAX: upload / delete / stream / text
  * ========================================================================= */
@@ -343,11 +418,14 @@ function vance_user_docs_ajax_upload() {
 	}
 
 	// Trust the file's contents, not the browser-supplied type: wp_check_filetype_and_ext
-	// re-derives both from the bytes and the extension together.
-	$check   = wp_check_filetype_and_ext( $file['tmp_name'], $file['name'] );
+	// re-derives both from the bytes and the extension together. Our own map is
+	// passed here as well as to the upload below, so the pre-flight check and the
+	// upload cannot disagree about what is allowed — the default allowlist is
+	// wider than ours, and on some builds narrower for types like HEIC.
+	$allowed = vance_user_docs_upload_mimes();
+	$check   = wp_check_filetype_and_ext( $file['tmp_name'], $file['name'], $allowed );
 	$mime    = ! empty( $check['type'] ) ? $check['type'] : '';
-	$allowed = vance_user_docs_allowed_types();
-	if ( ! $mime || ! isset( $allowed[ $mime ] ) ) {
+	if ( ! $mime || ! in_array( $mime, $allowed, true ) ) {
 		wp_send_json_error( array(
 			'message' => 'That file type is not supported. Please upload a PDF, Word document, text file, CSV or image.',
 		) );
@@ -359,7 +437,7 @@ function vance_user_docs_ajax_upload() {
 
 	$att_id = media_handle_upload( 'doc', 0, array(), array(
 		'test_form' => false,
-		'mimes'     => array_flip( array_map( 'strval', array_keys( $allowed ) ) ),
+		'mimes'     => $allowed,
 	) );
 	if ( is_wp_error( $att_id ) ) {
 		wp_send_json_error( array( 'message' => $att_id->get_error_message() ) );
@@ -518,12 +596,18 @@ function vance_user_docs_ai_sources( $sources, $messages, $request ) {
 		$excerpt = substr( $excerpt, 0, 6000 );
 	}
 
+	// `member_document` is what makes the difference between the model reading
+	// this and refusing it. Without the flag it is labelled "the article the
+	// reader is currently reading" and falls under the hub's rule that clinical
+	// questions may only be answered from the library — so the model reports it
+	// cannot find the answer while the document sits in its context.
 	array_unshift( $sources, array(
-		'id'      => 0,
-		'title'   => sprintf( 'Member document: %s', $doc['name'] ),
-		'url'     => '',
-		'excerpt' => $excerpt,
-		'primary' => true,
+		'id'              => 0,
+		'title'           => $doc['name'],
+		'url'             => '',
+		'excerpt'         => $excerpt,
+		'primary'         => true,
+		'member_document' => true,
 	) );
 
 	return $sources;
