@@ -19,7 +19,7 @@ require_once get_template_directory() . '/inc/tool-brand-css.php';
 
 $vance_tool_slug          = 'ibd-recipes';
 $vance_tool_name          = vance_get_theme_mod( 'vance_tool_recipes_name', 'IBD Recipes & Meal Planner' );
-$vance_tool_subtitle      = vance_get_theme_mod( 'vance_tool_recipes_subtitle', 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely — saving plans takes two clicks to create your free account.' );
+$vance_tool_subtitle      = vance_get_theme_mod( 'vance_tool_recipes_subtitle', 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely, saving plans takes two clicks to create your free account.' );
 $vance_tool_badge          = vance_get_theme_mod( 'vance_tool_recipes_badge', 'Meal Planning' );
 $vance_tool_badge_bg       = vance_get_theme_mod( 'vance_tool_recipes_badge_bg', '' );
 $vance_tool_badge_color    = vance_get_theme_mod( 'vance_tool_recipes_badge_color', '' );

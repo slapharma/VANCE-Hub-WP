@@ -3,7 +3,7 @@
 function vance_pages_customize_register( $wp_customize ) {
     // ---- HCP PAGE PANEL ----
     $wp_customize->add_panel( "vance_hcp_panel", array(
-        "title"    => __( "Page — For Practitioners (HCP)", "sla-health-hub" ),
+        "title"    => __( "Page - For Practitioners (HCP)", "sla-health-hub" ),
         "priority" => 43,
     ) );
 
@@ -81,7 +81,7 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- PATIENT PAGE PANEL ----
     $wp_customize->add_panel( "vance_pat_panel", array(
-        "title"    => __( "Page — For Patients", "sla-health-hub" ),
+        "title"    => __( "Page - For Patients", "sla-health-hub" ),
         "priority" => 42,
     ) );
 
@@ -93,7 +93,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_pat_hero_title", array( "default" => "Empowering Your <span class=\"highlight\">Wellness Journey</span>", "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_pat_hero_title", array( "label" => "Title", "section" => "vance_pat_hero", "type" => "textarea" ) );
     
-    $wp_customize->add_setting( "vance_pat_hero_desc", array( "default" => "More than just a news site—a truly useful platform providing the highest quality clinical information, innovative tools, and expert opinions to help you explore and manage your gastro healthcare concerns.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_pat_hero_desc", array( "default" => "More than just a news site, a truly useful platform providing the highest quality clinical information, innovative tools, and expert opinions to help you explore and manage your gastro healthcare concerns.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_pat_hero_desc", array( "label" => "Description", "section" => "vance_pat_hero", "type" => "textarea" ) );
     
     $wp_customize->add_setting("vance_pat_hero_bg", array("default"=>"","sanitize_callback"=>"esc_url_raw"));
@@ -160,20 +160,23 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- ABOUT US PAGE PANEL ----
     $wp_customize->add_panel( "vance_about_panel", array(
-        "title"    => __( "Page — About Us", "sla-health-hub" ),
+        "title"    => __( "Page - About Us", "sla-health-hub" ),
         "priority" => 40,
     ) );
 
     // ── Hero ──────────────────────────────────────────────────
     $wp_customize->add_section( "vance_about_hero", array( "title" => "Hero Section", "panel" => "vance_about_panel" ) );
-    $wp_customize->add_setting( "vance_about_hero_tag",   array( "default" => "Our Story", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_hero_tag",   array( "default" => "About Vance Medical Hub", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_hero_tag",   array( "label" => "Tag Label", "section" => "vance_about_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_hero_title", array( "default" => "From Pharma to <span class=\"highlight\">Healthcare</span>", "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_setting( "vance_about_hero_title", array( "default" => "Trusted by Patients. <span class=\"highlight\">Driven by Science.</span>", "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_about_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_about_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_about_hero_sub",   array( "default" => "A Natural Evolution in Gastrointestinal Care", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_about_hero_sub",   array( "label" => "Sub-title (italic)", "section" => "vance_about_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_hero_desc",  array( "default" => "Vance Medical bridges the worlds of pharmaceutical science and patient-centred nutrition, delivering evidence-based medical food solutions for life with IBD.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_about_hero_sub",   array( "label" => "Sub-title (unused by the current layout)", "section" => "vance_about_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_hero_desc",  array( "default" => "We bridge pharmaceutical expertise with nutritional science to empower patients living with gastrointestinal conditions, delivering evidence-based care you can trust.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_about_hero_desc",  array( "label" => "Description", "section" => "vance_about_hero", "type" => "textarea" ) );
+    // NB: `vance_about_hero_overlay` is registered further down by the shared
+    // $hero_overlay_pages loop ("vance_about_hero" . "_overlay") — don't add it
+    // here as well, or the later registration silently replaces this one.
     $wp_customize->add_setting( "vance_about_hero_img",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_about_hero_img", array( "label" => "Hero Background Image", "section" => "vance_about_hero" ) ) );
     // Styles for Hero Section
@@ -195,37 +198,50 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_about_hero_text_size", array( "label" => "Description Font Size (e.g. 20px)", "section" => "vance_about_hero", "type" => "text" ) );
 
 
-    // ── Origin / Pillars ──────────────────────────────────────
-    $wp_customize->add_section( "vance_about_origin", array( "title" => "Origin Section", "panel" => "vance_about_panel" ) );
-    $wp_customize->add_setting( "vance_about_origin_tag",   array( "default" => "From Pharma to Healthcare", "sanitize_callback" => "sanitize_text_field" ) );
+    // ── Trust Badges + Stats ──────────────────────────────────
+    // Badges now render as glass pills inside the About hero rather than a separate strip.
+    $wp_customize->add_section( "vance_about_trust", array( "title" => "Trust Badges & Stats", "panel" => "vance_about_panel" ) );
+    $wp_customize->add_setting( "vance_about_badges_show", array( "default" => true, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_about_badges_show", array( "label" => "Show Trust Badges (in hero)", "section" => "vance_about_trust", "type" => "checkbox" ) );
+    $badge_defaults = array( 1 => "Pharma-Grade Quality", 2 => "Clinician Approved", 3 => "Evidence-Based" );
+    for ( $i = 1; $i <= 3; $i++ ) {
+        $wp_customize->add_setting( "vance_about_badge{$i}_label", array( "default" => $badge_defaults[$i], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_badge{$i}_label", array( "label" => "Badge $i Label", "section" => "vance_about_trust", "type" => "text" ) );
+    }
+    $wp_customize->add_setting( "vance_about_stats_show", array( "default" => true, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_about_stats_show", array( "label" => "Show Stats Row", "section" => "vance_about_trust", "type" => "checkbox" ) );
+    $trust_stat_defaults = array(
+        1 => array( "30+",      "Years of Pharmaceutical Experience" ),
+        2 => array( "12+",      "Countries with Regulatory Approval" ),
+        3 => array( "100%",     "Pharma-Grade Standards Compliance" ),
+        4 => array( "10,000+",  "Patients Supported Globally" ),
+    );
+    for ( $i = 1; $i <= 4; $i++ ) {
+        $wp_customize->add_setting( "vance_about_stat{$i}_num",   array( "default" => $trust_stat_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_stat{$i}_num",   array( "label" => "Stat $i Number", "section" => "vance_about_trust", "type" => "text" ) );
+        $wp_customize->add_setting( "vance_about_stat{$i}_label", array( "default" => $trust_stat_defaults[$i][1], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_stat{$i}_label", array( "label" => "Stat $i Label", "section" => "vance_about_trust", "type" => "text" ) );
+    }
+
+    // ── Origin / Pillars (The Vance Evolution) ────────────────
+    $wp_customize->add_section( "vance_about_origin", array( "title" => "The Vance Evolution", "panel" => "vance_about_panel" ) );
+    $wp_customize->add_setting( "vance_about_origin_tag",   array( "default" => "The Vance Evolution", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_origin_tag",   array( "label" => "Section Tag", "section" => "vance_about_origin", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_origin_title", array( "default" => "From Pharma to Healthcare", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_origin_title", array( "default" => "A Natural Progression in Gastrointestinal Care", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_origin_title", array( "label" => "Heading", "section" => "vance_about_origin", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_origin_sub",   array( "default" => "A Natural Evolution in Gastrointestinal Care", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_origin_sub",   array( "default" => "", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_origin_sub",   array( "label" => "Sub-heading", "section" => "vance_about_origin", "type" => "text" ) );
 
     $pillar_defaults = array(
-        1 => array( "Heritage in Pharma",       "SLA Pharma has a long record of developing specialised gastrointestinal medicines under rigorous regulatory standards." ),
-        2 => array( "Patient-Centric Innovation","We found that medicines alone often fall short for chronic IBD. There is a clear need for evidence-based nutritional support." ),
-        3 => array( "The Birth of Vance Medical",  "Vance Medical bridges pharma and nutrition, delivering \"pharma-grade\" medical food products like EPAVANCE." ),
+        1 => array( "Pharma Heritage",             "Decades spent developing specialised gastrointestinal medicines to rigorous regulatory standards, building deep expertise in the conditions that affect patients most." ),
+        2 => array( "Innovation Focus",             "That experience revealed a consistent gap: medicines alone often fall short. There is a clear need for evidence-based nutritional support alongside standard medical intervention." ),
+        3 => array( "Patient-Centred Solutions",    "Vance Medical was founded to bridge that gap, combining pharmaceutical rigour with nutritional science to deliver medical food products and education to both patients and practitioners." ),
     );
     for ( $i = 1; $i <= 3; $i++ ) {
         $wp_customize->add_setting( "vance_about_p{$i}_title", array( "default" => $pillar_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
         $wp_customize->add_control( "vance_about_p{$i}_title", array( "label" => "Pillar $i Title", "section" => "vance_about_origin", "type" => "text" ) );
         $wp_customize->add_setting( "vance_about_p{$i}_desc",  array( "default" => $pillar_defaults[$i][1], "sanitize_callback" => "sanitize_textarea_field" ) );
         $wp_customize->add_control( "vance_about_p{$i}_desc",  array( "label" => "Pillar $i Description", "section" => "vance_about_origin", "type" => "textarea" ) );
-    }
-    // Stats
-    $stat_defaults = array(
-        1 => array( "25+",    "Years of Experience" ),
-        2 => array( "Global", "Regulatory Reach" ),
-        3 => array( "100%",   "Pharma-Grade Standards" ),
-    );
-    for ( $i = 1; $i <= 3; $i++ ) {
-        $wp_customize->add_setting( "vance_about_stat{$i}_num",   array( "default" => $stat_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
-        $wp_customize->add_control( "vance_about_stat{$i}_num",   array( "label" => "Stat $i Number", "section" => "vance_about_origin", "type" => "text" ) );
-        $wp_customize->add_setting( "vance_about_stat{$i}_label", array( "default" => $stat_defaults[$i][1], "sanitize_callback" => "sanitize_text_field" ) );
-        $wp_customize->add_control( "vance_about_stat{$i}_label", array( "label" => "Stat $i Label", "section" => "vance_about_origin", "type" => "text" ) );
     // Styles for Origin Section
     $wp_customize->add_setting( "vance_about_origin_show", array( "default" => true, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_about_origin_show", array( "label" => "Show Section", "section" => "vance_about_origin", "type" => "checkbox" ) );
@@ -256,9 +272,9 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_about_mission_desc",  array( "label" => "Description", "section" => "vance_about_mission", "type" => "textarea" ) );
 
     $val_defaults = array(
-        1 => array( "Evidence-Based",  "Every product and piece of content we produce meets the highest scientific and regulatory standards, rooted in peer-reviewed clinical research." ),
-        2 => array( "Patient-First",   "We design every solution around the real-world challenges that patients face — not just clinical endpoints — because lived experience matters." ),
-        3 => array( "Pharma-Grade",    "Our medical food products are developed with the same rigour applied to licensed medicines — providing a quality benchmark no ordinary supplement can match." ),
+        1 => array( "Evidence-Based",  "Every product and piece of content meets the highest scientific and regulatory standards, rooted in peer-reviewed clinical research." ),
+        2 => array( "Patient-First",   "We design every solution around real-world challenges patients face, not just clinical endpoints, because lived experience matters." ),
+        3 => array( "Pharma-Grade",    "Our medical food products are developed with the same rigour applied to licensed medicines, a quality benchmark no ordinary supplement can match." ),
         4 => array( "Global Reach",    "With a regulatory footprint spanning multiple continents, Vance Medical delivers consistent, trusted solutions wherever patients and clinicians need them." ),
     );
     for ( $i = 1; $i <= 4; $i++ ) {
@@ -286,24 +302,20 @@ function vance_pages_customize_register( $wp_customize ) {
 
     }
 
-    // ── EPAVANCE Product Spotlight ────────────────────────────
-    $wp_customize->add_section( "vance_about_product", array( "title" => "EPAVANCE Spotlight", "panel" => "vance_about_panel" ) );
-    $wp_customize->add_setting( "vance_about_prod_tag",       array( "default" => "Our Flagship Product", "sanitize_callback" => "sanitize_text_field" ) );
+    // ── Why Patients Trust Us (was EPAVANCE Product Spotlight) ─
+    $wp_customize->add_section( "vance_about_product", array( "title" => "Why Patients Trust Us", "panel" => "vance_about_panel" ) );
+    $wp_customize->add_setting( "vance_about_prod_tag",       array( "default" => "Why Patients Trust Us", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_prod_tag",       array( "label" => "Section Tag", "section" => "vance_about_product", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_prod_title",     array( "default" => "Introducing EPAVANCE", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_prod_title",     array( "default" => "Built on Decades of Clinical Excellence", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_prod_title",     array( "label" => "Title", "section" => "vance_about_product", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_prod_desc",      array( "default" => "EPAVANCE is a pharma-grade Omega-3 medical food especially formulated for patients with Inflammatory Bowel Disease. Unlike generic supplements, EPAVANCE is developed under the same rigorous manufacturing standards applied to licensed medicines.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_about_prod_desc",      array( "default" => "", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_about_prod_desc",      array( "label" => "Description", "section" => "vance_about_product", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_about_prod_btn",       array( "default" => "Learn More About EPAVANCE", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_about_prod_btn",       array( "label" => "Button Label", "section" => "vance_about_product", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_prod_url",       array( "default" => "#", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_about_prod_url",       array( "label" => "Button URL", "section" => "vance_about_product", "type" => "url" ) );
 
     $feat_defaults = array(
-        1 => array( "Pharma-Grade Manufacturing", "Produced under strict pharmaceutical cGMP standards — the highest tier of quality assurance in the industry." ),
-        2 => array( "Clinically Researched",      "Supported by clinical evidence demonstrating meaningful benefit for IBD patients managing their nutritional needs." ),
-        3 => array( "High-Dose EPA Omega-3",       "A precisely calibrated dose of EPA matched to the needs of IBD-associated gut inflammation." ),
-        4 => array( "Regulatory Status",           "Classified as a Medical Food (FSMP), enabling it to occupy a unique, trusted position between medication and nutrition." ),
+        1 => array( "Nutrition-First Approach", "Our team of gastroenterologists, dietitians, and pharmaceutical scientists develop solutions that fit naturally into your daily life." ),
+        2 => array( "Community & Support",      "Join a vibrant community of patients and practitioners sharing experiences, knowledge, and encouragement on the path to better gut health." ),
+        3 => array( "Digital Innovation",       "Our AI-powered tools and digital health platform put clinical-grade information at your fingertips, 24/7." ),
+        4 => array( "Regulatory Status",        "Classified as a Medical Food (FSMP), enabling it to occupy a unique, trusted position between medication and nutrition." ),
     );
     for ( $i = 1; $i <= 4; $i++ ) {
         $wp_customize->add_setting( "vance_about_feat{$i}_title", array( "default" => $feat_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
@@ -330,22 +342,47 @@ function vance_pages_customize_register( $wp_customize ) {
 
     }
 
+    // ── Patient Stories ────────────────────────────────────────
+    $wp_customize->add_section( "vance_about_testimonials", array( "title" => "Patient Stories", "panel" => "vance_about_panel" ) );
+    $wp_customize->add_setting( "vance_about_testimonials_show", array( "default" => true, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_about_testimonials_show", array( "label" => "Show Section", "section" => "vance_about_testimonials", "type" => "checkbox" ) );
+    $wp_customize->add_setting( "vance_about_testimonials_tag",   array( "default" => "Patient Stories", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_testimonials_tag",   array( "label" => "Section Tag", "section" => "vance_about_testimonials", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_testimonials_title", array( "default" => "Real People, Real Results", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_testimonials_title", array( "label" => "Heading", "section" => "vance_about_testimonials", "type" => "text" ) );
+
+    $testi_defaults = array(
+        1 => array( "The Vance Health Hub has completely changed how I manage my Crohn's disease. The nutritional guidance alongside my medication has made a real difference to my daily life.", "S.M.", "Sarah M.", "Living with Crohn's Disease" ),
+        2 => array( "As a gastroenterologist, I recommend Vance to my patients because I trust their pharmaceutical-grade approach. The evidence base behind their products is exactly what I look for.", "D.P.", "Dr. Patel", "Consultant Gastroenterologist" ),
+        3 => array( "Finally, a resource that combines proper medical science with practical nutrition advice. The VANCE-Ai tool helps me understand my condition without the jargon.", "J.T.", "James T.", "Living with IBS" ),
+    );
+    for ( $i = 1; $i <= 3; $i++ ) {
+        $wp_customize->add_setting( "vance_about_testi{$i}_quote",    array( "default" => $testi_defaults[$i][0], "sanitize_callback" => "sanitize_textarea_field" ) );
+        $wp_customize->add_control( "vance_about_testi{$i}_quote",    array( "label" => "Testimonial $i Quote", "section" => "vance_about_testimonials", "type" => "textarea" ) );
+        $wp_customize->add_setting( "vance_about_testi{$i}_initials", array( "default" => $testi_defaults[$i][1], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_testi{$i}_initials", array( "label" => "Testimonial $i Initials", "section" => "vance_about_testimonials", "type" => "text" ) );
+        $wp_customize->add_setting( "vance_about_testi{$i}_name",     array( "default" => $testi_defaults[$i][2], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_testi{$i}_name",     array( "label" => "Testimonial $i Name", "section" => "vance_about_testimonials", "type" => "text" ) );
+        $wp_customize->add_setting( "vance_about_testi{$i}_role",     array( "default" => $testi_defaults[$i][3], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_testi{$i}_role",     array( "label" => "Testimonial $i Role", "section" => "vance_about_testimonials", "type" => "text" ) );
+    }
+
     // ── Platform Section ──────────────────────────────────────
     $wp_customize->add_section( "vance_about_platform", array( "title" => "Platform Section", "panel" => "vance_about_panel" ) );
     $wp_customize->add_setting( "vance_about_plat_tag",   array( "default" => "The Digital Layer", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_plat_tag",   array( "label" => "Section Tag", "section" => "vance_about_platform", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_plat_title", array( "default" => "The Vance Medical Platform", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_plat_title", array( "default" => "Your Complete Digital Health Companion", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_plat_title", array( "label" => "Heading", "section" => "vance_about_platform", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_plat_desc",  array( "default" => "Beyond our medical food products, Vance Medical is building a world-class digital health hub - combining clinical-grade content, AI-powered tools, and a vibrant community for patients and healthcare professionals.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_about_plat_desc",  array( "default" => "Beyond our product pipeline, Vance Medical is building a world-class digital health hub, combining clinical-grade content, AI-powered tools, and a vibrant community for patients and healthcare professionals.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_about_plat_desc",  array( "label" => "Description", "section" => "vance_about_platform", "type" => "textarea" ) );
 
     $plat_defaults = array(
-        1 => array( "Clinical Content Hub",    "Peer-reviewed research, expert opinions, and patient education curated by gastroenterologists and dietitians." ),
-        2 => array( "VANCE-Ai",      "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety." ),
-        3 => array( "Patient Dashboard",       "A secure personal portal to track health records, manage your IBD tools, and connect with your care pathway." ),
-        4 => array( "HCP Professional Portal", "A dedicated space for healthcare practitioners to access protocols, CME, and collaborate with Vance experts." ),
-        5 => array( "Health Calculators",      "Evidence-based clinical calculators for malnutrition screening, BMI, and disease activity scoring." ),
-        6 => array( "Education Courses",       "Multi-chapter learning pathways developed by gastro specialists for both patients and clinicians." ),
+        1 => array( "Clinical Content Hub",    "Peer-reviewed research and patient education curated by gastroenterologists and dietitians." ),
+        2 => array( "VANCE-Ai",      "Specialised AI trained on clinical gastroenterology to answer your health questions safely." ),
+        3 => array( "Patient Dashboard",       "Track health records, manage your Gastro tools, and connect with your care pathway." ),
+        4 => array( "HCP Professional Portal", "Dedicated space for healthcare practitioners to access protocols and collaborate." ),
+        5 => array( "Health Calculators",      "Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring." ),
+        6 => array( "Education Courses",       "Multi-chapter learning pathways for both patients and clinicians." ),
     );
     for ( $i = 1; $i <= 6; $i++ ) {
         $wp_customize->add_setting( "vance_about_plat{$i}_title", array( "default" => $plat_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
@@ -374,17 +411,17 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // --- CTA Strip ---
     $wp_customize->add_section( "vance_about_cta", array( "title" => "CTA Strip", "panel" => "vance_about_panel" ) );
-    $wp_customize->add_setting( "vance_about_cta_title",      array( "default" => "Join the Vance Medical Community", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_cta_title",      array( "default" => "Ready to Take Control of Your Gastro Health?", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_cta_title",      array( "label" => "Heading", "section" => "vance_about_cta", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_cta_desc",       array( "default" => "Whether you're a patient managing IBD, a clinician advancing your practice, or a researcher exploring gut health - there's a place for you at Vance Medical.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_about_cta_desc",       array( "default" => "Join thousands of patients and healthcare professionals who trust Vance Health Hub for evidence-based gastrointestinal care.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_about_cta_desc",       array( "label" => "Description", "section" => "vance_about_cta", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_about_cta_btn1_label", array( "default" => "I'm a Patient", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_cta_btn1_label", array( "default" => "Join For Free", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_cta_btn1_label", array( "label" => "Button 1 Label", "section" => "vance_about_cta", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_cta_btn1_url",   array( "default" => "/patients/", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_setting( "vance_about_cta_btn1_url",   array( "default" => "/register/", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( "vance_about_cta_btn1_url",   array( "label" => "Button 1 URL", "section" => "vance_about_cta", "type" => "url" ) );
-    $wp_customize->add_setting( "vance_about_cta_btn2_label", array( "default" => "I'm a Healthcare Professional", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_cta_btn2_label", array( "default" => "Speak to Our Team", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_cta_btn2_label", array( "label" => "Button 2 Label", "section" => "vance_about_cta", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_cta_btn2_url",   array( "default" => "/healthcare-professionals/", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_setting( "vance_about_cta_btn2_url",   array( "default" => "/contact-us/", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( "vance_about_cta_btn2_url",   array( "label" => "Button 2 URL", "section" => "vance_about_cta", "type" => "url" ) );
     // Styles for CTA Strip
     $wp_customize->add_setting( "vance_about_cta_show", array( "default" => true, "sanitize_callback" => "absint" ) );
@@ -499,8 +536,8 @@ function vance_pages_customize_register( $wp_customize ) {
 
     $val_defaults = array(
         1 => array( "Evidence-Based",  "Every product and piece of content we produce meets the highest scientific and regulatory standards, rooted in peer-reviewed clinical research." ),
-        2 => array( "Patient-First",   "We design every solution around the real-world challenges that patients face — not just clinical endpoints — because lived experience matters." ),
-        3 => array( "Pharma-Grade",    "Our medical food products are developed with the same rigour applied to licensed medicines — providing a quality benchmark no ordinary supplement can match." ),
+        2 => array( "Patient-First",   "We design every solution around the real-world challenges that patients face, not just clinical endpoints, because lived experience matters." ),
+        3 => array( "Pharma-Grade",    "Our medical food products are developed with the same rigour applied to licensed medicines, providing a quality benchmark no ordinary supplement can match." ),
         4 => array( "Global Reach",    "With a regulatory footprint spanning multiple continents, Vance Medical delivers consistent, trusted solutions wherever patients and clinicians need them." ),
     );
     for ( $i = 1; $i <= 4; $i++ ) {
@@ -542,7 +579,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_heritage_prod_url",       array( "label" => "Button URL", "section" => "vance_heritage_product", "type" => "url" ) );
 
     $feat_defaults = array(
-        1 => array( "Pharma-Grade Manufacturing", "Produced under strict pharmaceutical cGMP standards — the highest tier of quality assurance in the industry." ),
+        1 => array( "Pharma-Grade Manufacturing", "Produced under strict pharmaceutical cGMP standards, the highest tier of quality assurance in the industry." ),
         2 => array( "Clinically Researched",      "Supported by clinical evidence demonstrating meaningful benefit for IBD patients managing their nutritional needs." ),
         3 => array( "High-Dose EPA Omega-3",       "A precisely calibrated dose of EPA matched to the needs of IBD-associated gut inflammation." ),
         4 => array( "Regulatory Status",           "Classified as a Medical Food (FSMP), enabling it to occupy a unique, trusted position between medication and nutrition." ),
@@ -578,16 +615,16 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_heritage_plat_tag",   array( "label" => "Section Tag", "section" => "vance_heritage_platform", "type" => "text" ) );
     $wp_customize->add_setting( "vance_heritage_plat_title", array( "default" => "The Vance Medical Platform", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_heritage_plat_title", array( "label" => "Heading", "section" => "vance_heritage_platform", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_heritage_plat_desc",  array( "default" => "Beyond our medical food products, Vance Medical is building a world-class digital health hub - combining clinical-grade content, AI-powered tools, and a vibrant community for patients and healthcare professionals.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_heritage_plat_desc",  array( "default" => "Beyond our product pipeline, Vance Medical is building a world-class digital health hub, combining clinical-grade content, AI-powered tools, and a vibrant community for patients and healthcare professionals.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_heritage_plat_desc",  array( "label" => "Description", "section" => "vance_heritage_platform", "type" => "textarea" ) );
 
     $plat_defaults = array(
-        1 => array( "Clinical Content Hub",    "Peer-reviewed research, expert opinions, and patient education curated by gastroenterologists and dietitians." ),
-        2 => array( "VANCE-Ai",      "A specialised AI trained on clinical gastroenterology to answer your health questions with precision and safety." ),
-        3 => array( "Patient Dashboard",       "A secure personal portal to track health records, manage your IBD tools, and connect with your care pathway." ),
-        4 => array( "HCP Professional Portal", "A dedicated space for healthcare practitioners to access protocols, CME, and collaborate with Vance experts." ),
-        5 => array( "Health Calculators",      "Evidence-based clinical calculators for malnutrition screening, BMI, and disease activity scoring." ),
-        6 => array( "Education Courses",       "Multi-chapter learning pathways developed by gastro specialists for both patients and clinicians." ),
+        1 => array( "Clinical Content Hub",    "Peer-reviewed research and patient education curated by gastroenterologists and dietitians." ),
+        2 => array( "VANCE-Ai",      "Specialised AI trained on clinical gastroenterology to answer your health questions safely." ),
+        3 => array( "Patient Dashboard",       "Track health records, manage your Gastro tools, and connect with your care pathway." ),
+        4 => array( "HCP Professional Portal", "Dedicated space for healthcare practitioners to access protocols and collaborate." ),
+        5 => array( "Health Calculators",      "Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring." ),
+        6 => array( "Education Courses",       "Multi-chapter learning pathways for both patients and clinicians." ),
     );
     for ( $i = 1; $i <= 6; $i++ ) {
         $wp_customize->add_setting( "vance_heritage_plat{$i}_title", array( "default" => $plat_defaults[$i][0], "sanitize_callback" => "sanitize_text_field" ) );
@@ -645,18 +682,24 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- PROMO BLOCKS ----
 
-    // ---- Promo Block 1 ----
-    $wp_customize->add_section( "vance_about_promo1", array( "title" => "Promo Block 1", "panel" => "vance_about_panel" ) );
+    // ---- Promo Block 1 ("Our Story") ----
+    $wp_customize->add_section( "vance_about_promo1", array( "title" => "Promo Block 1 (Our Story)", "panel" => "vance_about_panel" ) );
     $wp_customize->add_setting( "vance_about_promo1_img", array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_about_promo1_img", array( "label" => "Image", "section" => "vance_about_promo1" ) ) );
-    $wp_customize->add_setting( "vance_about_promo1_title", array( "default" => "Promo title", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_promo1_title", array( "default" => "From Pharma Heritage to Patient-Centred Innovation", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_promo1_title", array( "label" => "Title", "section" => "vance_about_promo1", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_promo1_sub", array( "default" => "Promo subtitle", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_about_promo1_sub", array( "default" => "Our Story", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_promo1_sub", array( "label" => "Subtitle", "section" => "vance_about_promo1", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_about_promo1_desc", array( "default" => "Promo description text goes here.", "sanitize_callback" => "sanitize_textarea_field" ) );
-    $wp_customize->add_control( "vance_about_promo1_desc", array( "label" => "Description", "section" => "vance_about_promo1", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_about_promo1_btn_lbl", array( "default" => "Learn More", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_about_promo1_btn_lbl", array( "label" => "Button Label", "section" => "vance_about_promo1", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_promo1_desc", array( "default" => "For over three decades, our team has been at the forefront of gastrointestinal medicine, developing specialised treatments to the highest regulatory standards.\n\nThat deep clinical experience revealed a consistent gap: medicines alone often fall short for chronic gastro conditions. Patients need evidence-based nutritional support alongside standard medical intervention.\n\nVance Medical was founded to bridge that gap, combining pharmaceutical rigour with nutritional science to deliver medical food products and education that truly make a difference.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_about_promo1_desc", array( "label" => "Description", "description" => "Separate paragraphs with a blank line. The first paragraph renders as the lead.", "section" => "vance_about_promo1", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_about_promo1_check1", array( "default" => "Developed under pharmaceutical regulatory frameworks", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_promo1_check1", array( "label" => "Checklist Line 1", "section" => "vance_about_promo1", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_promo1_check2", array( "default" => "Peer-reviewed clinical evidence base", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_promo1_check2", array( "label" => "Checklist Line 2", "section" => "vance_about_promo1", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_promo1_check3", array( "default" => "Trusted by gastroenterologists worldwide", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_promo1_check3", array( "label" => "Checklist Line 3", "section" => "vance_about_promo1", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_promo1_btn_lbl", array( "default" => "", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_promo1_btn_lbl", array( "label" => "Button Label (leave blank to hide)", "section" => "vance_about_promo1", "type" => "text" ) );
     $wp_customize->add_setting( "vance_about_promo1_btn_url", array( "default" => "#", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( "vance_about_promo1_btn_url", array( "label" => "Button URL", "section" => "vance_about_promo1", "type" => "url" ) );
     $wp_customize->add_setting( "vance_about_promo1_layout", array( "default" => "img-left", "sanitize_callback" => "sanitize_text_field" ) );
@@ -693,8 +736,8 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_about_promo2_layout", array( "default" => "img-left", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_promo2_layout", array( "label" => "Layout", "section" => "vance_about_promo2", "type" => "select", "choices" => array("img-left" => "Image Left", "img-right" => "Image Right") ) );
 
-    // Styles for Promo Block 2
-    $wp_customize->add_setting( "vance_about_promo2_show", array( "default" => true, "sanitize_callback" => "absint" ) );
+    // Styles for Promo Block 2 (off by default — no equivalent section in the current mockup)
+    $wp_customize->add_setting( "vance_about_promo2_show", array( "default" => false, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_about_promo2_show", array( "label" => "Show Section", "section" => "vance_about_promo2", "type" => "checkbox" ) );
     $wp_customize->add_setting( "vance_about_promo2_bg", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_about_promo2_bg", array( "label" => "Background Color", "section" => "vance_about_promo2" ) ) );
@@ -706,6 +749,50 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_about_promo2_text_color", array( "label" => "Text Color", "section" => "vance_about_promo2" ) ) );
     $wp_customize->add_setting( "vance_about_promo2_text_size", array( "default" => "", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_about_promo2_text_size", array( "label" => "Text Font Size (px)", "section" => "vance_about_promo2", "type" => "text" ) );
+
+    /* ---- About: imagery + micro-copy added by the About Us redesign ----
+       Each image ships with a theme default from assets/img/about/ (the approved
+       mockup photography), so these controls start populated. Clearing one falls
+       back to that default; sections whose default is removed degrade to a
+       teal-wash panel with an outline icon rather than showing a gap. */
+    $vance_about_img_note = "Leave blank to use the bundled default from assets/img/about/.";
+
+    // Overlay caption on the Our Story / Promo image (e.g. "Pharma-Grade Production").
+    foreach ( array( 1, 2 ) as $vance_promo_i ) {
+        $wp_customize->add_setting( "vance_about_promo{$vance_promo_i}_img_badge", array( "default" => $vance_promo_i === 1 ? "Pharma-Grade Production" : "", "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_promo{$vance_promo_i}_img_badge", array( "label" => "Image Caption Badge (blank to hide)", "section" => "vance_about_promo{$vance_promo_i}", "type" => "text" ) );
+    }
+
+    // Photo for each of the three Vance Evolution timeline cards.
+    for ( $i = 1; $i <= 3; $i++ ) {
+        $wp_customize->add_setting( "vance_about_p{$i}_img", array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_about_p{$i}_img", array( "label" => "Pillar $i Image", "description" => $vance_about_img_note, "section" => "vance_about_origin" ) ) );
+    }
+
+    // Background photo behind Mission & Values (sits under a near-opaque light veil).
+    $wp_customize->add_setting( "vance_about_mission_img", array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_about_mission_img", array( "label" => "Section Background Image", "description" => $vance_about_img_note, "section" => "vance_about_mission" ) ) );
+
+    // Photo for each Why Patients Trust Us card.
+    for ( $i = 1; $i <= 3; $i++ ) {
+        $wp_customize->add_setting( "vance_about_feat{$i}_img", array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_about_feat{$i}_img", array( "label" => "Feature $i Image", "description" => $vance_about_img_note, "section" => "vance_about_product" ) ) );
+    }
+
+    // Digital Layer: side photo plus the two floating pill captions.
+    $wp_customize->add_setting( "vance_about_digital_img", array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_about_digital_img", array( "label" => "Section Image", "description" => $vance_about_img_note, "section" => "vance_about_platform" ) ) );
+    $wp_customize->add_setting( "vance_about_float1_label", array( "default" => "Secure & Private", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_float1_label", array( "label" => "Floating Badge 1 (blank to hide)", "section" => "vance_about_platform", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_about_float2_label", array( "default" => "24/7 Access", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_about_float2_label", array( "label" => "Floating Badge 2 (blank to hide)", "section" => "vance_about_platform", "type" => "text" ) );
+
+    // Reassurance row under the CTA buttons.
+    $vance_about_reassure_defaults = array( 1 => "Secure & Private", 2 => "No Payment Required", 3 => "Instant Access" );
+    for ( $i = 1; $i <= 3; $i++ ) {
+        $wp_customize->add_setting( "vance_about_cta_reassure{$i}", array( "default" => $vance_about_reassure_defaults[$i], "sanitize_callback" => "sanitize_text_field" ) );
+        $wp_customize->add_control( "vance_about_cta_reassure{$i}", array( "label" => "Reassurance Item $i (blank to hide)", "section" => "vance_about_cta", "type" => "text" ) );
+    }
 
     // ---- Promo Block 1 ----
     $wp_customize->add_section( "vance_heritage_promo1", array( "title" => "Promo Block 1", "panel" => "vance_heritage_panel" ) );
@@ -771,7 +858,7 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ---- CONTACT US PAGE PANEL ----
     $wp_customize->add_panel( "vance_contact_panel", array(
-        "title"    => __( "Page — Contact Us", "sla-health-hub" ),
+        "title"    => __( "Page - Contact Us", "sla-health-hub" ),
         "priority" => 47,
     ) );
 
@@ -781,7 +868,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_contact_hero_tag",      array( "label" => "Tag Label",                  "section" => "vance_contact_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_contact_hero_title",    array( "default" => "We'd Love to Hear From You", "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_contact_hero_title",    array( "label" => "Heading (HTML allowed)",     "section" => "vance_contact_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_contact_hero_desc",     array( "default" => "Whether you're a patient, healthcare professional, researcher, or media contact — our team is here to help.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_contact_hero_desc",     array( "default" => "Whether you're a patient, healthcare professional, researcher, or media contact, our team is here to help.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_contact_hero_desc",     array( "label" => "Description",                "section" => "vance_contact_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_contact_hero_img",      array( "default" => "",                         "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_contact_hero_img", array( "label" => "Background Image", "section" => "vance_contact_hero" ) ) );
@@ -865,7 +952,7 @@ function vance_pages_customize_register( $wp_customize ) {
     // EDUCATION (COMING SOON) PAGE PANEL
     // ============================================================
     $wp_customize->add_panel( "vance_edu_panel", array(
-        "title"    => __( "Page — Education", "sla-health-hub" ),
+        "title"    => __( "Page - Education", "sla-health-hub" ),
         "priority" => 44,
     ) );
 
@@ -896,7 +983,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_edu_intro_eyebrow", array( "label" => "Eyebrow / tag label", "section" => "vance_edu_intro", "type" => "text" ) );
     $wp_customize->add_setting( "vance_edu_intro_title", array( "default" => "Courses crafted by clinicians, for life with IBD", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_edu_intro_title", array( "label" => "Section Title", "section" => "vance_edu_intro", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_edu_intro_desc",  array( "default" => "Self-paced patient courses and CPD-accredited practitioner modules — written, reviewed, and field-tested by gastroenterologists and dietitians. Pick a track below to be notified when enrolment opens.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_edu_intro_desc",  array( "default" => "Self-paced patient courses and CPD-accredited practitioner modules, written, reviewed, and field-tested by gastroenterologists and dietitians. Pick a track below to be notified when enrolment opens.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_edu_intro_desc",  array( "label" => "Description", "section" => "vance_edu_intro", "type" => "textarea" ) );
     // Section background + body text colour (controls colour of H2 + paragraph; eyebrow has its own pair).
     $wp_customize->add_setting( "vance_edu_intro_bg_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
@@ -932,16 +1019,16 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_section( "vance_edu_waitlist", array( "title" => "Waitlist Signup", "panel" => "vance_edu_panel" ) );
     $wp_customize->add_setting( "vance_edu_waitlist_heading", array( "default" => "Join the Waitlist", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_edu_waitlist_heading", array( "label" => "Heading", "section" => "vance_edu_waitlist", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_edu_waitlist_desc",    array( "default" => "Be first to hear when patient or practitioner courses go live. We'll send a single email — no spam, easy unsubscribe.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_edu_waitlist_desc",    array( "default" => "Be first to hear when patient or practitioner courses go live. We'll send a single email, no spam, easy unsubscribe.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_edu_waitlist_desc",    array( "label" => "Description", "section" => "vance_edu_waitlist", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_edu_waitlist_action",  array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_edu_waitlist_action",  array( "label" => "Form Action URL (Mailchimp/HubSpot endpoint — leave blank to hide form)", "section" => "vance_edu_waitlist", "type" => "url" ) );
+    $wp_customize->add_control( "vance_edu_waitlist_action",  array( "label" => "Form Action URL (Mailchimp/HubSpot endpoint - leave blank to hide form)", "section" => "vance_edu_waitlist", "type" => "url" ) );
     $wp_customize->add_setting( "vance_edu_waitlist_button",  array( "default" => "Notify Me", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_edu_waitlist_button",  array( "label" => "Button Label", "section" => "vance_edu_waitlist", "type" => "text" ) );
     $wp_customize->add_setting( "vance_edu_waitlist_bg_from",    array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_bg_from",    array( "label" => "Gradient — From Colour", "section" => "vance_edu_waitlist" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_bg_from",    array( "label" => "Gradient - From Colour", "section" => "vance_edu_waitlist" ) ) );
     $wp_customize->add_setting( "vance_edu_waitlist_bg_to",      array( "default" => "#006666", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_bg_to",      array( "label" => "Gradient — To Colour",   "section" => "vance_edu_waitlist" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_bg_to",      array( "label" => "Gradient - To Colour",   "section" => "vance_edu_waitlist" ) ) );
     $wp_customize->add_setting( "vance_edu_waitlist_text_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_edu_waitlist_text_color", array( "label" => "Text Colour",            "section" => "vance_edu_waitlist" ) ) );
 
@@ -949,7 +1036,7 @@ function vance_pages_customize_register( $wp_customize ) {
     // TOOLS & RESOURCES PAGE PANEL
     // ============================================================
     $wp_customize->add_panel( "vance_tools_panel", array(
-        "title"    => __( "Page — Tools & Resources", "sla-health-hub" ),
+        "title"    => __( "Page - Tools & Resources", "sla-health-hub" ),
         "priority" => 45,
     ) );
 
@@ -959,7 +1046,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_tools_hero_tag",   array( "label" => "Tag Label", "section" => "vance_tools_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_hero_title", array( "default" => "Tools &amp; <span class=\"highlight\">Resources</span>", "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_tools_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_tools_hero", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_tools_hero_desc",  array( "default" => "Clinical calculators built on peer-reviewed evidence — free to use, no signup required. Save your results and build a meal plan by registering for a free account.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_tools_hero_desc",  array( "default" => "Clinical calculators built on peer-reviewed evidence, free to use, no signup required. Save your results and build a meal plan by registering for a free account.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_tools_hero_desc",  array( "label" => "Description", "section" => "vance_tools_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_tools_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_tools_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_tools_hero" ) ) );
@@ -968,13 +1055,13 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // Hero CTA buttons (set text to empty to hide a button)
     $wp_customize->add_setting( "vance_tools_hero_btn1_text", array( "default" => "Try a Tool", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_tools_hero_btn1_text", array( "label" => "Button 1 — Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn1_text", array( "label" => "Button 1 - Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_hero_btn1_link", array( "default" => "#tools-list", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_tools_hero_btn1_link", array( "label" => "Button 1 — Link", "section" => "vance_tools_hero", "type" => "url" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn1_link", array( "label" => "Button 1 - Link", "section" => "vance_tools_hero", "type" => "url" ) );
     $wp_customize->add_setting( "vance_tools_hero_btn2_text", array( "default" => "Create Free Account", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_tools_hero_btn2_text", array( "label" => "Button 2 — Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn2_text", array( "label" => "Button 2 - Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_hero_btn2_link", array( "default" => "/register/", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_tools_hero_btn2_link", array( "label" => "Button 2 — Link", "section" => "vance_tools_hero", "type" => "url" ) );
+    $wp_customize->add_control( "vance_tools_hero_btn2_link", array( "label" => "Button 2 - Link", "section" => "vance_tools_hero", "type" => "url" ) );
 
     // Tools Intro
     $wp_customize->add_section( "vance_tools_intro", array( "title" => "Intro Section", "panel" => "vance_tools_panel" ) );
@@ -982,7 +1069,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_tools_intro_eyebrow", array( "label" => "Eyebrow / tag label", "section" => "vance_tools_intro", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_intro_title", array( "default" => "Clinical-grade calculators, free for everyone", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_tools_intro_title", array( "label" => "Section Title", "section" => "vance_tools_intro", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_tools_intro_desc",  array( "default" => "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them — register if you want to save results to your dashboard.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_tools_intro_desc",  array( "default" => "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them, register if you want to save results to your dashboard.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_tools_intro_desc",  array( "label" => "Description", "section" => "vance_tools_intro", "type" => "textarea" ) );
     // Section background + text colour (controls colour of H2 + paragraph; eyebrow has its own pair).
     $wp_customize->add_setting( "vance_tools_intro_bg_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
@@ -1004,17 +1091,17 @@ function vance_pages_customize_register( $wp_customize ) {
     $tool_hero_specs = array(
         'omega'        => array(
             'section_id'   => 'vance_tools_hero_omega',
-            'title'        => 'Omega-3 Calculator — Hero',
+            'title'        => 'Omega-3 Calculator, Hero',
             'name_key'     => 'vance_tool_omega_name',
             'sub_key'      => 'vance_tool_omega_subtitle',
             'bg_key'       => 'vance_tool_omega_hero_bg',
             'overlay_key'  => 'vance_tool_omega_hero_overlay',
             'name_default' => 'Omega-3 Calculator',
-            'sub_default'  => 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance — built on the latest gastroenterology evidence.',
+            'sub_default'  => 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance, built on the latest gastroenterology evidence.',
         ),
         'malnutrition' => array(
             'section_id'   => 'vance_tools_hero_malnutrition',
-            'title'        => 'Malnutrition Calculator — Hero',
+            'title'        => 'Malnutrition Calculator, Hero',
             'name_key'     => 'vance_tool_malnutrition_name',
             'sub_key'      => 'vance_tool_malnutrition_subtitle',
             'bg_key'       => 'vance_tool_malnutrition_hero_bg',
@@ -1024,7 +1111,7 @@ function vance_pages_customize_register( $wp_customize ) {
         ),
         'blood'        => array(
             'section_id'   => 'vance_tools_hero_blood',
-            'title'        => 'Blood Test Analyser — Hero',
+            'title'        => 'Blood Test Analyser, Hero',
             'name_key'     => 'vance_tool_blood_name',
             'sub_key'      => 'vance_tool_blood_subtitle',
             'bg_key'       => 'vance_tool_blood_hero_bg',
@@ -1034,13 +1121,13 @@ function vance_pages_customize_register( $wp_customize ) {
         ),
         'recipes'      => array(
             'section_id'   => 'vance_tools_hero_recipes',
-            'title'        => 'IBD Recipes — Hero',
+            'title'        => 'IBD Recipes, Hero',
             'name_key'     => 'vance_tool_recipes_name',
             'sub_key'      => 'vance_tool_recipes_subtitle',
             'bg_key'       => 'vance_tool_recipes_hero_bg',
             'overlay_key'  => 'vance_tool_recipes_hero_overlay',
             'name_default' => 'IBD Recipes & Meal Planner',
-            'sub_default'  => 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely — saving plans takes two clicks to create your free account.',
+            'sub_default'  => 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely, saving plans takes two clicks to create your free account.',
         ),
     );
     foreach ( $tool_hero_specs as $key => $spec ) {
@@ -1090,7 +1177,7 @@ function vance_pages_customize_register( $wp_customize ) {
     //  page-turn-evidence-into-action.php, no parallel naming)
     // ============================================================
     $wp_customize->add_panel( "vance_evidence_panel", array(
-        "title"    => __( "Page — Get Started", "sla-health-hub" ),
+        "title"    => __( "Page - Get Started", "sla-health-hub" ),
         "priority" => 41,
     ) );
 
@@ -1127,7 +1214,7 @@ function vance_pages_customize_register( $wp_customize ) {
     // Hero overlay slider lives in this section so admins find it next to the bg image (was in "Hero Overlays (extra)" only)
     $wp_customize->add_setting( "vance_evidence_hero_overlay_inline", array( "default" => 78, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_evidence_hero_overlay_inline", array(
-        "label"       => "Hero Overlay Opacity (%) — duplicates the slider in “Hero Overlays (extra)”",
+        "label"       => "Hero Overlay Opacity (%) - duplicates the slider in “Hero Overlays (extra)”",
         "section"     => "vance_evidence_hero",
         "type"        => "number",
         "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
@@ -1158,7 +1245,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $pillar_defaults = array(
         1 => array( "Clinical Trials",      "Randomised controlled trials and phase II–IV studies investigating medical food and nutritional interventions in IBD, SIBO, and related GI conditions." ),
         2 => array( "Real-World Data",      "Longitudinal outcomes from registered patient cohorts, post-market surveillance, and anonymised dashboard analytics across thousands of IBD journeys." ),
-        3 => array( "Peer-Reviewed Science","Curated meta-analyses and systematic reviews from Gut, AJG, Lancet Gastro, JCN, and other indexed journals — summarised for bedside use." ),
+        3 => array( "Peer-Reviewed Science","Curated meta-analyses and systematic reviews from Gut, AJG, Lancet Gastro, JCN, and other indexed journals, summarised for bedside use." ),
         4 => array( "Expert Consensus",     "Multidisciplinary panel statements from gastroenterologists, dietitians, and pharmacists who have validated the protocol pathways we publish." ),
     );
     for ( $i = 1; $i <= 4; $i++ ) {
@@ -1182,9 +1269,9 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_evidence_proc_desc",  array( "label" => "Section Description", "section" => "vance_evidence_proc", "type" => "textarea" ) );
 
     $proc_defaults = array(
-        1 => array( "Synthesise", "Our medical writing team combines primary studies, guidelines, and registry data into a single graded position — with conflicts of interest and limitations flagged openly." ),
+        1 => array( "Synthesise", "Our medical writing team combines primary studies, guidelines, and registry data into a single graded position, with conflicts of interest and limitations flagged openly." ),
         2 => array( "Translate",  "We convert each position into two companion artefacts: a clinician-facing protocol card and a plain-language patient brief vetted by a patient advisory panel." ),
-        3 => array( "Apply",      "Protocols feed the Vance Medical dashboard, VANCE-Ai, and downloadable handouts — so evidence becomes a concrete decision at the point of care." ),
+        3 => array( "Apply",      "Protocols feed the Vance Medical dashboard, VANCE-Ai, and downloadable handouts, so evidence becomes a concrete decision at the point of care." ),
     );
     for ( $i = 1; $i <= 3; $i++ ) {
         $wp_customize->add_setting( "vance_evidence_proc{$i}_title", array( "default" => $proc_defaults[ $i ][0], "sanitize_callback" => "sanitize_text_field" ) );
@@ -1206,7 +1293,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_evidence_feat_desc",  array( "default" => "Recent reviews, trial readouts, and protocol updates published by the Vance Medical editorial team.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_evidence_feat_desc",  array( "label" => "Section Description", "section" => "vance_evidence_feat", "type" => "textarea" ) );
     // Category selector (uses dropdown-pages style → category dropdown).
-    $cat_choices = array( 0 => '— All categories —' );
+    $cat_choices = array( 0 => 'All categories' );
     $all_cats = get_categories( array( 'hide_empty' => false ) );
     if ( is_array( $all_cats ) ) {
         foreach ( $all_cats as $cat ) {
@@ -1260,9 +1347,9 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_evidence_feat_bg",        array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_feat_bg",        array( "label" => "Featured-Evidence Background", "section" => "vance_evidence_styling" ) ) );
     $wp_customize->add_setting( "vance_evidence_cta_bg_from",    array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_bg_from",    array( "label" => "CTA Gradient — From", "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_bg_from",    array( "label" => "CTA Gradient - From", "section" => "vance_evidence_styling" ) ) );
     $wp_customize->add_setting( "vance_evidence_cta_bg_to",      array( "default" => "#006666", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_bg_to",      array( "label" => "CTA Gradient — To",   "section" => "vance_evidence_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_cta_bg_to",      array( "label" => "CTA Gradient - To",   "section" => "vance_evidence_styling" ) ) );
     $wp_customize->add_setting( "vance_evidence_heading_color",  array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_evidence_heading_color",  array( "label" => "Section Heading Colour", "section" => "vance_evidence_styling" ) ) );
     $wp_customize->add_setting( "vance_evidence_body_color",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
@@ -1282,83 +1369,83 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // Left-panel header: "DISCOVERY FILTERS"
     $wp_customize->add_setting( "vance_discovery_filters_label_text",  array( "default" => "Discovery Filters", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_filters_label_text",  array( "label" => "Filters Header — Text", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_filters_label_text",  array( "label" => "Filters Header - Text", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_filters_label_size",  array( "default" => 12, "sanitize_callback" => "absint" ) );
-    $wp_customize->add_control( "vance_discovery_filters_label_size",  array( "label" => "Filters Header — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 30, "step" => 1 ) ) );
+    $wp_customize->add_control( "vance_discovery_filters_label_size",  array( "label" => "Filters Header - Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 30, "step" => 1 ) ) );
     $wp_customize->add_setting( "vance_discovery_filters_label_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_filters_label_color", array( "label" => "Filters Header — Colour (blank = brand teal)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_filters_label_color", array( "label" => "Filters Header - Colour (blank = brand teal)", "section" => "vance_discovery_styling" ) ) );
 
     // Right-panel header: "AI CLINICAL INTELLIGENCE"
     $wp_customize->add_setting( "vance_discovery_ai_label_text",  array( "default" => "VANCE-Ai", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_ai_label_text",  array( "label" => "AI Header — Text", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_ai_label_text",  array( "label" => "AI Header - Text", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_ai_label_size",  array( "default" => 12, "sanitize_callback" => "absint" ) );
-    $wp_customize->add_control( "vance_discovery_ai_label_size",  array( "label" => "AI Header — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 30, "step" => 1 ) ) );
+    $wp_customize->add_control( "vance_discovery_ai_label_size",  array( "label" => "AI Header - Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 30, "step" => 1 ) ) );
     $wp_customize->add_setting( "vance_discovery_ai_label_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_ai_label_color", array( "label" => "AI Header — Colour (blank = white)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_ai_label_color", array( "label" => "AI Header - Colour (blank = white)", "section" => "vance_discovery_styling" ) ) );
 
     // Reading-level toggles (on / off states).
     $wp_customize->add_setting( "vance_discovery_toggle_off_bg",     array( "default" => "rgba(255,255,255,0.10)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_toggle_off_bg",     array( "label" => "Toggle Off — Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_toggle_off_bg",     array( "label" => "Toggle Off - Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_toggle_off_dot",    array( "default" => "rgba(255,255,255,0.60)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_toggle_off_dot",    array( "label" => "Toggle Off — Dot Colour", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_toggle_off_dot",    array( "label" => "Toggle Off - Dot Colour", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_toggle_on_bg",      array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_toggle_on_bg",      array( "label" => "Toggle On — Background", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_toggle_on_bg",      array( "label" => "Toggle On - Background", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_toggle_on_dot",     array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_toggle_on_dot",     array( "label" => "Toggle On — Dot Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_toggle_on_dot",     array( "label" => "Toggle On - Dot Colour", "section" => "vance_discovery_styling" ) ) );
 
     // Chip (pathway + content-type) selected & unselected colour pairs.
     $wp_customize->add_setting( "vance_discovery_chip_off_bg",      array( "default" => "rgba(255,255,255,0.06)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_chip_off_bg",      array( "label" => "Chip Unselected — Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_chip_off_bg",      array( "label" => "Chip Unselected - Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_chip_off_border",  array( "default" => "rgba(255,255,255,0.12)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_chip_off_border",  array( "label" => "Chip Unselected — Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_chip_off_border",  array( "label" => "Chip Unselected - Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_chip_off_text",    array( "default" => "rgba(255,255,255,0.75)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_chip_off_text",    array( "label" => "Chip Unselected — Text", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_chip_off_text",    array( "label" => "Chip Unselected - Text", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_chip_on_bg",       array( "default" => "rgba(0,128,128,0.20)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_chip_on_bg",       array( "label" => "Chip Selected — Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_chip_on_bg",       array( "label" => "Chip Selected - Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_chip_on_border",   array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_chip_on_border", array( "label" => "Chip Selected — Border", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_chip_on_border", array( "label" => "Chip Selected - Border", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_chip_on_text",     array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_chip_on_text", array( "label" => "Chip Selected — Text", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_chip_on_text", array( "label" => "Chip Selected - Text", "section" => "vance_discovery_styling" ) ) );
 
     // Ask AI input box.
     $wp_customize->add_setting( "vance_discovery_askai_input_bg",     array( "default" => "rgba(255,255,255,0.06)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_askai_input_bg",     array( "label" => "VANCE-Ai Input — Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_askai_input_bg",     array( "label" => "VANCE-Ai Input - Background (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discovery_askai_input_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_askai_input_color", array( "label" => "VANCE-Ai Input — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_askai_input_color", array( "label" => "VANCE-Ai Input - Text Colour", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_askai_input_border", array( "default" => "rgba(255,255,255,0.12)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_askai_input_border", array( "label" => "VANCE-Ai Input — Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_askai_input_border", array( "label" => "VANCE-Ai Input - Border (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
 
     // Action buttons — solid colours (no gradient). Blank background = keep theme default.
     $wp_customize->add_setting( "vance_discovery_btn_go_bg",       array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_go_bg",       array( "label" => "GO Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_go_bg",       array( "label" => "GO Button - Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_btn_go_color",    array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_go_color",    array( "label" => "GO Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_go_color",    array( "label" => "GO Button - Text Colour", "section" => "vance_discovery_styling" ) ) );
 
     $wp_customize->add_setting( "vance_discovery_btn_clear_bg",    array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_clear_bg",    array( "label" => "Clear Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_clear_bg",    array( "label" => "Clear Button - Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_btn_clear_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_clear_color", array( "label" => "Clear Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_clear_color", array( "label" => "Clear Button - Text Colour", "section" => "vance_discovery_styling" ) ) );
 
     $wp_customize->add_setting( "vance_discovery_btn_save_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_save_bg",     array( "label" => "Save Search Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_save_bg",     array( "label" => "Save Search Button - Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_btn_save_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_save_color",  array( "label" => "Save Search Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_save_color",  array( "label" => "Save Search Button - Text Colour", "section" => "vance_discovery_styling" ) ) );
 
     $wp_customize->add_setting( "vance_discovery_btn_send_bg",     array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_send_bg",     array( "label" => "Send Button — Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_send_bg",     array( "label" => "Send Button - Background (blank = theme default)", "section" => "vance_discovery_styling" ) ) );
     $wp_customize->add_setting( "vance_discovery_btn_send_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_send_color",  array( "label" => "Send Button — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_btn_send_color",  array( "label" => "Send Button - Text Colour", "section" => "vance_discovery_styling" ) ) );
 
     // Status text — "AI (Online)" and "Content Filters (Active)".
     $wp_customize->add_setting( "vance_discovery_status_ai_size",       array( "default" => 10, "sanitize_callback" => "absint" ) );
-    $wp_customize->add_control( "vance_discovery_status_ai_size",       array( "label" => "AI Status (Online) — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 24, "step" => 1 ) ) );
+    $wp_customize->add_control( "vance_discovery_status_ai_size",       array( "label" => "AI Status (Online) - Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 24, "step" => 1 ) ) );
     $wp_customize->add_setting( "vance_discovery_status_ai_color",      array( "default" => "#22C55E", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_status_ai_color", array( "label" => "AI Status (Online) — Text Colour", "section" => "vance_discovery_styling" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_discovery_status_ai_color", array( "label" => "AI Status (Online) - Text Colour", "section" => "vance_discovery_styling" ) ) );
 
     $wp_customize->add_setting( "vance_discovery_status_filters_size",  array( "default" => 10, "sanitize_callback" => "absint" ) );
-    $wp_customize->add_control( "vance_discovery_status_filters_size",  array( "label" => "Filters Status (Active) — Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 24, "step" => 1 ) ) );
+    $wp_customize->add_control( "vance_discovery_status_filters_size",  array( "label" => "Filters Status (Active) - Font Size (px)", "section" => "vance_discovery_styling", "type" => "number", "input_attrs" => array( "min" => 8, "max" => 24, "step" => 1 ) ) );
     $wp_customize->add_setting( "vance_discovery_status_filters_color", array( "default" => "rgba(255,255,255,0.5)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_discovery_status_filters_color", array( "label" => "Filters Status (Active) — Text Colour (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
+    $wp_customize->add_control( "vance_discovery_status_filters_color", array( "label" => "Filters Status (Active) - Text Colour (hex/rgba)", "section" => "vance_discovery_styling", "type" => "text" ) );
 
     // ============================================================
     // PREMIUM SUBSCRIBE SECTION — full Customizer panel
@@ -1373,7 +1460,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_premium_eyebrow",       array( "default" => "Join the Inner Circle", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_premium_eyebrow",       array( "label" => "Eyebrow Text", "section" => "vance_premium_content", "type" => "text" ) );
     $wp_customize->add_setting( "vance_premium_heading",       array( "default" => "Access <span class=\"highlight\">IBD Clinical Resources</span>", "sanitize_callback" => "wp_kses_post" ) );
-    $wp_customize->add_control( "vance_premium_heading",       array( "label" => "Heading (HTML — wrap with <span class=\"highlight\"> for accent colour)", "section" => "vance_premium_content", "type" => "textarea" ) );
+    $wp_customize->add_control( "vance_premium_heading",       array( "label" => "Heading (HTML - wrap with <span class=\"highlight\"> for accent colour)", "section" => "vance_premium_content", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_premium_desc",          array( "default" => "Gain access to premium articles, monthly masterclasses, and a personalized health dashboard. Join 50,000+ members on the path to better living.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_premium_desc",          array( "label" => "Description", "section" => "vance_premium_content", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_premium_pill_1",        array( "default" => "Expert Reviews", "sanitize_callback" => "sanitize_text_field" ) );
@@ -1387,6 +1474,8 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_premium_card_heading",     array( "label" => "Card Heading", "section" => "vance_premium_card", "type" => "text" ) );
     $wp_customize->add_setting( "vance_premium_card_subheading", array( "default" => "", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_premium_card_subheading", array( "label" => "Card Subheading (optional, blank = hidden)", "section" => "vance_premium_card", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_premium_card_subheading_color", array( "default" => "#000000", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_card_subheading_color", array( "label" => "Card Subheading Colour", "section" => "vance_premium_card" ) ) );
     $wp_customize->add_setting( "vance_premium_input_placeholder", array( "default" => "Enter your email address", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_premium_input_placeholder", array( "label" => "Email Input Placeholder", "section" => "vance_premium_card", "type" => "text" ) );
     $wp_customize->add_setting( "vance_premium_button_label",     array( "default" => "Get Started Now →", "sanitize_callback" => "sanitize_text_field" ) );
@@ -1401,11 +1490,11 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_premium_section_bg",  array( "default" => "#0f172a", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_section_bg",  array( "label" => "Section Background", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_eyebrow_color",  array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_color",  array( "label" => "Eyebrow Tag — Font Colour",        "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_color",  array( "label" => "Eyebrow Tag - Font Colour",        "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_eyebrow_bg",     array( "default" => "",        "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_bg",     array( "label" => "Eyebrow Tag — Background Colour",  "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_bg",     array( "label" => "Eyebrow Tag - Background Colour",  "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_eyebrow_border", array( "default" => "",        "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_border", array( "label" => "Eyebrow Tag — Border Colour",      "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_eyebrow_border", array( "label" => "Eyebrow Tag - Border Colour",      "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_heading_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_heading_color", array( "label" => "Heading Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_highlight_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
@@ -1413,9 +1502,9 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_premium_desc_color",   array( "default" => "#94a3b8", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_desc_color", array( "label" => "Description Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_pill_text_color", array( "default" => "#cbd5e1", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_pill_text_color", array( "label" => "Feature Pills — Text Colour", "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_pill_text_color", array( "label" => "Feature Pills - Text Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_pill_check_color", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_pill_check_color", array( "label" => "Feature Pills — Check Mark Colour", "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_pill_check_color", array( "label" => "Feature Pills - Check Mark Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_card_bg",      array( "default" => "rgba(255,255,255,0.05)", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_premium_card_bg",      array( "label" => "Card Background (hex/rgba)", "section" => "vance_premium_colors", "type" => "text" ) );
     $wp_customize->add_setting( "vance_premium_card_border",  array( "default" => "rgba(255,255,255,0.10)", "sanitize_callback" => "sanitize_text_field" ) );
@@ -1423,13 +1512,13 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_premium_card_heading_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_card_heading_color", array( "label" => "Card Heading Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_input_bg",     array( "default" => "rgba(0,0,0,0.20)", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_premium_input_bg",     array( "label" => "Input — Background (hex/rgba)", "section" => "vance_premium_colors", "type" => "text" ) );
+    $wp_customize->add_control( "vance_premium_input_bg",     array( "label" => "Input - Background (hex/rgba)", "section" => "vance_premium_colors", "type" => "text" ) );
     $wp_customize->add_setting( "vance_premium_input_color",  array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_input_color", array( "label" => "Input — Text Colour", "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_input_color", array( "label" => "Input - Text Colour", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_button_bg",    array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_button_bg", array( "label" => "Button — Background", "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_button_bg", array( "label" => "Button - Background", "section" => "vance_premium_colors" ) ) );
     $wp_customize->add_setting( "vance_premium_button_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_button_color", array( "label" => "Button — Text Colour", "section" => "vance_premium_colors" ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_premium_button_color", array( "label" => "Button - Text Colour", "section" => "vance_premium_colors" ) ) );
 
     // Section: Sizing
     $wp_customize->add_section( "vance_premium_sizing", array( "title" => "Sizing", "panel" => "vance_premium_panel" ) );
@@ -1446,7 +1535,7 @@ function vance_pages_customize_register( $wp_customize ) {
     // HEALTHCARE QUIZ — hero shell mods (mirrors AskAi visual layout)
     // ============================================================
     $wp_customize->add_panel( "vance_hquiz_panel", array(
-        "title"    => __( "Page — IBD Health Quiz", "sla-health-hub" ),
+        "title"    => __( "Page - IBD Health Quiz", "sla-health-hub" ),
         "priority" => 46,
     ) );
     $wp_customize->add_section( "vance_hquiz_hero", array( "title" => "Hero Section", "panel" => "vance_hquiz_panel" ) );
@@ -1454,7 +1543,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_hquiz_hero_badge",    array( "label" => "Hero Badge Text", "section" => "vance_hquiz_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_hquiz_hero_title",    array( "default" => "IBD Health Quiz", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_hquiz_hero_title",    array( "label" => "Hero Title (H1)", "section" => "vance_hquiz_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_hquiz_hero_subtitle", array( "default" => "A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private — get an instant summary you can share with your clinician.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_subtitle", array( "default" => "A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_hquiz_hero_subtitle", array( "label" => "Hero Subtitle", "section" => "vance_hquiz_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_hquiz_hero_bg",       array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_hquiz_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_hquiz_hero" ) ) );

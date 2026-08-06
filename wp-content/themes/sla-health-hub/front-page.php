@@ -1401,7 +1401,7 @@ body {
                                 <!-- KEYWORD SEARCH -->
                                 <div class="filter-group" style="margin-bottom:0;">
                                     <div class="keyword-row">
-                                        <input type="text" name="s" class="keyword-input" placeholder="Keyword Search (Optional)">
+                                        <input type="text" name="keyword" class="keyword-input" placeholder="Keyword Search (Optional)">
                                     </div>
                                 </div>
 
@@ -1435,7 +1435,7 @@ body {
                                  One chat surface site-wide, so a conversation started here
                                  continues on any article and saves to the user's dashboard. -->
                             <div class="askai-teaser" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 6px 0 4px;">
-                                <p style="margin: 0; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.82);">Ask a question in plain English and get an answer built only from the articles published on this hub — with a link to every source used.</p>
+                                <p style="margin: 0; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.82);">Ask a question in plain English and get an answer built only from the articles published on this hub, with a link to every source used.</p>
                                 <div>
                                     <button type="button" class="chat-send" data-vance-askai-open style="padding: 12px 22px; font-size: 13px; cursor: pointer; <?php echo $btn_style($btn_send_bg, $btn_send_color); ?>">Open VANCE-Ai</button>
                                 </div>
@@ -2037,6 +2037,11 @@ body {
     $prem_card_heading   = vance_get_theme_mod('vance_premium_card_heading',   'Start Your Journey');
     $prem_card_heading_color = vance_get_theme_mod('vance_premium_card_heading_color', '#ffffff');
     $prem_card_subhead   = vance_get_theme_mod('vance_premium_card_subheading', '');
+    /* Own color, independent of $prem_desc_color: that one is tuned for the
+       left-column description sitting on the dark section background, but
+       this subheading sits inside the light signup card (vance_premium_card_bg,
+       #f4ffff live) — reusing the light grey there made it nearly invisible. */
+    $prem_card_subhead_color = vance_get_theme_mod('vance_premium_card_subheading_color', '#000000');
     $prem_input_bg       = vance_get_theme_mod('vance_premium_input_bg',       'rgba(0,0,0,0.20)');
     $prem_input_color    = vance_get_theme_mod('vance_premium_input_color',    '#ffffff');
     $prem_input_ph       = vance_get_theme_mod('vance_premium_input_placeholder', 'Enter your email address');
@@ -2073,7 +2078,7 @@ body {
             <div style="flex-shrink: 0; background: <?php echo esc_attr($prem_card_bg); ?>; padding: 40px; border-radius: 0; border: 1px solid <?php echo esc_attr($prem_card_border); ?>; max-width: 400px; width: 100%;">
                 <h3 style="font-size: 24px; font-weight: 700; margin-bottom: <?php echo $prem_card_subhead ? '8' : '24'; ?>px; color: <?php echo esc_attr($prem_card_heading_color); ?>;"><?php echo esc_html($prem_card_heading); ?></h3>
                 <?php if ( $prem_card_subhead ) : ?>
-                    <p style="color: <?php echo esc_attr($prem_desc_color); ?>; font-size: 14px; margin-bottom: 24px;"><?php echo esc_html($prem_card_subhead); ?></p>
+                    <p style="color: <?php echo esc_attr($prem_card_subhead_color); ?>; font-size: 14px; margin-bottom: 24px;"><?php echo esc_html($prem_card_subhead); ?></p>
                 <?php endif; ?>
                 <form action="<?php echo esc_url($prem_form_action); ?>" method="get" style="display: flex; flex-direction: column; gap: 16px;">
                     <input type="email" name="user_email" placeholder="<?php echo esc_attr($prem_input_ph); ?>" required class="premium-input" style="width: 100%; padding: 16px; border-radius: 0; border: 1px solid rgba(255,255,255,0.2); background: <?php echo esc_attr($prem_input_bg); ?>; color: <?php echo esc_attr($prem_input_color); ?>; font-size: 16px;">

@@ -468,10 +468,10 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
             <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing a person living well with Crohn's"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-tips is-cols-1">
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Good nutrition</strong> — eating well supports healing and energy levels</p></div>
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">⚠️</div><p><strong>Know your warning signs</strong> — recognise when a flare may be starting</p></div>
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🧠</div><p><strong>Mental wellbeing</strong> — looking after your emotional health is an important part of care</p></div>
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">📅</div><p><strong>Regular specialist review</strong> — stay in touch with your IBD team</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Good nutrition</strong>, eating well supports healing and energy levels</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">⚠️</div><p><strong>Know your warning signs</strong>, recognise when a flare may be starting</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🧠</div><p><strong>Mental wellbeing</strong>, looking after your emotional health is an important part of care</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">📅</div><p><strong>Regular specialist review</strong>, stay in touch with your IBD team</p></div>
               </div>
             </div>
           </div>
@@ -498,7 +498,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
       <section class="gi-cp-section" id="what-is-uc">
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📖</div><h2>What is Ulcerative Colitis?</h2></div>
         <div class="gi-cp-card">
-          <p>Ulcerative colitis (UC) is a long-term condition where the lining of the large bowel — the colon and rectum — becomes inflamed. Small sores (ulcers) can form on the lining, which may bleed and produce mucus.</p>
+          <p>Ulcerative colitis (UC) is a long-term condition where the lining of the large bowel, the colon and rectum, becomes inflamed. Small sores (ulcers) can form on the lining, which may bleed and produce mucus.</p>
           <p>UC can occur at any age and is often first diagnosed in younger adults. Most people have times when symptoms <strong>flare up</strong>, followed by periods of <strong>remission</strong> when they feel well.</p>
           <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Ulcerative colitis always begins in the rectum and can spread part or all of the way up the colon. Unlike Crohn's disease, it affects only the colon and rectum, and only the inner lining.</p></div>
         </div>
@@ -537,7 +537,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
               </ul>
             </div>
           </div>
-          <div class="gi-cp-warning-urgent" style="margin-top:25px"><p><strong>When to seek help:</strong> Seek urgent advice if you have a severe flare — for example frequent bloody stools, a fever, a racing heart or significant tummy pain.</p></div>
+          <div class="gi-cp-warning-urgent" style="margin-top:25px"><p><strong>When to seek help:</strong> Seek urgent advice if you have a severe flare, for example frequent bloody stools, a fever, a racing heart or significant tummy pain.</p></div>
         </div>
       </section>
 
@@ -597,10 +597,10 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
             <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing a person living well with UC"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-tips is-cols-1">
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">💊</div><p><strong>Take maintenance treatment as prescribed</strong> — even when you feel well</p></div>
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">📅</div><p><strong>Attend regular reviews</strong> — stay in touch with your specialist team</p></div>
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">⚠️</div><p><strong>Know your warning signs</strong> — recognise when a flare may be starting</p></div>
-                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Look after sleep, stress and diet</strong> — these all help keep things stable</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">💊</div><p><strong>Take maintenance treatment as prescribed</strong>, even when you feel well</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">📅</div><p><strong>Attend regular reviews</strong>, stay in touch with your specialist team</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">⚠️</div><p><strong>Know your warning signs</strong>, recognise when a flare may be starting</p></div>
+                <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Look after sleep, stress and diet</strong>, these all help keep things stable</p></div>
               </div>
             </div>
           </div>
@@ -744,7 +744,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
             <div class="gi-cp-row-text">
               <p>Irritable bowel syndrome (IBS) is one of the most common digestive conditions. It is a <strong>functional</strong> disorder, which means the gut doesn't work as it should even though it looks normal and isn't damaged. This is what sets it apart from inflammatory bowel disease.</p>
               <p>IBS is closely linked to how the gut and the brain communicate; this is often referred to as the <strong>gut-brain axis</strong>. It can be uncomfortable and disruptive, but it does not damage the bowel or raise the risk of bowel cancer.</p>
-              <div class="gi-cp-highlight"><p><strong>Key fact:</strong> IBS is a functional disorder — the gut looks normal but doesn't work as it should. It is closely linked to the gut-brain axis.</p></div>
+              <div class="gi-cp-highlight"><p><strong>Key fact:</strong> IBS is a functional disorder, the gut looks normal but doesn't work as it should. It is closely linked to the gut-brain axis.</p></div>
             </div>
           </div>
         </div>
@@ -811,7 +811,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
             <li>A coeliac disease test</li>
             <li>A stool test for <strong>faecal calprotectin</strong> to help exclude inflammation or infection</li>
           </ul>
-          <div class="gi-cp-highlight"><p><strong>Important:</strong> IBS is a diagnosis of exclusion — tests are done to rule out other conditions rather than to confirm IBS itself.</p></div>
+          <div class="gi-cp-highlight"><p><strong>Important:</strong> IBS is a diagnosis of exclusion, tests are done to rule out other conditions rather than to confirm IBS itself.</p></div>
         </div>
       </section>
 
@@ -869,7 +869,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🎯</div><h2>What is Colorectal Cancer?</h2></div>
         <div class="gi-cp-card">
           <p>Colorectal cancer, also called bowel cancer, starts in the large bowel (colon) or back passage (rectum). Most bowel cancers develop slowly from small growths called <strong>polyps</strong> on the bowel lining.</p>
-          <p>Not all polyps become cancer, and finding and removing them — often during screening — can stop a cancer from ever forming.</p>
+          <p>Not all polyps become cancer, and finding and removing them, often during screening, can stop a cancer from ever forming.</p>
           <div class="gi-cp-highlight"><p><strong>Key fact:</strong> Most bowel cancers grow slowly from polyps. Finding and removing polyps during screening can prevent cancer from developing.</p></div>
         </div>
       </section>
@@ -940,7 +940,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
             <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing Colorectal Cancer treatment options"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid">
-                <div class="gi-cp-tile"><h4>Surgery</h4><p>To remove the affected part of the bowel — the most common treatment</p></div>
+                <div class="gi-cp-tile"><h4>Surgery</h4><p>To remove the affected part of the bowel, the most common treatment</p></div>
                 <div class="gi-cp-tile"><h4>Chemotherapy</h4><p>Medicines that kill cancer cells, often given after surgery</p></div>
                 <div class="gi-cp-tile"><h4>Radiotherapy</h4><p>Particularly for rectal cancer, using radiation to target cancer cells</p></div>
                 <div class="gi-cp-tile"><h4>Targeted &amp; immunotherapy</h4><p>Newer medicines for some cancers that target specific cell changes</p></div>

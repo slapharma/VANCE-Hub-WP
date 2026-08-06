@@ -285,6 +285,19 @@ h6 {
     color: var(--primary-color);
 }
 
+/* The header nav is actually rendered by the Max Mega Menu plugin
+   (#mega-menu-primary-menu / .mega-menu-link), not .main-nav — the rule above
+   never matches it. The plugin's own generated stylesheet has no hover-state
+   color at all for top-level items and colors the open/active state orange
+   (#FF6105, a pre-rebrand leftover), so this overrides both to the brand teal.
+   Selector specificity matches the plugin's own generated CSS; !important
+   guards against load-order with that generated/cached stylesheet. */
+#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item > a.mega-menu-link:hover,
+#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item > a.mega-menu-link:focus,
+#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item.mega-toggle-on > a.mega-menu-link {
+    color: var(--primary-color) !important;
+}
+
 /* WordPress Standard Menu Classes */
 .menu-item-has-children {
     position: relative;

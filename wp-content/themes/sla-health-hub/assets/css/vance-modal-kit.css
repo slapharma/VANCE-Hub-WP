@@ -1,0 +1,514 @@
+/**
+ * Vance Modal Kit — the malnutrition calculator's design language, extracted
+ * so every modal surface on the site shares one look.
+ *
+ * The IBD Malnutrition Calculator bundle
+ * (assets/tools/malnutrition-calculator/index.html) is the reference design:
+ * soft slate page wash, a single white card with a 16px radius and a low
+ * diffuse shadow, an uppercase teal pill badge over an uppercase Outfit title,
+ * a thin progress rail, and large tap-target option rows that lift on hover
+ * and fill with the teal wash when selected.
+ *
+ * That bundle is a build artifact we text-patch in place (CLAUDE.md constraint
+ * 6), so its CSS cannot be imported. These rules are a faithful port of it,
+ * with the tokens hoisted to custom properties. If the bundle is ever
+ * restyled, mirror the change here.
+ *
+ * Deliberate exception to the theme's `border-radius: 0` house style: the
+ * calculator's rounded cards are the design being adopted, on the modal
+ * surfaces only. Nothing here leaks outside a `.vance-mk` scope.
+ *
+ * Used by:
+ *   inc/quiz-modal.php          — Health Discovery Quiz
+ *   inc/tool-widgets.php        — Discovery Suite / Content Filters modal
+ *   inc/clinical-info-modal.php — Health details & lifestyle editor
+ *   assets/css/vance-askai.css  — VANCE-Ai chat modal (consumes the tokens)
+ */
+
+:root {
+	--mk-teal: #008080;
+	--mk-teal-hover: #006666;
+	--mk-wash: #def4f4;
+	--mk-navy: #0A1929;
+	--mk-navy-muted: #1E293B;
+	--mk-bg: #F8FAFC;
+	--mk-white: #FFFFFF;
+	--mk-border: #E2E8F0;
+	--mk-text: #1F2937;
+	--mk-muted: #64748B;
+	--mk-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+	--mk-shadow-lift: 0 6px 20px -4px rgba(0, 128, 128, 0.18);
+	--mk-radius: 12px;
+	--mk-radius-lg: 16px;
+}
+
+/* =========================================================================
+   Scrim + panel
+   ========================================================================= */
+
+.vance-mk-scrim {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	padding: 24px 16px;
+	background: rgba(10, 25, 41, 0.55);
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+	overflow-y: auto;
+}
+
+.vance-mk-scrim.is-open {
+	display: flex;
+	animation: vance-mk-fade 180ms ease-out;
+}
+
+@keyframes vance-mk-fade {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+/* The panel is the calculator's page: soft wash behind, card in front. */
+.vance-mk {
+	position: relative;
+	width: 100%;
+	max-width: 680px;
+	margin: auto;
+	background: var(--mk-bg);
+	border-radius: var(--mk-radius-lg);
+	box-shadow: 0 24px 60px rgba(10, 25, 41, 0.28);
+	padding: 28px 24px 24px;
+	font-family: 'Inter', system-ui, sans-serif;
+	color: var(--mk-text);
+	max-height: none;
+}
+
+.vance-mk--wide { max-width: 940px; }
+
+.vance-mk__close {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	width: 34px;
+	height: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	line-height: 1;
+	color: var(--mk-muted);
+	background: var(--mk-white);
+	border: 1px solid var(--mk-border);
+	border-radius: 50%;
+	cursor: pointer;
+	transition: 0.18s;
+	z-index: 2;
+}
+
+.vance-mk__close:hover { color: var(--mk-navy); border-color: var(--mk-teal); }
+.vance-mk__close:focus-visible { outline: 3px solid var(--mk-teal); outline-offset: 2px; }
+
+/* =========================================================================
+   Header — badge / title / subtitle
+   ========================================================================= */
+
+.vance-mk__header { text-align: center; margin-bottom: 24px; padding: 0 28px; }
+
+.vance-mk__badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 14px;
+	border-radius: 100px;
+	font-family: 'Outfit', sans-serif;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	background: var(--mk-wash);
+	color: var(--mk-teal);
+	border: 1px solid rgba(0, 128, 128, 0.2);
+	margin-bottom: 12px;
+}
+
+.vance-mk__title {
+	font-family: 'Outfit', sans-serif;
+	font-size: 28px;
+	font-weight: 800;
+	color: var(--mk-navy);
+	letter-spacing: -0.02em;
+	text-transform: uppercase;
+	line-height: 1.15;
+	margin: 0 0 10px;
+}
+
+.vance-mk__subtitle {
+	font-size: 14px;
+	color: var(--mk-muted);
+	line-height: 1.6;
+	max-width: 480px;
+	margin: 0 auto;
+}
+
+/* =========================================================================
+   Card + progress
+   ========================================================================= */
+
+.vance-mk__card {
+	background: var(--mk-white);
+	border: 1px solid var(--mk-border);
+	border-radius: var(--mk-radius-lg);
+	box-shadow: var(--mk-shadow);
+	padding: 28px;
+}
+
+.vance-mk__progress { margin-bottom: 24px; }
+
+.vance-mk__progress-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.vance-mk__progress-label {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--mk-muted);
+}
+
+.vance-mk__progress-pct { font-size: 11px; font-weight: 700; color: var(--mk-teal); }
+
+.vance-mk__progress-track {
+	height: 6px;
+	background: var(--mk-border);
+	border-radius: 99px;
+	overflow: hidden;
+}
+
+.vance-mk__progress-fill {
+	height: 100%;
+	width: 0;
+	background: var(--mk-teal);
+	border-radius: 99px;
+	transition: width 0.4s;
+}
+
+/* =========================================================================
+   Step content
+   ========================================================================= */
+
+.vance-mk__step-title {
+	font-family: 'Outfit', sans-serif;
+	font-size: 19px;
+	font-weight: 800;
+	color: var(--mk-navy);
+	letter-spacing: -0.02em;
+	margin: 0 0 6px;
+}
+
+.vance-mk__step-subtitle {
+	font-size: 13px;
+	color: var(--mk-muted);
+	line-height: 1.6;
+	margin: 0 0 18px;
+}
+
+.vance-mk__panel { animation: vance-mk-step-in 0.22s ease-out; }
+
+@keyframes vance-mk-step-in {
+	from { opacity: 0; transform: translateY(12px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================================
+   Options
+   ========================================================================= */
+
+.vance-mk__options { display: flex; flex-direction: column; gap: 10px; }
+.vance-mk__options--grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.vance-mk__option {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	text-align: left;
+	padding: 14px 16px;
+	border-radius: var(--mk-radius);
+	border: 2px solid var(--mk-border);
+	background: var(--mk-white);
+	cursor: pointer;
+	user-select: none;
+	transition: 0.18s;
+	font-family: 'Inter', sans-serif;
+}
+
+.vance-mk__option:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--mk-shadow-lift);
+	border-color: var(--mk-teal);
+}
+
+.vance-mk__option.is-selected { border-color: var(--mk-teal); background: var(--mk-wash); }
+
+.vance-mk__option-mark {
+	flex: 0 0 20px;
+	width: 20px;
+	height: 20px;
+	border: 2px solid #cbd5e1;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	transition: 0.18s;
+}
+
+.vance-mk__option-mark--box { border-radius: 5px; }
+
+.vance-mk__option.is-selected .vance-mk__option-mark {
+	border-color: var(--mk-teal);
+	background: var(--mk-teal);
+	color: #fff;
+	font-size: 12px;
+	line-height: 1;
+}
+
+.vance-mk__option-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--mk-navy);
+	display: block;
+}
+
+.vance-mk__option.is-selected .vance-mk__option-label {
+	font-family: 'Outfit', sans-serif;
+	font-weight: 700;
+}
+
+.vance-mk__option-sublabel {
+	font-size: 12px;
+	color: var(--mk-muted);
+	margin-top: 2px;
+	display: block;
+}
+
+/* Dependent follow-ups revealed by a selected option. */
+.vance-mk__dependent {
+	grid-column: 1 / -1;
+	margin: -2px 0 8px;
+	padding: 14px 16px;
+	background: var(--mk-bg);
+	border: 1px solid var(--mk-border);
+	border-radius: var(--mk-radius);
+}
+
+.vance-mk__dependent-label {
+	display: block;
+	font-family: 'Outfit', sans-serif;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--mk-navy);
+	margin-bottom: 8px;
+}
+
+.vance-mk__dependent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* =========================================================================
+   Form fields
+   ========================================================================= */
+
+.vance-mk__label {
+	display: block;
+	font-family: 'Outfit', sans-serif;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--mk-navy);
+	margin-bottom: 6px;
+}
+
+.vance-mk__hint { font-size: 12px; color: var(--mk-muted); margin-top: 6px; line-height: 1.5; }
+
+.vance-mk__input,
+.vance-mk__select,
+.vance-mk__textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 12px 14px;
+	border: 1px solid var(--mk-border);
+	border-radius: var(--mk-radius);
+	font-family: 'Inter', sans-serif;
+	font-size: 15px;
+	color: var(--mk-text);
+	background: var(--mk-bg);
+	outline: none;
+	transition: 0.2s;
+}
+
+.vance-mk__textarea { resize: vertical; min-height: 76px; line-height: 1.55; }
+
+.vance-mk__input:focus,
+.vance-mk__select:focus,
+.vance-mk__textarea:focus {
+	border-color: var(--mk-teal);
+	background: var(--mk-white);
+	box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.1);
+}
+
+.vance-mk__field { margin-bottom: 18px; }
+.vance-mk__field:last-child { margin-bottom: 0; }
+.vance-mk__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.vance-mk__fieldset { border: 0; padding: 0; margin: 0 0 24px; }
+.vance-mk__fieldset:last-child { margin-bottom: 0; }
+
+.vance-mk__legend {
+	display: block;
+	width: 100%;
+	font-family: 'Outfit', sans-serif;
+	font-size: 12px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--mk-navy);
+	padding: 0 0 10px;
+	margin-bottom: 16px;
+	border-bottom: 1px solid var(--mk-border);
+}
+
+/* =========================================================================
+   Buttons
+   ========================================================================= */
+
+.vance-mk__nav { display: flex; gap: 10px; margin-top: 24px; }
+
+.vance-mk__btn {
+	flex: 1;
+	padding: 13px;
+	border-radius: var(--mk-radius);
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: 0.18s;
+	font-family: 'Outfit', sans-serif;
+	border: 2px solid transparent;
+}
+
+.vance-mk__btn--primary {
+	border: none;
+	background: var(--mk-teal);
+	color: #fff;
+	box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+}
+
+.vance-mk__btn--primary:hover:not(:disabled) {
+	background: var(--mk-teal-hover);
+	box-shadow: 0 6px 20px rgba(0, 128, 128, 0.3);
+}
+
+.vance-mk__btn--primary:disabled {
+	background: var(--mk-border);
+	color: var(--mk-muted);
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
+.vance-mk__btn--ghost {
+	border-color: var(--mk-border);
+	background: transparent;
+	color: var(--mk-muted);
+	font-weight: 600;
+	font-family: 'Inter', sans-serif;
+}
+
+.vance-mk__btn--ghost:hover { border-color: var(--mk-teal); color: var(--mk-teal); }
+
+.vance-mk__btn--dark {
+	border: none;
+	background: var(--mk-navy);
+	color: #fff;
+	box-shadow: 0 4px 12px rgba(10, 25, 41, 0.15);
+}
+
+.vance-mk__btn--dark:hover { background: var(--mk-navy-muted); }
+.vance-mk__btn--auto { flex: 0 0 auto; padding: 13px 24px; }
+.vance-mk__btn--ok { background: #16a34a !important; box-shadow: none; }
+
+.vance-mk__btn:focus-visible { outline: 3px solid var(--mk-teal); outline-offset: 2px; }
+
+/* =========================================================================
+   Feedback + footer
+   ========================================================================= */
+
+.vance-mk__note {
+	display: none;
+	margin-top: 14px;
+	padding: 11px 14px;
+	border-radius: var(--mk-radius);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.vance-mk__note.is-visible { display: block; }
+.vance-mk__note--error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.vance-mk__note--ok { background: var(--mk-wash); color: #0f5c5c; border: 1px solid rgba(0, 128, 128, 0.25); }
+
+.vance-mk__footer {
+	text-align: center;
+	font-size: 12px;
+	color: var(--mk-muted);
+	margin-top: 20px;
+	line-height: 1.6;
+}
+
+/* Success / completion panel. */
+.vance-mk__done { text-align: center; padding: 24px 8px 8px; }
+
+.vance-mk__done-icon {
+	width: 56px;
+	height: 56px;
+	margin: 0 auto 16px;
+	border-radius: 50%;
+	background: var(--mk-wash);
+	color: var(--mk-teal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26px;
+}
+
+/* =========================================================================
+   Responsive + motion
+   ========================================================================= */
+
+@media (max-width: 640px) {
+	.vance-mk-scrim { padding: 0; }
+	.vance-mk {
+		border-radius: 0;
+		min-height: 100%;
+		padding: 22px 14px 18px;
+		max-width: none;
+	}
+	.vance-mk__header { padding: 0 34px; }
+	.vance-mk__title { font-size: 22px; }
+	.vance-mk__card { padding: 20px; }
+	.vance-mk__options--grid,
+	.vance-mk__dependent-grid,
+	.vance-mk__row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.vance-mk-scrim.is-open,
+	.vance-mk__panel { animation: none; }
+	.vance-mk__option,
+	.vance-mk__btn,
+	.vance-mk__close,
+	.vance-mk__progress-fill { transition: none; }
+	.vance-mk__option:hover { transform: none; }
+}

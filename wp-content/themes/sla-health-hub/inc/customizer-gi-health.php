@@ -18,7 +18,7 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
        PANEL
     ════════════════════════════════════════ */
     $wp_customize->add_panel( 'vance_gi_panel', [
-        'title'    => __( 'Page — GI Health', 'sla-health-hub' ),
+        'title'    => __( 'Page - GI Health', 'sla-health-hub' ),
         'priority' => 44,
     ] );
 
@@ -39,7 +39,7 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
        SECTION 1 — Hub: Hero
     ════════════════════════════════════════ */
     $wp_customize->add_section( 'vance_gi_hub_hero', [
-        'title' => 'Hub — Hero',
+        'title' => 'Hub, Hero',
         'panel' => 'vance_gi_panel',
     ] );
 
@@ -50,7 +50,7 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
     $wp_customize->add_setting( 'vance_gi_hub_hero_heading', [ 'default' => 'Seven common gut conditions, clearly explained', 'sanitize_callback' => 'wp_kses_post' ] );
     $wp_customize->add_control( 'vance_gi_hub_hero_heading', [ 'label' => 'Heading (HTML allowed)', 'section' => $sec, 'type' => 'textarea' ] );
 
-    $wp_customize->add_setting( 'vance_gi_hub_hero_lede', [ 'default' => 'Clinician-reviewed information on inflammatory bowel disease, IBS, colorectal cancer and more — written in plain language to help you understand, prepare and manage.', 'sanitize_callback' => 'sanitize_textarea_field' ] );
+    $wp_customize->add_setting( 'vance_gi_hub_hero_lede', [ 'default' => 'Clinician-reviewed information on inflammatory bowel disease, IBS, colorectal cancer and more, written in plain language to help you understand, prepare and manage.', 'sanitize_callback' => 'sanitize_textarea_field' ] );
     $wp_customize->add_control( 'vance_gi_hub_hero_lede', [ 'label' => 'Lede paragraph', 'section' => $sec, 'type' => 'textarea' ] );
 
     $wp_customize->add_setting( 'vance_gi_hub_hero_btn1_text', [ 'default' => 'Explore conditions', 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -72,15 +72,15 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
     $wp_customize->add_control( 'vance_gi_hub_hero_bg_overlay', [ 'label' => 'Image overlay opacity (0 = fully show image, 100 = fully hide it)', 'section' => $sec, 'type' => 'number', 'input_attrs' => [ 'min' => 0, 'max' => 100 ] ] );
 
     /* hero gradient colours */
-    $colour( 'vance_gi_hub_hero_c1', '#003d3d', $sec, 'Hero gradient — dark start colour' );
-    $colour( 'vance_gi_hub_hero_c2', '#006666', $sec, 'Hero gradient — mid colour' );
-    $colour( 'vance_gi_hub_hero_c3', '#008080', $sec, 'Hero gradient — end colour' );
+    $colour( 'vance_gi_hub_hero_c1', '#003d3d', $sec, 'Hero gradient, dark start colour' );
+    $colour( 'vance_gi_hub_hero_c2', '#006666', $sec, 'Hero gradient, mid colour' );
+    $colour( 'vance_gi_hub_hero_c3', '#008080', $sec, 'Hero gradient, end colour' );
 
     /* ════════════════════════════════════════
        SECTION 2 — Hub: Conditions Grid
     ════════════════════════════════════════ */
     $wp_customize->add_section( 'vance_gi_hub_grid', [
-        'title' => 'Hub — Conditions Grid',
+        'title' => 'Hub, Conditions Grid',
         'panel' => 'vance_gi_panel',
     ] );
     $sec = 'vance_gi_hub_grid';
@@ -95,7 +95,7 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
        SECTION 3 — Hub: Stats Band
     ════════════════════════════════════════ */
     $wp_customize->add_section( 'vance_gi_hub_stats', [
-        'title' => 'Hub — Stats Band',
+        'title' => 'Hub, Stats Band',
         'panel' => 'vance_gi_panel',
     ] );
     $sec = 'vance_gi_hub_stats';
@@ -113,16 +113,16 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
     ];
     foreach ( $stat_defaults as $i => $d ) {
         $wp_customize->add_setting( "vance_gi_hub_stat{$i}_num", [ 'default' => $d[0], 'sanitize_callback' => 'sanitize_text_field' ] );
-        $wp_customize->add_control( "vance_gi_hub_stat{$i}_num", [ 'label' => "Stat $i — number / headline figure", 'section' => $sec, 'type' => 'text' ] );
+        $wp_customize->add_control( "vance_gi_hub_stat{$i}_num", [ 'label' => "Stat $i, number / headline figure", 'section' => $sec, 'type' => 'text' ] );
         $wp_customize->add_setting( "vance_gi_hub_stat{$i}_label", [ 'default' => $d[1], 'sanitize_callback' => 'sanitize_text_field' ] );
-        $wp_customize->add_control( "vance_gi_hub_stat{$i}_label", [ 'label' => "Stat $i — label", 'section' => $sec, 'type' => 'text' ] );
+        $wp_customize->add_control( "vance_gi_hub_stat{$i}_label", [ 'label' => "Stat $i, label", 'section' => $sec, 'type' => 'text' ] );
     }
 
     /* ════════════════════════════════════════
        SECTION 4 — Hub: CTA Band
     ════════════════════════════════════════ */
     $wp_customize->add_section( 'vance_gi_hub_cta', [
-        'title' => 'Hub — CTA Band',
+        'title' => 'Hub, CTA Band',
         'panel' => 'vance_gi_panel',
     ] );
     $sec = 'vance_gi_hub_cta';
@@ -138,26 +138,26 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
     $wp_customize->add_setting( 'vance_gi_hub_cta_btn_url', [ 'default' => '/dashboard/', 'sanitize_callback' => 'esc_url_raw' ] );
     $wp_customize->add_control( 'vance_gi_hub_cta_btn_url', [ 'label' => 'Button URL', 'section' => $sec, 'type' => 'url' ] );
 
-    $colour( 'vance_gi_hub_cta_c1', '#008080', $sec, 'CTA gradient — left colour' );
-    $colour( 'vance_gi_hub_cta_c2', '#006666', $sec, 'CTA gradient — right colour' );
+    $colour( 'vance_gi_hub_cta_c1', '#008080', $sec, 'CTA gradient, left colour' );
+    $colour( 'vance_gi_hub_cta_c2', '#006666', $sec, 'CTA gradient, right colour' );
 
     /* ════════════════════════════════════════
        SECTION 5 — Shared Colours
     ════════════════════════════════════════ */
     $wp_customize->add_section( 'vance_gi_colours', [
-        'title' => 'GI Health — Colours',
+        'title' => 'GI Health, Colours',
         'panel' => 'vance_gi_panel',
     ] );
     $sec = 'vance_gi_colours';
 
     $colour( 'vance_gi_color_primary',        '#008080', $sec, 'Primary teal (buttons, borders, links)' );
-    $colour( 'vance_gi_color_primary_hover',  '#006666', $sec, 'Primary teal — darker hover state' );
+    $colour( 'vance_gi_color_primary_hover',  '#006666', $sec, 'Primary teal, darker hover state' );
     $colour( 'vance_gi_color_primary_light',  '#78bfbf', $sec, 'Primary light (stat numbers, orb)' );
     $colour( 'vance_gi_color_primary_pale',   '#aedbdb', $sec, 'Primary pale (hero eyebrow, dots)' );
     $colour( 'vance_gi_color_primary_wash',   '#def4f4', $sec, 'Primary wash (callout bg, card icon bg)' );
-    $colour( 'vance_gi_color_callout_border', '#008080', $sec, 'Callout box — left border colour' );
-    $colour( 'vance_gi_color_keyfact_border', '#008080', $sec, 'Keyfact strip — bottom border colour' );
-    $colour( 'vance_gi_color_sidebar_accent', '#008080', $sec, 'Left sidebar panel — top border colour' );
+    $colour( 'vance_gi_color_callout_border', '#008080', $sec, 'Callout box, left border colour' );
+    $colour( 'vance_gi_color_keyfact_border', '#008080', $sec, 'Keyfact strip, bottom border colour' );
+    $colour( 'vance_gi_color_sidebar_accent', '#008080', $sec, 'Left sidebar panel, top border colour' );
 
     /* ════════════════════════════════════════
        SECTIONS 6–12 — Condition Pages
@@ -176,7 +176,7 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
         $sec_id = "vance_gi_cond_{$key}";
 
         $wp_customize->add_section( $sec_id, [
-            'title' => "Condition — {$panel_label}",
+            'title' => "Condition, {$panel_label}",
             'panel' => 'vance_gi_panel',
         ] );
 

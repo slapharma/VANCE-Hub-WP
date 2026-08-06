@@ -144,11 +144,16 @@ class VHH_REST_Annotations {
 		if ( is_wp_error( $enabled ) ) {
 			return $enabled;
 		}
-		// Any logged-in user can view, comment, and reply — it's a collaborative
-		// review surface. Moderation (resolve/delete/export) still needs the
+		// Restricted to roles holding vhh_annotate — Administrator and Editor
+		// by default; Customize → Article Annotations can widen it to more
+		// roles. Moderation (resolve/delete/export) still needs the separate
 		// vhh_moderate_annotations capability (see can_patch / can_export).
-		if ( ! is_user_logged_in() ) {
-			return new WP_Error( 'vhh_unauthorized', 'Login required.', array( 'status' => rest_authorization_required_code() ) );
+		if ( ! VHH_Plugin::user_can_annotate() ) {
+			return new WP_Error(
+				'vhh_unauthorized',
+				is_user_logged_in() ? 'You do not have permission to use annotations.' : 'Login required.',
+				array( 'status' => rest_authorization_required_code() )
+			);
 		}
 		return true;
 	}

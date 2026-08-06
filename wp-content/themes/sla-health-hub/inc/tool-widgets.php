@@ -36,161 +36,109 @@ function vance_tool_widgets_emit_modal_css_once() {
 	static $emitted = false;
 	if ( $emitted ) { return; }
 	$emitted = true;
-		$c_backdrop   = vance_get_theme_mod( 'vance_modal_backdrop',        'rgba(10, 25, 41, 0.78)' );
-		$c_panel_bg   = vance_get_theme_mod( 'vance_modal_panel_bg',        '#0A1929' );
-		// Saved as an empty string on this site, which emitted `color: ;` and left
-		// the panel with no colour of its own. Fall back to a dark ink that reads
-		// on the white panel background rather than to the old white.
-		$c_text       = vance_get_theme_mod( 'vance_modal_text_color',      '' ) ?: '#0F172A';
-		$c_header_bg  = vance_get_theme_mod( 'vance_modal_header_bg',       '#061119' );
-		$c_title      = vance_get_theme_mod( 'vance_modal_title_color',     '#ffffff' );
-		// The vance_modal_*_bubble_* / input / send colour mods are no longer read
-		// here: the chat they styled moved to the shared Ask AI surface.
 	?>
 	<style>
-		/* Frosted surfaces. The tints come from the customizer colours at reduced
-		   alpha (see vance_rgba) so admin colour choices still drive the look;
-		   only the transparency and blur are added here. */
-		.vance-tw-modal {
-			position: fixed; inset: 0;
-			z-index: 99999;
-			display: none;
-			align-items: center; justify-content: center;
-			padding: 16px;
-			background: <?php echo vance_rgba( $c_backdrop, 0.62 ); ?>;
-			-webkit-backdrop-filter: blur(8px);
-			backdrop-filter: blur(8px);
-			opacity: 0;
-			transition: opacity 0.25s ease;
-		}
-		.vance-tw-modal.is-open { display: flex; opacity: 1; }
-		.vance-tw-modal__panel {
-			position: relative;
-			width: min(1000px, 100%);
-			max-height: min(90vh, 860px);
-			background: <?php echo vance_rgba( $c_panel_bg, 0.82 ); ?>;
-			-webkit-backdrop-filter: blur(28px) saturate(150%);
-			backdrop-filter: blur(28px) saturate(150%);
-			color: <?php echo $c_text; ?>;
-			border-radius: 0;
-			border: 1px solid rgba(255,255,255,0.55);
-			box-shadow: 0 30px 90px rgba(10,25,41,0.38), inset 0 1px 0 rgba(255,255,255,0.70);
-			overflow: hidden;
-			display: flex; flex-direction: column;
-		}
-		/* Without backdrop-filter the tint alone would let the page bleed through
-		   and drop text contrast, so fall back to near-opaque surfaces. */
-		@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-			.vance-tw-modal { background: <?php echo vance_rgba( $c_backdrop, 0.92 ); ?>; }
-			.vance-tw-modal__panel { background: <?php echo $c_panel_bg; ?>; }
-		}
-		.vance-tw-modal__header {
-			display: flex; align-items: center; justify-content: space-between;
-			padding: 14px 24px;
-			background: <?php echo vance_rgba( $c_header_bg, 0.80 ); ?>;
-			-webkit-backdrop-filter: blur(20px);
-			backdrop-filter: blur(20px);
-			border-bottom: 1px solid rgba(255,255,255,0.18);
-		}
-		.vance-tw-modal__title {
-			margin: 0;
-			font-size: 14px; font-weight: 700;
-			font-family: 'Outfit', sans-serif;
-			letter-spacing: 0.6px;
-			text-transform: uppercase;
-			color: <?php echo $c_title; ?>;
-		}
-		.vance-tw-modal__close {
-			background: transparent; border: none;
-			color: #ffffff; opacity: 0.85;
-			font-size: 22px; line-height: 1;
-			cursor: pointer; padding: 4px 10px;
-			border-radius: 0;
-		}
-		.vance-tw-modal__close:hover { opacity: 1; background: rgba(255,255,255,0.10); }
-		.vance-tw-modal__body { flex: 1; min-height: 0; padding: 22px 24px; overflow-y: auto; }
-		.vance-tw-modal__footer { padding: 14px 22px; border-top: 1px solid rgba(255,255,255,0.10); background: <?php echo $c_header_bg; ?>; }
-		/* Filter chips and their labels are styled by the renderer itself
-		   (vance_discovery_facet_css in functions.php), so they stay correct
-		   wherever they are used. Only the surrounding form furniture is here. */
-		/* Chips sit on frosted glass rather than flat white, so they get a touch
-		   of translucency of their own. The selected state stays fully opaque:
-		   its contrast has to be predictable whatever shows through behind. */
+		/*
+		 * The Discovery / Content Filters modal now wears the shared modal kit
+		 * (assets/css/vance-modal-kit.css) — the malnutrition calculator's
+		 * design language, so the three modals a reader is most likely to open
+		 * from the homepage look like one product.
+		 *
+		 * That replaces the old dark frosted-glass panel, and with it the
+		 * vance_modal_backdrop / _panel_bg / _header_bg / _title_color /
+		 * _text_color Customizer settings, which no longer drive this surface.
+		 * The kit is a fixed light palette by design; those controls can be
+		 * retired from the Customizer whenever someone is next in there.
+		 *
+		 * Only the form furniture is styled here. The filter chips themselves
+		 * come from vance_discovery_facet_css() in functions.php so they stay
+		 * identical wherever the facets are rendered.
+		 */
+		.vance-tw-modal { z-index: 99999; }
+
 		.vance-tw-modal .vance-facets {
-			--vf-chip-bg: rgba(255,255,255,0.72);
-			--vf-chip-border: rgba(15,23,42,0.16);
-			--vf-chip-hover-bg: rgba(255,255,255,0.95);
-			--vf-chip-hover-border: rgba(15,23,42,0.32);
+			--vf-chip-bg: #ffffff;
+			--vf-chip-border: #E2E8F0;
+			--vf-chip-hover-bg: #f4ffff;
+			--vf-chip-hover-border: #008080;
 		}
+
 		.vance-tw-modal .filters-intro {
 			margin: 0 0 18px;
-			font-size: 15px; line-height: 1.5;
-			color: #3f4d5f;
+			font-size: 14px; line-height: 1.6;
+			color: #64748B;
 		}
+
 		.vance-tw-modal .keyword-field { flex: 1 1 260px; min-width: 0; }
 		.vance-tw-modal .keyword-label {
 			display: block; margin: 0 0 6px;
-			font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800;
-			color: #334155;
-			text-transform: uppercase; letter-spacing: 1px;
+			font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+			color: #0A1929;
 		}
 		.vance-tw-modal .keyword-input {
 			width: 100%; box-sizing: border-box;
-			min-height: 44px; padding: 11px 14px;
-			background: rgba(255,255,255,0.85); color: #0f172a;
-			border: 1px solid rgba(15,23,42,0.16); border-radius: 0;
-			font-size: 16px;
+			min-height: 46px; padding: 12px 14px;
+			background: #F8FAFC; color: #1F2937;
+			border: 1px solid #E2E8F0; border-radius: 12px;
+			font-family: 'Inter', sans-serif; font-size: 15px;
+			outline: none; transition: 0.2s;
 		}
-		.vance-tw-modal .keyword-input::placeholder { color: #64748b; }
+		.vance-tw-modal .keyword-input::placeholder { color: #94A3B8; }
 		.vance-tw-modal .keyword-input:focus {
-			outline: 3px solid #008080; outline-offset: 2px;
 			border-color: #008080; background: #ffffff;
+			box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
 		}
-		/* Keyword and both buttons share one band pinned to the bottom of the
-		   panel, so the primary action stays reachable even on a short viewport
+
+		/* Keyword + both buttons share one band pinned to the bottom of the
+		   card, so the primary action stays reachable on a short viewport
 		   where the filters above it have to scroll. */
 		.vance-tw-modal .filters-actions {
-			position: sticky; bottom: -22px; z-index: 2;
+			position: sticky; bottom: -24px; z-index: 2;
 			display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
-			margin: 20px -24px -22px; padding: 16px 24px;
-			background: rgba(255,255,255,0.68);
-			-webkit-backdrop-filter: blur(20px);
-			backdrop-filter: blur(20px);
-			border-top: 1px solid rgba(15,23,42,0.10);
+			margin: 22px -28px -28px; padding: 18px 28px;
+			background: rgba(255,255,255,0.94);
+			-webkit-backdrop-filter: blur(16px);
+			backdrop-filter: blur(16px);
+			border-top: 1px solid #E2E8F0;
+			border-radius: 0 0 16px 16px;
 		}
 		.vance-tw-modal .vance-tw-btn-go {
-			min-height: 44px; padding: 11px 28px;
-			background: #008080;
-			color: #ffffff; border: 1px solid #008080; border-radius: 0;
-			font-family: 'Outfit', sans-serif; font-size: 15px;
-			font-weight: 800; letter-spacing: 0.3px;
+			min-height: 46px; padding: 13px 28px;
+			background: #008080; color: #ffffff;
+			border: none; border-radius: 12px;
+			font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
 			cursor: pointer;
-			transition: background-color .18s ease, border-color .18s ease;
+			box-shadow: 0 4px 12px rgba(0,128,128,0.2);
+			transition: 0.18s;
 		}
-		.vance-tw-modal .vance-tw-btn-go:hover { background: #006666; border-color: #006666; }
+		.vance-tw-modal .vance-tw-btn-go:hover {
+			background: #006666; box-shadow: 0 6px 20px rgba(0,128,128,0.3);
+		}
 		.vance-tw-modal .vance-tw-btn-text {
-			min-height: 44px; padding: 11px 20px;
-			background: #ffffff;
-			border: 1px solid #cbd5e1;
-			color: #334155;
-			border-radius: 0; cursor: pointer;
-			font-family: 'Outfit', sans-serif;
-			font-size: 14px; font-weight: 700;
-			transition: background-color .18s ease, border-color .18s ease;
+			min-height: 46px; padding: 13px 20px;
+			background: transparent;
+			border: 2px solid #E2E8F0; color: #64748B;
+			border-radius: 12px; cursor: pointer;
+			font-family: 'Inter', sans-serif;
+			font-size: 14px; font-weight: 600;
+			transition: 0.18s;
 		}
-		.vance-tw-modal .vance-tw-btn-text:hover { background: #f1f5f9; border-color: #94a3b8; }
+		.vance-tw-modal .vance-tw-btn-text:hover { border-color: #008080; color: #008080; }
 		.vance-tw-modal .vance-tw-btn-go:focus-visible,
 		.vance-tw-modal .vance-tw-btn-text:focus-visible {
 			outline: 3px solid #008080; outline-offset: 2px;
 		}
-		@media (prefers-reduced-motion: reduce) {
-			.vance-tw-modal,
+
+		@media (max-width: 640px) {
+			.vance-tw-modal .filters-actions { margin: 22px -20px -20px; padding: 16px 20px; border-radius: 0; }
 			.vance-tw-modal .vance-tw-btn-go,
-			.vance-tw-modal .vance-tw-btn-text { transition: none; }
+			.vance-tw-modal .vance-tw-btn-text { flex: 1 1 100%; }
 		}
-		/* The chat bubble/input rules that used to live here went with the inline
-		   Vance AI modal — that card now opens the shared VANCE-Ai surface, which
-		   brings its own stylesheet (assets/css/vance-askai.css). */
+		@media (prefers-reduced-motion: reduce) {
+			.vance-tw-modal .vance-tw-btn-go,
+			.vance-tw-modal .vance-tw-btn-text,
+			.vance-tw-modal .keyword-input { transition: none; }
+		}
 	</style>
 	<script>
 	(function () {
@@ -316,16 +264,37 @@ function vance_tw_open_attr( $modal_id ) {
 
 /**
  * Modal shell. Takes the inline tool UI as a callable.
+ *
+ * Built from the shared modal kit (assets/css/vance-modal-kit.css): badge,
+ * uppercase title and subtitle above a single white card. `.vance-tw-modal`
+ * is kept as a hook so the existing open/close delegation and the form styles
+ * above keep working.
+ *
+ * @param string   $modal_id             DOM id, also the data-vance-tw-open target.
+ * @param string   $title                Modal title.
+ * @param callable $render_body_callable Renders the tool UI inside the card.
+ * @param string   $badge                Small pill above the title.
+ * @param string   $subtitle             One line under the title.
  */
-function vance_tool_widget_modal( $modal_id, $title, $render_body_callable ) {
+function vance_tool_widget_modal( $modal_id, $title, $render_body_callable, $badge = 'Vance Medical Hub', $subtitle = '' ) {
+	$title_id = sanitize_html_class( $modal_id ) . '-title';
 	?>
-	<div id="<?php echo esc_attr( $modal_id ); ?>" class="vance-tw-modal" role="dialog" aria-modal="true" aria-hidden="true">
-		<div class="vance-tw-modal__panel">
-			<div class="vance-tw-modal__header">
-				<h2 class="vance-tw-modal__title"><?php echo esc_html( $title ); ?></h2>
-				<button type="button" class="vance-tw-modal__close" aria-label="Close" data-vance-tw-close>&times;</button>
+	<div id="<?php echo esc_attr( $modal_id ); ?>" class="vance-tw-modal vance-mk-scrim" role="dialog" aria-modal="true"
+	     aria-hidden="true" aria-labelledby="<?php echo esc_attr( $title_id ); ?>">
+		<div class="vance-mk vance-mk--wide" role="document">
+			<button type="button" class="vance-mk__close" aria-label="Close" data-vance-tw-close>&times;</button>
+
+			<div class="vance-mk__header">
+				<?php if ( $badge ) : ?>
+					<div class="vance-mk__badge"><?php echo esc_html( $badge ); ?></div>
+				<?php endif; ?>
+				<h2 id="<?php echo esc_attr( $title_id ); ?>" class="vance-mk__title"><?php echo esc_html( $title ); ?></h2>
+				<?php if ( $subtitle ) : ?>
+					<p class="vance-mk__subtitle"><?php echo esc_html( $subtitle ); ?></p>
+				<?php endif; ?>
 			</div>
-			<div class="vance-tw-modal__body">
+
+			<div class="vance-mk__card vance-tw-modal__body">
 				<?php call_user_func( $render_body_callable ); ?>
 			</div>
 		</div>
@@ -342,7 +311,7 @@ function vance_render_tool_widget_content_filters() {
 
 	vance_tool_widget_card( array(
 		'title'    => vance_get_theme_mod( $prefix . 'title',  'Content Filters' ),
-		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Filter the knowledge base by section, topic, condition and audience — find exactly the article, study, or guide you need in seconds.' ),
+		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Filter the knowledge base by section, topic, condition and audience, find exactly the article, study, or guide you need in seconds.' ),
 		'cta'      => vance_get_theme_mod( $prefix . 'cta',    'Open Filters' ),
 		'accent'   => vance_get_theme_mod( $prefix . 'accent', '#008080' ),
 		'bg_color' => vance_get_theme_mod( $prefix . 'bg_color',    '#ffffff' ),
@@ -353,7 +322,13 @@ function vance_render_tool_widget_content_filters() {
 		'fallback_icon_svg' => '<rect x="3" y="6" width="18" height="2"/><rect x="6" y="11" width="12" height="2"/><rect x="9" y="16" width="6" height="2"/>',
 	) );
 
-	vance_tool_widget_modal( 'vance-tw-modal-content-filters', 'Content Filters', 'vance_tw_render_content_filters_body' );
+	vance_tool_widget_modal(
+		'vance-tw-modal-content-filters',
+		'Discovery Suite',
+		'vance_tw_render_content_filters_body',
+		'Vance Medical Hub · Content Filters',
+		'Narrow the knowledge base down to the articles, studies and guides that apply to you.'
+	);
 }
 
 function vance_tw_render_content_filters_body() {
@@ -371,7 +346,7 @@ function vance_tw_render_content_filters_body() {
 		<div class="filters-actions">
 			<div class="keyword-field">
 				<label class="keyword-label" for="vance-tw-keyword">Keyword</label>
-				<input type="text" id="vance-tw-keyword" name="s" class="keyword-input" placeholder="Optional, for example bloating">
+				<input type="text" id="vance-tw-keyword" name="keyword" class="keyword-input" placeholder="Optional, for example bloating">
 			</div>
 			<button type="submit" class="vance-tw-btn-go">Show results</button>
 			<button type="reset" class="vance-tw-btn-text" onclick="var f=this.closest('form'); setTimeout(function(){ f.querySelectorAll('.text-chip').forEach(function(el){ var i=el.querySelector('input'); el.classList.toggle('selected', !!(i &amp;&amp; i.checked)); }); }, 0);">Reset</button>
@@ -389,7 +364,7 @@ function vance_render_tool_widget_vance_ai() {
 
 	vance_tool_widget_card( array(
 		'title'    => vance_get_theme_mod( $prefix . 'title',  'VANCE-Ai' ),
-		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Ask any gastro health question and get an evidence-backed answer in seconds. Powered by curated clinical content — available 24/7.' ),
+		'desc'     => vance_get_theme_mod( $prefix . 'desc',   'Ask any gastro health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.' ),
 		'cta'      => vance_get_theme_mod( $prefix . 'cta',    'Open Chat' ),
 		'accent'   => vance_get_theme_mod( $prefix . 'accent', '#0EA5E9' ),
 		'bg_color' => vance_get_theme_mod( $prefix . 'bg_color',    '#ffffff' ),
@@ -529,7 +504,13 @@ function vance_render_tool_widgets_row() {
 	<?php
 	// Content Filters keeps its local modal. The Vance AI banner opens the shared
 	// Ask AI chat instead (see vance_tw_open_attr).
-	vance_tool_widget_modal( 'vance-tw-modal-content-filters', 'Content Filters', 'vance_tw_render_content_filters_body' );
+	vance_tool_widget_modal(
+		'vance-tw-modal-content-filters',
+		'Discovery Suite',
+		'vance_tw_render_content_filters_body',
+		'Vance Medical Hub · Content Filters',
+		'Narrow the knowledge base down to the articles, studies and guides that apply to you.'
+	);
 }
 
 /**

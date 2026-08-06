@@ -20,7 +20,7 @@ get_header(); ?>
     $hero_bg        = vance_get_theme_mod( 'vance_tools_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
     $hero_tag       = vance_get_theme_mod( 'vance_tools_hero_tag',   'Free Tools' );
     $hero_title     = vance_get_theme_mod( 'vance_tools_hero_title', 'Tools &amp; <span class="highlight">Resources</span>' );
-    $hero_desc      = vance_get_theme_mod( 'vance_tools_hero_desc',  'Clinical calculators built on peer-reviewed evidence — free to use, no signup required. Save your results and build a meal plan by registering for a free account.' );
+    $hero_desc      = vance_get_theme_mod( 'vance_tools_hero_desc',  'Clinical calculators built on peer-reviewed evidence, free to use, no signup required. Save your results and build a meal plan by registering for a free account.' );
     $hero_overlay   = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_tools_hero_overlay', 70 ) ) ) ) / 100;
     $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
     $hero_btn1_text = vance_get_theme_mod( 'vance_tools_hero_btn1_text', 'Try a Tool' );
@@ -51,7 +51,7 @@ get_header(); ?>
     <!-- INTRO -->
     <?php
     $intro_title     = vance_get_theme_mod( 'vance_tools_intro_title', 'Clinical-grade calculators, free for everyone' );
-    $intro_desc      = vance_get_theme_mod( 'vance_tools_intro_desc',  "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them — register if you want to save results to your dashboard." );
+    $intro_desc      = vance_get_theme_mod( 'vance_tools_intro_desc',  "Whether you're tracking your own health or supporting a patient, these tools turn evidence into a number you can act on. No login needed to use them, register if you want to save results to your dashboard." );
     $intro_eyebrow   = vance_get_theme_mod( 'vance_tools_intro_eyebrow',   'Open Access' );
     $intro_bg        = vance_get_theme_mod( 'vance_tools_intro_bg_color', '#ffffff' );
     $intro_text_col  = vance_get_theme_mod( 'vance_tools_intro_text_color', '' ); // empty → use theme defaults
@@ -101,7 +101,7 @@ get_header(); ?>
             'page_url' => '/ibd-recipies/',
             'name'     => 'IBD Recipes & Meal Planner',
             'tag'      => 'Meal Planning',
-            'desc'     => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely — saving plans prompts a quick signup.',
+            'desc'     => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely, saving plans prompts a quick signup.',
             'colors'   => array( '#def4f4', '#aedbdb', '#008080' ),
             'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />',
         ),
@@ -155,7 +155,7 @@ get_header(); ?>
         <div class="container" style="text-align: center; color: white;">
             <h2 style="color: white; margin-bottom: 16px;">Want to save your results?</h2>
             <p class="max-600" style="font-size: 18px; margin: 0 auto 32px; color: rgba(255,255,255,0.92);">
-                Free registration unlocks result history, personalised meal plans, VANCE-Ai, and printable handouts — all in your private dashboard.
+                Free registration unlocks result history, personalised meal plans, VANCE-Ai, and printable handouts, all in your private dashboard.
             </p>
             <div class="hero-actions" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
                 <a href="/register/" class="btn btn-primary" style="background: white; color: #008080; border: none;">Register Free</a>

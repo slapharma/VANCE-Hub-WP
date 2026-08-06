@@ -30,7 +30,7 @@ $tracks_text_color  = vance_get_theme_mod( 'vance_edu_tracks_text_color',  '' );
 // ── Waitlist ────────────────────────────────────────────────────────────────
 $wl_action      = vance_get_theme_mod( 'vance_edu_waitlist_action', '' );
 $wl_heading     = vance_get_theme_mod( 'vance_edu_waitlist_heading', 'Join the Waitlist' );
-$wl_desc        = vance_get_theme_mod( 'vance_edu_waitlist_desc',    "Be first to hear when patient or practitioner courses go live. We'll send a single email — no spam, easy unsubscribe." );
+$wl_desc        = vance_get_theme_mod( 'vance_edu_waitlist_desc',    "Be first to hear when patient or practitioner courses go live. We'll send a single email, no spam, easy unsubscribe." );
 $wl_button      = vance_get_theme_mod( 'vance_edu_waitlist_button',  'Notify Me' );
 $wl_bg_from     = vance_get_theme_mod( 'vance_edu_waitlist_bg_from', '#008080' );
 $wl_bg_to       = vance_get_theme_mod( 'vance_edu_waitlist_bg_to',   '#006666' );
@@ -66,7 +66,7 @@ $track_icons = array(
     <!-- INTRO — cloned from page-tools-resources.php, same shape + 64px padding -->
     <?php
     $intro_title    = vance_get_theme_mod( 'vance_edu_intro_title',         'Courses crafted by clinicians, for life with IBD' );
-    $intro_desc     = vance_get_theme_mod( 'vance_edu_intro_desc',          'Self-paced patient courses and CPD-accredited practitioner modules — written, reviewed, and field-tested by gastroenterologists and dietitians. Pick a track below to be notified when enrolment opens.' );
+    $intro_desc     = vance_get_theme_mod( 'vance_edu_intro_desc',          'Self-paced patient courses and CPD-accredited practitioner modules, written, reviewed, and field-tested by gastroenterologists and dietitians. Pick a track below to be notified when enrolment opens.' );
     $intro_eyebrow  = vance_get_theme_mod( 'vance_edu_intro_eyebrow',       'Coming Soon' );
     $intro_bg       = vance_get_theme_mod( 'vance_edu_intro_bg_color',      '#ffffff' );
     $intro_text_col = vance_get_theme_mod( 'vance_edu_intro_text_color',    '' ); // empty → use theme defaults
@@ -177,7 +177,7 @@ $track_icons = array(
             <p style="font-size: 11px; color: var(--text-light); margin: 12px 0 0; line-height: 1.55;">No spam. One launch email per track. <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>.</p>
         </form>
         <?php else : ?>
-        <p style="font-size: 13px; color: var(--text-light); margin: 0;"><em>Waitlist signup is being configured — please check back soon.</em></p>
+        <p style="font-size: 13px; color: var(--text-light); margin: 0;"><em>Waitlist signup is being configured, please check back soon.</em></p>
         <?php endif; ?>
     </div>
 </div>
@@ -193,7 +193,7 @@ $track_icons = array(
     function open(track) {
         if (track && trackInp) trackInp.value = track;
         if (track && ctxEl) {
-            ctxEl.textContent = "We'll email you when " + track + " go live. One launch email per track — no spam.";
+            ctxEl.textContent = "We'll email you when " + track + " go live. One launch email per track, no spam.";
         }
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';

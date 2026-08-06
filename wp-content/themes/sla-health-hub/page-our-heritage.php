@@ -156,8 +156,8 @@ get_header(); ?>
                 <?php 
                 $val_defaults = [
                     1 => ["Evidence-Based", "Every product and piece of content we produce meets the highest scientific and regulatory standards, rooted in peer-reviewed clinical research."],
-                    2 => ["Patient-First", "We design every solution around the real-world challenges that patients face — not just clinical endpoints — because lived experience matters."],
-                    3 => ["Pharma-Grade", "Our medical food products are developed with the same rigour applied to licensed medicines — providing a quality benchmark no ordinary supplement can match."],
+                    2 => ["Patient-First", "We design every solution around the real-world challenges that patients face, not just clinical endpoints, because lived experience matters."],
+                    3 => ["Pharma-Grade", "Our medical food products are developed with the same rigour applied to licensed medicines, providing a quality benchmark no ordinary supplement can match."],
                     4 => ["Global Reach", "With a regulatory footprint spanning multiple continents, Vance Medical delivers consistent, trusted solutions wherever patients and clinicians need them."]
                 ];
                 for($i=1; $i<=4; $i++):
@@ -195,7 +195,7 @@ get_header(); ?>
                 <div style="flex:1;min-width:300px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
                     <?php 
                     $feat_defaults = [
-                        1 => ["Pharma-Grade Manufacturing", "Produced under strict pharmaceutical cGMP standards — the highest tier of quality assurance in the industry."],
+                        1 => ["Pharma-Grade Manufacturing", "Produced under strict pharmaceutical cGMP standards, the highest tier of quality assurance in the industry."],
                         2 => ["Clinically Researched", "Supported by clinical evidence demonstrating meaningful benefit for IBD patients managing their nutritional needs."],
                         3 => ["High-Dose EPA Omega-3", "A precisely calibrated dose of EPA matched to the needs of IBD-associated gut inflammation."],
                         4 => ["Regulatory Status", "Classified as a Medical Food (FSMP), enabling it to occupy a unique, trusted position between medication and nutrition."]

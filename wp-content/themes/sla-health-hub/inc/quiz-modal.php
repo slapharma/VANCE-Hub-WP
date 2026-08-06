@@ -1,363 +1,425 @@
 <?php
 /**
- * Vance Medical Quiz Modal Template
+ * Health Discovery Quiz — modal.
+ *
+ * Styling is the shared modal kit (assets/css/vance-modal-kit.css), a port of
+ * the IBD Malnutrition Calculator's design: wash background, one white card,
+ * pill badge over an uppercase title, thin progress rail, and large option
+ * rows that lift on hover and fill teal when selected.
+ *
+ * The questions come from vance_quiz_steps() in functions.php — the same
+ * definition the dashboard reads to label saved answers and to work out which
+ * step a given answer lives on. Do not add a question here.
+ *
+ * Public API: openQuizModal(step = 1, singleEdit = false), closeQuizModal()
  */
+
+$vance_quiz_saved = is_user_logged_in()
+    ? get_user_meta( get_current_user_id(), '_sla_healthcare_quiz_results', true )
+    : array();
+if ( ! is_array( $vance_quiz_saved ) ) {
+    $vance_quiz_saved = array();
+}
 ?>
-<div id="vance-quiz-modal" class="vance-modal vance-glass-scrim" style="display:none; position:fixed; inset:0; z-index:10000; overflow-y:auto; padding:20px; align-items:flex-start; justify-content:center;">
-    <div class="quiz-container vance-glass-panel" style="max-width: 800px; width:100%; overflow: hidden; position: relative; margin: 40px auto; animation: slideUp 0.4s ease;">
-        <span onclick="closeQuizModal()" style="position:absolute; top:20px; right:20px; font-size:28px; color:white; cursor:pointer; z-index:10001; background:rgba(0,0,0,0.3); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:0;">&times;</span>
-        
-        <div class="quiz-header" style="background: #0A1929; color: white; padding: 40px; text-align: center;">
-            <h2 id="modal-quiz-title" style="font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">Vance Medical Discovery</h2>
-            <p id="modal-quiz-subtitle" style="font-size: 16px; color: #cbd5e1; margin: 0;">Tell us a bit about yourself to personalize your experience.</p>
-        </div>
-        
-        <div class="progress-bar-container" style="height: 8px; background: #e2e8f0; width: 100%;">
-            <div class="progress-bar-fill" id="modal-progress-bar" style="height: 100%; background: #008080; width: 0%; transition: width 0.4s ease;"></div>
+<div id="vance-quiz-modal" class="vance-mk-scrim" role="dialog" aria-modal="true"
+     aria-hidden="true" aria-labelledby="vance-quiz-modal-title">
+    <div class="vance-mk" role="document">
+        <button type="button" class="vance-mk__close" onclick="closeQuizModal()" aria-label="Close quiz">&times;</button>
+
+        <div class="vance-mk__header">
+            <div class="vance-mk__badge">Vance Medical &middot; Health Discovery</div>
+            <h2 id="vance-quiz-modal-title" class="vance-mk__title">Health Discovery Quiz</h2>
+            <p class="vance-mk__subtitle">Nine short questions so the hub can point you at the research, tools and recipes that actually apply to you. You can change any answer later.</p>
         </div>
 
-        <form id="modal-health-quiz-form">
-            <div id="modal-quiz-steps-container"></div>
-
-            <div class="results-screen" id="modal-results-screen" style="text-align:center; padding:80px 60px; display:none;">
-                <h2 style="font-size:36px; font-weight:800; color:#0A1929; margin-bottom:20px; font-family:'Outfit';">Analysis Complete</h2>
-                <p style="font-size:18px; color:#64748b; margin-bottom:40px;">Your clinical discovery responses have been updated.</p>
-                
-                <div class="quiz-cta-box" style="background:#0A1929; padding:40px; border-radius:0; color:white;">
-                    <h3 style="font-size:24px; font-weight:700; margin-bottom:16px;">Step 1 Complete!</h3>
-                    <p style="color:#94a3b8; font-size:15px; margin-bottom:24px;">Your basic profile is updated. Would you like to add more detailed clinical information for a deeper AI analysis?</p>
-                    
-                    <div style="display:flex; flex-direction:column; gap:12px;">
-                        <button type="button" onclick="openClinicalInfoFromQuiz()" class="btn-primary" style="background:#008080; color:white; border:none; padding:14px 32px; border-radius:0; font-weight:700; font-family:'Outfit'; cursor:pointer; box-shadow:0 10px 20px rgba(0,128,128, 0.2);">Add Detailed Clinical Info &rarr;</button>
-                        <button type="button" onclick="handleQuizCompletion()" style="background:transparent; color:#cbd5e1; border:1px solid rgba(255,255,255,0.2); padding:10px 32px; border-radius:0; font-weight:600; font-family:'Outfit'; cursor:pointer;">No thanks, view my profile</button>
+        <div class="vance-mk__card">
+            <form id="modal-health-quiz-form" novalidate>
+                <div class="vance-mk__progress" id="modal-quiz-progress">
+                    <div class="vance-mk__progress-meta">
+                        <span class="vance-mk__progress-label" id="modal-progress-label">Step 1 of 9</span>
+                        <span class="vance-mk__progress-pct" id="modal-progress-pct">0%</span>
+                    </div>
+                    <div class="vance-mk__progress-track">
+                        <div class="vance-mk__progress-fill" id="modal-progress-bar"></div>
                     </div>
                 </div>
-            </div>
 
-            <div class="quiz-footer" id="modal-quiz-footer" style="padding:30px 60px 40px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; gap:16px;">
-                <button type="button" class="btn-quiz modal-prev" id="modal-btn-prev" style="visibility:hidden; background:#f1f5f9; color:#64748b; border:none; padding:14px 24px; border-radius:0; cursor:pointer; font-weight:700;">Previous</button>
-                <div style="display:flex; gap:12px;">
-                    <button type="button" class="modal-btn-save" id="modal-btn-save" onclick="submitQuiz(true)">Save & Exit</button>
-                    <button type="button" class="btn-quiz modal-next" id="modal-btn-next" disabled style="background:#008080; color:white; border:none; padding:14px 32px; border-radius:0; cursor:pointer; font-weight:700; opacity:0.5;">Next Step</button>
+                <div id="modal-quiz-steps-container"></div>
+
+                <div class="vance-mk__done" id="modal-results-screen" style="display:none;">
+                    <div class="vance-mk__done-icon" aria-hidden="true">&#10003;</div>
+                    <h3 class="vance-mk__step-title" style="font-size:22px;">Your profile is up to date</h3>
+                    <p class="vance-mk__step-subtitle" style="max-width:420px; margin:0 auto 22px;">Thanks, your answers are saved. You can add clinical detail any time from your health profile.</p>
+                    <button type="button" class="vance-mk__btn vance-mk__btn--primary vance-mk__btn--auto" onclick="handleQuizCompletion()">View my profile &rarr;</button>
                 </div>
-            </div>
-        </form>
+
+                <div class="vance-mk__nav" id="modal-quiz-footer">
+                    <button type="button" class="vance-mk__btn vance-mk__btn--ghost" id="modal-btn-prev" style="visibility:hidden;">Back</button>
+                    <button type="button" class="vance-mk__btn vance-mk__btn--ghost" id="modal-btn-save" style="display:none;">Save &amp; close</button>
+                    <button type="button" class="vance-mk__btn vance-mk__btn--primary" id="modal-btn-next" disabled>Next</button>
+                </div>
+
+                <div class="vance-mk__note" id="modal-quiz-note" role="status" aria-live="polite"></div>
+            </form>
+        </div>
+
+        <p class="vance-mk__footer">Your answers are private to your account and used only to tailor what this hub shows you.</p>
     </div>
 </div>
 
-
-
 <script>
-let currentQuizStep = 1;
+(function () {
+    // Questions come from PHP (vance_quiz_steps) so this file and the dashboard
+    // cannot disagree about what is asked, or in what order.
+    var quizStepsContent = <?php echo wp_json_encode( vance_quiz_steps() ); ?>;
+    var savedData        = <?php echo wp_json_encode( (object) $vance_quiz_saved ); ?>;
+    var IS_LOGGED_IN     = <?php echo is_user_logged_in() ? 'true' : 'false'; ?>;
+    var AJAX_URL         = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+    var QUIZ_NONCE       = <?php echo wp_json_encode( wp_create_nonce( 'vance_quiz_nonce' ) ); ?>;
+    var PROFILE_URL      = <?php echo wp_json_encode( home_url( '/dashboard/?tab=health-profile' ) ); ?>;
 
-// Parse existing results
-<?php 
-$meta = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_sla_healthcare_quiz_results', true) : array();
-if (!is_array($meta)) $meta = array();
-?>
-let savedData = <?php echo json_encode( empty($meta) ? (object)array() : $meta ); ?>;
-const quizResults = {};
-// Ensure arrays are parsed correctly if they were saved as comma-separated strings
-for (let key in savedData) {
-    if (typeof savedData[key] === 'string' && (key === 'condition_type' || key === 'looking_for' || key === 'supplement_types')) {
-        quizResults[key] = savedData[key].split(',').map(s => s.trim()).filter(Boolean);
-    } else {
-        quizResults[key] = savedData[key];
-    }
-}
+    var totalQuizSteps = quizStepsContent.length;
+    var currentQuizStep = 1;
+    var isSingleEditMode = false;
 
-const quizStepsContent = [
-    { title: "What is your age?", field: "age", type: "radio", layout: 'grid', opts: ['Under 18', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'] },
-    { title: "What is your gender?", field: "gender", type: "radio", opts: ['Male', 'Female', 'Prefer not to say'] },
-    { title: "Do you currently have a gastrointestinal condition?", field: "gastro_condition", type: "radio", opts: ['Diagnosed', 'Symptoms but no diagnosis', 'No known disease or symptoms'] },
-    { title: "Which condition are you most concerned with? (Select all that apply)", field: "condition_type", type: "checkbox", opts: ["Crohn's", "UC", "IBS", "General gut health / wellness", {v: "Other", textInput: true, txtField: "condition_type_other"}] },
-    { title: "What are you primarily looking for today? (Select all that apply)", field: "looking_for", type: "checkbox", opts: ["Research", "Education", "Health Tools", "Community Support", "Specialist Nutrition", {v: "Other", textInput: true, txtField: "looking_for_other"}] },
-    { title: "How long have you been interested in gastrointestinal health?", field: "duration", type: "radio", opts: [{v: "Recently", t: "Recently (less than 6 months)"}, {v: "1-3 Years", t: "1-3 Years"}, {v: "3+ Years", t: "3+ Years / Long-term"}] },
-    { title: "Are you currently seeing a specialist for your health goals?", field: "seeing_specialist", type: "radio", layout: 'grid', opts: [{v: "Yes", textInput: true, txtField: "specialist_type", textLabel: "What type of specialist?"}, "No"] },
-    { title: "Do you currently use prescribed medication?", field: "use_medication", type: "radio", layout: 'grid', opts: [{v: "Yes", textInput: true, txtField: "medication_details", textLabel: "Please specify:"}, "No"] },
-    { title: "Do you currently use food supplements?", field: "use_supplements", type: "radio", layout: 'grid', opts: [{v: "Yes", depField: "supplement_types", depCheckboxes: ["Omega 3", "Vitamin D", "Probiotics", "Iron", "Zinc", "Curcumin", "Butrayte", {v:"Other", textInput:true, txtField:"supplement_other"}]}, "No"] }
-];
-const totalQuizSteps = quizStepsContent.length;
+    // Multi-answer fields are stored as a comma-separated string, so split them
+    // back into arrays on the way in.
+    var MULTI = {};
+    quizStepsContent.forEach(function (s) {
+        if (s.type === 'checkbox') { MULTI[s.field] = true; }
+        (s.opts || []).forEach(function (o) {
+            if (o && typeof o === 'object' && o.depField) { MULTI[o.depField] = true; }
+        });
+    });
 
-let isSingleEditMode = false;
-
-function openQuizModal(startStep = 1, singleEdit = false) {
-    isSingleEditMode = singleEdit;
-    document.getElementById('vance-quiz-modal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    document.getElementById('modal-quiz-steps-container').style.display = 'block';
-    document.getElementById('modal-quiz-footer').style.display = 'flex';
-    document.getElementById('modal-results-screen').style.display = 'none';
-
-    currentQuizStep = startStep;
-    renderQuizStep(currentQuizStep);
-}
-
-function closeQuizModal() {
-    document.getElementById('vance-quiz-modal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-
-function renderQuizStep(num) {
-    const data = quizStepsContent[num-1];
-    const container = document.getElementById('modal-quiz-steps-container');
-    
-    document.getElementById('modal-progress-bar').style.width = ((num-1) / totalQuizSteps * 100) + '%';
-    
-    let optionsHtml = '';
-    const isMulti = data.type === 'checkbox';
-    
-    // Ensure array exists for checkboxes
-    if (isMulti && !quizResults[data.field]) quizResults[data.field] = [];
-    
-    data.opts.forEach((opt, idx) => {
-        const val = typeof opt === 'object' ? opt.v : opt;
-        const txt = typeof opt === 'object' && opt.t ? opt.t : val;
-        
-        let isSelected = false;
-        if (isMulti) {
-            isSelected = quizResults[data.field].includes(val);
+    var quizResults = {};
+    Object.keys(savedData || {}).forEach(function (key) {
+        var val = savedData[key];
+        if (MULTI[key] && typeof val === 'string') {
+            quizResults[key] = val.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
         } else {
-            isSelected = quizResults[data.field] === val;
-        }
-        
-        const typeStr = isMulti ? 'checkbox' : 'radio';
-        const shapeStr = isMulti ? '4px' : '50%';
-        
-        // Option HTML
-        optionsHtml += `
-            <label class="modal-option-item ${isSelected ? 'selected' : ''}" style="padding:16px 20px; border:2px solid ${isSelected?'#008080':'#e2e8f0'}; display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; background:${isSelected?'#def4f4':'white'};" onclick="handleOptionClick(this, ${num-1}, ${idx}, event)">
-                <input type="${typeStr}" name="${data.field}" value="${val}" ${isSelected ? 'checked' : ''} style="display:none;">
-                <div style="width:20px; height:20px; border:2px solid ${isSelected?'#008080':'#cbd5e1'}; border-radius:${shapeStr}; display:flex; align-items:center; justify-content:center; background:${isSelected?'#008080':'transparent'};">
-                    ${isSelected ? (isMulti ? '<span style="color:white;font-size:12px;">✓</span>' : '<div style="width:10px;height:10px;background:white;border-radius:50%;"></div>') : ''}
-                </div>
-                <span style="font-size:15px; font-weight:600; color:#334155;">${txt}</span>
-            </label>
-        `;
-        
-        // Dependent Text Input
-        if (typeof opt === 'object' && opt.textInput) {
-            const txtVal = quizResults[opt.txtField] || '';
-            const displayStr = isSelected ? 'block' : 'none';
-            optionsHtml += `
-                <div id="dep-text-${data.field}-${val}" style="display:${displayStr}; grid-column:1/-1; margin:-4px 0 16px;">
-                    ${opt.textLabel ? `<label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">${opt.textLabel}</label>` : ''}
-                    <input type="text" value="${txtVal}" oninput="quizResults['${opt.txtField}'] = this.value; checkModalValidity();" placeholder="Please specify..." style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:0;">
-                </div>
-            `;
-        }
-        
-        // Dependent Checkboxes (e.g. Supplements -> Yes -> lists)
-        if (typeof opt === 'object' && opt.depCheckboxes) {
-            const depField = opt.depField;
-            if (!quizResults[depField]) quizResults[depField] = [];
-            
-            let depHtml = '';
-            opt.depCheckboxes.forEach((depOpt, dIdx) => {
-                const dVal = typeof depOpt === 'object' ? depOpt.v : depOpt;
-                const dTxt = dVal;
-                const dSelected = quizResults[depField].includes(dVal);
-                
-                depHtml += `
-                    <label class="modal-option-item ${dSelected ? 'selected' : ''}" style="padding:12px 16px; border:2px solid ${dSelected?'#008080':'#e2e8f0'}; display:flex; align-items:center; gap:12px; cursor:pointer; background:${dSelected?'#def4f4':'white'};">
-                        <input type="checkbox" value="${dVal}" ${dSelected ? 'checked' : ''} style="display:none;" onchange="handleDepCheckboxChange(this, '${depField}', ${dIdx})">
-                        <div style="width:18px; height:18px; border:2px solid ${dSelected?'#008080':'#cbd5e1'}; border-radius:4px; display:flex; align-items:center; justify-content:center; background:${dSelected?'#008080':'transparent'};">
-                            ${dSelected ? '<span style="color:white;font-size:10px;">✓</span>' : ''}
-                        </div>
-                        <span style="font-size:14px; font-weight:600; color:#334155;">${dTxt}</span>
-                    </label>
-                `;
-                
-                if (typeof depOpt === 'object' && depOpt.textInput) {
-                    const dTxtVal = quizResults[depOpt.txtField] || '';
-                    const dDisplayStr = dSelected ? 'block' : 'none';
-                    depHtml += `
-                        <div id="dep-text-${depField}-${dVal}" style="display:${dDisplayStr}; grid-column:1/-1; margin:-4px 0 12px;">
-                            <input type="text" value="${dTxtVal}" oninput="quizResults['${depOpt.txtField}'] = this.value; checkModalValidity();" placeholder="Specify other..." style="width:100%; padding:10px; border:2px solid #e2e8f0; border-radius:0;">
-                        </div>
-                    `;
-                }
-            });
-            
-            const displayStr = isSelected ? 'grid' : 'none';
-            optionsHtml += `
-                <div id="dep-check-${data.field}-${val}" style="display:${displayStr}; grid-template-columns:1fr 1fr; gap:10px; grid-column:1/-1; margin:8px 0 16px; padding:16px; background:#f8fafc; border:1px solid #e2e8f0;">
-                    <label style="grid-column:1/-1; font-size:13px; font-weight:700; margin-bottom:4px;">Select all that apply:</label>
-                    ${depHtml}
-                </div>
-            `;
+            quizResults[key] = val;
         }
     });
 
-    container.innerHTML = `
-        <div class="quiz-step active" style="padding:40px 60px;">
-            <label style="display:block; font-size:24px; font-weight:700; color:#0A1929; margin-bottom:30px; font-family:'Outfit';">${data.title}</label>
-            <div style="display:${data.layout === 'grid' ? 'grid' : 'flex'}; grid-template-columns:1fr 1fr; flex-direction:column; gap:12px;">
-                ${optionsHtml}
-            </div>
-        </div>
-    `;
+    var modal     = document.getElementById('vance-quiz-modal');
+    var container = document.getElementById('modal-quiz-steps-container');
+    var footer    = document.getElementById('modal-quiz-footer');
+    var results   = document.getElementById('modal-results-screen');
+    var progress  = document.getElementById('modal-quiz-progress');
+    var noteEl    = document.getElementById('modal-quiz-note');
+    var btnNext   = document.getElementById('modal-btn-next');
+    var btnPrev   = document.getElementById('modal-btn-prev');
+    var btnSave   = document.getElementById('modal-btn-save');
 
-    document.getElementById('modal-btn-prev').style.visibility = num === 1 ? 'hidden' : 'visible';
-    document.getElementById('modal-btn-next').innerText = (num === totalQuizSteps) ? 'Finish' : 'Next Step';
-    document.getElementById('modal-btn-save').style.display = isSingleEditMode ? 'block' : 'none';
-    
-    checkModalValidity();
-}
-
-function handleOptionClick(el, stepIdx, optIdx, e) {
-    // The option is a <label> wrapping a hidden input, so one user click fires
-    // this twice: once for the click itself, then again when the label forwards
-    // a synthetic click to the input. Radio steps survived it (same value
-    // reassigned), but checkbox steps toggled the answer straight back off, so
-    // nothing could be selected. Ignore the forwarded click.
-    if (e && e.target && e.target.tagName === 'INPUT') return;
-
-    const data = quizStepsContent[stepIdx];
-    const isMulti = data.type === 'checkbox';
-    const opt = data.opts[optIdx];
-    const val = typeof opt === 'object' ? opt.v : opt;
-    
-    if (isMulti) {
-        // Toggle array
-        const i = quizResults[data.field].indexOf(val);
-        if (i > -1) quizResults[data.field].splice(i, 1);
-        else quizResults[data.field].push(val);
-    } else {
-        quizResults[data.field] = val;
-    }
-    
-    renderQuizStep(stepIdx + 1); // re-render to update UI and dependencies
-}
-
-// Global function to attach to dynamic html
-window.handleDepCheckboxChange = function(inputEl, depField, optIdx) {
-    // Requires finding the parent data to know what to update.
-    // The easiest way is directly re-rendering the current step after modifying quizResults.
-    const val = inputEl.value;
-    if (!quizResults[depField]) quizResults[depField] = [];
-    
-    const i = quizResults[depField].indexOf(val);
-    if (inputEl.checked && i === -1) quizResults[depField].push(val);
-    else if (!inputEl.checked && i > -1) quizResults[depField].splice(i, 1);
-    
-    renderQuizStep(currentQuizStep);
-}
-
-function checkModalValidity() {
-    const data = quizStepsContent[currentQuizStep - 1];
-    let isValid = false;
-    
-    const val = quizResults[data.field];
-    
-    if (data.type === 'checkbox') {
-        isValid = Array.isArray(val) && val.length > 0;
-    } else {
-        isValid = !!val;
-    }
-    
-    // Check required text fields
-    if (isValid) {
-        data.opts.forEach(opt => {
-            if (typeof opt === 'object') {
-                const optVal = opt.v;
-                const isSelected = data.type === 'checkbox' ? val.includes(optVal) : val === optVal;
-                
-                if (isSelected && opt.textInput) {
-                    if (!quizResults[opt.txtField] || quizResults[opt.txtField].trim() === '') {
-                        isValid = false;
-                    }
-                }
-                
-                // Nested depCheckboxes validation could go here...
-                if (isSelected && opt.depCheckboxes) {
-                    const depVal = quizResults[opt.depField];
-                    if (!Array.isArray(depVal) || depVal.length === 0) isValid = false;
-                    else {
-                        opt.depCheckboxes.forEach(dOpt => {
-                            if (typeof dOpt === 'object' && dOpt.textInput && depVal.includes(dOpt.v)) {
-                                if (!quizResults[dOpt.txtField] || quizResults[dOpt.txtField].trim() === '') {
-                                    isValid = false;
-                                }
-                            }
-                        });
-                    }
-                }
-            }
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
     }
 
-    const nextBtn = document.getElementById('modal-btn-next');
-    nextBtn.disabled = !isValid;
-    nextBtn.style.opacity = isValid ? '1' : '0.5';
-}
+    function showNote(msg, kind) {
+        if (!noteEl) { return; }
+        noteEl.textContent = msg;
+        noteEl.className = 'vance-mk__note is-visible vance-mk__note--' + (kind || 'error');
+    }
+    function clearNote() {
+        if (noteEl) { noteEl.className = 'vance-mk__note'; noteEl.textContent = ''; }
+    }
 
-document.getElementById('modal-btn-next').addEventListener('click', () => {
-    if(currentQuizStep < totalQuizSteps) {
-        currentQuizStep++;
+    <?php // ---- open / close ---- ?>
+    window.openQuizModal = function (startStep, singleEdit) {
+        isSingleEditMode = !!singleEdit;
+        // Clamp: a caller passing a step that no longer exists used to render
+        // `undefined.opts` and throw, leaving an empty modal with the page
+        // scroll locked behind it.
+        var step = parseInt(startStep, 10);
+        if (!step || step < 1 || step > totalQuizSteps) { step = 1; }
+
+        clearNote();
+        container.style.display = 'block';
+        footer.style.display = 'flex';
+        progress.style.display = 'block';
+        results.style.display = 'none';
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        currentQuizStep = step;
         renderQuizStep(currentQuizStep);
-    } else {
-        submitQuiz();
-    }
-});
+    };
 
-document.getElementById('modal-btn-prev').addEventListener('click', () => {
-    if(currentQuizStep > 1) {
-        currentQuizStep--;
-        renderQuizStep(currentQuizStep);
-    }
-});
+    window.closeQuizModal = function () {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    };
 
-function submitQuiz(quickSave = false) {
-    if (quickSave) {
-        closeQuizModal();
-    } else {
-        document.getElementById('modal-progress-bar').style.width = '100%';
-        document.getElementById('modal-quiz-steps-container').style.display = 'none';
-        document.getElementById('modal-quiz-footer').style.display = 'none';
-        document.getElementById('modal-results-screen').style.display = 'block';
-    }
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) { window.closeQuizModal(); }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) { window.closeQuizModal(); }
+    });
 
-    <?php if(is_user_logged_in()): ?>
-    // stringify arrays to match how the standalone quiz formats its data
-    const payload = {};
-    for (let k in quizResults) {
-        if (Array.isArray(quizResults[k])) {
-            payload[k] = quizResults[k].join(', ');
-        } else {
-            payload[k] = quizResults[k];
+    <?php // ---- rendering ---- ?>
+    function optionMarkup(step, opt, idx, isMulti) {
+        var val = (typeof opt === 'object') ? opt.v : opt;
+        var txt = (typeof opt === 'object' && opt.t) ? opt.t : val;
+        var current = quizResults[step.field];
+        var selected = isMulti
+            ? (Array.isArray(current) && current.indexOf(val) > -1)
+            : current === val;
+
+        var html = '' +
+            '<button type="button" class="vance-mk__option' + (selected ? ' is-selected' : '') + '"' +
+            ' data-opt="' + idx + '" role="' + (isMulti ? 'checkbox' : 'radio') + '"' +
+            ' aria-checked="' + (selected ? 'true' : 'false') + '">' +
+                '<span class="vance-mk__option-mark' + (isMulti ? ' vance-mk__option-mark--box' : '') + '">' +
+                    (selected ? (isMulti ? '&#10003;' : '<span style="width:8px;height:8px;background:#fff;border-radius:50%;display:block;"></span>') : '') +
+                '</span>' +
+                '<span><span class="vance-mk__option-label">' + esc(txt) + '</span></span>' +
+            '</button>';
+
+        if (typeof opt === 'object' && opt.textInput) {
+            html += '' +
+                '<div class="vance-mk__dependent" style="display:' + (selected ? 'block' : 'none') + ';">' +
+                    (opt.textLabel ? '<label class="vance-mk__dependent-label">' + esc(opt.textLabel) + '</label>' : '') +
+                    '<input type="text" class="vance-mk__input" data-txt-field="' + esc(opt.txtField) + '"' +
+                    ' value="' + esc(quizResults[opt.txtField] || '') + '" placeholder="Please specify…">' +
+                '</div>';
         }
+
+        if (typeof opt === 'object' && opt.depCheckboxes) {
+            var depField = opt.depField;
+            if (!Array.isArray(quizResults[depField])) { quizResults[depField] = []; }
+            var inner = '';
+            opt.depCheckboxes.forEach(function (dOpt) {
+                var dVal = (typeof dOpt === 'object') ? dOpt.v : dOpt;
+                var dSel = quizResults[depField].indexOf(dVal) > -1;
+                inner += '' +
+                    '<button type="button" class="vance-mk__option' + (dSel ? ' is-selected' : '') + '"' +
+                    ' style="padding:11px 13px;" data-dep-field="' + esc(depField) + '" data-dep-val="' + esc(dVal) + '" role="checkbox" aria-checked="' + (dSel ? 'true' : 'false') + '">' +
+                        '<span class="vance-mk__option-mark vance-mk__option-mark--box" style="flex:0 0 18px;width:18px;height:18px;">' + (dSel ? '&#10003;' : '') + '</span>' +
+                        '<span class="vance-mk__option-label" style="font-size:13px;">' + esc(dVal) + '</span>' +
+                    '</button>';
+                if (typeof dOpt === 'object' && dOpt.textInput) {
+                    inner += '' +
+                        '<div style="grid-column:1/-1; display:' + (dSel ? 'block' : 'none') + ';">' +
+                            '<input type="text" class="vance-mk__input" data-txt-field="' + esc(dOpt.txtField) + '"' +
+                            ' value="' + esc(quizResults[dOpt.txtField] || '') + '" placeholder="Specify other…">' +
+                        '</div>';
+                }
+            });
+            html += '' +
+                '<div class="vance-mk__dependent" style="display:' + (selected ? 'block' : 'none') + ';">' +
+                    '<label class="vance-mk__dependent-label">Select all that apply</label>' +
+                    '<div class="vance-mk__dependent-grid">' + inner + '</div>' +
+                '</div>';
+        }
+
+        return html;
     }
-    
-    jQuery.ajax({
-        url: '<?php echo admin_url('admin-ajax.php'); ?>',
-        type: 'POST',
-        data: {
-            action: 'vance_save_quiz_results',
-            quiz_data: payload,
-            nonce: '<?php echo wp_create_nonce("vance_quiz_nonce"); ?>'
-        },
-        success: function(res) {
-            if(quickSave) location.reload();
+
+    function renderQuizStep(num) {
+        var step = quizStepsContent[num - 1];
+        if (!step) { return; }
+        var isMulti = step.type === 'checkbox';
+        if (isMulti && !Array.isArray(quizResults[step.field])) { quizResults[step.field] = []; }
+
+        var pct = Math.round(((num - 1) / totalQuizSteps) * 100);
+        document.getElementById('modal-progress-bar').style.width = pct + '%';
+        document.getElementById('modal-progress-label').textContent = 'Step ' + num + ' of ' + totalQuizSteps;
+        document.getElementById('modal-progress-pct').textContent = pct + '%';
+
+        var opts = (step.opts || []).map(function (opt, idx) {
+            return optionMarkup(step, opt, idx, isMulti);
+        }).join('');
+
+        container.innerHTML = '' +
+            '<div class="vance-mk__panel">' +
+                '<h3 class="vance-mk__step-title">' + esc(step.title) + '</h3>' +
+                (step.subtitle ? '<p class="vance-mk__step-subtitle">' + esc(step.subtitle) + '</p>' : '') +
+                '<div class="vance-mk__options' + (step.layout === 'grid' ? ' vance-mk__options--grid' : '') + '">' + opts + '</div>' +
+            '</div>';
+
+        btnPrev.style.visibility = num === 1 ? 'hidden' : 'visible';
+        btnNext.textContent = (num === totalQuizSteps) ? 'Finish' : 'Next';
+        btnSave.style.display = isSingleEditMode ? 'block' : 'none';
+
+        checkModalValidity();
+    }
+
+    <?php // ---- interaction (delegated: the step markup is re-rendered on every change) ---- ?>
+    container.addEventListener('click', function (e) {
+        var dep = e.target.closest('[data-dep-field]');
+        if (dep) {
+            var field = dep.getAttribute('data-dep-field');
+            var value = dep.getAttribute('data-dep-val');
+            if (!Array.isArray(quizResults[field])) { quizResults[field] = []; }
+            var at = quizResults[field].indexOf(value);
+            if (at > -1) { quizResults[field].splice(at, 1); } else { quizResults[field].push(value); }
+            renderQuizStep(currentQuizStep);
+            return;
+        }
+
+        var btn = e.target.closest('[data-opt]');
+        if (!btn) { return; }
+        var step = quizStepsContent[currentQuizStep - 1];
+        var opt  = step.opts[parseInt(btn.getAttribute('data-opt'), 10)];
+        var val  = (typeof opt === 'object') ? opt.v : opt;
+
+        if (step.type === 'checkbox') {
+            var i = quizResults[step.field].indexOf(val);
+            if (i > -1) { quizResults[step.field].splice(i, 1); } else { quizResults[step.field].push(val); }
+        } else {
+            quizResults[step.field] = val;
+        }
+        renderQuizStep(currentQuizStep);
+    });
+
+    // Free-text follow-ups write straight through; re-rendering on each
+    // keystroke would blur the field mid-typing.
+    container.addEventListener('input', function (e) {
+        var field = e.target.getAttribute && e.target.getAttribute('data-txt-field');
+        if (!field) { return; }
+        quizResults[field] = e.target.value;
+        checkModalValidity();
+    });
+
+    function checkModalValidity() {
+        var step = quizStepsContent[currentQuizStep - 1];
+        var val  = quizResults[step.field];
+        var valid = step.type === 'checkbox' ? (Array.isArray(val) && val.length > 0) : !!val;
+
+        if (valid) {
+            (step.opts || []).forEach(function (opt) {
+                if (typeof opt !== 'object') { return; }
+                var chosen = step.type === 'checkbox' ? val.indexOf(opt.v) > -1 : val === opt.v;
+                if (!chosen) { return; }
+                if (opt.textInput && !String(quizResults[opt.txtField] || '').trim()) { valid = false; }
+                if (opt.depCheckboxes) {
+                    var dep = quizResults[opt.depField];
+                    if (!Array.isArray(dep) || !dep.length) {
+                        valid = false;
+                    } else {
+                        opt.depCheckboxes.forEach(function (d) {
+                            if (typeof d === 'object' && d.textInput && dep.indexOf(d.v) > -1
+                                && !String(quizResults[d.txtField] || '').trim()) { valid = false; }
+                        });
+                    }
+                }
+            });
+        }
+
+        btnNext.disabled = !valid;
+    }
+
+    btnNext.addEventListener('click', function () {
+        if (currentQuizStep < totalQuizSteps) {
+            currentQuizStep++;
+            renderQuizStep(currentQuizStep);
+        } else {
+            submitQuiz(false);
         }
     });
-    <?php endif; ?>
-}
 
-function handleQuizCompletion() {
-    <?php if(!is_user_logged_in()): ?>
-        closeQuizModal();
-        if (typeof openGuestModal === 'function') openGuestModal();
-    <?php else: ?>
-        window.location.href = '<?php echo home_url('/dashboard/?tab=health-profile'); ?>';
-    <?php endif; ?>
-}
+    btnPrev.addEventListener('click', function () {
+        if (currentQuizStep > 1) {
+            currentQuizStep--;
+            renderQuizStep(currentQuizStep);
+        }
+    });
 
-function openClinicalInfoFromQuiz() {
-    closeQuizModal();
-    if (typeof openClinicalInfoModal === 'function') {
-        openClinicalInfoModal();
+    btnSave.addEventListener('click', function () { submitQuiz(true); });
+
+    <?php // ---- save ---- ?>
+    function submitQuiz(quickSave) {
+        clearNote();
+
+        // Arrays are stored comma-joined, matching the standalone quiz page.
+        var payload = {};
+        Object.keys(quizResults).forEach(function (k) {
+            payload[k] = Array.isArray(quizResults[k]) ? quizResults[k].join(', ') : quizResults[k];
+        });
+
+        if (!IS_LOGGED_IN) {
+            // Nothing to attach these to yet — stash them so they are saved the
+            // moment this reader registers or signs in (flushed on next load).
+            try { window.localStorage.setItem('vance_pending_quiz_results', JSON.stringify(payload)); } catch (e) {}
+            if (quickSave) { window.closeQuizModal(); } else { showCompletion(); }
+            return;
+        }
+
+        var body = new FormData();
+        body.append('action', 'vance_save_quiz_results');
+        body.append('nonce', QUIZ_NONCE);
+        Object.keys(payload).forEach(function (k) { body.append('quiz_data[' + k + ']', payload[k]); });
+
+        if (quickSave) { btnSave.disabled = true; btnSave.textContent = 'Saving…'; }
+        else { btnNext.disabled = true; btnNext.textContent = 'Saving…'; }
+
+        // The modal used to close before this request resolved and only acted on
+        // success, so a failed save looked exactly like a successful one — the
+        // answers simply were not there next time. It now stays open until the
+        // save is confirmed, and says so when it is not.
+        fetch(AJAX_URL, { method: 'POST', credentials: 'same-origin', body: body })
+            .then(function (r) {
+                if (!r.ok) { throw new Error('HTTP ' + r.status); }
+                return r.json();
+            })
+            .then(function (res) {
+                if (!res || !res.success) {
+                    throw new Error((res && res.data) ? String(res.data) : 'save failed');
+                }
+                if (quickSave) { window.location.reload(); } else { showCompletion(); }
+            })
+            .catch(function (err) {
+                showNote('Could not save your answers (' + err.message + '). Please check your connection and try again.', 'error');
+                btnSave.disabled = false; btnSave.textContent = 'Save & close';
+                btnNext.disabled = false;
+                btnNext.textContent = (currentQuizStep === totalQuizSteps) ? 'Finish' : 'Next';
+            });
     }
-}
+
+    function showCompletion() {
+        document.getElementById('modal-progress-bar').style.width = '100%';
+        document.getElementById('modal-progress-pct').textContent = '100%';
+        container.style.display = 'none';
+        footer.style.display = 'none';
+        progress.style.display = 'none';
+        results.style.display = 'block';
+    }
+
+    window.handleQuizCompletion = function () {
+        if (!IS_LOGGED_IN) {
+            window.closeQuizModal();
+            if (typeof window.openGuestModal === 'function') { window.openGuestModal(); }
+            return;
+        }
+        window.location.href = PROFILE_URL;
+    };
+
+    <?php if ( is_user_logged_in() ) : ?>
+    // A guest who finished the quiz before signing in had nowhere to save their
+    // answers, so they were stashed in localStorage. Now that this page load has
+    // a user, flush them once and clear the stash.
+    (function flushPendingQuizResults() {
+        var raw;
+        try { raw = window.localStorage.getItem('vance_pending_quiz_results'); } catch (e) { raw = null; }
+        if (!raw) { return; }
+        var payload;
+        try { payload = JSON.parse(raw); } catch (e) { payload = null; }
+        try { window.localStorage.removeItem('vance_pending_quiz_results'); } catch (e) {}
+        if (!payload || typeof payload !== 'object') { return; }
+
+        var body = new FormData();
+        body.append('action', 'vance_save_quiz_results');
+        body.append('nonce', QUIZ_NONCE);
+        Object.keys(payload).forEach(function (k) { body.append('quiz_data[' + k + ']', payload[k]); });
+        fetch(AJAX_URL, { method: 'POST', credentials: 'same-origin', body: body }).catch(function () {});
+    })();
+    <?php endif; ?>
+})();
 </script>

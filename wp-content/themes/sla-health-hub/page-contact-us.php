@@ -70,7 +70,7 @@ get_header(); ?>
     $hero_bg_color = vance_get_theme_mod( 'vance_contact_hero_bg_color' );
     $hero_tag      = vance_get_theme_mod( 'vance_contact_hero_tag',   'Get in Touch' );
     $hero_title    = vance_get_theme_mod( 'vance_contact_hero_title', 'We\'d Love to <span class="highlight">Hear From You</span>' );
-    $hero_desc     = vance_get_theme_mod( 'vance_contact_hero_desc',  'Whether you\'re a patient, healthcare professional, researcher, or media contact — our team is here to help. Reach out and we\'ll respond within one business day.' );
+    $hero_desc     = vance_get_theme_mod( 'vance_contact_hero_desc',  'Whether you\'re a patient, healthcare professional, researcher, or media contact, our team is here to help. Reach out and we\'ll respond within one business day.' );
 
     $hero_styles   = vance_get_style_contact( 'vance_contact_hero' );
     $hero_overlay  = max(0, min(100, absint(vance_get_theme_mod('vance_contact_hero_overlay', 78)))) / 100;

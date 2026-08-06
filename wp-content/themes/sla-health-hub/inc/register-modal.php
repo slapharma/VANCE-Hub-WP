@@ -91,7 +91,7 @@ $ajax_url       = admin_url( 'admin-ajax.php' );
             <label for="vance-reg-email">Email</label>
             <input type="email" id="vance-reg-email" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
 
-            <label for="vance-reg-password">Password <span style="font-weight: 400; text-transform: none; opacity: 0.7;">— 8 characters minimum</span></label>
+            <label for="vance-reg-password">Password <span style="font-weight: 400; text-transform: none; opacity: 0.7;">, 8 characters minimum</span></label>
             <input type="password" id="vance-reg-password" name="password" required minlength="8" autocomplete="new-password" placeholder="••••••••">
 
             <label for="vance-reg-role">I am a…</label>
@@ -214,7 +214,7 @@ $ajax_url       = admin_url( 'admin-ajax.php' );
                     if (cb) cb(j.data || {});
                     else window.location.href = (j.data && j.data.redirect) || '/dashboard/?vance_welcome=1';
                 } else {
-                    var msg = (j && j.data && j.data.message) || 'Something went wrong — please try again.';
+                    var msg = (j && j.data && j.data.message) || 'Something went wrong, please try again.';
                     showErr(msg);
                 }
             });

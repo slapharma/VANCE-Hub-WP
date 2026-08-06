@@ -431,7 +431,7 @@
 /* sticky in-page jump nav */
 .gi-cp-nav {
     position: sticky; top: var(--header-height, 80px); z-index: 20;
-    background: rgba(224,243,255,0.95);
+    background: #2f4f6f;
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     padding: 14px 0; margin-bottom: 40px; border-bottom: 1px solid #2f4f6f;
 }
@@ -439,9 +439,9 @@
 .gi-cp-nav a {
     color: #2f4f6f; font-size: 13px; padding: 8px 16px; display: block;
     background: #fff; border: 1px solid #2f4f6f; font-weight: 500; white-space: nowrap;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
-.gi-cp-nav a:hover { background: #2f4f6f; color: #fff; }
+.gi-cp-nav a:hover { background: #2f4f6f; color: #fff; border-color: #fff; }
 
 /* section shell */
 .gi-cp-section { margin-bottom: 50px; scroll-margin-top: 140px; }

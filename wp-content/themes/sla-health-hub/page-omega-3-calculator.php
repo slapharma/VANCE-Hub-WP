@@ -17,7 +17,7 @@ require_once get_template_directory() . '/inc/tool-brand-css.php';
 
 $vance_tool_slug         = 'omega-3-calculator';
 $vance_tool_name         = vance_get_theme_mod( 'vance_tool_omega_name', 'Omega-3 Calculator' );
-$vance_tool_subtitle     = vance_get_theme_mod( 'vance_tool_omega_subtitle', 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance — built on the latest gastroenterology evidence.' );
+$vance_tool_subtitle     = vance_get_theme_mod( 'vance_tool_omega_subtitle', 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance, built on the latest gastroenterology evidence.' );
 $vance_tool_badge          = vance_get_theme_mod( 'vance_tool_omega_badge', 'Nutrition Calculator' );
 $vance_tool_badge_bg       = vance_get_theme_mod( 'vance_tool_omega_badge_bg', '' );
 $vance_tool_badge_color    = vance_get_theme_mod( 'vance_tool_omega_badge_color', '' );

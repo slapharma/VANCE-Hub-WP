@@ -57,13 +57,14 @@ $vance_tm_paths = array(
     <div class="vance-tool-modal__panel vance-glass-panel" tabindex="-1">
         <div class="vance-tool-modal__bar">
             <h2 id="vance-tool-modal-title" class="vance-tool-modal__title">Tool</h2>
+            <?php // No "open full page" escape hatch: the modal is the tool surface. ?>
             <div class="vance-tool-modal__bar-actions">
-                <a class="vance-tool-modal__fullscreen" href="#" target="_blank" rel="noopener" data-no-tool-modal>Open full page <svg class="vance-tool-modal__fullscreen-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>
                 <button type="button" class="vance-tool-modal__close" data-vance-tool-close aria-label="Close tool">&times;</button>
             </div>
         </div>
         <div class="vance-tool-modal__body">
-            <iframe id="vance-tool-modal-iframe" title="Vance tool" allow="clipboard-write" loading="lazy"></iframe>
+            <?php // No loading="lazy": src is only set when the modal opens, and deferring it then is the whole delay. ?>
+            <iframe id="vance-tool-modal-iframe" title="Vance tool" allow="clipboard-write" loading="eager" fetchpriority="high"></iframe>
             <div class="vance-tool-modal__loading" aria-hidden="true"><span class="vance-tool-modal__spinner"></span></div>
         </div>
     </div>
@@ -108,9 +109,6 @@ $vance_tm_paths = array(
     margin: 0;
 }
 .vance-tool-modal__bar-actions { display: flex; align-items: center; gap: 14px; }
-.vance-tool-modal__fullscreen { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--primary-color); text-decoration: none; white-space: nowrap; }
-.vance-tool-modal__fullscreen:hover { text-decoration: underline; }
-.vance-tool-modal__fullscreen-icon { flex: 0 0 auto; }
 .vance-tool-modal__close {
     width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
@@ -157,7 +155,6 @@ $vance_tm_paths = array(
     var titleEl    = document.getElementById('vance-tool-modal-title');
     var iframe     = document.getElementById('vance-tool-modal-iframe');
     var loading    = modal.querySelector('.vance-tool-modal__loading');
-    var fullscreen = modal.querySelector('.vance-tool-modal__fullscreen');
     var closeBtn   = modal.querySelector('.vance-tool-modal__close');
     var lastTrigger = null;
     var loadedSlug  = null;
@@ -182,7 +179,8 @@ $vance_tm_paths = array(
         if (tool.inline) {
             if (typeof window.openQuizModal === 'function') {
                 var qm = document.getElementById('vance-quiz-modal');
-                if (qm && qm.style.display === 'flex') { return true; } // already open
+                // Modal kit toggles `is-open`, not an inline display style.
+                if (qm && qm.classList.contains('is-open')) { return true; } // already open
                 window.openQuizModal();
                 return true;
             }
@@ -192,7 +190,6 @@ $vance_tm_paths = array(
 
         // Iframe tools.
         titleEl.textContent = tool.title || 'Tool';
-        if (fullscreen) { fullscreen.href = tool.url; }
         if (loadedSlug !== slug) {
             if (loading) { loading.classList.remove('is-hidden'); }
             iframe.src = addEmbedParam(tool.url);
@@ -222,6 +219,53 @@ $vance_tm_paths = array(
     }
 
     window.VanceToolModal = { open: openModal, close: closeModal };
+
+    /**
+     * Warm a tool on intent.
+     *
+     * The tool lives two documents deep — the modal iframe loads a WordPress
+     * wrapper page, which loads the bundle in an iframe of its own — so a cold
+     * click meant waiting for two round trips plus everything the wrapper page
+     * pulls in. Prefetching on hover/focus/touch buys the few hundred
+     * milliseconds between "the pointer is heading for this" and the click,
+     * which is usually the whole perceived delay.
+     *
+     * <link rel="prefetch"> only, never a hidden iframe: it is a low-priority
+     * hint the browser is free to ignore or drop under load, it never executes
+     * the page, and it costs nothing for anyone who does not hover a tool.
+     * Each tool is warmed at most once per page.
+     */
+    var warmed = {};
+    function warmTool(slug) {
+        slug = normalizeSlug(slug);
+        var tool = CFG.tools[slug];
+        if (!tool || tool.inline || warmed[slug]) { return; }
+        warmed[slug] = true;
+        try {
+            var link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.as = 'document';
+            link.href = addEmbedParam(tool.url);
+            document.head.appendChild(link);
+        } catch (e) { /* prefetch is an optimisation — never break the click path */ }
+    }
+
+    function slugFromEvent(e) {
+        if (!e.target || !e.target.closest) { return ''; }
+        var openEl = e.target.closest('[data-vance-tool-open]');
+        if (openEl) { return openEl.getAttribute('data-vance-tool-open'); }
+        var a = e.target.closest('a[href]');
+        if (!a || a.hasAttribute('data-no-tool-modal')) { return ''; }
+        if (a.origin && a.origin !== window.location.origin) { return ''; }
+        return CFG.paths[(a.pathname || '').replace(/\/+$/, '').toLowerCase()] || '';
+    }
+
+    ['pointerenter', 'focusin', 'touchstart'].forEach(function (evt) {
+        document.addEventListener(evt, function (e) {
+            var slug = slugFromEvent(e);
+            if (slug) { warmTool(slug); }
+        }, { capture: true, passive: true });
+    });
 
     // --- Delegated triggers ---
     document.addEventListener('click', function (e) {

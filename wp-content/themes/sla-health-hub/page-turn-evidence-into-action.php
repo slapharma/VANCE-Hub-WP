@@ -100,7 +100,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     $pillar_defaults = array(
         1 => array( 'Clinical Trials',     'Randomised controlled trials and phase II–IV studies investigating medical food and nutritional interventions in IBD, SIBO, and related GI conditions.' ),
         2 => array( 'Real-World Data',     'Longitudinal outcomes from registered patient cohorts, post-market surveillance, and anonymised dashboard analytics across thousands of IBD journeys.' ),
-        3 => array( 'Peer-Reviewed Science','Curated meta-analyses and systematic reviews from Gut, AJG, Lancet Gastro, JCN, and other indexed journals — summarised for bedside use.' ),
+        3 => array( 'Peer-Reviewed Science','Curated meta-analyses and systematic reviews from Gut, AJG, Lancet Gastro, JCN, and other indexed journals, summarised for bedside use.' ),
         4 => array( 'Expert Consensus',    'Multidisciplinary panel statements from gastroenterologists, dietitians, and pharmacists who have validated the protocol pathways we publish.' ),
     );
     // Brand-only palette: [grad-from, grad-to, svg stroke]
@@ -157,9 +157,9 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     $proc_desc  = vance_get_theme_mod( 'vance_evidence_proc_desc',  'The journey every piece of evidence takes before it reaches a clinician protocol or a patient-facing recommendation.' );
 
     $proc_defaults = array(
-        1 => array( 'Synthesise', 'Our medical writing team combines primary studies, guidelines, and registry data into a single graded position — with conflicts of interest and limitations flagged openly.' ),
+        1 => array( 'Synthesise', 'Our medical writing team combines primary studies, guidelines, and registry data into a single graded position, with conflicts of interest and limitations flagged openly.' ),
         2 => array( 'Translate',  'We convert each position into two companion artefacts: a clinician-facing protocol card and a plain-language patient brief vetted by a patient advisory panel.' ),
-        3 => array( 'Apply',      'Protocols feed the Vance Medical dashboard, VANCE-Ai, and downloadable handouts — so evidence becomes a concrete decision at the point of care.' ),
+        3 => array( 'Apply',      'Protocols feed the Vance Medical dashboard, VANCE-Ai, and downloadable handouts, so evidence becomes a concrete decision at the point of care.' ),
     );
     ?>
     <section class="section-padding" style="background: <?php echo esc_attr( $evd_proc_bg ?: 'white' ); ?>;">

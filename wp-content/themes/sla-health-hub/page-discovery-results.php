@@ -19,7 +19,11 @@ $content_types = isset($_GET['content_type']) ? array_map('sanitize_title', (arr
 $topics        = isset($_GET['topic'])        ? array_map('sanitize_title', (array) $_GET['topic'])        : array();
 $conditions    = isset($_GET['condition'])    ? array_map('sanitize_title', (array) $_GET['condition'])    : array();
 $audience      = isset($_GET['audience'])     ? sanitize_key($_GET['audience'])                            : '';
-$search_query  = isset($_GET['s'])            ? sanitize_text_field($_GET['s'])                            : '';
+/* Field is submitted as `keyword`, not `s` — `s` is WordPress's own reserved
+   search query var, and any non-empty value in the querystring flips the main
+   query's is_search() to true before this page template is even chosen,
+   bouncing the request to (a non-existent) search.php instead of here. */
+$search_query  = isset($_GET['keyword'])      ? sanitize_text_field($_GET['keyword'])                      : '';
 $sort          = isset($_GET['sort'])         ? sanitize_key($_GET['sort'])                                : '';
 
 // Only honour condition slugs the site actually defines.

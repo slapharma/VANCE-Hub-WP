@@ -213,7 +213,7 @@ function vance_render_admin_messages_page() {
             if ( $cu && ! empty( $cu->allcaps[ $c ] ) ) $caps_subset[] = $c;
         }
         wp_die(
-            'Insufficient permissions — administrator role required.<br><br>' .
+            'Insufficient permissions, administrator role required.<br><br>' .
             '<strong>Your roles:</strong> <code>' . esc_html( $roles ) . '</code><br>' .
             '<strong>Admin-relevant caps detected:</strong> <code>' . esc_html( $caps_subset ? implode( ', ', $caps_subset ) : '(none)' ) . '</code><br>' .
             '<strong>User ID:</strong> <code>' . (int) ( $cu->ID ?? 0 ) . '</code>',
@@ -274,7 +274,7 @@ function vance_render_admin_messages_page() {
         $r_msg_id = isset( $_POST['reply_msg_id'] ) ? absint( $_POST['reply_msg_id'] ) : 0;
         $r_body   = isset( $_POST['reply_body'] ) ? trim( wp_kses_post( wp_unslash( $_POST['reply_body'] ) ) ) : '';
         if ( ! $r_msg_id || ! wp_verify_nonce( $_POST['vance_admin_reply_nonce'], 'vance_admin_reply_' . $r_msg_id ) ) {
-            $reply_error = 'Security check failed — please reload and retry.';
+            $reply_error = 'Security check failed, please reload and retry.';
         } elseif ( strlen( $r_body ) < 3 ) {
             $reply_error = 'Reply body too short.';
         } else {
@@ -342,7 +342,7 @@ function vance_render_admin_messages_page() {
                 elseif ( $n === 'restored' )      echo 'Message restored.';
                 elseif ( $n === 'force_deleted' ) echo 'Message permanently deleted.';
                 elseif ( $n === 'reply_deleted' ) echo 'Reply deleted.';
-                elseif ( $n === 'resent' )        echo 'Message resent — read receipts cleared.';
+                elseif ( $n === 'resent' )        echo 'Message resent, read receipts cleared.';
                 else                              echo 'Done.';
             ?></p></div>
         <?php endif; ?>
@@ -402,7 +402,7 @@ function vance_render_admin_messages_page() {
                         <td>
                             <select id="msg_user_ids" name="msg_user_ids[]" multiple size="8" style="width: 100%; max-width: 600px;">
                                 <?php foreach ( $users as $u ) : ?>
-                                    <option value="<?php echo (int) $u->ID; ?>"><?php echo esc_html( $u->display_name . ' — ' . $u->user_email ); ?></option>
+                                    <option value="<?php echo (int) $u->ID; ?>"><?php echo esc_html( $u->display_name . '' . $u->user_email ); ?></option>
                                 <?php endforeach; ?>
                             </select>
                             <p class="description">Hold ⌘/Ctrl to select multiple. Up to 500 users shown.</p>
@@ -515,7 +515,7 @@ function vance_render_admin_messages_page() {
                 <div style="background: white; border: 1px solid #c3c4c7; padding: 16px 20px; margin-top: 16px;">
                     <div style="display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; align-items: baseline;">
                         <div>
-                            <strong style="font-size: 14px;"><?php echo $author ? esc_html( $author->display_name ) : '—'; ?></strong>
+                            <strong style="font-size: 14px;"><?php echo $author ? esc_html( $author->display_name ) : 'Unknown'; ?></strong>
                             <?php if ( $is_admin ) : ?><span style="font-size: 11px; color: #008080; margin-left: 6px;">(admin)</span><?php endif; ?>
                             <span style="color: #666; font-size: 12px; margin-left: 8px;">replied <?php echo esc_html( get_the_date( 'M j, Y g:i a', $reply ) ); ?></span>
                         </div>
@@ -583,13 +583,13 @@ function vance_render_admin_messages_page() {
                 </thead>
                 <tbody>
                     <?php if ( empty( $messages ) ) : ?>
-                        <tr><td colspan="8" style="padding: 20px; text-align: center; color: #666;">No messages yet — switch to <em>Send New</em> to compose one.</td></tr>
+                        <tr><td colspan="8" style="padding: 20px; text-align: center; color: #666;">No messages yet, switch to <em>Send New</em> to compose one.</td></tr>
                     <?php else : foreach ( $messages as $m ) :
                         $sev   = get_post_meta( $m->ID, '_sla_msg_severity', true ) ?: 'info';
                         $aud   = get_post_meta( $m->ID, '_sla_msg_audience', true ) ?: 'all';
                         $reads = (array) get_post_meta( $m->ID, '_sla_msg_read_by', true );
                         $exp   = (int)  get_post_meta( $m->ID, '_sla_msg_expires', true );
-                        $aud_label = $aud === 'all' ? 'All users' : ( $aud === 'users' ? 'Selected users' : 'Role: ' . esc_html( get_post_meta( $m->ID, '_sla_msg_role', true ) ?: '—' ) );
+                        $aud_label = $aud === 'all' ? 'All users' : ( $aud === 'users' ? 'Selected users' : 'Role: ' . esc_html( get_post_meta( $m->ID, '_sla_msg_role', true ) ?: 'any' ) );
                         $resend_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=resend&msg_id=' . $m->ID ), 'vance_msg_action_' . $m->ID );
                         $delete_url = wp_nonce_url( admin_url( 'admin.php?page=vance-user-messages&vance_action=delete&msg_id=' . $m->ID ), 'vance_msg_action_' . $m->ID );
                         $is_expired = $exp && $exp < time();
@@ -918,7 +918,7 @@ function vance_admin_messages_render_with_thread( $post, $current_user_id ) {
                     $is_admin_reply = $author && in_array( 'administrator', (array) $author->roles, true );
                     $author_label = $author
                         ? esc_html( $author->display_name . ( $is_admin_reply ? ' (Vance Medical team)' : '' ) )
-                        : '—';
+                        : 'Unknown';
                     $r_body = wp_kses_post( $r->post_content );
                     $r_body = preg_replace( '/\*\*(.+?)\*\*/', '<strong>$1</strong>', $r_body );
                     $r_body = make_clickable( $r_body );
@@ -991,10 +991,10 @@ function vance_msg_ajax_user_reply() {
 
     $body = isset( $_POST['body'] ) ? trim( wp_kses_post( wp_unslash( $_POST['body'] ) ) ) : '';
     if ( strlen( $body ) < 3 ) {
-        wp_send_json_error( array( 'message' => 'Reply too short — please write at least 3 characters.' ) );
+        wp_send_json_error( array( 'message' => 'Reply too short, please write at least 3 characters.' ) );
     }
     if ( strlen( $body ) > 4000 ) {
-        wp_send_json_error( array( 'message' => 'Reply too long — 4000 characters maximum.' ) );
+        wp_send_json_error( array( 'message' => 'Reply too long, 4000 characters maximum.' ) );
     }
 
     $current = wp_get_current_user();
@@ -1005,7 +1005,7 @@ function vance_msg_ajax_user_reply() {
         'post_status'  => 'publish',
         'post_parent'  => $msg_id,
         'post_author'  => (int) $current->ID,
-        'post_title'   => 'Re: ' . wp_trim_words( get_the_title( $msg_id ), 8, '…' ) . ' — ' . $title_seed,
+        'post_title'   => 'Re: ' . wp_trim_words( get_the_title( $msg_id ), 8, '…' ) . '' . $title_seed,
         'post_content' => $body,
     ), true );
 

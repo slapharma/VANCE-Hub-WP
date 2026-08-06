@@ -151,7 +151,20 @@ get_header();
 
 /* Sidebar */
 .sidebar-header { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-.dash-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px; color: <?php echo $sidebar_logo_color; ?>; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+/* Sidebar logo, sized exactly like the site header's.
+   main.css sizes the header logo with a crop window, not a height: .logo-area
+   is 145x36 (125x32 below 768px) with overflow:hidden, and the img is scaled to
+   that WIDTH, so the artwork's built-in whitespace is trimmed off the top and
+   bottom. The dashboard set `height: 50px` instead, which fits the whole PNG,
+   whitespace included — so the wordmark itself rendered about a third smaller
+   than the one on the homepage. Same numbers as main.css's .logo-area rules;
+   change them together. */
+.dash-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px; color: <?php echo $sidebar_logo_color; ?>; display: flex; align-items: center; gap: 8px; text-decoration: none; width: 125px; height: 32px; overflow: hidden; flex: 0 0 auto; }
+.dash-logo img { width: 125px; height: auto; max-width: none; display: block; }
+@media (min-width: 768px) {
+    .dash-logo { width: 145px; height: 36px; }
+    .dash-logo img { width: 145px; }
+}
 .dash-nav { padding: 20px 12px; flex: 1; }
 .nav-section { margin-bottom: 24px; }
 .nav-label { font-size: 11px; font-weight: <?php echo $nav_label_weight; ?>; color: <?php echo $theme_sidebar_text; ?>; text-transform: uppercase; margin: 0 0 8px 12px; letter-spacing: 0.5px; opacity: 0.7; }
@@ -200,8 +213,9 @@ get_header();
     <!-- SIDEBAR -->
     <aside class="dash-sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="/" class="dash-logo" style="display: flex; align-items: center; gap: 0; text-decoration: none;">
-                <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 50px; width: auto; object-fit: contain;">
+            <?php // Sizing lives in .dash-logo above so it stays in step with the site header. ?>
+            <a href="/" class="dash-logo">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical">
             </a>
             <button class="mobile-toggle" style="margin-left: auto; color: #0A1929;" onclick="toggleSidebar()">✕</button>
         </div>
@@ -598,13 +612,18 @@ get_header();
                         ? vance_get_tool_history($current_user->ID, 'ibd-recipes', 10)
                         : array();
 
-                    // Defaults for form
-                    $defaults = array(
-                        'digital_apps' => '', 'medication' => '', 'supplements' => '', 
-                        'lifestyle_changes' => '', 'flare_up_freq' => '', 'last_flare_up' => '',
-                        'weight' => '', 'height' => '', 'blood_pressure' => '', 'additional_details' => ''
-                    );
-                    $profile = array_merge($defaults, $clinical_profile);
+                    // Every clinical-profile key, empty by default, so a field added
+                    // to vance_clinical_profile_fields() reads safely here without
+                    // a local defaults list going stale (functions.php).
+                    $profile = array_merge( vance_clinical_profile_defaults(), is_array($clinical_profile) ? $clinical_profile : array() );
+
+                    // Quiz field order and labels come from the quiz itself, so a
+                    // row's "Edit" opens the step that actually asks that question.
+                    // The old local list still named `current_tools` and
+                    // `learning_pref` — questions the quiz stopped asking — which
+                    // put every step index after "duration" off by one or two.
+                    $quiz_fields = vance_quiz_field_labels();
+                    $quiz_steps  = array_keys( $quiz_fields );
                     ?>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
                         <!-- Quiz Results Section -->
@@ -622,23 +641,23 @@ get_header();
                                 </div>
                             <?php else: ?>
                                 <div class="dash-list">
-                                    <?php 
-                                    $labels = array(
-                                        'age' => 'Age Range', 'gender' => 'Gender',
-                                        'gastro_condition' => 'Gastro Condition', 'condition_type' => 'Primary Concern',
-                                        'looking_for' => 'Searching For', 'duration' => 'Duration/Interest',
-                                        'seeing_specialist' => 'Seeing Specialist', 'current_tools' => 'Digital Tool Use',
-                                        'learning_pref' => 'Learning Style'
-                                    );
-                                    foreach($quiz_results as $key => $val): if(isset($labels[$key])): ?>
-                                        <div class="list-item" style="cursor:pointer;" onclick="openQuizModal(<?php echo array_search($key, array_keys($labels)) + 1; ?>, true)">
-                                            <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo $labels[$key]; ?></span>
+                                    <?php
+                                    // Walk the quiz's own field order, not the saved
+                                    // answers' order, so rows always read in the order
+                                    // the questions were asked and an unanswered
+                                    // question is simply skipped.
+                                    foreach ( $quiz_fields as $key => $label ) :
+                                        if ( empty( $quiz_results[ $key ] ) ) { continue; }
+                                        $step = array_search( $key, $quiz_steps, true ) + 1;
+                                        ?>
+                                        <div class="list-item" style="cursor:pointer;" onclick="openQuizModal(<?php echo (int) $step; ?>, true)">
+                                            <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html( $label ); ?></span>
                                             <div style="display:flex; align-items:center; gap:8px;">
-                                                <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo esc_html(ucfirst($val)); ?></span>
+                                                <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo esc_html( ucfirst( (string) $quiz_results[ $key ] ) ); ?></span>
                                                 <span style="font-size:12px; color:#008080; opacity:0; transition:opacity 0.2s;" class="edit-hint">Edit &rarr;</span>
                                             </div>
                                         </div>
-                                    <?php endif; endforeach; ?>
+                                    <?php endforeach; ?>
                                 </div>
                                 <div style="margin-top:24px; text-align:center;">
                                     <button onclick="openQuizModal()" style="font-size:12px; color:#008080; font-weight:600; background:none; border:none; cursor:pointer;">Retake Entire Quiz &rarr;</button>
@@ -657,46 +676,76 @@ get_header();
                                 <button type="button" onclick="openClinicalInfoModal()" class="vance-btn-inverted vance-btn--sm">Edit Details</button>
                             </div>
                             
+                            <?php
+                            // Rows are data-driven so the panel and the editor modal
+                            // list the same fields in the same order. `wide` renders
+                            // the value on its own line for free-text answers.
+                            $bmi = '';
+                            if ( is_numeric($profile['weight']) && is_numeric($profile['height']) && (float) $profile['height'] > 0 ) {
+                                $m   = (float) $profile['height'] / 100;
+                                $bmi = number_format( (float) $profile['weight'] / ( $m * $m ), 1 );
+                            }
+                            $wl = '';
+                            if ( is_numeric($profile['weight']) && is_numeric($profile['usual_weight']) && (float) $profile['usual_weight'] > 0 ) {
+                                $diff = (float) $profile['usual_weight'] - (float) $profile['weight'];
+                                if ( abs($diff) >= 0.1 ) {
+                                    $wl = ( $diff > 0 ? '−' : '+' ) . number_format( abs($diff), 1 ) . 'kg vs usual';
+                                }
+                            }
+                            $appt = '';
+                            if ( $profile['next_appointment'] ) {
+                                $ts   = strtotime( $profile['next_appointment'] );
+                                $appt = $ts ? date_i18n( 'j M Y', $ts ) : '';
+                            }
+                            $rows = array(
+                                array( 'Weight / Height',   ( $profile['weight'] ? esc_html($profile['weight']) . 'kg' : '—' ) . ' / ' . ( $profile['height'] ? esc_html($profile['height']) . 'cm' : '—' ) . ( $bmi ? ' <span style="color:#008080;">· BMI ' . esc_html($bmi) . '</span>' : '' ), false, true ),
+                                array( 'Usual weight',      ( $profile['usual_weight'] ? esc_html($profile['usual_weight']) . 'kg' : '—' ) . ( $wl ? ' <span style="color:#64748B; font-weight:600;">· ' . esc_html($wl) . '</span>' : '' ), false, true ),
+                                array( 'Medication',        $profile['medication'],        true,  false ),
+                                array( 'Supplements',       $profile['supplements'],       true,  false ),
+                                array( 'Allergies',         $profile['allergies'],         true,  false ),
+                                array( 'Dietary pattern',   $profile['dietary_pattern'],   false, false ),
+                                array( 'Trigger foods',     $profile['trigger_foods'],     true,  false ),
+                                array( 'Recent changes',    $profile['lifestyle_changes'], true,  false ),
+                                array( 'Flare-up history',  ( $profile['flare_up_freq'] ?: '—' ) . ( $profile['last_flare_up'] ? ' (last: ' . $profile['last_flare_up'] . ')' : '' ), false, false ),
+                                array( 'Blood pressure',    $profile['blood_pressure'],    false, false ),
+                                array( 'Next appointment',  $appt,                         false, false ),
+                                array( 'Questions to ask',  $profile['appointment_questions'], true, false ),
+                            );
+                            ?>
                             <div class="dash-list">
-                                <div class="list-item">
-                                    <span style="font-size:13px; font-weight:600; color:#64748B;">Weight / Height</span>
-                                    <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo $profile['weight'] ? esc_html($profile['weight']) . 'kg' : '---'; ?> / <?php echo $profile['height'] ? esc_html($profile['height']) . 'cm' : '---'; ?></span>
-                                </div>
-                                <div class="list-item">
-                                    <span style="font-size:13px; font-weight:600; color:#64748B;">Medication</span>
-                                    <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo $profile['medication'] ?: 'None listed'; ?></span>
-                                </div>
-                                <div class="list-item">
-                                    <span style="font-size:13px; font-weight:600; color:#64748B;">Supplements</span>
-                                    <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo $profile['supplements'] ?: 'None listed'; ?></span>
-                                </div>
-                                <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:4px;">
-                                    <span style="font-size:13px; font-weight:600; color:#64748B;">Lifestyle Changes</span>
-                                    <p style="font-size:14px; color:#334155; margin:0; line-height:1.4;"><?php echo $profile['lifestyle_changes'] ?: 'No lifestyle updates yet.'; ?></p>
-                                </div>
-                                <div class="list-item">
-                                    <span style="font-size:13px; font-weight:600; color:#64748B;">Flare-up History</span>
-                                    <span style="font-size:14px; color:#0F172A; font-weight:700;"><?php echo $profile['flare_up_freq'] ?: '---'; ?> (Last: <?php echo $profile['last_flare_up'] ?: 'N/A'; ?>)</span>
-                                </div>
+                                <?php foreach ( $rows as $row ) :
+                                    list( $label, $value, $wide, $raw ) = $row;
+                                    $display = $raw ? $value : esc_html( (string) $value );
+                                    $empty   = trim( wp_strip_all_tags( (string) $value ) ) === '' || trim( (string) $value ) === '—';
+                                    ?>
+                                    <div class="list-item"<?php echo $wide ? ' style="flex-direction:column; align-items:flex-start; gap:4px;"' : ''; ?>>
+                                        <span style="font-size:13px; font-weight:600; color:#64748B;"><?php echo esc_html( $label ); ?></span>
+                                        <?php if ( $wide ) : ?>
+                                            <p style="font-size:14px; color:<?php echo $empty ? '#94A3B8' : '#334155'; ?>; margin:0; line-height:1.5; white-space:pre-line;"><?php echo $empty ? 'Not recorded' : $display; ?></p>
+                                        <?php else : ?>
+                                            <span style="font-size:14px; color:<?php echo $empty ? '#94A3B8' : '#0F172A'; ?>; font-weight:700; text-align:right;"><?php echo $empty ? 'Not recorded' : $display; ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
 
                             <div style="margin-top:30px; border-top:1px solid #E2E8F0; padding-top:20px;">
-                                <label style="display:block; font-size:13px; font-weight:700; color:#0A1929; margin-bottom:12px;">Additional Discovery Details</label>
+                                <label for="dash-additional-details" style="display:block; font-size:13px; font-weight:700; color:#0A1929; margin-bottom:12px;">Additional notes &amp; observations</label>
                                 <form id="dashboard-additional-details-form">
                                     <?php wp_nonce_field( 'vance_dashboard_nonce', 'nonce' ); ?>
                                     <input type="hidden" name="action" value="vance_save_clinical_profile">
-                                    <input type="hidden" name="weight" value="<?php echo esc_attr($profile['weight']); ?>">
-                                    <input type="hidden" name="height" value="<?php echo esc_attr($profile['height']); ?>">
-                                    <input type="hidden" name="medication" value="<?php echo esc_attr($profile['medication']); ?>">
-                                    <input type="hidden" name="supplements" value="<?php echo esc_attr($profile['supplements']); ?>">
-                                    <input type="hidden" name="digital_apps" value="<?php echo esc_attr($profile['digital_apps']); ?>">
-                                    <input type="hidden" name="lifestyle_changes" value="<?php echo esc_attr($profile['lifestyle_changes']); ?>">
-                                    <input type="hidden" name="flare_up_freq" value="<?php echo esc_attr($profile['flare_up_freq']); ?>">
-                                    <input type="hidden" name="last_flare_up" value="<?php echo esc_attr($profile['last_flare_up']); ?>">
-                                    <input type="hidden" name="blood_pressure" value="<?php echo esc_attr($profile['blood_pressure']); ?>">
-                                    
-                                    <textarea name="additional_details" rows="5" placeholder="Add any other symptoms, observations or clinical notes you would like to track..." style="width:100%; padding:14px; border:1px solid #E2E8F0; border-radius:0; font-size:14px; background:#F8FAFC; margin-bottom:12px; resize:none;"><?php echo esc_textarea($profile['additional_details']); ?></textarea>
-                                    <button type="submit" style="width:100%; padding:10px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:0; font-weight:700; color:#475569; cursor:pointer; transition:all 0.2s;">Save Additional Details</button>
+                                    <?php
+                                    // The hidden copies of every other field that used
+                                    // to live here are gone: the save handler now merges
+                                    // into the stored profile instead of replacing it,
+                                    // so this form only needs to send what it edits.
+                                    // (They were also a stale-data hazard — a value
+                                    // changed in the modal after page load would have
+                                    // been written back from this page's old copy.)
+                                    ?>
+                                    <textarea id="dash-additional-details" name="additional_details" rows="5" placeholder="Anything else you would like to keep a record of — symptoms, observations, how you have been feeling…" style="width:100%; padding:14px; border:1px solid #E2E8F0; border-radius:0; font-size:14px; background:#F8FAFC; margin-bottom:12px; resize:vertical;"><?php echo esc_textarea($profile['additional_details']); ?></textarea>
+                                    <button type="submit" style="width:100%; padding:10px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:0; font-weight:700; color:#475569; cursor:pointer; transition:all 0.2s;">Save notes</button>
+                                    <p id="dashboard-additional-details-msg" role="status" aria-live="polite" style="display:none; margin:10px 0 0; font-size:13px; line-height:1.5;"></p>
                                 </form>
                             </div>
                         </div>
@@ -1586,16 +1635,35 @@ get_header();
                         }
                     })();
 
+                    // Every outcome resets the button and says what happened. The
+                    // previous success-only callback meant a failed request (the
+                    // save handler used to 403 on a nonce mismatch) left this
+                    // stuck on "Saving..." with nothing shown to the user.
                     jQuery('#dashboard-additional-details-form').on('submit', function(e) {
                         e.preventDefault();
-                        const btn = jQuery(this).find('button');
+                        const btn = jQuery(this).find('button[type="submit"]');
+                        const msg = jQuery('#dashboard-additional-details-msg');
+                        const reset = () => btn.prop('disabled', false).text('Save notes').css('background', '#F1F5F9').css('color', '#475569');
+                        const say = (text, ok) => msg.text(text).css('color', ok ? '#047857' : '#B91C1C').show();
+
+                        msg.hide();
                         btn.prop('disabled', true).text('Saving...');
-                        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', jQuery(this).serialize(), function(res) {
-                            if(res.success) {
-                                btn.text('Details Saved!').css('background', '#D1FAE5').css('color', '#065F46');
-                                setTimeout(() => btn.prop('disabled', false).text('Save Additional Details').css('background', '#F1F5F9').css('color', '#475569'), 2000);
-                            }
-                        });
+
+                        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', jQuery(this).serialize())
+                            .done(function(res) {
+                                if (res && res.success) {
+                                    btn.text('Saved ✓').css('background', '#D1FAE5').css('color', '#065F46');
+                                    say('Your notes have been saved.', true);
+                                    setTimeout(reset, 2200);
+                                } else {
+                                    say((res && res.data) ? String(res.data) : 'Could not save, please try again.', false);
+                                    reset();
+                                }
+                            })
+                            .fail(function(xhr) {
+                                say('Could not save (error ' + xhr.status + '). Please refresh the page and try again.', false);
+                                reset();
+                            });
                     });
                     </script>
                 <?php break;
@@ -1607,7 +1675,7 @@ get_header();
                     // wrappers is now logged-in-aware (see vance_save_tool_result).
                     $dash_tools = array(
                         array( 'slug' => 'healthcare-quiz',        'page_url' => '/healthcare-quiz/',         'name' => 'IBD Health Quiz',        'tag' => 'Self-Assessment',  'desc' => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
-                        array( 'slug' => 'ibd-recipes',            'page_url' => '/ibd-recipies/',            'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely — saving plans prompts a quick signup.', 'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
+                        array( 'slug' => 'ibd-recipes',            'page_url' => '/ibd-recipies/',            'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely, saving plans prompts a quick signup.', 'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
                         array( 'slug' => 'malnutrition-calculator','page_url' => '/malnutrition-calculator/','name' => 'Malnutrition Calculator','tag' => 'IBD Screening',    'desc' => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.', 'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' ),
                     );
                     ?>
@@ -2000,7 +2068,7 @@ get_header();
 
                         <?php if ( empty( $all_msgs ) ) : ?>
                             <div style="text-align: center; padding: 48px; background: #F8FAFC; border: 1px dashed #E2E8F0;">
-                                <p style="color: #64748B; margin: 0;">No messages yet — the team will share updates and announcements here.</p>
+                                <p style="color: #64748B; margin: 0;">No messages yet, the team will share updates and announcements here.</p>
                             </div>
                         <?php else : ?>
                             <div class="vance-msg-list">
@@ -2067,7 +2135,7 @@ get_header();
                                             .then(function (r) { return r.json(); })
                                             .then(function (j) {
                                                 if (j && j.success) {
-                                                    setStatus(form, 'Reply sent — admins will see it shortly. Refresh to see your reply in the thread.', false);
+                                                    setStatus(form, 'Reply sent, admins will see it shortly. Refresh to see your reply in the thread.', false);
                                                     if (ta) ta.value = '';
                                                     setTimeout(function () { window.location.reload(); }, 1200);
                                                 } else {

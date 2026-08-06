@@ -170,10 +170,30 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 .tool-page--embed .tool-page-card {
     border: 0; box-shadow: none; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
 }
-.tool-page--embed .tool-page-card__head {
-    position: sticky; top: 0; z-index: 5; /* keep Save reachable while the tool scrolls */
-}
 .tool-page--embed .tool-page-iframe { flex: 1 1 auto; height: auto; min-height: 60vh; }
+
+/* One slim action bar: compliance note left, Save right. Sticky so Save stays
+   reachable while the tool scrolls underneath it. */
+.tool-page-card__head--embed {
+    position: sticky; top: 0; z-index: 5;
+    padding: 10px 18px;
+    gap: 14px;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+    flex-wrap: nowrap;
+}
+.tool-page-card__note {
+    margin: 0; min-width: 0;
+    font-size: 12px; line-height: 1.45; color: #64748b;
+}
+.tool-page-card__head--embed .tool-page-save {
+    flex: 0 0 auto; padding: 9px 16px; font-size: 13px;
+}
+@media (max-width: 560px) {
+    .tool-page-card__head--embed { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+    .tool-page-card__note { font-size: 11.5px; flex: 1 1 100%; order: 2; }
+    .tool-page-card__head--embed .tool-page-save { order: 1; width: 100%; justify-content: center; }
+}
 </style>
 
 <div class="tool-page<?php echo $embed ? ' tool-page--embed' : ''; ?>">
@@ -207,10 +227,24 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 
     <div class="tool-page-container">
         <div class="tool-page-card">
-            <div class="tool-page-card__head">
-                <h2 class="tool-page-card__title"><?php echo esc_html( $tool_name ); ?></h2>
-                <div class="tool-page-card__actions">
-                    <a href="<?php echo esc_url( $iframe_src ); ?>" target="_blank" rel="noopener" class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;">Open full screen ↗</a>
+            <?php if ( $embed ) : ?>
+                <?php
+                /*
+                 * Embed mode gets ONE slim bar instead of three stacked bands.
+                 *
+                 * The modal already puts the tool's name in its own title bar, so
+                 * repeating it here — above a full-width disclaimer strip, above the
+                 * bundle's own hero — pushed the actual tool below the fold and read
+                 * as noise. The name goes, the disclaimer becomes the bar's left-hand
+                 * text, and the Save button keeps the right.
+                 *
+                 * The "Open full screen" link goes entirely in modal mode: a modal
+                 * that offers an escape hatch out of itself is a modal that hasn't
+                 * committed to being the tool surface.
+                 */
+                ?>
+                <div class="tool-page-card__head tool-page-card__head--embed">
+                    <p class="tool-page-card__note">General information only, not a diagnosis. In an emergency call 999 or NHS 111.</p>
                     <?php if ( $save_enabled ) : ?>
                     <button type="button"
                             class="tool-page-save"
@@ -221,15 +255,42 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
                     </button>
                     <?php endif; ?>
                 </div>
-            </div>
-            <div class="tool-page-disclaimer-top">
-                General information only. Not a diagnosis or a substitute for professional medical advice. In an emergency call 999 or NHS 111.
-            </div>
+            <?php else : ?>
+                <div class="tool-page-card__head">
+                    <h2 class="tool-page-card__title"><?php echo esc_html( $tool_name ); ?></h2>
+                    <div class="tool-page-card__actions">
+                        <a href="<?php echo esc_url( $iframe_src ); ?>" target="_blank" rel="noopener" class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;">Open full screen ↗</a>
+                        <?php if ( $save_enabled ) : ?>
+                        <button type="button"
+                                class="tool-page-save"
+                                data-tool-slug="<?php echo esc_attr( $slug ); ?>"
+                                data-logged-in="<?php echo $is_logged_in ? '1' : '0'; ?>"
+                                data-nonce="<?php echo esc_attr( $nonce ); ?>">
+                            <?php echo esc_html( $save_label ); ?>
+                        </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="tool-page-disclaimer-top">
+                    General information only. Not a diagnosis or a substitute for professional medical advice. In an emergency call 999 or NHS 111.
+                </div>
+            <?php endif; ?>
+            <?php
+            /*
+             * Embed mode loads eagerly with fetchpriority="high". This iframe IS
+             * the reason the modal was opened, but `loading="lazy"` put it last
+             * in the queue behind every theme and plugin asset on the wrapper
+             * page — the tool had not started fetching by the time the wrapper's
+             * load event fired at ~1.7s, which is the delay users saw as "slow to
+             * open". On the standalone page the hero sits above it, so lazy is
+             * still the right call there.
+             */
+            ?>
             <iframe class="tool-page-iframe<?php echo $autoresize ? ' tool-page-iframe--autoresize' : ''; ?>"
                     id="vance-tool-iframe-<?php echo esc_attr( $slug ); ?>"
                     src="<?php echo esc_url( $iframe_src ); ?>"
                     title="<?php echo esc_attr( $tool_name ); ?>"
-                    loading="lazy"
+                    <?php echo $embed ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'; ?>
                     allow="clipboard-write"
                     <?php echo $autoresize ? 'scrolling="no"' : ''; ?>></iframe>
         </div>
@@ -242,7 +303,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
             <?php if ( $is_logged_in ) : ?>
                 Saved results appear in your <a href="/dashboard/" style="color: var(--primary-color);">dashboard</a>.
             <?php else : ?>
-                Saving your result is free — we'll create your account in two clicks. Already have one? <a href="/login/?redirect_to=<?php echo esc_attr( urlencode( $_SERVER['REQUEST_URI'] ?? '/' ) ); ?>" style="color: var(--primary-color);">Sign in</a>.
+                Saving your result is free, we'll create your account in two clicks. Already have one? <a href="/login/?redirect_to=<?php echo esc_attr( urlencode( $_SERVER['REQUEST_URI'] ?? '/' ) ); ?>" style="color: var(--primary-color);">Sign in</a>.
             <?php endif; ?>
         </p>
     </div>
@@ -594,7 +655,7 @@ get_template_part( 'inc/register-modal' );
                     payload: payload,
                     onSuccess: function (resp) {
                         report({ ok: true });
-                        showToast('Account created — opening your dashboard…', 4000);
+                        showToast('Account created, opening your dashboard…', 4000);
                         setTimeout(function () {
                             window.location.href = (resp && resp.redirect) || '/dashboard/?vance_welcome=1';
                         }, 600);
@@ -623,15 +684,15 @@ get_template_part( 'inc/register-modal' );
                     showToast('Saved to your dashboard ✓', 3500);
                     if (saveBtn) saveBtn.disabled = false;
                 } else {
-                    var msg = (j && j.data && j.data.message) || 'Could not save — please try again.';
+                    var msg = (j && j.data && j.data.message) || 'Could not save, please try again.';
                     report({ ok: false, message: msg });
                     showToast(msg, 4500);
                     if (saveBtn) saveBtn.disabled = false;
                 }
             })
             .catch(function () {
-                report({ ok: false, message: 'Network error — please try again.' });
-                showToast('Network error — please try again.', 4500);
+                report({ ok: false, message: 'Network error, please try again.' });
+                showToast('Network error, please try again.', 4500);
                 if (saveBtn) saveBtn.disabled = false;
             });
     }

@@ -234,7 +234,7 @@ get_header(); ?>
 
     <h2 id="intellectual-property">6. Intellectual Property</h2>
     <p>
-        All content on this Platform — including but not limited to text, graphics, logos, icons, images, audio clips, tool interfaces, and software — is the property of Vance Medical Foods Ltd or its content licensors and is protected by UK and international copyright, trade mark, and other intellectual property laws.
+        All content on this Platform, including but not limited to text, graphics, logos, icons, images, audio clips, tool interfaces, and software, is the property of Vance Medical Foods Ltd or its content licensors and is protected by UK and international copyright, trade mark, and other intellectual property laws.
     </p>
     <p>
         You are granted a limited, non-exclusive, non-transferable licence to access and use the Platform for personal, non-commercial purposes. No content may be copied, reproduced, republished, uploaded, modified, transmitted, or distributed without our prior written permission, except as expressly permitted by these Terms.
@@ -250,7 +250,7 @@ get_header(); ?>
 
     <h2 id="warranties">8. Disclaimer of Warranties</h2>
     <p>
-        The Platform and its content are provided on an "as is" and "as available" basis, without warranties of any kind — express or implied — including but not limited to implied warranties of merchantability, fitness for a particular purpose, accuracy, or non-infringement.
+        The Platform and its content are provided on an "as is" and "as available" basis, without warranties of any kind, express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, accuracy, or non-infringement.
     </p>
     <p>
         We do not warrant that the Platform will be uninterrupted, error-free, secure, or free from viruses or other harmful components. We reserve the right to modify, suspend, or discontinue any part of the Platform at any time without notice.

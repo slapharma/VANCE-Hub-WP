@@ -30,14 +30,16 @@ class VHH_Frontend {
 		if ( ! VHH_Plugin::enabled() ) {
 			return false;
 		}
-		// Any logged-in user can see and use the comment panel (collaborative
-		// review). Logged-out visitors still get zero annotation output.
+		// Restricted to roles holding vhh_annotate — Administrator and Editor
+		// by default; Customize → Article Annotations can widen it to more
+		// roles. Logged-out visitors, and logged-in users without the
+		// capability, still get zero annotation output.
 		if ( is_singular() ) {
 			$post = get_queried_object();
 			if ( ! $post instanceof WP_Post || ! VHH_Plugin::post_type_allowed( $post->post_type ) || 'publish' !== $post->post_status ) {
 				return false;
 			}
-			return is_user_logged_in();
+			return VHH_Plugin::user_can_annotate();
 		}
 		// Listing views have no WP_Post of their own — get_queried_object()
 		// returns null (a "latest posts" home) or a WP_Term (a category) — so
@@ -50,7 +52,7 @@ class VHH_Frontend {
 		// this correct either way. Other listing views (search, author,
 		// date archives) stay excluded — not requested.
 		if ( is_front_page() || is_home() || is_category() ) {
-			return is_user_logged_in();
+			return VHH_Plugin::user_can_annotate();
 		}
 		return false;
 	}

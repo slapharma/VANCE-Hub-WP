@@ -16,7 +16,7 @@ get_header(); ?>
     $hero_bg      = vance_get_theme_mod( 'vance_pat_hero_bg', get_template_directory_uri() . '/assets/img/patient_hero.png' );
     $hero_tag     = vance_get_theme_mod( 'vance_pat_hero_tag',   'Patient Portal' );
     $hero_title   = vance_get_theme_mod( 'vance_pat_hero_title', 'Empowering Your <span class="highlight">Wellness Journey</span>' );
-    $hero_desc    = vance_get_theme_mod( 'vance_pat_hero_desc',  'More than just a news site—a truly useful platform providing the highest quality clinical information, innovative tools, and expert opinions to help you explore and manage your gastro healthcare concerns.' );
+    $hero_desc    = vance_get_theme_mod( 'vance_pat_hero_desc',  'More than just a news site, a truly useful platform providing the highest quality clinical information, innovative tools, and expert opinions to help you explore and manage your gastro healthcare concerns.' );
     $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_pat_hero_overlay', 70 ) ) ) ) / 100;
     $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
     ?>

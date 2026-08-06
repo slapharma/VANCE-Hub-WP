@@ -302,8 +302,8 @@ get_header(); ?>
     <p>We do not sell your personal data. We may share your information with:</p>
     <ul>
         <li><strong>Service providers acting as data processors on our behalf</strong>, under written data processing agreements. These include website hosting, website analytics, email and newsletter delivery, and the third-party AI provider that powers VANCE-Ai. Each is contractually required to protect your data and to use it only on our documented instructions.</li>
-        <li><strong>Professional advisors</strong> — such as lawyers or auditors — where necessary and under confidentiality obligations</li>
-        <li><strong>Regulatory or legal authorities</strong> — where required by law or to protect the rights of Vance Medical or others</li>
+        <li><strong>Professional advisors</strong>, such as lawyers or auditors, where necessary and under confidentiality obligations</li>
+        <li><strong>Regulatory or legal authorities</strong>, where required by law or to protect the rights of Vance Medical or others</li>
     </ul>
     <p>
         Any third-party processors we engage are contractually required to implement appropriate technical and organisational security measures and to process data only on our documented instructions.
@@ -328,7 +328,7 @@ get_header(); ?>
         <tbody>
             <tr>
                 <td><strong>Essential</strong></td>
-                <td>Required for the Platform to function — e.g. login sessions, security tokens</td>
+                <td>Required for the Platform to function, e.g. login sessions, security tokens</td>
             </tr>
             <tr>
                 <td><strong>Functional</strong></td>
@@ -403,7 +403,7 @@ get_header(); ?>
 
     <h2 id="transfers">10. International Transfers</h2>
     <p>
-        Some of our third-party service providers may process data outside the United Kingdom. Where this occurs, we ensure appropriate safeguards are in place — such as the International Data Transfer Agreement (IDTA) or adequacy decisions — to ensure your data receives equivalent protection.
+        Some of our third-party service providers may process data outside the United Kingdom. Where this occurs, we ensure appropriate safeguards are in place, such as the International Data Transfer Agreement (IDTA) or adequacy decisions, to ensure your data receives equivalent protection.
     </p>
 
     <h2 id="children">11. Children's Privacy</h2>

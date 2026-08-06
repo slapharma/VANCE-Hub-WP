@@ -386,7 +386,16 @@ add_action( 'wp_ajax_vance_delete_search', 'vance_dashboard_delete_search' );
  * Handle Note Saving AJAX
  */
 function vance_save_note() {
-    check_ajax_referer( 'vance_save_note_nonce', 'nonce' );
+    // Two callers, two nonces. page-my-notes.php sends 'vance_save_note_nonce';
+    // the Ask AI chat (assets/js/vance-askai.js) sends CFG.notesNonce, which is
+    // 'vance_dashboard_nonce' — the same nonce its sibling calls
+    // vance_append_to_note() and vance_list_notes() already accept. Checking
+    // only the first meant "save as note" from the chat 403'd every time.
+    $ok = check_ajax_referer( 'vance_save_note_nonce', 'nonce', false )
+        || check_ajax_referer( 'vance_dashboard_nonce', 'nonce', false );
+    if ( ! $ok ) {
+        wp_send_json_error( 'Your session has expired. Please refresh the page and try again.' );
+    }
 
     if ( ! is_user_logged_in() ) {
         wp_send_json_error( 'Not logged in' );
@@ -1032,7 +1041,7 @@ add_action( 'wp_ajax_vance_rename_tool_entry', 'vance_rename_tool_entry' );
 function vance_ajax_quick_register() {
     // Nonce (paired with wp_create_nonce('vance_quick_register') in the modal partial).
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_quick_register' ) ) {
-        wp_send_json_error( array( 'message' => 'Security check failed — please refresh the page and try again.' ), 403 );
+        wp_send_json_error( array( 'message' => 'Security check failed, please refresh the page and try again.' ), 403 );
     }
 
     // Honeypot — bots tend to fill any non-empty input. Real users can't see it.
@@ -1071,7 +1080,7 @@ function vance_ajax_quick_register() {
 
     // Validation.
     if ( ! is_email( $email ) ) {
-        wp_send_json_error( array( 'message' => 'That email address looks invalid — please double-check.' ) );
+        wp_send_json_error( array( 'message' => 'That email address looks invalid, please double-check.' ) );
     }
     if ( strlen( $password ) < 8 ) {
         wp_send_json_error( array( 'message' => 'Please choose a password of at least 8 characters.' ) );
@@ -1081,7 +1090,7 @@ function vance_ajax_quick_register() {
     }
     if ( email_exists( $email ) ) {
         wp_send_json_error( array(
-            'message' => 'An account already exists for that email — please sign in instead.',
+            'message' => 'An account already exists for that email, please sign in instead.',
             'exists'  => true,
         ) );
     }
@@ -1212,7 +1221,7 @@ function vance_ajax_save_tool_result() {
 
     $ok = vance_append_tool_history( $uid, $tool, $payload );
     if ( ! $ok ) {
-        wp_send_json_error( array( 'message' => 'Could not save — please try again.' ) );
+        wp_send_json_error( array( 'message' => 'Could not save, please try again.' ) );
     }
 
     wp_send_json_success( array(

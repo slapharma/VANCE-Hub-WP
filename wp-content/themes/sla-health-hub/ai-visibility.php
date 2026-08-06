@@ -374,7 +374,7 @@ class AIV_System {
         echo "### Per-Post Markdown (public)\n";
         echo "Endpoint: {$per_post_url}\n";
         echo "No authentication required. Replace {slug} with any post slug.\n";
-        echo "Returns text/markdown directly — suitable for direct LLM ingestion.\n\n";
+        echo "Returns text/markdown directly, suitable for direct LLM ingestion.\n\n";
         echo "## Freshness\n\n";
         echo "Last updated: {$date}\n";
 
@@ -437,7 +437,7 @@ class AIV_System {
 
     public function filter_robots_txt( string $output, bool $public ): string {
         $crawlers = $this->get_setting( 'crawlers', [] );
-        $lines    = [ "\n# AI Crawler Permissions — Vance Medical Hub AI Visibility v" . self::VERSION ];
+        $lines    = [ "\n# AI Crawler Permissions, Vance Medical Hub AI Visibility v" . self::VERSION ];
 
         foreach ( $crawlers as $bot => $allowed ) {
             $rule    = $allowed ? 'Allow: /' : 'Disallow: /';
@@ -884,7 +884,7 @@ jQuery(function($) {
             btn.prop('disabled', false).text('Save Settings');
             var msg = resp.success
                 ? '<div class="aiv-notice aiv-notice-success">Settings saved successfully.</div>'
-                : '<div class="aiv-notice aiv-notice-error">Save failed — please try again.</div>';
+                : '<div class="aiv-notice aiv-notice-error">Save failed, please try again.</div>';
             $('.aiv-save-notice').html(msg).show();
             setTimeout(function() { $('.aiv-save-notice').fadeOut(); }, 3500);
         });
@@ -928,7 +928,7 @@ jQuery(function($) {
             }
         }).fail(function() {
             btn.prop('disabled', false).text('Regenerate Summary');
-            status.css('color','#c0392b').text('Request failed — check your API key.');
+            status.css('color','#c0392b').text('Request failed, check your API key.');
         });
     });
 
@@ -936,7 +936,7 @@ jQuery(function($) {
     $(document).on('click', '#aiv-bulk-generate', function() {
         var btn = $(this);
         btn.prop('disabled', true).text('Generating…');
-        $('#aiv-bulk-status').show().text('Running bulk generation — this may take several minutes…');
+        $('#aiv-bulk-status').show().text('Running bulk generation, this may take several minutes…');
         $.post('{$ajax_url}', {
             action: 'aiv_bulk_generate',
             nonce:  $('#aiv_nonce').val()
@@ -945,7 +945,7 @@ jQuery(function($) {
             if (resp.success) {
                 $('#aiv-bulk-status').text(
                     'Done! ' + resp.data.count + ' summaries generated. '
-                    + (resp.data.remaining > 0 ? resp.data.remaining + ' remaining — click again to continue.' : 'All posts now have summaries.')
+                    + (resp.data.remaining > 0 ? resp.data.remaining + ' remaining, click again to continue.' : 'All posts now have summaries.')
                 );
             }
         });
@@ -1009,7 +1009,7 @@ JS;
             <div class="aiv-header">
                 <div>
                     <h1>AI Visibility <span class="aiv-badge">v<?php echo esc_html( self::VERSION ); ?></span></h1>
-                    <p>Make Vance Medical Hub discoverable, citable, and accessible to AI systems — ChatGPT, Claude, Perplexity, and agents.</p>
+                    <p>Make Vance Medical Hub discoverable, citable, and accessible to AI systems, ChatGPT, Claude, Perplexity, and agents.</p>
                 </div>
             </div>
 
@@ -1124,18 +1124,18 @@ JS;
                             Regenerate Key
                         </button>
                         <p class="description" style="margin-top:6px;">
-                            Regenerating invalidates the current key immediately — update all integrations before clicking.
+                            Regenerating invalidates the current key immediately, update all integrations before clicking.
                         </p>
                     </div>
                     <div class="aiv-card">
                         <h3><span class="dashicons dashicons-admin-page"></span> Per-Post Endpoint <span class="aiv-badge" style="font-size:10px;">Public</span></h3>
                         <p style="font-size:13px;color:#374151;margin-bottom:10px;">
-                            Each post has its own standalone markdown URL — no API key required.
+                            Each post has its own standalone markdown URL, no API key required.
                             AI agents can link directly to any individual article.
                         </p>
                         <p class="aiv-endpoint-box"><?php echo esc_html( rest_url( 'theme/v1/post-markdown/{slug}' ) ); ?></p>
                         <p style="margin-top:10px;font-size:13px;color:#6b7280;">
-                            Replace <code>{slug}</code> with the post slug. Returns <code>text/markdown</code> directly — not JSON.
+                            Replace <code>{slug}</code> with the post slug. Returns <code>text/markdown</code> directly, not JSON.
                         </p>
                     </div>
                     <div class="aiv-card">
@@ -1161,7 +1161,7 @@ curl -H "<span class="hl">X-Markdown-API-Key: <span class="aiv-key-placeholder">
                             <thead><tr><th>Parameter</th><th>Example</th><th>Notes</th></tr></thead>
                             <tbody>
                                 <tr><td><code>?after=</code></td><td><code>?after=2026-04-01</code></td>
-                                    <td>ISO 8601 date — fetch posts published after this date. Ideal for daily incremental updates.</td></tr>
+                                    <td>ISO 8601 date, fetch posts published after this date. Ideal for daily incremental updates.</td></tr>
                                 <tr><td><code>?per_page=</code></td><td><code>?per_page=50</code></td>
                                     <td>Posts per page. Default 20, max 100.</td></tr>
                                 <tr><td><code>?page=</code></td><td><code>?page=2</code></td>
@@ -1178,7 +1178,7 @@ curl -H "<span class="hl">X-Markdown-API-Key: <span class="aiv-key-placeholder">
                     <div class="aiv-card">
                         <h3><span class="dashicons dashicons-text-page"></span> llms.txt Configuration</h3>
                         <p style="font-size:13px;color:#374151;margin-bottom:12px;">
-                            The <code>/llms.txt</code> file describes your publication to AI tools — topics covered, key URLs, and how to access the Markdown API. Auto-served by WordPress with no physical file needed.
+                            The <code>/llms.txt</code> file describes your publication to AI tools, topics covered, key URLs, and how to access the Markdown API. Auto-served by WordPress with no physical file needed.
                         </p>
                         <p>
                             <a href="<?php echo esc_url( $llms_url ); ?>" target="_blank" class="button button-secondary">
@@ -1226,7 +1226,7 @@ curl -H "<span class="hl">X-Markdown-API-Key: <span class="aiv-key-placeholder">
                             <div class="aiv-toggle-row">
                                 <div>
                                     <strong><?php echo esc_html( $bot ); ?></strong>
-                                    — <?php echo esc_html( $label ); ?>
+                                    , <?php echo esc_html( $label ); ?>
                                     <p style="margin:2px 0 0;font-size:12px;color:#6b7280;"><?php echo esc_html( $desc ); ?></p>
                                 </div>
                                 <label class="aiv-toggle">
@@ -1247,13 +1247,13 @@ curl -H "<span class="hl">X-Markdown-API-Key: <span class="aiv-key-placeholder">
                     <div class="aiv-card">
                         <h3><span class="dashicons dashicons-chart-pie"></span> Schema.org NewsArticle Markup</h3>
                         <p style="font-size:13px;color:#374151;margin-bottom:14px;">
-                            Injects <code>NewsArticle</code> JSON-LD structured data into every post page so AI tools can cite IBDHealthHub accurately — with proper headline, dates, author, and publisher attribution.
+                            Injects <code>NewsArticle</code> JSON-LD structured data into every post page so AI tools can cite IBDHealthHub accurately, with proper headline, dates, author, and publisher attribution.
                         </p>
                         <div class="aiv-toggle-row" style="padding:0;border:none;">
                             <div>
                                 <strong>Enable Schema.org Markup</strong>
                                 <p style="margin:2px 0 0;font-size:12px;color:#6b7280;">
-                                    Adds NewsArticle JSON-LD to every post — required for Google rich results and AI citation accuracy.
+                                    Adds NewsArticle JSON-LD to every post, required for Google rich results and AI citation accuracy.
                                 </p>
                             </div>
                             <label class="aiv-toggle">
@@ -1312,7 +1312,7 @@ curl -H "<span class="hl">X-Markdown-API-Key: <span class="aiv-key-placeholder">
                             <label for="aiv-sum-provider">AI Provider</label>
                             <select id="aiv-sum-provider" name="summaries_provider">
                                 <option value="claude" <?php selected( $settings['summaries_provider'] ?? 'claude', 'claude' ); ?>>
-                                    Claude Haiku (Anthropic) — Recommended
+                                    Claude Haiku (Anthropic), Recommended
                                 </option>
                                 <option value="openai" <?php selected( $settings['summaries_provider'] ?? 'claude', 'openai' ); ?>>
                                     GPT-4o mini (OpenAI)
@@ -1330,13 +1330,13 @@ curl -H "<span class="hl">X-Markdown-API-Key: <span class="aiv-key-placeholder">
                             <label for="aiv-sum-trigger">Generation Trigger</label>
                             <select id="aiv-sum-trigger" name="summaries_trigger">
                                 <option value="on_publish" <?php selected( $settings['summaries_trigger'] ?? 'on_publish', 'on_publish' ); ?>>
-                                    On Publish — generate when a post is published
+                                    On Publish, generate when a post is published
                                 </option>
                                 <option value="nightly" <?php selected( $settings['summaries_trigger'] ?? 'on_publish', 'nightly' ); ?>>
-                                    Nightly Batch — process unsummarised posts each night via WP-Cron
+                                    Nightly Batch, process unsummarised posts each night via WP-Cron
                                 </option>
                                 <option value="manual" <?php selected( $settings['summaries_trigger'] ?? 'on_publish', 'manual' ); ?>>
-                                    Manual only — use the post editor button or bulk generate below
+                                    Manual only, use the post editor button or bulk generate below
                                 </option>
                             </select>
                         </div>

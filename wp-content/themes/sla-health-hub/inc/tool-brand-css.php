@@ -77,13 +77,69 @@ CSS;
     }
 endif;
 
+if ( ! function_exists( 'vance_tool_brand_css_recipes_embed' ) ) :
+    /**
+     * Modal-only rules for the IBD Recipes bundle.
+     *
+     * Full-page, the bundle opens on a 56px-padded teal gradient hero carrying a
+     * gold pill badge, a 48px headline, a three-line paragraph and four emoji
+     * stat chips. Inside the tool modal that lands under the modal's own title
+     * bar and the action bar, so the reader met three headers before a single
+     * recipe — the "much too noisy" hero.
+     *
+     * Here it collapses to one flush teal band holding just the section name.
+     * The sticky search/filter bar then sits directly beneath it, which is the
+     * part of the page anyone opening the planner actually came for.
+     *
+     * The hero carries no class of its own (the bundle styles it inline), so it
+     * is matched on the one stable thing about it: the inline gradient. Anything
+     * that fails to match simply keeps the full-page styling — no layout breaks.
+     */
+    function vance_tool_brand_css_recipes_embed() {
+        return <<<CSS
+/* === Modal mode: collapse the bundle's hero to a single band === */
+main section[style*="linear-gradient(135deg"] {
+    padding: 11px 24px !important;
+    text-align: left !important;
+}
+main section[style*="linear-gradient(135deg"] > div {
+    max-width: 1200px !important;
+    text-align: left !important;
+}
+/* Direct div children are the badge and the emoji stat strip; the <p> is the
+   marketing paragraph. All three restate what the modal title already says. */
+main section[style*="linear-gradient(135deg"] > div > div,
+main section[style*="linear-gradient(135deg"] > div > p {
+    display: none !important;
+}
+main section[style*="linear-gradient(135deg"] h1 {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.09em !important;
+    text-transform: uppercase !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+}
+/* The full-page rule below adds top padding to compensate for the hidden nav.
+   With the band flush against the modal chrome that gap is dead space. */
+main, [role="main"], body > div { padding-top: 0 !important; }
+/* Recipe cards sit tighter in a modal's narrower column. */
+main section[style*="max-width:1200px"] { padding-top: 20px !important; }
+CSS;
+    }
+endif;
+
 if ( ! function_exists( 'vance_tool_brand_css_recipes' ) ) :
     /**
      * IBD Recipes (Next.js) — hide the bundle's own header/nav (since we have
      * our own), drop logo strip, recolour primaries.
+     *
+     * @param bool $embed True when the tool is loaded inside the tool modal;
+     *                    appends the compact-hero rules above.
      */
-    function vance_tool_brand_css_recipes() {
+    function vance_tool_brand_css_recipes( $embed = false ) {
         $common = vance_tool_brand_css_common();
+        $extra  = $embed ? "\n" . vance_tool_brand_css_recipes_embed() : '';
         return $common . "\n" . <<<CSS
 /* Hide the internal Next.js header / top nav strip — we already have a hero
    above the iframe. Cover both the semantic <header> and any wrapping divs
@@ -187,6 +243,7 @@ main, [role="main"], body > div { padding-top: 16px !important; }
 [style*="border-radius: 50%"] {
     border-radius: 9999px !important;
 }
-CSS;
+CSS
+        . $extra;
     }
 endif;

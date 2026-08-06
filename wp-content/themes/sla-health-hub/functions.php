@@ -461,6 +461,17 @@ function vance_health_hub_scripts() {
     // Enqueue Theme Stylesheet (style.css)
     wp_enqueue_style( 'vance-style', get_stylesheet_uri() );
 
+    // Modal kit — the malnutrition calculator's design language, shared by the
+    // health quiz, the Discovery/Content Filters modal, the clinical profile
+    // editor and VANCE-Ai. Loaded site-wide because every one of those modals
+    // is mounted from the footer on any page.
+    wp_enqueue_style(
+        'vance-modal-kit',
+        get_template_directory_uri() . '/assets/css/vance-modal-kit.css',
+        array( 'vance-main-style' ),
+        @filemtime( get_template_directory() . '/assets/css/vance-modal-kit.css' ) ?: '1.0.0'
+    );
+
     // GI Health section — CSS enqueued only on hub + condition pages.
     if ( is_page_template( 'page-gi-health.php' ) || is_page_template( 'page-gi-condition.php' ) ) {
         wp_enqueue_style(
@@ -508,6 +519,79 @@ function vance_health_hub_scripts() {
     wp_localize_script( 'vance-askai', 'vanceAskAi', vance_askai_script_data() );
 }
 add_action( 'wp_enqueue_scripts', 'vance_health_hub_scripts' );
+
+/**
+ * True when this request is a tool loaded chromelessly inside the tool modal
+ * (inc/tool-modal.php appends ?tool_embed=1 to the iframe URL).
+ */
+function vance_is_tool_embed() {
+    return isset( $_GET['tool_embed'] ) && '1' === $_GET['tool_embed'];
+}
+
+/**
+ * Strip everything the embedded tool view cannot use.
+ *
+ * `get_header('embed')` gives the tool a chromeless shell, but it still runs
+ * wp_head(), so the iframe was booting the entire site stack before the tool
+ * itself got a connection. Measured on /ibd-recipies/?tool_embed=1: 13 requests
+ * and a 1.7s load event before the tool's own iframe had started, of which the
+ * tool needed almost none —
+ *
+ *   google-gsi        283ms   sign-in client, but the embed has no login form
+ *   vance-askai (js)   98ms   chat + highlight-to-ask, neither reachable here
+ *   dashicons/emoji           admin-bar and emoji shims, invisible in an iframe
+ *
+ * Dropping them leaves the tool competing for far fewer connections, so the
+ * modal paints the tool instead of a spinner.
+ *
+ * Two things are deliberately left alone:
+ *
+ *   jQuery — nothing the theme renders in this view uses it, but plugin code on
+ *   wp_footer may, and a script that declares it as a dependency would drag it
+ *   back in regardless. It is also already warm in the browser cache from the
+ *   parent page, so removing it would buy close to nothing for real risk.
+ *
+ *   Analytics and consent tags — they come from plugins (Site Kit, Complianz).
+ *   Silently changing what a site measures, or what consent it collects, is the
+ *   owner's call and not a performance fix to make unilaterally. Suppressing
+ *   them in this view would cut roughly another 400ms.
+ *
+ * Priority 999 so this runs after every enqueue it needs to undo.
+ */
+function vance_tool_embed_slim_assets() {
+    if ( ! vance_is_tool_embed() ) {
+        return;
+    }
+
+    foreach ( array( 'vance-askai', 'google-gsi' ) as $handle ) {
+        wp_dequeue_script( $handle );
+    }
+    foreach ( array( 'vance-askai', 'dashicons' ) as $handle ) {
+        wp_dequeue_style( $handle );
+    }
+}
+add_action( 'wp_enqueue_scripts', 'vance_tool_embed_slim_assets', 999 );
+
+/**
+ * Emoji shim + generator cruft off in the embed view. Separate from the
+ * dequeue pass above because these hang off wp_head/wp_print_styles rather
+ * than being enqueued handles.
+ */
+function vance_tool_embed_trim_head() {
+    if ( ! vance_is_tool_embed() ) {
+        return;
+    }
+    remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+    remove_action( 'wp_print_styles', 'print_emoji_styles' );
+    remove_action( 'wp_head', 'wp_generator' );
+    remove_action( 'wp_head', 'rsd_link' );
+    remove_action( 'wp_head', 'wlwmanifest_link' );
+    remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
+    remove_action( 'wp_head', 'rest_output_link_wp_head' );
+    remove_action( 'wp_head', 'wp_shortlink_wp_head' );
+    show_admin_bar( false );
+}
+add_action( 'template_redirect', 'vance_tool_embed_trim_head' );
 
 /**
  * Keep the per-user dashboard views out of every page cache.
@@ -1788,7 +1872,7 @@ function vance_auth_modal_shortcode( $atts ) {
                     showError((data.data && (data.data.message || data.data)) || 'Sign in failed');
                     unlockButton(btn);
                 }
-            }).catch(function(){ showError('Network error — try again'); unlockButton(btn); });
+            }).catch(function(){ showError('Network error, try again'); unlockButton(btn); });
         });
 
         // Email signup — same form + vance_quick_register handler as the
@@ -1820,7 +1904,7 @@ function vance_auth_modal_shortcode( $atts ) {
                     showError((data.data && (data.data.message || data.data)) || 'Signup failed');
                     unlockButton(btn);
                 }
-            }).catch(function(){ showError('Network error — try again'); unlockButton(btn); });
+            }).catch(function(){ showError('Network error, try again'); unlockButton(btn); });
         });
 
         // Google
@@ -1842,7 +1926,7 @@ function vance_auth_modal_shortcode( $atts ) {
                 } else {
                     showError(typeof data.data === 'string' ? data.data : 'Google sign-in failed');
                 }
-            }).catch(function(){ showError('Network error — try again'); });
+            }).catch(function(){ showError('Network error, try again'); });
         };
     })();
     </script>
@@ -1856,7 +1940,7 @@ add_shortcode( 'vance_auth_modal', 'vance_auth_modal_shortcode' );
  */
 function vance_email_login_ajax() {
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_login_nonce' ) ) {
-        wp_send_json_error( 'Invalid request — please refresh and try again.' );
+        wp_send_json_error( 'Invalid request, please refresh and try again.' );
     }
     // 10 attempts per 5 min per IP
     if ( ! vance_rate_limit( 'login', 10, 300 ) ) {
@@ -1901,7 +1985,7 @@ add_action( 'wp_ajax_vance_email_login', 'vance_email_login_ajax' );
  */
 function vance_email_signup_ajax() {
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_signup_nonce' ) ) {
-        wp_send_json_error( 'Invalid request — please refresh and try again.' );
+        wp_send_json_error( 'Invalid request, please refresh and try again.' );
     }
     // 5 signup attempts per 15 min per IP (prevents mass account creation)
     if ( ! vance_rate_limit( 'signup', 5, 900 ) ) {
@@ -2041,7 +2125,7 @@ function vance_send_verification_email( $user_id ) {
         "%s\n\n" .
         "This link will keep working until you successfully verify.\n" .
         "If you did not create this account, you can safely ignore this email.\n\n" .
-        "— %s",
+        "%s",
         $user->display_name ? $user->display_name : $user->user_login,
         $site_name,
         $verify_url,
@@ -2115,7 +2199,7 @@ add_action( 'template_redirect', 'vance_gate_unverified_users' );
  */
 function vance_resend_verification_ajax() {
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_resend_nonce' ) ) {
-        wp_send_json_error( 'Invalid request — please refresh and try again.' );
+        wp_send_json_error( 'Invalid request, please refresh and try again.' );
     }
     if ( ! is_user_logged_in() ) {
         wp_send_json_error( 'Please sign in first.' );
@@ -3039,7 +3123,7 @@ function vance_customize_register( $wp_customize ) {
     //                             category via vance_resolve_post_overlay_settings().
     // -------------------------------------------------------------------------
     $wp_customize->add_section( 'vance_post_hero_overlay_cats', array(
-        'title'       => __( 'Post Hero Overlay — Per Category', 'sla-health-hub' ),
+        'title'       => __( 'Post Hero Overlay - Per Category', 'sla-health-hub' ),
         'description' => __( 'Give each main (top-level) category its own overlay. Tick “Use custom overlay” for a category to override the global settings; leave it off to inherit them. Posts in a sub-category use their top-level parent’s overlay.', 'sla-health-hub' ),
         'priority'    => 33.5,
         'panel'       => 'vance_content_panel',
@@ -3132,7 +3216,7 @@ function vance_customize_register( $wp_customize ) {
     ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_bg_color', array(
         'label'       => __( 'Hero Background Color', 'sla-health-hub' ),
-        'description' => __( 'Solid background color — visible when no image is set, or as image load fallback.', 'sla-health-hub' ),
+        'description' => __( 'Solid background color - visible when no image is set, or as image load fallback.', 'sla-health-hub' ),
         'section'     => 'vance_hero_settings',
     ) ) );
 
@@ -3145,7 +3229,7 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'sanitize_hex_color',
     ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_tag_bg', array(
-        'label'   => __( 'Hero Eyebrow — Background', 'sla-health-hub' ),
+        'label'   => __( 'Hero Eyebrow - Background', 'sla-health-hub' ),
         'section' => 'vance_hero_settings',
     ) ) );
 
@@ -3154,7 +3238,7 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'sanitize_hex_color',
     ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_tag_color', array(
-        'label'   => __( 'Hero Eyebrow — Text Colour', 'sla-health-hub' ),
+        'label'   => __( 'Hero Eyebrow - Text Colour', 'sla-health-hub' ),
         'section' => 'vance_hero_settings',
     ) ) );
 
@@ -3163,45 +3247,45 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'sanitize_hex_color',
     ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_tag_border', array(
-        'label'   => __( 'Hero Eyebrow — Border Colour', 'sla-health-hub' ),
+        'label'   => __( 'Hero Eyebrow - Border Colour', 'sla-health-hub' ),
         'section' => 'vance_hero_settings',
     ) ) );
 
     // Button 1 (Practitioner — primary fill)
     $wp_customize->add_setting( 'vance_hero_btn1_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_text_color', array( 'label' => 'Button 1 — Text Colour', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_text_color', array( 'label' => 'Button 1, Text Colour', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn1_bg_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_bg_color', array( 'label' => 'Button 1 — Background', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_bg_color', array( 'label' => 'Button 1, Background', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn1_border_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_border_color', array( 'label' => 'Button 1 — Border', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_border_color', array( 'label' => 'Button 1, Border', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn1_hover_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_hover_text_color', array( 'label' => 'Button 1 — Text on Hover', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_hover_text_color', array( 'label' => 'Button 1, Text on Hover', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn1_hover_bg_color', array( 'default' => '#006666', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_hover_bg_color', array( 'label' => 'Button 1 — Background on Hover', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn1_hover_bg_color', array( 'label' => 'Button 1, Background on Hover', 'section' => 'vance_hero_settings' ) ) );
 
     // Button 2 (Patient — outline)
     $wp_customize->add_setting( 'vance_hero_btn2_text_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_text_color', array( 'label' => 'Button 2 — Text Colour', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_text_color', array( 'label' => 'Button 2, Text Colour', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn2_bg_color', array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_bg_color', array(
-        'label'       => 'Button 2 — Background',
+        'label'       => 'Button 2, Background',
         'description' => 'Blank = transparent (outline button look).',
         'section'     => 'vance_hero_settings',
     ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn2_border_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_border_color', array( 'label' => 'Button 2 — Border', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_border_color', array( 'label' => 'Button 2, Border', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn2_hover_text_color', array( 'default' => '#0A1929', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_text_color', array( 'label' => 'Button 2 — Text on Hover', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_text_color', array( 'label' => 'Button 2, Text on Hover', 'section' => 'vance_hero_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hero_btn2_hover_bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_bg_color', array( 'label' => 'Button 2 — Background on Hover', 'section' => 'vance_hero_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_bg_color', array( 'label' => 'Button 2, Background on Hover', 'section' => 'vance_hero_settings' ) ) );
 
     // 2.5 Discovery Suite Settings (Nested under Vance Theme Settings)
     $wp_customize->add_section( 'vance_discovery_general', array(
@@ -3432,7 +3516,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Pathway Content (Featured Tools)', 'sla-health-hub' ),
         'priority'    => 31.7,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'Cloned Pathway Tiles block with Healthcare Quiz + VANCE-Ai cards. Showing/hiding controlled by Homepage Order — add or remove "pathway_content" from that list.', 'sla-health-hub' ),
+        'description' => __( 'Cloned Pathway Tiles block with Healthcare Quiz + VANCE-Ai cards. Showing/hiding controlled by Homepage Order - add or remove "pathway_content" from that list.', 'sla-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -3553,51 +3637,51 @@ function vance_customize_register( $wp_customize ) {
 
     // Card 1: Healthcare Quiz
     $wp_customize->add_setting( 'vance_hquiz_tile_title', array( 'default' => 'Healthcare Quiz', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_hquiz_tile_title', array( 'label' => 'Healthcare Quiz — Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_title', array( 'label' => 'Healthcare Quiz, Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_hquiz_tile_desc', array( 'default' => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.', 'sanitize_callback' => 'sanitize_textarea_field' ) );
-    $wp_customize->add_control( 'vance_hquiz_tile_desc', array( 'label' => 'Healthcare Quiz — Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_desc', array( 'label' => 'Healthcare Quiz, Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
 
     $wp_customize->add_setting( 'vance_hquiz_tile_extra', array( 'default' => 'Find your starting point', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_hquiz_tile_extra', array( 'label' => 'Healthcare Quiz — Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_extra', array( 'label' => 'Healthcare Quiz, Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_hquiz_tile_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
-    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_hquiz_tile_image', array( 'label' => 'Healthcare Quiz — Image', 'section' => 'vance_pathway_content_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_hquiz_tile_image', array( 'label' => 'Healthcare Quiz, Image', 'section' => 'vance_pathway_content_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_hquiz_tile_link', array( 'default' => '/healthcare-quiz/', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_hquiz_tile_link', array( 'label' => 'Healthcare Quiz — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_hquiz_tile_link', array( 'label' => 'Healthcare Quiz, Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     // Card 2: Ask AI
     $wp_customize->add_setting( 'vance_askai_tile_title', array( 'default' => 'VANCE-Ai', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_title', array( 'label' => 'VANCE-Ai — Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_askai_tile_title', array( 'label' => 'VANCE-Ai, Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_desc', array( 'default' => 'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.', 'sanitize_callback' => 'sanitize_textarea_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_desc', array( 'label' => 'VANCE-Ai — Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
+    $wp_customize->add_control( 'vance_askai_tile_desc', array( 'label' => 'VANCE-Ai, Description', 'section' => 'vance_pathway_content_settings', 'type' => 'textarea' ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_extra', array( 'default' => 'Personalised answers, 24/7', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_extra', array( 'label' => 'VANCE-Ai — Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_askai_tile_extra', array( 'label' => 'VANCE-Ai, Eyebrow / Extra text', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
-    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_tile_image', array( 'label' => 'VANCE-Ai — Image', 'section' => 'vance_pathway_content_settings' ) ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_askai_tile_image', array( 'label' => 'VANCE-Ai, Image', 'section' => 'vance_pathway_content_settings' ) ) );
 
     $wp_customize->add_setting( 'vance_askai_tile_link', array( 'default' => '/ask-ai/', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_askai_tile_link', array( 'label' => 'VANCE-Ai — Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_askai_tile_link', array( 'label' => 'VANCE-Ai, Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     // Pathway Content — Latest Content (right column)
     $wp_customize->add_setting( 'vance_pwc_latest_title', array( 'default' => 'LATEST CONTENT', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_pwc_latest_title', array( 'label' => 'Right Column — Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_title', array( 'label' => 'Right Column, Section Label', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_pwc_latest_count', array( 'default' => 6, 'sanitize_callback' => 'absint' ) );
-    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column — Number of Posts', 'description' => 'Bento layout shows 1 featured + the rest as side cards (6 = featured + 5).', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 7, 'step' => 1 ) ) );
+    $wp_customize->add_control( 'vance_pwc_latest_count', array( 'label' => 'Right Column, Number of Posts', 'description' => 'Bento layout shows 1 featured + the rest as side cards (6 = featured + 5).', 'section' => 'vance_pathway_content_settings', 'type' => 'number', 'input_attrs' => array( 'min' => 1, 'max' => 7, 'step' => 1 ) ) );
 
     $wp_customize->add_setting( 'vance_pwc_latest_category', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
     $cats = get_categories( array( 'hide_empty' => false ) );
     $cat_choices = array( 0 => 'All Categories' );
     foreach ( $cats as $c ) { $cat_choices[ $c->term_id ] = $c->name; }
-    $wp_customize->add_control( 'vance_pwc_latest_category', array( 'label' => 'Right Column — Category Filter', 'section' => 'vance_pathway_content_settings', 'type' => 'select', 'choices' => $cat_choices ) );
+    $wp_customize->add_control( 'vance_pwc_latest_category', array( 'label' => 'Right Column, Category Filter', 'section' => 'vance_pathway_content_settings', 'type' => 'select', 'choices' => $cat_choices ) );
 
     $wp_customize->add_setting( 'vance_pwc_latest_show_date', array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
-    $wp_customize->add_control( 'vance_pwc_latest_show_date', array( 'label' => 'Right Column — Show Post Date', 'section' => 'vance_pathway_content_settings', 'type' => 'checkbox' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_show_date', array( 'label' => 'Right Column, Show Post Date', 'section' => 'vance_pathway_content_settings', 'type' => 'checkbox' ) );
 
     // 2.6.5 Latest Content Grid Settings (Right side of Pathway section)
     $wp_customize->add_section( 'vance_pathway_latest_settings', array(
@@ -4500,7 +4584,7 @@ function vance_customize_register( $wp_customize ) {
 
     // Vance AI Modal — colour customization
     $wp_customize->add_section( 'vance_modal_colors', array(
-        'title'    => __( 'VANCE-Ai — Modal Colours', 'sla-health-hub' ),
+        'title'    => __( 'VANCE-Ai - Modal Colours', 'sla-health-hub' ),
         'panel'    => 'vance_content_panel',
         'priority' => 161,
     ) );
@@ -4923,6 +5007,28 @@ function vance_customize_register( $wp_customize ) {
             'section' => 'vance_category_heroes',
             'type'    => 'text',
         ) );
+
+        // Grid Columns — Healthcare News only. Its sections are computed date
+        // buckets, not real sub-category terms, so it can't use the per-sub-category
+        // "Grid columns" control in Sub-category Layouts; this is the equivalent
+        // scoped to just this page. Reuses vance_sanitize_grid_cols() (below).
+        if ( 'content-healthcare-news' === $cat->slug ) {
+            $wp_customize->add_setting( "vance_cat_grid_cols_{$cat->term_id}", array(
+                'default'           => '3',
+                'sanitize_callback' => 'vance_sanitize_grid_cols',
+            ) );
+            $wp_customize->add_control( "vance_cat_grid_cols_{$cat->term_id}", array(
+                'label'       => sprintf( __( '%s: Grid Columns', 'sla-health-hub' ), $cat->name ),
+                'description' => __( 'Articles per row in each date section (This Month, Last Month, etc).', 'sla-health-hub' ),
+                'section'     => 'vance_category_heroes',
+                'type'        => 'select',
+                'choices'     => array(
+                    '3' => __( '3 columns', 'sla-health-hub' ),
+                    '4' => __( '4 columns', 'sla-health-hub' ),
+                    '5' => __( '5 columns', 'sla-health-hub' ),
+                ),
+            ) );
+        }
     }
 
     // 5.4 Category Promo Blocks
@@ -4938,14 +5044,14 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     $vance_promo_tool_choices = array(
-        ''                        => __( '— Link to a custom URL —', 'sla-health-hub' ),
+        ''                        => __( 'Link to a custom URL', 'sla-health-hub' ),
         'ibd-recipes'             => __( 'Open: Recipes & Meal Planner', 'sla-health-hub' ),
         'malnutrition-calculator' => __( 'Open: Malnutrition Screener', 'sla-health-hub' ),
         'healthcare-quiz'         => __( 'Open: Health Discovery Quiz', 'sla-health-hub' ),
     );
 
     foreach ( $categories as $cat ) {
-        $vance_promo_prefix = sprintf( '%s — ', $cat->name );
+        $vance_promo_prefix = sprintf( '%s', $cat->name );
 
         $wp_customize->add_setting( "vance_cat_promo_show_{$cat->term_id}", array(
             'default'           => false,
@@ -5250,7 +5356,7 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'absint',
     ) );
     $wp_customize->add_control( 'vance_divider_thickness', array(
-        'label'       => __( 'Thickness (px) — line stroke', 'sla-health-hub' ),
+        'label'       => __( 'Thickness (px) - line stroke', 'sla-health-hub' ),
         'description' => __( 'How thick the line is.', 'sla-health-hub' ),
         'section'     => 'vance_section_dividers',
         'type'        => 'number',
@@ -5262,7 +5368,7 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'absint',
     ) );
     $wp_customize->add_control( 'vance_divider_width', array(
-        'label'       => __( 'Width (%) — horizontal extent', 'sla-health-hub' ),
+        'label'       => __( 'Width (%) - horizontal extent', 'sla-health-hub' ),
         'description' => __( '100 = full container width. Less than 100 centres a shorter line (e.g. 50 = half width, centred).', 'sla-health-hub' ),
         'section'     => 'vance_section_dividers',
         'type'        => 'number',
@@ -5290,7 +5396,7 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'absint',
     ) );
     $wp_customize->add_control( 'vance_divider_margin', array(
-        'label'       => __( 'Margin (px) — vertical space around the divider', 'sla-health-hub' ),
+        'label'       => __( 'Margin (px) - vertical space around the divider', 'sla-health-hub' ),
         'description' => __( 'Gap above and below the line. Larger = more breathing room between sections.', 'sla-health-hub' ),
         'section'     => 'vance_section_dividers',
         'type'        => 'number',
@@ -5302,7 +5408,7 @@ function vance_customize_register( $wp_customize ) {
         'sanitize_callback' => 'absint',
     ) );
     $wp_customize->add_control( 'vance_divider_padding', array(
-        'label'       => __( 'Padding (px) — vertical space inside the divider wrapper', 'sla-health-hub' ),
+        'label'       => __( 'Padding (px) - vertical space inside the divider wrapper', 'sla-health-hub' ),
         'description' => __( 'Adds space between the line and the edges of its own wrapper (rarely needed; usually leave at 0).', 'sla-health-hub' ),
         'section'     => 'vance_section_dividers',
         'type'        => 'number',
@@ -5344,7 +5450,7 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     // Build the category choices once (re-used across all 5 widget panels).
-    $cw_cat_choices = array( 0 => '— All categories —' );
+    $cw_cat_choices = array( 0 => 'All categories' );
     foreach ( get_categories( array( 'hide_empty' => false ) ) as $cat ) {
         $cw_cat_choices[ $cat->term_id ] = $cat->name;
     }
@@ -5943,6 +6049,15 @@ function vance_sanitize_grid_cols( $v ) {
 }
 function vance_get_subcat_grid_cols( $term_id ) {
     return vance_sanitize_grid_cols( (string) vance_get_theme_mod( "vance_subcat_grid_cols_{$term_id}", '3' ) );
+}
+
+/**
+ * Same option, scoped to a whole category rather than a sub-category — used
+ * by category-content-healthcare-news.php, whose sections are computed date
+ * buckets rather than real sub-category terms.
+ */
+function vance_get_cat_grid_cols( $term_id ) {
+    return vance_sanitize_grid_cols( (string) vance_get_theme_mod( "vance_cat_grid_cols_{$term_id}", '3' ) );
 }
 
 /**
@@ -6560,7 +6675,7 @@ function vance_customize_testimonials( $wp_customize ) {
             'sanitize_callback' => 'wp_kses_post',
         ) );
         $wp_customize->add_control( "vance_testimonial_inline_{$i}_quote", array(
-            'label'       => sprintf( __( 'Testimonial %d — Quote', 'sla-health-hub' ), $i ),
+            'label'       => sprintf( __( 'Testimonial %d - Quote', 'sla-health-hub' ), $i ),
             'description' => 1 === $i ? __( 'Inline testimonials show when no Testimonial posts exist. Leave Quote blank to skip a slot.', 'sla-health-hub' ) : '',
             'section'     => 'vance_testimonials_section',
             'type'        => 'textarea',
@@ -6571,7 +6686,7 @@ function vance_customize_testimonials( $wp_customize ) {
             'sanitize_callback' => 'sanitize_text_field',
         ) );
         $wp_customize->add_control( "vance_testimonial_inline_{$i}_name", array(
-            'label'   => sprintf( __( 'Testimonial %d — Name', 'sla-health-hub' ), $i ),
+            'label'   => sprintf( __( 'Testimonial %d - Name', 'sla-health-hub' ), $i ),
             'section' => 'vance_testimonials_section',
             'type'    => 'text',
         ) );
@@ -6581,7 +6696,7 @@ function vance_customize_testimonials( $wp_customize ) {
             'sanitize_callback' => 'sanitize_text_field',
         ) );
         $wp_customize->add_control( "vance_testimonial_inline_{$i}_role", array(
-            'label'   => sprintf( __( 'Testimonial %d — Role / Subtitle', 'sla-health-hub' ), $i ),
+            'label'   => sprintf( __( 'Testimonial %d - Role / Subtitle', 'sla-health-hub' ), $i ),
             'section' => 'vance_testimonials_section',
             'type'    => 'text',
         ) );
@@ -6591,7 +6706,7 @@ function vance_customize_testimonials( $wp_customize ) {
             'sanitize_callback' => 'esc_url_raw',
         ) );
         $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_testimonial_inline_{$i}_image", array(
-            'label'   => sprintf( __( 'Testimonial %d — Image (optional)', 'sla-health-hub' ), $i ),
+            'label'   => sprintf( __( 'Testimonial %d - Image (optional)', 'sla-health-hub' ), $i ),
             'section' => 'vance_testimonials_section',
         ) ) );
     }
@@ -6957,25 +7072,98 @@ require_once get_template_directory() . '/inc/customizer-gi-health.php';
 
 
 /**
+ * Every field stored in the `_sla_clinical_profile` user meta, mapped to the
+ * sanitiser it needs. Single source of truth shared by the dashboard panel
+ * (page-dashboard.php), the edit modal (inc/clinical-info-modal.php) and the
+ * AJAX writer below — add a field here and all three pick it up, so a new
+ * input can never be silently dropped on save.
+ *
+ * 'text' → single line, 'textarea' → multi-line, 'date' → YYYY-MM-DD only.
+ */
+function vance_clinical_profile_fields() {
+    return array(
+        'weight'                => 'text',
+        'height'                => 'text',
+        'usual_weight'          => 'text',
+        'blood_pressure'        => 'text',
+        'medication'            => 'textarea',
+        'supplements'           => 'textarea',
+        'allergies'             => 'textarea',
+        'trigger_foods'         => 'textarea',
+        'dietary_pattern'       => 'text',
+        'digital_apps'          => 'textarea',
+        'lifestyle_changes'     => 'textarea',
+        'flare_up_freq'         => 'text',
+        'last_flare_up'         => 'text',
+        'next_appointment'      => 'date',
+        'appointment_questions' => 'textarea',
+        'additional_details'    => 'textarea',
+    );
+}
+
+/**
+ * Defaults for the clinical profile — every key present and empty, so callers
+ * can read `$profile['allergies']` without an isset() dance.
+ */
+function vance_clinical_profile_defaults() {
+    return array_fill_keys( array_keys( vance_clinical_profile_fields() ), '' );
+}
+
+/**
  * AJAX: Save Detailed Clinical Profile
+ *
+ * Both callers (the "Additional details" form on the dashboard panel and the
+ * edit modal) are rendered with wp_nonce_field('vance_dashboard_nonce'), the
+ * same nonce every other dashboard writer uses, and both post their inputs as
+ * flat named fields.
  */
 function vance_save_clinical_profile() {
-    check_ajax_referer( 'vance_clinical_nonce', 'nonce' );
-    if ( ! is_user_logged_in() ) wp_send_json_error( 'Not logged in' );
-
-    $user_id = get_current_user_id();
-    $data = isset($_POST['profile_data']) ? $_POST['profile_data'] : array();
-    
-    if ( ! is_array( $data ) && is_string( $data ) ) {
-        $data = json_decode( stripslashes( $data ), true );
+    // This used to check 'vance_clinical_nonce' — a nonce no caller has ever
+    // created — so check_ajax_referer() died with 403 before anything was
+    // saved. jQuery.post() only has a success callback, so nothing ran and the
+    // submit button sat on "Updating…" indefinitely: the reported freeze.
+    // Verified by reverting this line locally and watching the request 403.
+    if ( ! check_ajax_referer( 'vance_dashboard_nonce', 'nonce', false ) ) {
+        wp_send_json_error( 'Your session has expired. Please refresh the page and try again.' );
+    }
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( 'Not logged in' );
     }
 
-    if ( ! empty( $data ) ) {
-        update_user_meta( $user_id, '_sla_clinical_profile', $data );
-        wp_send_json_success( 'Clinical profile updated' );
-    } else {
-        wp_send_json_error( 'No data' );
+    $user_id  = get_current_user_id();
+    $existing = get_user_meta( $user_id, '_sla_clinical_profile', true );
+    if ( ! is_array( $existing ) ) {
+        $existing = array();
     }
+
+    // Merge, never replace. The panel form posts only `additional_details` and
+    // the modal posts only its own inputs, so a wholesale replace would let
+    // whichever saved last wipe the other's answers. The old handler also read
+    // a `profile_data` blob that neither form has ever sent, which is why even
+    // a valid nonce would have returned "No data".
+    $written = 0;
+    foreach ( vance_clinical_profile_fields() as $key => $type ) {
+        if ( ! isset( $_POST[ $key ] ) ) {
+            continue;
+        }
+        $raw = wp_unslash( $_POST[ $key ] );
+        if ( 'textarea' === $type ) {
+            $existing[ $key ] = sanitize_textarea_field( $raw );
+        } elseif ( 'date' === $type ) {
+            $raw = sanitize_text_field( $raw );
+            $existing[ $key ] = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $raw ) ? $raw : '';
+        } else {
+            $existing[ $key ] = sanitize_text_field( $raw );
+        }
+        $written++;
+    }
+
+    if ( ! $written ) {
+        wp_send_json_error( 'No data received' );
+    }
+
+    update_user_meta( $user_id, '_sla_clinical_profile', $existing );
+    wp_send_json_success( 'Clinical profile updated' );
 }
 add_action( 'wp_ajax_vance_save_clinical_profile', 'vance_save_clinical_profile' );
 
@@ -6999,6 +7187,143 @@ function vance_quiz_modal_styles() {
     <?php
 }
 add_action( 'wp_footer', 'vance_quiz_modal_styles' );
+
+/**
+ * The Health Discovery Quiz, in order. Single source of truth for:
+ *   - inc/quiz-modal.php   (renders these steps client-side)
+ *   - page-dashboard.php   (lists saved answers, and needs each field's step
+ *                           number so a row's "Edit" opens the right question)
+ *
+ * Both used to keep their own copy, and they drifted: the dashboard still
+ * listed `current_tools` and `learning_pref`, questions the quiz no longer
+ * asks, so every step index after `duration` pointed at the wrong question.
+ *
+ * Step shape: title, field (meta key), type (radio|checkbox), layout
+ * (grid|list), label (short name for the dashboard row), opts. An option is
+ * either a plain string, or an object with:
+ *   v         value stored
+ *   t         display text, when it differs from the value
+ *   textInput a free-text follow-up appears when this option is chosen
+ *   txtField  meta key that free text is stored under
+ *   textLabel label above the free-text box
+ *   depField / depCheckboxes  a nested multi-select revealed by this option
+ */
+function vance_quiz_steps() {
+    return array(
+        array(
+            'title'  => 'What is your age?',
+            'field'  => 'age',
+            'label'  => 'Age range',
+            'type'   => 'radio',
+            'layout' => 'grid',
+            'opts'   => array( 'Under 18', '18-24', '25-34', '35-44', '45-54', '55-64', '65+' ),
+        ),
+        array(
+            'title'  => 'What is your gender?',
+            'field'  => 'gender',
+            'label'  => 'Gender',
+            'type'   => 'radio',
+            'layout' => 'list',
+            'opts'   => array( 'Male', 'Female', 'Prefer not to say' ),
+        ),
+        array(
+            'title'  => 'Do you currently have a gastrointestinal condition?',
+            'field'  => 'gastro_condition',
+            'label'  => 'Gastro condition',
+            'type'   => 'radio',
+            'layout' => 'list',
+            'opts'   => array( 'Diagnosed', 'Symptoms but no diagnosis', 'No known disease or symptoms' ),
+        ),
+        array(
+            'title'    => 'Which condition are you most concerned with?',
+            'subtitle' => 'Select all that apply.',
+            'field'    => 'condition_type',
+            'label'    => 'Primary concern',
+            'type'     => 'checkbox',
+            'layout'   => 'list',
+            'opts'     => array(
+                "Crohn's", 'UC', 'IBS', 'General gut health / wellness',
+                array( 'v' => 'Other', 'textInput' => true, 'txtField' => 'condition_type_other' ),
+            ),
+        ),
+        array(
+            'title'    => 'What are you primarily looking for today?',
+            'subtitle' => 'Select all that apply.',
+            'field'    => 'looking_for',
+            'label'    => 'Searching for',
+            'type'     => 'checkbox',
+            'layout'   => 'list',
+            'opts'     => array(
+                'Research', 'Education', 'Health Tools', 'Community Support', 'Specialist Nutrition',
+                array( 'v' => 'Other', 'textInput' => true, 'txtField' => 'looking_for_other' ),
+            ),
+        ),
+        array(
+            'title'  => 'How long have you been interested in gastrointestinal health?',
+            'field'  => 'duration',
+            'label'  => 'Duration of interest',
+            'type'   => 'radio',
+            'layout' => 'list',
+            'opts'   => array(
+                array( 'v' => 'Recently', 't' => 'Recently (less than 6 months)' ),
+                array( 'v' => '1-3 Years', 't' => '1-3 Years' ),
+                array( 'v' => '3+ Years', 't' => '3+ Years / Long-term' ),
+            ),
+        ),
+        array(
+            'title'  => 'Are you currently seeing a specialist for your health goals?',
+            'field'  => 'seeing_specialist',
+            'label'  => 'Seeing a specialist',
+            'type'   => 'radio',
+            'layout' => 'grid',
+            'opts'   => array(
+                array( 'v' => 'Yes', 'textInput' => true, 'txtField' => 'specialist_type', 'textLabel' => 'What type of specialist?' ),
+                'No',
+            ),
+        ),
+        array(
+            'title'  => 'Do you currently use prescribed medication?',
+            'field'  => 'use_medication',
+            'label'  => 'Prescribed medication',
+            'type'   => 'radio',
+            'layout' => 'grid',
+            'opts'   => array(
+                array( 'v' => 'Yes', 'textInput' => true, 'txtField' => 'medication_details', 'textLabel' => 'Please specify:' ),
+                'No',
+            ),
+        ),
+        array(
+            'title'  => 'Do you currently use food supplements?',
+            'field'  => 'use_supplements',
+            'label'  => 'Food supplements',
+            'type'   => 'radio',
+            'layout' => 'grid',
+            'opts'   => array(
+                array(
+                    'v'             => 'Yes',
+                    'depField'      => 'supplement_types',
+                    'depCheckboxes' => array(
+                        'Omega 3', 'Vitamin D', 'Probiotics', 'Iron', 'Zinc', 'Curcumin', 'Butyrate',
+                        array( 'v' => 'Other', 'textInput' => true, 'txtField' => 'supplement_other' ),
+                    ),
+                ),
+                'No',
+            ),
+        ),
+    );
+}
+
+/**
+ * field => short label, in quiz order. Used by the dashboard's saved-answers
+ * list; the array position + 1 is the step number to open for editing.
+ */
+function vance_quiz_field_labels() {
+    $labels = array();
+    foreach ( vance_quiz_steps() as $step ) {
+        $labels[ $step['field'] ] = $step['label'];
+    }
+    return $labels;
+}
 
 /**
  * AJAX: Save Healthcare Quiz Results

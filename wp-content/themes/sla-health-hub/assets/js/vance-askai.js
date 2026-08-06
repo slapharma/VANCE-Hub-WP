@@ -1323,6 +1323,32 @@
 		} catch (e) {}
 	}
 
+	/**
+	 * True while any other full-screen site modal (health quiz, clinical info,
+	 * the unified tool modal, guest save, or quick register) is on screen. The
+	 * intro overlay sits at a very high z-index and covers the whole viewport,
+	 * so injecting it over one of these silently eats every click on it —
+	 * the popup itself may still be at opacity:0 mid-fade-in, so there's
+	 * nothing visible to blame. Checked right before the overlay is created,
+	 * not just at page load, since a reader can still be mid-quiz well past
+	 * the 1400ms delay below.
+	 */
+	function otherModalIsOpen() {
+		// The quiz and clinical modals moved to the shared modal kit, which
+		// toggles an `is-open` class rather than an inline display style.
+		var quiz = document.getElementById('vance-quiz-modal');
+		if (quiz && quiz.classList.contains('is-open')) { return true; }
+		var clinical = document.getElementById('vance-clinical-info-modal');
+		if (clinical && clinical.classList.contains('is-open')) { return true; }
+		var toolModal = document.getElementById('vance-tool-modal');
+		if (toolModal && toolModal.classList.contains('is-open')) { return true; }
+		var guestModal = document.getElementById('guest-save-modal');
+		if (guestModal && guestModal.style.display === 'flex') { return true; }
+		var regOverlay = document.getElementById('vance-reg-overlay');
+		if (regOverlay && regOverlay.classList.contains('is-open')) { return true; }
+		return false;
+	}
+
 	function initArticleIntro() {
 		if (!CFG.postId || !CFG.introEnabled || !introFrequencyAllows()) {
 			return;
@@ -1334,6 +1360,13 @@
 		window.setTimeout(function () {
 			// Don't interrupt someone who has already started chatting.
 			if (document.body.classList.contains('vance-askai-open')) {
+				return;
+			}
+			// Don't interrupt someone mid-quiz, mid-form, or mid-signup — see
+			// otherModalIsOpen() above. Skipping here (rather than showing over
+			// them) leaves markIntroSeen() uncalled, so the intro is still free
+			// to show on a later qualifying pageview.
+			if (otherModalIsOpen()) {
 				return;
 			}
 			showIntro();
