@@ -26,4 +26,18 @@
   setTimeout(addBtn, 1500);
 })();
 </script>
+<script>
+(function(){
+  function add(){
+    if (document.getElementById("vance-photo-credit")) return;
+    var d = document.createElement('div');
+    d.id = "vance-photo-credit";
+    d.className = 'no-print';
+    d.setAttribute('style', "padding:14px 16px 18px;text-align:center;font-size:9px;line-height:1.6;color:#CBD5E1;font-family:system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.2px;");
+    d.innerHTML = "Photography: <a href=\"https://unsplash.com/@_k8_\" target=\"_blank\" rel=\"noopener nofollow\" style=\"color:inherit;text-decoration:none;\">K8</a> / Unsplash";
+    document.body.appendChild(d);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add); else add();
+})();
+</script>
 </body></html>

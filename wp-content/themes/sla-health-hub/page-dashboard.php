@@ -1248,6 +1248,21 @@ get_header();
                                         'recipes'  => $is_structured ? vance_recipe_plan_recipes($exp_days) : array(),
                                     );
 
+                                    // Photo credit for the viewer and the PDF, covering only the
+                                    // photographers whose work this plan actually shows. Plain
+                                    // text, not linked: it is rasterised into the PDF, where a
+                                    // link would be dead weight.
+                                    $plan_slugs = array_keys($meal_plan_payloads[ $mp_i ]['recipes']);
+                                    $meal_plan_payloads[ $mp_i ]['credit'] = $plan_slugs
+                                        ? vance_recipe_credit_line($plan_slugs, false)
+                                        : '';
+                                    // Accumulated across every plan on the page for the one
+                                    // discreet line under the list.
+                                    $meal_plan_credit_slugs = array_unique(array_merge(
+                                        isset($meal_plan_credit_slugs) ? $meal_plan_credit_slugs : array(),
+                                        $plan_slugs
+                                    ));
+
                                     // Up to six thumbnails on the collapsed card, deduplicated so a
                                     // week that repeats a recipe still shows six different dishes.
                                     $strip = array();
@@ -1313,6 +1328,16 @@ get_header();
                                 window.VANCE_MEAL_PLANS = <?php echo wp_json_encode($meal_plan_payloads); ?>;
                             </script>
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your healthcare team.</p>
+                            <?php
+                            // Unsplash licence: credit the photographer wherever the photo
+                            // appears. Deliberately near-invisible — it belongs on the page,
+                            // not in the reader's way.
+                            $mp_credit = !empty($meal_plan_credit_slugs)
+                                ? vance_recipe_credit_line($meal_plan_credit_slugs)
+                                : '';
+                            if ($mp_credit) : ?>
+                                <p style="margin:8px 0 0; font-size:9px; line-height:1.6; color:#CBD5E1; letter-spacing:.2px;"><?php echo $mp_credit; // already escaped by vance_recipe_credit_line() ?></p>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
 
@@ -1435,7 +1460,12 @@ get_header();
                                 : '';
                             document.getElementById('modal-meal-plan-content').innerHTML =
                                 imgHtml + statsHtml +
-                                (html || '<p style="color:#475569; font-size:13px;">This plan has no meals saved against it.</p>');
+                                (html || '<p style="color:#475569; font-size:13px;">This plan has no meals saved against it.</p>') +
+                                // Unsplash licence: the modal shows a thumbnail per meal, so the
+                                // credit belongs here too. Spans the full grid, barely visible.
+                                (plan.credit
+                                    ? '<p style="grid-column:1/-1; margin:6px 0 0; font-size:9px; line-height:1.6; color:#CBD5E1; letter-spacing:.2px;">' + esc(plan.credit) + '</p>'
+                                    : '');
                             // Point the modal's own PDF button at whichever plan is open.
                             var modalPdf = document.getElementById('modal-meal-plan-pdf');
                             if (modalPdf) { modalPdf.setAttribute('data-plan-index', btn.getAttribute('data-plan-index')); }
@@ -1813,6 +1843,8 @@ get_header();
                                     recipesHtml +
                                     '<div style="margin-top:26px; border-top:1px solid #E2E8F0; padding-top:10px; font-size:9px; color:' + PDF_MUTE + '; line-height:1.5;">' +
                                         'Generated from Vance Medical Hub. Meal plans are general guidance, not personalised dietary advice — check any dietary change with your healthcare team.' +
+                                        // Unsplash licence: credit travels with the photos.
+                                        (plan.credit ? '<div style="margin-top:5px; color:#94A3B8;">' + esc(plan.credit) + '</div>' : '') +
                                     '</div>' +
                                 '</div>';
                             return el;
