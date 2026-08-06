@@ -26,4 +26,25 @@
   setTimeout(addBtn, 1500);
 })();
 </script>
+<script id="vance-nav-guard">
+(function(){
+  var BASE = '/wp-content/themes/sla-health-hub/assets/tools/ibd-recipes';
+  // Capture phase on document fires before Next's hydrated Link handler
+  // (attached deeper, on the app's root container), so this always wins the
+  // race regardless of script load order.
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+    var href = a.getAttribute('href') || '';
+    if (href.indexOf(BASE) !== 0) return; // only this app's own internal links
+    // Next's client router double-prepends basePath on soft nav here (see
+    // fix_recipes_router_nav.py for the full story) - force a real page
+    // load instead, using the href already correctly written into the DOM.
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = a.href;
+  }, true);
+})();
+</script>
 </body></html>
