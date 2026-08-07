@@ -333,6 +333,20 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
         background-color: #2F4F6F !important;
     }
 
+    /* Reveal the off-canvas panel on open. Max Mega Menu Pro toggles the
+     * `.mega-menu-open` class on click (confirmed: aria-expanded flips,
+     * class is applied) but on this install its own generated stylesheet
+     * never actually ships a matching `visibility`/`left` rule for the open
+     * state, so the panel stays parked at left:-300px / visibility:hidden
+     * forever — the hamburger looks tappable but never opens anything.
+     * The plugin already sets position:fixed, width:300px, top:0,
+     * height:100dvh and a left/visibility transition on the panel itself;
+     * we only need to supply the missing "open" values. (Reported 2026-08-07.) */
+    body.mega-menu-primary-menu .mega-menu-toggle.mega-menu-open + #mega-menu-primary-menu {
+        visibility: visible !important;
+        left: 0 !important;
+    }
+
     /* Top-level menu items: near-white text on the navy panel. */
     body.mega-menu-primary-menu ul.mega-menu > li.mega-menu-item > a.mega-menu-link {
         background-color: transparent !important;

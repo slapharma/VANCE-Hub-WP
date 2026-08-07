@@ -128,7 +128,7 @@ function vance_dashboard_features() {
 			'label'       => 'My Tools',
 			'icon'        => '🧮',
 			'section'     => 'main',
-			'description' => 'Saved calculator and blood-test results.',
+			'description' => 'Saved calculator results.',
 			'default'     => true,
 			'toggleable'  => true,
 		),

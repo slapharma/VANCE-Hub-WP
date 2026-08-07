@@ -509,7 +509,7 @@ get_header();
                     <?php else : ?>
                         <h3>Join the Vance Community</h3>
                         <p>Register for free today to access all the Vance Medical tools, clinical trackers, and your personalized dashboard.</p>
-                        <a href="<?php echo home_url('/register/'); ?>" class="btn-quiz btn-next" style="display: inline-block; text-decoration: none;">Create Free Account</a>
+                        <a href="<?php echo home_url('/login/?tab=signup'); ?>" class="btn-quiz btn-next" style="display: inline-block; text-decoration: none;">Register or Log-In to See Your Results</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -700,6 +700,22 @@ document.addEventListener('DOMContentLoaded', function() {
             showStep(currentStep);
         }
     });
+
+    // Browser Back/Forward soft-lock fix: the browser silently restores a
+    // previously-checked radio's `checked` state on navigation (bfcache
+    // restore or a plain reload) without firing `change`, which is the only
+    // event checkSelection() and the `.selected` visual class listen for.
+    // Result: the answer is still technically checked but Next stays
+    // disabled and nothing looks selected. `pageshow` fires after any such
+    // restore (including bfcache, where DOMContentLoaded never re-runs), so
+    // re-sync both the visuals and validation state from it every time.
+    function resyncFromRestoredState() {
+        document.querySelectorAll('.option-item input:checked').forEach(function (input) {
+            input.closest('.option-item').classList.add('selected');
+        });
+        checkSelection();
+    }
+    window.addEventListener('pageshow', resyncFromRestoredState);
 });
 </script>
 

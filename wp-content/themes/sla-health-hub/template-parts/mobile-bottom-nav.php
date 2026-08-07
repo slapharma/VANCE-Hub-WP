@@ -19,13 +19,13 @@ if ( ! function_exists( 'vance_mobile_bottomnav_active' ) || ! vance_mobile_bott
 
 // Resolve destinations once.
 $vbn_home      = home_url( '/' );
-$vbn_tools     = home_url( '/tools-resources/' );
+$vbn_tools     = home_url( '/free-health-tools/' );
 $vbn_askai     = home_url( '/ask-ai/' );
 $vbn_dashboard = is_user_logged_in() ? home_url( '/dashboard/' ) : wp_login_url( home_url( '/dashboard/' ) );
 
 // Active-tab detection.
 $vbn_is_home  = is_front_page();
-$vbn_is_tools = is_page( 'tools-resources' );
+$vbn_is_tools = is_page( 'free-health-tools' );
 $vbn_is_askai = is_page( 'ask-ai' );
 $vbn_is_dash  = is_page( 'dashboard' );
 
@@ -67,12 +67,12 @@ $vbn_active = function ( $cond ) {
     <ul class="vbn-sheet-links">
         <li><a href="<?php echo esc_url( home_url( '/about-us/' ) ); ?>"><?php esc_html_e( 'About Us', 'sla-health-hub' ); ?></a></li>
         <li><a href="<?php echo esc_url( home_url( '/healthcare-quiz/' ) ); ?>"><?php esc_html_e( 'Health Quiz', 'sla-health-hub' ); ?></a></li>
-        <li><a href="<?php echo esc_url( home_url( '/turn-evidence-into-action/' ) ); ?>"><?php esc_html_e( 'Get Started', 'sla-health-hub' ); ?></a></li>
+        <li><a href="<?php echo esc_url( home_url( '/get-started-today/' ) ); ?>"><?php esc_html_e( 'Get Started', 'sla-health-hub' ); ?></a></li>
         <li><a href="<?php echo esc_url( home_url( '/contact-us/' ) ); ?>"><?php esc_html_e( 'Contact', 'sla-health-hub' ); ?></a></li>
         <?php if ( is_user_logged_in() ) : ?>
             <li><a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>"><?php esc_html_e( 'Sign Out', 'sla-health-hub' ); ?></a></li>
         <?php else : ?>
-            <li><a href="<?php echo esc_url( home_url( '/register/' ) ); ?>"><?php esc_html_e( 'Join for Free', 'sla-health-hub' ); ?></a></li>
+            <li><a href="<?php echo esc_url( home_url( '/login/?tab=signup' ) ); ?>"><?php esc_html_e( 'Join for Free', 'sla-health-hub' ); ?></a></li>
             <li><a href="<?php echo esc_url( wp_login_url() ); ?>"><?php esc_html_e( 'Sign In', 'sla-health-hub' ); ?></a></li>
         <?php endif; ?>
     </ul>

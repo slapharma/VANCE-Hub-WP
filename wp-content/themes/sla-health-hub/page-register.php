@@ -222,6 +222,27 @@ get_header();
     color: var(--primary-color);
     font-weight: 600;
 }
+
+.password-field-wrap {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #94a3b8;
+    line-height: 1;
+}
+
+.password-toggle:hover {
+    color: #334155;
+}
 </style>
 
 <div class="vance-register-page">
@@ -242,7 +263,10 @@ get_header();
 
             <div class="form-group">
                 <label class="form-label" for="user_password">Password <span class="form-hint">(8 characters minimum)</span></label>
-                <input type="password" id="user_password" name="password" class="form-input" required minlength="8" autocomplete="new-password" placeholder="••••••••">
+                <div class="password-field-wrap">
+                    <input type="password" id="user_password" name="password" class="form-input" style="padding-right:44px;" required minlength="8" autocomplete="new-password" placeholder="••••••••">
+                    <button type="button" class="password-toggle" data-toggle-for="user_password" aria-label="Show password">👁</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -294,6 +318,16 @@ get_header();
 
     function showErr(msg) { errBox.textContent = msg; errBox.classList.add('is-visible'); }
     function clearErr() { errBox.textContent = ''; errBox.classList.remove('is-visible'); }
+
+    document.querySelectorAll('.password-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var input = document.getElementById(btn.getAttribute('data-toggle-for'));
+            var showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            btn.textContent = showing ? '👁' : '🙈';
+            btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        });
+    });
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();

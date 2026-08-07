@@ -579,7 +579,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $cta_title    = vance_get_theme_mod('vance_about_cta_title',      'Ready to Take Control of Your Gastro Health?');
         $cta_desc     = vance_get_theme_mod('vance_about_cta_desc',       'Join thousands of patients and healthcare professionals who trust Vance Health Hub for evidence-based gastrointestinal care.');
         $cta_btn1_lbl = vance_get_theme_mod('vance_about_cta_btn1_label', 'Join For Free');
-        $cta_btn1_url = vance_get_theme_mod('vance_about_cta_btn1_url',   '/register/');
+        $cta_btn1_url = vance_get_theme_mod('vance_about_cta_btn1_url',   '/login/?tab=signup');
         $cta_btn2_lbl = vance_get_theme_mod('vance_about_cta_btn2_label', 'Speak to Our Team');
         $cta_btn2_url = vance_get_theme_mod('vance_about_cta_btn2_url',   '/contact-us/');
         // No hex default here: unset means the navy gradient below, not the legacy orange.

@@ -808,6 +808,14 @@
     <script>
         // ── Calculator Logic ──────────────────────────────────────────────────────────
 
+        // Range-validate a numeric field's raw string state so Next can't be enabled
+        // on an out-of-range value (e.g. a negative age or a >30 stool count) just
+        // because the field is non-empty. min/max mirror the <input>'s own attrs.
+        function numOutOfRange(raw, min, max) {
+            if (raw === '') return true;
+            var n = Number(raw);
+            return Number.isNaN(n) || n < min || n > max;
+        }
         function lbsToKg(lbs) { return Math.round(lbs * 0.453592 * 10) / 10; }
         function stLbsToKg(st, lbs) { return Math.round((st * 6.35029 + lbs * 0.453592) * 10) / 10; }
         function ftInToCm(ft, inches) { return Math.round((ft * 30.48 + inches * 2.54) * 10) / 10; }
@@ -970,6 +978,7 @@
       <div style="margin-bottom:16px">
         <label class="form-label">Age (years)</label>
         <input class="vance-input" type="number" min="16" max="110" placeholder="e.g. 34" id="inp-age" value="${state.age}">
+        <p class="input-hint">Enter an age between 16 and 110</p>
       </div>
       <div>
         <label class="form-label">Gender</label>
@@ -979,7 +988,7 @@
           ${optCard('gender', 'other', 'Other / Prefer not to say')}
         </div>
       </div>
-      ${navBtns(true, true, !state.age || !state.gender)}`;
+      ${navBtns(true, true, numOutOfRange(state.age, 16, 110) || !state.gender)}`;
 
                 case 3: return `
       <h2 class="step-title">What is your height?</h2>
@@ -1051,7 +1060,7 @@
       <p class="step-subtitle">Think about your typical day over the past week. Enter 0 if you have no loose stools.</p>
       <input class="vance-input" type="number" min="0" max="30" placeholder="e.g. 3" id="inp-stools" value="${state.stools}">
       <p class="input-hint">Enter a number between 0 and 30</p>
-      ${navBtns(true, true, state.stools === '')}`;
+      ${navBtns(true, true, numOutOfRange(state.stools, 0, 30))}`;
 
                 case 9: return `
       <h2 class="step-title">How would you describe your abdominal pain over the past week?</h2>

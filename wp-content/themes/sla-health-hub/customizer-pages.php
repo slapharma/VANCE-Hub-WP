@@ -895,6 +895,17 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_contact_hours",       array( "default" => "Monday – Friday, 9:00 am – 5:00 pm GMT", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_contact_hours",       array( "label" => "Office Hours",               "section" => "vance_contact_info", "type" => "text" ) );
 
+    // ── Contact Form Spam Protection (reCAPTCHA v3) ─────────────────────
+    // Get a free key pair at https://www.google.com/recaptcha/admin (register
+    // the site under reCAPTCHA v3). Contact form silently skips verification
+    // when either key is blank, so it keeps working un-protected until both
+    // are set — see vance_contact_recaptcha_verify() in page-contact-us.php.
+    $wp_customize->add_section( "vance_contact_recaptcha", array( "title" => "Contact Form Spam Protection", "panel" => "vance_contact_panel" ) );
+    $wp_customize->add_setting( "vance_recaptcha_site_key",   array( "default" => "", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_recaptcha_site_key",   array( "label" => "reCAPTCHA v3 Site Key",   "description" => "Public key, safe to expose in page source.", "section" => "vance_contact_recaptcha", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_recaptcha_secret_key", array( "default" => "", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_recaptcha_secret_key", array( "label" => "reCAPTCHA v3 Secret Key", "description" => "Private key, used server-side only.", "section" => "vance_contact_recaptcha", "type" => "text" ) );
+
     // ============================================================
     // HERO OVERLAY OPACITY SLIDERS — per-page (0–100, mapped to alpha 0.00–1.00)
     // ============================================================
@@ -1053,11 +1064,9 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_tools_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_tools_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_tools_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
-    // Hero CTA buttons (set text to empty to hide a button)
-    $wp_customize->add_setting( "vance_tools_hero_btn1_text", array( "default" => "Try a Tool", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_tools_hero_btn1_text", array( "label" => "Button 1 - Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_tools_hero_btn1_link", array( "default" => "#tools-list", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_tools_hero_btn1_link", array( "label" => "Button 1 - Link", "section" => "vance_tools_hero", "type" => "url" ) );
+    // Hero CTA button (set text to empty to hide it). A second "Try a Tool"
+    // button was removed 2026-08-07 — it anchor-linked to #tools-list, which
+    // never matched anything on the page (the grid's real id is #tools-grid).
     $wp_customize->add_setting( "vance_tools_hero_btn2_text", array( "default" => "Create Free Account", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_tools_hero_btn2_text", array( "label" => "Button 2 - Text (blank to hide)", "section" => "vance_tools_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_tools_hero_btn2_link", array( "default" => "/register/", "sanitize_callback" => "esc_url_raw" ) );
@@ -1084,21 +1093,11 @@ function vance_pages_customize_register( $wp_customize ) {
 
     // ============================================================
     // PER-TOOL HERO SECTIONS — grouped under the Tools panel.
-    // Mods read by page-{slug}.php wrapper templates (omega-3, malnutrition,
-    // blood-test, ibd-recipies). Each tool gets one section with name,
+    // Mods read by page-{slug}.php wrapper templates (malnutrition,
+    // ibd-recipies). Each tool gets one section with name,
     // subtitle, hero bg image, and overlay slider.
     // ============================================================
     $tool_hero_specs = array(
-        'omega'        => array(
-            'section_id'   => 'vance_tools_hero_omega',
-            'title'        => 'Omega-3 Calculator, Hero',
-            'name_key'     => 'vance_tool_omega_name',
-            'sub_key'      => 'vance_tool_omega_subtitle',
-            'bg_key'       => 'vance_tool_omega_hero_bg',
-            'overlay_key'  => 'vance_tool_omega_hero_overlay',
-            'name_default' => 'Omega-3 Calculator',
-            'sub_default'  => 'Calculate your personalised EPA + DHA target based on body weight, dietary intake, and clinical guidance, built on the latest gastroenterology evidence.',
-        ),
         'malnutrition' => array(
             'section_id'   => 'vance_tools_hero_malnutrition',
             'title'        => 'Malnutrition Calculator, Hero',
@@ -1108,16 +1107,6 @@ function vance_pages_customize_register( $wp_customize ) {
             'overlay_key'  => 'vance_tool_malnutrition_hero_overlay',
             'name_default' => 'IBD Malnutrition Calculator',
             'sub_default'  => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.',
-        ),
-        'blood'        => array(
-            'section_id'   => 'vance_tools_hero_blood',
-            'title'        => 'Blood Test Analyser, Hero',
-            'name_key'     => 'vance_tool_blood_name',
-            'sub_key'      => 'vance_tool_blood_subtitle',
-            'bg_key'       => 'vance_tool_blood_hero_bg',
-            'overlay_key'  => 'vance_tool_blood_hero_overlay',
-            'name_default' => 'IBD Blood Test Analyser',
-            'sub_default'  => 'Drop in your blood panel results and get plain-language analysis flagging anything outside reference ranges. Designed to help you prepare for your next clinic appointment.',
         ),
         'recipes'      => array(
             'section_id'   => 'vance_tools_hero_recipes',
@@ -1207,10 +1196,8 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_evidence_hero_btn1_text", array( "label" => "Primary Button Label", "section" => "vance_evidence_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_hero_btn1_link", array( "default" => "#pillars", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( "vance_evidence_hero_btn1_link", array( "label" => "Primary Button Link", "section" => "vance_evidence_hero", "type" => "url" ) );
-    $wp_customize->add_setting( "vance_evidence_hero_btn2_text", array( "default" => "Request a Clinical Consultation", "sanitize_callback" => "sanitize_text_field" ) );
-    $wp_customize->add_control( "vance_evidence_hero_btn2_text", array( "label" => "Secondary Button Label", "section" => "vance_evidence_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_evidence_hero_btn2_link", array( "default" => "/contact-us/", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_evidence_hero_btn2_link", array( "label" => "Secondary Button Link", "section" => "vance_evidence_hero", "type" => "url" ) );
+    // Secondary hero button ("Dive into our Knowledgebase" / "Request a
+    // Clinical Consultation") removed 2026-08-07 — see page-turn-evidence-into-action.php.
     // Hero overlay slider lives in this section so admins find it next to the bg image (was in "Hero Overlays (extra)" only)
     $wp_customize->add_setting( "vance_evidence_hero_overlay_inline", array( "default" => 78, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_evidence_hero_overlay_inline", array(
@@ -1329,8 +1316,8 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_evidence_cta_desc",  array( "label" => "Description", "section" => "vance_evidence_cta", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_evidence_cta_btn1_text", array( "default" => "Register Free", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_cta_btn1_text", array( "label" => "Primary Button Label", "section" => "vance_evidence_cta", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_evidence_cta_btn1_link", array( "default" => "/register/", "sanitize_callback" => "esc_url_raw" ) );
-    $wp_customize->add_control( "vance_evidence_cta_btn1_link", array( "label" => "Primary Button Link", "section" => "vance_evidence_cta", "type" => "url" ) );
+    // Link control removed 2026-08-07 — pinned to /login/?tab=signup in
+    // page-turn-evidence-into-action.php so it can't drift off-target again.
     $wp_customize->add_setting( "vance_evidence_cta_btn2_text", array( "default" => "Talk to Our Team", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_evidence_cta_btn2_text", array( "label" => "Secondary Button Label", "section" => "vance_evidence_cta", "type" => "text" ) );
     $wp_customize->add_setting( "vance_evidence_cta_btn2_link", array( "default" => "/contact-us/", "sanitize_callback" => "esc_url_raw" ) );

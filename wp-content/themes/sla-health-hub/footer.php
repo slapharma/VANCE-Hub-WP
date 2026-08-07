@@ -106,7 +106,7 @@
     <div id="infographic-modal" class="infographic-modal">
         <span class="modal-close">&times;</span>
         <div class="modal-content">
-            <img id="modal-image" src="" alt="Enlarged Infographic">
+            <img id="modal-image" alt="Enlarged Infographic">
         </div>
     </div>
 
@@ -124,7 +124,7 @@
                 <?php echo do_shortcode('[google_login]'); ?>
             </div>
             
-            <p style="font-size: 14px; color: #94a3b8; margin: 0;">Already have an account? <a href="<?php echo wp_login_url(); ?>" style="color: #008080; font-weight: 600; text-decoration: none;">Sign In</a></p>
+            <p style="font-size: 14px; color: #94a3b8; margin: 0;">Already have an account? <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>" style="color: #008080; font-weight: 600; text-decoration: none;">Sign In</a></p>
         </div>
     </div>
 
@@ -225,24 +225,24 @@
         }
 
         // Close modal
-        closeBtn.onclick = function() {
+        function closeModal() {
             modal.style.display = "none";
+            modalImg.removeAttribute('src');
             document.body.style.overflow = '';
         }
+        closeBtn.onclick = closeModal;
 
         // Close on outside click
         modal.onclick = function(event) {
             if (event.target === modal) {
-                modal.style.display = "none";
-                document.body.style.overflow = '';
+                closeModal();
             }
         }
 
         // Close on ESC key
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
-                modal.style.display = "none";
-                document.body.style.overflow = '';
+                closeModal();
             }
         });
 
@@ -342,6 +342,49 @@ include get_template_directory() . '/template-parts/mobile-sticky-cta.php';
 // Phase 2.3 — swipeable homepage category cards (self-gated; front page only).
 include get_template_directory() . '/template-parts/mobile-swipe-cards.php';
 ?>
+
+<script>
+/*
+ * Max Mega Menu mobile panel — fix for a stuck-transition bug that leaves
+ * the off-canvas panel permanently visibility:hidden / left:-300px.
+ *
+ * Confirmed root cause (2026-08-07): the plugin correctly toggles
+ * aria-expanded and the `.mega-menu-open` class on click, and its own
+ * generated stylesheet does have the correct higher-specificity "open"
+ * rule (visibility:visible; left:0) — but the panel's `left`/`visibility`
+ * are under an active CSS transition, and that transition is stuck at its
+ * closed-state value on first open. Per the CSS cascade spec, an
+ * in-progress transition's interpolated value outranks EVERYTHING else,
+ * including inline `!important` — so no ordinary CSS override can win.
+ * The only reliable fix is to briefly disable the transition, force the
+ * open values, reflow, then restore the transition so future opens/closes
+ * still animate normally.
+ */
+(function () {
+    var toggle = document.querySelector( '.mega-menu-toggle' );
+    var panel  = document.getElementById( 'mega-menu-primary-menu' );
+    if ( ! toggle || ! panel ) {
+        return;
+    }
+
+    function sync() {
+        var isOpen = toggle.classList.contains( 'mega-menu-open' );
+        panel.style.setProperty( 'transition', 'none', 'important' );
+        void panel.offsetHeight; // force reflow so the transition-none takes hold before we set values
+        if ( isOpen ) {
+            panel.style.setProperty( 'visibility', 'visible', 'important' );
+            panel.style.setProperty( 'left', '0px', 'important' );
+        } else {
+            panel.style.removeProperty( 'visibility' );
+            panel.style.removeProperty( 'left' );
+        }
+        void panel.offsetHeight;
+        panel.style.removeProperty( 'transition' );
+    }
+
+    new MutationObserver( sync ).observe( toggle, { attributes: true, attributeFilter: [ 'class' ] } );
+})();
+</script>
 
 <?php wp_footer(); ?>
 <?php echo vance_get_theme_mod( 'vance_footer_scripts' ); ?>

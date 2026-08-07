@@ -284,7 +284,7 @@ get_header(); ?>
 
     <div class="legal-contact-box">
         <h3>Vance Medical Foods Ltd</h3>
-        <p><strong>Email:</strong> <a href="mailto:info@gastrohealthhub.com">info@gastrohealthhub.com</a></p>
+        <p><strong>Email:</strong> <a href="mailto:info@vancemedical.co.uk">info@vancemedical.co.uk</a></p>
         <p><strong>Phone:</strong> +44 (0)1628 526 005</p>
         <p><strong>Website:</strong> <a href="https://gastrohealthhub.com">gastrohealthhub.com</a></p>
         <p style="margin-top:16px; font-size:14px; color:#718096;">

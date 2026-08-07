@@ -137,9 +137,57 @@ $track_icons = array(
             </form>
             <p style="font-size: 13px; opacity: 0.78; margin-top: 16px;">No spam. One launch email per track.</p>
             <?php else : ?>
-            <p style="font-size: 14px; opacity: 0.78; margin-top: 16px;">
-                <em>Waitlist signup will activate once an admin sets the form action URL in Appearance → Customize → Education Page Settings → Waitlist Signup.</em>
-            </p>
+            <form class="edu-waitlist-form" id="edu-waitlist-selfhosted-form" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
+                <?php wp_nonce_field( 'vance_edu_waitlist', 'edu_waitlist_nonce' ); ?>
+                <input type="email" name="EMAIL" id="edu-waitlist-email" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px;">
+                <select name="ROLE" id="edu-waitlist-role" style="padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px; background: white;">
+                    <option value="">I am a…</option>
+                    <option value="patient">Patient</option>
+                    <option value="caregiver">Caregiver / Family</option>
+                    <option value="hcp">Healthcare Professional</option>
+                </select>
+                <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                    <input type="text" name="edu_waitlist_hp" id="edu-waitlist-hp" tabindex="-1" value="">
+                </div>
+                <button type="submit" class="btn btn-primary edu-waitlist-submit" id="edu-waitlist-submit-btn" style="background: white; color: <?php echo esc_attr( $wl_bg_from ); ?>; border: none;"><?php echo esc_html( $wl_button ); ?></button>
+            </form>
+            <p id="edu-waitlist-status" style="font-size: 13px; opacity: 0.85; margin-top: 16px;">No spam. One launch email per track.</p>
+            <script>
+            (function () {
+                var form   = document.getElementById( 'edu-waitlist-selfhosted-form' );
+                var status = document.getElementById( 'edu-waitlist-status' );
+                var btn    = document.getElementById( 'edu-waitlist-submit-btn' );
+                if ( ! form ) { return; }
+                form.addEventListener( 'submit', function ( e ) {
+                    e.preventDefault();
+                    btn.disabled = true;
+                    status.textContent = 'Sending…';
+                    var body = new URLSearchParams();
+                    body.set( 'action', 'vance_edu_waitlist_signup' );
+                    body.set( 'nonce', document.getElementById( 'edu_waitlist_nonce' ).value );
+                    body.set( 'email', document.getElementById( 'edu-waitlist-email' ).value );
+                    body.set( 'role', document.getElementById( 'edu-waitlist-role' ).value );
+                    body.set( 'edu_waitlist_hp', document.getElementById( 'edu-waitlist-hp' ).value );
+                    fetch( '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: body.toString()
+                    } ).then( function ( r ) { return r.json(); } ).then( function ( data ) {
+                        if ( data.success ) {
+                            form.style.display = 'none';
+                            status.textContent = "You're on the list — we'll email you the moment this launches.";
+                        } else {
+                            btn.disabled = false;
+                            status.textContent = ( data.data && data.data.message ) || 'Something went wrong, please try again.';
+                        }
+                    } ).catch( function () {
+                        btn.disabled = false;
+                        status.textContent = 'Network error, please try again.';
+                    } );
+                } );
+            })();
+            </script>
             <?php endif; ?>
         </div>
     </section>
@@ -177,7 +225,63 @@ $track_icons = array(
             <p style="font-size: 11px; color: var(--text-light); margin: 12px 0 0; line-height: 1.55;">No spam. One launch email per track. <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>.</p>
         </form>
         <?php else : ?>
-        <p style="font-size: 13px; color: var(--text-light); margin: 0;"><em>Waitlist signup is being configured, please check back soon.</em></p>
+        <form id="edu-wl-modal-form" autocomplete="on">
+            <?php wp_nonce_field( 'vance_edu_waitlist', 'edu_wl_modal_nonce' ); ?>
+            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--secondary-color); margin: 14px 0 6px; letter-spacing: 0.3px; text-transform: uppercase;">Email</label>
+            <input type="email" name="EMAIL" id="edu-wl-modal-email" required placeholder="you@example.com" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box;">
+
+            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--secondary-color); margin: 14px 0 6px; letter-spacing: 0.3px; text-transform: uppercase;">I am a…</label>
+            <select name="ROLE" id="edu-wl-modal-role" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box;">
+                <option value="">Select…</option>
+                <option value="patient">Patient</option>
+                <option value="caregiver">Caregiver / Family</option>
+                <option value="hcp">Healthcare Professional</option>
+            </select>
+            <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                <input type="text" name="edu_wl_modal_hp" id="edu-wl-modal-hp" tabindex="-1" value="">
+            </div>
+            <button type="submit" id="edu-wl-modal-submit" style="width: 100%; padding: 14px; margin-top: 20px; background: <?php echo esc_attr( $wl_bg_from ); ?>; color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.4px; text-transform: uppercase;">
+                <?php echo esc_html( $wl_button ); ?>
+            </button>
+            <p id="edu-wl-modal-status" style="font-size: 11px; color: var(--text-light); margin: 12px 0 0; line-height: 1.55;">No spam. One launch email per track. <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>.</p>
+        </form>
+        <script>
+        (function () {
+            var form   = document.getElementById( 'edu-wl-modal-form' );
+            var status = document.getElementById( 'edu-wl-modal-status' );
+            var btn    = document.getElementById( 'edu-wl-modal-submit' );
+            if ( ! form ) { return; }
+            form.addEventListener( 'submit', function ( e ) {
+                e.preventDefault();
+                btn.disabled = true;
+                var originalStatus = status.textContent;
+                status.textContent = 'Sending…';
+                var body = new URLSearchParams();
+                body.set( 'action', 'vance_edu_waitlist_signup' );
+                body.set( 'nonce', document.getElementById( 'edu_wl_modal_nonce' ).value );
+                body.set( 'email', document.getElementById( 'edu-wl-modal-email' ).value );
+                body.set( 'role', document.getElementById( 'edu-wl-modal-role' ).value );
+                body.set( 'edu_wl_modal_hp', document.getElementById( 'edu-wl-modal-hp' ).value );
+                fetch( '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body.toString()
+                } ).then( function ( r ) { return r.json(); } ).then( function ( data ) {
+                    if ( data.success ) {
+                        form.querySelectorAll( 'input, select, button' ).forEach( function ( el ) { el.style.display = 'none'; } );
+                        status.textContent = "You're on the list — we'll email you the moment this launches.";
+                    } else {
+                        btn.disabled = false;
+                        status.textContent = ( data.data && data.data.message ) || 'Something went wrong, please try again.';
+                    }
+                } ).catch( function () {
+                    btn.disabled = false;
+                    status.textContent = 'Network error, please try again.';
+                } );
+            } );
+        })();
+        </script>
         <?php endif; ?>
     </div>
 </div>

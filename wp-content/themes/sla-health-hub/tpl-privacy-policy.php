@@ -244,7 +244,7 @@ get_header(); ?>
 
     <h3>Health information (special category data)</h3>
     <p>
-        Some of the information you choose to give us is health information, which UK GDPR treats as a "special category" needing extra protection. This includes anything you enter into our calculators, quiz or VANCE-Ai, and any results you choose to save to your account (for example from the malnutrition calculator, blood-test reference tool or omega-3 calculator).
+        Some of the information you choose to give us is health information, which UK GDPR treats as a "special category" needing extra protection. This includes anything you enter into our calculators, quiz or VANCE-Ai, and any results you choose to save to your account (for example from the malnutrition calculator).
     </p>
     <p>
         We only process this health information with your explicit consent, which you give when you choose to save a result or use a feature that stores it. We do not use it for advertising, and we do not share it with third parties for marketing. You can withdraw your consent and delete your saved results at any time from your dashboard, or by contacting us.

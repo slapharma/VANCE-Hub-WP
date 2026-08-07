@@ -23,10 +23,8 @@ get_header(); ?>
     $hero_desc      = vance_get_theme_mod( 'vance_tools_hero_desc',  'Clinical calculators built on peer-reviewed evidence, free to use, no signup required. Save your results and build a meal plan by registering for a free account.' );
     $hero_overlay   = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_tools_hero_overlay', 70 ) ) ) ) / 100;
     $hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
-    $hero_btn1_text = vance_get_theme_mod( 'vance_tools_hero_btn1_text', 'Try a Tool' );
-    $hero_btn1_link = vance_get_theme_mod( 'vance_tools_hero_btn1_link', '#tools-list' );
     $hero_btn2_text = vance_get_theme_mod( 'vance_tools_hero_btn2_text', 'Create Free Account' );
-    $hero_btn2_link = vance_get_theme_mod( 'vance_tools_hero_btn2_link', '/register/' );
+    $hero_btn2_link = vance_get_theme_mod( 'vance_tools_hero_btn2_link', '/login/?tab=signup' );
     ?>
     <section class="hero tools-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
         <div class="container">
@@ -34,14 +32,9 @@ get_header(); ?>
                 <span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
                 <h1><?php echo wp_kses_post( $hero_title ); ?></h1>
                 <p><?php echo esc_html( $hero_desc ); ?></p>
-                <?php if ( $hero_btn1_text || $hero_btn2_text ) : ?>
+                <?php if ( $hero_btn2_text ) : ?>
                 <div class="hero-actions" style="margin-top: 24px;">
-                    <?php if ( $hero_btn1_text ) : ?>
-                        <a href="<?php echo esc_url( $hero_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $hero_btn1_text ); ?></a>
-                    <?php endif; ?>
-                    <?php if ( $hero_btn2_text ) : ?>
-                        <a href="<?php echo esc_url( $hero_btn2_link ); ?>" class="btn btn-outline"><?php echo esc_html( $hero_btn2_text ); ?></a>
-                    <?php endif; ?>
+                    <a href="<?php echo esc_url( $hero_btn2_link ); ?>" class="btn btn-outline"><?php echo esc_html( $hero_btn2_text ); ?></a>
                 </div>
                 <?php endif; ?>
             </div>
@@ -75,14 +68,6 @@ get_header(); ?>
     <!-- TOOLS GRID — each card links to its own dedicated page (ask-ai-style shell) -->
     <?php
     $tools = array(
-        // Omega-3 Calculator card removed 2026-07-21 per request. The tool page
-        // (page-omega-3-calculator.php → /omega-3-calculator/) and its asset
-        // bundle still exist and remain reachable by direct URL; only the card
-        // on this Tools & Resources listing was pulled.
-        //
-        // Blood Test Analyser card removed 2026-07-23 per request. The tool page
-        // (page-blood-test.php → /blood-test/) and its asset bundle still exist
-        // and remain reachable by direct URL; only the card on this listing was pulled.
         array(
             // IBD Health Quiz lives as a PHP page template (page-healthcare-quiz.php),
             // not as a /assets/tools/ bundle — so we just link to /healthcare-quiz/.
@@ -158,7 +143,7 @@ get_header(); ?>
                 Free registration unlocks result history, personalised meal plans, VANCE-Ai, and printable handouts, all in your private dashboard.
             </p>
             <div class="hero-actions" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-                <a href="/register/" class="btn btn-primary" style="background: white; color: #008080; border: none;">Register Free</a>
+                <a href="/login/?tab=signup" class="btn btn-primary" style="background: white; color: #008080; border: none;">Register Free</a>
                 <a href="/login/" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;">Already have an account? Sign in</a>
             </div>
         </div>

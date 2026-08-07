@@ -27,8 +27,7 @@ get_header(); ?>
                 <h1><?php echo wp_kses_post( $hero_title ); ?></h1>
                 <p><?php echo esc_html( $hero_desc ); ?></p>
                 <div class="hero-actions" style="margin-top: 24px;">
-                    <a href="#benefits" class="btn btn-primary">Explore Resources</a>
-                    <a href="#subscribe" class="btn btn-outline">Subscribe Free</a>
+                    <a href="<?php echo esc_url( home_url( '/login/?tab=signup' ) ); ?>" class="btn btn-primary">Join Today</a>
                 </div>
             </div>
         </div>

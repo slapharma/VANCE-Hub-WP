@@ -139,10 +139,7 @@ function vance_render_section_patients_cta() {
 		<div class="container" style="text-align: center; color: white;">
 			<h2 style="color: white; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
 			<p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: rgba(255,255,255,0.85);"><?php echo esc_html( $cta_desc ); ?></p>
-			<form class="patient-subscribe-form" style="display: flex; gap: 12px; max-width: 500px; margin: 0 auto;">
-				<input type="email" placeholder="Enter your email" class="form-input" style="flex: 1; min-width: 250px; padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px;">
-				<button type="submit" class="btn btn-primary">Subscribe Free</button>
-			</form>
+			<a href="<?php echo esc_url( home_url( '/login/?tab=signup' ) ); ?>" class="btn btn-primary" style="display: inline-block;">Join Today</a>
 			<p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 16px;">Free forever. Unsubscribe anytime.</p>
 		</div>
 	</section>

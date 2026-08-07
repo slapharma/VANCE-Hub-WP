@@ -1,15 +1,15 @@
 <?php
 /**
  * Tool Page Shell — shared visual + behaviour for per-tool wrapper pages
- * (Omega-3, Malnutrition, Blood Test, IBD Recipes …).
+ * (Malnutrition, IBD Recipes …).
  *
  * Layout mirrors `page-ask-ai.php`: tall dark hero (badge + H1 + subtitle) with
  * the tool iframe slotted into a card below, overlapping the hero by -40px so
  * it reads as a single composed unit.
  *
  * Caller contract — set BEFORE `require` / `get_template_part`:
- *   $vance_tool_slug          string  required, e.g. 'omega-3-calculator'
- *   $vance_tool_name          string  required, e.g. 'Omega-3 Calculator'
+ *   $vance_tool_slug          string  required, e.g. 'malnutrition-calculator'
+ *   $vance_tool_name          string  required, e.g. 'IBD Malnutrition Calculator'
  *   $vance_tool_subtitle      string  required, hero paragraph copy
  *   $vance_tool_badge         string  optional, defaults to 'Free Tool'
  *   $vance_tool_hero_bg       string  optional, image URL (defaults to about_hero.png)

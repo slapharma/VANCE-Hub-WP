@@ -37,6 +37,7 @@ function vance_dashboard_save_profile() {
         'vance_twitter'       => 'esc_url_raw',
         'vance_instagram'     => 'esc_url_raw',
         'vance_facebook'      => 'esc_url_raw',
+        'vance_tiktok'        => 'esc_url_raw',
     );
 
     $userdata = array( 'ID' => $user_id );
@@ -763,8 +764,7 @@ add_action( 'wp_ajax_vance_rename_chat', 'vance_dashboard_rename_chat' );
  * QUICK-REGISTER FROM TOOL PAGES
  * ----------------------------------------------------------------------------
  * Powers the "Save your result" → modal flow on per-tool pages
- * (/omega-3-calculator/, /malnutrition-calculator/, /blood-test/,
- * /ibd-recipes/). Anonymous user submits email + password + role, we create
+ * (/malnutrition-calculator/, /ibd-recipes/). Anonymous user submits email + password + role, we create
  * the user, auto-log-in, and stash the pending tool result against
  * `_sla_<tool>_history` user meta so it appears in the dashboard.
  *
@@ -781,7 +781,7 @@ add_action( 'wp_ajax_vance_rename_chat', 'vance_dashboard_rename_chat' );
  * @return string[]
  */
 function vance_known_tool_slugs() {
-    return array( 'omega-3-calculator', 'malnutrition-calculator', 'blood-test', 'ibd-recipes' );
+    return array( 'malnutrition-calculator', 'ibd-recipes' );
 }
 
 /**

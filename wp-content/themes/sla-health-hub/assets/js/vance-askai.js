@@ -147,11 +147,71 @@
 		focusComposer();
 	}
 
+	/**
+	 * Small in-widget confirm dialog, styled to match the rest of the panel
+	 * instead of a native window.confirm() (which can't be styled and is
+	 * auto-dismissed by some privacy/automation tools).
+	 */
+	function askaiConfirm(message, onConfirm) {
+		var overlay = document.createElement('div');
+		overlay.setAttribute('role', 'alertdialog');
+		overlay.setAttribute('aria-modal', 'true');
+		overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,25,41,0.45);display:flex;align-items:center;justify-content:center;z-index:2147483000;padding:16px;';
+
+		var box = document.createElement('div');
+		box.style.cssText = 'background:#fff;border-radius:14px;padding:22px 24px;max-width:360px;width:100%;box-shadow:0 24px 60px rgba(10,25,41,0.28);font-family:inherit;';
+
+		var msg = document.createElement('p');
+		msg.textContent = message;
+		msg.style.cssText = 'margin:0 0 18px;color:#0f172a;font-size:14px;line-height:1.5;';
+		box.appendChild(msg);
+
+		var row = document.createElement('div');
+		row.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;';
+
+		var cancelBtn = document.createElement('button');
+		cancelBtn.type = 'button';
+		cancelBtn.textContent = 'Cancel';
+		cancelBtn.style.cssText = 'padding:9px 16px;border-radius:8px;border:1px solid #e0e6e6;background:#fff;color:#444;font-weight:600;font-size:13px;cursor:pointer;';
+
+		var confirmBtn = document.createElement('button');
+		confirmBtn.type = 'button';
+		confirmBtn.textContent = 'Clear';
+		confirmBtn.style.cssText = 'padding:9px 16px;border-radius:8px;border:none;background:#008080;color:#fff;font-weight:600;font-size:13px;cursor:pointer;';
+
+		row.appendChild(cancelBtn);
+		row.appendChild(confirmBtn);
+		box.appendChild(row);
+		overlay.appendChild(box);
+		document.body.appendChild(overlay);
+
+		function close() {
+			overlay.remove();
+			document.removeEventListener('keydown', onKeydown);
+		}
+		function onKeydown(e) {
+			if (e.key === 'Escape') { close(); }
+		}
+		cancelBtn.addEventListener('click', close);
+		overlay.addEventListener('click', function (e) { if (e.target === overlay) { close(); } });
+		confirmBtn.addEventListener('click', function () { close(); onConfirm(); });
+		document.addEventListener('keydown', onKeydown);
+		confirmBtn.focus();
+	}
+
 	/** Wipe this conversation, including the copy stored on the account. */
 	function clearConversation() {
-		if (state.messages.length && !window.confirm(CFG.i18n && CFG.i18n.clearConfirm ? CFG.i18n.clearConfirm : 'Clear this conversation? It will also be removed from your saved chats.')) {
+		if (!state.messages.length) {
+			doClearConversation();
 			return;
 		}
+		askaiConfirm(
+			(CFG.i18n && CFG.i18n.clearConfirm) || 'Clear this conversation? It will also be removed from your saved chats.',
+			doClearConversation
+		);
+	}
+
+	function doClearConversation() {
 		var oldId = state.id;
 		stopReveal();
 		state.messages = [];
@@ -503,7 +563,7 @@
 				// One row: a tall input on the left, and a column on the right
 				// holding the level slider above the buttons.
 				'<div class="vance-askai__entry">' +
-					'<textarea id="' + inputId + '" class="vance-askai__input" rows="1" placeholder="' + escapeHtml(CFG.placeholder || 'Ask a question…') + '"></textarea>' +
+					'<textarea id="' + inputId + '" class="vance-askai__input" rows="1" maxlength="2000" placeholder="' + escapeHtml(CFG.placeholder || 'Ask a question…') + '"></textarea>' +
 					'<div class="vance-askai__side">' +
 						levelMarkup(levelId) +
 						'<div class="vance-askai__actions">' +
@@ -920,11 +980,7 @@
 				register.addEventListener('click', function () {
 					closePanel(false);
 					hideBar();
-					if (window.VanceRegisterModal && 'function' === typeof window.VanceRegisterModal.open) {
-						window.VanceRegisterModal.open({ tool: '', payload: {} });
-					} else if (CFG.registerUrl) {
-						window.location.href = CFG.registerUrl;
-					}
+					window.location.href = CFG.registerUrl || '/login/?tab=signup';
 				});
 				panel.appendChild(register);
 

@@ -20,7 +20,7 @@ if ( ! function_exists( 'vance_mobile_stickycta_active' ) || ! vance_mobile_stic
 
 $vsc_text = vance_get_theme_mod( 'vance_mobile_stickycta_text', 'Ready to take control of your gut health?' );
 $vsc_btn  = vance_get_theme_mod( 'vance_mobile_stickycta_btn', 'Join for Free' );
-$vsc_link = vance_get_theme_mod( 'vance_mobile_stickycta_link', home_url( '/register/' ) );
+$vsc_link = vance_get_theme_mod( 'vance_mobile_stickycta_link', home_url( '/login/?tab=signup' ) );
 
 // A storage key that changes if the admin edits the copy, so a reworded CTA
 // reappears even for visitors who dismissed the previous one.

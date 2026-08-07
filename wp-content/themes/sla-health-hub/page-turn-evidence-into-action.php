@@ -58,8 +58,10 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     $hero_desc  = vance_get_theme_mod( 'vance_evidence_hero_desc', 'Rigorous clinical research only matters when it reaches the patient. Vance Medical translates peer-reviewed science and real-world data into practical protocols that clinicians and patients can act on.' );
     $hero_btn1  = vance_get_theme_mod( 'vance_evidence_hero_btn1_text', 'Explore the Evidence Library' );
     $hero_btn1_link = vance_get_theme_mod( 'vance_evidence_hero_btn1_link', '#pillars' );
-    $hero_btn2  = vance_get_theme_mod( 'vance_evidence_hero_btn2_text', 'Request a Clinical Consultation' );
-    $hero_btn2_link = vance_get_theme_mod( 'vance_evidence_hero_btn2_link', '/contact-us/' );
+    // A second hero button ("Dive into our Knowledgebase" on live, code default
+    // "Request a Clinical Consultation") was removed 2026-08-07 — its link had
+    // never been updated off the /contact-us/ default when the label was
+    // renamed, so it went to the wrong place regardless of copy.
     $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_evidence_hero_overlay', 78 ) ) ) ) / 100;
     $hero_overlay_bottom = min( 1, $hero_overlay + 0.14 );
     ?>
@@ -85,7 +87,6 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
                 <p style="<?php echo $p_inline_style; ?>"><?php echo esc_html( $hero_desc ); ?></p>
                 <div class="hero-actions" style="margin-top: 24px;">
                     <a href="<?php echo esc_url( $hero_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $hero_btn1 ); ?></a>
-                    <a href="<?php echo esc_url( $hero_btn2_link ); ?>" class="btn btn-outline"><?php echo esc_html( $hero_btn2 ); ?></a>
                 </div>
             </div>
         </div>
@@ -240,7 +241,10 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     $cta_title = vance_get_theme_mod( 'vance_evidence_cta_title', 'Put Evidence to Work for Your Patients' );
     $cta_desc  = vance_get_theme_mod( 'vance_evidence_cta_desc',  'Free registration unlocks the full protocol library, VANCE-Ai, and printable patient handouts branded to your practice.' );
     $cta_btn1  = vance_get_theme_mod( 'vance_evidence_cta_btn1_text', 'Register Free' );
-    $cta_btn1_link = vance_get_theme_mod( 'vance_evidence_cta_btn1_link', '/register/' );
+    // Link is intentionally NOT theme_mod-driven (unlike the text) — it was
+    // stuck on the /register/ default even after the button was relabelled
+    // "Join Now" on live, so it's pinned here to guarantee it stays correct.
+    $cta_btn1_link = home_url( '/login/?tab=signup' );
     $cta_btn2  = vance_get_theme_mod( 'vance_evidence_cta_btn2_text', 'Talk to Our Team' );
     $cta_btn2_link = vance_get_theme_mod( 'vance_evidence_cta_btn2_link', '/contact-us/' );
     ?>

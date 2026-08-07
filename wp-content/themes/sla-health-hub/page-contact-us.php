@@ -7,24 +7,69 @@
 $contact_sent  = false;
 $contact_error = '';
 
+/**
+ * Verify a reCAPTCHA v3 token against Google's siteverify endpoint.
+ * Returns true (i.e. "skip protection") when no secret key is configured yet,
+ * so the form keeps working before an admin sets one up in the Customizer.
+ */
+function vance_contact_recaptcha_verify( $token ) {
+    $secret = vance_get_theme_mod( 'vance_recaptcha_secret_key', '' );
+    if ( '' === $secret ) {
+        return true;
+    }
+    if ( '' === $token ) {
+        return false;
+    }
+    $response = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', array(
+        'timeout' => 10,
+        'body'    => array(
+            'secret'   => $secret,
+            'response' => $token,
+            'remoteip' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
+        ),
+    ) );
+    if ( is_wp_error( $response ) ) {
+        return true; // Google unreachable — don't block real submitters over a network hiccup.
+    }
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    // v3 returns a 0.0–1.0 bot-likelihood score; 0.5 is Google's own suggested cutoff.
+    return ! empty( $body['success'] ) && ( ! isset( $body['score'] ) || $body['score'] >= 0.5 );
+}
+
 if ( isset( $_POST['vance_contact_submit'] ) && wp_verify_nonce( $_POST['vance_contact_nonce'], 'vance_contact_form' ) ) {
     $name    = sanitize_text_field( $_POST['contact_name'] ?? '' );
     $email   = sanitize_email( $_POST['contact_email'] ?? '' );
     $subject = sanitize_text_field( $_POST['contact_subject'] ?? '' );
     $message = sanitize_textarea_field( $_POST['contact_message'] ?? '' );
+    $token   = sanitize_text_field( $_POST['vance_recaptcha_token'] ?? '' );
 
     if ( empty( $name ) || empty( $email ) || empty( $message ) ) {
         $contact_error = 'Please fill in all required fields.';
     } elseif ( ! is_email( $email ) ) {
         $contact_error = 'Please enter a valid email address.';
+    } elseif ( ! vance_contact_recaptcha_verify( $token ) ) {
+        $contact_error = 'We could not verify this submission as human. Please try again.';
     } else {
-        $to      = get_option( 'admin_email' );
-        $subject = $subject ? "Contact: $subject" : "New Contact Form Submission – Vance Medical";
-        $body    = "Name: $name\nEmail: $email\n\n$message";
-        $headers = array( "Reply-To: $name <$email>" );
+        $to        = get_option( 'admin_email' );
+        $site_name = get_bloginfo( 'name' );
+        $from_addr = 'noreply@' . preg_replace( '#^www\.#', '', wp_parse_url( home_url(), PHP_URL_HOST ) );
+        $subject   = $subject ? "Contact: $subject" : "New Contact Form Submission – Vance Medical";
+        $body      = "Name: $name\nEmail: $email\n\n$message";
+        $headers   = array(
+            "From: {$site_name} <{$from_addr}>",
+            "Reply-To: $name <$email>",
+        );
 
         if ( wp_mail( $to, $subject, $body, $headers ) ) {
             $contact_sent = true;
+            // Best-effort confirmation to the submitter — failure here should
+            // never block the "Message Sent!" state, the admin copy already went out.
+            wp_mail(
+                $email,
+                "We've received your message – {$site_name}",
+                "Hi {$name},\n\nThanks for contacting {$site_name}. A member of our team will get back to you within one business day.\n\nFor your records, here's what you sent us:\n\n{$message}",
+                array( "From: {$site_name} <{$from_addr}>" )
+            );
         } else {
             $contact_error = 'There was a problem sending your message. Please try again or email us directly.';
         }
@@ -250,8 +295,10 @@ get_header(); ?>
                     </div>
                     <?php endif; ?>
 
-                    <form method="post" action="<?php echo esc_url( get_permalink() ); ?>#contact-form" id="contact-form" novalidate>
+                    <form method="post" action="<?php echo esc_url( get_permalink() ); ?>#contact-form" id="contact-form">
                         <?php wp_nonce_field( 'vance_contact_form', 'vance_contact_nonce' ); ?>
+                        <input type="hidden" name="vance_recaptcha_token" id="vance_recaptcha_token" value="">
+                        <div id="contact-form-client-error" style="display:none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; color: #dc2626; font-size: 14px;"></div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                             <div>
@@ -319,6 +366,66 @@ get_header(); ?>
                             By submitting this form you agree to our <a href="/privacy-policy" style="color: var(--primary-color);">Privacy Policy</a>. We never share your data.
                         </p>
                     </form>
+
+                    <?php $recaptcha_site_key = vance_get_theme_mod( 'vance_recaptcha_site_key', '' ); ?>
+                    <?php if ( $recaptcha_site_key ) : ?>
+                    <script src="https://www.google.com/recaptcha/api.js?render=<?php echo esc_attr( $recaptcha_site_key ); ?>"></script>
+                    <?php endif; ?>
+                    <script>
+                    (function () {
+                        var form     = document.getElementById( 'contact-form' );
+                        var errBox   = document.getElementById( 'contact-form-client-error' );
+                        var siteKey  = <?php echo wp_json_encode( $recaptcha_site_key ); ?>;
+                        var tokenEl  = document.getElementById( 'vance_recaptcha_token' );
+                        if ( ! form ) {
+                            return;
+                        }
+
+                        function showClientError( msg ) {
+                            errBox.textContent = msg;
+                            errBox.style.display = 'block';
+                        }
+
+                        function fieldErrors() {
+                            var name    = form.contact_name.value.trim();
+                            var email   = form.contact_email.value.trim();
+                            var message = form.contact_message.value.trim();
+                            if ( ! name || ! email || ! message ) {
+                                return 'Please fill in all required fields.';
+                            }
+                            if ( ! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( email ) ) {
+                                return 'Please enter a valid email address.';
+                            }
+                            return '';
+                        }
+
+                        form.addEventListener( 'submit', function ( e ) {
+                            errBox.style.display = 'none';
+                            var msg = fieldErrors();
+                            if ( msg ) {
+                                e.preventDefault();
+                                showClientError( msg );
+                                return;
+                            }
+                            if ( siteKey && window.grecaptcha && ! form.dataset.recaptchaDone ) {
+                                e.preventDefault();
+                                grecaptcha.ready( function () {
+                                    grecaptcha.execute( siteKey, { action: 'contact_form' } ).then( function ( token ) {
+                                        tokenEl.value = token;
+                                        form.dataset.recaptchaDone = '1';
+                                        form.requestSubmit ? form.requestSubmit() : form.submit();
+                                    } ).catch( function () {
+                                        // reCAPTCHA failed to load/execute — submit anyway rather than
+                                        // blocking a genuine visitor; the server-side check still runs
+                                        // and simply treats a missing token as unverified.
+                                        form.dataset.recaptchaDone = '1';
+                                        form.requestSubmit ? form.requestSubmit() : form.submit();
+                                    } );
+                                } );
+                            }
+                        } );
+                    })();
+                    </script>
                     <?php endif; ?>
                 </div><!-- / form card -->
 

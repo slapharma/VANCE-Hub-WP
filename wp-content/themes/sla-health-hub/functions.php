@@ -669,7 +669,7 @@ function vance_askai_script_data() {
         $foot = sprintf(
             /* translators: %s: registration URL */
             __( '<a href="%s">Register for FREE</a> to save your conversations. General information from this hub only, not personal medical advice.', 'sla-health-hub' ),
-            esc_url( home_url( '/register/' ) )
+            esc_url( home_url( '/login/?tab=signup' ) )
         );
     }
 
@@ -767,7 +767,7 @@ function vance_askai_script_data() {
         'clearEndpoint' => esc_url_raw( rest_url( 'vance-health/v1/ai-chat/clear' ) ),
         'nonce'         => wp_create_nonce( 'wp_rest' ),
         'isLoggedIn'    => is_user_logged_in(),
-        'registerUrl'   => esc_url( home_url( '/register/' ) ),
+        'registerUrl'   => esc_url( home_url( '/login/?tab=signup' ) ),
         'postId'        => $post_id,
         'postTitle'     => $post_id ? get_the_title( $post_id ) : '',
         'postUrl'       => $post_id ? esc_url( get_permalink( $post_id ) ) : '',
@@ -1605,7 +1605,15 @@ function vance_redirect_wp_login_to_themed_login() {
     if ( 'GET' !== $method && 'HEAD' !== $method ) {
         return; // allow form POSTs to wp-login.php for native username/password fallback
     }
-    if ( ! empty( $_GET['action'] ) ) {
+    // "Forgot password?" (the initial request-a-reset-link step) gets the
+    // themed treatment too — see the `view=lostpassword` branch in
+    // vance_auth_modal_shortcode(). Every other action (rp/resetpass — the
+    // set-a-new-password step after clicking the emailed link, register,
+    // logout, postpass, confirmaction) is left on WP's own screens; building
+    // a fully custom flow for those wasn't asked for and is a lot more
+    // surface area for a single "unbranded page" complaint.
+    $is_lostpassword = isset( $_GET['action'] ) && 'lostpassword' === $_GET['action'];
+    if ( ! empty( $_GET['action'] ) && ! $is_lostpassword ) {
         return;
     }
     if ( isset( $_GET['wp_admin_login'] ) ) {
@@ -1616,6 +1624,9 @@ function vance_redirect_wp_login_to_themed_login() {
     $redirect_to  = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
 
     $target = add_query_arg( 'redirect_to', urlencode( $redirect_to ), home_url( '/login/' ) );
+    if ( $is_lostpassword ) {
+        $target = add_query_arg( 'view', 'lostpassword', $target );
+    }
     wp_safe_redirect( $target );
     exit;
 }
@@ -1644,19 +1655,27 @@ function vance_auth_modal_shortcode( $atts ) {
 
     $client_id = defined( 'GOOGLE_CLIENT_ID' ) ? GOOGLE_CLIENT_ID : '';
 
+    // "Forgot password?" branded view — see vance_redirect_wp_login_to_themed_login()
+    // (functions.php) for the ?action=lostpassword -> ?view=lostpassword redirect.
+    $is_lostpassword = isset( $_GET['view'] ) && 'lostpassword' === $_GET['view'];
+
+    // Cross-page "Join Now" / "Register" CTAs land here with ?tab=signup so the
+    // Sign Up panel opens directly instead of Sign In (the default).
+    $initial_tab = ( isset( $_GET['tab'] ) && 'signup' === $_GET['tab'] ) ? 'signup' : 'signin';
+
     $raw_redirect = isset( $_GET['redirect_to'] ) ? wp_unslash( $_GET['redirect_to'] ) : home_url( '/dashboard/' );
     $redirect_to  = wp_validate_redirect( $raw_redirect, home_url( '/dashboard/' ) );
 
     $nonces = array(
-        'google' => wp_create_nonce( 'google_oauth_nonce' ),
-        'login'  => wp_create_nonce( 'vance_login_nonce' ),
+        'google'        => wp_create_nonce( 'google_oauth_nonce' ),
+        'login'         => wp_create_nonce( 'vance_login_nonce' ),
         // Sign-up tab posts to the same vance_quick_register handler as the
         // tool-page / VANCE-Ai register modal (constraint #5: paired names).
-        'signup' => wp_create_nonce( 'vance_quick_register' ),
+        'signup'        => wp_create_nonce( 'vance_quick_register' ),
+        'lostpassword'  => wp_create_nonce( 'vance_lostpassword_nonce' ),
     );
 
     $ajax_url    = admin_url( 'admin-ajax.php' );
-    $lost_pw_url = wp_lostpassword_url( $redirect_to );
 
     $cfg = wp_json_encode( array(
         'ajaxUrl'    => $ajax_url,
@@ -1704,6 +1723,9 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-submit:hover:not(:disabled){background:#006666}
     .vance-auth-submit:disabled{background:#aaa;cursor:not-allowed}
     .vance-auth-footer{text-align:center;margin-top:12px;font-size:12px;color:#888}
+    .vance-auth-pw-wrap{position:relative}
+    .vance-auth-pw-toggle{position:absolute;top:50%;right:12px;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:4px;color:#94a3b8;line-height:1}
+    .vance-auth-pw-toggle:hover{color:#334155}
     @media (max-width:480px){.vance-auth-modal{padding:28px 22px}}
     /* Hide site chrome only when the modal is rendered on the page */
     body:has(.vance-auth-overlay) .site-header,
@@ -1721,9 +1743,29 @@ function vance_auth_modal_shortcode( $atts ) {
         <div class="vance-auth-modal">
             <button type="button" class="vance-auth-close" id="vance-auth-close" aria-label="Close">&times;</button>
             <div class="vance-auth-header">
+                <?php if ( $is_lostpassword ) : ?>
+                <h2 id="vance-auth-title">Reset your password</h2>
+                <p>Enter your email and we'll send you a reset link</p>
+                <?php else : ?>
                 <h2 id="vance-auth-title">Welcome</h2>
                 <p>Sign in or create your account to continue</p>
+                <?php endif; ?>
             </div>
+
+            <div class="vance-auth-error" id="vance-auth-error" role="alert"></div>
+
+            <?php if ( $is_lostpassword ) : ?>
+            <form class="vance-auth-form active" id="vance-lostpassword" novalidate>
+                <div class="vance-auth-field">
+                    <label for="vance-lostpassword-email">Email</label>
+                    <input id="vance-lostpassword-email" type="email" name="email" required autocomplete="email">
+                </div>
+                <button type="submit" class="vance-auth-submit" data-label="Send reset link">Send reset link</button>
+            </form>
+            <div class="vance-auth-footer">
+                <a href="<?php echo esc_url( add_query_arg( 'redirect_to', urlencode( $redirect_to ), home_url( '/login/' ) ) ); ?>" style="color:#008080">Back to sign in</a>
+            </div>
+            <?php else : ?>
 
             <?php if ( $client_id ) : ?>
             <div class="vance-auth-google">
@@ -1740,33 +1782,37 @@ function vance_auth_modal_shortcode( $atts ) {
             <?php endif; ?>
 
             <div class="vance-auth-tabs" role="tablist">
-                <button class="vance-auth-tab active" type="button" data-target="vance-signin" role="tab">Sign in</button>
-                <button class="vance-auth-tab" type="button" data-target="vance-signup" role="tab">Sign up</button>
+                <button class="vance-auth-tab<?php echo 'signin' === $initial_tab ? ' active' : ''; ?>" type="button" data-target="vance-signin" role="tab">Sign in</button>
+                <button class="vance-auth-tab<?php echo 'signup' === $initial_tab ? ' active' : ''; ?>" type="button" data-target="vance-signup" role="tab">Sign up</button>
             </div>
 
-            <div class="vance-auth-error" id="vance-auth-error" role="alert"></div>
-
-            <form class="vance-auth-form active" id="vance-signin" novalidate>
+            <form class="vance-auth-form<?php echo 'signin' === $initial_tab ? ' active' : ''; ?>" id="vance-signin" novalidate>
                 <div class="vance-auth-field">
                     <label for="vance-signin-email">Email</label>
                     <input id="vance-signin-email" type="email" name="email" required autocomplete="email">
                 </div>
                 <div class="vance-auth-field">
                     <label for="vance-signin-password">Password</label>
-                    <input id="vance-signin-password" type="password" name="password" required autocomplete="current-password">
+                    <div class="vance-auth-pw-wrap">
+                        <input id="vance-signin-password" type="password" name="password" required autocomplete="current-password" style="padding-right:40px;">
+                        <button type="button" class="vance-auth-pw-toggle" data-toggle-for="vance-signin-password" aria-label="Show password">👁</button>
+                    </div>
                 </div>
-                <div class="vance-auth-forgot"><a href="<?php echo esc_url( $lost_pw_url ); ?>">Forgot password?</a></div>
+                <div class="vance-auth-forgot"><a href="<?php echo esc_url( add_query_arg( array( 'view' => 'lostpassword', 'redirect_to' => urlencode( $redirect_to ) ), home_url( '/login/' ) ) ); ?>">Forgot password?</a></div>
                 <button type="submit" class="vance-auth-submit" data-label="Sign in">Sign in</button>
             </form>
 
-            <form class="vance-auth-form" id="vance-signup" novalidate>
+            <form class="vance-auth-form<?php echo 'signup' === $initial_tab ? ' active' : ''; ?>" id="vance-signup" novalidate>
                 <div class="vance-auth-field">
                     <label for="vance-signup-email">Email</label>
                     <input id="vance-signup-email" type="email" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
                 </div>
                 <div class="vance-auth-field">
                     <label for="vance-signup-password">Password (min 8 characters)</label>
-                    <input id="vance-signup-password" type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="••••••••">
+                    <div class="vance-auth-pw-wrap">
+                        <input id="vance-signup-password" type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="••••••••" style="padding-right:40px;">
+                        <button type="button" class="vance-auth-pw-toggle" data-toggle-for="vance-signup-password" aria-label="Show password">👁</button>
+                    </div>
                 </div>
                 <div class="vance-auth-field">
                     <label for="vance-signup-role">I am a…</label>
@@ -1796,6 +1842,7 @@ function vance_auth_modal_shortcode( $atts ) {
             <div class="vance-auth-footer">
                 By continuing you agree to our <a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>" style="color:#008080">Terms</a> &amp; <a href="<?php echo esc_url( home_url( '/privacy/' ) ); ?>" style="color:#008080">Privacy</a>.
             </div>
+            <?php endif; // $is_lostpassword ?>
         </div>
     </div>
 
@@ -1848,6 +1895,17 @@ function vance_auth_modal_shortcode( $atts ) {
             if ('Escape' === e.key) { closeAuthModal(); }
         });
 
+        // Password show/hide toggles
+        document.querySelectorAll('.vance-auth-pw-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById(btn.getAttribute('data-toggle-for'));
+                var showing = input.type === 'text';
+                input.type = showing ? 'password' : 'text';
+                btn.textContent = showing ? '👁' : '🙈';
+                btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+            });
+        });
+
         // Tabs
         document.querySelectorAll('.vance-auth-tab').forEach(function(tab){
             tab.addEventListener('click', function(){
@@ -1859,8 +1917,31 @@ function vance_auth_modal_shortcode( $atts ) {
             });
         });
 
+        // Reset-password request (only present on the ?view=lostpassword screen)
+        var lostPwForm = document.getElementById('vance-lostpassword');
+        if (lostPwForm) {
+            lostPwForm.addEventListener('submit', function(e){
+                e.preventDefault();
+                clearError();
+                var btn = this.querySelector('.vance-auth-submit');
+                lockButton(btn, 'Sending…');
+                postForm('vance_lostpassword', CFG.nonces.lostpassword, {
+                    email: this.email.value.trim()
+                }).then(function(data){
+                    unlockButton(btn);
+                    if (data.success) {
+                        lostPwForm.innerHTML = '<p style="margin:0;color:#444;font-size:14px;line-height:1.6;">Check your email — if an account matches that address, a reset link is on its way.</p>';
+                    } else {
+                        showError((data.data && (data.data.message || data.data)) || 'Could not send reset link');
+                    }
+                }).catch(function(){ showError('Network error, try again'); unlockButton(btn); });
+            });
+        }
+
         // Email login
-        document.getElementById('vance-signin').addEventListener('submit', function(e){
+        var signinForm = document.getElementById('vance-signin');
+        if (signinForm) {
+        signinForm.addEventListener('submit', function(e){
             e.preventDefault();
             clearError();
             var btn = this.querySelector('.vance-auth-submit');
@@ -1877,10 +1958,13 @@ function vance_auth_modal_shortcode( $atts ) {
                 }
             }).catch(function(){ showError('Network error, try again'); unlockButton(btn); });
         });
+        }
 
         // Email signup — same form + vance_quick_register handler as the
         // tool-page / VANCE-Ai register modal.
-        document.getElementById('vance-signup').addEventListener('submit', function(e){
+        var signupForm = document.getElementById('vance-signup');
+        if (signupForm) {
+        signupForm.addEventListener('submit', function(e){
             e.preventDefault();
             clearError();
             var termsEl = this.querySelector('input[name="consent_terms"]');
@@ -1909,6 +1993,7 @@ function vance_auth_modal_shortcode( $atts ) {
                 }
             }).catch(function(){ showError('Network error, try again'); unlockButton(btn); });
         });
+        }
 
         // Google
         window.vanceLoginRedirect = CFG.redirectTo;
@@ -1979,6 +2064,34 @@ function vance_email_login_ajax() {
 }
 add_action( 'wp_ajax_nopriv_vance_email_login', 'vance_email_login_ajax' );
 add_action( 'wp_ajax_vance_email_login', 'vance_email_login_ajax' );
+
+/**
+ * AJAX: request a password reset link — powers the branded
+ * /login/?view=lostpassword screen (see vance_auth_modal_shortcode()).
+ * Delegates to WP core's retrieve_password() so the email itself, the reset
+ * key, and the eventual wp-login.php?action=rp flow are all standard WP.
+ */
+function vance_lostpassword_ajax() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_lostpassword_nonce' ) ) {
+        wp_send_json_error( 'Invalid request, please refresh and try again.' );
+    }
+    if ( ! vance_rate_limit( 'lostpassword', 5, 300 ) ) {
+        wp_send_json_error( 'Too many attempts. Please wait a few minutes and try again.' );
+    }
+
+    $email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    if ( ! is_email( $email ) ) {
+        wp_send_json_error( 'Please enter a valid email address.' );
+    }
+
+    // Always report success regardless of whether the address matches an
+    // account — the alternative (a "no such user" error) leaks which emails
+    // are registered, which retrieve_password()'s own errors would do.
+    retrieve_password( $email );
+    wp_send_json_success();
+}
+add_action( 'wp_ajax_nopriv_vance_lostpassword', 'vance_lostpassword_ajax' );
+add_action( 'wp_ajax_vance_lostpassword', 'vance_lostpassword_ajax' );
 
 /**
  * AJAX: email + password signup.
@@ -2054,6 +2167,56 @@ function vance_email_signup_ajax() {
 }
 add_action( 'wp_ajax_nopriv_vance_email_signup', 'vance_email_signup_ajax' );
 add_action( 'wp_ajax_vance_email_signup', 'vance_email_signup_ajax' );
+
+/**
+ * Education/Webinars page waitlist signup (self-hosted fallback used when no
+ * third-party ESP action URL is configured in the Customizer — see
+ * page-education.php). Stores signups in a single wp_option and emails the
+ * admin per signup, per project decision (no CRM/ESP wired up yet).
+ */
+function vance_edu_waitlist_signup_ajax() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_edu_waitlist' ) ) {
+        wp_send_json_error( array( 'message' => 'Invalid request, please refresh and try again.' ) );
+    }
+    if ( ! empty( $_POST['edu_waitlist_hp'] ) ) {
+        wp_send_json_success(); // Honeypot tripped — pretend success, drop silently.
+    }
+    if ( ! vance_rate_limit( 'edu_waitlist', 5, 300 ) ) {
+        wp_send_json_error( array( 'message' => 'Too many attempts. Please wait a few minutes and try again.' ) );
+    }
+
+    $email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $role  = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+    if ( ! is_email( $email ) ) {
+        wp_send_json_error( array( 'message' => 'Please enter a valid email address.' ) );
+    }
+
+    $signups = get_option( 'vance_edu_waitlist_signups', array() );
+    if ( ! is_array( $signups ) ) {
+        $signups = array();
+    }
+    foreach ( $signups as $existing ) {
+        if ( isset( $existing['email'] ) && strtolower( $existing['email'] ) === strtolower( $email ) ) {
+            wp_send_json_success(); // Already on the list — no error, no duplicate entry.
+        }
+    }
+    $signups[] = array(
+        'email' => $email,
+        'role'  => $role,
+        'ts'    => current_time( 'mysql' ),
+    );
+    update_option( 'vance_edu_waitlist_signups', $signups, false );
+
+    wp_mail(
+        get_option( 'admin_email' ),
+        'New Education/Webinars waitlist signup – Vance Medical',
+        "New waitlist signup:\n\nEmail: {$email}\nRole: " . ( $role ?: '(not specified)' )
+    );
+
+    wp_send_json_success();
+}
+add_action( 'wp_ajax_nopriv_vance_edu_waitlist_signup', 'vance_edu_waitlist_signup_ajax' );
+add_action( 'wp_ajax_vance_edu_waitlist_signup', 'vance_edu_waitlist_signup_ajax' );
 
 /* =====================================================================
  * Rate limiting helpers (transient-backed, IP-bucketed).
@@ -6683,7 +6846,7 @@ function vance_customize_testimonials( $wp_customize ) {
             'role'  => 'IBD Specialist Nurse',
         ),
         3 => array(
-            'quote' => 'The omega-3 calculator and recipe tools are the most practical resources I\'ve found anywhere. Finally something built for the patient, not the clinician.',
+            'quote' => 'The malnutrition calculator and recipe tools are the most practical resources I\'ve found anywhere. Finally something built for the patient, not the clinician.',
             'name'  => 'Marcus T.',
             'role'  => 'Ulcerative Colitis, diagnosed 2022',
         ),

@@ -63,7 +63,7 @@ endif;
 
 if ( ! function_exists( 'vance_tool_brand_css_calculator' ) ) :
     /**
-     * Common + calculator-specific tweaks (omega-3, blood-test, malnutrition).
+     * Common + calculator-specific tweaks (malnutrition).
      */
     function vance_tool_brand_css_calculator() {
         $common = vance_tool_brand_css_common();

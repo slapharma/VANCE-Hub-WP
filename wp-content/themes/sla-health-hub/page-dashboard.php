@@ -7,8 +7,14 @@
 $current_user = wp_get_current_user();
 $is_logged_in = is_user_logged_in();
 
-// Redirect if not logged in? (User requested inline login previously, preserving that logic)
-// But for the "Admin" design, it usually requires full screen. Refactoring to show Login Hero if not logged in.
+// Logged-out visitors get sent to the themed login screen with redirect_to
+// set, same as /my-notes/ and wp-login.php — previously this page instead
+// rendered its own in-page "Login Hero" at its own URL with no redirect_to
+// anywhere, so a sign-in from here had no guaranteed way back to /dashboard/.
+if ( ! $is_logged_in ) {
+    wp_safe_redirect( add_query_arg( 'redirect_to', urlencode( home_url( '/dashboard/' ) ), home_url( '/login/' ) ) );
+    exit;
+}
 
 // 2. Handle PDF Print Request
 if ( isset($_GET['print_note']) && is_user_logged_in() ) {
@@ -68,25 +74,7 @@ get_header();
     body { margin: 0; padding: 0; overflow-x: hidden; background-color: #F8FAFC; }
 </style>
 
-<?php if ( ! $is_logged_in ) : ?>
-    <!-- LOGIN VIEW (Retained from previous version) -->
-    <div class="container" style="padding-top: 100px;">
-        <div class="login-hero" style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;">
-            <div style="width: 64px; height: 64px; background: #008080; border-radius: 0; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;">
-                <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-            </div>
-            <h1 style="margin-bottom: 12px; color: #0f172a;">Welcome to Your Hub</h1>
-            <p style="color: #64748b; margin-bottom: 32px;">Access your personalized readings, courses, and health records.</p>
-            
-            <?php echo do_shortcode('[google_login]'); ?>
-            
-            <div style="margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 24px;">
-                <p style="font-size: 14px; color: #94a3b8;">Don't have an account? <a href="<?php echo esc_url( home_url( '/register/' ) ); ?>" style="color: #008080; font-weight: 600;">Register Now</a></p>
-            </div>
-        </div>
-    </div>
-
-<?php else : 
+<?php
     // DATA PREP
     $first_name = get_user_meta( $current_user->ID, 'first_name', true ) ?: $current_user->display_name;
     $job_title = get_user_meta( $current_user->ID, '_sla_job_title', true ) ?: 'Add Job Title';
@@ -599,6 +587,19 @@ get_header();
                         'linkedin' => get_user_meta($current_user->ID, '_sla_linkedin', true),
                         'instagram' => get_user_meta($current_user->ID, '_sla_instagram', true),
                         'facebook' => get_user_meta($current_user->ID, '_sla_facebook', true),
+                        'tiktok' => get_user_meta($current_user->ID, '_sla_tiktok', true),
+                    );
+                    // Inline SVG per platform — same icon set as header.php's site-wide
+                    // social row (footer.php's is an unused placeholder), reused here
+                    // keyed off the profile's own per-user values instead of the
+                    // site-wide vance_social_* theme_mods.
+                    $social_icons = array(
+                        'website'   => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm7.93 6h-3.5a15.6 15.6 0 0 0-1.4-4.3A8.03 8.03 0 0 1 19.93 8zM12 4.04c.9 1.13 1.99 3.13 2.43 3.96H9.57C10.01 7.17 11.1 5.17 12 4.04zM4.26 14A7.9 7.9 0 0 1 4 12c0-.69.1-1.36.26-2h3.94A18.6 18.6 0 0 0 8 12c0 .69.07 1.35.2 2H4.26zm.81 2h3.5a15.6 15.6 0 0 0 1.4 4.3A8.03 8.03 0 0 1 5.07 16zm3.5-8H5.07a8.03 8.03 0 0 1 4.9-4.3A15.6 15.6 0 0 0 8.57 8zM12 19.96c-.9-1.13-1.99-3.13-2.43-3.96h4.86c-.44.83-1.53 2.83-2.43 3.96zM14.8 14H9.2A16.6 16.6 0 0 1 9 12c0-.69.08-1.35.2-2h5.6c.12.65.2 1.31.2 2s-.08 1.35-.2 2zm.2 5.96A16.6 16.6 0 0 0 16.4 16h3.5a8.03 8.03 0 0 1-4.9 3.96zM16.8 14c.13-.65.2-1.31.2-2s-.07-1.35-.2-2h3.94c.16.64.26 1.31.26 2s-.1 1.36-.26 2z"/></svg>',
+                        'twitter'   => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18.9 2H22l-7.7 8.8L23.3 22h-6.9l-5.4-6.9L4.8 22H1.6l8.2-9.4L1 2h7l4.9 6.4L18.9 2Zm-1.2 18h1.9L7.4 4H5.4l12.3 16Z"/></svg>',
+                        'linkedin'  => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14C2.24 0 0 2.24 0 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5V5c0-2.76-2.24-5-5-5ZM8 19H5V9h3v10ZM6.5 7.7A1.7 1.7 0 1 1 6.5 4.3a1.7 1.7 0 0 1 0 3.4ZM20 19h-3v-5.4c0-1.3-.5-2.2-1.6-2.2-.9 0-1.4.6-1.6 1.2-.1.2-.1.5-.1.8V19h-3V9h3v1.3c.4-.6 1.1-1.5 2.8-1.5 2 0 3.5 1.3 3.5 4.2V19Z"/></svg>',
+                        'instagram' => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 2 .2 2.4.4.6.2 1 .5 1.5 1 .4.4.7.9 1 1.5.2.4.3 1.2.4 2.4.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 2-.4 2.4-.2.6-.5 1-1 1.5-.4.4-.9.7-1.5 1-.4.2-1.2.3-2.4.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-2-.2-2.4-.4-.6-.2-1-.5-1.5-1-.4-.4-.7-.9-1-1.5-.2-.4-.3-1.2-.4-2.4-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.2-2 .4-2.4.2-.6.5-1 1-1.5.4-.4.9-.7 1.5-1 .4-.2 1.2-.3 2.4-.4C8.4 2.2 8.8 2.2 12 2.2Zm0 1.8c-3.1 0-3.5 0-4.7.1-1 .1-1.6.2-1.9.3-.5.2-.8.4-1.2.7-.4.4-.6.7-.7 1.2-.1.3-.3.9-.3 1.9C3.1 8.5 3.1 8.9 3.1 12s0 3.5.1 4.7c.1 1 .2 1.6.3 1.9.2.5.4.8.7 1.2.4.4.7.6 1.2.7.3.1.9.3 1.9.3 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1-.1 1.6-.2 1.9-.3.5-.2.8-.4 1.2-.7.4-.4.6-.7.7-1.2.1-.3.3-.9.3-1.9.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1-.2-1.6-.3-1.9-.2-.5-.4-.8-.7-1.2-.4-.4-.7-.6-1.2-.7-.3-.1-.9-.3-1.9-.3-1.2-.1-1.6-.1-4.7-.1Zm0 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 1.8a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Zm4.7-2a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1Z"/></svg>',
+                        'facebook'  => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12Z"/></svg>',
+                        'tiktok'    => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M16.6 2h-3.2v13.7a2.9 2.9 0 1 1-2-2.75v-3.3a6.2 6.2 0 1 0 5.2 6.13V8.8a7.8 7.8 0 0 0 4.5 1.44V7.05a4.6 4.6 0 0 1-4.5-4.6V2Z"/></svg>',
                     );
                     $profile_docs = get_user_meta($current_user->ID, '_sla_profile_docs', true) ?: array();
                     $profile_links = get_user_meta($current_user->ID, '_sla_profile_links', true) ?: array();
@@ -616,7 +617,22 @@ get_header();
                                         <button type="button" onclick="triggerAvatarUpload()" style="position: absolute; bottom: 0; right: 0; background: white; border: 1px solid #E2E8F0; width: 32px; height: 32px; border-radius: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📸</button>
                                         <input type="file" id="avatar-input" style="display: none;" accept="image/*" onchange="uploadAvatar(this)">
                                     </div>
-                                    
+
+                                    <?php
+                                    // One icon per platform that actually has a saved URL — hidden
+                                    // entirely when none are set, rather than showing 6 empty slots.
+                                    $any_social = array_filter( $socials );
+                                    if ( $any_social ) :
+                                    ?>
+                                    <div style="display:flex; gap:8px; margin:-8px 0 20px; flex-wrap:wrap;">
+                                        <?php foreach ( $socials as $key => $url ) : if ( ! $url ) { continue; } ?>
+                                        <a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener" title="<?php echo esc_attr( ucfirst( $key ) ); ?>" style="width:28px; height:28px; border-radius:50%; background:#F1F5F5; color:#008080; display:flex; align-items:center; justify-content:center; opacity:0.85;">
+                                            <?php echo $social_icons[ $key ]; ?>
+                                        </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php endif; ?>
+
                                     <?php
                                     // Document upload moved to its own My Documents tab, where it
                                     // has room for a reader, the Ask VANCE-Ai flow and the
@@ -680,11 +696,12 @@ get_header();
                                     <!-- Social Links -->
                                     <h3 style="margin:30px 0 20px 0; font-size:16px; color:#0F172A; border-top:1px solid #E2E8F0; padding-top:20px;">Social Profiles</h3>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-                                        <div><input type="url" name="vance_website" placeholder="Website URL" value="<?php echo esc_attr($socials['website']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_twitter" placeholder="X (Twitter) URL" value="<?php echo esc_attr($socials['twitter']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_linkedin" placeholder="LinkedIn URL" value="<?php echo esc_attr($socials['linkedin']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_instagram" placeholder="Instagram URL" value="<?php echo esc_attr($socials['instagram']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_facebook" placeholder="Facebook URL" value="<?php echo esc_attr($socials['facebook']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                        <div><input type="url" name="vance_website" placeholder="https://yoursite.com" value="<?php echo esc_attr($socials['website']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                        <div><input type="url" name="vance_twitter" placeholder="https://x.com/vancehealthhub" value="<?php echo esc_attr($socials['twitter']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                        <div><input type="url" name="vance_linkedin" placeholder="https://linkedin.com/company/vancehealthhub" value="<?php echo esc_attr($socials['linkedin']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                        <div><input type="url" name="vance_instagram" placeholder="https://instagram.com/@vancehealthhub" value="<?php echo esc_attr($socials['instagram']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                        <div><input type="url" name="vance_facebook" placeholder="https://facebook.com/vancehealthhub" value="<?php echo esc_attr($socials['facebook']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                        <div><input type="url" name="vance_tiktok" placeholder="https://tiktok.com/@vancehealthhub" value="<?php echo esc_attr($socials['tiktok']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
                                     </div>
 
                                     <!-- External Links -->
@@ -3647,5 +3664,4 @@ get_header();
     }
 </script>
 
-<?php endif; ?>
 <?php get_footer('dashboard'); ?>
