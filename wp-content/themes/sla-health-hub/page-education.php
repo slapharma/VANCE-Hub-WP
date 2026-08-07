@@ -176,7 +176,12 @@ $track_icons = array(
                     } ).then( function ( r ) { return r.json(); } ).then( function ( data ) {
                         if ( data.success ) {
                             form.style.display = 'none';
-                            status.textContent = "You're on the list — we'll email you the moment this launches.";
+                            status.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;">' +
+                                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.18)"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>' +
+                                "You're on the list — we'll email you the moment this launches.</span>";
+                            status.style.fontSize = '16px';
+                            status.style.fontWeight = '700';
+                            status.style.opacity = '1';
                         } else {
                             btn.disabled = false;
                             status.textContent = ( data.data && data.data.message ) || 'Something went wrong, please try again.';
@@ -251,10 +256,27 @@ $track_icons = array(
             var status = document.getElementById( 'edu-wl-modal-status' );
             var btn    = document.getElementById( 'edu-wl-modal-submit' );
             if ( ! form ) { return; }
+            var defaultStatusHtml = status.innerHTML;
+            var fields = form.querySelectorAll( 'input, select, button' );
+            var autoCloseTimer = null;
+
+            // Exposed so the outer open()/trigger script can restore a fresh form
+            // if the modal is reopened after a previous successful submission —
+            // otherwise re-clicking a track card would just show the old
+            // "you're on the list" state with no way to sign up again.
+            window.VanceEduWaitlistModal = {
+                reset: function () {
+                    if ( autoCloseTimer ) { clearTimeout( autoCloseTimer ); autoCloseTimer = null; }
+                    fields.forEach( function ( el ) { el.style.display = ''; } );
+                    btn.disabled = false;
+                    status.innerHTML = defaultStatusHtml;
+                    status.style.cssText = '';
+                }
+            };
+
             form.addEventListener( 'submit', function ( e ) {
                 e.preventDefault();
                 btn.disabled = true;
-                var originalStatus = status.textContent;
                 status.textContent = 'Sending…';
                 var body = new URLSearchParams();
                 body.set( 'action', 'vance_edu_waitlist_signup' );
@@ -269,8 +291,16 @@ $track_icons = array(
                     body: body.toString()
                 } ).then( function ( r ) { return r.json(); } ).then( function ( data ) {
                     if ( data.success ) {
-                        form.querySelectorAll( 'input, select, button' ).forEach( function ( el ) { el.style.display = 'none'; } );
-                        status.textContent = "You're on the list — we'll email you the moment this launches.";
+                        fields.forEach( function ( el ) { el.style.display = 'none'; } );
+                        status.innerHTML = '<span style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:#008080;">' +
+                            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="rgba(0,128,128,0.1)"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>' +
+                            "You're on the list — we'll email you the moment this launches.</span>";
+                        status.style.marginTop = '18px';
+                        // Give them a moment to read the confirmation, then close for them.
+                        autoCloseTimer = setTimeout( function () {
+                            var closeBtn = document.getElementById( 'edu-wl-close' );
+                            if ( closeBtn ) { closeBtn.click(); }
+                        }, 3200 );
                     } else {
                         btn.disabled = false;
                         status.textContent = ( data.data && data.data.message ) || 'Something went wrong, please try again.';
@@ -299,6 +329,7 @@ $track_icons = array(
         if (track && ctxEl) {
             ctxEl.textContent = "We'll email you when " + track + " go live. One launch email per track, no spam.";
         }
+        if (window.VanceEduWaitlistModal) { window.VanceEduWaitlistModal.reset(); }
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }

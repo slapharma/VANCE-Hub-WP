@@ -21,7 +21,7 @@ if ( ! function_exists( 'vance_mobile_bottomnav_active' ) || ! vance_mobile_bott
 $vbn_home      = home_url( '/' );
 $vbn_tools     = home_url( '/free-health-tools/' );
 $vbn_askai     = home_url( '/ask-ai/' );
-$vbn_dashboard = is_user_logged_in() ? home_url( '/dashboard/' ) : wp_login_url( home_url( '/dashboard/' ) );
+$vbn_dashboard = is_user_logged_in() ? home_url( '/dashboard/' ) : add_query_arg( 'redirect_to', urlencode( home_url( '/dashboard/' ) ), home_url( '/login/' ) );
 
 // Active-tab detection.
 $vbn_is_home  = is_front_page();
@@ -73,7 +73,7 @@ $vbn_active = function ( $cond ) {
             <li><a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>"><?php esc_html_e( 'Sign Out', 'sla-health-hub' ); ?></a></li>
         <?php else : ?>
             <li><a href="<?php echo esc_url( home_url( '/login/?tab=signup' ) ); ?>"><?php esc_html_e( 'Join for Free', 'sla-health-hub' ); ?></a></li>
-            <li><a href="<?php echo esc_url( wp_login_url() ); ?>"><?php esc_html_e( 'Sign In', 'sla-health-hub' ); ?></a></li>
+            <li><a href="<?php echo esc_url( home_url( '/login/' ) ); ?>"><?php esc_html_e( 'Sign In', 'sla-health-hub' ); ?></a></li>
         <?php endif; ?>
     </ul>
 </div>

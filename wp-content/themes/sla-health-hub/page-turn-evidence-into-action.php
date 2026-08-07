@@ -57,7 +57,16 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     $hero_title = vance_get_theme_mod( 'vance_evidence_hero_title', 'Turn <span class="highlight">Evidence</span> into Action' );
     $hero_desc  = vance_get_theme_mod( 'vance_evidence_hero_desc', 'Rigorous clinical research only matters when it reaches the patient. Vance Medical translates peer-reviewed science and real-world data into practical protocols that clinicians and patients can act on.' );
     $hero_btn1  = vance_get_theme_mod( 'vance_evidence_hero_btn1_text', 'Explore the Evidence Library' );
-    $hero_btn1_link = vance_get_theme_mod( 'vance_evidence_hero_btn1_link', '#pillars' );
+    // Link is intentionally NOT theme_mod-driven (unlike the text) — same DB
+    // drift as the lower CTA button below: the text was relabelled "Join Now!"
+    // via Customizer but the link theme_mod was never updated off the
+    // "#pillars" default, so live visitors clicking "Join Now!" just scrolled
+    // to the pillars section instead of reaching signup. Pinned here for the
+    // same reason it's pinned below. This template is confirmed single-purpose
+    // in production — /turn-evidence-into-action/ 404s, only /get-started-today/
+    // uses it (see file doc comment) — so there's no other live page relying
+    // on the "#pillars" default.
+    $hero_btn1_link = home_url( '/login/?tab=signup' );
     // A second hero button ("Dive into our Knowledgebase" on live, code default
     // "Request a Clinical Consultation") was removed 2026-08-07 — its link had
     // never been updated off the /contact-us/ default when the label was
@@ -86,7 +95,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
                 <h1 style="<?php echo $h1_inline_style; ?>"><?php echo wp_kses_post( $hero_title ); ?></h1>
                 <p style="<?php echo $p_inline_style; ?>"><?php echo esc_html( $hero_desc ); ?></p>
                 <div class="hero-actions" style="margin-top: 24px;">
-                    <a href="<?php echo esc_url( $hero_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $hero_btn1 ); ?></a>
+                    <a href="<?php echo esc_url( $hero_btn1_link ); ?>" class="btn btn-primary" id="evd-hero-join-btn"><?php echo esc_html( $hero_btn1 ); ?></a>
                 </div>
             </div>
         </div>
@@ -253,12 +262,30 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
             <h2 style="color: <?php echo esc_attr( $evd_cta_title_color ); ?>; margin-bottom: 16px;"><?php echo esc_html( $cta_title ); ?></h2>
             <p class="max-600" style="font-size: 18px; margin-bottom: 32px; color: <?php echo esc_attr( $evd_cta_text_color ); ?>;"><?php echo esc_html( $cta_desc ); ?></p>
             <div class="hero-actions" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-                <a href="<?php echo esc_url( $cta_btn1_link ); ?>" class="btn btn-primary"><?php echo esc_html( $cta_btn1 ); ?></a>
+                <a href="<?php echo esc_url( $cta_btn1_link ); ?>" class="btn btn-primary" id="evd-cta-join-btn"><?php echo esc_html( $cta_btn1 ); ?></a>
                 <a href="<?php echo esc_url( $cta_btn2_link ); ?>" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;"><?php echo esc_html( $cta_btn2 ); ?></a>
             </div>
         </div>
     </section>
 
 </main>
+
+<script>
+// Open the sitewide quick-signup overlay (inc/register-modal.php, loaded globally
+// via footer.php) instead of navigating to /login/?tab=signup. Href stays as a
+// progressive-enhancement fallback for no-JS / VanceRegisterModal unavailable.
+(function () {
+    [ 'evd-hero-join-btn', 'evd-cta-join-btn' ].forEach( function ( id ) {
+        var btn = document.getElementById( id );
+        if ( ! btn ) { return; }
+        btn.addEventListener( 'click', function ( e ) {
+            if ( window.VanceRegisterModal && typeof window.VanceRegisterModal.open === 'function' ) {
+                e.preventDefault();
+                window.VanceRegisterModal.open( {} );
+            }
+        } );
+    } );
+})();
+</script>
 
 <?php get_footer(); ?>

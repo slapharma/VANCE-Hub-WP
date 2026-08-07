@@ -610,10 +610,21 @@ add_action( 'template_redirect', 'vance_tool_embed_trim_head' );
  * Matched by slug as well as by assigned template: they resolve through
  * WordPress's page-{slug}.php hierarchy rather than a saved template, so
  * is_page_template() alone returns false.
+ *
+ * Also covers the Healthcare Quiz and the tool-page-shell.php-based tool
+ * pages (Malnutrition Calculator, IBD Recipes): each bakes
+ * `is_user_logged_in()` straight into the emitted HTML/JS at render time
+ * (e.g. `var loggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>` in
+ * tool-page-shell.php, and an `if(is_user_logged_in())` PHP guard around the
+ * quiz's whole save-AJAX block in page-healthcare-quiz.php). A visitor who
+ * loads one of these pages anonymously, then registers/logs in without a
+ * fresh full page load, is served the still-cached anonymous snapshot on
+ * their next request — its JS believes they're logged out, so quiz/tool
+ * results silently fail to save instead of persisting to `_sla_*` meta.
  */
 function vance_no_cache_account_pages() {
-    $slugs     = array( 'dashboard', 'my-notes' );
-    $templates = array( 'page-dashboard.php', 'page-my-notes.php' );
+    $slugs     = array( 'dashboard', 'my-notes', 'healthcare-quiz', 'malnutrition-calculator', 'ibd-recipies' );
+    $templates = array( 'page-dashboard.php', 'page-my-notes.php', 'page-healthcare-quiz.php', 'page-malnutrition-calculator.php', 'page-ibd-recipies.php' );
 
     if ( ! is_page( $slugs ) && ! is_page_template( $templates ) ) {
         return;

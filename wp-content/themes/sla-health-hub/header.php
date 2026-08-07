@@ -88,7 +88,7 @@
                 // Appearance → Customize → Vance Theme → Brand Identity → Header Navigation
                 // → "Show My Dashboard button in header" (default ON since 2026-07-09).
                 if ( vance_get_theme_mod( 'vance_show_dashboard_btn', true ) ) :
-                    $dashboard_url = is_user_logged_in() ? home_url('/dashboard/') : wp_login_url(home_url('/dashboard/'));
+                    $dashboard_url = is_user_logged_in() ? home_url('/dashboard/') : add_query_arg( 'redirect_to', urlencode( home_url('/dashboard/') ), home_url('/login/') );
                 ?>
                 <a href="<?php echo esc_url($dashboard_url); ?>" class="header-dashboard-link">My Dashboard</a>
                 <?php endif; ?>
