@@ -7926,6 +7926,19 @@ function vance_mobile_body_class( $classes ) {
     if ( is_front_page() && vance_get_theme_mod( 'vance_mobile_swipecards_enable', false ) ) {
         $classes[] = 'has-vance-swipecards';
     }
+    // page-dashboard.php hides .site-header itself and has its own full layout
+    // (.dashboard-wrap / .dash-sidebar), so it must opt out of the fixed-header
+    // top-padding compensation in mobile-base.css §3 — that rule already checks
+    // for body.dashboard-body, it just never got added anywhere. Without this,
+    // mobile visitors saw ~70px of blank white space (reserved for a header that
+    // is deliberately hidden here) above the dashboard's own hamburger/breadcrumb
+    // bar, with the real logo visible only inside the sidebar drawer once opened.
+    // is_page_template() won't catch this: the "dashboard" page has no explicit
+    // _wp_page_template meta set — WP resolves page-dashboard.php purely via the
+    // slug-matching template hierarchy, so the check has to key off the slug.
+    if ( is_page( 'dashboard' ) ) {
+        $classes[] = 'dashboard-body';
+    }
     return $classes;
 }
 add_filter( 'body_class', 'vance_mobile_body_class' );
