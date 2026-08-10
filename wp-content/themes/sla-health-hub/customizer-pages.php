@@ -1559,6 +1559,11 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_userguide_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_userguide_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_userguide_hero_desc",  array( "default" => "Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_userguide_hero_desc",  array( "label" => "Description", "section" => "vance_userguide_hero", "type" => "textarea" ) );
+    // Same bg image + overlay pair as the Tools & Resources hero (vance_tools_hero_bg/overlay).
+    $wp_customize->add_setting( "vance_userguide_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_userguide_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_userguide_hero" ) ) );
+    $wp_customize->add_setting( "vance_userguide_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_userguide_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_userguide_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
     /* ---- Retire orphaned "Our Heritage" panel (unlinked clone of About Us). Reversible: delete this block to restore. Template file & saved values are untouched. ---- */
     foreach ( array( 'vance_heritage_hero', 'vance_heritage_origin', 'vance_heritage_mission', 'vance_heritage_product', 'vance_heritage_platform', 'vance_heritage_cta', 'vance_heritage_promo1', 'vance_heritage_promo2' ) as $vance_retired_sec ) {

@@ -122,20 +122,26 @@ $tools = array(
 
 <main id="main-content" class="user-guide-page">
 
-	<!-- HERO -->
+	<!-- HERO (same "patients-hero" structure as page-tools-resources.php: full-bleed
+	     background image + gradient overlay, tag-label/h1/p, single hero-actions button) -->
 	<?php
-	$hero_tag   = vance_get_theme_mod( 'vance_userguide_hero_tag', 'User Guide' );
-	$hero_title = vance_get_theme_mod( 'vance_userguide_hero_title', 'Get the most out of <span class="highlight">Vance Medical Hub</span>' );
-	$hero_desc  = vance_get_theme_mod( 'vance_userguide_hero_desc', 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.' );
-	$pdf_url    = get_template_directory_uri() . '/assets/downloads/Vance-Health-Hub-User-Guide.pdf';
+	$hero_bg      = vance_get_theme_mod( 'vance_userguide_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
+	$hero_tag     = vance_get_theme_mod( 'vance_userguide_hero_tag', 'User Guide' );
+	$hero_title   = vance_get_theme_mod( 'vance_userguide_hero_title', 'Get the most out of <span class="highlight">Vance Medical Hub</span>' );
+	$hero_desc    = vance_get_theme_mod( 'vance_userguide_hero_desc', 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.' );
+	$hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_userguide_hero_overlay', 70 ) ) ) ) / 100;
+	$hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
+	$pdf_url      = get_template_directory_uri() . '/assets/downloads/Vance-Health-Hub-User-Guide.pdf';
 	?>
-	<section class="hero user-guide-hero">
+	<section class="hero userguide-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
 		<div class="container">
 			<div class="hero-content">
 				<span class="tag-label"><?php echo esc_html( $hero_tag ); ?></span>
 				<h1><?php echo wp_kses_post( $hero_title ); ?></h1>
 				<p><?php echo esc_html( $hero_desc ); ?></p>
-				<a href="<?php echo esc_url( $pdf_url ); ?>" class="btn btn-outline" download>Download as PDF</a>
+				<div class="hero-actions" style="margin-top: 24px;">
+					<a href="<?php echo esc_url( $pdf_url ); ?>" class="btn btn-outline" download>Download as PDF</a>
+				</div>
 			</div>
 		</div>
 	</section>

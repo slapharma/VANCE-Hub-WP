@@ -4,12 +4,9 @@
  * functions.php — inert everywhere else on the site.
  */
 
-.user-guide-hero {
-    padding: 72px 0 56px;
-    min-height: 0;
-}
-.user-guide-hero .hero-content { max-width: 760px; }
-.user-guide-hero p { max-width: 620px; }
+/* Hero sizing/background come from inline styles on the <section> itself
+   (matching page-tools-resources.php's hero exactly) — .userguide-hero is
+   just a marker class, same as .tools-hero carries no rules of its own. */
 
 /* ---------- In-page nav ----------
    Same sticky pill-nav structure/behaviour as the GI condition pages'
