@@ -1842,8 +1842,8 @@ function vance_auth_modal_shortcode( $atts ) {
             <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" class="btn btn-primary" style="width:100%;box-sizing:border-box;gap:10px;">Go to dashboard
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </a>
-            <p style="margin:20px 0 0;">
-                <a href="' . esc_url( wp_logout_url( home_url() ) ) . '" style="font-size:14px;font-weight:500;color:var(--text-light,#6B7280);text-decoration:none;border-bottom:1px solid transparent;transition:color .15s,border-color .15s;"
+            <p style="margin:7px 0 0;">
+                <a href="' . esc_url( wp_logout_url( home_url() ) ) . '" style="display:inline-block;padding:13px 10px;margin:-13px -10px;font-size:14px;font-weight:500;color:var(--text-light,#6B7280);text-decoration:none;border-bottom:1px solid transparent;transition:color .15s,border-color .15s;"
                    onmouseover="this.style.color=\'var(--primary-color,#008080)\';this.style.borderColor=\'currentColor\';"
                    onmouseout="this.style.color=\'var(--text-light,#6B7280)\';this.style.borderColor=\'transparent\';">Not you? Logout</a>
             </p>
