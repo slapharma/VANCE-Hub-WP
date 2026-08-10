@@ -251,7 +251,6 @@
     opacity: 0;
     transform: translateY(10px) scale(0.94);
 }
-.vug-badge span[aria-hidden] { margin-right: 5px; }
 .vug-anim-shot.is-visible .vug-badge {
     animation: vug-badge-in 0.55s cubic-bezier(.22,1,.36,1) both var(--vug-badge-delay, 0s);
 }

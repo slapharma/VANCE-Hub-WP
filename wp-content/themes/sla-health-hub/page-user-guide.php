@@ -77,7 +77,7 @@ function vug_anim_shot( $img_base, $filename, $alt, $caption, $badges = array(),
 		</span>
 		<?php foreach ( $badges as $badge ) : ?>
 		<span class="vug-badge vug-badge--<?php echo esc_attr( $badge['pos'] ); ?>" style="--vug-badge-delay: <?php echo esc_attr( $badge['delay'] ); ?>s;">
-			<span aria-hidden="true"><?php echo esc_html( $badge['icon'] ); ?></span><?php echo esc_html( $badge['text'] ); ?>
+			<?php echo esc_html( trim( $badge['text'] ) ); ?>
 		</span>
 		<?php endforeach; ?>
 		<figcaption><?php echo esc_html( $caption ); ?></figcaption>
@@ -94,8 +94,7 @@ $tools = array(
 		'tag'    => 'Self-Assessment',
 		'desc'   => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers and lifestyle factors. Get an instant summary you can share with your clinician.',
 		'img'    => 'healthcare-quiz-start.png',
-		'badge_icon' => '📋',
-		'badge_text' => ' 9 quick questions',
+		'badge_text' => '9 quick questions',
 	),
 	array(
 		'slug'   => 'ibd-recipes',
@@ -104,8 +103,7 @@ $tools = array(
 		'tag'    => 'Meal Planning',
 		'desc'   => 'Browse EPA-rich, gut-friendly recipes with full nutrition data and build a weekly meal plan.',
 		'img'    => 'ibd-recipes-browse.png',
-		'badge_icon' => '🍲',
-		'badge_text' => ' 19 recipes ready',
+		'badge_text' => '19 recipes ready',
 	),
 	array(
 		'slug'   => 'malnutrition-calculator',
@@ -114,8 +112,7 @@ $tools = array(
 		'tag'    => 'IBD Screening',
 		'desc'   => 'An 11-step malnutrition risk screener combining MUST, IBD-NST and GLIM criteria into a single, actionable score.',
 		'img'    => 'malnutrition-calculator-form.png',
-		'badge_icon' => '🧮',
-		'badge_text' => ' 11-step screener',
+		'badge_text' => '11-step screener',
 	),
 );
 ?>
@@ -204,10 +201,10 @@ $tools = array(
 					<div class="vug-shot-strip">
 						<?php
 						echo vug_anim_shot( $img_base, 'home-hero.png', 'Vance Medical Hub homepage', 'Homepage', array(
-							array( 'icon' => '🎉', 'text' => ' Free to join', 'pos' => 'top-right', 'delay' => 0.2 ),
+							array( 'text' => 'Free to join', 'pos' => 'top-right', 'delay' => 0.2 ),
 						) );
 						echo vug_anim_shot( $img_base, 'nav-menu.png', 'Main navigation showing the VANCE-AI button and My Dashboard link', 'Main navigation', array(
-							array( 'icon' => '🤖', 'text' => ' VANCE-Ai · always on', 'pos' => 'top-right', 'delay' => 0.35 ),
+							array( 'text' => 'VANCE-Ai · always on', 'pos' => 'top-right', 'delay' => 0.35 ),
 						) );
 						?>
 					</div>
@@ -239,7 +236,7 @@ $tools = array(
 					<div class="vug-shot-strip">
 						<?php
 						echo vug_anim_shot( $img_base, 'discovery-suite-search.png', 'Discovery Results page filtered by keyword and condition', 'Filtered results', array(
-							array( 'icon' => '🔍', 'text' => ' 12 results found', 'pos' => 'top-right', 'delay' => 0.2 ),
+							array( 'text' => '12 results found', 'pos' => 'top-right', 'delay' => 0.2 ),
 						) );
 						?>
 					</div>
@@ -267,7 +264,7 @@ $tools = array(
 					<div class="vug-shot-strip">
 						<?php
 						echo vug_anim_shot( $img_base, 'vance-ai-chat.png', 'VANCE-Ai chat with a cited answer', 'Cited answer', array(
-							array( 'icon' => '✓', 'text' => ' Answer sourced', 'pos' => 'top-right', 'delay' => 0.2 ),
+							array( 'text' => 'Answer sourced', 'pos' => 'top-right', 'delay' => 0.2 ),
 						) );
 						?>
 					</div>
@@ -298,7 +295,7 @@ $tools = array(
 						<img src="<?php echo esc_url( $img_base . $tool['img'] ); ?>" alt="<?php echo esc_attr( wp_strip_all_tags( $tool['name'] ) ); ?> screenshot" loading="lazy">
 					</span>
 					<span class="vug-badge vug-badge--top-right" style="--vug-badge-delay: <?php echo esc_attr( 0.3 + $i * 0.15 ); ?>s;">
-						<span aria-hidden="true"><?php echo esc_html( $tool['badge_icon'] ); ?></span><?php echo esc_html( $tool['badge_text'] ); ?>
+						<?php echo esc_html( trim( $tool['badge_text'] ) ); ?>
 					</span>
 					<figcaption>
 						<span class="vug-tool-card__tag"><?php echo esc_html( $tool['tag'] ); ?></span>
@@ -312,10 +309,10 @@ $tools = array(
 			<div class="vug-shot-strip vug-shot-strip--center">
 				<?php
 				echo vug_anim_shot( $img_base, 'healthcare-quiz-results.png', 'IBD Health Quiz completion screen', 'Quiz result', array(
-					array( 'icon' => '✓', 'text' => ' Profile updated', 'pos' => 'top-right', 'delay' => 0.2 ),
+					array( 'text' => 'Profile updated', 'pos' => 'top-right', 'delay' => 0.2 ),
 				) );
 				echo vug_anim_shot( $img_base, 'malnutrition-calculator-result.png', 'Malnutrition Calculator risk result', 'Calculator result', array(
-					array( 'icon' => '⚠', 'text' => ' Medium risk flagged', 'pos' => 'top-right', 'delay' => 0.35 ),
+					array( 'text' => 'Medium risk flagged', 'pos' => 'top-right', 'delay' => 0.35 ),
 				) );
 				?>
 			</div>
@@ -365,21 +362,21 @@ $tools = array(
 			<div class="vug-dash-shots">
 				<?php
 				echo vug_anim_shot( $img_base, 'my-dashboard-overview.png', 'My Dashboard overview', 'Dashboard', array(
-					array( 'icon' => '🔔', 'text' => ' 3 updates', 'pos' => 'top-right', 'delay' => 0.15 ),
+					array( 'text' => '3 updates', 'pos' => 'top-right', 'delay' => 0.15 ),
 				) );
 				echo vug_anim_shot( $img_base, 'my-dashboard-profile.png', 'My Profile section of My Dashboard', 'My Profile', array(
-					array( 'icon' => '✓', 'text' => ' Profile saved', 'pos' => 'top-right', 'delay' => 0.3 ),
+					array( 'text' => 'Profile saved', 'pos' => 'top-right', 'delay' => 0.3 ),
 				) );
 				// "show saved articles on the My Dashboard screenshot" — the captured
 				// state is a fresh test account (empty Reading List), so two example
 				// saved-article toasts animate in over it to show what a populated
 				// list looks like without editing the underlying screenshot pixels.
 				echo vug_anim_shot( $img_base, 'my-dashboard-bookmarks.png', 'My Reading List section of My Dashboard', 'My Reading List', array(
-					array( 'icon' => '📚', 'text' => ' IBD Flare Nutrition Checklist — saved', 'pos' => 'top-right', 'delay' => 0.2 ),
-					array( 'icon' => '📚', 'text' => ' The Malabsorption Diet Explained — saved', 'pos' => 'bottom-left', 'delay' => 0.75 ),
+					array( 'text' => 'IBD Flare Nutrition Checklist — saved', 'pos' => 'top-right', 'delay' => 0.2 ),
+					array( 'text' => 'The Malabsorption Diet Explained — saved', 'pos' => 'bottom-left', 'delay' => 0.75 ),
 				), 0.45 );
 				echo vug_anim_shot( $img_base, 'my-dashboard-notes.png', 'My Notes section of My Dashboard', 'My Notes', array(
-					array( 'icon' => '📝', 'text' => ' "Ask GP about iron levels" — added', 'pos' => 'bottom-left', 'delay' => 0.3 ),
+					array( 'text' => '"Ask GP about iron levels" — added', 'pos' => 'bottom-left', 'delay' => 0.3 ),
 				), 0.6 );
 				?>
 			</div>
