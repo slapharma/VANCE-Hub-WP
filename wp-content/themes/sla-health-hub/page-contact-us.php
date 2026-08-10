@@ -99,7 +99,7 @@ get_header(); ?>
     <?php
     $intro_title  = vance_get_theme_mod( 'vance_contact_intro_title', 'How Can We Help?' );
     $intro_text   = vance_get_theme_mod( 'vance_contact_intro_text',  'Vance Medical is committed to providing exceptional support to every member of our community. Use the form to send us a message, or reach us directly through any of the channels below.' );
-    $detail_email = vance_get_theme_mod( 'vance_contact_email',   'info@gastrohealthhub.com' );
+    $detail_email = vance_get_theme_mod( 'vance_contact_email',   'team@vancemedicalfoods.co.uk' );
     $detail_phone = vance_get_theme_mod( 'vance_contact_phone',   '+44 (0)1628 526 005' );
     $detail_hours = vance_get_theme_mod( 'vance_contact_hours',   'Monday – Friday, 9:00 am – 5:00 pm GMT' );
 

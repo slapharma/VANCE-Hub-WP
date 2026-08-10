@@ -432,7 +432,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $testi_title = vance_get_theme_mod('vance_about_testimonials_title', 'Real People, Real Results');
         $testi_defaults = array(
             1 => array("The Vance Health Hub has completely changed how I manage my Crohn's disease. The nutritional guidance alongside my medication has made a real difference to my daily life.", 'S.M.', 'Sarah M.', "Living with Crohn's Disease"),
-            2 => array('As a gastroenterologist, I recommend Vance to my patients because I trust their pharmaceutical-grade approach. The evidence base behind their products is exactly what I look for.', 'M.P.', 'M. Patel', 'Living with Colitis'),
+            2 => array('Living with colitis felt overwhelming until I found Vance. Knowing the guidance is pharmaceutical-grade and evidence-based gives me real confidence in the choices I make about my condition every day.', 'M.P.', 'M. Patel', 'Living with Colitis'),
             3 => array('Finally, a resource that combines proper medical science with practical nutrition advice. The VANCE-Ai tool helps me understand my condition without the jargon.', 'J.T.', 'James T.', 'Living with IBS'),
         );
     ?>
@@ -949,7 +949,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-features em { display: block; font-size: .9rem; font-style: normal; line-height: 1.55; color: var(--vab-muted); }
 
 .vabout-digital-media { position: relative; }
-.vabout-digital-media img { width: 100%; height: 500px; object-fit: cover; border-radius: var(--vab-r-lg); box-shadow: var(--vab-sh-lg); }
+.vabout-digital-media img { width: 100%; height: 500px; object-fit: contain; background: var(--vab-white); border-radius: var(--vab-r-lg); box-shadow: var(--vab-sh-lg); }
 .vabout-float {
     position: absolute;
     display: flex; align-items: center; gap: 10px;

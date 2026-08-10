@@ -886,7 +886,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_contact_intro_title", array( "label" => "Section Heading",            "section" => "vance_contact_info", "type" => "text" ) );
     $wp_customize->add_setting( "vance_contact_intro_text",  array( "default" => "Vance Medical is committed to providing exceptional support to every member of our community.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_contact_intro_text",  array( "label" => "Intro Paragraph",            "section" => "vance_contact_info", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_contact_email",       array( "default" => "info@gastrohealthhub.com",     "sanitize_callback" => "sanitize_email" ) );
+    $wp_customize->add_setting( "vance_contact_email",       array( "default" => "team@vancemedicalfoods.co.uk", "sanitize_callback" => "sanitize_email" ) );
     $wp_customize->add_control( "vance_contact_email",       array( "label" => "Email Address",              "section" => "vance_contact_info", "type" => "text" ) );
     $wp_customize->add_setting( "vance_contact_phone",       array( "default" => "+44 (0)1628 526 005",      "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_contact_phone",       array( "label" => "Phone Number",               "section" => "vance_contact_info", "type" => "text" ) );
