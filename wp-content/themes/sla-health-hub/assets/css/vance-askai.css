@@ -643,6 +643,15 @@
 	font-family: var(--font-main, 'Inter', system-ui, sans-serif);
 	color: #1F2937;
 	overflow: hidden;
+	/* No cap on card height meant that on narrow viewports, where the grid
+	   below stacks the illustration banner above the full text column
+	   instead of beside it, combined content height could exceed the
+	   viewport with nothing to constrain it — the whole page scrolled to
+	   reach the CTA instead of the card scrolling internally. The overlay's
+	   own 24px flex padding on each side is subtracted here so the card
+	   never exceeds the space the overlay actually gives it. */
+	max-height: calc(100dvh - 48px);
+	overflow-y: auto;
 }
 
 /* Two columns: copy + CTA on the left, illustration on the right. */
