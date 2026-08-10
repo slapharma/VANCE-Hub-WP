@@ -1542,6 +1542,24 @@ function vance_pages_customize_register( $wp_customize ) {
         "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
     ) );
 
+    // ============================================================
+    // USER GUIDE PAGE — page-user-guide.php already reads these three
+    // vance_userguide_hero_* mods via vance_get_theme_mod() with inline
+    // defaults; this section is the previously-missing admin UI for them
+    // (same gap noted in that file's own doc comment).
+    // ============================================================
+    $wp_customize->add_panel( "vance_userguide_panel", array(
+        "title"    => __( "Page - User Guide", "sla-health-hub" ),
+        "priority" => 47,
+    ) );
+    $wp_customize->add_section( "vance_userguide_hero", array( "title" => "Hero Section", "panel" => "vance_userguide_panel" ) );
+    $wp_customize->add_setting( "vance_userguide_hero_tag",   array( "default" => "User Guide", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_userguide_hero_tag",   array( "label" => "Tag Label", "section" => "vance_userguide_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_userguide_hero_title", array( "default" => 'Get the most out of <span class="highlight">Vance Medical Hub</span>', "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_userguide_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_userguide_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_userguide_hero_desc",  array( "default" => "Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_userguide_hero_desc",  array( "label" => "Description", "section" => "vance_userguide_hero", "type" => "textarea" ) );
+
     /* ---- Retire orphaned "Our Heritage" panel (unlinked clone of About Us). Reversible: delete this block to restore. Template file & saved values are untouched. ---- */
     foreach ( array( 'vance_heritage_hero', 'vance_heritage_origin', 'vance_heritage_mission', 'vance_heritage_product', 'vance_heritage_platform', 'vance_heritage_cta', 'vance_heritage_promo1', 'vance_heritage_promo2' ) as $vance_retired_sec ) {
         $wp_customize->remove_section( $vance_retired_sec );
