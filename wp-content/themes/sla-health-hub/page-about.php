@@ -191,20 +191,22 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
             <div class="vabout-hero-veil" style="background:linear-gradient(135deg, rgba(10,25,41,<?php echo esc_attr($ov); ?>), rgba(19,45,66,<?php echo esc_attr($ov_bot); ?>));" role="presentation"></div>
         <?php endif; ?>
 
-        <div class="container vabout-hero-inner">
-            <span class="vabout-pill vabout-pill-dark" style="<?php echo $styles['tag']; ?>"><?php echo esc_html($hero_tag); ?></span>
-            <h1 style="<?php echo $styles['title']; ?>"><?php echo wp_kses_post($hero_title); ?></h1>
-            <p class="vabout-hero-sub" style="<?php echo $styles['text']; ?>"><?php echo esc_html($hero_desc); ?></p>
+        <div class="container">
+            <div class="vabout-hero-inner">
+                <span class="vabout-pill vabout-pill-dark" style="<?php echo $styles['tag']; ?>"><?php echo esc_html($hero_tag); ?></span>
+                <h1 style="<?php echo $styles['title']; ?>"><?php echo wp_kses_post($hero_title); ?></h1>
+                <p class="vabout-hero-sub" style="<?php echo $styles['text']; ?>"><?php echo esc_html($hero_desc); ?></p>
 
-            <?php if (vance_get_theme_mod('vance_about_badges_show', true)) : ?>
-            <ul class="vabout-trustbadges">
-                <?php for ($i = 1; $i <= 3; $i++) :
-                    $label = vance_get_theme_mod("vance_about_badge{$i}_label", $badge_defaults[$i]);
-                    if (!$label) continue; ?>
-                    <li><span class="vabout-tb-ico"><?php echo vance_about_icon('check', 16, 2.5); ?></span><?php echo esc_html($label); ?></li>
-                <?php endfor; ?>
-            </ul>
-            <?php endif; ?>
+                <?php if (vance_get_theme_mod('vance_about_badges_show', true)) : ?>
+                <ul class="vabout-trustbadges">
+                    <?php for ($i = 1; $i <= 3; $i++) :
+                        $label = vance_get_theme_mod("vance_about_badge{$i}_label", $badge_defaults[$i]);
+                        if (!$label) continue; ?>
+                        <li><span class="vabout-tb-ico"><?php echo vance_about_icon('check', 16, 2.5); ?></span><?php echo esc_html($label); ?></li>
+                    <?php endfor; ?>
+                </ul>
+                <?php endif; ?>
+            </div>
         </div>
     </section>
     <?php endif; ?>
@@ -276,7 +278,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $pd     = $promo_defaults[$p];
         if (!get_theme_mod($prefix . '_show', $pd['show'])) continue;
 
-        $img     = get_theme_mod($prefix . '_img', $p === 1 ? $vabout_img . 'pharma-manufacturing.webp' : '');
+        $img     = get_theme_mod($prefix . '_img', $p === 1 ? $vabout_img . 'pharma-manufacturing.jpg' : '');
         $title   = get_theme_mod($prefix . '_title', $pd['title']);
         $sub     = get_theme_mod($prefix . '_sub', $pd['sub']);
         $desc    = get_theme_mod($prefix . '_desc', $pd['desc']);
@@ -526,12 +528,10 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $styles     = vance_get_style_string('vance_about_platform');
 
         $plat_defaults = array(
-            1 => array('Clinical Content Hub',    'Peer-reviewed research and patient education curated by gastroenterologists and dietitians.', 'book'),
-            2 => array('VANCE-Ai',                'Specialised AI trained on clinical gastroenterology to answer your health questions safely.', 'sparkles'),
-            3 => array('Patient Dashboard',       'Track health records, manage your Gastro tools, and connect with your care pathway.', 'dashboard'),
-            4 => array('HCP Professional Portal', 'Dedicated space for healthcare practitioners to access protocols and collaborate.', 'stethoscope'),
-            5 => array('Health Calculators',      'Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring.', 'calculator'),
-            6 => array('Education Courses',       'Multi-chapter learning pathways for both patients and clinicians.', 'graduation'),
+            1 => array('Clinical Content Hub', 'Peer-reviewed research and patient education curated by gastroenterologists and dietitians.', 'book'),
+            2 => array('VANCE-Ai',             'Specialised AI trained on clinical gastroenterology to answer your health questions safely.', 'sparkles'),
+            3 => array('My Dashboard',         'Track health records, manage your Gastro tools, and connect with your care pathway.', 'dashboard'),
+            4 => array('Health Calculators',   'Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring.', 'calculator'),
         );
     ?>
     <section class="vabout-digital" style="<?php echo $styles['section']; ?>">
@@ -543,7 +543,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
                     <p class="vabout-lead" style="<?php echo $styles['text']; ?>"><?php echo esc_html($plat_desc); ?></p>
 
                     <ul class="vabout-features">
-                        <?php for ($i = 1; $i <= 6; $i++) :
+                        <?php for ($i = 1; $i <= 4; $i++) :
                             $pt = vance_get_theme_mod("vance_about_plat{$i}_title", $plat_defaults[$i][0]);
                             $pdz= vance_get_theme_mod("vance_about_plat{$i}_desc",  $plat_defaults[$i][1]);
                         ?>
@@ -702,7 +702,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-pill {
     display: inline-block;
     padding: 7px 16px;
-    border-radius: var(--vab-r-pill);
+    border-radius: 0;
     background: rgba(0,128,128,.10);
     color: var(--vab-teal-dark);
     font-family: var(--font-main, 'Inter', sans-serif);
@@ -755,9 +755,9 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-hero {
     position: relative;
     display: flex;
-    align-items: center;
-    min-height: 78vh;
-    padding: 110px 0 130px;
+    align-items: flex-start;
+    min-height: 332px;
+    padding: 72px 0 116px;
     overflow: hidden;
     background: linear-gradient(135deg, var(--vab-navy), var(--vab-navy-2) 55%, #0d3540);
 }
@@ -770,7 +770,8 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     height: 120px;
     background: linear-gradient(to top, var(--vab-white), transparent);
 }
-.vabout-hero-inner { position: relative; z-index: 2; max-width: 820px; }
+.vabout-hero > .container { width: 100%; }
+.vabout-hero-inner { position: relative; z-index: 2; max-width: 820px; margin: 0; }
 .vabout-hero h1 { color: #fff; margin: 22px 0 20px; }
 /* Needs the extra class: `.vabout p` would otherwise out-specify this and paint
    the subtitle muted grey on the navy hero (fails contrast). */
@@ -796,8 +797,8 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 /* ============================ STATS ============================ */
 /* Stats sit clear of the hero rather than overlapping it — 100px of breathing
    room below the hero's fade-out, per client direction. */
-.vabout-stats { background: var(--vab-white); padding: 100px 0 80px; position: relative; z-index: 3; }
-.vabout-stats-overlap { margin-top: 0; padding-top: 100px; }
+.vabout-stats { background: var(--vab-white); padding: 50px 0 40px; position: relative; z-index: 3; }
+.vabout-stats-overlap { margin-top: 0; padding-top: 50px; }
 .vabout-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
 .vabout-stat {
     position: relative;
@@ -841,8 +842,8 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     color: var(--vab-teal);
 }
 .vabout-stat-figure { display: flex; align-items: baseline; justify-content: center; gap: 2px; margin: 0; }
-.vabout-stat-num { font-family: var(--font-heading, 'Outfit', sans-serif); font-size: 2.85rem; font-weight: 700; line-height: 1; color: var(--vab-navy); }
-.vabout-stat-suffix { font-family: var(--font-heading, 'Outfit', sans-serif); font-size: 1.7rem; font-weight: 700; color: var(--vab-teal); }
+.vabout-stat-num { font-family: var(--font-heading, 'Outfit', sans-serif); font-size: 2.1rem; font-weight: 700; line-height: 1; color: var(--vab-navy); }
+.vabout-stat-suffix { font-family: var(--font-heading, 'Outfit', sans-serif); font-size: 1.25rem; font-weight: 700; color: var(--vab-teal); }
 /* 20px bottom margin is the guaranteed minimum gap; the bar's auto top margin
    then absorbs whatever slack a shorter (single-line) label leaves, so every
    bar lands on the same baseline across the row. */
@@ -852,7 +853,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-stat.is-visible .vabout-stat-bar i { width: 100%; }
 
 /* ============================ STORY ============================ */
-.vabout-story { background: var(--vab-warm); padding: 100px 0; }
+.vabout-story { background: var(--vab-warm); padding: 50px 0; }
 .vabout-story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
 .vabout-story-grid.is-flipped .vabout-story-media { order: 2; }
 .vabout-story-media { position: relative; border-radius: var(--vab-r-lg); overflow: hidden; box-shadow: var(--vab-sh-lg); }
@@ -880,7 +881,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-story-body .vabout-btn { margin-top: 30px; }
 
 /* ========================== EVOLUTION ========================== */
-.vabout-evolution { padding: 100px 0; }
+.vabout-evolution { padding: 50px 0; }
 .vabout-timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
 .vabout-tl-item { text-align: center; }
 .vabout-tl-ico {
@@ -906,7 +907,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-tl-card p  { margin: 0; padding: 0 24px 26px; font-size: .95rem; }
 
 /* =========================== MISSION =========================== */
-.vabout-mission { padding: 118px 0; overflow: hidden; background: var(--vab-light); }
+.vabout-mission { padding: 59px 0; overflow: hidden; background: var(--vab-light); }
 .vabout-mission-media { position: absolute; inset: 0; background-size: cover; background-position: center; }
 .vabout-mission-veil {
     position: absolute; inset: 0;
@@ -938,7 +939,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-pillar p  { margin: 0; font-size: .9rem; line-height: 1.65; }
 
 /* ============================ TRUST ============================ */
-.vabout-trust { background: var(--vab-warm); padding: 100px 0; }
+.vabout-trust { background: var(--vab-warm); padding: 50px 0; }
 .vabout-trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
 .vabout-trust-card {
     background: var(--vab-white);
@@ -957,7 +958,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-trust-body p  { margin: 0; font-size: .95rem; }
 
 /* ========================= TESTIMONIALS ========================= */
-.vabout-testimonials { padding: 100px 0; }
+.vabout-testimonials { padding: 50px 0; }
 .vabout-testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
 .vabout-testi {
     position: relative;
@@ -991,7 +992,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-testi figcaption em { display: block; font-size: .84rem; font-style: normal; color: var(--vab-muted); }
 
 /* =========================== DIGITAL =========================== */
-.vabout-digital { background: var(--vab-light); padding: 100px 0; }
+.vabout-digital { background: var(--vab-light); padding: 50px 0; }
 .vabout-digital-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; }
 .vabout-digital-body h2 { margin: 14px 0 16px; }
 .vabout-digital-body .vabout-lead { margin: 0 0 34px; }
@@ -1033,7 +1034,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 
 /* ============================= CTA ============================= */
 .vabout-cta {
-    padding: 84px 0;
+    padding: 42px 0;
     text-align: center;
     background: linear-gradient(135deg, var(--vab-navy), var(--vab-navy-2));
 }
@@ -1088,7 +1089,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 }
 
 /* ========================= PAGE CONTENT ========================= */
-.vabout-content { padding: 80px 0; }
+.vabout-content { padding: 40px 0; }
 .vabout-content .entry-content { line-height: 1.8; }
 
 /* ====================== SCROLL REVEAL ======================
@@ -1108,18 +1109,17 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     .vabout-media-tall { height: 400px; min-height: 400px; }
 }
 @media (max-width: 768px) {
-    .vabout-hero { min-height: 0; padding: 80px 0 100px; }
     .vabout-hero-sub { font-size: 1.05rem; }
     .vabout-trustbadges { flex-direction: column; align-items: flex-start; }
-    .vabout-stats { padding: 64px 0 60px; }
-    .vabout-stats-overlap { margin-top: 0; padding-top: 64px; }
+    .vabout-stats { padding: 32px 0 30px; }
+    .vabout-stats-overlap { margin-top: 0; padding-top: 32px; }
     .vabout-stats-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
     .vabout-stat { padding: 26px 16px; }
-    .vabout-stat-num { font-size: 2.1rem; }
-    .vabout-stat-suffix { font-size: 1.3rem; }
+    .vabout-stat-num { font-size: 1.6rem; }
+    .vabout-stat-suffix { font-size: 1rem; }
     .vabout-story, .vabout-evolution, .vabout-trust,
-    .vabout-testimonials, .vabout-digital { padding: 64px 0; }
-    .vabout-mission { padding: 72px 0; }
+    .vabout-testimonials, .vabout-digital { padding: 32px 0; }
+    .vabout-mission { padding: 36px 0; }
     .vabout-story-grid { grid-template-columns: 1fr; gap: 36px; }
     .vabout-story-grid.is-flipped .vabout-story-media { order: 0; }
     .vabout-story-media img { height: 320px; }

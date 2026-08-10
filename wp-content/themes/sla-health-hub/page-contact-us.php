@@ -111,7 +111,7 @@ get_header(); ?>
     ?>
     <section class="section-padding" style="background: var(--accent-color, #f8fafc);">
         <div class="container">
-            <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 60px; align-items: start;">
+            <div class="vcontact-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr); gap: 60px; align-items: start;">
 
                 <!-- ─ Left column: details ───────────────────────────── -->
                 <div>
@@ -255,7 +255,7 @@ get_header(); ?>
                         <input type="hidden" name="vance_recaptcha_token" id="vance_recaptcha_token" value="">
                         <div id="contact-form-client-error" style="display:none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; color: #dc2626; font-size: 14px;"></div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="vcontact-name-email-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; margin-bottom: 20px;">
                             <div>
                                 <label for="contact_name" style="display: block; font-size: 13px; font-weight: 700; color: var(--secondary-color); margin-bottom: 8px; letter-spacing: 0.3px;">
                                     Full Name <span style="color: var(--primary-color);">*</span>
@@ -469,5 +469,22 @@ get_header(); ?>
     </section>
 
 </main>
+
+<style>
+/* The details/form layout and the Name/Email row are built with inline-style
+   CSS Grid (1fr tracks), which have no explicit mobile breakpoint. 1fr alone
+   sizes a track to at least its content's min-content width, so on narrow
+   screens the columns refused to shrink and forced the whole page to render
+   zoomed out. minmax(0,1fr) on the inline styles stops that blowout; these
+   breakpoints additionally stack the columns so fields stay full-width and
+   readable instead of being squeezed side by side.
+*/
+@media (max-width: 900px) {
+    .vcontact-grid { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 520px) {
+    .vcontact-name-email-grid { grid-template-columns: 1fr !important; }
+}
+</style>
 
 <?php get_footer(); ?>
