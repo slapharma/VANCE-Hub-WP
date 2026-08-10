@@ -1463,12 +1463,21 @@ function vance_google_login_button_shortcode( $atts ) {
     </div>
     <script>
     window.vanceLoginRedirect = ' . wp_json_encode( $redirect_to ) . ';
+    window.vanceGoogleNonce = ' . wp_json_encode( $nonce ) . ';
+    // This page can be served from LiteSpeed\'s full-page cache, which freezes
+    // the nonce above at whatever moment the cache last regenerated. Refresh
+    // it via admin-ajax.php (never page-cached) so it matches this visitor;
+    // on failure the original value stays as a fallback.
+    fetch("' . esc_url( admin_url( 'admin-ajax.php' ) ) . '?action=vance_refresh_auth_nonces", { credentials: "same-origin" })
+        .then(function(r){ return r.json(); })
+        .then(function(data){ if (data.success && data.data.google) { window.vanceGoogleNonce = data.data.google; } })
+        .catch(function(){});
     function handleGoogleCredentialResponse(response) {
         fetch("' . admin_url('admin-ajax.php') . '", {
             method: "POST",
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
             body: "action=vance_google_oauth_callback&credential=" + response.credential +
-                  "&nonce=' . $nonce . '" +
+                  "&nonce=" + encodeURIComponent(window.vanceGoogleNonce) +
                   "&redirect_to=" + encodeURIComponent(window.vanceLoginRedirect || "")
         })
         .then(res => res.json())
@@ -1606,6 +1615,30 @@ function vance_google_oauth_callback() {
 }
 add_action( 'wp_ajax_nopriv_vance_google_oauth_callback', 'vance_google_oauth_callback' );
 add_action( 'wp_ajax_vance_google_oauth_callback', 'vance_google_oauth_callback' );
+
+/**
+ * Fresh auth nonces, fetched via AJAX rather than trusted from page HTML.
+ *
+ * LiteSpeed Cache serves this theme's pages from a full-page cache, so a
+ * nonce embedded directly in server-rendered markup is frozen at whatever
+ * moment the cache last regenerated — every visitor since then gets served
+ * that same nonce, which wp_verify_nonce() then rejects because it no longer
+ * matches their own anonymous-session token. admin-ajax.php requests are
+ * never page-cached, so nonces fetched here are always current. Public and
+ * unauthenticated on purpose: a nonce is a per-action anti-CSRF token, not a
+ * secret, and the forms it protects (Google/email sign-in, signup, password
+ * reset) are themselves unauthenticated.
+ */
+function vance_refresh_auth_nonces() {
+    wp_send_json_success( array(
+        'google'       => wp_create_nonce( 'google_oauth_nonce' ),
+        'login'        => wp_create_nonce( 'vance_login_nonce' ),
+        'signup'       => wp_create_nonce( 'vance_quick_register' ),
+        'lostpassword' => wp_create_nonce( 'vance_lostpassword_nonce' ),
+    ) );
+}
+add_action( 'wp_ajax_nopriv_vance_refresh_auth_nonces', 'vance_refresh_auth_nonces' );
+add_action( 'wp_ajax_vance_refresh_auth_nonces', 'vance_refresh_auth_nonces' );
 
 /**
  * Redirect bare GET hits on wp-login.php to the themed /login/ page.
@@ -1872,6 +1905,18 @@ function vance_auth_modal_shortcode( $atts ) {
     <script>
     (function(){
         var CFG = <?php echo $cfg; // already JSON-encoded by wp_json_encode ?>;
+
+        // This page can be served from LiteSpeed's full-page cache, which
+        // freezes CFG.nonces at whatever moment the cache last regenerated —
+        // every visitor since then gets the same nonce, which wp_verify_nonce()
+        // then rejects. Refresh via admin-ajax.php (never page-cached) so the
+        // nonces match this visitor; on failure the original values remain as
+        // a fallback rather than blocking the form.
+        fetch(CFG.ajaxUrl + '?action=vance_refresh_auth_nonces', { credentials: 'same-origin' })
+            .then(function(r){ return r.json(); })
+            .then(function(data){ if (data.success) { CFG.nonces = data.data; } })
+            .catch(function(){});
+
         var errEl = document.getElementById('vance-auth-error');
 
         function showError(msg){
