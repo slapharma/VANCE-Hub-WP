@@ -11,8 +11,10 @@
     <meta name="theme-color" content="#008080" media="(prefers-color-scheme: dark)">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Vance Medical provides pharma-grade nutritional health resources, clinical reviews, and education for healthcare practitioners and patients.">
-    <title>Vance Medical. Pharma-Grade Nutritional Health.</title>
+    <?php // No hardcoded <title> or meta description here: the theme declares
+          // add_theme_support('title-tag') and the SEO plugin emits its own
+          // description, both via wp_head(). A static tag here is printed FIRST
+          // and silently wins, forcing one title on every page of the site. ?>
     <link rel="icon" type="image/png" href="<?php echo get_template_directory_uri(); ?>/assets/img/favicon.png">
     <link rel="profile" href="https://gmpg.org/xfn/11">
     <?php wp_head(); ?>
