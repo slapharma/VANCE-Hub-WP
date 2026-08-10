@@ -172,7 +172,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $hero_img      = vance_get_theme_mod('vance_about_hero_img', $vabout_img . 'diverse-patients-clinic.jpg');
         $hero_bg_color = vance_get_theme_mod('vance_about_hero_bg_color');
         $hero_tag      = vance_get_theme_mod('vance_about_hero_tag', 'About Vance Medical Hub');
-        $hero_title    = vance_get_theme_mod('vance_about_hero_title', 'Trusted by Patients. <span class="highlight">Driven by Science.</span>');
+        $hero_title    = vance_get_theme_mod('vance_about_hero_title', 'Trusted by Patients.<br><span class="highlight">Driven by Science.</span>');
         $hero_desc     = vance_get_theme_mod('vance_about_hero_desc', 'We bridge pharmaceutical expertise with nutritional science to empower patients living with gastrointestinal conditions, delivering evidence-based care you can trust.');
         $styles        = vance_get_style_string('vance_about_hero');
 
