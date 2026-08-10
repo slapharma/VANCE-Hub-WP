@@ -118,13 +118,33 @@
                 <span style="font-size: 32px;">🔖</span>
             </div>
             <h2 style="font-size: 24px; color: #0f172a; margin-bottom: 12px; font-family: var(--font-heading);">Join the Vance Medical Hub</h2>
-            <p style="font-size: 16px; color: #64748b; margin-bottom: 32px; line-height: 1.6;">Save your favorite articles, track your reading progress, and access exclusive professional resources by joining our community.</p>
-            
-            <div style="margin-bottom: 24px;">
+            <p style="font-size: 16px; color: #64748b; margin-bottom: 24px; line-height: 1.6;">Save your favorite articles, track your reading progress, and access exclusive professional resources by joining our community.</p>
+
+            <div style="margin-bottom: 16px;">
                 <?php echo do_shortcode('[google_login]'); ?>
             </div>
-            
-            <p style="font-size: 14px; color: #94a3b8; margin: 0;">Already have an account? <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>" style="color: #008080; font-weight: 600; text-decoration: none;">Sign In</a></p>
+
+            <div style="text-align:center;color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:12px 0;position:relative;">
+                <div style="position:absolute;left:0;right:0;top:50%;border-top:1px solid #E2E8F0;z-index:0;"></div>
+                <span style="background:#fff;padding:0 10px;position:relative;z-index:1;">or</span>
+            </div>
+
+            <form id="guest-save-email-form" style="text-align:left;" novalidate>
+                <input type="email" id="guest-save-email" name="email" required autocomplete="email" inputmode="email" placeholder="Email address" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #E2E8F0;font-size:15px;margin-bottom:10px;border-radius:0;">
+                <input type="password" id="guest-save-password" name="password" required minlength="8" autocomplete="new-password" placeholder="Password, 8 characters minimum" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #E2E8F0;font-size:15px;margin-bottom:10px;border-radius:0;">
+                <!-- Honeypot — bots fill anything visible; real users don't fill display:none fields -->
+                <div style="position:absolute;left:-5000px;" aria-hidden="true">
+                    <input type="text" id="guest-save-hp" tabindex="-1" value="">
+                </div>
+                <label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#64748b;text-align:left;margin-bottom:14px;cursor:pointer;font-weight:400;">
+                    <input type="checkbox" id="guest-save-terms" required style="width:auto;margin-top:2px;">
+                    <span>I agree to the <a href="<?php echo esc_url( home_url( '/terms-of-use/' ) ); ?>" target="_blank" style="color:#008080;">Terms</a> and <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>" target="_blank" style="color:#008080;">Privacy Policy</a>.</span>
+                </label>
+                <div id="guest-save-error" role="alert" style="display:none;padding:10px 14px;margin-bottom:12px;background:#FEF2F2;border-left:3px solid #DC2626;color:#991B1B;font-size:13px;text-align:left;"></div>
+                <button type="submit" id="guest-save-submit" style="width:100%;padding:14px;background:#008080;color:white;border:none;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.4px;text-transform:uppercase;border-radius:0;">Create account</button>
+            </form>
+
+            <p style="font-size: 14px; color: #94a3b8; margin: 16px 0 0;">Already have an account? <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>" style="color: #008080; font-weight: 600; text-decoration: none;">Sign In</a></p>
         </div>
     </div>
 
@@ -151,6 +171,71 @@
         document.getElementById('guest-save-modal').style.display = 'none';
         document.body.style.overflow = '';
     }
+
+    (function () {
+        var form = document.getElementById('guest-save-email-form');
+        if (!form) { return; }
+        var errEl      = document.getElementById('guest-save-error');
+        var submitBtn  = document.getElementById('guest-save-submit');
+        var ajaxUrl    = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+        var signupNonce = '';
+
+        // This page can be served from LiteSpeed's full-page cache, so a nonce
+        // baked into the cached HTML would go stale. Refresh it via
+        // admin-ajax.php (never page-cached) instead.
+        fetch(ajaxUrl + '?action=vance_refresh_auth_nonces', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { if (data.success) { signupNonce = data.data.signup; } })
+            .catch(function () {});
+
+        function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+        function clearErr() { errEl.textContent = ''; errEl.style.display = 'none'; }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearErr();
+            var email = document.getElementById('guest-save-email').value.trim();
+            var password = document.getElementById('guest-save-password').value;
+            if (!email || email.indexOf('@') < 1) { showErr('Please enter a valid email.'); return; }
+            if (password.length < 8) { showErr('Password must be at least 8 characters.'); return; }
+            if (!document.getElementById('guest-save-terms').checked) {
+                showErr('Please agree to the Terms and Privacy Policy to continue.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account…';
+
+            var body = new URLSearchParams({
+                action: 'vance_quick_register',
+                nonce: signupNonce,
+                email: email,
+                password: password,
+                consent_terms: '1',
+                role: 'patient',
+                vance_hp: document.getElementById('guest-save-hp').value,
+                source: 'guest_save_modal'
+            });
+
+            fetch(ajaxUrl, {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body.toString()
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create account';
+                if (data.success) {
+                    window.location.href = (data.data && data.data.redirect) || '/dashboard/?vance_welcome=1';
+                } else {
+                    showErr((data.data && data.data.message) || 'Something went wrong, please try again.');
+                }
+            }).catch(function () {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create account';
+                showErr('Network error, please try again.');
+            });
+        });
+    })();
     </script>
 
     <style>
