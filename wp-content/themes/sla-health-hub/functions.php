@@ -1973,7 +1973,7 @@ function vance_auth_modal_shortcode( $atts ) {
                     data-auto_prompt="false"></div>
                 <div class="g_id_signin" data-type="standard" data-shape="rectangular"
                     data-theme="outline" data-text="continue_with" data-size="large"
-                    data-logo_alignment="left" data-width="340"></div>
+                    data-logo_alignment="left"></div>
             </div>
             <div class="vance-auth-divider"><span>or</span></div>
             <?php endif; ?>
