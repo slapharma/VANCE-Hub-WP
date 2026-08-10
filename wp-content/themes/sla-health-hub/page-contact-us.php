@@ -4,76 +4,29 @@
  */
 
 // ── Form processing (before headers are sent) ─────────────────────────────
+// vance_contact_recaptcha_verify() and vance_contact_process_submission() live
+// in functions.php (loaded on every request, including admin-ajax.php) rather
+// than here — this file is a page TEMPLATE, only included when WordPress
+// actually renders /contact-us/. Defining the AJAX action's add_action() call
+// here meant it never registered on admin-ajax.php requests at all, since
+// admin-ajax.php never loads page templates — every AJAX submit attempt hit
+// WordPress's generic "unknown action" fallback instead of this form's logic.
 $contact_sent  = false;
 $contact_error = '';
 
-/**
- * Verify a reCAPTCHA v3 token against Google's siteverify endpoint.
- * Returns true (i.e. "skip protection") when no secret key is configured yet,
- * so the form keeps working before an admin sets one up in the Customizer.
- */
-function vance_contact_recaptcha_verify( $token ) {
-    $secret = vance_get_theme_mod( 'vance_recaptcha_secret_key', '' );
-    if ( '' === $secret ) {
-        return true;
-    }
-    if ( '' === $token ) {
-        return false;
-    }
-    $response = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', array(
-        'timeout' => 10,
-        'body'    => array(
-            'secret'   => $secret,
-            'response' => $token,
-            'remoteip' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
-        ),
-    ) );
-    if ( is_wp_error( $response ) ) {
-        return true; // Google unreachable — don't block real submitters over a network hiccup.
-    }
-    $body = json_decode( wp_remote_retrieve_body( $response ), true );
-    // v3 returns a 0.0–1.0 bot-likelihood score; 0.5 is Google's own suggested cutoff.
-    return ! empty( $body['success'] ) && ( ! isset( $body['score'] ) || $body['score'] >= 0.5 );
-}
-
+// Native-POST fallback for no-JS visitors, or if the AJAX path (functions.php)
+// is ever unreachable (fetch blocked, JS disabled, etc.) — the form's
+// method="post" action stays pointed at this same page for exactly that reason.
 if ( isset( $_POST['vance_contact_submit'] ) && wp_verify_nonce( $_POST['vance_contact_nonce'], 'vance_contact_form' ) ) {
-    $name    = sanitize_text_field( $_POST['contact_name'] ?? '' );
-    $email   = sanitize_email( $_POST['contact_email'] ?? '' );
-    $subject = sanitize_text_field( $_POST['contact_subject'] ?? '' );
-    $message = sanitize_textarea_field( $_POST['contact_message'] ?? '' );
-    $token   = sanitize_text_field( $_POST['vance_recaptcha_token'] ?? '' );
-
-    if ( empty( $name ) || empty( $email ) || empty( $message ) ) {
-        $contact_error = 'Please fill in all required fields.';
-    } elseif ( ! is_email( $email ) ) {
-        $contact_error = 'Please enter a valid email address.';
-    } elseif ( ! vance_contact_recaptcha_verify( $token ) ) {
-        $contact_error = 'We could not verify this submission as human. Please try again.';
-    } else {
-        $to        = get_option( 'admin_email' );
-        $site_name = get_bloginfo( 'name' );
-        $from_addr = 'noreply@' . preg_replace( '#^www\.#', '', wp_parse_url( home_url(), PHP_URL_HOST ) );
-        $subject   = $subject ? "Contact: $subject" : "New Contact Form Submission – Vance Medical";
-        $body      = "Name: $name\nEmail: $email\n\n$message";
-        $headers   = array(
-            "From: {$site_name} <{$from_addr}>",
-            "Reply-To: $name <$email>",
-        );
-
-        if ( wp_mail( $to, $subject, $body, $headers ) ) {
-            $contact_sent = true;
-            // Best-effort confirmation to the submitter — failure here should
-            // never block the "Message Sent!" state, the admin copy already went out.
-            wp_mail(
-                $email,
-                "We've received your message – {$site_name}",
-                "Hi {$name},\n\nThanks for contacting {$site_name}. A member of our team will get back to you within one business day.\n\nFor your records, here's what you sent us:\n\n{$message}",
-                array( "From: {$site_name} <{$from_addr}>" )
-            );
-        } else {
-            $contact_error = 'There was a problem sending your message. Please try again or email us directly.';
-        }
-    }
+    $result = vance_contact_process_submission(
+        sanitize_text_field( wp_unslash( $_POST['contact_name'] ?? '' ) ),
+        sanitize_email( wp_unslash( $_POST['contact_email'] ?? '' ) ),
+        sanitize_text_field( wp_unslash( $_POST['contact_subject'] ?? '' ) ),
+        sanitize_textarea_field( wp_unslash( $_POST['contact_message'] ?? '' ) ),
+        sanitize_text_field( wp_unslash( $_POST['vance_recaptcha_token'] ?? '' ) )
+    );
+    $contact_sent  = $result['success'];
+    $contact_error = $result['error'];
 }
 
 get_header(); ?>
@@ -273,8 +226,10 @@ get_header(); ?>
                 <!-- ─ Right column: contact form ─────────────────────── -->
                 <div style="background: white; border-radius: 20px; padding: 48px 44px; box-shadow: 0 4px 32px rgba(10,25,41,.1);">
 
-                    <?php if ( $contact_sent ) : ?>
-                    <div style="text-align: center; padding: 40px 0;">
+                    <!-- Rendered server-side for the no-JS fallback (native POST below actually
+                         reached this page) AND used as the JS AJAX success target — JS toggles
+                         these two containers directly instead of relying on a page reload. -->
+                    <div id="contact-form-success" style="<?php echo $contact_sent ? '' : 'display:none;'; ?> text-align: center; padding: 40px 0;">
                         <div style="width: 72px; height: 72px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
                             <svg width="36" height="36" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                 <path d="M20 6L9 17l-5-5"/>
@@ -284,7 +239,7 @@ get_header(); ?>
                         <p style="color: var(--text-light); font-size: 16px; line-height: 1.7;">Thank you for reaching out. A member of our team will get back to you within one business day.</p>
                     </div>
 
-                    <?php else : ?>
+                    <div id="contact-form-wrapper" style="<?php echo $contact_sent ? 'display:none;' : ''; ?>">
 
                     <h3 style="font-size: 24px; font-weight: 800; color: var(--secondary-color); margin: 0 0 8px;">Send Us a Message</h3>
                     <p style="color: var(--text-light); font-size: 15px; margin: 0 0 32px;">Fields marked <span style="color: var(--primary-color);">*</span> are required.</p>
@@ -367,6 +322,8 @@ get_header(); ?>
                         </p>
                     </form>
 
+                    </div><!-- / #contact-form-wrapper -->
+
                     <?php $recaptcha_site_key = vance_get_theme_mod( 'vance_recaptcha_site_key', '' ); ?>
                     <?php if ( $recaptcha_site_key ) : ?>
                     <script src="https://www.google.com/recaptcha/api.js?render=<?php echo esc_attr( $recaptcha_site_key ); ?>"></script>
@@ -374,12 +331,44 @@ get_header(); ?>
                     <script>
                     (function () {
                         var form     = document.getElementById( 'contact-form' );
+                        var wrapper  = document.getElementById( 'contact-form-wrapper' );
+                        var success  = document.getElementById( 'contact-form-success' );
                         var errBox   = document.getElementById( 'contact-form-client-error' );
                         var siteKey  = <?php echo wp_json_encode( $recaptcha_site_key ); ?>;
                         var tokenEl  = document.getElementById( 'vance_recaptcha_token' );
+                        var submitBtn = form ? form.querySelector( 'button[type="submit"]' ) : null;
+                        var ajaxUrl  = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
                         if ( ! form ) {
                             return;
                         }
+
+                        // Submits via fetch()/admin-ajax.php instead of a native form POST +
+                        // page reload. The native-POST path (form's method/action attributes)
+                        // stays in the markup purely as a no-JS fallback — with JS active this
+                        // handler always wins by calling preventDefault() unconditionally.
+                        //
+                        // Reasons for the switch, found while chasing a "form resets with no
+                        // feedback" report: (1) this page can be served from LiteSpeed's
+                        // full-page cache, freezing the nonce at whatever moment the cache last
+                        // regenerated, so a stale nonce reaching the server via a real page POST
+                        // showed neither an error nor a success state; (2) in some browser/
+                        // automation contexts form.requestSubmit() silently produced no network
+                        // request at all — a full-page-navigation submission has no way to
+                        // recover or even report that. An AJAX POST sidesteps both: the nonce is
+                        // fetched fresh moments before use via this same request, and success/
+                        // failure is read directly from the fetch() promise rather than inferred
+                        // from whether a navigation happened to occur.
+                        //
+                        // The nonce still needs an explicit refresh here: hitting an uncached
+                        // endpoint doesn't make the nonce *value* fresh if that value was read
+                        // out of the page's own (possibly cached) HTML. Fetched via the same
+                        // never-page-cached admin-ajax.php action used for the login/signup
+                        // forms elsewhere on this site; on failure the original page-rendered
+                        // value is kept as a fallback rather than blocking the submission.
+                        var nonceReady = fetch( ajaxUrl + '?action=vance_refresh_auth_nonces', { credentials: 'same-origin' } )
+                            .then( function ( r ) { return r.json(); } )
+                            .then( function ( data ) { return ( data.success && data.data.contact ) ? data.data.contact : form.vance_contact_nonce.value; } )
+                            .catch( function () { return form.vance_contact_nonce.value; } );
 
                         function showClientError( msg ) {
                             errBox.textContent = msg;
@@ -399,34 +388,80 @@ get_header(); ?>
                             return '';
                         }
 
+                        function getRecaptchaToken() {
+                            if ( ! siteKey || ! window.grecaptcha ) {
+                                return Promise.resolve( '' );
+                            }
+                            // grecaptcha.ready()/.execute() can fail to ever call back at all —
+                            // not reject, just never settle (seen with certain domain/site-key
+                            // mismatches and some automation contexts). The existing .catch()
+                            // only covers a genuine rejection; a hang here would otherwise leave
+                            // the submission permanently stuck. A hard timeout guarantees this
+                            // always resolves either way, with a real or an empty token.
+                            return new Promise( function ( resolve ) {
+                                var settled = false;
+                                var settle  = function ( token ) {
+                                    if ( settled ) { return; }
+                                    settled = true;
+                                    resolve( token || '' );
+                                };
+                                setTimeout( function () { settle( '' ); }, 10000 );
+                                grecaptcha.ready( function () {
+                                    grecaptcha.execute( siteKey, { action: 'contact_form' } )
+                                        .then( function ( token ) { tokenEl.value = token; settle( token ); } )
+                                        .catch( function () { settle( '' ); } );
+                                } );
+                            } );
+                        }
+
+                        function submitViaAjax( nonce, token ) {
+                            var body = new URLSearchParams();
+                            body.set( 'action', 'vance_contact_submit' );
+                            body.set( 'nonce', nonce );
+                            body.set( 'contact_name', form.contact_name.value.trim() );
+                            body.set( 'contact_email', form.contact_email.value.trim() );
+                            body.set( 'contact_subject', form.contact_subject.value );
+                            body.set( 'contact_message', form.contact_message.value.trim() );
+                            body.set( 'vance_recaptcha_token', token );
+
+                            return fetch( ajaxUrl, {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: body.toString()
+                            } )
+                                .then( function ( r ) { return r.json(); } )
+                                .then( function ( data ) {
+                                    if ( data.success ) {
+                                        wrapper.style.display = 'none';
+                                        success.style.display = '';
+                                        success.scrollIntoView( { behavior: 'smooth', block: 'center' } );
+                                    } else {
+                                        showClientError( ( data.data && data.data.message ) || 'Something went wrong, please try again.' );
+                                    }
+                                } )
+                                .catch( function () {
+                                    showClientError( 'Network error, please try again or email us directly.' );
+                                } );
+                        }
+
                         form.addEventListener( 'submit', function ( e ) {
+                            e.preventDefault();
                             errBox.style.display = 'none';
                             var msg = fieldErrors();
                             if ( msg ) {
-                                e.preventDefault();
                                 showClientError( msg );
                                 return;
                             }
-                            if ( siteKey && window.grecaptcha && ! form.dataset.recaptchaDone ) {
-                                e.preventDefault();
-                                grecaptcha.ready( function () {
-                                    grecaptcha.execute( siteKey, { action: 'contact_form' } ).then( function ( token ) {
-                                        tokenEl.value = token;
-                                        form.dataset.recaptchaDone = '1';
-                                        form.requestSubmit ? form.requestSubmit() : form.submit();
-                                    } ).catch( function () {
-                                        // reCAPTCHA failed to load/execute — submit anyway rather than
-                                        // blocking a genuine visitor; the server-side check still runs
-                                        // and simply treats a missing token as unverified.
-                                        form.dataset.recaptchaDone = '1';
-                                        form.requestSubmit ? form.requestSubmit() : form.submit();
-                                    } );
+                            if ( submitBtn ) { submitBtn.disabled = true; }
+                            Promise.all( [ nonceReady, getRecaptchaToken() ] )
+                                .then( function ( results ) { return submitViaAjax( results[0], results[1] ); } )
+                                .finally( function () {
+                                    if ( submitBtn ) { submitBtn.disabled = false; }
                                 } );
-                            }
                         } );
                     })();
                     </script>
-                    <?php endif; ?>
                 </div><!-- / form card -->
 
             </div><!-- / grid -->

@@ -504,6 +504,24 @@ function vance_health_hub_scripts() {
         );
     }
 
+    // User Guide page — CSS/JS enqueued only on that page (scroll-reveal,
+    // scrollspy sub-nav, screenshot/GIF lightbox).
+    if ( is_page_template( 'page-user-guide.php' ) ) {
+        wp_enqueue_style(
+            'vance-user-guide',
+            get_template_directory_uri() . '/assets/css/user-guide.css',
+            array( 'vance-main-style' ),
+            @filemtime( get_template_directory() . '/assets/css/user-guide.css' ) ?: '1.0.0'
+        );
+        wp_enqueue_script(
+            'vance-user-guide',
+            get_template_directory_uri() . '/assets/js/user-guide.js',
+            array(),
+            @filemtime( get_template_directory() . '/assets/js/user-guide.js' ) ?: '1.0.0',
+            true
+        );
+    }
+
     // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the
     // highlight-to-ask pill needs to be live on every article.
     wp_enqueue_style(
@@ -1635,10 +1653,123 @@ function vance_refresh_auth_nonces() {
         'login'        => wp_create_nonce( 'vance_login_nonce' ),
         'signup'       => wp_create_nonce( 'vance_quick_register' ),
         'lostpassword' => wp_create_nonce( 'vance_lostpassword_nonce' ),
+        'contact'      => wp_create_nonce( 'vance_contact_form' ),
     ) );
 }
 add_action( 'wp_ajax_nopriv_vance_refresh_auth_nonces', 'vance_refresh_auth_nonces' );
 add_action( 'wp_ajax_vance_refresh_auth_nonces', 'vance_refresh_auth_nonces' );
+
+/**
+ * Verify a reCAPTCHA v3 token against Google's siteverify endpoint.
+ * Returns true (i.e. "skip protection") when no secret key is configured yet,
+ * so the contact form (page-contact-us.php) keeps working before an admin
+ * sets one up in the Customizer.
+ */
+function vance_contact_recaptcha_verify( $token ) {
+    $secret = vance_get_theme_mod( 'vance_recaptcha_secret_key', '' );
+    if ( '' === $secret ) {
+        return true;
+    }
+    if ( '' === $token ) {
+        return false;
+    }
+    $response = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', array(
+        'timeout' => 10,
+        'body'    => array(
+            'secret'   => $secret,
+            'response' => $token,
+            'remoteip' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
+        ),
+    ) );
+    if ( is_wp_error( $response ) ) {
+        return true; // Google unreachable — don't block real submitters over a network hiccup.
+    }
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    // v3 returns a 0.0–1.0 bot-likelihood score; 0.5 is Google's own suggested cutoff.
+    return ! empty( $body['success'] ) && ( ! isset( $body['score'] ) || $body['score'] >= 0.5 );
+}
+
+/**
+ * Shared validation + send logic for the contact form's native-POST fallback
+ * (page-contact-us.php) and its AJAX handler (vance_ajax_contact_submit,
+ * directly below). Expects already-sanitized values.
+ * Returns array('success' => bool, 'error' => string).
+ */
+function vance_contact_process_submission( $name, $email, $subject, $message, $token ) {
+    if ( empty( $name ) || empty( $email ) || empty( $message ) ) {
+        return array( 'success' => false, 'error' => 'Please fill in all required fields.' );
+    }
+    if ( ! is_email( $email ) ) {
+        return array( 'success' => false, 'error' => 'Please enter a valid email address.' );
+    }
+    if ( ! vance_contact_recaptcha_verify( $token ) ) {
+        return array( 'success' => false, 'error' => 'We could not verify this submission as human. Please try again.' );
+    }
+
+    $to        = get_option( 'admin_email' );
+    $site_name = get_bloginfo( 'name' );
+    // Verified Resend sending domain — matches the WP Mail SMTP "From Email"
+    // set to the same address, so this stays correct even if that plugin
+    // setting is ever bypassed or the mailer changes.
+    $from_addr     = 'team@vancemedicalfoods.co.uk';
+    $email_subject = $subject ? "Contact: $subject" : "New Contact Form Submission – Vance Medical";
+    $body          = "Name: $name\nEmail: $email\n\n$message";
+    $headers       = array(
+        "From: {$site_name} <{$from_addr}>",
+        // Reply-To goes to the submitter here, not team@ — so a staffer
+        // reading the alert can hit reply and land straight in the
+        // customer's inbox instead of their own team inbox.
+        "Reply-To: $name <$email>",
+    );
+
+    if ( ! wp_mail( $to, $email_subject, $body, $headers ) ) {
+        return array( 'success' => false, 'error' => 'There was a problem sending your message. Please try again or email us directly.' );
+    }
+
+    // Best-effort confirmation to the submitter — failure here should never
+    // block the "Message Sent!" state, the admin copy already went out.
+    wp_mail(
+        $email,
+        "We've received your message – {$site_name}",
+        "Hi {$name},\n\nThanks for contacting {$site_name}. A member of our team will get back to you within one business day.\n\nFor your records, here's what you sent us:\n\n{$message}",
+        array(
+            "From: {$site_name} <{$from_addr}>",
+            "Reply-To: {$site_name} <{$from_addr}>",
+        )
+    );
+
+    return array( 'success' => true, 'error' => '' );
+}
+
+/**
+ * AJAX path for the contact form — the primary path when JS is available.
+ * Added after the native form-POST path proved unreliable: this page can be
+ * served from LiteSpeed's full-page cache (freezing the nonce), and in some
+ * browser contexts form.requestSubmit() produced no network request at all,
+ * with a full-page-navigation submission having no way to recover or even
+ * report that. Matches the existing AJAX pattern already used by the
+ * waitlist form (page-education.php) and the quick-signup modal
+ * (inc/register-modal.php) on this same site.
+ */
+function vance_ajax_contact_submit() {
+    check_ajax_referer( 'vance_contact_form', 'nonce' );
+
+    $result = vance_contact_process_submission(
+        sanitize_text_field( wp_unslash( $_POST['contact_name'] ?? '' ) ),
+        sanitize_email( wp_unslash( $_POST['contact_email'] ?? '' ) ),
+        sanitize_text_field( wp_unslash( $_POST['contact_subject'] ?? '' ) ),
+        sanitize_textarea_field( wp_unslash( $_POST['contact_message'] ?? '' ) ),
+        sanitize_text_field( wp_unslash( $_POST['vance_recaptcha_token'] ?? '' ) )
+    );
+
+    if ( $result['success'] ) {
+        wp_send_json_success();
+    } else {
+        wp_send_json_error( array( 'message' => $result['error'] ) );
+    }
+}
+add_action( 'wp_ajax_nopriv_vance_contact_submit', 'vance_ajax_contact_submit' );
+add_action( 'wp_ajax_vance_contact_submit', 'vance_ajax_contact_submit' );
 
 /**
  * Redirect bare GET hits on wp-login.php to the themed /login/ page.
