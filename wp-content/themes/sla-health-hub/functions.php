@@ -1833,10 +1833,20 @@ add_action( 'login_init', 'vance_redirect_wp_login_to_themed_login' );
 function vance_auth_modal_shortcode( $atts ) {
     if ( is_user_logged_in() ) {
         $current_user = wp_get_current_user();
-        return '<div class="vance-user-logged-in" style="text-align:center;padding:40px 20px;">
-            <p>Welcome back, ' . esc_html( $current_user->display_name ) . '.</p>
-            <p><a href="' . esc_url( home_url( '/dashboard/' ) ) . '" class="btn btn-primary">Go to dashboard</a>
-            &nbsp;<a href="' . esc_url( wp_logout_url( home_url() ) ) . '" class="btn btn-outline">Logout</a></p>
+        return '<div style="max-width:460px;margin:40px auto;padding:48px 40px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 10px 40px rgba(10,25,41,.08);text-align:center;font-family:var(--font-main, \'Inter\', sans-serif);">
+            <span style="display:flex;align-items:center;justify-content:center;width:72px;height:72px;margin:0 auto 24px;border-radius:50%;background:rgba(0,128,128,.10);color:var(--primary-color,#008080);">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <h1 style="margin:0 0 8px;font-family:var(--font-heading, \'Outfit\', sans-serif);font-size:26px;font-weight:700;color:var(--secondary-color,#0A1929);line-height:1.25;">Welcome back, ' . esc_html( $current_user->display_name ) . '</h1>
+            <p style="margin:0 0 32px;color:var(--text-light,#6B7280);font-size:15px;line-height:1.6;">You\'re signed in and ready to go.</p>
+            <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" class="btn btn-primary" style="width:100%;box-sizing:border-box;gap:10px;">Go to dashboard
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+            <p style="margin:20px 0 0;">
+                <a href="' . esc_url( wp_logout_url( home_url() ) ) . '" style="font-size:14px;font-weight:500;color:var(--text-light,#6B7280);text-decoration:none;border-bottom:1px solid transparent;transition:color .15s,border-color .15s;"
+                   onmouseover="this.style.color=\'var(--primary-color,#008080)\';this.style.borderColor=\'currentColor\';"
+                   onmouseout="this.style.color=\'var(--text-light,#6B7280)\';this.style.borderColor=\'transparent\';">Not you? Logout</a>
+            </p>
         </div>';
     }
 
