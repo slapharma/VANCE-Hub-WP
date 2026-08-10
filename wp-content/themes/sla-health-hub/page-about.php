@@ -216,16 +216,15 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     /* ============================ STATS ============================ */
     if (vance_get_theme_mod('vance_about_stats_show', true)) :
         $stat_defaults = array(
-            1 => array('30+',     'Years of Pharmaceutical Experience', 'flask'),
-            2 => array('12+',     'Countries with Regulatory Approval',  'globe'),
-            3 => array('100%',    'Pharma-Grade Standards Compliance',   'shield'),
-            4 => array('10,000+', 'Patients Supported Globally',         'users'),
+            1 => array('30+',      'Years of Pharmaceutical Experience', 'flask'),
+            2 => array('100%',     'Pharma-Grade Standards Compliance',   'shield'),
+            3 => array('100,000+', 'Patients Supported Globally',         'users'),
         );
     ?>
     <section class="vabout-stats<?php echo vance_get_theme_mod('vance_about_hero_show', true) ? ' vabout-stats-overlap' : ''; ?>">
         <div class="container">
             <div class="vabout-stats-grid">
-                <?php for ($i = 1; $i <= 4; $i++) :
+                <?php for ($i = 1; $i <= 3; $i++) :
                     $num   = vance_get_theme_mod("vance_about_stat{$i}_num",   $stat_defaults[$i][0]);
                     $label = vance_get_theme_mod("vance_about_stat{$i}_label", $stat_defaults[$i][1]);
                     $parts = vance_about_split_stat($num);
@@ -259,7 +258,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
             'show'  => true,
             'title' => 'From Pharma Heritage to Patient-Centred Innovation',
             'sub'   => 'Our Story',
-            'desc'  => "For over three decades, our team has been at the forefront of gastrointestinal medicine, developing specialised treatments to the highest regulatory standards.\n\nThat deep clinical experience revealed a consistent gap: medicines alone often fall short for chronic gastro conditions. Patients need evidence-based nutritional support alongside standard medical intervention.\n\nVance Medical was founded to bridge that gap, combining pharmaceutical rigour with nutritional science to deliver medical food products and education that truly make a difference.",
+            'desc'  => "For over three decades, our team has been at the forefront of gastrointestinal medicine, developing specialised treatments to the highest regulatory standards.\n\nThat deep clinical experience revealed a consistent gap: medicines alone often fall short for chronic gastro conditions. Patients need evidence-based nutritional support alongside standard medical intervention.\n\nVance Medical was founded to bridge that gap, combining pharmaceutical rigour with nutritional science to deliver medical food products and education to both patients and practitioners.",
             'btn_lbl' => '',
             'checks'  => array('Developed under pharmaceutical regulatory frameworks', 'Peer-reviewed clinical evidence base', 'Trusted by gastroenterologists worldwide'),
         ),
@@ -332,51 +331,6 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         </div>
     </section>
     <?php endfor; ?>
-
-
-    <?php
-    /* =================== EVOLUTION (image timeline) =================== */
-    if (vance_get_theme_mod('vance_about_origin_show', true)) :
-        $origin_tag   = vance_get_theme_mod('vance_about_origin_tag',   'The Vance Evolution');
-        $origin_title = vance_get_theme_mod('vance_about_origin_title', 'A Natural Progression in Gastrointestinal Care');
-        $origin_sub   = vance_get_theme_mod('vance_about_origin_sub', '');
-        $styles       = vance_get_style_string('vance_about_origin');
-
-        $pillar_defaults = array(
-            1 => array('Pharma Heritage',           'Decades spent developing specialised gastrointestinal medicines to rigorous regulatory standards, building deep expertise in the conditions that affect patients most.', 'pill',       'research-lab.jpg'),
-            2 => array('Innovation Focus',          'That experience revealed a consistent gap: medicines alone often fall short. There is a clear need for evidence-based nutritional support alongside standard medical intervention.', 'lightbulb', 'healthy-nutrition-food.jpg'),
-            3 => array('Patient-Centred Solutions', 'Vance Medical was founded to bridge that gap, combining pharmaceutical rigour with nutritional science to deliver medical food products and education to both patients and practitioners.', 'heartpulse', 'gut-health-wellness.jpg'),
-        );
-    ?>
-    <section id="our-story" class="vabout-evolution vabout-bg-white" style="<?php echo $styles['section']; ?>">
-        <div class="container">
-            <header class="vabout-head reveal">
-                <span class="vabout-pill" style="<?php echo $styles['tag']; ?>"><?php echo esc_html($origin_tag); ?></span>
-                <h2 style="<?php echo $styles['title']; ?>"><?php echo esc_html($origin_title); ?></h2>
-                <?php if ($origin_sub) : ?><p style="<?php echo $styles['text']; ?>"><?php echo esc_html($origin_sub); ?></p><?php endif; ?>
-            </header>
-
-            <div class="vabout-timeline">
-                <?php for ($i = 1; $i <= 3; $i++) :
-                    $t   = vance_get_theme_mod("vance_about_p{$i}_title", $pillar_defaults[$i][0]);
-                    $d   = vance_get_theme_mod("vance_about_p{$i}_desc",  $pillar_defaults[$i][1]);
-                    $im  = vance_get_theme_mod("vance_about_p{$i}_img", $vabout_img . $pillar_defaults[$i][3]);
-                ?>
-                <div class="vabout-tl-item reveal">
-                    <span class="vabout-tl-ico"><?php echo vance_about_icon($pillar_defaults[$i][2], 26); ?></span>
-                    <div class="vabout-tl-card">
-                        <?php if ($im) : ?>
-                            <div class="vabout-tl-media"><img src="<?php echo esc_url($im); ?>" alt="<?php echo esc_attr($t); ?>" loading="lazy" decoding="async"></div>
-                        <?php endif; ?>
-                        <h3 style="<?php echo $styles['title']; ?>"><?php echo esc_html($t); ?></h3>
-                        <p style="<?php echo $styles['text']; ?>"><?php echo esc_html($d); ?></p>
-                    </div>
-                </div>
-                <?php endfor; ?>
-            </div>
-        </div>
-    </section>
-    <?php endif; ?>
 
 
     <?php
@@ -478,7 +432,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $testi_title = vance_get_theme_mod('vance_about_testimonials_title', 'Real People, Real Results');
         $testi_defaults = array(
             1 => array("The Vance Health Hub has completely changed how I manage my Crohn's disease. The nutritional guidance alongside my medication has made a real difference to my daily life.", 'S.M.', 'Sarah M.', "Living with Crohn's Disease"),
-            2 => array('As a gastroenterologist, I recommend Vance to my patients because I trust their pharmaceutical-grade approach. The evidence base behind their products is exactly what I look for.', 'D.P.', 'Dr. Patel', 'Consultant Gastroenterologist'),
+            2 => array('As a gastroenterologist, I recommend Vance to my patients because I trust their pharmaceutical-grade approach. The evidence base behind their products is exactly what I look for.', 'M.P.', 'M. Patel', 'Living with Colitis'),
             3 => array('Finally, a resource that combines proper medical science with practical nutrition advice. The VANCE-Ai tool helps me understand my condition without the jargon.', 'J.T.', 'James T.', 'Living with IBS'),
         );
     ?>
@@ -522,16 +476,16 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $plat_tag   = vance_get_theme_mod('vance_about_plat_tag',   'The Digital Layer');
         $plat_title = vance_get_theme_mod('vance_about_plat_title', 'Your Complete Digital Health Companion');
         $plat_desc  = vance_get_theme_mod('vance_about_plat_desc',  'Beyond our product pipeline, Vance Medical is building a world-class digital health hub, combining clinical-grade content, AI-powered tools, and a vibrant community for patients and healthcare professionals.');
-        $plat_img   = vance_get_theme_mod('vance_about_digital_img', $vabout_img . 'happy-patient.jpeg');
+        $plat_img   = vance_get_theme_mod('vance_about_digital_img', $vabout_img . 'digital-health-companion.png');
         $float1     = vance_get_theme_mod('vance_about_float1_label', 'Secure & Private');
         $float2     = vance_get_theme_mod('vance_about_float2_label', '24/7 Access');
         $styles     = vance_get_style_string('vance_about_platform');
 
         $plat_defaults = array(
-            1 => array('Clinical Content Hub', 'Peer-reviewed research and patient education curated by gastroenterologists and dietitians.', 'book'),
-            2 => array('VANCE-Ai',             'Specialised AI trained on clinical gastroenterology to answer your health questions safely.', 'sparkles'),
-            3 => array('My Dashboard',         'Track health records, manage your Gastro tools, and connect with your care pathway.', 'dashboard'),
-            4 => array('Health Calculators',   'Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring.', 'calculator'),
+            1 => array('Clinical Content Hub', 'Peer-reviewed research and patient education curated by gastroenterologists and dietitians.', 'book',      home_url('/gastro-health-explained/')),
+            2 => array('VANCE-Ai',             'Specialised AI trained on clinical gastroenterology to answer your health questions safely.', 'sparkles', home_url('/ask-ai/')),
+            3 => array('My Dashboard',         'Track health records, manage your Gastro tools, and connect with your care pathway.', 'dashboard',       home_url('/dashboard/')),
+            4 => array('Health Calculators',   'Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring.', 'calculator',  home_url('/free-health-tools/')),
         );
     ?>
     <section class="vabout-digital" style="<?php echo $styles['section']; ?>">
@@ -544,15 +498,18 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 
                     <ul class="vabout-features">
                         <?php for ($i = 1; $i <= 4; $i++) :
-                            $pt = vance_get_theme_mod("vance_about_plat{$i}_title", $plat_defaults[$i][0]);
-                            $pdz= vance_get_theme_mod("vance_about_plat{$i}_desc",  $plat_defaults[$i][1]);
+                            $pt  = vance_get_theme_mod("vance_about_plat{$i}_title", $plat_defaults[$i][0]);
+                            $pdz = vance_get_theme_mod("vance_about_plat{$i}_desc",  $plat_defaults[$i][1]);
+                            $purl= vance_get_theme_mod("vance_about_plat{$i}_url",   $plat_defaults[$i][3]);
                         ?>
                         <li>
-                            <span class="vabout-feat-ico"><?php echo vance_about_icon($plat_defaults[$i][2], 20); ?></span>
-                            <span>
-                                <strong style="<?php echo $styles['title']; ?>"><?php echo esc_html($pt); ?></strong>
-                                <em style="<?php echo $styles['text']; ?>"><?php echo esc_html($pdz); ?></em>
-                            </span>
+                            <a class="vabout-feature-link" href="<?php echo esc_url($purl); ?>">
+                                <span class="vabout-feat-ico"><?php echo vance_about_icon($plat_defaults[$i][2], 20); ?></span>
+                                <span>
+                                    <strong style="<?php echo $styles['title']; ?>"><?php echo esc_html($pt); ?></strong>
+                                    <em style="<?php echo $styles['text']; ?>"><?php echo esc_html($pdz); ?></em>
+                                </span>
+                            </a>
                         </li>
                         <?php endfor; ?>
                     </ul>
@@ -799,7 +756,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
    room below the hero's fade-out, per client direction. */
 .vabout-stats { background: var(--vab-white); padding: 50px 0 40px; position: relative; z-index: 3; }
 .vabout-stats-overlap { margin-top: 0; padding-top: 50px; }
-.vabout-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.vabout-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .vabout-stat {
     position: relative;
     overflow: hidden;
@@ -879,32 +836,6 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     border-radius: 50%; background: var(--vab-teal-wash); color: var(--vab-teal-dark);
 }
 .vabout-story-body .vabout-btn { margin-top: 30px; }
-
-/* ========================== EVOLUTION ========================== */
-.vabout-evolution { padding: 50px 0; }
-.vabout-timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-.vabout-tl-item { text-align: center; }
-.vabout-tl-ico {
-    display: flex; align-items: center; justify-content: center;
-    width: 64px; height: 64px; margin: 0 auto 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--vab-teal), var(--vab-teal-dark));
-    color: #fff;
-    box-shadow: 0 8px 24px rgba(0,128,128,.32);
-}
-.vabout-tl-card {
-    background: var(--vab-white);
-    border: 1px solid var(--vab-line);
-    border-radius: var(--vab-r-md);
-    overflow: hidden;
-    transition: transform .3s var(--vab-ease), box-shadow .3s var(--vab-ease);
-}
-.vabout-tl-card:hover { transform: translateY(-4px); box-shadow: var(--vab-sh-lg); }
-.vabout-tl-media { height: 200px; overflow: hidden; }
-.vabout-tl-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--vab-ease); }
-.vabout-tl-card:hover .vabout-tl-media img { transform: scale(1.05); }
-.vabout-tl-card h3 { margin: 0; padding: 22px 24px 8px; }
-.vabout-tl-card p  { margin: 0; padding: 0 24px 26px; font-size: .95rem; }
 
 /* =========================== MISSION =========================== */
 .vabout-mission { padding: 59px 0; overflow: hidden; background: var(--vab-light); }
@@ -997,13 +928,16 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-digital-body h2 { margin: 14px 0 16px; }
 .vabout-digital-body .vabout-lead { margin: 0 0 34px; }
 .vabout-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.vabout-features li {
+.vabout-feature-link {
     display: flex; align-items: flex-start; gap: 16px;
     padding: 14px 16px;
     border-radius: var(--vab-r-sm);
+    text-decoration: none;
+    color: inherit;
     transition: background .3s var(--vab-ease);
 }
-.vabout-features li:hover { background: rgba(0,128,128,.06); }
+.vabout-feature-link:hover { background: rgba(0,128,128,.06); }
+.vabout-feature-link:focus-visible { outline: 2px solid var(--vab-teal); outline-offset: 2px; }
 .vabout-feat-ico {
     display: flex; align-items: center; justify-content: center;
     flex: 0 0 44px; width: 44px; height: 44px;
@@ -1078,7 +1012,6 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
      not titles or body copy. */
 .vabout-stats,
 .vabout-story,
-.vabout-evolution,
 .vabout-mission,
 .vabout-trust,
 .vabout-digital,
@@ -1101,7 +1034,6 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 @media (max-width: 1024px) {
     .vabout-stats-grid,
     .vabout-pillars { grid-template-columns: repeat(2, 1fr); }
-    .vabout-timeline { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
     .vabout-trust-grid { grid-template-columns: repeat(2, 1fr); }
     .vabout-testi-grid { grid-template-columns: 1fr; max-width: 620px; margin: 0 auto; }
     .vabout-digital-grid { grid-template-columns: 1fr; gap: 48px; }
@@ -1117,7 +1049,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     .vabout-stat { padding: 26px 16px; }
     .vabout-stat-num { font-size: 1.6rem; }
     .vabout-stat-suffix { font-size: 1rem; }
-    .vabout-story, .vabout-evolution, .vabout-trust,
+    .vabout-story, .vabout-trust,
     .vabout-testimonials, .vabout-digital { padding: 32px 0; }
     .vabout-mission { padding: 36px 0; }
     .vabout-story-grid { grid-template-columns: 1fr; gap: 36px; }

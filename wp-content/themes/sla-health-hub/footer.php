@@ -25,16 +25,16 @@
                 <div class="footer-brand">
                     <?php
                     $f_logo = vance_get_theme_mod('vance_footer_logo');
-                    $f_text = vance_get_theme_mod('vance_footer_brand_text', 'Your Gastro Health Hub. Curated clinical research, latest news, health trackers and downloadable resources for both patients and practitioners.');
+                    $f_text = vance_get_theme_mod('vance_footer_brand_text', 'Pioneering gastro research and turning knowledge into better patient outcomes.');
                     ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:block; margin-bottom: 24px;">
                         <?php if($f_logo): ?>
-                            <img src="<?php echo esc_url($f_logo); ?>" alt="Vance Medical" style="height: 48px;" loading="lazy" decoding="async">
+                            <img src="<?php echo esc_url($f_logo); ?>" alt="Vance Medical" style="height: 72px;" loading="lazy" decoding="async">
                         <?php else: ?>
-                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 48px;" loading="lazy" decoding="async">
+                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" style="height: 72px;" loading="lazy" decoding="async">
                         <?php endif; ?>
                     </a>
-                    <p><?php echo esc_html($f_text); ?></p>
+                    <p style="color: var(--secondary-color, #0A1929); font-weight: 700;"><?php echo esc_html($f_text); ?></p>
                 </div>
 
                 <div class="footer-col">

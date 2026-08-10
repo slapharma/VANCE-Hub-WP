@@ -101,7 +101,6 @@ get_header(); ?>
     $intro_text   = vance_get_theme_mod( 'vance_contact_intro_text',  'Vance Medical is committed to providing exceptional support to every member of our community. Use the form to send us a message, or reach us directly through any of the channels below.' );
     $detail_email = vance_get_theme_mod( 'vance_contact_email',   'info@gastrohealthhub.com' );
     $detail_phone = vance_get_theme_mod( 'vance_contact_phone',   '+44 (0)1628 526 005' );
-    $detail_addr  = vance_get_theme_mod( 'vance_contact_address', 'Vance Medical Foods Ltd, 4 Renaissance Way, Wooburn Green, HP10 0DF, United Kingdom' );
     $detail_hours = vance_get_theme_mod( 'vance_contact_hours',   'Monday – Friday, 9:00 am – 5:00 pm GMT' );
 
     $social_linkedin  = vance_get_theme_mod( 'vance_social_linkedin' );
@@ -148,13 +147,6 @@ get_header(); ?>
                                 'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
                                 'color' => '#10b981',
                             ),
-                            array(
-                                'label' => 'Address',
-                                'value' => $detail_addr,
-                                'href'  => false,
-                                'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>',
-                                'color' => '#8b5cf6',
-                            ),
                         );
                         foreach ( $details as $d ) : ?>
                         <div style="display: flex; gap: 16px; align-items: flex-start; background: white; padding: 20px 24px; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,.06);">
@@ -191,7 +183,7 @@ get_header(); ?>
                         'twitter'   => array(
                             'url'  => $social_twitter,
                             'name' => 'X',
-                            'icon' => '<path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>',
+                            'icon' => '<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
                             'fill' => true,
                         ),
                         'instagram' => array(
