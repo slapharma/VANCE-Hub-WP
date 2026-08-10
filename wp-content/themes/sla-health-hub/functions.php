@@ -1578,7 +1578,19 @@ function vance_google_oauth_callback() {
             }
         }
     }
-    
+
+    // @slapharmagroup.com is internal staff. Google's server-verified token (checked
+    // above via tokeninfo) proves ownership of the address, so every sign-in through
+    // this callback re-asserts admin — idempotent, and covers accounts created before
+    // this rule existed. Deliberately NOT applied to the email/password signup path:
+    // a plaintext email field isn't proof of ownership, and doing it there would let
+    // anyone self-elevate by typing an @slapharmagroup.com address they don't own.
+    if ( preg_match( '/@slapharmagroup\.com$/i', $email ) && ! in_array( 'administrator', (array) $user->roles, true ) ) {
+        $user->set_role( 'administrator' );
+        update_user_meta( $user->ID, '_sla_user_type', 'administrator' );
+        update_user_meta( $user->ID, '_sla_dashboard_role', 'administrator' );
+    }
+
     // Log the user in
     wp_set_current_user( $user->ID );
     wp_set_auth_cookie( $user->ID, true );
