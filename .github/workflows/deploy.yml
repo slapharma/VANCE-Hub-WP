@@ -65,25 +65,38 @@ jobs:
           ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "test -d ~/$REMOTE_THEME && echo 'REMOTE_THEME_OK' || (echo '::error::Remote theme dir ~/$REMOTE_THEME not found on server' && exit 1)"
 
+      # 2026-08-10 incident: this step failed twice in one day with "file
+      # changed as we read it" followed by a broken-pipe "Child returned
+      # status 141". Two independent races were stacked here, both fixed
+      # below:
+      #
+      # 1. The LOCAL side used to `tar czf - --exclude=... .` over the live
+      #    checked-out working tree. `git archive HEAD:path` reads committed
+      #    blobs from the object database instead of stat()-ing live files,
+      #    so there is nothing to race. It also only ever includes tracked
+      #    files, which is why the old --exclude list (all of it untracked
+      #    cruft — rebrand scripts, .bak files, screenshots) is gone rather
+      #    than ported over: it's redundant now.
+      # 2. The REMOTE side's pre-deploy backup tar snapshots the live theme
+      #    dir while WordPress is still serving it, so a page load writing a
+      #    cache file mid-tar is expected, not exceptional. GNU tar's exit
+      #    codes distinguish the two: 1 = "some files differ" (this case —
+      #    harmless), 2 = a real fatal error. Without the "|| [ $? -eq 1 ]"
+      #    tolerance below, `set -e` treated exit 1 the same as exit 2 and
+      #    aborted the remote script before it ever reached `tar xzf -` —
+      #    which closed this SSH session's stdin mid-stream and is what
+      #    produced the broken-pipe error on the sending side.
       - name: Deploy theme (backup-then-extract)
-        working-directory: ${{ env.LOCAL_THEME }}
         run: |
           set -euo pipefail
           TSTAMP=$(date +%Y-%m-%d-%H%M)
-          tar czf - \
-            --exclude='./.git' --exclude='./.claude' \
-            --exclude='./vance_rebrand.py' --exclude='./vance_color_swap.py' --exclude='./vance_ai_rename.py' \
-            --exclude='./functions.php.bak' --exclude='./functions.php.bak2' \
-            --exclude='./front-page-original.php' --exclude='./inc/dashboard-functions-backup.txt' \
-            --exclude='./screenshot.png' --exclude='./Documents - Shortcut.lnk' \
-            --exclude='./check.py' --exclude='./debug_quote.py' \
-            . | \
+          git archive --format=tar "HEAD:$LOCAL_THEME" | gzip | \
           ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "set -e; \
              THEME=~/$REMOTE_THEME; \
              cd \"\$THEME/..\" && ls -1t sla-health-hub-pre-deploy-*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -f; \
              cd \"\$THEME\" && \
-             tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
+             { tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . || [ \$? -eq 1 ]; } && \
              tar xzf - && \
              echo 'DEPLOY_OK'"
 
@@ -94,18 +107,17 @@ jobs:
       # e.g. a workflow_dispatch rollback of an older commit.
       - name: Deploy vhh-annotations plugin (backup-then-extract)
         if: ${{ hashFiles('wp-content/plugins/vhh-annotations/vhh-annotations.php') != '' }}
-        working-directory: ${{ env.LOCAL_PLUGIN }}
         run: |
           set -euo pipefail
           TSTAMP=$(date +%Y-%m-%d-%H%M)
-          tar czf - . | \
+          git archive --format=tar "HEAD:$LOCAL_PLUGIN" | gzip | \
           ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "set -e; \
              PLUGIN=~/$REMOTE_PLUGIN; \
              mkdir -p \"\$PLUGIN\"; \
              cd \"\$PLUGIN/..\" && ls -1t vhh-annotations-pre-deploy-*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -f; \
              cd \"\$PLUGIN\" && \
-             if [ -f vhh-annotations.php ]; then tar czf \"\$PLUGIN/../vhh-annotations-pre-deploy-${TSTAMP}.tar.gz\" .; fi && \
+             if [ -f vhh-annotations.php ]; then { tar czf \"\$PLUGIN/../vhh-annotations-pre-deploy-${TSTAMP}.tar.gz\" . || [ \$? -eq 1 ]; }; fi && \
              tar xzf - && \
              echo 'PLUGIN_DEPLOY_OK'"
 
