@@ -525,6 +525,106 @@ PROMPT;
 	return $rules . $block;
 }
 
+/**
+ * Default wording for the three Open mode guardrails.
+ *
+ * Single source of truth: both vance_ai_open_system_prompt() (runtime fallback)
+ * and the Customizer control defaults in functions.php read from this, so the
+ * two can never drift apart.
+ *
+ * @return array{claims:string,sources:string,ontopic:string}
+ */
+function vance_ai_open_mode_guardrail_defaults() {
+	return array(
+		'claims'  => "Do not make or imply medical claims for food supplements or Foods for Special Medical Purposes (FSMP) beyond what UK/EU food law permits (the retained EU Nutrition and Health Claims Regulation (EC) No 1924/2006, and the FSMP provisions of retained Regulation (EU) No 609/2013). Only state a nutrition or health claim if it appears on the GB/EU authorised claims register; otherwise do not state it. Never say a supplement or FSMP product can diagnose, treat, cure or prevent a disease. Never advise a reader to start, stop, increase or decrease a supplement, FSMP product or medication; that decision belongs to their dietitian, GP or specialist team.",
+		'sources' => "For UK gastro healthcare questions (IBD, IBS and related gastrointestinal conditions), weight your answer by this hierarchy: (1) Official UK guidance, NHS, NICE and relevant professional bodies such as the British Society of Gastroenterology (BSG), treat this as authoritative. (2) Reputable UK patient and charity organisations, such as Crohn's & Colitis UK and Guts UK, treat this as trustworthy patient facing guidance that supports but does not override tier (1). Where you rely on general medical knowledge outside both tiers, keep it general, non prescriptive, and prefer naming a tier (1) or (2) organisation the reader can check rather than stating clinical specifics yourself.",
+		'ontopic' => "Keep the conversation focused on the reader's gastro healthcare journey and research (IBD, IBS, digestive and gut health, related nutrition, symptoms, treatment landscape, and living with these conditions). Brief tangents are fine, but steer the conversation back to this topic within a reply or two, gently and without being curt.",
+	);
+}
+
+/**
+ * Assemble the Open mode system instruction: identity, a source-priority rule,
+ * the three admin-editable guardrails, then the same tone/formatting/length
+ * rules the grounded prompt uses.
+ *
+ * Unlike the grounded prompt, the model is not confined to the SOURCES: it
+ * prioritises hub content when relevant, then fills any gap from its own
+ * general knowledge, always within the GUARDRAILS.
+ *
+ * @param array[] $sources       Output of vance_ai_retrieve_sources(). May be empty.
+ * @param string  $reading_level One of the vance_ai_reading_levels() keys.
+ * @return string
+ */
+function vance_ai_open_system_prompt( $sources, $reading_level = 'knowledgeable' ) {
+	$defaults = vance_ai_open_mode_guardrail_defaults();
+
+	$guardrail_claims  = trim( (string) vance_get_theme_mod( 'vance_askai_guardrail_claims', $defaults['claims'] ) );
+	$guardrail_sources = trim( (string) vance_get_theme_mod( 'vance_askai_guardrail_sources', $defaults['sources'] ) );
+	$guardrail_ontopic = trim( (string) vance_get_theme_mod( 'vance_askai_guardrail_ontopic', $defaults['ontopic'] ) );
+
+	if ( '' === $guardrail_claims ) {
+		$guardrail_claims = $defaults['claims'];
+	}
+	if ( '' === $guardrail_sources ) {
+		$guardrail_sources = $defaults['sources'];
+	}
+	if ( '' === $guardrail_ontopic ) {
+		$guardrail_ontopic = $defaults['ontopic'];
+	}
+
+	$rules = <<<PROMPT
+You are VANCE-Ai, the assistant on the Vance Medical Hub (vancehealthhub.co.uk), a resource about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
+
+In this mode you are not limited to this hub's own library: you may draw on your full general medical, scientific and nutritional knowledge. But first prioritise the SOURCES below, extracts from this hub's own library, whenever they are relevant to the reader's question.
+
+RULES
+1. If the SOURCES cover the question, or a substantial part of it, ground your answer in them first.
+2. Where the SOURCES are silent, thin, or only partly relevant, fill the gap with your own general knowledge, always staying within the GUARDRAILS below.
+3. When you draw on a SOURCE, cite it. End your answer with the hub articles you used, one per line, in exactly this form:
+Read more: <article title> | <URL>
+Copy each URL character-for-character from its SOURCE header. Never invent, shorten or guess a URL, and never cite a source you did not actually use. Do not cite anything for parts of the answer drawn from general knowledge outside the SOURCES. Reference entries that carry no URL are not cited this way.
+
+GUARDRAILS
+4. {$guardrail_claims}
+5. {$guardrail_sources}
+6. {$guardrail_ontopic}
+
+GENERAL RULES
+7. This is general information, not personal medical advice. Do not diagnose, do not recommend or adjust treatment or dosing, and do not interpret a reader's own test results. Point anything urgent to their clinical team, NHS 111, or 999 in an emergency.
+8. Tone: professional, clinical, warm and plain-spoken.
+9. FORMATTING: clean, readable prose. Do NOT use Markdown headings or any "#" characters. You may use **bold** for key terms and simple hyphen (-) bullet points for short lists. No tables, no code blocks.
+10. PUNCTUATION: never use an em dash or an en dash anywhere in your reply. Use a comma, a colon, a full stop or brackets instead.
+11. LENGTH: keep answers focused, around 300 words, unless the reader explicitly asks for more depth.
+PROMPT;
+
+	$levels = vance_ai_reading_levels();
+	$key    = vance_ai_normalise_reading_level( $reading_level );
+	$rules .= "\n\n" . $levels[ $key ]['instruction'];
+
+	if ( empty( $sources ) ) {
+		return $rules . "\n\nSOURCES\nNothing in the Vance Medical Hub library matched this question closely enough to use. Answer from your own general knowledge instead, following the rules above.\n";
+	}
+
+	$block = "\n\nSOURCES\n\n";
+	foreach ( $sources as $source ) {
+		if ( ! empty( $source['reference'] ) ) {
+			$label = 'REFERENCE (Vance Medical Hub knowledge base: authoritative, but not a public article)';
+		} elseif ( ! empty( $source['primary'] ) ) {
+			$label = 'PRIMARY SOURCE (the article the reader is currently reading)';
+		} else {
+			$label = 'SOURCE';
+		}
+
+		$block .= '--- ' . $label . ': ' . $source['title'];
+		$block .= ! empty( $source['url'] ) ? ' | URL: ' . $source['url'] : ' | (no public URL, do not cite a link for this entry)';
+		$block .= " ---\n";
+		$block .= $source['excerpt'] . "\n";
+		$block .= "--- END SOURCE ---\n\n";
+	}
+
+	return $rules . $block;
+}
+
 // =========================================================================
 // Conversation storage
 // =========================================================================
@@ -826,28 +926,44 @@ function vance_rest_ai_chat( $request ) {
 		$model = 'anthropic/claude-opus-4.8'; // Sensible fallback if the setting is unset.
 	}
 
-	// --- Ground the answer in hub content ----------------------------------
-	$sources = vance_ai_retrieve_sources( $messages, $context_post_id );
+	// --- Mode: grounded (hub-only) vs open (full model knowledge + guardrails) ---
+	$mode = vance_get_theme_mod( 'vance_askai_mode', 'grounded' );
 
-	/**
-	 * Last chance to add or reorder grounding sources.
-	 *
-	 * Used by My Documents to make a member's own uploaded document the primary
-	 * source for the conversation. Anything added here must already be in the
-	 * {id, title, url, excerpt, primary} shape vance_ai_system_prompt() expects,
-	 * and a filter that adds a `primary` source is responsible for demoting any
-	 * existing one.
-	 *
-	 * @param array[]         $sources  Retrieved sources.
-	 * @param array           $messages The conversation so far.
-	 * @param WP_REST_Request $request  The originating request.
-	 */
-	$sources = apply_filters( 'vance_ai_sources', $sources, $messages, $request );
+	if ( 'open' === $mode ) {
+		// Open mode still prioritises the hub's own posts (same retrieval as
+		// grounded mode), but is not confined to them. It deliberately skips the
+		// vance_ai_sources filter: that filter is how My Documents injects a
+		// member's uploaded document, and a document must never be used as
+		// reference material for anyone but the user who uploaded it, so it is
+		// never attached to an Open mode conversation for any user.
+		$sources       = vance_ai_retrieve_sources( $messages, $context_post_id );
+		$system_prompt = vance_ai_open_system_prompt( $sources, $reading_level );
+	} else {
+		// --- Ground the answer in hub content ----------------------------------
+		$sources = vance_ai_retrieve_sources( $messages, $context_post_id );
+
+		/**
+		 * Last chance to add or reorder grounding sources.
+		 *
+		 * Used by My Documents to make a member's own uploaded document the primary
+		 * source for the conversation. Anything added here must already be in the
+		 * {id, title, url, excerpt, primary} shape vance_ai_system_prompt() expects,
+		 * and a filter that adds a `primary` source is responsible for demoting any
+		 * existing one.
+		 *
+		 * @param array[]         $sources  Retrieved sources.
+		 * @param array           $messages The conversation so far.
+		 * @param WP_REST_Request $request  The originating request.
+		 */
+		$sources = apply_filters( 'vance_ai_sources', $sources, $messages, $request );
+
+		$system_prompt = vance_ai_system_prompt( $sources, $reading_level );
+	}
 
 	$payload_messages = array(
 		array(
 			'role'    => 'system',
-			'content' => vance_ai_system_prompt( $sources, $reading_level ),
+			'content' => $system_prompt,
 		),
 	);
 	// Only the recent turns go to the model — the full transcript is still stored.
@@ -924,5 +1040,6 @@ function vance_rest_ai_chat( $request ) {
 		'reply'   => $reply,
 		'saved'   => $saved,
 		'sources' => count( $sources ),
+		'mode'    => $mode,
 	);
 }

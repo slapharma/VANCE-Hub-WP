@@ -1116,6 +1116,10 @@
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
+	height: 32px; /* explicit so .header-dashboard-link (main.css) can match this
+	                 box exactly via box-sizing:border-box, despite its added
+	                 border — was auto (~31px); pinning it is what makes the
+	                 match reliable rather than approximate. 2026-08-11. */
 	padding: 8px 16px;
 	font-family: var(--font-heading, 'Outfit', sans-serif);
 	font-size: 12px;

@@ -992,6 +992,99 @@ function vance_rename_tool_entry() {
 add_action( 'wp_ajax_vance_rename_tool_entry', 'vance_rename_tool_entry' );
 
 /**
+ * Create/update a FluentCRM contact and apply the audience + opt-in tags that
+ * drive the member/HCP nurture funnels. Safe no-op if FluentCRM isn't active
+ * — a marketing plugin must never be able to block signup.
+ *
+ * @param int    $user_id
+ * @param string $email
+ * @param string $audience_role   One of patient|caregiver|hcp|researcher|other (matches _sla_audience_role).
+ * @param bool   $marketing_opt_in
+ * @param string $source          'form' or 'google'.
+ */
+function vance_sync_fluentcrm_contact( $user_id, $email, $audience_role, $marketing_opt_in, $source = 'form' ) {
+    if ( ! function_exists( 'FluentCrmApi' ) ) {
+        return;
+    }
+
+    $tag_map = array(
+        'hcp'       => 'hcp-practitioner',
+        'patient'   => 'patient-caregiver',
+        'caregiver' => 'patient-caregiver',
+        'researcher' => 'researcher',
+    );
+    $audience_tag = isset( $tag_map[ $audience_role ] ) ? $tag_map[ $audience_role ] : 'member';
+
+    $tags = array( $audience_tag, 'signup-google' === $source || 'google' === $source ? 'signup-google' : 'signup-form' );
+    if ( $marketing_opt_in ) {
+        $tags[] = 'marketing-opt-in';
+    }
+
+    $user = get_userdata( $user_id );
+
+    FluentCrmApi( 'contacts' )->createOrUpdate( array(
+        'email'         => $email,
+        'first_name'    => $user ? $user->first_name : '',
+        'last_name'     => $user ? $user->last_name : '',
+        'status'        => 'subscribed',
+        'tags'          => $tags,
+        'lists'         => array( 'Vance Health Hub Members' ),
+        'source'        => $source,
+        'custom_values' => array(
+            'wp_user_id'     => $user_id,
+            'dashboard_role' => get_user_meta( $user_id, '_sla_dashboard_role', true ),
+        ),
+    ) );
+}
+
+/**
+ * Ensure a member has a referral code, generating one on first call.
+ * 8-char alphanumeric — not a guessable sequential ID.
+ *
+ * @param int $user_id
+ * @return string
+ */
+function vance_generate_referral_code_for_user( $user_id ) {
+    $existing = get_user_meta( $user_id, '_sla_referral_code', true );
+    if ( $existing ) {
+        return $existing;
+    }
+    $code = substr( wp_generate_password( 10, false, false ), 0, 8 );
+    update_user_meta( $user_id, '_sla_referral_code', $code );
+    return $code;
+}
+
+/**
+ * If the new signup arrived via a `?ref=CODE` link (captured into the
+ * `vance_ref` cookie by vance_capture_referral_cookie()), record the
+ * relationship and credit the referrer. No reward logic — just attribution.
+ *
+ * @param int $referee_user_id
+ */
+function vance_credit_referral_signup( $referee_user_id ) {
+    if ( empty( $_COOKIE['vance_ref'] ) ) {
+        return;
+    }
+    $ref_code = sanitize_text_field( wp_unslash( $_COOKIE['vance_ref'] ) );
+    if ( ! $ref_code ) {
+        return;
+    }
+    $referrers = get_users( array(
+        'meta_key'   => '_sla_referral_code',
+        'meta_value' => $ref_code,
+        'number'     => 1,
+        'fields'     => 'ID',
+    ) );
+    if ( empty( $referrers[0] ) || (int) $referrers[0] === (int) $referee_user_id ) {
+        return;
+    }
+    $referrer_id = (int) $referrers[0];
+    update_user_meta( $referee_user_id, '_sla_referred_by', $referrer_id );
+    $count = (int) get_user_meta( $referrer_id, '_sla_referral_count', true );
+    update_user_meta( $referrer_id, '_sla_referral_count', $count + 1 );
+}
+
+/**
  * AJAX: anonymous quick-register from a tool page.
  *
  * Expects POST: nonce, email, password, role, tool (optional), payload (optional JSON).
@@ -1097,6 +1190,9 @@ function vance_ajax_quick_register() {
     update_user_meta( $user_id, '_sla_signup_source', $source ?: ( 'tool_page:' . ( $tool ?: 'unknown' ) ) );
     update_user_meta( $user_id, '_sla_signup_ts',     time() );
 
+    vance_generate_referral_code_for_user( $user_id );
+    vance_credit_referral_signup( $user_id );
+
     // Consent record (UK GDPR / PECR). Saving a tool result is the affirmative
     // action giving explicit consent to store health data (Article 9).
     update_user_meta( $user_id, '_sla_consent_terms', '1' );
@@ -1106,6 +1202,8 @@ function vance_ajax_quick_register() {
     update_user_meta( $user_id, '_sla_consent_health_at', current_time( 'mysql' ) );
     update_user_meta( $user_id, '_sla_marketing_opt_in', $marketing_opt_in ? '1' : '0' );
     update_user_meta( $user_id, '_sla_marketing_opt_in_at', current_time( 'mysql' ) );
+
+    vance_sync_fluentcrm_contact( $user_id, $email, $role_in, $marketing_opt_in, 'form' );
 
     // Stash the pending tool payload (if any).
     if ( $tool && ! empty( $payload ) ) {

@@ -186,6 +186,122 @@ get_header();
 .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .profile-avatar { width: 32px; height: 32px; border-radius: 0; object-fit: cover; border: 1px solid #E2E8F0; }
 
+/* My Profile: platform-icon row under the avatar photo.
+   2026-08-11: previously a negative top margin (-8px) pulled this row up
+   against the 120px avatar's bottom edge, reading as "attached to" the photo
+   (reported). Real margin-top instead, and doubled 28px -> 56px per request.
+   #vance-profile-social-icons always renders (hidden via display:none when no
+   socials are saved yet) so JS can insert the first icon without a reload —
+   see vanceRefreshSocialIcon() below. Fixed 3-column grid (not flex-wrap) so
+   the row always breaks 3/3 regardless of how many platforms are saved. */
+.vance-profile-social-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: #F1F5F5;
+    color: var(--dash-primary, #008080); display: flex; align-items: center;
+    justify-content: center; opacity: 0.85; transition: opacity 0.2s, transform 0.2s;
+}
+.vance-profile-social-icon:hover { opacity: 1; transform: translateY(-1px); }
+.vance-profile-social-icon svg { width: 28px; height: 28px; }
+
+/* Plain-text My Links list under the icon row — protocol-stripped display
+   text, real URL still in href. Social Profiles don't get this (they have
+   icons already); request 2026-08-11. */
+.vance-profile-link-text {
+    display: block; font-size: 13px; font-weight: 500; color: var(--dash-primary, #008080);
+    text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 100%;
+}
+.vance-profile-link-text:hover { text-decoration: underline; }
+
+/* Inline per-field save control for Social Profiles / My Links. The page's
+   single "Update Profile" button at the bottom still saves everything at
+   once, but that gives no feedback about which field changed — this adds an
+   instant per-field confirmation (and, for social fields, refreshes the icon
+   row above without waiting on a full-form submit). */
+#profile-form-main input[type="text"],
+#profile-form-main input[type="email"],
+#profile-form-main input[type="url"],
+#profile-form-main textarea {
+    font-size: 14px; /* was unset (name/email/job/org/bio) or 13px (social/links) — unified */
+}
+/* Lighter placeholder text so an empty field reads as visibly empty rather
+   than looking like it already has a (dim) value in it — request 2026-08-11. */
+#profile-form-main input::placeholder,
+#profile-form-main textarea::placeholder {
+    color: #C1C8D2;
+    opacity: 1; /* Firefox dims placeholder color further via opacity by default */
+}
+
+/* Leading icon inside each input/textarea — request 2026-08-11: "add relevant
+   icons next to each input box". .vance-input-icon-wrap is the positioning
+   context; the icon is decorative (the label already names the field), so
+   aria-hidden + pointer-events:none keeps it out of the a11y tree and clicks
+   pass through to the input beneath. */
+.vance-input-icon-wrap { position: relative; }
+.vance-field-save-row .vance-input-icon-wrap { flex: 1; min-width: 0; }
+/* Single source of truth for the box model on every icon-fronted field —
+   width/padding/border used to be set inline per-input (or, for the Social
+   Profiles/My Links rewrite, accidentally not set at all: those inputs
+   rendered at native browser size/border with no left-padding, so the icon —
+   centered against the WRAPPER, which the flex row stretches to the save
+   button's 44px — ended up floating well above the input's own tiny box.
+   That's the "icons off-set" reported 2026-08-11. Centralising here, and
+   giving the save-row variant an explicit 44px to match its button exactly,
+   removes the mismatch instead of just approximating it. */
+.vance-input-icon-wrap input,
+.vance-input-icon-wrap textarea {
+    width: 100%; box-sizing: border-box; font-family: inherit;
+    padding: 10px 10px 10px 36px; border: 1px solid #E2E8F0; border-radius: 0;
+}
+.vance-input-icon-wrap textarea { resize: none; }
+.vance-field-save-row .vance-input-icon-wrap input {
+    height: 44px; padding-top: 0; padding-bottom: 0;
+}
+.vance-input-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    display: flex; color: #94A3B8; pointer-events: none;
+}
+.vance-input-icon--top { top: 13px; transform: none; }
+.vance-input-icon svg { width: 16px; height: 16px; }
+
+.vance-field-save-row { display: flex; gap: 8px; align-items: stretch; }
+.vance-field-save-btn {
+    flex: 0 0 auto; width: 44px; height: 44px; display: flex; align-items: center;
+    justify-content: center; border: 1px solid #E2E8F0; background: #fff;
+    color: #94A3B8; cursor: pointer; transition: all 0.2s;
+}
+.vance-field-save-btn:hover:not(:disabled) { border-color: var(--dash-primary, #008080); color: var(--dash-primary, #008080); }
+.vance-field-save-btn:disabled { opacity: 0.6; cursor: default; }
+.vance-field-save-btn.is-saved { background: var(--dash-primary, #008080); border-color: var(--dash-primary, #008080); color: #fff; }
+.vance-field-save-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+/* Two icons per button, toggled by data-empty (set server-side on load, kept
+   live by an `input` listener — see vanceUpdateFieldEmptyState() below):
+   checkmark = field has a value; circle-slash = field is empty, nothing to
+   save. Request 2026-08-11: "the tick should be changed to a circle with a
+   line through it to symbolise empty." The save-confirmation flash
+   (.is-saved) always shows the checkmark regardless of data-empty — "saved"
+   is a universal confirmation, not a value-state indicator. */
+.vance-field-save-btn .vance-icon-empty { display: none; }
+.vance-field-save-btn[data-empty="1"] .vance-icon-check { display: none; }
+.vance-field-save-btn[data-empty="1"] .vance-icon-empty { display: block; }
+.vance-field-save-btn.is-saved .vance-icon-check { display: block !important; }
+.vance-field-save-btn.is-saved .vance-icon-empty { display: none !important; }
+
+/* Delete button — request 2026-08-11: "add a delete button next to each
+   social and link input field". Clears + persists the field; the JS no-ops
+   on an already-empty field rather than hiding/disabling the button outright
+   (avoids needing extra sync JS), but it dims via this sibling selector off
+   the save button's own [data-empty] so it still reads as "nothing to do"
+   at a glance. */
+.vance-field-delete-btn {
+    flex: 0 0 auto; width: 44px; height: 44px; display: flex; align-items: center;
+    justify-content: center; border: 1px solid #E2E8F0; background: #fff;
+    color: #94A3B8; cursor: pointer; transition: all 0.2s;
+}
+.vance-field-delete-btn:hover:not(:disabled) { border-color: #DC2626; color: #DC2626; }
+.vance-field-delete-btn:disabled { opacity: 0.6; cursor: default; }
+.vance-field-delete-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.vance-field-save-btn[data-empty="1"] ~ .vance-field-delete-btn { opacity: 0.4; }
+
 /* Content */
 .dash-content { padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
@@ -582,7 +698,12 @@ get_header();
                 case 'profile': 
                     // Prepare data
                     $socials = array(
-                        'website' => get_user_meta($current_user->ID, '_sla_website', true),
+                        // 'website' removed 2026-08-11 along with its form field — it was
+                        // still being fetched here, so a legacy saved value kept showing
+                        // as an icon under the avatar with no way to clear it (reported:
+                        // "deleted all the social and web links but it's still showing
+                        // one web icon"). Not read at all now; the old _sla_website meta
+                        // is simply orphaned, not deleted — harmless if it's ever restored.
                         'twitter' => get_user_meta($current_user->ID, '_sla_twitter', true), // X
                         'linkedin' => get_user_meta($current_user->ID, '_sla_linkedin', true),
                         'instagram' => get_user_meta($current_user->ID, '_sla_instagram', true),
@@ -619,19 +740,48 @@ get_header();
                                     </div>
 
                                     <?php
-                                    // One icon per platform that actually has a saved URL — hidden
-                                    // entirely when none are set, rather than showing 6 empty slots.
+                                    // One icon per platform that actually has a saved URL. The
+                                    // wrapper itself always renders (just hidden when empty) so
+                                    // vanceRefreshSocialIcon() can insert the first icon live,
+                                    // after a per-field save, with no page reload.
                                     $any_social = array_filter( $socials );
-                                    if ( $any_social ) :
                                     ?>
-                                    <div style="display:flex; gap:8px; margin:-8px 0 20px; flex-wrap:wrap;">
+                                    <?php // Fixed 3-column grid (not flex-wrap) so the row always
+                                          // breaks 3/3 — request 2026-08-11: "icons should be 3 per row". ?>
+                                    <?php // margin-top:150px is a fixed gap from the avatar's bottom
+                                          // edge, not just spacing — request 2026-08-11: "always be
+                                          // 150px padded from the bottom of the profile pic". Margins
+                                          // between block siblings collapse to the larger value, so this
+                                          // wins outright over the avatar wrapper's own 20px margin-bottom
+                                          // above regardless of that value. ?>
+                                    <div id="vance-profile-social-icons" style="display:<?php echo $any_social ? 'grid' : 'none'; ?>; grid-template-columns: repeat(3, 56px); gap:10px; margin:150px 0 20px;">
                                         <?php foreach ( $socials as $key => $url ) : if ( ! $url ) { continue; } ?>
-                                        <a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener" title="<?php echo esc_attr( ucfirst( $key ) ); ?>" style="width:28px; height:28px; border-radius:50%; background:#F1F5F5; color:#008080; display:flex; align-items:center; justify-content:center; opacity:0.85;">
+                                        <a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener" data-platform="<?php echo esc_attr( $key ); ?>" title="<?php echo esc_attr( ucfirst( $key ) ); ?>" class="vance-profile-social-icon">
                                             <?php echo $social_icons[ $key ]; ?>
                                         </a>
                                         <?php endforeach; ?>
                                     </div>
-                                    <?php endif; ?>
+                                    <?php // Hidden SVG templates, one per platform, so JS can build a
+                                          // brand-new icon <a> for a platform that had no saved value
+                                          // at page load (vanceRefreshSocialIcon() below). ?>
+                                    <div style="display:none;" aria-hidden="true">
+                                        <?php foreach ( $social_icons as $key => $svg ) : ?>
+                                        <span id="vance-social-icon-tpl-<?php echo esc_attr( $key ); ?>"><?php echo $svg; ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php
+                                    // Plain-text link list under the icon row — My Links only. Social
+                                    // Profiles already have icons right above and don't need a
+                                    // redundant text list (first pass put this under Social Profiles;
+                                    // corrected 2026-08-11). Protocol stripped for display only, the
+                                    // href keeps the real, full URL.
+                                    $any_profile_links = array_filter( $profile_links );
+                                    ?>
+                                    <div id="vance-profile-my-links-list" style="display:<?php echo $any_profile_links ? 'flex' : 'none'; ?>; flex-direction:column; gap:6px; margin:0 0 20px;">
+                                        <?php foreach ( $profile_links as $link ) : if ( ! $link ) { continue; } ?>
+                                        <a href="<?php echo esc_url( $link ); ?>" target="_blank" rel="noopener" class="vance-profile-link-text"><?php echo esc_html( preg_replace( '#^https?://(www\.)?#i', '', rtrim( $link, '/' ) ) ); ?></a>
+                                        <?php endforeach; ?>
+                                    </div>
 
                                     <?php
                                     // Document upload moved to its own My Documents tab, where it
@@ -660,55 +810,124 @@ get_header();
 
                                 <!-- Right Col: Info & Links -->
                                 <div>
+                                    <?php
+                                    // Leading icons for the plain (non-save-row) fields below —
+                                    // request 2026-08-11: "add relevant icons next to each input
+                                    // box". Kept local to this block since they're one-offs, unlike
+                                    // $social_icons which is reused for both the input icon AND the
+                                    // avatar-row badge.
+                                    $icon_person    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>';
+                                    $icon_envelope  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"></rect><path d="M3 7l9 6 9-6"></path></svg>';
+                                    $icon_briefcase = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="1"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M2 13h20"></path></svg>';
+                                    $icon_building  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"></rect><path d="M9 21v-4h6v4"></path><path d="M8 7h2M14 7h2M8 11h2M14 11h2"></path></svg>';
+                                    $icon_notes     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="14" y2="18"></line></svg>';
+                                    $icon_link      = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>';
+                                    // Save-tick vs. empty-circle-slash — the two icons every
+                                    // .vance-field-save-btn carries; CSS (above) shows one or the
+                                    // other via [data-empty], and always the check while .is-saved.
+                                    $icon_check_svg = '<svg class="vance-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                                    $icon_empty_svg = '<svg class="vance-icon-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="5.5" y1="18.5" x2="18.5" y2="5.5"></line></svg>';
+                                    // Delete button beside each save button — request 2026-08-11.
+                                    $icon_trash_svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+                                    ?>
                                     <h3 style="margin:0 0 20px 0; font-size:18px; color:#0F172A;">Personal Information</h3>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
                                         <div>
                                             <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">First Name</label>
-                                            <input type="text" name="first_name" value="<?php echo esc_attr($first_name); ?>" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:0;">
+                                            <div class="vance-input-icon-wrap">
+                                                <span class="vance-input-icon" aria-hidden="true"><?php echo $icon_person; ?></span>
+                                                <input type="text" name="first_name" value="<?php echo esc_attr($first_name); ?>">
+                                            </div>
                                         </div>
                                         <div>
                                             <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Last Name</label>
-                                            <input type="text" name="last_name" value="<?php echo esc_attr($current_user->last_name); ?>" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:0;">
+                                            <div class="vance-input-icon-wrap">
+                                                <span class="vance-input-icon" aria-hidden="true"><?php echo $icon_person; ?></span>
+                                                <input type="text" name="last_name" value="<?php echo esc_attr($current_user->last_name); ?>">
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div style="margin-bottom: 24px;">
                                         <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Email Address</label>
-                                        <input type="email" name="user_email" value="<?php echo esc_attr($current_user->user_email); ?>" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:0;">
+                                        <div class="vance-input-icon-wrap">
+                                            <span class="vance-input-icon" aria-hidden="true"><?php echo $icon_envelope; ?></span>
+                                            <input type="email" name="user_email" value="<?php echo esc_attr($current_user->user_email); ?>">
+                                        </div>
                                     </div>
 
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
                                         <div>
                                             <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Job Title</label>
-                                            <input type="text" name="vance_job_title" value="<?php echo esc_attr($job_title); ?>" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:0;">
+                                            <div class="vance-input-icon-wrap">
+                                                <span class="vance-input-icon" aria-hidden="true"><?php echo $icon_briefcase; ?></span>
+                                                <input type="text" name="vance_job_title" value="<?php echo esc_attr($job_title); ?>">
+                                            </div>
                                         </div>
                                         <div>
                                             <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Organization</label>
-                                            <input type="text" name="vance_organization" value="<?php echo esc_attr($org); ?>" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:0;">
+                                            <div class="vance-input-icon-wrap">
+                                                <span class="vance-input-icon" aria-hidden="true"><?php echo $icon_building; ?></span>
+                                                <input type="text" name="vance_organization" value="<?php echo esc_attr($org); ?>">
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div style="margin-bottom: 24px;">
                                         <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Biography</label>
-                                        <textarea name="description" rows="4" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:0; font-family:inherit; resize:none;"><?php echo esc_textarea($current_user->description); ?></textarea>
+                                        <div class="vance-input-icon-wrap">
+                                            <span class="vance-input-icon vance-input-icon--top" aria-hidden="true"><?php echo $icon_notes; ?></span>
+                                            <textarea name="description" rows="4"><?php echo esc_textarea($current_user->description); ?></textarea>
+                                        </div>
                                     </div>
 
                                     <!-- Social Links -->
                                     <h3 style="margin:30px 0 20px 0; font-size:16px; color:#0F172A; border-top:1px solid #E2E8F0; padding-top:20px;">Social Profiles</h3>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-                                        <div><input type="url" name="vance_website" placeholder="https://yoursite.com" value="<?php echo esc_attr($socials['website']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_twitter" placeholder="https://x.com/vancehealthhub" value="<?php echo esc_attr($socials['twitter']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_linkedin" placeholder="https://linkedin.com/company/vancehealthhub" value="<?php echo esc_attr($socials['linkedin']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_instagram" placeholder="https://instagram.com/@vancehealthhub" value="<?php echo esc_attr($socials['instagram']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_facebook" placeholder="https://facebook.com/vancehealthhub" value="<?php echo esc_attr($socials['facebook']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
-                                        <div><input type="url" name="vance_tiktok" placeholder="https://tiktok.com/@vancehealthhub" value="<?php echo esc_attr($socials['tiktok']); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;"></div>
+                                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+                                        <?php
+                                        $social_field_meta = array(
+                                            // 'website' removed from this form 2026-08-11 — still in
+                                            // $socials/$social_icons above, so a legacy saved value (if
+                                            // any) keeps showing in the icon row under the avatar photo.
+                                            'twitter'   => array( 'name' => 'vance_twitter',   'placeholder' => 'https://x.com/vancehealthhub' ),
+                                            'linkedin'  => array( 'name' => 'vance_linkedin',  'placeholder' => 'https://linkedin.com/company/vancehealthhub' ),
+                                            'instagram' => array( 'name' => 'vance_instagram', 'placeholder' => 'https://instagram.com/@vancehealthhub' ),
+                                            'facebook'  => array( 'name' => 'vance_facebook',  'placeholder' => 'https://facebook.com/vancehealthhub' ),
+                                            'tiktok'    => array( 'name' => 'vance_tiktok',    'placeholder' => 'https://tiktok.com/@vancehealthhub' ),
+                                        );
+                                        foreach ( $social_field_meta as $key => $meta ) :
+                                        ?>
+                                        <div class="vance-field-save-row" data-platform="<?php echo esc_attr( $key ); ?>">
+                                            <div class="vance-input-icon-wrap">
+                                                <span class="vance-input-icon" aria-hidden="true"><?php echo $social_icons[ $key ]; ?></span>
+                                                <input type="url" name="<?php echo esc_attr( $meta['name'] ); ?>" placeholder="<?php echo esc_attr( $meta['placeholder'] ); ?>" value="<?php echo esc_attr( $socials[ $key ] ); ?>">
+                                            </div>
+                                            <button type="button" class="vance-field-save-btn" data-empty="<?php echo '' === $socials[ $key ] ? '1' : '0'; ?>" aria-label="Save <?php echo esc_attr( ucfirst( $key ) ); ?> link" onclick="vanceSaveProfileField(this)">
+                                                <?php echo $icon_check_svg . $icon_empty_svg; ?>
+                                            </button>
+                                            <button type="button" class="vance-field-delete-btn" aria-label="Clear <?php echo esc_attr( ucfirst( $key ) ); ?> link" onclick="vanceDeleteProfileField(this)">
+                                                <?php echo $icon_trash_svg; ?>
+                                            </button>
+                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
 
                                     <!-- External Links -->
                                     <h3 style="margin:30px 0 20px 0; font-size:16px; color:#0F172A; border-top:1px solid #E2E8F0; padding-top:20px;">My Links (Up to 5)</h3>
-                                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px;">
+                                    <div class="vance-profile-links-group" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px;">
                                         <?php foreach($profile_links as $i => $link): ?>
-                                            <input type="url" name="profile_links[]" placeholder="https://" value="<?php echo esc_attr($link); ?>" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:0; font-size:13px;">
+                                        <div class="vance-field-save-row">
+                                            <div class="vance-input-icon-wrap">
+                                                <span class="vance-input-icon" aria-hidden="true"><?php echo $icon_link; ?></span>
+                                                <input type="url" name="profile_links[]" placeholder="https://" value="<?php echo esc_attr($link); ?>">
+                                            </div>
+                                            <button type="button" class="vance-field-save-btn" data-empty="<?php echo '' === $link ? '1' : '0'; ?>" aria-label="Save link <?php echo (int) $i + 1; ?>" onclick="vanceSaveProfileField(this)">
+                                                <?php echo $icon_check_svg . $icon_empty_svg; ?>
+                                            </button>
+                                            <button type="button" class="vance-field-delete-btn" aria-label="Clear link <?php echo (int) $i + 1; ?>" onclick="vanceDeleteProfileField(this)">
+                                                <?php echo $icon_trash_svg; ?>
+                                            </button>
+                                        </div>
                                         <?php endforeach; ?>
                                     </div>
 
@@ -720,6 +939,42 @@ get_header();
                         </form>
                     </div>
                     <?php // Document upload/delete JS moved with the feature to the documents tab. ?>
+
+                    <?php
+                    $ref_code  = get_user_meta( $current_user->ID, '_sla_referral_code', true );
+                    $ref_count = (int) get_user_meta( $current_user->ID, '_sla_referral_count', true );
+                    $ref_link  = $ref_code ? home_url( '/?ref=' . rawurlencode( $ref_code ) ) : '';
+                    ?>
+                    <?php if ( $ref_link ) : ?>
+                    <div class="dash-card" style="max-width: 900px; margin-top:24px;">
+                        <h3 style="margin:0 0 8px 0; font-size:16px; color:#0F172A;">Invite friends</h3>
+                        <p style="color:#64748B; font-size:13px; margin:0 0 16px 0;">Share your personal link — anyone who joins the Hub through it counts toward your invites below.</p>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <input type="text" readonly id="ref-link-input" value="<?php echo esc_attr( $ref_link ); ?>" style="flex:1; min-width:240px; padding:10px; border:1px solid #E2E8F0; border-radius:0; font-size:13px; background:#F8FAFC; color:#0F172A;">
+                            <button type="button" class="ref-copy" data-url="<?php echo esc_attr( $ref_link ); ?>" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; border-radius:0; font-weight:600; cursor:pointer;">Copy link</button>
+                        </div>
+                        <p style="margin:16px 0 0 0; font-size:13px; color:#0F172A;"><strong><?php echo esc_html( $ref_count ); ?></strong> <?php echo 1 === $ref_count ? 'person has' : 'people have'; ?> joined using your link.</p>
+                    </div>
+                    <script>
+                    (function () {
+                        var btn = document.querySelector('.ref-copy');
+                        if (!btn) { return; }
+                        btn.addEventListener('click', function () {
+                            var url = btn.getAttribute('data-url') || '';
+                            var done = function () {
+                                var was = btn.textContent;
+                                btn.textContent = 'Copied ✓';
+                                setTimeout(function () { btn.textContent = was; }, 1600);
+                            };
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                                navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link:', url); });
+                            } else {
+                                window.prompt('Copy this link:', url);
+                            }
+                        });
+                    })();
+                    </script>
+                    <?php endif; ?>
                 <?php break;
 
                 case 'health-profile':
@@ -3494,12 +3749,155 @@ get_header();
         var data = jQuery(this).serialize() + '&action=vance_save_profile&nonce=<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>';
         var btn = jQuery(this).find('button[type="submit"]');
         btn.text('Saving...').prop('disabled', true);
-        
+
         jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', data, function(res) {
             btn.text('Update Profile').prop('disabled', false);
             if(res.success) { alert('Profile saved successfully!'); } else alert(res.data);
         });
     });
+
+    // Keeps each save button's icon (checkmark vs. empty circle-slash — see
+    // the [data-empty] CSS above) matching its input LIVE as the user types,
+    // not just after a save. Delegated so it also covers the icon inserted
+    // for a 6th platform... N/A here, but stays correct if the row markup is
+    // ever rebuilt client-side.
+    jQuery(document).on('input', '.vance-field-save-row input', function () {
+        var row = this.closest('.vance-field-save-row');
+        var btn = row && row.querySelector('.vance-field-save-btn');
+        if (btn) btn.setAttribute('data-empty', this.value.trim() ? '0' : '1');
+    });
+
+    // Per-field save (Social Profiles / My Links) — the tick button beside each
+    // input. Saves just that field (or, for My Links, all 5 array slots
+    // together so the other 4 aren't wiped — the handler overwrites the whole
+    // _sla_profile_links meta from whatever profile_links[] it receives) and
+    // shows a brief filled-tick "saved" state, no page reload.
+    function vanceSaveProfileField(btn) {
+        var row = btn.closest('.vance-field-save-row');
+        if (!row || btn.disabled) return;
+        vancePersistFieldRow(row, btn);
+    }
+
+    // Delete button beside each save button (request 2026-08-11) — clears the
+    // field and persists that (a no-op if it was already empty: nothing to
+    // clear, no confirm needed). Reuses the save button as the feedback
+    // target so the same checkmark/circle-slash + brief "saved" flash apply,
+    // rather than inventing a second status indicator for the same field.
+    function vanceDeleteProfileField(btn) {
+        var row = btn.closest('.vance-field-save-row');
+        if (!row || btn.disabled) return;
+        var input = row.querySelector('input');
+        if (!input || !input.value.trim()) return;
+        if (!confirm('Clear this link?')) return;
+        input.value = '';
+        var saveBtn = row.querySelector('.vance-field-save-btn');
+        if (saveBtn) saveBtn.setAttribute('data-empty', '1');
+        vancePersistFieldRow(row, saveBtn || btn);
+    }
+
+    // Shared by both buttons above — builds and sends the save-profile
+    // request for one row (a single Social Profile field, or all 5 My Links
+    // slots together) and updates the row's feedback button + the relevant
+    // live list (icon row / text list) on success.
+    function vancePersistFieldRow(row, feedbackBtn) {
+        var platform = row.getAttribute('data-platform'); // set for Social Profiles rows only
+        var data = {
+            action: 'vance_save_profile',
+            nonce: '<?php echo wp_create_nonce("vance_dashboard_nonce"); ?>'
+        };
+        var savedValue = '';
+        var myLinksValues = null;
+
+        if (platform) {
+            var input = row.querySelector('input');
+            savedValue = input.value.trim();
+            data[input.name] = savedValue;
+        } else {
+            // My Links: send every slot in the group, in DOM order, so an
+            // untouched link isn't dropped by the handler's array overwrite.
+            myLinksValues = [];
+            document.querySelectorAll('.vance-profile-links-group input[name="profile_links[]"]').forEach(function (inp, i) {
+                data['profile_links[' + i + ']'] = inp.value;
+                myLinksValues.push(inp.value.trim());
+            });
+        }
+
+        feedbackBtn.disabled = true;
+        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', data, function (res) {
+            feedbackBtn.disabled = false;
+            if (res.success) {
+                feedbackBtn.classList.add('is-saved');
+                feedbackBtn.setAttribute('aria-label', 'Saved');
+                setTimeout(function () {
+                    feedbackBtn.classList.remove('is-saved');
+                    feedbackBtn.setAttribute('aria-label', platform ? 'Save ' + platform + ' link' : 'Save link');
+                }, 2000);
+                if (platform) {
+                    vanceRefreshSocialIcon(platform, savedValue);
+                } else {
+                    vanceRefreshMyLinksList(myLinksValues);
+                }
+            } else {
+                alert(res.data || 'Could not save — please try again.');
+            }
+        }).fail(function () {
+            feedbackBtn.disabled = false;
+            alert('Could not save — please try again.');
+        });
+    }
+
+    // Adds/updates/removes one platform's icon in the row above the avatar
+    // so a saved (or cleared) social link shows up instantly, without a
+    // reload. Social Profiles only — that row is icons-only (no text list,
+    // see vanceRefreshMyLinksList() for My Links' equivalent below).
+    function vanceRefreshSocialIcon(platform, url) {
+        var wrap = document.getElementById('vance-profile-social-icons');
+        if (!wrap) return;
+        var existing = wrap.querySelector('a[data-platform="' + platform + '"]');
+
+        if (!url) {
+            if (existing) existing.remove();
+        } else if (existing) {
+            existing.href = url;
+        } else {
+            var tpl = document.getElementById('vance-social-icon-tpl-' + platform);
+            if (tpl) {
+                var a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.className = 'vance-profile-social-icon';
+                a.setAttribute('data-platform', platform);
+                a.setAttribute('title', platform.charAt(0).toUpperCase() + platform.slice(1));
+                a.innerHTML = tpl.innerHTML;
+                wrap.appendChild(a);
+            }
+        }
+
+        wrap.style.display = wrap.children.length ? 'grid' : 'none'; // grid, not flex — 3-per-row layout above
+    }
+
+    // Rebuilds the protocol-stripped My Links text list under the avatar
+    // photo from the 5 current slot values — simpler and safer than diffing
+    // against data-platform (My Links have no stable per-row identity the
+    // way Social Profiles do), and vanceSaveProfileField() already has all
+    // 5 values in hand from building the save request.
+    function vanceRefreshMyLinksList(values) {
+        var wrap = document.getElementById('vance-profile-my-links-list');
+        if (!wrap || !values) return;
+        wrap.innerHTML = '';
+        values.forEach(function (url) {
+            if (!url) return;
+            var a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.className = 'vance-profile-link-text';
+            a.textContent = url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+            wrap.appendChild(a);
+        });
+        wrap.style.display = wrap.children.length ? 'flex' : 'none';
+    }
 
     // Markdown Formatter Helper
     function parseMarkdown(text) {

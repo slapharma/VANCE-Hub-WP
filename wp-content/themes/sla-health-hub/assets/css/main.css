@@ -111,18 +111,30 @@ h6 {
     transform: translateY(-1px);
 }
 
-/* Header "My Dashboard" CTA — plain bold teal text link (not a button) */
+/* Header "My Dashboard" CTA — boxed button: white bg, teal border/text,
+   inverts (teal bg, white text) on hover. Was a plain underline-on-hover
+   text link; requested 2026-08-11 to read as a button next to VANCE-Ai. */
 .header-dashboard-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px; /* matches .vance-nav-askai (vance-askai.css) exactly — global
+                     box-sizing:border-box means this border is absorbed inside
+                     the height instead of adding to it. Requested 2026-08-11:
+                     "same dimensions as the vance-ai [button]". */
     color: var(--primary-color);
+    background: #fff;
+    border: 1.5px solid var(--primary-color);
     font-weight: 700;
     font-size: 14px;
+    padding: 0 16px;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .header-dashboard-link:hover {
-    color: var(--primary-hover);
-    text-decoration: underline;
+    background: var(--primary-color);
+    color: #fff;
 }
 
 .btn-outline {
@@ -163,7 +175,7 @@ h6 {
 /* logo.png is the VANCE wordmark on a padded 16:9 canvas (~28% transparent
    margin above and below the mark — see the same note in vance-askai.css by
    .vance-askai-intro__logo-img). .logo-area is the crop viewport: fixed to
-   the wordmark's actual visible size (125x32) with overflow:hidden, while
+   the wordmark's actual visible size with overflow:hidden, while
    the <img> inside keeps its full natural width (125px, height auto ≈70px)
    — align-items:center + the overflow clip crop away the top/bottom padding
    symmetrically, the same as object-fit:cover would, but by rasterizing the
@@ -173,7 +185,13 @@ h6 {
    was pixelated — that tiny a target gave the compositor very little to
    antialias the wordmark's diagonal arrow edge with, especially inside
    .site-header's transform:translateZ(0) GPU layer (see that rule's note).
-   Corrected 2026-07-28; +10% (114→125) requested same day. */
+   Corrected 2026-07-28; +10% (114→125) requested same day.
+   2026-08-11: the box height was tightened to the wordmark's *exact* pixel
+   bounding box (measured from logo.png's alpha channel — no soft/antialiased
+   fringe, a hard edge right at the crop line), leaving zero rounding margin.
+   Sub-pixel layout rounding then clipped the arrow tip's peak in production
+   (reported as "logo cut off at the top of the V"). +4px on both breakpoints
+   restores a safety margin without visibly growing the logo. */
 .logo-area {
     display: flex;
     align-items: center;
@@ -182,7 +200,7 @@ h6 {
     font-size: 24px;
     font-family: var(--font-heading);
     width: 125px; /* +10% from 114px */
-    height: 32px; /* +10% from 29px */
+    height: 36px; /* +4px safety margin, from 32px — see note above */
     overflow: hidden;
 }
 
@@ -195,7 +213,7 @@ h6 {
    min-width:768px to avoid overflowing the fixed 70px mobile header.
    2026-07-24: per request, the nav is dropped to align with the BOTTOM of the
    logo instead of being vertically centred. .header-content stays
-   align-items:center (logo + header-actions remain centred); only .main-nav is
+   align-items:center (logo remains centred); .main-nav and .header-actions are
    pinned to flex-end. The reduced link bottom-padding pulls the menu text down
    so its baseline meets the logo's bottom edge. This only lines up now that
    the logo box above is cropped to its visible content (see note there) —
@@ -207,7 +225,7 @@ h6 {
 @media (min-width: 768px) {
     .logo-area {
         width: 145px; /* +15% from 125px, same glyph aspect ratio */
-        height: 36px; /* +15% from 32px */
+        height: 40px; /* +4px safety margin, from 36px — see note above */
     }
     .logo-area img {
         width: 145px;
@@ -219,6 +237,18 @@ h6 {
     }
     .main-nav a {
         padding-bottom: 2px; /* was 8px — lower the text to meet the logo bottom */
+    }
+    /* 2026-08-11: header-actions (social icons, VANCE-Ai button, My Dashboard
+       link) was still centred in the row via .header-content's align-items,
+       sitting ~5px above the nav/logo bottom edge — reported as not lining up
+       with the menu. align-self drops the whole cluster to the row bottom.
+       Its children also need their own align-items:flex-end (icons/button/
+       link are different heights, so each needs its OWN bottom edge on the
+       baseline, not just the tallest child's) — that override lives with
+       .header-actions's base rule further down the file; see the note there
+       for why it can't live in this block. */
+    .header-actions {
+        align-self: flex-end;
     }
     /* Mega Menu Pro renders inside .main-nav; if its wrapper is ever hoisted to a
        direct flex child, keep it bottom-aligned too. Nudge its bar down to match. */
@@ -414,6 +444,21 @@ h6 {
     display: flex;
     gap: 16px;
     align-items: center;
+}
+
+/* Desktop: overrides align-items:center above so each header-actions child
+   (social icons, VANCE-Ai button, My Dashboard link) sits on its own bottom
+   edge, matching .main-nav/.logo-area's baseline (2026-08-11).
+   MUST come after the unconditional rule above — a @media block earlier in
+   the file loses to a later same-specificity unconditional rule regardless
+   of the media query, so putting align-items:flex-end in the min-width:768px
+   block up near .logo-area (where .main-nav's own flex-end rule lives) was
+   silently overridden by the plain .header-actions rule above it in source
+   order. Keeping this one physically after fixes the cascade. */
+@media (min-width: 768px) {
+    .header-actions {
+        align-items: flex-end;
+    }
 }
 
 /* Hero Section */

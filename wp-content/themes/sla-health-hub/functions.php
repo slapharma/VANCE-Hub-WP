@@ -1594,6 +1594,18 @@ function vance_google_oauth_callback() {
         $email_verified = isset( $payload['email_verified'] ) ? (bool) $payload['email_verified'] : true;
         update_user_meta( $user_id, '_vance_email_verified', $email_verified ? 1 : 0 );
 
+        // Google signup has no "I am a..." step, so there's no _sla_audience_role
+        // signal yet — default to 'other' (routes into the general Member nurture,
+        // never guessed into the HCP track) rather than leaving it unset.
+        update_user_meta( $user_id, '_sla_audience_role', 'other' );
+        if ( function_exists( 'vance_sync_fluentcrm_contact' ) ) {
+            vance_sync_fluentcrm_contact( $user_id, $email, 'other', false, 'google' );
+        }
+        if ( function_exists( 'vance_generate_referral_code_for_user' ) ) {
+            vance_generate_referral_code_for_user( $user_id );
+            vance_credit_referral_signup( $user_id );
+        }
+
         $user = get_user_by( 'id', $user_id );
     } else {
         // Existing user signing in via Google — opportunistically mark verified if not already.
@@ -2797,6 +2809,18 @@ function vance_increase_upload_size_limit( $limit ) {
     return 10 * 1024 * 1024; // 10MB in bytes
 }
 add_filter( 'upload_size_limit', 'vance_increase_upload_size_limit' );
+
+/**
+ * Customizer active_callback: show the Open-mode guardrail controls only when
+ * the Answer mode setting is set to 'open'.
+ *
+ * @param WP_Customize_Control $control
+ * @return bool
+ */
+function vance_askai_open_mode_control_active( $control ) {
+    $setting = $control->manager->get_setting( 'vance_askai_mode' );
+    return $setting && 'open' === $setting->value();
+}
 
 /**
  * Fetch the list of available models from OpenRouter for the Ask AI model dropdown.
@@ -4578,6 +4602,23 @@ function vance_customize_register( $wp_customize ) {
         'panel'    => 'vance_content_panel',
     ) );
 
+    // Answer mode
+    $wp_customize->add_setting( 'vance_askai_mode', array(
+        'default'           => 'grounded',
+        'sanitize_callback' => 'sanitize_key',
+    ) );
+    $wp_customize->add_control( 'vance_askai_mode', array(
+        'label'       => __( 'Answer mode', 'sla-health-hub' ),
+        'description' => __( 'Grounded: VANCE-Ai answers only from this hub\'s own library (default, safest). Open: VANCE-Ai draws on its full general knowledge, constrained by the guardrails below.', 'sla-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'select',
+        'priority'    => 1,
+        'choices'     => array(
+            'grounded' => __( 'Grounded — hub content only (default)', 'sla-health-hub' ),
+            'open'     => __( 'Open — full AI knowledge with guardrails', 'sla-health-hub' ),
+        ),
+    ) );
+
     // Hero Settings
     $wp_customize->add_setting( 'vance_askai_hero_bg', array(
         'default'           => '',
@@ -4662,6 +4703,44 @@ function vance_customize_register( $wp_customize ) {
         'section'     => 'vance_askai_settings',
         'type'        => 'select',
         'choices'     => $vance_model_choices,
+    ) );
+
+    // Open-mode guardrails (only shown when Answer mode = Open)
+    $vance_open_guardrail_defaults = vance_ai_open_mode_guardrail_defaults();
+
+    $wp_customize->add_setting( 'vance_askai_guardrail_claims', array(
+        'default'           => $vance_open_guardrail_defaults['claims'],
+        'sanitize_callback' => 'sanitize_textarea_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_guardrail_claims', array(
+        'label'           => __( 'Open mode: supplement/FSMP claims guardrail', 'sla-health-hub' ),
+        'description'     => __( 'UK/EU food-supplement and FSMP regulatory boundary. Edit the wording to match current legal/compliance guidance without a code change.', 'sla-health-hub' ),
+        'section'         => 'vance_askai_settings',
+        'type'            => 'textarea',
+        'active_callback' => 'vance_askai_open_mode_control_active',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_guardrail_sources', array(
+        'default'           => $vance_open_guardrail_defaults['sources'],
+        'sanitize_callback' => 'sanitize_textarea_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_guardrail_sources', array(
+        'label'           => __( 'Open mode: UK guidance hierarchy guardrail', 'sla-health-hub' ),
+        'description'     => __( 'Tier 1 (NHS/NICE/BSG) vs tier 2 (Crohn\'s & Colitis UK, Guts UK) source weighting.', 'sla-health-hub' ),
+        'section'         => 'vance_askai_settings',
+        'type'            => 'textarea',
+        'active_callback' => 'vance_askai_open_mode_control_active',
+    ) );
+
+    $wp_customize->add_setting( 'vance_askai_guardrail_ontopic', array(
+        'default'           => $vance_open_guardrail_defaults['ontopic'],
+        'sanitize_callback' => 'sanitize_textarea_field',
+    ) );
+    $wp_customize->add_control( 'vance_askai_guardrail_ontopic', array(
+        'label'           => __( 'Open mode: stay-on-topic guardrail', 'sla-health-hub' ),
+        'section'         => 'vance_askai_settings',
+        'type'            => 'textarea',
+        'active_callback' => 'vance_askai_open_mode_control_active',
     ) );
 
     // Knowledge base grounding
@@ -6690,6 +6769,19 @@ function vance_setup_custom_roles() {
     }
 }
 add_action( 'init', 'vance_setup_custom_roles' );
+
+/**
+ * Referral link attribution: capture `?ref=CODE` into a 30-day cookie so the
+ * credit-on-signup logic (vance_credit_referral_signup(), inc/dashboard-functions.php)
+ * can find it even if the visitor doesn't sign up on their first page view.
+ */
+function vance_capture_referral_cookie() {
+    if ( ! empty( $_GET['ref'] ) && ! isset( $_COOKIE['vance_ref'] ) && ! headers_sent() ) {
+        $code = sanitize_text_field( wp_unslash( $_GET['ref'] ) );
+        setcookie( 'vance_ref', $code, time() + 30 * DAY_IN_SECONDS, '/', '', is_ssl(), true );
+    }
+}
+add_action( 'init', 'vance_capture_referral_cookie' );
 
 /**
  * Authentication & Redirects
