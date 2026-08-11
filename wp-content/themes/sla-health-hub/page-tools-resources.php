@@ -73,7 +73,7 @@ get_header(); ?>
             // not as a /assets/tools/ bundle — so we just link to /healthcare-quiz/.
             'slug'     => 'healthcare-quiz',
             'page_url' => '/healthcare-quiz/',
-            'name'     => 'IBD Health Quiz',
+            'name'     => 'Gastro Health Survey',
             'tag'      => 'Self-Assessment',
             'desc'     => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.',
             'colors'   => array( '#78bfbf', '#aedbdb', '#008080' ),

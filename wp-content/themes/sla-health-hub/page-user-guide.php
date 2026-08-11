@@ -42,7 +42,7 @@ $dashboard_tabs = array(
 	array( 'icon' => '📊', 'label' => 'Dashboard',      'desc' => 'Your home base — a snapshot of saved tools, recent notes, unread messages and your Health Profile progress.' ),
 	array( 'icon' => '👤', 'label' => 'My Profile',      'desc' => 'Your name, avatar, bio and contact details.' ),
 	array( 'icon' => '🩺', 'label' => 'Health Profile',  'desc' => 'Your health discovery results and clinical profile questionnaire — this is what personalises content across the site.' ),
-	array( 'icon' => '🧮', 'label' => 'My Tools',        'desc' => 'Every saved calculator result (Malnutrition Calculator, Healthcare Quiz), so you can track changes over time.' ),
+	array( 'icon' => '🧮', 'label' => 'My Tools',        'desc' => 'Every saved calculator result (Malnutrition Calculator, Gastro Health Survey), so you can track changes over time.' ),
 	array( 'icon' => '📚', 'label' => 'My Reading List', 'desc' => 'Articles you\'ve bookmarked to come back to.' ),
 	array( 'icon' => '🎓', 'label' => 'My Courses',      'desc' => 'Learning content you\'ve enrolled in.' ),
 	array( 'icon' => '🔍', 'label' => 'My Searches',     'desc' => 'Saved Discovery Suite searches, one click from your last filter.' ),
@@ -90,7 +90,7 @@ $tools = array(
 	array(
 		'slug'   => 'healthcare-quiz',
 		'url'    => '/healthcare-quiz/',
-		'name'   => 'IBD Health Quiz',
+		'name'   => 'Gastro Health Survey',
 		'tag'    => 'Self-Assessment',
 		'desc'   => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers and lifestyle factors. Get an instant summary you can share with your clinician.',
 		'img'    => 'healthcare-quiz-start.png',
@@ -308,7 +308,7 @@ $tools = array(
 			</div>
 			<div class="vug-shot-strip vug-shot-strip--center">
 				<?php
-				echo vug_anim_shot( $img_base, 'healthcare-quiz-results.png', 'IBD Health Quiz completion screen', 'Quiz result', array(
+				echo vug_anim_shot( $img_base, 'healthcare-quiz-results.png', 'Gastro Health Survey completion screen', 'Quiz result', array(
 					array( 'text' => 'Profile updated', 'pos' => 'top-right', 'delay' => 0.2 ),
 				) );
 				echo vug_anim_shot( $img_base, 'malnutrition-calculator-result.png', 'Malnutrition Calculator risk result', 'Calculator result', array(

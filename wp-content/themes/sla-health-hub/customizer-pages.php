@@ -1522,13 +1522,13 @@ function vance_pages_customize_register( $wp_customize ) {
     // HEALTHCARE QUIZ — hero shell mods (mirrors AskAi visual layout)
     // ============================================================
     $wp_customize->add_panel( "vance_hquiz_panel", array(
-        "title"    => __( "Page - IBD Health Quiz", "sla-health-hub" ),
+        "title"    => __( "Page - Gastro Health Survey", "sla-health-hub" ),
         "priority" => 46,
     ) );
     $wp_customize->add_section( "vance_hquiz_hero", array( "title" => "Hero Section", "panel" => "vance_hquiz_panel" ) );
     $wp_customize->add_setting( "vance_hquiz_hero_badge",    array( "default" => "Self-Assessment", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_hquiz_hero_badge",    array( "label" => "Hero Badge Text", "section" => "vance_hquiz_hero", "type" => "text" ) );
-    $wp_customize->add_setting( "vance_hquiz_hero_title",    array( "default" => "IBD Health Quiz", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_setting( "vance_hquiz_hero_title",    array( "default" => "Gastro Health Survey", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_hquiz_hero_title",    array( "label" => "Hero Title (H1)", "section" => "vance_hquiz_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_hquiz_hero_subtitle", array( "default" => "A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_hquiz_hero_subtitle", array( "label" => "Hero Subtitle", "section" => "vance_hquiz_hero", "type" => "textarea" ) );

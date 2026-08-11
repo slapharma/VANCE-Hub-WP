@@ -4052,7 +4052,7 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_icon_bg_color', array( 'label' => 'Image Placeholder Background', 'section' => 'vance_pathway_content_settings' ) ) );
 
     // Card 1: Healthcare Quiz
-    $wp_customize->add_setting( 'vance_hquiz_tile_title', array( 'default' => 'Healthcare Quiz', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_setting( 'vance_hquiz_tile_title', array( 'default' => 'Gastro Health Survey', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_hquiz_tile_title', array( 'label' => 'Healthcare Quiz, Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_hquiz_tile_desc', array( 'default' => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.', 'sanitize_callback' => 'sanitize_textarea_field' ) );
@@ -5518,7 +5518,7 @@ function vance_customize_register( $wp_customize ) {
         ''                        => __( 'Link to a custom URL', 'sla-health-hub' ),
         'ibd-recipes'             => __( 'Open: Recipes & Meal Planner', 'sla-health-hub' ),
         'malnutrition-calculator' => __( 'Open: Malnutrition Screener', 'sla-health-hub' ),
-        'healthcare-quiz'         => __( 'Open: Health Discovery Quiz', 'sla-health-hub' ),
+        'healthcare-quiz'         => __( 'Open: Gastro Health Survey', 'sla-health-hub' ),
     );
 
     foreach ( $categories as $cat ) {

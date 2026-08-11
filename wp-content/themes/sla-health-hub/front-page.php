@@ -1011,7 +1011,7 @@ body {
                     // each one in whichever style the admin selected.
                     $pwc_cards = array(
                         array(
-                            'title'         => vance_get_theme_mod('vance_hquiz_tile_title', 'Healthcare Quiz'),
+                            'title'         => vance_get_theme_mod('vance_hquiz_tile_title', 'Gastro Health Survey'),
                             'desc'          => vance_get_theme_mod('vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.'),
                             'eyebrow'       => vance_get_theme_mod('vance_hquiz_tile_extra', 'Find your starting point'),
                             'image'         => vance_get_theme_mod('vance_hquiz_tile_image'),

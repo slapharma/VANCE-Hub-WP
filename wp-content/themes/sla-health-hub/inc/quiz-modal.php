@@ -28,7 +28,7 @@ if ( ! is_array( $vance_quiz_saved ) ) {
 
         <div class="vance-mk__header">
             <div class="vance-mk__badge">Vance Medical &middot; Health Discovery</div>
-            <h2 id="vance-quiz-modal-title" class="vance-mk__title">Health Discovery Quiz</h2>
+            <h2 id="vance-quiz-modal-title" class="vance-mk__title">Gastro Health Survey</h2>
             <p class="vance-mk__subtitle">Nine short questions so the hub can point you at the research, tools and recipes that actually apply to you. You can change any answer later.</p>
         </div>
 

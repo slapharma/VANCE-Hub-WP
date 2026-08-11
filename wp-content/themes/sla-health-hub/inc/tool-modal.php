@@ -38,7 +38,7 @@ $vance_tm_tools = array(
         'inline' => false,
     ),
     'healthcare-quiz' => array(
-        'title'  => 'Health Discovery Quiz',
+        'title'  => 'Gastro Health Survey',
         'url'    => home_url( '/healthcare-quiz/' ),
         'inline' => true, // reuses openQuizModal()
     ),

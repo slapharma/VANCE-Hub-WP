@@ -20,7 +20,7 @@ $saved_role = isset( $saved_quiz['role'] ) ? $saved_quiz['role'] : '';
 
 // Hero shell mods (mirror the askai- and per-tool-page conventions).
 $hq_hero_bg       = vance_get_theme_mod( 'vance_hquiz_hero_bg', get_template_directory_uri() . '/assets/img/about_hero.png' );
-$hq_hero_title    = vance_get_theme_mod( 'vance_hquiz_hero_title', 'IBD Health Quiz' );
+$hq_hero_title    = vance_get_theme_mod( 'vance_hquiz_hero_title', 'Gastro Health Survey' );
 $hq_hero_subtitle = vance_get_theme_mod( 'vance_hquiz_hero_subtitle', 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.' );
 $hq_hero_badge    = vance_get_theme_mod( 'vance_hquiz_hero_badge', 'Self-Assessment' );
 $hq_overlay       = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_hquiz_hero_overlay', 85 ) ) ) ) / 100;
