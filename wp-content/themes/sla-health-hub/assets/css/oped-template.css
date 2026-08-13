@@ -164,6 +164,42 @@
     color: var(--text-main);
 }
 
+/* ---------------------------------------------------------------------------
+   Article title at the top of the reading column
+   Repeats the post title inside the white body card. It is a <div>, not a
+   heading, because the hero <h1 class="oped-title"> remains the page's only H1
+   — so this only borrows that H1's typography, recoloured for a white card.
+   The two-class selector below beats the plain .oped-article-body padding rules
+   (including the mobile shorthands further down this file and in main.css), so
+   the gap above the title is exactly 50px at every breakpoint.
+--------------------------------------------------------------------------- */
+.oped-article-body.has-article-title {
+    padding-top: 50px;
+}
+
+.va-article-title {
+    font-family: var(--font-heading);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: var(--secondary-color);
+    margin: 0 0 32px;
+}
+
+@media (max-width: 768px) {
+    .va-article-title {
+        font-size: 32px;
+        margin-bottom: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .va-article-title {
+        font-size: 28px;
+    }
+}
+
 .oped-article-body p {
     margin-bottom: 24px;
 }

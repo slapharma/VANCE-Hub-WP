@@ -219,7 +219,14 @@ while ( have_posts() ) :
                 <div class="oped-main-content">
 
                     <!-- Article Body -->
-                    <div class="oped-article-body">
+                    <div class="oped-article-body has-article-title">
+                        <?php
+                        // The post title repeated at the top of the reading column.
+                        // Deliberately NOT a heading element: the hero
+                        // <h1 class="oped-title"> above stays the page's only H1,
+                        // so this is a <div> styled to match that H1's typography.
+                        ?>
+                        <div class="va-article-title"><?php the_title(); ?></div>
                         <?php the_content(); ?>
                     </div>
 
