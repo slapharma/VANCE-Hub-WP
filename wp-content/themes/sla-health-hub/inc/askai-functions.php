@@ -543,6 +543,28 @@ function vance_ai_open_mode_guardrail_defaults() {
 }
 
 /**
+ * Fixed allow-list of external organisations Open mode may link to when a claim
+ * comes from general knowledge rather than a hub SOURCE.
+ *
+ * Deliberately NOT admin-editable and NOT left to the model to invent: each URL
+ * here is a root domain, verified by hand, so a citation can never 404 or point
+ * somewhere wrong. The model is instructed to use these exact URLs verbatim and
+ * never deep-link, which is what actually prevents hallucinated citations, not
+ * asking it nicely to "only cite verified sources".
+ *
+ * @return array<int,array{name:string,url:string}>
+ */
+function vance_ai_open_mode_trusted_orgs() {
+	return array(
+		array( 'name' => 'NHS', 'url' => 'https://www.nhs.uk' ),
+		array( 'name' => 'NICE', 'url' => 'https://www.nice.org.uk' ),
+		array( 'name' => 'British Society of Gastroenterology', 'url' => 'https://www.bsg.org.uk' ),
+		array( 'name' => "Crohn's & Colitis UK", 'url' => 'https://www.crohnsandcolitis.org.uk' ),
+		array( 'name' => 'Guts UK', 'url' => 'https://www.gutscharity.org.uk' ),
+	);
+}
+
+/**
  * Assemble the Open mode system instruction: identity, a source-priority rule,
  * the three admin-editable guardrails, then the same tone/formatting/length
  * rules the grounded prompt uses.
@@ -572,6 +594,12 @@ function vance_ai_open_system_prompt( $sources, $reading_level = 'knowledgeable'
 		$guardrail_ontopic = $defaults['ontopic'];
 	}
 
+	$trusted_lines = array();
+	foreach ( vance_ai_open_mode_trusted_orgs() as $org ) {
+		$trusted_lines[] = 'More from: ' . $org['name'] . ' | ' . $org['url'];
+	}
+	$trusted_orgs_block = implode( "\n", $trusted_lines );
+
 	$rules = <<<PROMPT
 You are VANCE-Ai, the assistant on the Vance Medical Hub (vancehealthhub.co.uk), a resource about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
 
@@ -580,21 +608,24 @@ In this mode you are not limited to this hub's own library: you may draw on your
 RULES
 1. If the SOURCES cover the question, or a substantial part of it, ground your answer in them first.
 2. Where the SOURCES are silent, thin, or only partly relevant, fill the gap with your own general knowledge, always staying within the GUARDRAILS below.
-3. When you draw on a SOURCE, cite it. End your answer with the hub articles you used, one per line, in exactly this form:
+3. Always give the reader somewhere to read more, prioritising hub content. When you draw on a SOURCE, cite it at the end of your answer, one per line, in exactly this form:
 Read more: <article title> | <URL>
-Copy each URL character-for-character from its SOURCE header. Never invent, shorten or guess a URL, and never cite a source you did not actually use. Do not cite anything for parts of the answer drawn from general knowledge outside the SOURCES. Reference entries that carry no URL are not cited this way.
+Copy each URL character-for-character from its SOURCE header. Never invent, shorten or guess a URL, and never cite a source you did not actually use. Reference entries that carry no URL are not cited this way.
+4. When part of your answer comes from general knowledge and no SOURCE covers it, point the reader to one of these named organisations instead, each on its own line, after any "Read more" lines:
+{$trusted_orgs_block}
+Only ever use these exact URLs, written exactly as above, and only when genuinely relevant to what you just said. Never invent, guess, shorten or deep-link to any other page, whether on these domains or any other external site.
 
 GUARDRAILS
-4. {$guardrail_claims}
-5. {$guardrail_sources}
-6. {$guardrail_ontopic}
+5. {$guardrail_claims}
+6. {$guardrail_sources}
+7. {$guardrail_ontopic}
 
 GENERAL RULES
-7. This is general information, not personal medical advice. Do not diagnose, do not recommend or adjust treatment or dosing, and do not interpret a reader's own test results. Point anything urgent to their clinical team, NHS 111, or 999 in an emergency.
-8. Tone: professional, clinical, warm and plain-spoken.
-9. FORMATTING: clean, readable prose. Do NOT use Markdown headings or any "#" characters. You may use **bold** for key terms and simple hyphen (-) bullet points for short lists. No tables, no code blocks.
-10. PUNCTUATION: never use an em dash or an en dash anywhere in your reply. Use a comma, a colon, a full stop or brackets instead.
-11. LENGTH: keep answers focused, around 300 words, unless the reader explicitly asks for more depth.
+8. This is general information, not personal medical advice. Do not diagnose, do not recommend or adjust treatment or dosing, and do not interpret a reader's own test results. Point anything urgent to their clinical team, NHS 111, or 999 in an emergency.
+9. Tone: professional, clinical, warm and plain-spoken.
+10. FORMATTING: clean, readable prose. Do NOT use Markdown headings or any "#" characters. You may use **bold** for key terms and simple hyphen (-) bullet points for short lists. No tables, no code blocks.
+11. PUNCTUATION: never use an em dash or an en dash anywhere in your reply. Use a comma, a colon, a full stop or brackets instead.
+12. RESPONSE STRUCTURE: give a short answer first, no more than 200 words, covering the key point. After it, add any "Read more" or "More from" lines required by rules 3 and 4. Then, on its own line, ask the reader if they would like more detail or a longer, more in depth answer. Do not include the longer answer pre-emptively in this same reply: only give it if the reader says yes or asks for more in a later message.
 PROMPT;
 
 	$levels = vance_ai_reading_levels();
