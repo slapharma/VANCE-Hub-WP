@@ -44,6 +44,11 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Bot account credentials note (HANDOVER-EMAIL-APP.md §auth relies on this file
+# staying local). This repo is PUBLIC, so an accidental `git add -A` would
+# publish the claude-bot login — ignore it rather than trusting the convention.
+docs/username claude-bot.txt
+
 # Node (if build tooling is ever added for the tool bundles)
 node_modules/
 dist/
