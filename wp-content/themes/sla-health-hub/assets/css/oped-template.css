@@ -167,8 +167,9 @@
 /* ---------------------------------------------------------------------------
    Article title at the top of the reading column
    Repeats the post title inside the white body card. It is a <div>, not a
-   heading, because the hero <h1 class="oped-title"> remains the page's only H1
-   — so this only borrows that H1's typography, recoloured for a white card.
+   heading, because the hero <h1 class="oped-title"> remains the page's only H1.
+   Sized at 28px to match the body's section headings — and, like those
+   headings, it holds that size at every breakpoint rather than scaling down.
    The two-class selector below beats the plain .oped-article-body padding rules
    (including the mobile shorthands further down this file and in main.css), so
    the gap above the title is exactly 50px at every breakpoint.
@@ -179,25 +180,12 @@
 
 .va-article-title {
     font-family: var(--font-heading);
-    font-size: 40px;
+    font-size: 28px;
     font-weight: 700;
     line-height: 1.15;
     letter-spacing: -1px;
     color: var(--secondary-color);
-    margin: 0 0 32px;
-}
-
-@media (max-width: 768px) {
-    .va-article-title {
-        font-size: 32px;
-        margin-bottom: 24px;
-    }
-}
-
-@media (max-width: 480px) {
-    .va-article-title {
-        font-size: 28px;
-    }
+    margin: 0 0 75px;
 }
 
 .oped-article-body p {
@@ -214,11 +202,23 @@
 }
 
 .oped-article-body h2 {
-    font-size: 28px;
+    font-size: 22px;
 }
 
 .oped-article-body h3 {
-    font-size: 22px;
+    font-size: 19px;
+}
+
+/* Below 768px, main.css sets a site-wide `.container h2 { font-size: 28px
+   !important }` typography guard. The article body sits inside a .container,
+   so that rule ties with .oped-article-body h2 on specificity, wins on source
+   order, and drags section headings back up to 28px — level with the article
+   title. This exception is scoped one level tighter and matches the
+   !important, so the article's own heading scale holds at every width. */
+@media (max-width: 767.98px) {
+    .oped-main-content .oped-article-body h2 {
+        font-size: 22px !important;
+    }
 }
 
 .oped-article-body blockquote {

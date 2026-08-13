@@ -1535,14 +1535,14 @@ body.home .hero {
 }
 
 .oped-article-body h2 {
-    font-size: 28px;
+    font-size: 22px;
     margin-top: 32px;
     margin-bottom: 16px;
     color: var(--secondary-color);
 }
 
 .oped-article-body h3 {
-    font-size: 22px;
+    font-size: 19px;
     margin-top: 28px;
     margin-bottom: 14px;
     color: var(--secondary-color);
