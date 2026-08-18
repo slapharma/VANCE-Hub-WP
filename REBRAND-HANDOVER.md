@@ -1,10 +1,18 @@
 # Vance Medical Rebrand — Handover
 
+> **Historical snapshot, 2026-04-17.** Paths, domain and repo names below describe the
+> state at handover and are now stale in several places. For current operational paths
+> and the working deploy/rollback commands, use [CLAUDE.md](CLAUDE.md). In particular the
+> theme folder was renamed `sla-health-hub` → `vance-health-hub` on 2026-08-18
+> (see [TODO-RENAME.md](TODO-RENAME.md)), so every `themes/sla-health-hub` path below is
+> pre-rename. Backup tarballs named `sla-health-hub-pre-*.tar.gz` do still exist on the
+> server under those original names.
+
 **Project:** SLA Health WordPress theme → Vance Medical Foods Ltd rebrand
 **Live site:** https://gastrohealthhub.com (formerly slahealth.co.uk)
 **Repo:** https://github.com/slapharma/SLAHealthHub (now redirecting to `x.Archive-SLAHealthHub` — archived on GitHub)
 **Hosting:** Hostinger, SSH `u767439438@82.29.185.3` port 65002, key at `~/.ssh/hostinger_sla`
-**Theme directory name (unchanged):** `wp-content/themes/sla-health-hub/` — see note under *Architecture Decisions* below.
+**Theme directory name (at handover):** `wp-content/themes/sla-health-hub/` — renamed to `vance-health-hub` on 2026-08-18; see [TODO-RENAME.md](TODO-RENAME.md).
 **Last deploy:** 2026-04-17 14:26 UTC, commit `1ab0101`
 **Handover date:** 2026-04-17
 

@@ -1,69 +1,102 @@
-# Deferred: theme folder rename `sla-health-hub` → (new slug)
+# DONE: theme folder rename `sla-health-hub` → `vance-health-hub`
 
-**Status:** Deferred on 2026-04-17. Tracked per [REBRAND-HANDOVER.md §6.6](REBRAND-HANDOVER.md). Low-value, high-risk — user decided to leave for later.
+**Status:** Completed 2026-08-18. Deferred on 2026-04-17, executed in a single window.
+Supersedes the deferral note tracked per [REBRAND-HANDOVER.md §6.6](REBRAND-HANDOVER.md).
 
-The folder name is never visible to end users. The effort is entirely cross-reference bookkeeping plus a coordinated deploy window.
+The folder name is never visible to end users. This was cross-reference bookkeeping plus a
+coordinated deploy window.
 
-## Why this is hard
+## What was actually coupled
 
-- `Text Domain: sla-health-hub` in `style.css` is consumed by `esc_html__('...', 'sla-health-hub')` in **~169 call sites** across `functions.php`, `customizer-pages.php`, and every `page-*.php`.
-- `wp_options.template` and `wp_options.stylesheet` in the live DB both store `sla-health-hub`. Renaming the folder without updating these breaks theme activation immediately.
-- Hostinger live path `~/domains/gastrohealthhub.com/public_html/wp-content/themes/sla-health-hub/` must be renamed atomically with the local rename or the next deploy fails.
-- `theme_mods_sla-health-hub` option key holds all customizer data — renaming requires a DB migration of that key or the admin's customizations disappear.
-- Any `.mo` / `.po` translation files (currently none, but if ever added) are keyed by text domain.
+- `Text Domain: sla-health-hub` in `style.css`, consumed by ~600 `esc_html__`/`__`/`esc_attr__`
+  call sites. (The old estimate of 169 undercounted.) Note `load_theme_textdomain()` is never
+  called and there are no `.mo`/`.po` files, so the text domain is inert — it was renamed for
+  consistency, not because anything would have broken.
+- `wp_options.template` and `wp_options.stylesheet` — both stored `sla-health-hub`.
+- `theme_mods_sla-health-hub` — 39,626 bytes of serialised customizer data.
+- ~2,900 baked-in `themes/sla-health-hub` paths inside the `assets/tools/ibd-recipes/`
+  static Next.js export (HTML + `.txt` payloads). **This was the real bulk of the work** and
+  is what breaks if the folder is renamed without redeploying the theme.
+- 1,040 in-DB references to `themes/sla-health-hub` (4 posts, 6 usermeta, 20 FluentCRM
+  campaign bodies, 1 vhh-annotations selector, rest Jetpack Boost transients).
+- `.github/workflows/deploy.yml` path filter, `REMOTE_THEME`, `LOCAL_THEME`, backup filename
+  pattern; `email-templates/*.html` logo URLs; `LIVE-PULL/` and `LOCAL/` helper scripts.
 
-## Coordinated sequence — all in one deploy window
+All live PHP resolves assets through `get_template_directory_uri()`, so no template code
+carried a hardcoded path.
 
-1. **Pick the new slug.** Candidates: `vance-hub`, `gastrohealthhub`, `vance-medical`. `vance-hub` matches the GitHub repo name `VANCE-Hub-WP`.
-2. **Local repo**
-   - Rename folder `wp-content/themes/sla-health-hub/` → `wp-content/themes/<new-slug>/`.
-   - Edit `style.css` header: `Text Domain: <new-slug>`.
-   - Repo-wide find/replace: `'sla-health-hub'` → `'<new-slug>'` but **scoped to** `esc_html__`, `esc_attr__`, `_e`, `_x`, `_n`, `__`, `load_theme_textdomain` calls only.
-   - Grep for any remaining `'sla-health-hub'` string literal — expect only `REBRAND-HANDOVER.md`, `CLAUDE.md`, and `TODO-RENAME.md` (this file) to match after the targeted replace.
-   - Deploy command paths inherit from `$THEME` env var but the literal `sla-health-hub` appears in the backup filename and rollback commands — update those too.
-3. **Server**
-   ```bash
-   ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
-     "cd ~/domains/gastrohealthhub.com/public_html/wp-content/themes && \
-      mv sla-health-hub <new-slug>"
+## Sequence that was executed
+
+1. **Repo** — `git mv` the folder, then a blanket `sla-health-hub` → `vance-health-hub`
+   substitution across 237 text files in the theme. Verified by reconstructing every changed
+   file from `HEAD` with the same substitution and byte-comparing: 237/237 identical, so the
+   commit provably contains nothing but the slug change. All 73 PHP files lint clean.
+2. **Server, zero-downtime cutover** — `cp -a sla-health-hub vance-health-hub` first, so both
+   folders existed and the site kept serving from the old one while the DB was flipped.
+3. **Database** — single statement, no JSON round-trip:
+   ```sql
+   UPDATE wp_options SET option_value='vance-health-hub' WHERE option_name IN ('template','stylesheet');
+   UPDATE wp_options SET option_name='theme_mods_vance-health-hub' WHERE option_name='theme_mods_sla-health-hub';
    ```
-4. **Database** — run from the live server via wp-cli (dry-run first)
-   ```bash
-   ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
-     "cd ~/domains/gastrohealthhub.com/public_html && \
-      wp option update template   '<new-slug>' && \
-      wp option update stylesheet '<new-slug>' && \
-      wp option update theme_mods_<new-slug> \"\$(wp option get theme_mods_sla-health-hub --format=json)\" --format=json && \
-      wp option delete theme_mods_sla-health-hub"
-   ```
-5. **Re-activate the theme** (WP admin → Appearance → Themes → Activate) or via wp-cli `wp theme activate <new-slug>`. The admin UI may show a "broken theme" warning until activation because `template`/`stylesheet` options may be briefly inconsistent with the on-disk folder — do steps 3 and 4 in quick succession.
-6. **Update the deploy script** in `CLAUDE.md` and any README references to the new slug.
-7. **Smoke-test** per [REBRAND-HANDOVER.md §8](REBRAND-HANDOVER.md) — every smoke test should still pass because nothing user-facing changed.
+   Renaming `option_name` in SQL preserves the serialised blob byte-for-byte — confirmed by
+   MD5 `1028a4dc5b6a2c9953271a576bca35b6` / 39,626 bytes matching before and after. Do **not**
+   use `wp option get --format=json | wp option update --format=json`; that round-trip can
+   mangle serialised PHP.
+4. **In-DB URLs** — `wp search-replace 'themes/sla-health-hub' 'themes/vance-health-hub'
+   --all-tables --precise` (1,040 rows), plus a second scoped pass for the JSON-escaped form
+   `themes\/sla-health-hub`, which the first pattern misses. One `vhh-annotations`
+   `_vhh_selector` row stored the path that way.
+5. **Old folder removed** after verification; theme re-listed as active automatically (no
+   `wp theme activate` needed — the option flip is what activates it, and avoiding
+   `switch_theme` also avoids re-running `after_switch_theme` hooks).
+6. Caches flushed: `wp cache flush`, `wp litespeed-purge all`, `wp transient delete --all`.
 
-## Things to NOT change during this rename
+## Deliberately NOT rewritten
 
-- `_sla_*` user/post meta keys — see CLAUDE.md constraint 2.
-- The `implode('', array('s','l','a','_'))` trick inside `vance_get_theme_mod()` — see CLAUDE.md constraint 3.
-- CSS custom properties `--primary-*` and hex literals — unrelated to the folder rename, and changing them here adds risk.
-- GitHub org `slapharma` — user decision, parent pharma entity retained.
+- **262 published + 39 trashed `customize_changeset` posts** keyed `sla-health-hub::<setting>`.
+  These are historical changesets. WordPress only applies changesets matching the current
+  stylesheet, so they are inert. Rewriting the key would make stale customizer states
+  applicable to the live theme again — actively harmful.
+- `wp_wpmailsmtp_debug_events.initiator` (3 rows) and one `wp_aioseo_seo_analyzer_results`
+  row — historical logs and a regenerating cache.
+- `_sla_*` user/post meta keys — CLAUDE.md constraint 2.
+- The `implode('', array('s','l','a','_'))` legacy prefix in `vance_get_theme_mod()` —
+  CLAUDE.md constraint 3. It is `_sla_`, a different string, and was never at risk.
+- Historical docs (`REBRAND-HANDOVER.md` body, `RECONCILIATION-2026-05-25/`, dated
+  `HANDOVER-*.md`, `LIVE-PULL/backups/*.json`). A dated banner was added to the top of
+  `REBRAND-HANDOVER.md` instead.
+- Server backup tarballs already named `sla-health-hub-pre-*.tar.gz` keep their original names.
 
 ## Rollback
 
-Keep a server-side backup before the rename:
+Backups taken immediately before the cutover, all outside the web root at `~/`:
+
+- `~/sla-health-hub-prerename-2026-08-18-0951.tar.gz` (26M, full theme)
+- `~/db-prerename-2026-08-18.sql` (17M, full DB)
+- `~/theme_mods-prerename-2026-08-18.json` (34K)
+
+To reverse:
+
 ```bash
-ssh ... "tar czf ~/domains/gastrohealthhub.com/public_html/wp-content/themes/sla-health-hub-prerename-$(date +%Y-%m-%d-%H%M).tar.gz -C ~/domains/gastrohealthhub.com/public_html/wp-content/themes sla-health-hub"
+cd ~/domains/vancehealthhub.co.uk/public_html/wp-content/themes
+tar xzf ~/sla-health-hub-prerename-2026-08-18-0951.tar.gz
+cd ~/domains/vancehealthhub.co.uk/public_html
+wp db query "UPDATE wp_options SET option_value='sla-health-hub' WHERE option_name IN ('template','stylesheet'); UPDATE wp_options SET option_name='theme_mods_sla-health-hub' WHERE option_name='theme_mods_vance-health-hub';"
+wp search-replace 'themes/vance-health-hub' 'themes/sla-health-hub' --all-tables --precise
+rm -rf wp-content/themes/vance-health-hub
+wp cache flush; wp litespeed-purge all
 ```
 
-If activation fails after rename, reverse steps 3–5:
+Then `git revert` the rename commit in this repo so CI stops deploying to the new path.
+
+## Note: `wp db export` is broken on this host
+
+`wp db export` exits 255 with no message (silently, even with `--debug`). `mysqldump` itself
+works fine. Use it directly:
+
 ```bash
-wp option update template   'sla-health-hub'
-wp option update stylesheet 'sla-health-hub'
-mv <new-slug> sla-health-hub
+cd ~/domains/vancehealthhub.co.uk/public_html
+DBN=$(wp config get DB_NAME); DBU=$(wp config get DB_USER); DBH=$(wp config get DB_HOST)
+export MYSQL_PWD=$(wp config get DB_PASSWORD)
+mysqldump --add-drop-table --single-transaction --quick -h"$DBH" -u"$DBU" "$DBN" > ~/db-backup.sql
 ```
-
-## Effort estimate (rough, for planning only)
-
-- Local refactor: 1–2 hours (169 call sites, but mechanical).
-- Server + DB: 15 minutes if wp-cli access is ready.
-- Testing: 30–60 minutes for full smoke-test pass.
-- **Total:** ~3 hours of focused work, must be done start-to-finish in one session.

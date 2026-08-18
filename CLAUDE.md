@@ -5,8 +5,8 @@
    `https://www.vancehealthhub.com` is a frameset wrapper pointing at the `.co.uk`
    and is NOT a hosting target.)
 **Repo:** https://github.com/slapharma/VANCE-Hub-WP (this one)
-**Theme path (in repo):** `wp-content/themes/sla-health-hub/`
-**Theme path (on server):** `~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub/`
+**Theme path (in repo):** `wp-content/themes/vance-health-hub/`
+**Theme path (on server):** `~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/vance-health-hub/`
   (renamed from `~/domains/gastrohealthhub.com/...` during the domain swap — all earlier
    handover commands referencing the old path must be rewritten.)
 **Host:** Hostinger, SSH `u767439438@82.29.185.3` port 65002, key `~/.ssh/hostinger_sla`
@@ -18,8 +18,17 @@ This repo consolidates and replaces the earlier `.gemini/SLAHealthHub` working t
 
 ## Load-bearing constraints — break any of these and the site silently breaks
 
-### 1. DO NOT rename the theme folder `sla-health-hub`
-Users never see it. Renaming requires a coordinated 5-step sequence: folder rename on disk + server, update `wp_options.template` and `wp_options.stylesheet`, update Text Domain in `style.css`, update ~169 `esc_html__(..., 'sla-health-hub')` call sites, re-activate the theme. See [TODO-RENAME.md](TODO-RENAME.md).
+### 1. Theme folder is `vance-health-hub` (renamed 2026-08-18 from `sla-health-hub`)
+The rename is done — repo, server folder, `wp_options.template`/`stylesheet`, the
+`theme_mods_*` option key, and all in-DB `themes/sla-health-hub` URLs were migrated in one
+window. See [TODO-RENAME.md](TODO-RENAME.md) for the sequence that was executed and the
+rollback path.
+
+The coupling that made it risky still exists, so treat any *further* slug change the same
+way: the folder name must stay in lockstep with the `Text Domain:` header in `style.css`,
+the ~600 `esc_html__(..., 'vance-health-hub')` call sites, `wp_options.template`,
+`wp_options.stylesheet`, and the `theme_mods_vance-health-hub` option key. Changing the
+folder alone breaks theme activation and silently empties every customizer setting.
 
 ### 2. DO NOT rename `_sla_*` user/post meta keys
 92 call sites across `inc/dashboard-functions.php` + `functions.php`. Every user's profile image, bookmarks, notes, saved searches, quiz results, calculator history lives under these keys. Renaming orphans all user data. Form fields submit as `vance_*` and the handler translates back to `_sla_*` on write — keep that translation.
@@ -91,7 +100,7 @@ Create a WP Page titled `Turn Evidence into Action`, slug `turn-evidence-into-ac
 
 ## Deploy workflow
 
-Run this **only** from `wp-content/themes/sla-health-hub/`. The leading guard
+Run this **only** from `wp-content/themes/vance-health-hub/`. The leading guard
 aborts if you're not there — a wrong working directory makes `tar . ` package the
 whole repo root *into* the live theme dir, which on 2026-06-24 publicly leaked
 `.deploy_key`, the handover docs, and the compliance `.docx` files. (CI in
@@ -101,7 +110,7 @@ and is safe; this guard protects the manual path.)
 ```bash
 # Abort unless the current dir really is the theme dir.
 if [ ! -f style.css ] || ! grep -q 'Theme Name' style.css || [ ! -f functions.php ]; then
-  echo 'ABORT: run this from wp-content/themes/sla-health-hub/'; exit 1
+  echo 'ABORT: run this from wp-content/themes/vance-health-hub/'; exit 1
 fi
 TSTAMP=$(date +%Y-%m-%d-%H%M) && \
 tar czf - \
@@ -114,9 +123,9 @@ tar czf - \
   . | \
 ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
   "set -e; \
-   THEME=~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub; \
+   THEME=~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/vance-health-hub; \
    cd \"\$THEME\" && \
-   tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
+   tar czf \"\$THEME/../vance-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
    tar xzf - && \
    echo 'DEPLOY_OK'"
 ```
@@ -174,7 +183,7 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 │   └── UI_UPDATES_SUMMARY.md
 ├── wp-content/
 │   ├── themes/
-│   │   └── sla-health-hub/   ← the actual WordPress theme
+│   │   └── vance-health-hub/   ← the actual WordPress theme
 │   └── plugins/
 │       └── vhh-annotations/  ← highlight/comment companion plugin (see Plugin deploy)
 └── LOCAL/                    ← gitignored, one-shot transformer scripts

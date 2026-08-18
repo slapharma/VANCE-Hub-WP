@@ -7,7 +7,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'wp-content/themes/sla-health-hub/**'
+      - 'wp-content/themes/vance-health-hub/**'
       - 'wp-content/plugins/vhh-annotations/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
@@ -26,8 +26,8 @@ env:
   # domains/vancehealthhub.co.uk/ during the 2026-04 rebrand. Earlier versions
   # of this workflow still referenced the old name; see RECONCILIATION-2026-05-25
   # for the incident this fix addresses.
-  REMOTE_THEME: domains/vancehealthhub.co.uk/public_html/wp-content/themes/sla-health-hub
-  LOCAL_THEME: wp-content/themes/sla-health-hub
+  REMOTE_THEME: domains/vancehealthhub.co.uk/public_html/wp-content/themes/vance-health-hub
+  LOCAL_THEME: wp-content/themes/vance-health-hub
   REMOTE_PLUGIN: domains/vancehealthhub.co.uk/public_html/wp-content/plugins/vhh-annotations
   LOCAL_PLUGIN: wp-content/plugins/vhh-annotations
 
@@ -94,9 +94,9 @@ jobs:
           ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "set -e; \
              THEME=~/$REMOTE_THEME; \
-             cd \"\$THEME/..\" && ls -1t sla-health-hub-pre-deploy-*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -f; \
+             cd \"\$THEME/..\" && ls -1t vance-health-hub-pre-deploy-*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -f; \
              cd \"\$THEME\" && \
-             { tar czf \"\$THEME/../sla-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . || [ \$? -eq 1 ]; } && \
+             { tar czf \"\$THEME/../vance-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . || [ \$? -eq 1 ]; } && \
              tar xzf - && \
              echo 'DEPLOY_OK'"
 
@@ -128,7 +128,7 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Site: https://vancehealthhub.co.uk" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "A pre-deploy backup was written on the server as \`sla-health-hub-pre-deploy-*.tar.gz\` (one level above the theme dir)." >> "$GITHUB_STEP_SUMMARY"
+          echo "A pre-deploy backup was written on the server as \`vance-health-hub-pre-deploy-*.tar.gz\` (one level above the theme dir)." >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Manual follow-ups (no CLI hook available):**" >> "$GITHUB_STEP_SUMMARY"
           echo "- Purge Hostinger cache: hPanel → Cache Manager → Purge All" >> "$GITHUB_STEP_SUMMARY"
