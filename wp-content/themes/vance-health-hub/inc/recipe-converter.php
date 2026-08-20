@@ -33,6 +33,52 @@ function vance_recipe_cli_tag_line_overrides() {
 	);
 }
 
+/**
+ * Resolve a taxonomy term to its ID via a direct query, bypassing
+ * term_exists()/get_terms(). Needed because term_exists() was observed
+ * returning a false negative for terms seeded moments earlier in the same
+ * request (2026-08-20 conversion run: every vance_recipe_cat assignment
+ * silently no-op'd via wp_set_post_terms, while vance_recipe_tag worked
+ * because those terms are freshly created each time, never pre-existing —
+ * i.e. the flaky path is specifically "does this already-existing term
+ * exist", not term creation).
+ *
+ * @return int Term ID, or 0 if not found.
+ */
+function vance_recipe_cli_term_id( $taxonomy, $name ) {
+	global $wpdb;
+	$slug    = sanitize_title( $name );
+	$term_id = $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT t.term_id FROM {$wpdb->terms} t
+			 INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = t.term_id
+			 WHERE tt.taxonomy = %s AND ( t.slug = %s OR t.name = %s )
+			 LIMIT 1",
+			$taxonomy,
+			$slug,
+			$name
+		)
+	);
+	return $term_id ? (int) $term_id : 0;
+}
+
+/**
+ * Same, but creates the term if the direct lookup finds nothing.
+ *
+ * @return int Term ID, or 0 on failure.
+ */
+function vance_recipe_cli_ensure_term_id( $taxonomy, $name ) {
+	$id = vance_recipe_cli_term_id( $taxonomy, $name );
+	if ( $id ) {
+		return $id;
+	}
+	$inserted = wp_insert_term( $name, $taxonomy );
+	if ( is_wp_error( $inserted ) ) {
+		return vance_recipe_cli_term_id( $taxonomy, $name ); // Likely a race with another process; look it up directly.
+	}
+	return (int) $inserted['term_id'];
+}
+
 function vance_recipe_cli_extract_between( $html, $start_regex, $end_regex ) {
 	if ( ! preg_match( $start_regex, $html, $m, PREG_OFFSET_CAPTURE ) ) {
 		return null;
@@ -299,9 +345,24 @@ function vance_recipe_cli_convert( $args, $assoc_args ) {
 			)
 		);
 
-		wp_set_post_terms( $post_id, array( $parsed['category'] ), 'vance_recipe_cat', false );
+		$cat_id = vance_recipe_cli_term_id( 'vance_recipe_cat', $parsed['category'] );
+		if ( $cat_id ) {
+			wp_set_object_terms( $post_id, array( $cat_id ), 'vance_recipe_cat', false );
+		} else {
+			WP_CLI::warning( "{$slug}: category term '{$parsed['category']}' not found — left uncategorised." );
+		}
+
 		if ( $parsed['tags'] ) {
-			wp_set_post_terms( $post_id, $parsed['tags'], 'vance_recipe_tag', false );
+			$tag_ids = array();
+			foreach ( $parsed['tags'] as $tag_name ) {
+				$tid = vance_recipe_cli_ensure_term_id( 'vance_recipe_tag', $tag_name );
+				if ( $tid ) {
+					$tag_ids[] = $tid;
+				}
+			}
+			if ( $tag_ids ) {
+				wp_set_object_terms( $post_id, $tag_ids, 'vance_recipe_tag', false );
+			}
 		}
 
 		update_post_meta( $post_id, '_vance_recipe_legacy_slug', $slug );
