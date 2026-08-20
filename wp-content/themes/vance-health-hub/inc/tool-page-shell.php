@@ -12,7 +12,7 @@
  *   $vance_tool_name          string  required, e.g. 'IBD Malnutrition Calculator'
  *   $vance_tool_subtitle      string  required, hero paragraph copy
  *   $vance_tool_badge         string  optional, defaults to 'Free Tool'
- *   $vance_tool_hero_bg       string  optional, image URL (defaults to about_hero.png)
+ *   $vance_tool_hero_bg       string  optional, image URL (defaults to patient_hero.png)
  *   $vance_tool_hero_overlay  int     optional, 0–100 (default 80)
  *   $vance_tool_iframe_height int     optional, px (default 720)
  *   $vance_tool_save_label    string  optional, 'Save my result' button label (default 'Save my result')
@@ -39,7 +39,7 @@ $tool_subtitle = isset( $vance_tool_subtitle ) ? $vance_tool_subtitle : '';
 $tool_badge    = isset( $vance_tool_badge ) ? $vance_tool_badge : 'Free Tool';
 $hero_bg       = isset( $vance_tool_hero_bg ) && $vance_tool_hero_bg
     ? $vance_tool_hero_bg
-    : get_template_directory_uri() . '/assets/img/about_hero.png';
+    : get_template_directory_uri() . '/assets/img/patient_hero.png'; // about_hero.png has never existed in this theme — same 404 fixed in page-malnutrition-calculator.php and the recipe pages.
 $overlay_pct   = isset( $vance_tool_hero_overlay ) ? max( 0, min( 100, absint( $vance_tool_hero_overlay ) ) ) : 80;
 $iframe_height = isset( $vance_tool_iframe_height ) ? absint( $vance_tool_iframe_height ) : 720;
 $save_label    = isset( $vance_tool_save_label ) ? $vance_tool_save_label : 'Save my result';

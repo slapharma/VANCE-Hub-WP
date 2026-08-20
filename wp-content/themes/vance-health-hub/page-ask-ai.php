@@ -7,7 +7,7 @@
 get_header();
 
 // Get customizer settings
-$hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri() . '/assets/img/about_hero.png');
+$hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri() . '/assets/img/patient_hero.png');
 $hero_title = vance_get_theme_mod('vance_askai_hero_title', 'VANCE-Ai');
 $hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Ask anything about IBD, clinical nutrition and gastrointestinal health. Every answer is drawn from articles published on the Vance Medical Hub, with links to the sources used.');
 $hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Information Assistant');

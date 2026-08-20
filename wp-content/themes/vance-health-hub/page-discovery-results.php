@@ -92,7 +92,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 }
 
 .results-hero {
-    background: linear-gradient(rgba(10, 25, 41, 0.85), rgba(10, 25, 41, 0.9)), url('<?php echo get_template_directory_uri(); ?>/assets/img/about_hero.png') center/cover;
+    background: linear-gradient(rgba(10, 25, 41, 0.85), rgba(10, 25, 41, 0.9)), url('<?php echo get_template_directory_uri(); ?>/assets/img/patient_hero.png') center/cover;
     padding: 80px 0;
     color: white;
     text-align: center;
