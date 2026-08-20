@@ -29,7 +29,11 @@ define( 'VANCE_TOOL_MODAL_RENDERED', true );
 $vance_tm_tools = array(
     'ibd-recipes' => array(
         'title'  => vance_get_theme_mod( 'vance_tool_recipes_name', 'IBD Recipes & Meal Planner' ),
-        'url'    => home_url( '/ibd-recipies/' ), // legacy slug spelling — see page-ibd-recipies.php
+        // The tool slug ('ibd-recipes') is the AJAX/history contract key — kept unchanged
+        // (CLAUDE.md constraint 2). The PAGE it opens is /gastro-meal-planner/, not the old
+        // /ibd-recipies/ misspelling: that page never existed in the DB (confirmed 2026-08-20),
+        // so this was 404ing inside the modal iframe for every trigger site-wide until now.
+        'url'    => home_url( '/gastro-meal-planner/' ),
         'inline' => false,
     ),
     'malnutrition-calculator' => array(
@@ -46,7 +50,8 @@ $vance_tm_tools = array(
 
 // pathname -> slug map for the global <a> interceptor (lowercased, no trailing slash).
 $vance_tm_paths = array(
-    '/ibd-recipies'            => 'ibd-recipes',
+    '/gastro-meal-planner'     => 'ibd-recipes',
+    '/ibd-recipies'            => 'ibd-recipes', // legacy misspelt path — never a real page, kept in case anything still links to it.
     '/ibd-recipes'             => 'ibd-recipes',
     '/malnutrition-calculator' => 'malnutrition-calculator',
     '/healthcare-quiz'         => 'healthcare-quiz',

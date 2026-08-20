@@ -642,7 +642,7 @@ add_action( 'template_redirect', 'vance_tool_embed_trim_head' );
  */
 function vance_no_cache_account_pages() {
     $slugs     = array( 'dashboard', 'my-notes', 'healthcare-quiz', 'malnutrition-calculator', 'gastro-meal-planner' );
-    $templates = array( 'page-dashboard.php', 'page-my-notes.php', 'page-healthcare-quiz.php', 'page-malnutrition-calculator.php', 'page-ibd-recipies.php' );
+    $templates = array( 'page-dashboard.php', 'page-my-notes.php', 'page-healthcare-quiz.php', 'page-malnutrition-calculator.php', 'page-gastro-recipies.php' );
 
     if ( ! is_page( $slugs ) && ! is_page_template( $templates ) ) {
         return;

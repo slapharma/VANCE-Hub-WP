@@ -183,7 +183,7 @@ function vance_recipe_json_ld( $post_id ) {
  */
 function vance_recipe_legacy_redirects() {
 	// Matched by REQUEST_URI path rather than is_page( 'ibd-recipies' ): that
-	// Page doesn't exist any more (see page-ibd-recipies.php's header comment)
+	// Page doesn't exist any more (see page-gastro-recipies.php's header comment)
 	// and never will again, so an is_page() check would only ever match a 404
 	// and this branch would silently never fire for the old bookmarked links
 	// it exists to catch.

@@ -1,15 +1,23 @@
 <?php
 /**
- * Template Name: IBD Recipes & Meal Planner (Public)
+ * Template Name: Gastro Recipes & Meal Planner (Public)
  *
  * Public-facing wrapper around the IBD Recipes Next.js bundle. Visual shell
  * matches page-ask-ai.php via inc/tool-page-shell.php.
+ *
+ * RENAMED from page-ibd-recipies.php 2026-08-20 (IBD -> Gastro branding, per
+ * direction) — cosmetic/internal only: no live URL or saved data changed.
+ * The things that did NOT change, and must not:
+ *   - $vance_tool_slug below stays 'ibd-recipes' — it's the AJAX save/history
+ *     contract key (`_sla_ibd_recipes_history` meta, nonce
+ *     `vance_tool_save_ibd-recipes`), protected by CLAUDE.md constraint 2.
+ *   - The bundle asset folder stays `assets/tools/ibd-recipes/` (constraint 6).
  *
  * PAGE BINDING: the live WP Page is `/gastro-meal-planner/` (recreated
  * 2026-08-20 — the original `/ibd-recipies/` Page had been lost from the DB
  * entirely, pre-dating this file's involvement; nothing currently links to
  * it, so there was no inbound-link reason to recreate it under the old
- * misspelt slug). This file's filename no longer matches the Page's slug, so
+ * misspelt slug). This file's filename doesn't match the Page's slug, so
  * it's bound explicitly via the Page's `_wp_page_template` meta rather than
  * WP's page-{slug}.php auto-binding convention — the `Template Name:` header
  * above is what makes that binding possible. Phase 3 of the recipe rebuild
@@ -52,10 +60,10 @@ $vance_tool_brand_css     = vance_tool_brand_css_recipes( $vance_embed );
 // (overrides the auto-derived URL which would use the slug-typo path).
 $vance_tool_iframe_src    = get_template_directory_uri() . '/assets/tools/ibd-recipes/index.html';
 
-// Deep link: `/ibd-recipies/?recipe=<slug>` opens one recipe's page directly,
-// inside the normal site chrome and brand CSS. The dashboard's saved meal
-// plans link here so "open the full recipe" lands on the recipe rather than
-// the browser index.
+// Deep link: `/gastro-meal-planner/?recipe=<slug>` opens one recipe's page
+// directly, inside the normal site chrome and brand CSS. The dashboard's
+// saved meal plans link here so "open the full recipe" lands on the recipe
+// rather than the browser index.
 //
 // The slug is validated against the recipe catalogue before it reaches the
 // path — never interpolated raw — so this cannot be walked out of the bundle

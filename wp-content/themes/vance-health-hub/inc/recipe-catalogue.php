@@ -308,7 +308,7 @@ function vance_recipe_image_url( $slug ) {
 /**
  * Public URL for a single recipe, for opening in a new tab.
  *
- * Points at the WP wrapper page (`page-ibd-recipies.php`) with a `recipe` query
+ * Points at the WP wrapper page (`page-gastro-recipies.php`) with a `recipe` query
  * arg rather than at the raw bundle path under /wp-content/, so the recipe
  * opens inside the site chrome with the brand CSS applied. The wrapper
  * validates the slug against this same catalogue before building an iframe URL
