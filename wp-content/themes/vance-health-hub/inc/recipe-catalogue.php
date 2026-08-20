@@ -1,54 +1,40 @@
 <?php
 /**
- * Recipe catalogue — the theme-side mirror of the IBD Recipes bundle's data.
+ * Recipe catalogue — the theme-side data layer over the `vance_recipe` CPT.
  *
  * WHY THIS EXISTS
  * ---------------
- * The recipe data lives inside a Vite/Next build artifact
- * (`assets/tools/ibd-recipes/_next/static/chunks/*.js`) which the theme must not
- * depend on parsing at runtime, and which gets text-patched in place rather than
- * rebuilt (CLAUDE.md constraint 6). But the dashboard needs three things the
- * saved meal-plan payload does not carry:
+ * This file is the keystone of the native recipe rebuild (Phase 3): it keeps
+ * the exact same 13 function signatures and return shapes that
+ * page-dashboard.php has depended on since before the rebuild, but sources
+ * them from the `vance_recipe` CPT (inc/recipe-cpt.php, inc/recipe-admin.php)
+ * instead of the hand-mirrored arrays that used to live here and in
+ * recipe-data.php, which mirrored a Next.js bundle export
+ * (assets/tools/ibd-recipes/) that no longer drives anything user-facing.
  *
- *   1. a thumbnail for each meal,
- *   2. a link to the full recipe,
- *   3. a way to resolve BOTH new saves (which record a slug) and old saves
- *      (which only ever recorded the recipe's display name).
+ * Because every caller — the dashboard's meal-plan cards, the viewer modal,
+ * the PDF export, the shopping list, the credit lines — goes through these
+ * functions rather than touching post meta directly, none of that code
+ * needed to change when the data source did. `vance_recipe_expand_meal()`,
+ * `vance_recipe_shopping_list()`, `vance_recipe_plan_recipes()` and
+ * `vance_recipe_credit_line()` in particular MUST keep returning exactly the
+ * same shape for the same logical recipe: page-dashboard.php calls them
+ * directly and un-defensively.
  *
- * So the slug → {name, image} mapping is mirrored here, in version control,
- * where it can be read by PHP without touching the bundle.
- *
- * KEEPING IT IN SYNC
- * ------------------
- * If recipes are added/renamed in the bundle, re-derive this list from
- * `_next/static/chunks/` — every entry there is `id:"…",name:"…",category:"…"
- * … image:"…"`. A slug present in a saved plan but missing here degrades
- * gracefully (no thumbnail, no link) rather than erroring.
+ * SAVED PLANS OLD AND NEW
+ * ------------------------
+ * A saved meal-plan row only ever recorded a recipe by slug (v3+) or by name
+ * (v2 and earlier) — never the full recipe. `vance_recipe_resolve_slug()` is
+ * the join back to a real recipe for both; an unresolved slug/name degrades
+ * gracefully (no thumbnail, no link) rather than erroring, so a recipe an
+ * admin later unpublishes or renames doesn't break anyone's saved history.
  *
  * IMAGES
  * ------
- * `vance_recipe_image_url()` prefers a locally hosted file at
- * `assets/img/recipes/<slug>.(webp|jpg|jpeg|png)` and only falls back to the
- * bundle's remote URL when no local file exists. Local files are strongly
- * preferred: the remote Unsplash URLs are hotlinks with no guarantee of
- * permanence — one of them (tuna-lentil-pasta-salad) is already a hard 404 —
- * and remote images make PDF rendering dependent on a third party's CORS
- * headers.
- *
- * A visual check of all 19 remote images against their recipes (2026-08-05)
- * found only 4 correct: a seabass recipe illustrated with bacon-loaded fries,
- * energy balls with chocolate-chip cookies, granola with an orange splashing
- * into water, and so on. All 19 were therefore replaced with locally hosted
- * photos, each one looked at before it was committed. The `audit` note on every
- * entry records what the old remote image was, so the history is not lost.
- *
- * The `remote` URLs are kept only as a fallback for a missing local file. Note
- * that tuna-lentil-pasta-salad's remote is dead, so deleting that local file
- * would reintroduce a broken image rather than degrade to a working one.
- *
- * Attribution for the local files lives in assets/img/recipes/attribution.json.
- * The Unsplash API licence requires the photographer to be credited wherever
- * the photos appear — that credit is NOT yet rendered anywhere on the site.
+ * `vance_recipe_image_url()` returns the CPT's native featured image. There
+ * is no remote/hotlink fallback any more — every recipe has a real uploaded
+ * image (see inc/recipe-converter.php, which converted all 19 from drafts
+ * that already had featured images).
  *
  * @package vance-health-hub
  */
@@ -57,14 +43,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Nutrition + ingredients, machine-derived from the bundle. Kept in its own
-// file so this one stays hand-authored and reviewable.
-require_once __DIR__ . '/recipe-data.php';
+/**
+ * All published recipes as WP_Post objects, queried once per request. Both
+ * vance_recipe_catalogue() and vance_recipe_data() build their per-request
+ * caches from this single query rather than querying twice — meta and terms
+ * are primed for every post in it by WP_Query's own cache priming, so
+ * get_post_meta()/get_the_terms() calls against these posts elsewhere in the
+ * request don't cost extra queries either.
+ *
+ * @return WP_Post[]
+ */
+function vance_recipe_all_posts() {
+	static $posts = null;
+	if ( null !== $posts ) {
+		return $posts;
+	}
+
+	$posts = get_posts(
+		array(
+			'post_type'      => 'vance_recipe',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+			'no_found_rows'  => true,
+		)
+	);
+
+	return $posts;
+}
 
 /**
- * The full recipe list, keyed by slug (the bundle's `id`).
+ * The full recipe list, keyed by slug (the CPT's post_name).
  *
- * @return array<string, array{name:string, category:string, remote:string, audit:string}>
+ * @return array<string, array{id:int, name:string, category:string}>
  */
 function vance_recipe_catalogue() {
 	static $catalogue = null;
@@ -72,133 +84,60 @@ function vance_recipe_catalogue() {
 		return $catalogue;
 	}
 
-	$u = 'https://images.unsplash.com/';
+	$catalogue = array();
+	foreach ( vance_recipe_all_posts() as $post ) {
+		$cat_terms = get_the_terms( $post->ID, 'vance_recipe_cat' );
+		$category  = ( $cat_terms && ! is_wp_error( $cat_terms ) && isset( $cat_terms[0] ) ) ? $cat_terms[0]->slug : '';
 
-	$catalogue = array(
-		// --- Breakfast ---
-		'blueberry-chia-pudding'     => array(
-			'name'     => 'Anti-Inflammatory Blueberry Chia Pudding',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1511690656952-34342bb7c2f2?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — shows a chickpea & olive salad bowl
-		),
-		'blueberry-almond-smoothie'  => array(
-			'name'     => 'Blueberry Almond Anti-Inflammatory Smoothie',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1502741224143-90386d7f8c82?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — shows a strawberry smoothie
-		),
-		'gf-protein-pancakes'        => array(
-			'name'     => 'Gluten-Free High-Protein Pancakes',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1567620905732-2d1ec7ab7445?w=800&q=80',
-			'audit'    => 'replaced', // was already correct
-		),
-		'gf-protein-granola'         => array(
-			'name'     => 'Gluten-Free High-Protein High-Fibre Granola',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1517093728432-a0440f8d45af?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — shows an orange splashing into blue water
-		),
-		'harissa-eggs-avocado'       => array(
-			'name'     => 'Harissa Fried Eggs & Avocado on Sourdough',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1525351484163-7529414344d8?w=800&q=80',
-			'audit'    => 'replaced', // was already correct
-		),
-		'mango-ginger-smoothie'      => array(
-			'name'     => 'Mango Ginger Gut-Friendly Smoothie',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1553530666-ba11a7da3888?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — shows a deep-purple berry smoothie
-		),
-		'strawberry-chia-smoothie'   => array(
-			'name'     => 'Strawberry Chia Breakfast Smoothie',
-			'category' => 'breakfast',
-			'remote'   => $u . 'photo-1570696516188-ade861b84a49?w=800&q=80',
-			'audit'    => 'replaced', // was weak — pink berry smoothie, but raspberries not strawberries
-		),
-
-		// --- Lunch ---
-		'crispy-chickpea-salad'      => array(
-			'name'     => 'Crispy Chickpea & Avocado Salad',
-			'category' => 'lunch',
-			'remote'   => $u . 'photo-1512621776951-a57141f2eefd?w=800&q=80',
-			'audit'    => 'replaced', // was already correct
-		),
-		'sardine-avocado-bowl'       => array(
-			'name'     => 'Mediterranean Sardine & Avocado Bowl',
-			'category' => 'lunch',
-			'remote'   => $u . 'photo-1546069901-ba9599a7e63c?w=800&q=80',
-			'audit'    => 'replaced', // was weak — a poke-style bowl; no sardines and no avocado
-		),
-		'tuna-lentil-pasta-salad'    => array(
-			'name'     => 'Tuna & Red Lentil Pasta Salad',
-			'category' => 'lunch',
-			'remote'   => $u . 'photo-1473093226555-0b6efd8b61f3?w=800&q=80',
-			'audit'    => 'replaced', // was a hard 404 — rendered as a broken image on the live site
-		),
-
-		// --- Dinner ---
-		'ginger-chicken-stir-fry'    => array(
-			'name'     => 'Ginger Chicken & Vegetable Stir Fry',
-			'category' => 'dinner',
-			'remote'   => $u . 'photo-1603133872878-684f208fb84b?w=800&q=80',
-			'audit'    => 'replaced', // was weak — a plate of fried rice, not a stir fry
-		),
-		'chicken-tacos-avocado-slaw' => array(
-			'name'     => 'Gluten-Free Chicken Tacos with Avocado Slaw',
-			'category' => 'dinner',
-			'remote'   => $u . 'photo-1565299585323-38d6b0865b47?w=800&q=80',
-			'audit'    => 'replaced', // was weak — tacos, but chickpea & sweet potato — no chicken
-		),
-		'lemon-herb-salmon'          => array(
-			'name'     => 'Lemon Herb Salmon with Greens',
-			'category' => 'dinner',
-			'remote'   => $u . 'photo-1467003909585-2f8a72700288?w=800&q=80',
-			'audit'    => 'replaced', // was already correct
-		),
-		'mediterranean-lentil-bowl'  => array(
-			'name'     => 'Mediterranean Lentil & Roasted Vegetable Bowl',
-			'category' => 'dinner',
-			'remote'   => $u . 'photo-1540189549336-e6e99c3679fe?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — green salad and a glass of orange juice; no lentils
-		),
-		'mediterranean-seabass'      => array(
-			'name'     => 'Mediterranean Seabass with Roasted Vegetables',
-			'category' => 'dinner',
-			'remote'   => $u . 'photo-1485962398705-ef6a13c41e8f?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — bacon-and-cheese loaded fries
-		),
-		'sweet-potato-ginger-soup'   => array(
-			'name'     => 'Sweet Potato & Ginger Soup',
-			'category' => 'dinner',
-			'remote'   => $u . 'photo-1547592180-85f173990554?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — a rice bowl with green beans; no soup
-		),
-
-		// --- Snacks ---
-		'apple-almond-butter-plate'  => array(
-			'name'     => 'Apple Almond Butter Snack Plate',
-			'category' => 'snacks',
-			'remote'   => $u . 'photo-1568702846914-96b305d2aaeb?w=800&q=80',
-			'audit'    => 'replaced', // was weak — a single bare apple on a grey backdrop
-		),
-		'date-nut-energy-balls'      => array(
-			'name'     => 'Protein Date & Nut Energy Balls',
-			'category' => 'snacks',
-			'remote'   => $u . 'photo-1558961363-fa8fdf82db35?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — a bowl of chocolate chip cookies
-		),
-		'turmeric-roasted-chickpeas' => array(
-			'name'     => 'Turmeric Roasted Chickpeas',
-			'category' => 'snacks',
-			'remote'   => $u . 'photo-1498837167922-ddd27525d352?w=800&q=80',
-			'audit'    => 'replaced', // was wrong — a salad-bar spread of raw ingredients
-		),
-	);
+		$catalogue[ $post->post_name ] = array(
+			'id'       => $post->ID,
+			// Raw post_title, not get_the_title(): the latter HTML-entity-encodes
+			// ampersands ("&" -> "&#038;"), which broke vance_recipe_name_key()'s
+			// match against saved plans that recorded a raw "&" in the name
+			// (verified live 2026-08-20 against a real account's pre-rebuild
+			// v1/name-only saves — several recipes silently stopped resolving).
+			'name'     => $post->post_title,
+			'category' => $category,
+		);
+	}
 
 	return $catalogue;
+}
+
+/**
+ * Nutrition + ingredients + method, keyed by slug — the CPT-meta equivalent
+ * of the old hand-mirrored recipe-data.php.
+ *
+ * @return array<string, array{servings:int, prep:int, cook:int, nutrition:array<string,int>, ingredients:array, instructions:array<int,string>}>
+ */
+function vance_recipe_data() {
+	static $data = null;
+	if ( null !== $data ) {
+		return $data;
+	}
+
+	$data = array();
+	foreach ( vance_recipe_all_posts() as $post ) {
+		$ingredients = get_post_meta( $post->ID, '_vance_recipe_ingredients', true );
+		$method      = get_post_meta( $post->ID, '_vance_recipe_method', true );
+
+		$data[ $post->post_name ] = array(
+			'servings'     => (int) get_post_meta( $post->ID, '_vance_recipe_servings', true ),
+			'prep'         => (int) get_post_meta( $post->ID, '_vance_recipe_prep_min', true ),
+			'cook'         => (int) get_post_meta( $post->ID, '_vance_recipe_cook_min', true ), // '' (unset, no-cook recipes) casts to 0.
+			'nutrition'    => array(
+				'calories' => (int) get_post_meta( $post->ID, '_vance_recipe_kcal', true ),
+				'protein'  => (int) get_post_meta( $post->ID, '_vance_recipe_protein_g', true ),
+				'carbs'    => (int) get_post_meta( $post->ID, '_vance_recipe_carbs_g', true ),
+				'fat'      => (int) get_post_meta( $post->ID, '_vance_recipe_fat_g', true ),
+				'fibre'    => (int) get_post_meta( $post->ID, '_vance_recipe_fibre_g', true ),
+			),
+			'ingredients'  => is_array( $ingredients ) ? $ingredients : array(),
+			'instructions' => is_array( $method ) ? $method : array(),
+		);
+	}
+
+	return $data;
 }
 
 /**
@@ -263,65 +202,33 @@ function vance_recipe_resolve_slug( $slug, $name = '' ) {
 }
 
 /**
- * Thumbnail URL for a recipe.
- *
- * A locally hosted file always wins over the bundle's remote hotlink — see the
- * file header for why. Returns '' for an unknown slug so callers can render a
- * placeholder rather than a broken <img>.
+ * Thumbnail URL for a recipe — the CPT's native featured image.
  *
  * @param string $slug Catalogue slug.
- * @return string Absolute URL, or ''.
+ * @return string Absolute URL, or '' for an unknown slug or one with no
+ *                featured image set.
  */
 function vance_recipe_image_url( $slug ) {
-	static $local = null;
-
 	$catalogue = vance_recipe_catalogue();
 	if ( ! isset( $catalogue[ $slug ] ) ) {
 		return '';
 	}
-
-	// Scan the local override directory once, not once per meal — a 7-day plan
-	// renders up to 28 meals and this would otherwise be 28 stat() storms.
-	if ( null === $local ) {
-		$local = array();
-		$dir   = get_template_directory() . '/assets/img/recipes';
-		if ( is_dir( $dir ) ) {
-			foreach ( (array) glob( $dir . '/*.{webp,jpg,jpeg,png}', GLOB_BRACE ) as $path ) {
-				$file = basename( $path );
-				$key  = preg_replace( '/\.[^.]+$/', '', $file );
-				// First extension wins in glob order (webp before jpg), which is
-				// the preference we want anyway.
-				if ( ! isset( $local[ $key ] ) ) {
-					$local[ $key ] = get_template_directory_uri() . '/assets/img/recipes/' . $file;
-				}
-			}
-		}
-	}
-
-	if ( isset( $local[ $slug ] ) ) {
-		return $local[ $slug ];
-	}
-
-	return $catalogue[ $slug ]['remote'];
+	$url = get_the_post_thumbnail_url( $catalogue[ $slug ]['id'], 'large' );
+	return $url ? $url : '';
 }
 
 /**
- * Public URL for a single recipe, for opening in a new tab.
- *
- * Points at the WP wrapper page (`page-gastro-recipies.php`) with a `recipe` query
- * arg rather than at the raw bundle path under /wp-content/, so the recipe
- * opens inside the site chrome with the brand CSS applied. The wrapper
- * validates the slug against this same catalogue before building an iframe URL
- * from it.
+ * Public URL for a single recipe — the native single-vance_recipe.php page.
  *
  * @param string $slug Catalogue slug.
  * @return string Absolute URL, or '' for an unknown slug.
  */
 function vance_recipe_url( $slug ) {
-	if ( ! isset( vance_recipe_catalogue()[ $slug ] ) ) {
+	$catalogue = vance_recipe_catalogue();
+	if ( ! isset( $catalogue[ $slug ] ) ) {
 		return '';
 	}
-	return home_url( '/ibd-recipies/?recipe=' . rawurlencode( $slug ) );
+	return get_permalink( $catalogue[ $slug ]['id'] );
 }
 
 /**
@@ -441,13 +348,11 @@ function vance_recipe_shopping_list( $days ) {
 }
 
 /**
- * Photographer attribution for the local recipe photos.
+ * Photographer attribution for a recipe's featured image, keyed by slug —
+ * sourced from the CPT's photo-credit meta (inc/recipe-admin.php) rather
+ * than the old assets/img/recipes/attribution.json.
  *
- * The Unsplash licence asks for the photographer to be credited wherever the
- * photo appears. assets/img/recipes/attribution.json carries name + profile URL
- * for all 19; this reads it once per request.
- *
- * @return array<string, array{author:string, author_url:string, photo_url:string, alt:string}>
+ * @return array<string, array{author:string, author_url:string}>
  */
 function vance_recipe_attributions() {
 	static $data = null;
@@ -456,12 +361,15 @@ function vance_recipe_attributions() {
 	}
 
 	$data = array();
-	$file = get_template_directory() . '/assets/img/recipes/attribution.json';
-	if ( is_readable( $file ) ) {
-		$decoded = json_decode( (string) file_get_contents( $file ), true );
-		if ( is_array( $decoded ) ) {
-			$data = $decoded;
+	foreach ( vance_recipe_all_posts() as $post ) {
+		$author = get_post_meta( $post->ID, '_vance_recipe_credit_author', true );
+		if ( ! $author ) {
+			continue;
 		}
+		$data[ $post->post_name ] = array(
+			'author'     => $author,
+			'author_url' => get_post_meta( $post->ID, '_vance_recipe_credit_author_url', true ),
+		);
 	}
 	return $data;
 }
