@@ -584,48 +584,6 @@ function vance_request_consultation() {
 add_action( 'wp_ajax_vance_request_consultation', 'vance_request_consultation' );
 
 /**
- * Save a meal plan saved from the IBD Recipes app (postMessage).
- * Meta key: _sla_meal_plans
- */
-function vance_save_meal_plan() {
-    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
-        wp_send_json_error( 'Invalid nonce' );
-    }
-
-    $user_id = get_current_user_id();
-    $entry = array(
-        'id'     => sanitize_text_field( isset( $_POST['plan_id'] ) ? $_POST['plan_id'] : uniqid( 'mp_' ) ),
-        'title'  => sanitize_text_field( isset( $_POST['title'] ) ? $_POST['title'] : 'Meal Plan' ),
-        'days'   => isset( $_POST['days'] ) ? intval( $_POST['days'] ) : 0,
-        'data'   => isset( $_POST['data'] ) ? wp_kses_post( wp_unslash( $_POST['data'] ) ) : '',
-        'date'   => current_time( 'c' ),
-    );
-
-    $plans = get_user_meta( $user_id, '_sla_meal_plans', true ) ?: array();
-    if ( ! is_array( $plans ) ) { $plans = array(); }
-    array_unshift( $plans, $entry );
-    $plans = array_slice( $plans, 0, 50 );
-    update_user_meta( $user_id, '_sla_meal_plans', $plans );
-
-    wp_send_json_success( array( 'saved' => true, 'id' => $entry['id'] ) );
-}
-add_action( 'wp_ajax_vance_save_meal_plan', 'vance_save_meal_plan' );
-
-/**
- * List user's saved meal plans.
- */
-function vance_get_meal_plans() {
-    if ( ! is_user_logged_in() ) { wp_send_json_error( 'Not logged in' ); }
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'vance_dashboard_nonce' ) ) {
-        wp_send_json_error( 'Invalid nonce' );
-    }
-    $plans = get_user_meta( get_current_user_id(), '_sla_meal_plans', true ) ?: array();
-    wp_send_json_success( is_array( $plans ) ? $plans : array() );
-}
-add_action( 'wp_ajax_vance_get_meal_plans', 'vance_get_meal_plans' );
-
-/**
  * Handle Note Deletion AJAX
  */
 function vance_delete_note() {

@@ -425,113 +425,13 @@ get_template_part( 'inc/register-modal' );
      * nothing worth saving (e.g. the user is on the recipe list, not the
      * planner) — null falls through to snapshotIframe().
      */
-    var MEAL_PLAN_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-
-    /**
-     * IBD Recipes planner → { kind:'meal-plan', days:[…], totals:{…} }.
-     *
-     * The bundle ships no stable hooks — only inline styles and the
-     * `.recipe-print-card` print helper — so we anchor on the one class that
-     * exists plus the day names, and read positionally within a card:
-     *   card > [0] header (h2 = day, span = "1360 kcal")
-     *        > [1] slot grid > cell > [0] "🌅 BREAKFAST" > [1] recipe or + Add button
-     * Anything unrecognised is skipped rather than guessed at.
-     */
-    function extractMealPlan(doc, win) {
-        var cards = [].slice.call(doc.querySelectorAll('.recipe-print-card'));
-        if (!cards.length) return null;
-
-        var kcalOf = function (el) {
-            var m = (el && (el.innerText || el.textContent) || '').match(/([\d,]+)\s*kcal/);
-            return m ? parseInt(m[1].replace(/,/g, ''), 10) : null;
-        };
-
-        var days = [];
-        cards.forEach(function (card) {
-            var h2 = card.querySelector('h2');
-            var name = h2 ? h2.textContent.trim() : '';
-            // Day cards only — the planner also renders a recipe-detail appendix.
-            if (MEAL_PLAN_DAYS.indexOf(name) === -1) return;
-
-            var grid = card.children[1];
-            var meals = [];
-            if (grid) {
-                [].slice.call(grid.children).forEach(function (cell) {
-                    var label = cell.children[0];
-                    var body  = cell.children[1];
-                    // Empty slots render a "+ Add …" button instead of a recipe div.
-                    if (!label || !body || body.tagName === 'BUTTON') return;
-                    var titleEl = body.children[0];
-                    if (!titleEl) return;
-                    var meta = (body.innerText || '');
-                    var mins = meta.match(/(\d+)\s*min/);
-                    // The planner's slot cells render no thumbnail — only a title,
-                    // a kcal/minutes line and a "View recipe →" link. So the slug
-                    // from that link is what makes the meal identifiable: the
-                    // dashboard resolves it against inc/recipe-catalogue.php to get
-                    // the picture and the full-recipe URL. Without it we would be
-                    // matching on the display name alone.
-                    //
-                    // Next.js prefixes hrefs with the bundle's basePath, so the DOM
-                    // href is the full /wp-content/…/recipes/<slug>/ path rather
-                    // than the /recipes/<slug> written in the source. Take the last
-                    // path segment and accept either form.
-                    var linkEl = cell.querySelector ? cell.querySelector('a[href*="/recipes/"]') : null;
-                    var slug   = '';
-                    if (linkEl) {
-                        var parts = (linkEl.getAttribute('href') || '').split('?')[0].split('#')[0]
-                                    .split('/').filter(Boolean);
-                        if (parts.length) { slug = parts[parts.length - 1]; }
-                    }
-                    // Thumbnail capture stays as a fallback in case a future build
-                    // starts rendering one; the catalogue is the primary source.
-                    var imgEl = body.querySelector ? body.querySelector('img') : null;
-                    if (!imgEl && cell.querySelector) { imgEl = cell.querySelector('img'); }
-                    meals.push({
-                        slot:     (label.textContent || '').replace(/[^A-Za-z ]/g, '').trim(),
-                        name:     (titleEl.textContent || '').trim(),
-                        calories: kcalOf(body),
-                        minutes:  mins ? parseInt(mins[1], 10) : null,
-                        slug:     slug,
-                        image:    (imgEl && imgEl.src) ? imgEl.src : ''
-                    });
-                });
-            }
-
-            days.push({
-                day:      name,
-                calories: kcalOf(card.children[0]),
-                meals:    meals
-            });
-        });
-
-        // No day cards means we're on the recipe list, not the planner.
-        if (!days.length) return null;
-
-        var mealCount = 0, kcal = 0, planImage = '';
-        days.forEach(function (d) {
-            mealCount += d.meals.length;
-            if (d.calories) kcal += d.calories;
-            d.meals.forEach(function (m) { if (!planImage && m.image) { planImage = m.image; } });
-        });
-        // An untouched planner is not worth a history row.
-        if (mealCount === 0) return null;
-
-        return {
-            kind:       'meal-plan',
-            // v3 adds meals[].slug. v2 rows stay readable — the dashboard falls
-            // back to matching them on meals[].name.
-            version:    3,
-            url:        win.location && win.location.href,
-            title:      doc.title || '',
-            image:      planImage,
-            days:       days,
-            totals:     { days: days.length, meals: mealCount, calories: kcal },
-            capturedAt: new Date().toISOString()
-        };
-    }
-
-    var TOOL_EXTRACTORS = { 'ibd-recipes': extractMealPlan };
+    // Phase 5 of the recipe rebuild removed the only entry ('ibd-recipes' ->
+    // extractMealPlan(), which scraped the iframed Next.js planner's DOM) —
+    // that page no longer uses this shell at all (page-gastro-recipies.php
+    // is a native page now). Left as an empty map, ready for a future tool:
+    // extractStructured() below degrades to snapshotIframe() when a slug has
+    // no entry, exactly as it already does for malnutrition-calculator.
+    var TOOL_EXTRACTORS = {};
 
     /**
      * Run the extractor registered for this tool, if any. Never throws — a
