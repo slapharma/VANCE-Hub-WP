@@ -12,6 +12,173 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Flat recipe list for the hub's card grid and the planner's picker —
+ * everything both need, in one shape, so the server-rendered grid and the
+ * client-side picker/search are describing the same data.
+ *
+ * @return array<int, array{slug:string, name:string, category:string, image:string, url:string, calories:int, minutes:int, servings:int}>
+ */
+function vance_recipe_planner_data() {
+	$data = vance_recipe_data();
+	$out  = array();
+
+	foreach ( vance_recipe_catalogue() as $slug => $meta ) {
+		$facts = isset( $data[ $slug ] ) ? $data[ $slug ] : array();
+		$out[] = array(
+			'slug'     => $slug,
+			'name'     => $meta['name'],
+			'category' => $meta['category'],
+			'image'    => vance_recipe_image_url( $slug ),
+			'url'      => vance_recipe_url( $slug ),
+			'calories' => isset( $facts['nutrition']['calories'] ) ? (int) $facts['nutrition']['calories'] : 0,
+			'minutes'  => isset( $facts['prep'] ) ? ( (int) $facts['prep'] + (int) $facts['cook'] ) : 0,
+			'servings' => isset( $facts['servings'] ) ? (int) $facts['servings'] : 0,
+		);
+	}
+
+	return $out;
+}
+
+/**
+ * The planner's fixed grid shape: 7 days, each with 4 named slots. Both the
+ * live editing state (assets/js/recipe-planner.js) and a `?plan=` preload use
+ * this shape, keyed by slot name rather than a positional array so a missing
+ * or misordered slot in a saved row can't shift the others.
+ *
+ * @return array<int, array{day:string, meals:array<string,null>}>
+ */
+function vance_recipe_planner_days_skeleton() {
+	$out = array();
+	foreach ( array( 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ) as $day ) {
+		$out[] = array(
+			'day'   => $day,
+			'meals' => array(
+				'breakfast' => null,
+				'lunch'     => null,
+				'dinner'    => null,
+				'snack'     => null,
+			),
+		);
+	}
+	return $out;
+}
+
+/**
+ * A saved plan's `slot` field is free text ("Breakfast", "Snack", …) rather
+ * than one of the planner's 4 canonical keys, so match it case-insensitively
+ * rather than assuming it already is one.
+ *
+ * @param string $slot
+ * @return string One of breakfast/lunch/dinner/snack, or '' if unrecognised.
+ */
+function vance_recipe_planner_normalize_slot( $slot ) {
+	$slot = strtolower( trim( (string) $slot ) );
+	$map  = array(
+		'breakfast' => 'breakfast',
+		'lunch'     => 'lunch',
+		'dinner'    => 'dinner',
+		'snack'     => 'snack',
+		'snacks'    => 'snack',
+	);
+	return isset( $map[ $slot ] ) ? $map[ $slot ] : '';
+}
+
+/**
+ * Convert a saved plan's days[] (v1 name-only through v4 slug-capture) into
+ * the planner's fixed grid shape, via vance_recipe_expand_plan() so both the
+ * dashboard viewer and the planner's own "edit this plan" preload resolve a
+ * saved row identically.
+ *
+ * @param array $saved_days Saved plan payload's days[].
+ * @return array<int, array{day:string, meals:array<string, array{slug:string,name:string,calories:int,minutes:int}|null>}>
+ */
+function vance_recipe_planner_days_from_saved( $saved_days ) {
+	$expanded = vance_recipe_expand_plan( $saved_days );
+	$skeleton = vance_recipe_planner_days_skeleton();
+
+	$index_by_day = array();
+	foreach ( $skeleton as $i => $d ) {
+		$index_by_day[ strtolower( $d['day'] ) ] = $i;
+	}
+
+	foreach ( $expanded['days'] as $day_row ) {
+		$key = strtolower( trim( (string) $day_row['day'] ) );
+		if ( ! isset( $index_by_day[ $key ] ) ) {
+			continue; // Unrecognised day label — skip rather than guess where it goes.
+		}
+		$idx = $index_by_day[ $key ];
+		foreach ( (array) $day_row['meals'] as $meal ) {
+			$slot = vance_recipe_planner_normalize_slot( isset( $meal['slot'] ) ? $meal['slot'] : '' );
+			if ( ! $slot ) {
+				continue;
+			}
+			$skeleton[ $idx ]['meals'][ $slot ] = array(
+				'slug'     => $meal['slug'],
+				'name'     => $meal['name'],
+				'calories' => '' !== $meal['calories'] ? (int) $meal['calories'] : 0,
+				'minutes'  => '' !== $meal['minutes'] ? (int) $meal['minutes'] : 0,
+			);
+		}
+	}
+
+	return $skeleton;
+}
+
+/**
+ * Config handed to assets/js/recipe-planner.js via wp_localize_script().
+ * Reads $_GET directly (?plan=, ?add=) because it needs the same query vars
+ * the hub page itself is rendering from — see functions.php's
+ * vance_health_hub_scripts(), which calls this only on that page.
+ *
+ * @return array
+ */
+function vance_recipe_planner_script_config() {
+	$logged_in = is_user_logged_in();
+
+	$preload = null;
+	if ( $logged_in && isset( $_GET['plan'] ) ) {
+		$key  = sanitize_text_field( wp_unslash( $_GET['plan'] ) );
+		$hist = get_user_meta( get_current_user_id(), '_sla_ibd_recipes_history', true );
+		foreach ( (array) $hist as $entry ) {
+			if ( $key !== vance_tool_history_key( $entry ) ) {
+				continue;
+			}
+			$p = isset( $entry['payload'] ) ? $entry['payload'] : array();
+			if ( isset( $p['kind'] ) && 'meal-plan' === $p['kind'] && ! empty( $p['days'] ) && is_array( $p['days'] ) ) {
+				$preload = array(
+					'name' => isset( $p['name'] ) ? (string) $p['name'] : '',
+					'days' => vance_recipe_planner_days_from_saved( $p['days'] ),
+				);
+			}
+			break;
+		}
+	}
+
+	$add_slug = '';
+	if ( isset( $_GET['add'] ) ) {
+		$add_slug = vance_recipe_resolve_slug( sanitize_title( wp_unslash( $_GET['add'] ) ) );
+	}
+
+	return array(
+		'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+		'nonce'        => wp_create_nonce( 'vance_tool_save_ibd-recipes' ),
+		'loggedIn'     => $logged_in,
+		'toolSlug'     => 'ibd-recipes',
+		'recipes'      => vance_recipe_planner_data(),
+		'days'         => wp_list_pluck( vance_recipe_planner_days_skeleton(), 'day' ),
+		'slots'        => array(
+			'breakfast' => __( 'Breakfast', 'vance-health-hub' ),
+			'lunch'     => __( 'Lunch', 'vance-health-hub' ),
+			'dinner'    => __( 'Dinner', 'vance-health-hub' ),
+			'snack'     => __( 'Snack', 'vance-health-hub' ),
+		),
+		'preloadPlan'  => $preload,
+		'addSlug'      => $add_slug,
+		'dashboardUrl' => home_url( '/dashboard/' ),
+	);
+}
+
+/**
  * Render the nutrition-facts panel for a recipe post.
  *
  * @param int $post_id

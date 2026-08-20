@@ -1401,12 +1401,12 @@ get_header();
                     <div class="dash-card vance-mp-cardwrap" style="margin-top:32px;">
                         <div class="card-header">
                             <h3 class="card-title">Saved Meal Plans</h3>
-                            <a href="/ibd-recipies/" class="vance-btn-glass vance-btn--sm" data-vance-tool-open="ibd-recipes"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
+                            <a href="/gastro-meal-planner/" class="vance-btn-glass vance-btn--sm" data-vance-tool-open="ibd-recipes"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
                         </div>
                         <?php if (empty($meal_plan_history)): ?>
                             <div style="text-align:center; padding:40px;">
                                 <p style="color:#64748B; margin-bottom:20px;">You haven't saved a meal plan yet. Build a week in the planner and choose &ldquo;Save this meal plan&rdquo; to keep it here.</p>
-                                <a href="/ibd-recipies/" class="vance-btn-inverted" data-vance-tool-open="ibd-recipes">Open the Planner</a>
+                                <a href="/gastro-meal-planner/" class="vance-btn-inverted" data-vance-tool-open="ibd-recipes">Open the Planner</a>
                             </div>
                         <?php else: ?>
                             <style>
@@ -1586,7 +1586,7 @@ get_header();
                                                 <?php endif; ?>
                                                 <div class="vance-mp-actions">
                                                     <?php if ($is_structured): ?>
-                                                        <button type="button" class="vance-btn-inverted vance-btn--sm" data-vance-tool-open="ibd-recipes" data-plan-key="<?php echo esc_attr($key); ?>">Edit meal plan</button>
+                                                        <a href="<?php echo esc_url( home_url( '/gastro-meal-planner/?plan=' . rawurlencode( $key ) . '#planner' ) ); ?>" class="vance-btn-inverted vance-btn--sm" data-no-tool-modal>Edit meal plan</a>
                                                         <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="<?php echo (int) $mp_i; ?>">Download PDF</button>
                                                         <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan-index="<?php echo (int) $mp_i; ?>">View full</button>
                                                     <?php endif; ?>

@@ -522,6 +522,22 @@ function vance_health_hub_scripts() {
         );
     }
 
+    // Gastro Recipes & Meal Planner — native hub/planner page (Phase 3 of the
+    // recipe rebuild; replaces the iframed Next.js bundle + tool-page-shell.php
+    // for this one page). Config built by vance_recipe_planner_script_config()
+    // in inc/recipe-frontend.php, which needs the query vars this same request
+    // is rendering the page from (?plan=, ?add=), so it can't be precomputed.
+    if ( is_page_template( 'page-gastro-recipies.php' ) ) {
+        wp_enqueue_script(
+            'vance-recipe-planner',
+            get_template_directory_uri() . '/assets/js/recipe-planner.js',
+            array(),
+            @filemtime( get_template_directory() . '/assets/js/recipe-planner.js' ) ?: '1.0.0',
+            true
+        );
+        wp_localize_script( 'vance-recipe-planner', 'vanceRecipePlanner', vance_recipe_planner_script_config() );
+    }
+
     // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the
     // highlight-to-ask pill needs to be live on every article.
     wp_enqueue_style(
