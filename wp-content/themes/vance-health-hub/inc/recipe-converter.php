@@ -173,7 +173,10 @@ function vance_recipe_cli_parse_and_check( $slug, $content ) {
 	if ( null === $serves || $serves !== (int) $facts['servings'] ) {
 		$errors[] = "servings mismatch — HTML: " . var_export( $serves, true ) . ", recipe-data.php: {$facts['servings']}";
 	}
-	if ( strtolower( $meal_label ) !== $meta['category'] ) {
+	// "Meal:" is written singular ("Snack"); the catalogue category is plural
+	// ("snacks") for that one case, so accept either form matching.
+	$meal_norm = strtolower( $meal_label );
+	if ( $meal_norm !== $meta['category'] && $meal_norm . 's' !== $meta['category'] ) {
 		$errors[] = "meal/category mismatch — HTML: '{$meal_label}', catalogue: '{$meta['category']}'";
 	}
 
