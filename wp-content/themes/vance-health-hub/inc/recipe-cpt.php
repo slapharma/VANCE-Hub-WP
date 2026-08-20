@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'VANCE_RECIPE_PUBLIC', false );
-define( 'VANCE_RECIPE_REWRITE_VER', 1 );
+define( 'VANCE_RECIPE_PUBLIC', true ); // Phase 2: single-vance_recipe.php exists — recipes are live.
+define( 'VANCE_RECIPE_REWRITE_VER', 2 );
 
 function vance_recipe_register_cpt() {
 	register_post_type(

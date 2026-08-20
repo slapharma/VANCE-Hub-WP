@@ -641,7 +641,7 @@ add_action( 'template_redirect', 'vance_tool_embed_trim_head' );
  * results silently fail to save instead of persisting to `_sla_*` meta.
  */
 function vance_no_cache_account_pages() {
-    $slugs     = array( 'dashboard', 'my-notes', 'healthcare-quiz', 'malnutrition-calculator', 'ibd-recipies' );
+    $slugs     = array( 'dashboard', 'my-notes', 'healthcare-quiz', 'malnutrition-calculator', 'gastro-meal-planner' );
     $templates = array( 'page-dashboard.php', 'page-my-notes.php', 'page-healthcare-quiz.php', 'page-malnutrition-calculator.php', 'page-ibd-recipies.php' );
 
     if ( ! is_page( $slugs ) && ! is_page_template( $templates ) ) {
@@ -2785,6 +2785,7 @@ require get_template_directory() . '/inc/recipe-catalogue.php';
 require get_template_directory() . '/inc/recipe-cpt.php';
 require get_template_directory() . '/inc/recipe-admin.php';
 require get_template_directory() . '/inc/recipe-converter.php';
+require get_template_directory() . '/inc/recipe-frontend.php';
 
 /**
  * Include Ask AI Functions
