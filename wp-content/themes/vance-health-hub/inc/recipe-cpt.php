@@ -192,3 +192,51 @@ function vance_recipe_admin_column_content( $column, $post_id ) {
 	}
 }
 add_action( 'manage_vance_recipe_posts_custom_column', 'vance_recipe_admin_column_content', 10, 2 );
+
+/**
+ * Restore the vance_recipe query var while VANCE_RECIPE_PUBLIC is false.
+ *
+ * WP core's WP::parse_request() only carries a post type's own rewrite query
+ * var through to $wp->query_vars when is_post_type_viewable() is true, which
+ * (for a non-builtin type) requires publicly_queryable. With that false, a
+ * URL matching /recipes/%postname%/ still resolves $wp->matched_rule
+ * correctly but the vance_recipe var is silently dropped — verified live
+ * 2026-08-20: the request fell through to the default/home query and
+ * returned 200 with the theme's generic homepage content instead of 404 (no
+ * recipe data leaked, but not the clean "not live yet" Phase 1 needs).
+ * Putting the var back here — sourced from $wp->matched_query, which IS
+ * still set correctly — lets WP_Query resolve it as a normal singular query
+ * again, so is_singular('vance_recipe') below works and can 404 it properly.
+ *
+ * WP::parse_request() itself only translates a bare post-type query var into
+ * post_type+name inside the SAME loop that's gated by is_post_type_viewable()
+ * (see $post_type_query_vars in wp-includes/class-wp.php), so setting just
+ * `vance_recipe` here isn't enough — post_type/name have to be set directly.
+ * This action fires at the very end of parse_request(), after core's own
+ * "strip post_type unless publicly_queryable" pass already ran, so it isn't
+ * re-stripped.
+ */
+function vance_recipe_restore_query_var( $wp ) {
+	if ( VANCE_RECIPE_PUBLIC || empty( $wp->matched_query ) ) {
+		return;
+	}
+	parse_str( $wp->matched_query, $matched );
+	if ( ! empty( $matched['vance_recipe'] ) ) {
+		$wp->query_vars['vance_recipe'] = $matched['vance_recipe'];
+		$wp->query_vars['post_type']    = 'vance_recipe';
+		$wp->query_vars['name']         = $matched['vance_recipe'];
+	}
+}
+add_action( 'parse_request', 'vance_recipe_restore_query_var' );
+
+/**
+ * Belt-and-braces 404 for single recipes while VANCE_RECIPE_PUBLIC is false.
+ */
+function vance_recipe_block_frontend_when_private() {
+	if ( ! VANCE_RECIPE_PUBLIC && is_singular( 'vance_recipe' ) ) {
+		global $wp_query;
+		$wp_query->set_404();
+		status_header( 404 );
+	}
+}
+add_action( 'template_redirect', 'vance_recipe_block_frontend_when_private' );
