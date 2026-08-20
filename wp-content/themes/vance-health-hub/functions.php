@@ -2776,6 +2776,17 @@ require get_template_directory() . '/inc/dashboard-functions.php';
 require get_template_directory() . '/inc/recipe-catalogue.php';
 
 /**
+ * Recipe CPT — native replacement for the iframed IBD Recipes bundle
+ * (see the rebuild plan). CPT/taxonomy registration, admin meta boxes, and
+ * the one-time WP-CLI draft converter. recipe-admin.php's parse/format
+ * helpers and recipe-catalogue.php's data functions are both needed by the
+ * converter, so this loads after recipe-catalogue.php above.
+ */
+require get_template_directory() . '/inc/recipe-cpt.php';
+require get_template_directory() . '/inc/recipe-admin.php';
+require get_template_directory() . '/inc/recipe-converter.php';
+
+/**
  * Include Ask AI Functions
  * Grounded chat over hub content: retrieval, system prompt, REST route,
  * and auto-save of conversations into the user's dashboard.
