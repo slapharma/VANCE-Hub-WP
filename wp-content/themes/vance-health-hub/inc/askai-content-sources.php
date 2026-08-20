@@ -8,18 +8,15 @@
  *   1. GI Health conditions. page-gi-condition.php renders each condition from a
  *      hard-coded `case` block of literal HTML, so the pages have real
  *      permalinks but effectively empty post_content.
- *   2. IBD Recipes. A static Next.js export under assets/tools/ibd-recipes/,
- *      iframed by the recipes page. Not WordPress content at all.
+ *   2. Recipes. Native `vance_recipe` CPT posts (inc/recipe-cpt.php) — real
+ *      WordPress content with real permalinks, but the bulk of what a recipe
+ *      *is* (ingredients, method, nutrition) lives in post meta rather than
+ *      post_content, so the normal WP_Query retrieval in askai-functions.php
+ *      would only ever see the intro/"why this works" prose.
  *
  * This file turns both into a cached corpus of plain-text documents that the
  * retrieval step can score and cite, so the assistant can answer from them and
  * link the reader to the right page.
- *
- * The recipes are read from their 19 pre-rendered HTML pages rather than the
- * minified JS array that also holds them. The array is a JS object literal with
- * unquoted keys, and the regex needed to make it JSON would corrupt any value
- * containing a comma followed by a word and a colon, which recipe instructions
- * genuinely contain. The rendered pages carry the same text with no such risk.
  *
  * @package vance-health-hub
  */
@@ -137,73 +134,100 @@ function vance_ai_gi_documents() {
 }
 
 // =========================================================================
-// IBD Recipes
+// Recipes
 // =========================================================================
 
 /**
- * Read the pre-rendered recipe pages from the static export.
- *
- * Each recipe has its own directory, and the directory name is the recipe id
- * used in its public URL, so the citation link is exact.
+ * Build a recipe document from the `vance_recipe` CPT — title, category,
+ * intro/"why this works" prose, ingredients, method and a nutrition summary,
+ * assembled from post_content plus post meta (inc/recipe-cpt.php,
+ * inc/recipe-admin.php) since the recipe itself doesn't live in post_content
+ * alone.
  *
  * @return array[] Documents: {id, title, url, text, kind}.
  */
 function vance_ai_recipe_documents() {
-	$root = get_template_directory() . '/assets/tools/ibd-recipes/recipes';
-	if ( ! is_dir( $root ) ) {
-		return array();
-	}
-
-	// Force https: siteurl in the database is still http, so the theme URI comes
-	// back unencrypted and every citation would cost the reader a redirect hop.
-	// Fixing siteurl itself is a separate, site-wide change.
-	$base      = set_url_scheme( get_template_directory_uri(), 'https' ) . '/assets/tools/ibd-recipes/recipes/';
 	$documents = array();
 
-	foreach ( (array) glob( $root . '/*', GLOB_ONLYDIR ) as $dir ) {
-		$file = $dir . '/index.html';
-		if ( ! is_readable( $file ) ) {
-			continue;
+	foreach ( vance_recipe_all_posts() as $post ) {
+		$cat_terms = get_the_terms( $post->ID, 'vance_recipe_cat' );
+		$category  = ( $cat_terms && ! is_wp_error( $cat_terms ) && isset( $cat_terms[0] ) ) ? $cat_terms[0]->name : '';
+
+		$intro = vance_ai_html_to_text( $post->post_content );
+
+		$ingredients      = get_post_meta( $post->ID, '_vance_recipe_ingredients', true );
+		$ingredient_lines = array();
+		foreach ( (array) $ingredients as $section ) {
+			foreach ( (array) ( isset( $section['items'] ) ? $section['items'] : array() ) as $item ) {
+				$ingredient_lines[] = (string) $item;
+			}
 		}
 
-		$html = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-		if ( false === $html ) {
-			continue;
+		$method_lines = array_values( (array) get_post_meta( $post->ID, '_vance_recipe_method', true ) );
+
+		$kcal = get_post_meta( $post->ID, '_vance_recipe_kcal', true );
+		$nutrition_summary = '';
+		if ( '' !== $kcal ) {
+			$nutrition_summary = sprintf(
+				'Nutrition per serving: %d kcal, %dg protein, %dg carbs, %dg fat, %dg fibre.',
+				(int) $kcal,
+				(int) get_post_meta( $post->ID, '_vance_recipe_protein_g', true ),
+				(int) get_post_meta( $post->ID, '_vance_recipe_carbs_g', true ),
+				(int) get_post_meta( $post->ID, '_vance_recipe_fat_g', true ),
+				(int) get_post_meta( $post->ID, '_vance_recipe_fibre_g', true )
+			);
 		}
 
-		$id = basename( $dir );
+		$text = implode(
+			' ',
+			array_filter(
+				array(
+					$category ? "Category: {$category}." : '',
+					$intro,
+					$nutrition_summary,
+					$ingredient_lines ? 'Ingredients: ' . implode( ', ', $ingredient_lines ) . '.' : '',
+					$method_lines ? 'Method: ' . implode( ' ', $method_lines ) : '',
+				)
+			)
+		);
 
-		// The page title carries a site suffix; keep only the recipe name.
-		$title = ucwords( str_replace( '-', ' ', $id ) );
-		if ( preg_match( '#<title>(.*?)</title>#is', $html, $m ) ) {
-			$raw   = html_entity_decode( trim( $m[1] ), ENT_QUOTES, 'UTF-8' );
-			$parts = explode( '|', $raw );
-			$title = trim( $parts[0] );
-		}
-
-		// Each page has a single <main>; taking it drops the site nav, header and
-		// footer, which would otherwise lead every excerpt with the same chrome.
-		if ( preg_match( '#<main\b[^>]*>(.*?)</main>#is', $html, $main ) ) {
-			$html = $main[1];
-		}
-
-		$text = vance_ai_html_to_text( $html );
 		if ( str_word_count( $text ) < 40 ) {
 			continue;
 		}
 
-		// Lead with the name and a line of context, so a snippet lifted from the
-		// middle of the page still reads as a recipe from this hub.
+		// Raw post_title, not get_the_title(): the latter HTML-entity-encodes
+		// ampersands, which would read as literal "&#038;" in the AI's context
+		// (see inc/recipe-catalogue.php for the same fix, there for a different
+		// reason — name-matching saved plans rather than prompt readability).
+		$title = $post->post_title;
+
 		$documents[] = array(
-			'id'    => 'recipe:' . $id,
+			'id'    => 'recipe:' . $post->post_name,
 			'title' => $title,
-			'url'   => $base . $id . '/',
-			'text'  => $title . '. Gut-friendly recipe from the Vance Medical Hub IBD recipe collection. ' . $text,
+			'url'   => set_url_scheme( get_permalink( $post ), 'https' ),
+			'text'  => $title . '. Gut-friendly recipe from the Vance Medical Hub recipe collection. ' . $text,
 			'kind'  => 'recipe',
 		);
 	}
 
 	return $documents;
+}
+
+/**
+ * Cache-busting fingerprint for the recipe half of the corpus: count plus
+ * the newest post_modified, so adding, editing or unpublishing any recipe
+ * invalidates the cached corpus without anyone having to remember to purge
+ * it — the CPT equivalent of the old recipe-directory filemtime check.
+ *
+ * @return string
+ */
+function vance_ai_recipe_corpus_fingerprint() {
+	$posts = vance_recipe_all_posts();
+	$newest = 0;
+	foreach ( $posts as $post ) {
+		$newest = max( $newest, strtotime( $post->post_modified_gmt ) );
+	}
+	return count( $posts ) . '|' . $newest;
 }
 
 // =========================================================================
@@ -213,9 +237,9 @@ function vance_ai_recipe_documents() {
 /**
  * The full virtual corpus, cached.
  *
- * The cache key folds in the template's modification time and the recipe
- * directory listing, so editing either invalidates it without anyone having to
- * remember to purge.
+ * The cache key folds in the GI template's modification time and the recipe
+ * corpus fingerprint (count + newest post_modified), so editing either
+ * invalidates it without anyone having to remember to purge.
  *
  * @return array[]
  */
@@ -225,12 +249,11 @@ function vance_ai_virtual_documents() {
 		return $memo;
 	}
 
-	$template   = get_template_directory() . '/page-gi-condition.php';
-	$recipe_dir = get_template_directory() . '/assets/tools/ibd-recipes/recipes';
+	$template = get_template_directory() . '/page-gi-condition.php';
 
 	$fingerprint = md5(
 		( is_readable( $template ) ? (string) filemtime( $template ) : '0' ) . '|' .
-		( is_dir( $recipe_dir ) ? (string) filemtime( $recipe_dir ) : '0' )
+		vance_ai_recipe_corpus_fingerprint()
 	);
 
 	$key    = 'vance_ai_virtual_docs_' . $fingerprint;
