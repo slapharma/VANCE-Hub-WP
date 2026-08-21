@@ -522,12 +522,26 @@ function vance_health_hub_scripts() {
         );
     }
 
-    // Gastro Recipes & Meal Planner — native hub/planner page (Phase 3 of the
-    // recipe rebuild; replaces the iframed Next.js bundle + tool-page-shell.php
-    // for this one page). Config built by vance_recipe_planner_script_config()
+    // Gastro Recipes & Meal Planner — the recipe grid + 7x4 planner app
+    // (template-parts/recipe-hub-app.php), used both by the standalone hub
+    // page (Phase 3) and the dashboard's "My Recipes" tab (page-dashboard.php,
+    // case 'my-recipes'). Config built by vance_recipe_planner_script_config()
     // in inc/recipe-frontend.php, which needs the query vars this same request
     // is rendering the page from (?plan=, ?add=), so it can't be precomputed.
-    if ( is_page_template( 'page-gastro-recipies.php' ) ) {
+    $vance_on_recipe_hub_page = is_page_template( 'page-gastro-recipies.php' );
+    // is_page('dashboard'), not is_page_template('page-dashboard.php'): that
+    // file is resolved via WP's page-{slug}.php filename convention, not an
+    // explicit _wp_page_template meta value (confirmed empty on the live
+    // page 2026-08-20), so is_page_template() for it is always false.
+    $vance_on_dashboard_my_recipes = is_page( 'dashboard' )
+        && isset( $_GET['tab'] ) && 'my-recipes' === $_GET['tab'];
+    if ( $vance_on_recipe_hub_page || $vance_on_dashboard_my_recipes ) {
+        wp_enqueue_style(
+            'vance-recipe-hub',
+            get_template_directory_uri() . '/assets/css/recipe-hub.css',
+            array( 'vance-main-style' ),
+            @filemtime( get_template_directory() . '/assets/css/recipe-hub.css' ) ?: '1.0.0'
+        );
         wp_enqueue_script(
             'vance-recipe-planner',
             get_template_directory_uri() . '/assets/js/recipe-planner.js',

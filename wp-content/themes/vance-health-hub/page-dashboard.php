@@ -498,6 +498,7 @@ get_header();
                         switch($current_tab) {
                             case 'home': echo $is_practitioner ? 'You have 3 patient updates pending review.' : "Hi {$first_name}, welcome back to your Gastro Health Hub."; break;
                             case 'health-profile': echo 'View your health discovery results and update your health profile details.'; break;
+                            case 'my-recipes': echo 'Your saved meal plans, plus the recipe browser and weekly planner.'; break;
                             case 'notes': echo 'Your private clinical and personal notes.'; break;
                             case 'ai-chats': echo 'History of your conversations with VANCE-Ai.'; break;
                             default: echo '';
@@ -984,10 +985,6 @@ get_header();
                     $malnutrition_history = function_exists('vance_get_tool_history')
                         ? vance_get_tool_history($current_user->ID, 'malnutrition-calculator', 10)
                         : array();
-                    // Saved meal plans from the IBD Recipes planner (same save path).
-                    $meal_plan_history = function_exists('vance_get_tool_history')
-                        ? vance_get_tool_history($current_user->ID, 'ibd-recipes', 10)
-                        : array();
 
                     // Every clinical-profile key, empty by default, so a field added
                     // to vance_clinical_profile_fields() reads safely here without
@@ -1397,6 +1394,56 @@ get_header();
                     </script>
                     <?php endif; ?>
 
+                    <script>
+
+                    // Every outcome resets the button and says what happened. The
+                    // previous success-only callback meant a failed request (the
+                    // save handler used to 403 on a nonce mismatch) left this
+                    // stuck on "Saving..." with nothing shown to the user.
+                    jQuery('#dashboard-additional-details-form').on('submit', function(e) {
+                        e.preventDefault();
+                        const btn = jQuery(this).find('button[type="submit"]');
+                        const msg = jQuery('#dashboard-additional-details-msg');
+                        const reset = () => btn.prop('disabled', false).text('Save notes').css('background', '#F1F5F9').css('color', '#475569');
+                        const say = (text, ok) => msg.text(text).css('color', ok ? '#047857' : '#B91C1C').show();
+
+                        msg.hide();
+                        btn.prop('disabled', true).text('Saving...');
+
+                        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', jQuery(this).serialize())
+                            .done(function(res) {
+                                if (res && res.success) {
+                                    btn.text('Saved ✓').css('background', '#D1FAE5').css('color', '#065F46');
+                                    say('Your notes have been saved.', true);
+                                    setTimeout(reset, 2200);
+                                } else {
+                                    say((res && res.data) ? String(res.data) : 'Could not save, please try again.', false);
+                                    reset();
+                                }
+                            })
+                            .fail(function(xhr) {
+                                say('Could not save (error ' + xhr.status + '). Please refresh the page and try again.', false);
+                                reset();
+                            });
+                    });
+                    </script>
+                <?php break;
+
+                case 'my-recipes':
+                    // Saved Meal Plans viewer/rename/delete/PDF-export -- moved here
+                    // from case 'health-profile' 2026-08-20 (own dashboard tab now).
+                    // Everything below to the matching close is unchanged from that
+                    // move other than the trailing </script> added to close the tag
+                    // opened partway through (the tag used to stay open across into
+                    // health-profile's unrelated "Save notes" handler; that handler
+                    // now opens its own tag instead, right where this one used to).
+                    //
+                    // $meal_plan_history moved here too (was computed in
+                    // health-profile's setup, which no longer runs for this tab).
+                    $meal_plan_history = function_exists('vance_get_tool_history')
+                        ? vance_get_tool_history($current_user->ID, 'ibd-recipes', 10)
+                        : array();
+                    ?>
                     <!-- Saved meal plans (IBD Recipes planner) -->
                     <div class="dash-card vance-mp-cardwrap" style="margin-top:32px;">
                         <div class="card-header">
@@ -2224,38 +2271,22 @@ get_header();
                             });
                         }
                     })();
-
-                    // Every outcome resets the button and says what happened. The
-                    // previous success-only callback meant a failed request (the
-                    // save handler used to 403 on a nonce mismatch) left this
-                    // stuck on "Saving..." with nothing shown to the user.
-                    jQuery('#dashboard-additional-details-form').on('submit', function(e) {
-                        e.preventDefault();
-                        const btn = jQuery(this).find('button[type="submit"]');
-                        const msg = jQuery('#dashboard-additional-details-msg');
-                        const reset = () => btn.prop('disabled', false).text('Save notes').css('background', '#F1F5F9').css('color', '#475569');
-                        const say = (text, ok) => msg.text(text).css('color', ok ? '#047857' : '#B91C1C').show();
-
-                        msg.hide();
-                        btn.prop('disabled', true).text('Saving...');
-
-                        jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', jQuery(this).serialize())
-                            .done(function(res) {
-                                if (res && res.success) {
-                                    btn.text('Saved ✓').css('background', '#D1FAE5').css('color', '#065F46');
-                                    say('Your notes have been saved.', true);
-                                    setTimeout(reset, 2200);
-                                } else {
-                                    say((res && res.data) ? String(res.data) : 'Could not save, please try again.', false);
-                                    reset();
-                                }
-                            })
-                            .fail(function(xhr) {
-                                say('Could not save (error ' + xhr.status + '). Please refresh the page and try again.', false);
-                                reset();
-                            });
-                    });
                     </script>
+                    <?php
+                    // Recipe browser + weekly planner (template-parts/recipe-hub-app.php),
+                    // the same markup the standalone /gastro-meal-planner/ page uses.
+                    // CSS/JS enqueued by vance_health_hub_scripts() in functions.php,
+                    // gated on is_page('dashboard') + ?tab=my-recipes.
+                    ?>
+                    <div class="dash-card" style="margin-top:32px;">
+                        <div class="card-header">
+                            <h3 class="card-title">Browse Recipes &amp; Build a Plan</h3>
+                        </div>
+                        <?php
+                        $vance_rh_embedded = true;
+                        get_template_part( 'template-parts/recipe-hub-app' );
+                        ?>
+                    </div>
                 <?php break;
 
                 case 'tools':

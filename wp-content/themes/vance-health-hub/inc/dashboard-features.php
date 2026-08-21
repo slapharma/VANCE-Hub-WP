@@ -132,6 +132,14 @@ function vance_dashboard_features() {
 			'default'     => true,
 			'toggleable'  => true,
 		),
+		'my-recipes'     => array(
+			'label'       => 'My Recipes',
+			'icon'        => '🥗',
+			'section'     => 'main',
+			'description' => 'Saved meal plans, plus the recipe browser and weekly planner.',
+			'default'     => true,
+			'toggleable'  => true,
+		),
 		'reading-list'   => array(
 			'label'       => 'My Reading List',
 			'icon'        => '📚',
