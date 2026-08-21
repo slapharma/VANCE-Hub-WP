@@ -36,6 +36,16 @@ require_once get_template_directory() . '/inc/customizer-sortable-control.php';
 // Renderer used by archive.php + template-parts/subcategory-grouped-archive.php;
 // per-category Customizer controls are registered further down (Category Promo Blocks).
 require_once get_template_directory() . '/inc/category-promo.php';
+// Prime Block — the shared "Featured Tools + Latest Content" engine behind
+// Prime Block Home 1 / Home 2 (registry-driven homepage sections) and Prime
+// Block Categories (called directly from the archive templates). Must load on
+// the frontend too, not just in the Customizer, since it registers sections.
+require_once get_template_directory() . '/inc/prime-block.php';
+// Gastro Conditions — homepage tile grid for the GI condition pages.
+require_once get_template_directory() . '/inc/gastro-conditions.php';
+// Hero carousel — resolves hero slides and renders either the single static
+// hero (default) or a carousel once a second slide is enabled.
+require_once get_template_directory() . '/inc/hero-carousel.php';
 
 /**
  * Rebrand migration helper.
@@ -125,6 +135,251 @@ function vance_gi_conditions() {
         'colorectal-cancer'          => array( 'key' => 'crc',    'nav' => 'crc',          'label' => 'Colorectal Cancer' ),
         'diverticular-disease'       => array( 'key' => 'div',    'nav' => 'diverticular', 'label' => 'Diverticular Disease' ),
     );
+}
+
+/**
+ * The presentational half of the GI condition registry: the photo, alt text,
+ * display title and short description for each condition.
+ *
+ * vance_gi_conditions() above stays the canonical slug/key/nav registry; this
+ * carries only what a *card* needs. Extracted out of page-gi-health.php so the
+ * homepage "Gastro Conditions" section (inc/gastro-conditions.php) renders the
+ * same seven conditions from the same source instead of keeping a second copy.
+ *
+ * Images live in /assets/img/gi-health/.
+ *
+ * @return array<int, array{slug:string,image:string,alt:string,title:string,desc:string}>
+ */
+function vance_gi_condition_cards() {
+    return array(
+        array(
+            'slug'  => 'inflammatory-bowel-disease',
+            'image' => 'ibd.jpg',
+            'alt'   => 'Four friends sitting and talking around a table in a cafe',
+            'title' => 'Inflammatory Bowel Disease (IBD)',
+            'desc'  => "The umbrella term for long-term conditions, mainly Crohn\u{2019}s disease and ulcerative colitis, that cause ongoing inflammation of the digestive tract.",
+        ),
+        array(
+            'slug'  => 'ulcerative-colitis',
+            'image' => 'ulcerative-colitis.jpg',
+            'alt'   => 'Two women walking and talking together on a sunlit city street',
+            'title' => 'Ulcerative Colitis (UC)',
+            'desc'  => 'A form of IBD causing inflammation and ulcers in the lining of the colon and rectum.',
+        ),
+        array(
+            'slug'  => 'crohns-disease',
+            'image' => 'crohns.jpg',
+            'alt'   => 'A man sitting at his kitchen table, reading a letter over a cup of tea',
+            'title' => "Crohn\u{2019}s Disease",
+            'desc'  => 'A form of IBD that can inflame any part of the gut, from mouth to anus, often the small intestine.',
+        ),
+        array(
+            'slug'  => 'microscopic-colitis',
+            'image' => 'microscopic-colitis.jpg',
+            'alt'   => 'An older woman wrapped in a blanket on a sofa, drinking from a mug',
+            'title' => 'Microscopic Colitis',
+            'desc'  => 'Inflammation of the colon visible only under a microscope, causing chronic watery diarrhoea.',
+        ),
+        array(
+            'slug'  => 'irritable-bowel-syndrome',
+            'image' => 'ibs.jpg',
+            'alt'   => 'A man and his dog looking out across the water from a waterfront pier',
+            'title' => 'Irritable Bowel Syndrome (IBS)',
+            'desc'  => 'A common, long-term condition affecting how the gut works, causing abdominal pain, bloating, and bouts of diarrhoea, constipation or both.',
+        ),
+        array(
+            'slug'  => 'colorectal-cancer',
+            'image' => 'colorectal-cancer.jpg',
+            'alt'   => 'Two men sitting on a sofa at home, talking and smiling together',
+            'title' => 'Colorectal Cancer',
+            'desc'  => 'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps.',
+        ),
+        array(
+            'slug'  => 'diverticular-disease',
+            'image' => 'diverticular-disease.jpg',
+            'alt'   => 'A carer handing a glass of water to an older woman sitting on a sofa',
+            'title' => 'Diverticular Disease &amp; Diverticulitis',
+            'desc'  => 'Small pouches that form in the wall of the colon, which can sometimes cause pain or become inflamed.',
+        ),
+    );
+}
+
+/**
+ * Register the full Customizer control set for one Prime Block instance.
+ *
+ * Home 1 does NOT go through here — it is pinned to the legacy
+ * vance_pwc_* / vance_hquiz_* / vance_askai_* key names so the live site's
+ * saved configuration keeps working. Every other instance uses a clean,
+ * self-consistent prefix and can share this.
+ *
+ * Defaults mirror Home 1's out-of-the-box content, so a newly-enabled instance
+ * is immediately usable. Keep in sync with
+ * vance_prime_block_vals_for_prefix() in inc/prime-block.php.
+ *
+ * @param WP_Customize_Manager $wp_customize
+ * @param string               $section_id
+ * @param string               $prefix       e.g. 'vance_pb2_'
+ * @param string               $title
+ * @param float                $priority
+ * @param string               $description
+ * @param bool                 $with_category_toggle Add the "show on category
+ *                             archives" opt-in checkbox at the top.
+ */
+function vance_register_prime_block_controls( $wp_customize, $section_id, $prefix, $title, $priority, $description = '', $with_category_toggle = false ) {
+    $wp_customize->add_section( $section_id, array(
+        'title'       => $title,
+        'priority'    => $priority,
+        'panel'       => 'vance_homepage_panel',
+        'description' => $description,
+    ) );
+
+    if ( $with_category_toggle ) {
+        $wp_customize->add_setting( $prefix . 'show_on_categories', array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+        $wp_customize->add_control( $prefix . 'show_on_categories', array(
+            'label'       => __( 'Show on category archive pages', 'vance-health-hub' ),
+            'description' => __( 'When ticked, this block appears on every category archive, directly below the category promo block.', 'vance-health-hub' ),
+            'section'     => $section_id,
+            'type'        => 'checkbox',
+        ) );
+    }
+
+    $wp_customize->add_setting( $prefix . 'label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( $prefix . 'label', array( 'label' => 'Section Label', 'section' => $section_id, 'type' => 'text' ) );
+
+    $wp_customize->add_setting( $prefix . 'layout', array( 'default' => 'left', 'sanitize_callback' => 'sanitize_key' ) );
+    $wp_customize->add_control( $prefix . 'layout', array(
+        'label'       => __( 'Layout - Tools Position', 'vance-health-hub' ),
+        'description' => __( 'Choose whether the tool cards sit beside the Latest Content list, or stack above or below it.', 'vance-health-hub' ),
+        'section'     => $section_id,
+        'type'        => 'select',
+        'choices'     => vance_prime_block_layout_choices(),
+    ) );
+
+    $wp_customize->add_setting( $prefix . 'style', array( 'default' => 'card', 'sanitize_callback' => 'sanitize_key' ) );
+    $wp_customize->add_control( $prefix . 'style', array(
+        'label'       => __( 'Tool Card Style', 'vance-health-hub' ),
+        'description' => __( 'Card = paired tool tiles with image header. Image + Text = horizontal banner (icon left, content right). Image = image-led banner with overlay text. Pill = compact pill banner with CTA on the right.', 'vance-health-hub' ),
+        'section'     => $section_id,
+        'type'        => 'select',
+        'choices'     => vance_prime_block_style_choices(),
+    ) );
+
+    // -- Colours --
+    $pb_colors = array(
+        'section_bg'             => array( '#ffffff', 'Section Background' ),
+        'section_label_color'    => array( '#0f172a', 'Section Label Colour' ),
+        'card_title_color'       => array( '#0A1929', 'Card Title Colour' ),
+        'card_title_hover_color' => array( '#ffffff', 'Card Title Colour (on hover)' ),
+        'card_desc_color'        => array( '#64748b', 'Card Description Colour' ),
+        'card_eyebrow_color'     => array( '#008080', 'Card Eyebrow / Extra-text Colour' ),
+        'card_hover_color'       => array( '#008080', 'Card Hover Colour' ),
+        'icon_bg_color'          => array( '#0A1929', 'Image Placeholder Background' ),
+    );
+    foreach ( $pb_colors as $key => $meta ) {
+        $wp_customize->add_setting( $prefix . $key, array( 'default' => $meta[0], 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . $key, array( 'label' => $meta[1], 'section' => $section_id ) ) );
+    }
+
+    $wp_customize->add_setting( $prefix . 'tools_column_bg', array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'tools_column_bg', array(
+        'label'       => __( 'Tools Column Background', 'vance-health-hub' ),
+        'description' => __( 'Applied ONLY to the tools column. Leave blank for transparent; the column auto-pads when a colour is set so the band is visible.', 'vance-health-hub' ),
+        'section'     => $section_id,
+    ) ) );
+
+    // -- The two tool cards --
+    $pb_cards = array(
+        'card1' => array(
+            'label' => 'Card 1',
+            'title' => 'Gastro Health Survey',
+            'desc'  => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.',
+            'extra' => 'Find your starting point',
+            'link'  => '/healthcare-quiz/',
+        ),
+        'card2' => array(
+            'label' => 'Card 2',
+            'title' => 'VANCE-Ai',
+            'desc'  => 'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.',
+            'extra' => 'Personalised answers, 24/7',
+            'link'  => '/ask-ai/',
+        ),
+    );
+    foreach ( $pb_cards as $card_key => $c ) {
+        $wp_customize->add_setting( $prefix . $card_key . '_title', array( 'default' => $c['title'], 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . $card_key . '_title', array( 'label' => $c['label'] . ', Title', 'section' => $section_id, 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . $card_key . '_desc', array( 'default' => $c['desc'], 'sanitize_callback' => 'sanitize_textarea_field' ) );
+        $wp_customize->add_control( $prefix . $card_key . '_desc', array( 'label' => $c['label'] . ', Description', 'section' => $section_id, 'type' => 'textarea' ) );
+
+        $wp_customize->add_setting( $prefix . $card_key . '_extra', array( 'default' => $c['extra'], 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . $card_key . '_extra', array( 'label' => $c['label'] . ', Eyebrow / Extra text', 'section' => $section_id, 'type' => 'text' ) );
+
+        $wp_customize->add_setting( $prefix . $card_key . '_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $prefix . $card_key . '_image', array( 'label' => $c['label'] . ', Image', 'section' => $section_id ) ) );
+
+        $wp_customize->add_setting( $prefix . $card_key . '_link', array( 'default' => $c['link'], 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . $card_key . '_link', array( 'label' => $c['label'] . ', Link', 'section' => $section_id, 'type' => 'text' ) );
+    }
+
+    // -- Latest Content column --
+    $wp_customize->add_setting( $prefix . 'latest_title', array( 'default' => 'LATEST CONTENT', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( $prefix . 'latest_title', array( 'label' => 'Content Column, Section Label', 'section' => $section_id, 'type' => 'text' ) );
+
+    $wp_customize->add_setting( $prefix . 'latest_count', array( 'default' => 6, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( $prefix . 'latest_count', array(
+        'label'       => 'Content Column, Number of Posts',
+        'description' => 'Bento layout shows 1 featured + the rest as side cards (6 = featured + 5).',
+        'section'     => $section_id,
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 1, 'max' => 7, 'step' => 1 ),
+    ) );
+
+    $pb_cat_choices = array( 0 => 'All Categories' );
+    foreach ( get_categories( array( 'hide_empty' => false ) ) as $pb_cat ) {
+        $pb_cat_choices[ $pb_cat->term_id ] = $pb_cat->name;
+    }
+    $wp_customize->add_setting( $prefix . 'latest_category', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( $prefix . 'latest_category', array( 'label' => 'Content Column, Category Filter', 'section' => $section_id, 'type' => 'select', 'choices' => $pb_cat_choices ) );
+
+    $wp_customize->add_setting( $prefix . 'latest_show_date', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( $prefix . 'latest_show_date', array( 'label' => 'Content Column, Show Post Date', 'section' => $section_id, 'type' => 'checkbox' ) );
+}
+
+/**
+ * Resolve a GI condition page URL by slug.
+ *
+ * The conditions sit at the top level on the live site, so the child path is
+ * tried first (in case the hierarchy is restored) and the bare slug gives the
+ * canonical permalink today, avoiding the /gi-health/<slug>/ 301 hop.
+ *
+ * Lives here rather than in page-gi-health.php because more than one template
+ * now needs it (that page, plus the homepage Gastro Conditions section).
+ */
+function vance_gi_page_url( string $slug ): string {
+    $page = get_page_by_path( 'gi-health/' . $slug );
+    if ( ! $page ) {
+        $page = get_page_by_path( $slug );
+    }
+    if ( $page ) {
+        return get_permalink( $page );
+    }
+    return home_url( '/' . $slug . '/' );
+}
+
+/**
+ * Resolve the GI hub page URL. The hub lives at /gastro-health-explained/ on
+ * the live site; the original `gi-health` slug is tried as a fallback in case
+ * it is restored. Same lookup page-gi-condition.php does for its breadcrumb.
+ */
+function vance_gi_hub_url(): string {
+    $page = get_page_by_path( 'gastro-health-explained' );
+    if ( ! $page ) {
+        $page = get_page_by_path( 'gi-health' );
+    }
+    if ( $page ) {
+        return get_permalink( $page );
+    }
+    return home_url( '/gastro-health-explained/' );
 }
 
 /**
@@ -3768,6 +4023,138 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_hero_btn2_hover_bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_bg_color', array( 'label' => 'Button 2, Background on Hover', 'section' => 'vance_hero_settings' ) ) );
 
+    // -- Carousel behaviour (global, not per-slide) --------------------------
+    // Only has any effect once a second slide is enabled below; with one slide
+    // the hero renders as a plain static section with no carousel JS at all.
+    $wp_customize->add_setting( 'vance_hero_autoplay_enable', array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( 'vance_hero_autoplay_enable', array(
+        'label'       => __( 'Carousel: autoplay', 'vance-health-hub' ),
+        'description' => __( 'Advance slides automatically. Pauses on hover and keyboard focus, and is disabled entirely for visitors who prefer reduced motion. Only applies when 2 or more slides are enabled.', 'vance-health-hub' ),
+        'section'     => 'vance_hero_settings',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_hero_autoplay_interval', array( 'default' => 6, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( 'vance_hero_autoplay_interval', array(
+        'label'       => __( 'Carousel: seconds per slide', 'vance-health-hub' ),
+        'section'     => 'vance_hero_settings',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 2, 'max' => 30, 'step' => 1 ),
+    ) );
+
+    // -- Hero Slides 2..N ----------------------------------------------------
+    // Slide 1 IS the block of hero controls above — it reads the original
+    // vance_hero_* keys and is always on, so an existing site's hero simply
+    // becomes slide 1 with no migration. Slides 2+ get their own section each
+    // and are off by default, so nothing changes until an admin adds one.
+    //
+    // WP has no repeater control, so this follows the same fixed-slot idiom as
+    // the Content Widgets panel: register the field list once, loop it.
+    $vance_hero_slide_fields = array(
+        'image'                 => array( 'type' => 'image',    'label' => 'Background Image' ),
+        'tag_label'             => array( 'type' => 'text',     'label' => 'Eyebrow / Tag Label' ),
+        'tag_bg'                => array( 'type' => 'color',    'label' => 'Eyebrow - Background' ),
+        'tag_color'             => array( 'type' => 'color',    'label' => 'Eyebrow - Text Colour' ),
+        'tag_border'            => array( 'type' => 'color',    'label' => 'Eyebrow - Border Colour' ),
+        'title'                 => array( 'type' => 'html',     'label' => 'Title', 'description' => 'Wrap words in &lt;span class="highlight"&gt;…&lt;/span&gt; to accent them.' ),
+        'title_color'           => array( 'type' => 'color',    'label' => 'Title Colour' ),
+        'title_size'            => array( 'type' => 'range',    'label' => 'Title Size (px)', 'attrs' => array( 'min' => 24, 'max' => 100, 'step' => 1 ) ),
+        'subtitle'              => array( 'type' => 'textarea', 'label' => 'Subtitle' ),
+        'subtitle_color'        => array( 'type' => 'color',    'label' => 'Subtitle Colour' ),
+        'bg_color'              => array( 'type' => 'color',    'label' => 'Background Colour', 'description' => 'Visible when no image is set, and as image-load fallback.' ),
+        'mask_toggle'           => array( 'type' => 'checkbox', 'label' => 'Enable Dark Overlay Mask' ),
+        'mask_opacity_pct'      => array( 'type' => 'range',    'label' => 'Overlay Opacity (%)', 'attrs' => array( 'min' => 0, 'max' => 100, 'step' => 5 ) ),
+        'btn1_text'             => array( 'type' => 'text',     'label' => 'Button 1, Text' ),
+        'btn1_link'             => array( 'type' => 'text',     'label' => 'Button 1, Link', 'description' => 'A link containing "quiz" opens the quiz modal instead of navigating.' ),
+        'btn1_text_color'       => array( 'type' => 'color',    'label' => 'Button 1, Text Colour' ),
+        'btn1_bg_color'         => array( 'type' => 'color',    'label' => 'Button 1, Background' ),
+        'btn1_border_color'     => array( 'type' => 'color',    'label' => 'Button 1, Border' ),
+        'btn1_hover_text_color' => array( 'type' => 'color',    'label' => 'Button 1, Text on Hover' ),
+        'btn1_hover_bg_color'   => array( 'type' => 'color',    'label' => 'Button 1, Background on Hover' ),
+        'btn2_text'             => array( 'type' => 'text',     'label' => 'Button 2, Text' ),
+        'btn2_link'             => array( 'type' => 'text',     'label' => 'Button 2, Link' ),
+        'btn2_text_color'       => array( 'type' => 'color',    'label' => 'Button 2, Text Colour' ),
+        'btn2_bg_color'         => array( 'type' => 'color',    'label' => 'Button 2, Background', 'description' => 'Blank = transparent (outline button look).' ),
+        'btn2_border_color'     => array( 'type' => 'color',    'label' => 'Button 2, Border' ),
+        'btn2_hover_text_color' => array( 'type' => 'color',    'label' => 'Button 2, Text on Hover' ),
+        'btn2_hover_bg_color'   => array( 'type' => 'color',    'label' => 'Button 2, Background on Hover' ),
+    );
+    $vance_hero_slide_defaults = vance_hero_slide_field_defaults();
+
+    for ( $hs = 2; $hs <= VANCE_HERO_SLIDE_INSTANCES; $hs++ ) {
+        $hs_section = 'vance_hero_slide' . $hs . '_settings';
+        $hs_prefix  = 'vance_hero_slide' . $hs . '_';
+
+        $wp_customize->add_section( $hs_section, array(
+            /* translators: %d: slide number */
+            'title'       => sprintf( __( 'Hero Slide %d', 'vance-health-hub' ), $hs ),
+            'priority'    => 31 + ( $hs / 100 ),
+            'panel'       => 'vance_homepage_panel',
+            'description' => __( 'An additional hero slide. The hero only becomes a carousel once at least one of these is enabled; with none, it stays a single static hero.', 'vance-health-hub' ),
+        ) );
+
+        $wp_customize->add_setting( $hs_prefix . 'show', array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+        $wp_customize->add_control( $hs_prefix . 'show', array(
+            /* translators: %d: slide number */
+            'label'   => sprintf( __( 'Enable Slide %d', 'vance-health-hub' ), $hs ),
+            'section' => $hs_section,
+            'type'    => 'checkbox',
+        ) );
+
+        foreach ( $vance_hero_slide_fields as $hs_field => $hs_meta ) {
+            $hs_id      = $hs_prefix . $hs_field;
+            $hs_default = isset( $vance_hero_slide_defaults[ $hs_field ] ) ? $vance_hero_slide_defaults[ $hs_field ] : '';
+
+            switch ( $hs_meta['type'] ) {
+                case 'color':
+                    $hs_sanitize = 'sanitize_hex_color';
+                    break;
+                case 'image':
+                    $hs_sanitize = 'esc_url_raw';
+                    break;
+                case 'range':
+                    $hs_sanitize = 'absint';
+                    break;
+                case 'checkbox':
+                    $hs_sanitize = 'vance_sanitize_checkbox';
+                    break;
+                case 'textarea':
+                    $hs_sanitize = 'sanitize_textarea_field';
+                    break;
+                case 'html':
+                    // The renderer runs this through wp_kses_post(), and the
+                    // title is documented to accept a highlight <span> — so
+                    // sanitize to the same allow-list rather than stripping
+                    // every tag on save.
+                    $hs_sanitize = 'wp_kses_post';
+                    break;
+                default:
+                    $hs_sanitize = 'sanitize_text_field';
+            }
+
+            $wp_customize->add_setting( $hs_id, array(
+                'default'           => $hs_default,
+                'sanitize_callback' => $hs_sanitize,
+            ) );
+
+            $hs_args = array(
+                'label'   => $hs_meta['label'],
+                'section' => $hs_section,
+            );
+            if ( isset( $hs_meta['description'] ) ) { $hs_args['description'] = $hs_meta['description']; }
+
+            if ( $hs_meta['type'] === 'color' ) {
+                $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $hs_id, $hs_args ) );
+            } elseif ( $hs_meta['type'] === 'image' ) {
+                $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $hs_id, $hs_args ) );
+            } else {
+                $hs_args['type'] = ( $hs_meta['type'] === 'html' ) ? 'text' : $hs_meta['type'];
+                if ( isset( $hs_meta['attrs'] ) ) { $hs_args['input_attrs'] = $hs_meta['attrs']; }
+                $wp_customize->add_control( $hs_id, $hs_args );
+            }
+        }
+    }
+
     // 2.5 Discovery Suite Settings (Nested under Vance Theme Settings)
     $wp_customize->add_section( 'vance_discovery_general', array(
         'title'    => __( 'General', 'vance-health-hub' ),
@@ -3801,203 +4188,15 @@ function vance_customize_register( $wp_customize ) {
         ) );
     }
 
-    // 2.6 Pathway Tile Settings
-    $wp_customize->add_section( 'vance_pathway_tiles_settings', array(
-        'title'    => __( 'Pathway Tiles', 'vance-health-hub' ),
-        'priority' => 31.6,
-        'panel'    => 'vance_homepage_panel',
-    ) );
-
-    // Practitioner Tile
-    $wp_customize->add_setting( 'vance_practitioner_tile_title', array(
-        'default'           => 'For Practitioners',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_practitioner_tile_title', array(
-        'label'   => __( 'Practitioner Tile Title', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'text',
-    ) );
-
-    $wp_customize->add_setting( 'vance_practitioner_tile_desc', array(
-        'default'           => 'Access clinical reviews, evidence-based guidelines, and professional tools tailored for modern healthcare practitioners.',
-        'sanitize_callback' => 'sanitize_textarea_field',
-    ) );
-    $wp_customize->add_control( 'vance_practitioner_tile_desc', array(
-        'label'   => __( 'Practitioner Tile Description', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'textarea',
-    ) );
-
-    $wp_customize->add_setting( 'vance_practitioner_tile_extra', array(
-        'default'           => 'Bridging science and clinical outcomes',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_practitioner_tile_extra', array(
-        'label'   => __( 'Practitioner Tile Extra Font Text', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'text',
-    ) );
-
-    $wp_customize->add_setting( 'vance_practitioner_tile_image', array(
-        'default'           => '',
-        'sanitize_callback' => 'esc_url_raw',
-    ) );
-    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_practitioner_tile_image', array(
-        'label'   => __( 'Practitioner Tile Bottom Image', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-    ) ) );
-
-    // Patient Tile
-    $wp_customize->add_setting( 'vance_patient_tile_title', array(
-        'default'           => 'For Patients',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_patient_tile_title', array(
-        'label'   => __( 'Patient Tile Title', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'text',
-    ) );
-
-    $wp_customize->add_setting( 'vance_patient_tile_desc', array(
-        'default'           => 'Learn about chronic conditions, health optimization, and healthy living through our expert-led patient curriculum.',
-        'sanitize_callback' => 'sanitize_textarea_field',
-    ) );
-    $wp_customize->add_control( 'vance_patient_tile_desc', array(
-        'label'   => __( 'Patient Tile Description', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'textarea',
-    ) );
-
-    $wp_customize->add_setting( 'vance_patient_tile_extra', array(
-        'default'           => 'Empowering your health journey daily',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_patient_tile_extra', array(
-        'label'   => __( 'Patient Tile Extra Font Text', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'text',
-    ) );
-
-    $wp_customize->add_setting( 'vance_patient_tile_image', array(
-        'default'           => '',
-        'sanitize_callback' => 'esc_url_raw',
-    ) );
-    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_patient_tile_image', array(
-        'label'   => __( 'Patient Tile Bottom Image', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-    ) ) );
-
-    $wp_customize->add_setting( 'vance_practitioner_tile_link', array( 'default' => '/healthcare-professionals/', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_practitioner_tile_link', array( 'label' => 'Practitioner Tile Link', 'section' => 'vance_pathway_tiles_settings', 'type' => 'text' ) );
-
-    $wp_customize->add_setting( 'vance_patient_tile_link', array( 'default' => '/patients/', 'sanitize_callback' => 'sanitize_text_field' ) );
-    $wp_customize->add_control( 'vance_patient_tile_link', array( 'label' => 'Patient Tile Link', 'section' => 'vance_pathway_tiles_settings', 'type' => 'text' ) );
-
-    // Border Radius Controls - Patient
-    $wp_customize->add_setting( 'vance_patient_tile_radius', array(
-        'default'           => 16,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_patient_tile_radius', array(
-        'label'   => __( 'Patient Tile Radius (px)', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'number',
-        'input_attrs' => array( 'min' => 0, 'max' => 100 ),
-    ) );
-
-    $wp_customize->add_setting( 'vance_patient_image_radius', array(
-        'default'           => 8,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_patient_image_radius', array(
-        'label'   => __( 'Patient Image Radius (px)', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'number',
-        'input_attrs' => array( 'min' => 0, 'max' => 100 ),
-    ) );
-
-    // Border Radius Controls - Practitioner
-    $wp_customize->add_setting( 'vance_practitioner_tile_radius', array(
-        'default'           => 16,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_practitioner_tile_radius', array(
-        'label'   => __( 'Practitioner Tile Radius (px)', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'number',
-        'input_attrs' => array( 'min' => 0, 'max' => 100 ),
-    ) );
-
-    $wp_customize->add_setting( 'vance_practitioner_image_radius', array(
-        'default'           => 8,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_practitioner_image_radius', array(
-        'label'   => __( 'Practitioner Image Radius (px)', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'number',
-        'input_attrs' => array( 'min' => 0, 'max' => 100 ),
-    ) );
-
-    // Pathway card hover colour
-    $wp_customize->add_setting( 'vance_pathway_card_hover_color', array(
-        'default'           => '#008080',
-        'sanitize_callback' => 'sanitize_hex_color',
-    ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pathway_card_hover_color', array(
-        'label'       => __( 'Card Hover Background Colour', 'vance-health-hub' ),
-        'description' => __( 'Background colour applied to pathway cards on hover. Text and icon automatically invert to white.', 'vance-health-hub' ),
-        'section'     => 'vance_pathway_tiles_settings',
-    ) ) );
-
-    // Pathway section label
-    $wp_customize->add_setting( 'vance_pathway_who_label', array(
-        'default'           => 'Who Am I?',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_pathway_who_label', array(
-        'label'   => __( 'Section Label', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-        'type'    => 'text',
-    ) );
-
-    // Pathway card icon background colour
-    $wp_customize->add_setting( 'vance_pathway_icon_bg_color', array(
-        'default'           => '#0A1929',
-        'sanitize_callback' => 'sanitize_hex_color',
-    ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pathway_icon_bg_color', array(
-        'label'       => __( 'Icon Initial Background Colour', 'vance-health-hub' ),
-        'section'     => 'vance_pathway_tiles_settings',
-    ) ) );
-
-    // Pathway card icon hover background colour
-    $wp_customize->add_setting( 'vance_pathway_icon_hover_bg_color', array(
-        'default'           => 'rgba(255,255,255,0.2)',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_pathway_icon_hover_bg_color', array(
-        'label'       => __( 'Icon Hover Background Colour (Hex or RGBA)', 'vance-health-hub' ),
-        'section'     => 'vance_pathway_tiles_settings',
-        'type'        => 'text',
-    ) );
-
-    $wp_customize->add_setting( 'vance_pathway_section_bg', array(
-        'default'           => '#f8fafc',
-        'sanitize_callback' => 'sanitize_hex_color',
-    ) );
-    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pathway_section_bg', array(
-        'label'   => __( 'Section Background Color', 'vance-health-hub' ),
-        'section' => 'vance_pathway_tiles_settings',
-    ) ) );
-
-    // 2.6.7 Pathway Content (cloned Pathway Tiles — Featured Tools cards)
+    // 2.6.7 Prime Block Home 1 — the original "Pathway Content" block.
+    // The section ID and every setting key are deliberately unchanged: the
+    // rename is cosmetic, so everything the admin has already saved carries
+    // over with zero data loss.
     $wp_customize->add_section( 'vance_pathway_content_settings', array(
-        'title'       => __( 'Pathway Content (Featured Tools)', 'vance-health-hub' ),
+        'title'       => __( 'Prime Block Home 1', 'vance-health-hub' ),
         'priority'    => 31.7,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'Cloned Pathway Tiles block with Healthcare Quiz + VANCE-Ai cards. Showing/hiding controlled by Homepage Order - add or remove "pathway_content" from that list.', 'vance-health-hub' ),
+        'description' => __( 'Featured tool cards beside a Latest Content list. Showing/hiding and position are controlled by Homepage → Section Order — add or remove "Prime Block Home 1" there.', 'vance-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -4015,11 +4214,7 @@ function vance_customize_register( $wp_customize ) {
         'description' => __( 'Choose whether Featured Tools sit beside the Latest Content list, or stack above it.', 'vance-health-hub' ),
         'section'     => 'vance_pathway_content_settings',
         'type'        => 'select',
-        'choices'     => array(
-            'left'    => __( 'Left of Latest Content',  'vance-health-hub' ),
-            'right'   => __( 'Right of Latest Content', 'vance-health-hub' ),
-            'stacked' => __( 'Stacked (Tools on top)',  'vance-health-hub' ),
-        ),
+        'choices'     => vance_prime_block_layout_choices(),
     ) );
 
     // 2026-05-26: Banner-style selector + colour controls for the two PWC tool
@@ -4034,12 +4229,7 @@ function vance_customize_register( $wp_customize ) {
         'description' => __( 'Card = current paired tool tiles with image header. Image + Text = horizontal banner (icon left, content right). Image = image-led banner with overlay text. Pill = compact pill banner with CTA on the right.', 'vance-health-hub' ),
         'section'     => 'vance_pathway_content_settings',
         'type'        => 'select',
-        'choices'     => array(
-            'card'       => __( 'Card (current paired tiles)', 'vance-health-hub' ),
-            'image_text' => __( 'Image + Text (horizontal banner)', 'vance-health-hub' ),
-            'image'      => __( 'Image-led banner', 'vance-health-hub' ),
-            'pill'       => __( 'Minimal pill banner', 'vance-health-hub' ),
-        ),
+        'choices'     => vance_prime_block_style_choices(),
     ) );
 
     // Section-level label colour
@@ -4163,57 +4353,47 @@ function vance_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( 'vance_pwc_latest_show_date', array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
     $wp_customize->add_control( 'vance_pwc_latest_show_date', array( 'label' => 'Right Column, Show Post Date', 'section' => 'vance_pathway_content_settings', 'type' => 'checkbox' ) );
+    // 2.6.8 Prime Block Home 2 + Prime Block Categories.
+    // Both use the clean vance_pb2_* / vance_pbc_* prefixes (Home 1 stays
+    // pinned to the legacy vance_pwc_* / vance_hquiz_* / vance_askai_* keys so
+    // its saved values survive), so one registration helper serves both.
+    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_home2_settings', 'vance_pb2_', __( 'Prime Block Home 2', 'vance-health-hub' ), 31.72, __( 'A second, independently-configured Prime Block. Showing/hiding and position are controlled by Homepage → Section Order — add or remove "Prime Block Home 2" there.', 'vance-health-hub' ) );
 
-    // 2.6.5 Latest Content Grid Settings (Right side of Pathway section)
-    $wp_customize->add_section( 'vance_pathway_latest_settings', array(
-        'title'    => __( 'Pathway Section: Latest Content', 'vance-health-hub' ),
-        'priority' => 31.65,
-        'panel'    => 'vance_homepage_panel',
-    ) );
+    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_categories_settings', 'vance_pbc_', __( 'Prime Block Categories', 'vance-health-hub' ), 31.74, __( 'One Prime Block shown identically on every category archive page, directly below the category promo block. Off until you tick the box below.', 'vance-health-hub' ), true );
 
-    $wp_customize->add_setting( 'vance_pathway_latest_title', array(
-        'default'           => 'LATEST CONTENT',
-        'sanitize_callback' => 'sanitize_text_field',
-    ) );
-    $wp_customize->add_control( 'vance_pathway_latest_title', array(
-        'label'   => __( 'Grid Title', 'vance-health-hub' ),
-        'section' => 'vance_pathway_latest_settings',
-        'type'    => 'text',
-    ) );
-
-    $wp_customize->add_setting( 'vance_pathway_latest_count', array(
-        'default'           => 5,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_pathway_latest_count', array(
-        'label'   => __( 'Number of Posts', 'vance-health-hub' ),
-        'description' => __( 'Bento layout shows 1 featured + the rest as side cards (5 = featured + 4).', 'vance-health-hub' ),
-        'section' => 'vance_pathway_latest_settings',
-        'type'    => 'number',
-        'input_attrs' => array( 'min' => 1, 'max' => 10 ),
+    // 2.6.9 Gastro Conditions — one big animated tile per GI condition plus a
+    // "view all" tile. The condition list itself comes from
+    // vance_gi_condition_cards(); only presentation is configurable here.
+    $wp_customize->add_section( 'vance_gastro_conditions_settings', array(
+        'title'       => __( 'Gastro Conditions', 'vance-health-hub' ),
+        'priority'    => 31.76,
+        'panel'       => 'vance_homepage_panel',
+        'description' => __( 'Big linked tiles for each GI condition. Add "Gastro Conditions" to Homepage → Section Order to show it.', 'vance-health-hub' ),
     ) );
 
-    $wp_customize->add_setting( 'vance_pathway_latest_category', array(
-        'default'           => 0,
-        'sanitize_callback' => 'absint',
-    ) );
-    $wp_customize->add_control( 'vance_pathway_latest_category', array(
-        'label'   => __( 'Filter by Category', 'vance-health-hub' ),
-        'description' => __( 'Select a specific category or show latest from all.', 'vance-health-hub' ),
-        'section' => 'vance_pathway_latest_settings',
-        'type'    => 'select',
-        'choices' => vance_get_cpt_category_choices(),
+    $wp_customize->add_setting( 'vance_gc_heading', array( 'default' => 'Gastro Conditions', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_gc_heading', array( 'label' => 'Heading', 'section' => 'vance_gastro_conditions_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_gc_subtitle', array( 'default' => 'Learn about the condition that matters to you', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_gc_subtitle', array( 'label' => 'Subtitle', 'section' => 'vance_gastro_conditions_settings', 'type' => 'text' ) );
+
+    $wp_customize->add_setting( 'vance_gc_section_bg', array( 'default' => '#f8fafc', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_gc_section_bg', array( 'label' => 'Section Background Colour', 'section' => 'vance_gastro_conditions_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_gc_per_row', array( 'default' => 4, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( 'vance_gc_per_row', array(
+        'label'       => 'Tiles Per Row',
+        'description' => 'There are 8 tiles in total (7 conditions + "view all"), so 4 gives two even rows.',
+        'section'     => 'vance_gastro_conditions_settings',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 1, 'max' => 6, 'step' => 1 ),
     ) );
 
-    $wp_customize->add_setting( 'vance_pathway_latest_show_date', array(
-        'default'           => true,
-        'sanitize_callback' => 'vance_sanitize_checkbox',
-    ) );
-    $wp_customize->add_control( 'vance_pathway_latest_show_date', array(
-        'label'   => __( 'Show Post Date', 'vance-health-hub' ),
-        'section' => 'vance_pathway_latest_settings',
-        'type'    => 'checkbox',
-    ) );
+    $wp_customize->add_setting( 'vance_gc_view_all_bg_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_gc_view_all_bg_color', array( 'label' => '"View all" Tile Background Colour', 'section' => 'vance_gastro_conditions_settings' ) ) );
+
+    $wp_customize->add_setting( 'vance_gc_view_all_text', array( 'default' => 'VIEW ALL GASTRO CONDITIONS', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_control( 'vance_gc_view_all_text', array( 'label' => '"View all" Tile Text', 'section' => 'vance_gastro_conditions_settings', 'type' => 'text' ) );
 
     // 2.7 Knowledgebase Mini-Hero Section
     $wp_customize->add_section( 'vance_kb_mini_hero', array(
@@ -5836,7 +6016,10 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     $wp_customize->add_setting( 'vance_homepage_section_order', array(
-        'default'           => 'hero,pathway,pathway_content,promo,cats,discovery,join,kb,testimonials',
+        // Keep in step with front-page.php's own fallback for this mod.
+        // 'pathway' was retired and 'pathway_content' became
+        // 'prime-block-home-1' on 2026-08-21.
+        'default'           => 'hero,prime-block-home-1,promo,cats,discovery,join,kb,testimonials',
         'sanitize_callback' => 'vance_sanitize_sortable_sections',
     ) );
 
@@ -6001,6 +6184,19 @@ function vance_customize_register( $wp_customize ) {
             'panel'    => 'vance_content_widgets_panel',
         ) );
 
+        // -- Visibility ------------------------------------------------------
+        // Section Order controls WHERE the widget sits; this controls whether
+        // it renders at all. Before this existed, a widget was only ever
+        // visible if the admin had also ticked it in the separate Section
+        // Order screen, so configured widgets 2-5 silently showed nothing.
+        $wp_customize->add_setting( $prefix . 'show', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+        $wp_customize->add_control( $prefix . 'show', array(
+            'label'       => 'Show this widget',
+            'description' => 'Untick to hide this widget without removing it from Section Order.',
+            'section'     => $sec_id,
+            'type'        => 'checkbox',
+        ) );
+
         // -- Heading + Subtitle copy --
         $wp_customize->add_setting( $prefix . 'heading', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
         $wp_customize->add_control( $prefix . 'heading', array( 'label' => 'Heading (leave blank to hide)', 'section' => $sec_id, 'type' => 'text' ) );
@@ -6027,7 +6223,69 @@ function vance_customize_register( $wp_customize ) {
             'choices' => array(
                 'grid'  => 'Uniform Grid (every card same size)',
                 'bento' => 'Bento (1 large featured + smaller grid)',
+                'promo' => 'Featured Promo Card + Grid',
             ),
+        ) );
+
+        // -- Featured promo card (Featured Promo Card + Grid layout only) ----
+        // The promo tile takes the first cell of the uniform grid and reuses
+        // the same card chrome (background, border, hover) as the post cards,
+        // so it needs no separate colour controls beyond its icon.
+        $cw_promo_active = function ( $control ) use ( $prefix ) {
+            // Defensive null check: active_callback runs in wp-admin, where a
+            // fatal would take the whole Customizer down.
+            $setting = $control->manager->get_setting( $prefix . 'layout' );
+            return $setting && 'promo' === $setting->value();
+        };
+
+        $wp_customize->add_setting( $prefix . 'promo_icon', array( 'default' => 'star', 'sanitize_callback' => 'sanitize_key' ) );
+        $wp_customize->add_control( $prefix . 'promo_icon', array(
+            'label'           => 'Promo Card — Icon',
+            'description'     => 'Chosen from the theme icon set (assets/img/icons).',
+            'section'         => $sec_id,
+            'type'            => 'select',
+            'choices'         => vance_cw_icon_choices(),
+            'active_callback' => $cw_promo_active,
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'promo_icon_bg_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'promo_icon_bg_color', array(
+            'label'           => 'Promo Card — Icon Background Colour',
+            'section'         => $sec_id,
+            'active_callback' => $cw_promo_active,
+        ) ) );
+
+        $wp_customize->add_setting( $prefix . 'promo_heading', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'promo_heading', array(
+            'label'           => 'Promo Card — Heading',
+            'section'         => $sec_id,
+            'type'            => 'text',
+            'active_callback' => $cw_promo_active,
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'promo_text', array( 'default' => '', 'sanitize_callback' => 'sanitize_textarea_field' ) );
+        $wp_customize->add_control( $prefix . 'promo_text', array(
+            'label'           => 'Promo Card — Body Text',
+            'section'         => $sec_id,
+            'type'            => 'textarea',
+            'active_callback' => $cw_promo_active,
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'promo_button_text', array( 'default' => 'Learn more', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'promo_button_text', array(
+            'label'           => 'Promo Card — Button Text',
+            'section'         => $sec_id,
+            'type'            => 'text',
+            'active_callback' => $cw_promo_active,
+        ) );
+
+        $wp_customize->add_setting( $prefix . 'promo_button_link', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+        $wp_customize->add_control( $prefix . 'promo_button_link', array(
+            'label'           => 'Promo Card — Button Link',
+            'description'     => 'Leave blank to render the card without a link or button.',
+            'section'         => $sec_id,
+            'type'            => 'text',
+            'active_callback' => $cw_promo_active,
         ) );
 
         $wp_customize->add_setting( $prefix . 'text_align', array( 'default' => 'left', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -6198,6 +6456,40 @@ function vance_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( 'vance_promo_layout', array( 'default' => 'right', 'sanitize_callback' => 'sanitize_key' ) );
     $wp_customize->add_control( 'vance_promo_layout', array( 'label' => 'Image Position', 'section' => 'vance_promo_block', 'type' => 'select', 'choices' => array('left' => 'Left', 'right' => 'Right', 'top' => 'Top') ) );
+
+    // -- Border (added 2026-08-21) -------------------------------------------
+    // Scope mirrors the existing Width control's container/full split: the
+    // border can wrap the inner content card or the whole full-bleed band.
+    $wp_customize->add_setting( 'vance_promo_border_enable', array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( 'vance_promo_border_enable', array( 'label' => 'Show Border', 'section' => 'vance_promo_block', 'type' => 'checkbox' ) );
+
+    $wp_customize->add_setting( 'vance_promo_border_scope', array( 'default' => 'container', 'sanitize_callback' => 'sanitize_key' ) );
+    $wp_customize->add_control( 'vance_promo_border_scope', array(
+        'label'       => 'Border Around',
+        'description' => 'Content card = the inner promo box. Whole section = the full-bleed coloured band.',
+        'section'     => 'vance_promo_block',
+        'type'        => 'select',
+        'choices'     => array( 'container' => 'Content card', 'full' => 'Whole section' ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_promo_border_width', array( 'default' => 1, 'sanitize_callback' => 'absint' ) );
+    $wp_customize->add_control( 'vance_promo_border_width', array(
+        'label'       => 'Border Width (px)',
+        'section'     => 'vance_promo_block',
+        'type'        => 'number',
+        'input_attrs' => array( 'min' => 0, 'max' => 20, 'step' => 1 ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_promo_border_color', array( 'default' => '#e2e8f0', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_promo_border_color', array( 'label' => 'Border Colour', 'section' => 'vance_promo_block' ) ) );
+
+    $wp_customize->add_setting( 'vance_promo_border_style', array( 'default' => 'solid', 'sanitize_callback' => 'sanitize_key' ) );
+    $wp_customize->add_control( 'vance_promo_border_style', array(
+        'label'   => 'Border Style',
+        'section' => 'vance_promo_block',
+        'type'    => 'select',
+        'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'double' => 'Double' ),
+    ) );
 
     // 8. Join Block Settings
     $wp_customize->add_section( 'vance_join_community', array(

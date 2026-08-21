@@ -30,8 +30,11 @@ function vance_get_available_sections() {
 	$sections = array(
 		// Homepage-native — these have a matching `case 'X':` in front-page.php.
 		'hero'              => array( 'label' => 'Hero',                                   'group' => 'Homepage' ),
-		'pathway'           => array( 'label' => 'Pathway Tiles (Who Am I?)',              'group' => 'Homepage' ),
-		'pathway_content'   => array( 'label' => 'Pathway Content (Featured Tools)',       'group' => 'Homepage' ),
+		// 'pathway' (Who Am I? tiles) and 'pathway_content' were retired
+		// 2026-08-21. Pathway Content became the registry-driven
+		// 'prime-block-home-1' (registered in inc/prime-block.php); saved
+		// orders still naming 'pathway_content' are rewritten to it on read
+		// by front-page.php.
 		'promo'             => array( 'label' => 'Promo Block',                            'group' => 'Homepage' ),
 		'cats'              => array( 'label' => 'Category Cards',                         'group' => 'Homepage' ),
 		'discovery'         => array( 'label' => 'Discovery Suite',                        'group' => 'Homepage' ),
@@ -48,6 +51,77 @@ function vance_get_available_sections() {
 	 * @param array $sections array<id => array{label, group}>
 	 */
 	return apply_filters( 'vance_homepage_sections', $sections );
+}
+
+/**
+ * Rewrite a saved section list for the sections retired on 2026-08-21.
+ *
+ * 'pathway' (the Who Am I? tiles) is gone with no replacement; 'pathway_content'
+ * became the registry-driven 'prime-block-home-1'. Substituting in place keeps
+ * the admin's chosen position for the block that survived.
+ *
+ * Pure — front-page.php owns the decision to persist the result.
+ *
+ * @param array $sections Section IDs in display order.
+ * @return array Rewritten list (deduped).
+ */
+function vance_migrate_retired_pathway_sections( array $sections ) {
+	$out = array();
+	foreach ( $sections as $sid ) {
+		if ( $sid === 'pathway' ) {
+			continue; // retired with no replacement
+		}
+		if ( $sid === 'pathway_content' ) {
+			$sid = 'prime-block-home-1';
+		}
+		if ( ! in_array( $sid, $out, true ) ) {
+			$out[] = $sid;
+		}
+	}
+	return $out;
+}
+
+/**
+ * Append any Content Widget that is switched on but missing from the saved
+ * section order.
+ *
+ * Each widget now has its own "Show this widget" checkbox. Before that,
+ * visibility was governed ONLY by whether the admin had also ticked the widget
+ * in the separate Section Order screen — so a widget someone had filled in but
+ * never added there silently rendered nothing.
+ *
+ * The test is deliberately narrower than "show is true": `show` DEFAULTS to
+ * true, so appending on that alone would drop all five widgets onto every site
+ * that has never configured any of them, each showing six arbitrary posts. A
+ * widget is therefore only auto-added when it also carries authored copy (a
+ * heading or a subtitle) — the signal that somebody actually set it up and
+ * expected to see it.
+ *
+ * Section Order stays fully authoritative for anything already listed there;
+ * this only fills in instances it never mentioned.
+ *
+ * @param array $sections Section IDs in display order.
+ * @return array
+ */
+function vance_append_enabled_content_widgets( array $sections ) {
+	if ( ! defined( 'VANCE_CONTENT_WIDGET_INSTANCES' ) ) {
+		return $sections;
+	}
+	for ( $i = 1; $i <= VANCE_CONTENT_WIDGET_INSTANCES; $i++ ) {
+		$id = 'content-widget-' . $i;
+		if ( in_array( $id, $sections, true ) ) {
+			continue;
+		}
+		if ( ! vance_get_theme_mod( 'vance_cw' . $i . '_show', true ) ) {
+			continue;
+		}
+		$configured = trim( (string) vance_get_theme_mod( 'vance_cw' . $i . '_heading', '' ) ) !== ''
+		           || trim( (string) vance_get_theme_mod( 'vance_cw' . $i . '_subtitle', '' ) ) !== '';
+		if ( $configured ) {
+			$sections[] = $id;
+		}
+	}
+	return $sections;
 }
 
 /**
