@@ -48,16 +48,51 @@ jobs:
             exit 1
           fi
 
+      # 2026-08-21 incident (run 32476704759): this step failed after ~5s with a
+      # bare "Process completed with exit code 1", and the runs immediately
+      # before and after it were both green. Cause: `ssh-keyscan` reaches out
+      # over the network and exits non-zero when it cannot, and the step runs
+      # under the runner's default `bash -e` — so one transient blip reaching
+      # Hostinger failed the whole deploy. `2>/dev/null` also threw away the one
+      # message that would have said so.
+      #
+      # Retry with linear backoff, keep stderr for the summary, and only give up
+      # after the last attempt. Failing hard at that point is deliberate: if the
+      # host is genuinely unreachable the deploy steps cannot work either, and
+      # skipping the keyscan would silently drop host-key verification rather
+      # than fix anything.
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
         run: |
+          set -uo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/hostinger_sla
           chmod 600 ~/.ssh/hostinger_sla
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          touch ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
+          attempts=5
+          for attempt in $(seq 1 "$attempts"); do
+            # Collect to a temp file first: appending straight to known_hosts
+            # would leave a partial write behind on a failed attempt.
+            if ssh-keyscan -T 15 -p "$SSH_PORT" -H "$SSH_HOST" >/tmp/keyscan.out 2>/tmp/keyscan.err \
+               && [ -s /tmp/keyscan.out ]; then
+              cat /tmp/keyscan.out >> ~/.ssh/known_hosts
+              echo "ssh-keyscan succeeded on attempt ${attempt}/${attempts} ($(wc -l < /tmp/keyscan.out) host keys)."
+              break
+            fi
+            if [ "$attempt" -eq "$attempts" ]; then
+              echo "::error::ssh-keyscan could not reach ${SSH_HOST}:${SSH_PORT} after ${attempts} attempts. Last stderr below."
+              cat /tmp/keyscan.err >&2 || true
+              exit 1
+            fi
+            backoff=$(( attempt * 5 ))
+            echo "ssh-keyscan attempt ${attempt}/${attempts} failed; retrying in ${backoff}s."
+            cat /tmp/keyscan.err >&2 || true
+            sleep "$backoff"
+          done
 
       - name: Verify remote theme path exists
         run: |
