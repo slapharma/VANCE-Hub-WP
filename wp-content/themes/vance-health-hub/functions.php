@@ -4023,6 +4023,27 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_hero_btn2_hover_bg_color', array( 'default' => '#ffffff', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_hero_btn2_hover_bg_color', array( 'label' => 'Button 2, Background on Hover', 'section' => 'vance_hero_settings' ) ) );
 
+    // -- Slide 1's own toggles ----------------------------------------------
+    // The hero controls above ARE slide 1. These two are new keys with no
+    // legacy equivalent. "Enable" defaults to ON so nothing changes on an
+    // untouched site; switching it off with no other slide enabled omits the
+    // hero section entirely.
+    $wp_customize->add_setting( 'vance_hero_slide1_show', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( 'vance_hero_slide1_show', array(
+        'label'       => __( 'Enable Slide 1', 'vance-health-hub' ),
+        'description' => __( 'The hero settings in this section are Slide 1. Untick to drop it from the hero.', 'vance-health-hub' ),
+        'section'     => 'vance_hero_settings',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_hero_slide1_hide_buttons', array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( 'vance_hero_slide1_hide_buttons', array(
+        'label'       => __( 'Slide 1: hide both CTA buttons', 'vance-health-hub' ),
+        'description' => __( 'Renders this slide as eyebrow + title + subtitle only.', 'vance-health-hub' ),
+        'section'     => 'vance_hero_settings',
+        'type'        => 'checkbox',
+    ) );
+
     // -- Carousel behaviour (global, not per-slide) --------------------------
     // Only has any effect once a second slide is enabled below; with one slide
     // the hero renders as a plain static section with no carousel JS at all.
@@ -4078,6 +4099,7 @@ function vance_customize_register( $wp_customize ) {
         'btn2_border_color'     => array( 'type' => 'color',    'label' => 'Button 2, Border' ),
         'btn2_hover_text_color' => array( 'type' => 'color',    'label' => 'Button 2, Text on Hover' ),
         'btn2_hover_bg_color'   => array( 'type' => 'color',    'label' => 'Button 2, Background on Hover' ),
+        'hide_buttons'          => array( 'type' => 'checkbox', 'label' => 'Hide both CTA buttons', 'description' => 'Renders this slide as eyebrow + title + subtitle only.' ),
     );
     $vance_hero_slide_defaults = vance_hero_slide_field_defaults();
 

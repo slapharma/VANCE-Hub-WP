@@ -52,10 +52,11 @@ function vance_prime_block_layout_choices() {
  */
 function vance_prime_block_style_choices() {
 	return array(
-		'card'       => __( 'Card (paired tool tiles)',         'vance-health-hub' ),
-		'image_text' => __( 'Image + Text (horizontal banner)', 'vance-health-hub' ),
-		'image'      => __( 'Image-led banner',                 'vance-health-hub' ),
-		'pill'       => __( 'Minimal pill banner',              'vance-health-hub' ),
+		'card'       => __( 'Card (paired tool tiles)',           'vance-health-hub' ),
+		'card_thumb' => __( 'Card + Right Thumbnail',             'vance-health-hub' ),
+		'image_text' => __( 'Image + Text (horizontal banner)',   'vance-health-hub' ),
+		'image'      => __( 'Image-led banner',                   'vance-health-hub' ),
+		'pill'       => __( 'Minimal pill banner',                'vance-health-hub' ),
 	);
 }
 
@@ -294,6 +295,44 @@ function vance_render_prime_block( array $vals ) {
 		<?php echo $sel; ?> .pwc-card:hover .pwc-card-body p {
 			color: white !important;
 		}
+		/* 'card_thumb' — same card chrome, but laid out as a row: copy on the
+		   left, a fixed-width photo thumbnail on the right, instead of the
+		   full-width image strip across the top. */
+		<?php echo $sel; ?> .pwc-card--thumb {
+			flex-direction: row;
+			align-items: stretch;
+		}
+		<?php echo $sel; ?> .pwc-card--thumb .pwc-card-body {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+		<?php echo $sel; ?> .pwc-card-thumb {
+			flex: 0 0 96px;
+			width: 96px;
+			align-self: stretch;
+			background-position: center center;
+			background-size: cover;
+			background-repeat: no-repeat;
+			background-color: <?php echo esc_attr( $icon_bg ); ?>;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		<?php echo $sel; ?> .pwc-card-thumb .pwc-fallback-icon {
+			font-size: 24px;
+			color: #ffffff;
+			opacity: 0.85;
+			font-weight: 800;
+			font-family: 'Outfit', sans-serif;
+		}
+		/* The tools column is only ~220px wide in the side-by-side layouts, so
+		   a 96px thumbnail would leave too little room for the copy. Shrink it
+		   there and let the stacked layouts (full width) keep the larger one. */
+		<?php echo $sel; ?>.layout-left .pwc-card-thumb,
+		<?php echo $sel; ?>.layout-right .pwc-card-thumb { flex-basis: 72px; width: 72px; }
+		@media (max-width: 600px) {
+			<?php echo $sel; ?> .pwc-card-thumb { flex-basis: 72px; width: 72px; }
+		}
 		<?php echo $sel; ?> .pwc-card:hover .pwc-card-title,
 		<?php echo $sel; ?> .pwc-banner:hover .pwc-banner-title { color: <?php echo esc_attr( $title_hover_color ); ?> !important; }
 		<?php echo $sel; ?> .pwc-banner {
@@ -382,6 +421,23 @@ function vance_render_prime_block( array $vals ) {
 									<h3 class="pwc-banner-title" style="margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #ffffff; font-family: 'Outfit', sans-serif;"><?php echo $c_title; ?></h3>
 									<p style="margin: 0; font-size: 13px; opacity: 0.88; line-height: 1.4;"><?php echo $c_desc; ?></p>
 								</div>
+							</div>
+						</a>
+					<?php elseif ( $style === 'card_thumb' ) : // copy left, photo thumbnail right ?>
+						<a href="<?php echo $c_link; ?>" class="pwc-card pwc-card--thumb" style="flex: 1;">
+							<div class="pwc-card-body">
+								<div>
+									<h2 class="pwc-card-title" style="font-size: 20px; font-weight: 800; color: <?php echo esc_attr( $title_color ); ?>; margin: 0 0 8px 0; font-family: 'Outfit', sans-serif; transition: color 0.2s ease;"><?php echo $c_title; ?></h2>
+									<p style="color: <?php echo esc_attr( $desc_color ); ?>; font-size: 13px; margin: 0 0 8px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo $c_desc; ?></p>
+								</div>
+								<?php if ( $c_eye !== '' ) : ?>
+									<p style="font-weight: 700; color: <?php echo esc_attr( $eyebrow_color ); ?>; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo $c_eye; ?></p>
+								<?php endif; ?>
+							</div>
+							<div class="pwc-card-thumb" style="<?php echo $c_img ? 'background-image: url(\'' . esc_url( $c_img ) . '\');' : ''; ?>">
+								<?php if ( ! $c_img ) : ?>
+									<span class="pwc-fallback-icon"><?php echo $c_fi; ?></span>
+								<?php endif; ?>
 							</div>
 						</a>
 					<?php else : // 'card' (default — paired stacked tiles) ?>

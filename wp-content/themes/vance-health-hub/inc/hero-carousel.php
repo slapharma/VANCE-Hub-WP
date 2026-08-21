@@ -67,6 +67,8 @@ function vance_hero_slide_field_defaults() {
 		'btn2_border_color'     => '#ffffff',
 		'btn2_hover_text_color' => '#0A1929',
 		'btn2_hover_bg_color'   => '#ffffff',
+		// Hide this slide's two CTA buttons entirely (image + text only).
+		'hide_buttons'          => false,
 	);
 }
 
@@ -120,6 +122,9 @@ function vance_hero_slide_1_values() {
 		'btn2_border_color'     => vance_get_theme_mod( 'vance_hero_btn2_border_color',     $d['btn2_border_color'] ),
 		'btn2_hover_text_color' => vance_get_theme_mod( 'vance_hero_btn2_hover_text_color', $d['btn2_hover_text_color'] ),
 		'btn2_hover_bg_color'   => vance_get_theme_mod( 'vance_hero_btn2_hover_bg_color',   $d['btn2_hover_bg_color'] ),
+		// Slide 1's own two toggles. These are NEW keys (there is no legacy
+		// equivalent), so they sit outside the vance_hero_* group above.
+		'hide_buttons'          => vance_get_theme_mod( 'vance_hero_slide1_hide_buttons', false ),
 	);
 }
 
@@ -140,11 +145,18 @@ function vance_hero_slide_n_values( $n ) {
 }
 
 /**
- * Every slide that should render: slide 1 always, plus any of 2..N whose
- * "show" checkbox is ticked, in slide-number order.
+ * Every slide that should render, in slide-number order: slide 1 unless it has
+ * been explicitly switched off, plus any of 2..N whose "show" box is ticked.
+ *
+ * Slide 1 defaults to ON, so an untouched site is unaffected. Switching it off
+ * with no other slide enabled resolves to zero slides and the hero section is
+ * omitted entirely — which is a legitimate thing to want.
  */
 function vance_hero_resolved_slides() {
-	$slides = array( vance_hero_slide_1_values() );
+	$slides = array();
+	if ( vance_get_theme_mod( 'vance_hero_slide1_show', true ) ) {
+		$slides[] = vance_hero_slide_1_values();
+	}
 	for ( $n = 2; $n <= VANCE_HERO_SLIDE_INSTANCES; $n++ ) {
 		if ( vance_get_theme_mod( 'vance_hero_slide' . $n . '_show', false ) ) {
 			$slides[] = vance_hero_slide_n_values( $n );
@@ -201,10 +213,12 @@ function vance_hero_render_slide_content( array $s, $index ) {
 		<p style="font-size: 20px; line-height: 1.6; color: <?php echo esc_attr( $s['subtitle_color'] ); ?>; margin: 0 0 32px; max-width: 600px;">
 			<?php echo esc_html( $s['subtitle'] ); ?>
 		</p>
+		<?php if ( empty( $s['hide_buttons'] ) ) : ?>
 		<div class="hero-actions" style="display: flex; gap: 16px; flex-wrap: wrap;">
 			<a href="<?php echo esc_url( $s['btn1_link'] ); ?>" <?php echo $btn1_onclick; // phpcs:ignore ?> class="btn btn-primary <?php echo esc_attr( $b1 ); ?>" style="background: <?php echo esc_attr( $s['btn1_bg_color'] ); ?>; color: <?php echo esc_attr( $s['btn1_text_color'] ); ?>; border: 2px solid <?php echo esc_attr( $s['btn1_border_color'] ); ?>; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;"><?php echo esc_html( $s['btn1_text'] ); ?></a>
 			<a href="<?php echo esc_url( $s['btn2_link'] ); ?>" <?php echo $btn2_onclick; // phpcs:ignore ?> class="btn btn-outline <?php echo esc_attr( $b2 ); ?>" style="<?php echo $btn2_bg_decl; // phpcs:ignore ?> color: <?php echo esc_attr( $s['btn2_text_color'] ); ?>; border: 2px solid <?php echo esc_attr( $s['btn2_border_color'] ); ?>; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;"><?php echo esc_html( $s['btn2_text'] ); ?></a>
 		</div>
+		<?php endif; ?>
 	</div>
 	<?php
 }
@@ -240,7 +254,12 @@ function vance_render_hero_carousel() {
 		?>
 	<!-- Hero Section (Patient Style Structure) -->
 	<section class="hero patient-hero" style="display: flex; align-items: flex-start; <?php echo vance_hero_slide_bg_style( $s ); // phpcs:ignore ?> color: white; position: relative; overflow: hidden;">
-		<div class="container" style="position:relative;z-index:1;">
+		<?php /* width:100% + flex:1 1 auto — .container is `margin: 0 auto`, so as a
+		         flex item it shrinks to its content and self-centres, drifting
+		         horizontally with the title length. Forcing it to fill the row
+		         pins the text block to the container gutter, matching
+		         page-contact-us.php (see the same fix at main.css:507). */ ?>
+		<div class="container" style="position:relative;z-index:1;width:100%;flex:1 1 auto;">
 			<?php vance_hero_render_slide_content( $s, 0 ); ?>
 		</div>
 	</section>
@@ -272,7 +291,10 @@ function vance_render_hero_carousel() {
 			position: relative;
 			overflow: hidden;
 		}
-		.vance-hero-carousel .vance-hero-slide > .container { position: relative; z-index: 1; width: 100%; }
+		/* Same container fix as the single-slide path: .container is
+		   `margin: 0 auto`, so left unchecked it shrinks to content and
+		   self-centres inside the flex row. */
+		.vance-hero-carousel .vance-hero-slide > .container { position: relative; z-index: 1; width: 100%; flex: 1 1 auto; }
 		.vance-hero-carousel .vance-hero-nav {
 			position: absolute;
 			top: 50%;
