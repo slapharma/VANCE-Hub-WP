@@ -4870,6 +4870,22 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     // Answer mode
+    // Opening-turn behaviour. Applies to both answer modes; the rule is
+    // appended to whichever system prompt is in play. A toggle rather than a
+    // hard-coded behaviour so it can be switched off without a deploy if it
+    // turns out to get in readers' way.
+    $wp_customize->add_setting( 'vance_askai_clarify_first', array(
+        'default'           => true,
+        'sanitize_callback' => 'vance_sanitize_checkbox',
+    ) );
+    $wp_customize->add_control( 'vance_askai_clarify_first', array(
+        'label'       => __( 'Ask 2 clarifying questions first', 'vance-health-hub' ),
+        'description' => __( 'On the first question of a conversation, VANCE-Ai replies with two short clarifying questions instead of answering straight away. Follow-up turns answer normally.', 'vance-health-hub' ),
+        'section'     => 'vance_askai_settings',
+        'type'        => 'checkbox',
+        'priority'    => 2,
+    ) );
+
     $wp_customize->add_setting( 'vance_askai_mode', array(
         'default'           => 'grounded',
         'sanitize_callback' => 'sanitize_key',

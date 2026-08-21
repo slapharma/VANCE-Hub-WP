@@ -438,13 +438,58 @@ function vance_ai_normalise_reading_level( $level ) {
 }
 
 /**
+ * The opening-turn rule: ask two clarifying questions before answering.
+ *
+ * Returned as a block appended to whichever system prompt is in play, so the
+ * grounded and Open modes behave identically.
+ *
+ * Deliberately driven by the caller counting user turns rather than by asking
+ * the model to notice it is the first message. Only the last 12 turns are sent
+ * (see the array_slice in vance_ai_answer_request()), so a model asked to
+ * "check whether you already asked" would lose that context in a long
+ * conversation and start re-asking. Server-side, "is this the first user
+ * message" is exact.
+ *
+ * @param bool $enabled Whether to emit the rule at all.
+ * @return string Empty string when not applicable.
+ */
+function vance_ai_clarifying_rule( $enabled ) {
+	if ( ! $enabled ) {
+		return '';
+	}
+	return <<<'CLARIFY'
+
+
+OPENING TURN: ASK BEFORE YOU ANSWER
+This is the reader's first question of the conversation. Do NOT answer it yet.
+Instead reply with exactly two short clarifying questions that would let you
+give a more useful, better-targeted answer, and nothing else.
+
+- Ask about things that genuinely change the answer, for example: who it is for
+  (themselves, someone they care for, a patient), which condition or situation
+  they mean, what they have already tried or been told, or whether they want a
+  general overview or something specific.
+- Never ask for identifying details, test results, or anything you would need in
+  order to give personal medical advice.
+- Number them 1. and 2. Add at most one short line of context before them.
+- Do NOT answer the question, do NOT give clinical information, and do NOT write
+  any "Read more:" citation lines on this turn. The citation rule applies from
+  your next reply onwards, once you actually answer.
+- If the reader has already given enough detail that a clarifying question would
+  be redundant, still ask two, but make them narrow and genuinely useful, for
+  example offering a choice of depth or of which aspect to cover first.
+CLARIFY;
+}
+
+/**
  * Assemble the system instruction: the rules, the reading level, then the sources.
  *
  * @param array[] $sources       Output of vance_ai_retrieve_sources().
  * @param string  $reading_level One of the vance_ai_reading_levels() keys.
+ * @param bool    $ask_clarifying Emit the opening-turn clarifying-questions rule.
  * @return string
  */
-function vance_ai_system_prompt( $sources, $reading_level = 'knowledgeable' ) {
+function vance_ai_system_prompt( $sources, $reading_level = 'knowledgeable', $ask_clarifying = false ) {
 	$rules = <<<'PROMPT'
 You are VANCE-Ai, the assistant on the Vance Medical Hub (vancehealthhub.co.uk), a library of articles about inflammatory bowel disease (IBD), gastrointestinal health and clinical nutrition.
 
@@ -470,6 +515,9 @@ PROMPT;
 	$levels = vance_ai_reading_levels();
 	$key    = vance_ai_normalise_reading_level( $reading_level );
 	$rules .= "\n\n" . $levels[ $key ]['instruction'];
+	// Appended after the numbered rules so its overrides (no citations, no
+	// answer yet) are the last word on this turn.
+	$rules .= vance_ai_clarifying_rule( $ask_clarifying );
 
 	// A document the reader uploaded themselves is not hub content, and the rules
 	// above are written entirely around hub content: rule 2b forbids answering a
@@ -577,7 +625,7 @@ function vance_ai_open_mode_trusted_orgs() {
  * @param string  $reading_level One of the vance_ai_reading_levels() keys.
  * @return string
  */
-function vance_ai_open_system_prompt( $sources, $reading_level = 'knowledgeable' ) {
+function vance_ai_open_system_prompt( $sources, $reading_level = 'knowledgeable', $ask_clarifying = false ) {
 	$defaults = vance_ai_open_mode_guardrail_defaults();
 
 	$guardrail_claims  = trim( (string) vance_get_theme_mod( 'vance_askai_guardrail_claims', $defaults['claims'] ) );
@@ -631,6 +679,9 @@ PROMPT;
 	$levels = vance_ai_reading_levels();
 	$key    = vance_ai_normalise_reading_level( $reading_level );
 	$rules .= "\n\n" . $levels[ $key ]['instruction'];
+	// Last word on this turn: overrides rule 12's answer-then-offer-more
+	// structure and the citation rules, both of which assume an actual answer.
+	$rules .= vance_ai_clarifying_rule( $ask_clarifying );
 
 	if ( empty( $sources ) ) {
 		return $rules . "\n\nSOURCES\nNothing in the Vance Medical Hub library matched this question closely enough to use. Answer from your own general knowledge instead, following the rules above.\n";
@@ -957,6 +1008,19 @@ function vance_rest_ai_chat( $request ) {
 		$model = 'anthropic/claude-opus-4.8'; // Sensible fallback if the setting is unset.
 	}
 
+	// --- Opening turn: clarify before answering ----------------------------
+	// Counted here rather than inferred by the model: only the last 12 turns
+	// are sent below, so the model cannot reliably tell whether it already
+	// asked, and would start re-asking part-way through a long conversation.
+	$user_turns = 0;
+	foreach ( (array) $messages as $message ) {
+		if ( isset( $message['role'] ) && 'user' === $message['role'] ) {
+			$user_turns++;
+		}
+	}
+	$ask_clarifying = ( 1 === $user_turns )
+		&& (bool) vance_get_theme_mod( 'vance_askai_clarify_first', true );
+
 	// --- Mode: grounded (hub-only) vs open (full model knowledge + guardrails) ---
 	$mode = vance_get_theme_mod( 'vance_askai_mode', 'grounded' );
 
@@ -968,7 +1032,7 @@ function vance_rest_ai_chat( $request ) {
 		// reference material for anyone but the user who uploaded it, so it is
 		// never attached to an Open mode conversation for any user.
 		$sources       = vance_ai_retrieve_sources( $messages, $context_post_id );
-		$system_prompt = vance_ai_open_system_prompt( $sources, $reading_level );
+		$system_prompt = vance_ai_open_system_prompt( $sources, $reading_level, $ask_clarifying );
 	} else {
 		// --- Ground the answer in hub content ----------------------------------
 		$sources = vance_ai_retrieve_sources( $messages, $context_post_id );
@@ -988,7 +1052,7 @@ function vance_rest_ai_chat( $request ) {
 		 */
 		$sources = apply_filters( 'vance_ai_sources', $sources, $messages, $request );
 
-		$system_prompt = vance_ai_system_prompt( $sources, $reading_level );
+		$system_prompt = vance_ai_system_prompt( $sources, $reading_level, $ask_clarifying );
 	}
 
 	$payload_messages = array(
