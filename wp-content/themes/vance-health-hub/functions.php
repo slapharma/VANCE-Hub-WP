@@ -538,6 +538,29 @@ function vance_health_hub_scripts() {
         wp_localize_script( 'vance-recipe-planner', 'vanceRecipePlanner', vance_recipe_planner_script_config() );
     }
 
+    // Single recipe page — servings scaler, "Add to meal plan" quick-add
+    // modal, and PDF export. html2pdf.js is the same CDN build/version
+    // page-dashboard.php already uses for meal-plan PDF export.
+    if ( is_singular( 'vance_recipe' ) ) {
+        wp_enqueue_script(
+            'html2pdf',
+            'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+            array(),
+            '0.10.1',
+            true
+        );
+        wp_enqueue_script(
+            'vance-recipe-single',
+            get_template_directory_uri() . '/assets/js/recipe-single.js',
+            array( 'html2pdf' ),
+            @filemtime( get_template_directory() . '/assets/js/recipe-single.js' ) ?: '1.0.0',
+            true
+        );
+        // get_queried_object_id(), not get_the_ID(): this runs from wp_head(),
+        // before single-vance_recipe.php's own the_post() call sets up the loop.
+        wp_localize_script( 'vance-recipe-single', 'vanceRecipeSingle', vance_recipe_single_script_config( get_queried_object_id() ) );
+    }
+
     // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the
     // highlight-to-ask pill needs to be live on every article.
     wp_enqueue_style(

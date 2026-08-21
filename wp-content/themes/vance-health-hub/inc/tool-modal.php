@@ -9,12 +9,25 @@
  * the modal can never recursively spawn another modal inside itself.
  *
  * Behaviour:
- *   - Iframe tools (ibd-recipes, malnutrition-calculator) load their own WP page
- *     with ?tool_embed=1 (chromeless) inside the modal iframe; the existing
+ *   - Iframe tools (malnutrition-calculator) load their own WP page with
+ *     ?tool_embed=1 (chromeless) inside the modal iframe; the existing
  *     tool-page-shell save / brand-inject / autoresize plumbing runs unchanged.
  *   - The health quiz reuses its existing inline modal (openQuizModal()).
  *   - Progressive enhancement: every trigger is a real <a href> to the tool
  *     page, so tools still work with JS off or when opened in a new tab.
+ *
+ * The recipe hub/planner (/gastro-meal-planner/) is deliberately NOT a modal
+ * tool here — direction 2026-08-20: it's a full page, always the primary
+ * entry point, linked to directly from nav/footer/tool cards. Loading the
+ * whole hub chromelessly inside this modal's iframe is also what caused the
+ * "Add to meal plan" CTA on a single recipe page to open here at the recipe
+ * list instead of scrolling to the Weekly Plan — the modal's `tool.url` is a
+ * bare page URL with no query string, so a link's own `?add=<slug>#planner`
+ * was silently discarded by the interceptor below. "Add to meal plan" now
+ * opens its own small native picker instead (assets/js/recipe-quickadd.js) —
+ * see single-vance_recipe.php — which is what "modal only for tool features"
+ * means in practice: a purpose-built modal for one action, not the whole tool
+ * loaded inside a modal.
  *
  * Public API:  window.VanceToolModal.open('<slug>'),  window.VanceToolModal.close()
  * Triggers:    [data-vance-tool-open="<slug>"]  OR  any <a> to a known tool path.
@@ -27,15 +40,6 @@ if ( defined( 'VANCE_TOOL_MODAL_RENDERED' ) ) {
 define( 'VANCE_TOOL_MODAL_RENDERED', true );
 
 $vance_tm_tools = array(
-    'ibd-recipes' => array(
-        'title'  => vance_get_theme_mod( 'vance_tool_recipes_name', 'IBD Recipes & Meal Planner' ),
-        // The tool slug ('ibd-recipes') is the AJAX/history contract key — kept unchanged
-        // (CLAUDE.md constraint 2). The PAGE it opens is /gastro-meal-planner/, not the old
-        // /ibd-recipies/ misspelling: that page never existed in the DB (confirmed 2026-08-20),
-        // so this was 404ing inside the modal iframe for every trigger site-wide until now.
-        'url'    => home_url( '/gastro-meal-planner/' ),
-        'inline' => false,
-    ),
     'malnutrition-calculator' => array(
         'title'  => vance_get_theme_mod( 'vance_tool_malnutrition_name', 'IBD Malnutrition Calculator' ),
         'url'    => home_url( '/malnutrition-calculator/' ),
@@ -49,10 +53,11 @@ $vance_tm_tools = array(
 );
 
 // pathname -> slug map for the global <a> interceptor (lowercased, no trailing slash).
+// /gastro-meal-planner and its old aliases are deliberately absent — see the
+// file header. Any lingering data-vance-tool-open="ibd-recipes" attribute
+// elsewhere in the theme now just no-ops (openModal() returns false for an
+// unknown slug and the click falls through to a normal navigation).
 $vance_tm_paths = array(
-    '/gastro-meal-planner'     => 'ibd-recipes',
-    '/ibd-recipies'            => 'ibd-recipes', // legacy misspelt path — never a real page, kept in case anything still links to it.
-    '/ibd-recipes'             => 'ibd-recipes',
     '/malnutrition-calculator' => 'malnutrition-calculator',
     '/healthcare-quiz'         => 'healthcare-quiz',
 );
@@ -165,10 +170,7 @@ $vance_tm_paths = array(
     var loadedSlug  = null;
 
     function normalizeSlug(slug) {
-        if (!slug) { return ''; }
-        slug = String(slug).toLowerCase();
-        if (slug === 'ibd-recipies') { return 'ibd-recipes'; }
-        return slug;
+        return slug ? String(slug).toLowerCase() : '';
     }
     function addEmbedParam(url) {
         return url + (url.indexOf('?') === -1 ? '?' : '&') + 'tool_embed=1';

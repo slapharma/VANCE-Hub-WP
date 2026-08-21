@@ -72,12 +72,27 @@ while ( have_posts() ) :
 					<?php
 					$content = get_the_content();
 					if ( $content ) {
-						echo '<div style="font-size:16px;line-height:1.8;color:#334155;margin-bottom:36px;">' . apply_filters( 'the_content', $content ) . '</div>'; // phpcs:ignore -- standard content filter output.
+						echo '<div style="font-size:16px;line-height:1.8;color:#334155;margin-bottom:28px;">' . apply_filters( 'the_content', $content ) . '</div>'; // phpcs:ignore -- standard content filter output.
 					}
 					?>
 
+					<?php if ( has_post_thumbnail() ) : ?>
+						<img src="<?php echo esc_url( get_the_post_thumbnail_url( $post_id, 'large' ) ); ?>" alt="<?php the_title_attribute(); ?>" style="width:100%;height:auto;max-height:420px;object-fit:cover;border-radius:12px;margin-bottom:36px;">
+					<?php endif; ?>
+
 					<?php if ( $ingredients ) : ?>
-						<h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0A1929;margin:0 0 16px;">Ingredients</h2>
+						<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+							<h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0A1929;margin:0;">Ingredients</h2>
+							<?php if ( '' !== $servings && (int) $servings > 0 ) : ?>
+								<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:6px 8px;">
+									<span style="font-size:13px;font-weight:600;color:#475569;">Servings</span>
+									<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:6px;cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
+									<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:6px;padding:4px 2px;font-weight:700;">
+									<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:6px;cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
+								</div>
+							<?php endif; ?>
+						</div>
+						<p style="font-size:12.5px;color:#94a3b8;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
 						<?php foreach ( $ingredients as $section ) :
 							$section_name = isset( $section['section'] ) ? trim( (string) $section['section'] ) : '';
 							$items        = isset( $section['items'] ) ? (array) $section['items'] : array();
@@ -92,7 +107,7 @@ while ( have_posts() ) :
 								<?php foreach ( $items as $item ) : ?>
 									<li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:15px;color:#334155;">
 										<span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--primary-color);margin-top:8px;"></span>
-										<span><?php echo esc_html( $item ); ?></span>
+										<span data-ingredient-line><?php echo esc_html( $item ); ?></span>
 									</li>
 								<?php endforeach; ?>
 							</ul>
@@ -111,10 +126,13 @@ while ( have_posts() ) :
 						</ol>
 					<?php endif; ?>
 
-					<div style="margin-top:32px;">
-						<a href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:8px;text-decoration:none;">
+					<div style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px;">
+						<a id="vance-rs-addplan-trigger" href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:8px;text-decoration:none;">
 							Add to meal plan
 						</a>
+						<button type="button" id="vance-rs-pdf" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:8px;border:1px solid var(--primary-color);cursor:pointer;">
+							Download PDF
+						</button>
 					</div>
 
 					<div class="va-article-disclaimer" style="margin-top:40px;padding:20px 24px;background:#EEF6F6;border-left:4px solid var(--primary-color);font-size:14px;line-height:1.75;color:#475569;">
@@ -176,6 +194,36 @@ while ( have_posts() ) :
 	?>
 
 	</main>
+
+	<style>
+	.vance-rs-modal { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(10,25,41,0.72); }
+	.vance-rs-modal.is-open { display:flex; }
+	.vance-rs-modal-panel { background:#fff; border-radius:14px; width:100%; max-width:640px; max-height:80vh; overflow-y:auto; padding:22px; }
+	.vance-rs-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+	.vance-rs-modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:#64748b; }
+	.vance-rs-modal-grid { display:flex; flex-direction:column; gap:8px; }
+	.vance-rs-modal-day { display:flex; align-items:center; gap:10px; }
+	.vance-rs-modal-day > span { flex:none; width:36px; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; }
+	.vance-rs-modal-cells { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; flex:1; }
+	.vance-rs-modal-cell { border:1px solid #e2e8f0; background:#f8fafc; border-radius:6px; padding:8px 4px; font-size:10.5px; color:#94a3b8; cursor:pointer; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+	.vance-rs-modal-cell:hover { border-color:var(--primary-color); color:var(--primary-color); }
+	.vance-rs-modal-cell.is-filled { background:#EEF6F6; border-color:var(--primary-color); color:#0A1929; font-weight:600; }
+	.vance-rs-toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px); background:#0A1929; color:#fff; font-size:13.5px; padding:12px 22px; border-radius:8px; z-index:100060; opacity:0; pointer-events:none; transition:opacity 200ms ease, transform 200ms ease; }
+	.vance-rs-toast.is-visible { opacity:1; transform:translate(-50%,0); }
+	</style>
+
+	<div class="vance-rs-modal" id="vance-rs-modal" role="dialog" aria-modal="true" aria-hidden="true">
+		<div class="vance-rs-modal-panel">
+			<div class="vance-rs-modal-head">
+				<strong>Add to your weekly plan</strong>
+				<button type="button" class="vance-rs-modal-close" id="vance-rs-modal-close" aria-label="Close">&times;</button>
+			</div>
+			<div class="vance-rs-modal-grid" id="vance-rs-modal-grid"></div>
+			<p style="margin:16px 0 0;font-size:12px;color:#94a3b8;">Tap a slot to place this recipe there. <a href="/gastro-meal-planner/#planner" style="color:var(--primary-color);font-weight:600;">Open the full planner &rarr;</a></p>
+		</div>
+	</div>
+
+	<div class="vance-rs-toast" id="vance-rs-toast"></div>
 
 <?php
 endwhile;

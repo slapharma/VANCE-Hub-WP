@@ -1401,12 +1401,12 @@ get_header();
                     <div class="dash-card vance-mp-cardwrap" style="margin-top:32px;">
                         <div class="card-header">
                             <h3 class="card-title">Saved Meal Plans</h3>
-                            <a href="/gastro-meal-planner/" class="vance-btn-glass vance-btn--sm" data-vance-tool-open="ibd-recipes"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
+                            <a href="/gastro-meal-planner/" class="vance-btn-glass vance-btn--sm"><?php echo $meal_plan_history ? 'Build another' : 'Build a plan'; ?></a>
                         </div>
                         <?php if (empty($meal_plan_history)): ?>
                             <div style="text-align:center; padding:40px;">
                                 <p style="color:#64748B; margin-bottom:20px;">You haven't saved a meal plan yet. Build a week in the planner and choose &ldquo;Save this meal plan&rdquo; to keep it here.</p>
-                                <a href="/gastro-meal-planner/" class="vance-btn-inverted" data-vance-tool-open="ibd-recipes">Open the Planner</a>
+                                <a href="/gastro-meal-planner/" class="vance-btn-inverted">Open the Planner</a>
                             </div>
                         <?php else: ?>
                             <style>
@@ -2265,7 +2265,7 @@ get_header();
                     // wrappers is now logged-in-aware (see vance_save_tool_result).
                     $dash_tools = array(
                         array( 'slug' => 'healthcare-quiz',        'page_url' => '/healthcare-quiz/',         'name' => 'Gastro Health Survey',        'tag' => 'Self-Assessment',  'desc' => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
-                        array( 'slug' => 'ibd-recipes',            'page_url' => '/ibd-recipies/',            'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely, saving plans prompts a quick signup.', 'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
+                        array( 'slug' => 'ibd-recipes',            'page_url' => '/gastro-meal-planner/',     'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely, saving plans prompts a quick signup.', 'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
                         array( 'slug' => 'malnutrition-calculator','page_url' => '/malnutrition-calculator/','name' => 'Malnutrition Calculator','tag' => 'IBD Screening',    'desc' => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.', 'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' ),
                     );
                     ?>

@@ -179,6 +179,49 @@ function vance_recipe_planner_script_config() {
 }
 
 /**
+ * Config handed to assets/js/recipe-single.js via wp_localize_script() on a
+ * single recipe page — the servings scaler, the quick-add modal, and the PDF
+ * export all read from this one object.
+ *
+ * @param int $post_id
+ * @return array
+ */
+function vance_recipe_single_script_config( $post_id ) {
+	$ingredients = get_post_meta( $post_id, '_vance_recipe_ingredients', true );
+	$method      = get_post_meta( $post_id, '_vance_recipe_method', true );
+	$servings    = get_post_meta( $post_id, '_vance_recipe_servings', true );
+	$prep        = get_post_meta( $post_id, '_vance_recipe_prep_min', true );
+	$cook        = get_post_meta( $post_id, '_vance_recipe_cook_min', true );
+	$kcal        = get_post_meta( $post_id, '_vance_recipe_kcal', true );
+
+	$author = get_post_meta( $post_id, '_vance_recipe_credit_author', true );
+	$credit = $author ? ( 'Photography: ' . $author . ' / Unsplash' ) : '';
+
+	return array(
+		'days'  => wp_list_pluck( vance_recipe_planner_days_skeleton(), 'day' ),
+		'recipe' => array(
+			'slug'        => get_post_field( 'post_name', $post_id ),
+			'name'        => get_the_title( $post_id ),
+			'servings'    => '' !== $servings ? (int) $servings : 0,
+			'prep'        => '' !== $prep ? (int) $prep : 0,
+			'cook'        => '' !== $cook ? (int) $cook : 0,
+			'calories'    => '' !== $kcal ? (int) $kcal : 0,
+			'minutes'     => ( '' !== $prep ? (int) $prep : 0 ) + ( '' !== $cook ? (int) $cook : 0 ),
+			'ingredients' => is_array( $ingredients ) ? $ingredients : array(),
+			'method'      => is_array( $method ) ? $method : array(),
+			'nutrition'   => array(
+				'calories' => '' !== $kcal ? (int) $kcal : 0,
+				'protein'  => (int) get_post_meta( $post_id, '_vance_recipe_protein_g', true ),
+				'carbs'    => (int) get_post_meta( $post_id, '_vance_recipe_carbs_g', true ),
+				'fat'      => (int) get_post_meta( $post_id, '_vance_recipe_fat_g', true ),
+				'fibre'    => (int) get_post_meta( $post_id, '_vance_recipe_fibre_g', true ),
+			),
+			'credit'      => $credit,
+		),
+	);
+}
+
+/**
  * Render the nutrition-facts panel for a recipe post.
  *
  * @param int $post_id

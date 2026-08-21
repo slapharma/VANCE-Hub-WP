@@ -98,7 +98,7 @@ $tools = array(
 	),
 	array(
 		'slug'   => 'ibd-recipes',
-		'url'    => '/ibd-recipies/',
+		'url'    => '/gastro-meal-planner/',
 		'name'   => 'IBD Recipes &amp; Meal Planner',
 		'tag'    => 'Meal Planning',
 		'desc'   => 'Browse EPA-rich, gut-friendly recipes with full nutrition data and build a weekly meal plan.',
