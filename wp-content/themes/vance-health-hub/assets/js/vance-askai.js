@@ -31,7 +31,7 @@
 	var MAX_TURNS = 40;
 	var MIN_SELECTION = 2;   // a single acronym like "IBD" must qualify
 	var MAX_SELECTION = 600;
-	var REVEAL_MS = 44;      // per word-ish tick (30% slower again, was 34; original was 26)
+	var REVEAL_MS = 88;      // per word-ish tick — half speed (was 44; before that 34; original 26)
 
 	var LEVELS = Array.isArray(CFG.levels) && CFG.levels.length
 		? CFG.levels
