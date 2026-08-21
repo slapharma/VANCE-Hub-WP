@@ -366,7 +366,10 @@ body {
 
     /* PROMO BLOCK STYLES */
     .promo-block-section {
-        padding: 60px 0;
+        /* Top padding removed: the container's own 75px inset (below) now
+           supplies the space above the content, so the section's 60px sat on
+           top of it and read as a gap. Bottom keeps its 60px. */
+        padding: 0 0 60px;
         overflow: hidden;
     }
     .promo-container {
