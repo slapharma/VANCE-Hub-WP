@@ -6467,6 +6467,16 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_promo_text_color', array( 'default' => '#0F172A', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_promo_text_color', array( 'label' => 'Text Color', 'section' => 'vance_promo_block' ) ) );
 
+    // Container background — the inner content panel, distinct from the
+    // full-bleed section band above. Blank = transparent, i.e. the section
+    // colour shows through, which is how the block has always looked.
+    $wp_customize->add_setting( 'vance_promo_container_bg_color', array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_promo_container_bg_color', array(
+        'label'       => 'Container Background Colour',
+        'description' => 'Fills the inner content panel only. Leave blank to let the section background show through.',
+        'section'     => 'vance_promo_block',
+    ) ) );
+
     $wp_customize->add_setting( 'vance_promo_button_text', array( 'default' => 'Get Started Now', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_promo_button_text', array( 'label' => 'Button Text', 'section' => 'vance_promo_block', 'type' => 'text' ) );
 

@@ -42,7 +42,10 @@ function vance_render_gastro_conditions() {
 	<style>
 		#vance-gastro-conditions {
 			background: <?php echo esc_attr( $section_bg ); ?>;
-			padding: 80px 0;
+			/* Top padding trimmed 50px off the standard 80px section rhythm —
+			   this block follows another padded section on the homepage, so the
+			   full 80px read as a gap rather than as breathing room. */
+			padding: 30px 0 80px;
 		}
 		#vance-gastro-conditions .vance-gc-header { text-align: center; margin-bottom: 44px; }
 		#vance-gastro-conditions .vance-gc-header h2 {
