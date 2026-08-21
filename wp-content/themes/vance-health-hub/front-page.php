@@ -378,8 +378,10 @@ body {
         gap: 60px;
         /* Inset the content off the container edge so the container's own
            background colour (and optional border) read as a panel rather than
-           as a tight outline around the text. */
-        padding: 75px;
+           as a tight outline around the text. Top is deliberately shorter than
+           the other three: the section above contributes no top padding, so
+           60px here is the whole gap above the promo content. */
+        padding: 60px 75px 75px;
     }
     .promo-container.layout-left { flex-direction: row-reverse; }
     .promo-container.layout-top { flex-direction: column; text-align: center; }
