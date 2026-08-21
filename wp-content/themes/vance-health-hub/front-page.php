@@ -373,6 +373,10 @@ body {
         display: flex;
         align-items: center;
         gap: 60px;
+        /* Inset the content off the container edge so the container's own
+           background colour (and optional border) read as a panel rather than
+           as a tight outline around the text. */
+        padding: 75px;
     }
     .promo-container.layout-left { flex-direction: row-reverse; }
     .promo-container.layout-top { flex-direction: column; text-align: center; }
@@ -385,7 +389,8 @@ body {
        class any more. */
 
     @media (max-width: 768px) {
-        .promo-container { flex-direction: column !important; text-align: center; gap: 30px; }
+        /* 75px each side leaves too little room for the copy on a phone. */
+        .promo-container { flex-direction: column !important; text-align: center; gap: 30px; padding: 36px 24px; }
         .promo-image-box { width: 100%; }
     }
 </style>
@@ -530,9 +535,19 @@ body {
                     $promo_border_scope = vance_get_theme_mod('vance_promo_border_scope', 'container');
                     $promo_border_full  = ( $promo_border_scope === 'full' ) ? $promo_border_decl : '';
                     $promo_border_inner = ( $promo_border_scope !== 'full' ) ? $promo_border_decl : '';
-                    // Omit the attribute entirely when there's no border, so
-                    // the markup is unchanged for sites that leave this off.
-                    $promo_inner_attr   = $promo_border_inner !== '' ? ' style="' . trim( $promo_border_inner ) . '"' : '';
+
+                    // Inner container styling: border (when scoped here) plus
+                    // the optional container background colour. Blank colour =
+                    // transparent, so the section band shows through as before.
+                    $promo_inner_style = $promo_border_inner;
+                    $promo_container_bg = vance_get_theme_mod('vance_promo_container_bg_color', '');
+                    if ( $promo_container_bg !== '' ) {
+                        $promo_inner_style .= ' background-color: ' . esc_attr($promo_container_bg) . ';';
+                    }
+                    // Omit the attribute entirely when nothing is set, so the
+                    // markup is unchanged for sites using neither.
+                    $promo_inner_style = trim( $promo_inner_style );
+                    $promo_inner_attr  = $promo_inner_style !== '' ? ' style="' . $promo_inner_style . '"' : '';
                     ?>
     <section class="promo-block-section" style="background-color: <?php echo esc_attr($promo_bg); ?>; color: <?php echo esc_attr($promo_txt_c); ?>;<?php echo $promo_border_full; ?>">
         <div class="<?php echo $promo_w === 'container' ? 'container' : 'container-fluid'; ?>">
