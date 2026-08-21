@@ -82,7 +82,8 @@ get_header(); ?>
         array(
             'slug'     => 'ibd-recipes',
             'page_url' => '/gastro-meal-planner/',
-            'name'     => 'IBD Recipes & Meal Planner',
+            'name'     => 'Gastro Friendly Food',
+            'open_label' => 'Recipes & Meal Planner',
             'tag'      => 'Meal Planning',
             'desc'     => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely, saving plans prompts a quick signup.',
             'colors'   => array( '#def4f4', '#aedbdb', '#008080' ),
@@ -115,7 +116,7 @@ get_header(); ?>
                     </div>
                     <p class="tool-card__desc" style="color: var(--text-light); font-size: 14px; margin: 0 0 20px 0; line-height: 1.6; flex: 1;"><?php echo esc_html( $tool['desc'] ); ?></p>
                     <span class="tool-card__cta" style="font-size: 14px; font-weight: 600; color: var(--primary-color); display: inline-flex; align-items: center; gap: 6px;">
-                        Open <?php echo esc_html( $tool['name'] ); ?> →
+                        Open <?php echo esc_html( $tool['open_label'] ?? $tool['name'] ); ?> →
                     </span>
                 </a>
                 <?php endforeach; ?>

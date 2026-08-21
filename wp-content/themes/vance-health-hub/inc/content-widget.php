@@ -36,6 +36,32 @@ if ( ! defined( 'VANCE_CONTENT_WIDGET_INSTANCES' ) ) {
 }
 
 /**
+ * The predefined SVG icon set available to the 'promo' layout's featured card.
+ *
+ * Built from the theme's own icon folder rather than a hard-coded list, so
+ * dropping a new .svg in there makes it selectable with no code change.
+ * Returns slug => Human Label, ready to hand straight to a Customizer select.
+ *
+ * @return array<string,string>
+ */
+function vance_cw_icon_choices() {
+	static $choices = null;
+	if ( $choices !== null ) { return $choices; }
+
+	$choices = array();
+	$files   = glob( get_template_directory() . '/assets/img/icons/*.svg' );
+	if ( is_array( $files ) ) {
+		foreach ( $files as $file ) {
+			$slug = basename( $file, '.svg' );
+			$choices[ $slug ] = ucwords( str_replace( array( '-', '_' ), ' ', $slug ) );
+		}
+	}
+	// Defensive: never hand the Customizer an empty select.
+	if ( empty( $choices ) ) { $choices = array( 'star' => 'Star' ); }
+	return $choices;
+}
+
+/**
  * Resolve the instance number from a section ID like "content-widget-3".
  * Returns false if the ID isn't a content-widget instance.
  */
@@ -59,6 +85,11 @@ function vance_render_content_widget( $n ) {
 	if ( $n < 1 || $n > VANCE_CONTENT_WIDGET_INSTANCES ) { return; }
 
 	$prefix = "vance_cw{$n}_";
+
+	// Per-instance visibility gate, mirroring the Promo Block's own
+	// vance_promo_show pattern. Section Order still decides POSITION; this
+	// decides whether the widget renders at all.
+	if ( ! vance_get_theme_mod( $prefix . 'show', true ) ) { return; }
 
 	// --- Settings ------------------------------------------------------------
 	$heading        = vance_get_theme_mod( $prefix . 'heading',        '' );
@@ -105,11 +136,25 @@ function vance_render_content_widget( $n ) {
 	$rm_hover_text     = vance_get_theme_mod( $prefix . 'rm_hover_text_color', '#ffffff' );
 	$rm_hover_bg       = vance_get_theme_mod( $prefix . 'rm_hover_bg_color',   '#0A1929' );
 
-	if ( ! in_array( $layout, array( 'grid', 'bento' ), true ) )                  { $layout = 'grid'; }
+	// 2026-08-21 — 'promo' layout: a featured promo card occupying the first
+	// cell of an otherwise-normal uniform grid.
+	$promo_icon        = vance_get_theme_mod( $prefix . 'promo_icon',          'star' );
+	$promo_icon_bg     = vance_get_theme_mod( $prefix . 'promo_icon_bg_color', '#008080' );
+	$promo_heading     = vance_get_theme_mod( $prefix . 'promo_heading',       '' );
+	$promo_text        = vance_get_theme_mod( $prefix . 'promo_text',          '' );
+	$promo_button_text = vance_get_theme_mod( $prefix . 'promo_button_text',   'Learn more' );
+	$promo_button_link = vance_get_theme_mod( $prefix . 'promo_button_link',   '' );
+
+	if ( ! in_array( $layout, array( 'grid', 'bento', 'promo' ), true ) )         { $layout = 'grid'; }
 	if ( ! in_array( $text_align, array( 'left', 'center', 'right' ), true ) )    { $text_align = 'left'; }
 	if ( ! in_array( $featured_pos, array( 'left', 'right' ), true ) )            { $featured_pos = 'left'; }
-	if ( $layout === 'grid' ) {
+	if ( $layout === 'grid' || $layout === 'promo' ) {
 		$count = max( 1, $rows * $per_row );
+	}
+	// The promo tile occupies one grid cell, so fetch one fewer post and the
+	// total tile count still matches the configured rows × per-row.
+	if ( $layout === 'promo' ) {
+		$count = max( 1, $count - 1 );
 	}
 
 	// --- Query ---------------------------------------------------------------
@@ -128,7 +173,9 @@ function vance_render_content_widget( $n ) {
 	if ( $tag_slug !== '' ) { $args['tag']      = $tag_slug; }
 	$posts = get_posts( $args );
 
-	if ( empty( $posts ) ) { return; }
+	// The promo layout has its own authored content, so it is still worth
+	// rendering when the query comes back empty; the other layouts are not.
+	if ( empty( $posts ) && $layout !== 'promo' ) { return; }
 
 	$wrap_id = 'vance-cw-' . $n;
 
@@ -173,6 +220,13 @@ function vance_render_content_widget( $n ) {
 		'rm_hover_bg'    => $rm_hover_bg,
 		'featured_pos'   => $featured_pos,
 		'per_row'        => $per_row,
+		// Promo layout only — ignored by grid/bento.
+		'promo_icon'        => $promo_icon,
+		'promo_icon_bg'     => $promo_icon_bg,
+		'promo_heading'     => $promo_heading,
+		'promo_text'        => $promo_text,
+		'promo_button_text' => $promo_button_text,
+		'promo_button_link' => $promo_button_link,
 	);
 
 	// --- Render --------------------------------------------------------------
@@ -194,7 +248,9 @@ function vance_render_content_widget( $n ) {
 			if ( $layout === 'bento' ) {
 				vance_cw_render_bento( $posts, $opts );
 			} else {
-				vance_cw_render_grid( $posts, $opts );
+				// 'promo' is the uniform grid with a featured promo card
+				// prepended into the first cell.
+				vance_cw_render_grid( $posts, $opts, $layout === 'promo' );
 			}
 			?>
 		</div>
@@ -229,7 +285,18 @@ function vance_cw_truncate_title( $title, $max ) {
  * lengths (achieved via the flex layout in the card CSS).
  */
 function vance_cw_read_more( $post_id, $opts, $for_dark_bg = false ) {
-	if ( $opts['read_more_text'] === '' ) { return; }
+	vance_cw_read_more_pill( $opts['read_more_text'], $opts, $for_dark_bg );
+}
+
+/**
+ * The pill itself, taking its label directly rather than deriving it from a
+ * post. Split out of vance_cw_read_more() so the promo tile's CTA can reuse
+ * the exact same chrome — including the per-instance
+ * `.vance-cw-card:hover .vance-cw-rm-{n}-btn` hover rule — with no new CSS.
+ */
+function vance_cw_read_more_pill( $text, $opts, $for_dark_bg = false ) {
+	$text = (string) $text;
+	if ( $text === '' ) { return; }
 	$n          = $opts['n'];
 	$rm_class   = 'vance-cw-rm-' . $n;
 	$text_col   = $for_dark_bg ? '#ffffff' : $opts['rm_text'];
@@ -238,7 +305,7 @@ function vance_cw_read_more( $post_id, $opts, $for_dark_bg = false ) {
 	?>
 	<span class="<?php echo esc_attr( $rm_class ); ?>-btn" style="margin-top: auto; padding-top: 12px; align-self: flex-start;">
 		<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: <?php echo esc_attr( $text_col ); ?>; background: <?php echo esc_attr( $bg_col ); ?>; border: 1px solid <?php echo esc_attr( $border_col ); ?>; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;">
-			<?php echo esc_html( $opts['read_more_text'] ); ?>
+			<?php echo esc_html( $text ); ?>
 		</span>
 	</span>
 	<?php
@@ -373,9 +440,15 @@ function vance_cw_render_bento( $posts, $opts ) {
 
 /**
  * Uniform grid layout: every card is the same size in an N-per-row grid.
+ *
+ * @param array $posts Posts to render as cards.
+ * @param array $opts  Resolved per-instance options.
+ * @param bool  $promo When true, prepend the authored promo tile into the
+ *                     first cell (the 'promo' layout). It reuses the exact
+ *                     .vance-cw-card chrome so it sits flush with the posts.
  */
-function vance_cw_render_grid( $posts, $opts ) {
-	if ( empty( $posts ) ) { return; }
+function vance_cw_render_grid( $posts, $opts, $promo = false ) {
+	if ( empty( $posts ) && ! $promo ) { return; }
 	$n            = $opts['n'];
 	$per_row      = $opts['per_row'];
 	$text_align   = $opts['text_align'];
@@ -446,6 +519,35 @@ function vance_cw_render_grid( $posts, $opts ) {
 		}
 	</style>
 	<div class="vance-cw-grid">
+		<?php if ( $promo ) :
+			// Featured promo card. Same .vance-cw-card wrapper as the post
+			// cards, so background, border, hover lift and the read-more hover
+			// rule above all apply to it for free.
+			$icon_slug = sanitize_file_name( (string) $opts['promo_icon'] );
+			$icon_file = get_template_directory() . '/assets/img/icons/' . $icon_slug . '.svg';
+			$icon_url  = file_exists( $icon_file )
+				? get_template_directory_uri() . '/assets/img/icons/' . $icon_slug . '.svg'
+				: '';
+			$promo_link = (string) $opts['promo_button_link'];
+			$promo_tag  = $promo_link !== '' ? 'a' : 'div';
+			?>
+			<<?php echo $promo_tag; ?> class="vance-cw-card vance-cw-promo-card"<?php echo $promo_link !== '' ? ' href="' . esc_url( $promo_link ) . '"' : ''; ?>>
+				<div class="vance-cw-card-image" style="background: <?php echo esc_attr( $opts['promo_icon_bg'] ); ?>; display: flex; align-items: center; justify-content: center;">
+					<?php if ( $icon_url ) : ?>
+						<img src="<?php echo esc_url( $icon_url ); ?>" alt="" aria-hidden="true" style="width: 48px; height: 48px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.95;">
+					<?php endif; ?>
+				</div>
+				<div class="vance-cw-card-body">
+					<?php if ( $opts['promo_heading'] !== '' ) : ?>
+						<h4 style="font-size: 17px; color: <?php echo esc_attr( $title_color ); ?>; margin: 6px 0 8px 0; line-height: 1.3; transition: color 0.15s ease;"><?php echo esc_html( $opts['promo_heading'] ); ?></h4>
+					<?php endif; ?>
+					<?php if ( $opts['promo_text'] !== '' ) : ?>
+						<p style="font-size: 13px; color: <?php echo esc_attr( $excerpt_col ); ?>; margin: 0;"><?php echo esc_html( $opts['promo_text'] ); ?></p>
+					<?php endif; ?>
+					<?php if ( $promo_link !== '' ) { vance_cw_read_more_pill( $opts['promo_button_text'], $opts ); } ?>
+				</div>
+			</<?php echo $promo_tag; ?>>
+		<?php endif; ?>
 		<?php foreach ( $posts as $p ) :
 			$thumb = $render_image ? get_the_post_thumbnail_url( $p->ID, 'large' ) : '';
 			?>

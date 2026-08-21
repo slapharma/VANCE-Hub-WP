@@ -380,17 +380,13 @@ body {
     .promo-image-box { flex: 1; border-radius: 0; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
     .promo-image-box img { width: 100%; height: auto; display: block; }
     
-    /* PATHWAY OVERLAP */
-    .pathway-tiles-section {
-        position: relative;
-        z-index: 10;
-        margin-top: -60px;
-    }
+    /* The .pathway-tiles-section overlap rules that used to live here went with
+       the retired 'pathway' (Who Am I? tiles) section — nothing emits that
+       class any more. */
 
     @media (max-width: 768px) {
         .promo-container { flex-direction: column !important; text-align: center; gap: 30px; }
         .promo-image-box { width: 100%; }
-        .pathway-tiles-section { margin-top: 0; }
     }
 </style>
 
@@ -400,7 +396,7 @@ body {
     // Stored as a comma-separated string of CHECKED section IDs in display
     // order. The previous "force-add testimonials/pathway_content" fallbacks
     // have been removed now that the admin has explicit per-section checkboxes.
-    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,pathway,pathway_content,promo,cats,tool-widget-content-filters,tool-widget-vance-ai,join,kb,testimonials');
+    $section_order = vance_get_theme_mod('vance_homepage_section_order', 'hero,prime-block-home-1,promo,cats,tool-widget-content-filters,tool-widget-vance-ai,join,kb,testimonials');
     $sections      = array_filter( array_map( 'trim', explode( ',', $section_order ) ) );
     // Migration: the legacy combined 'discovery' block (chip filters + Ask AI
     // input + reading-level toggles) has been split into two focused modal-
@@ -466,729 +462,45 @@ body {
         update_option( 'vance_kb_content_split_migrated', 1, false );
     }
 
+    // Migration (2026-08-21): 'pathway' (the Who Am I? tiles) has been retired,
+    // and 'pathway_content' became the registry-driven 'prime-block-home-1'.
+    // Rewrite the saved order in place so the admin's chosen POSITION is
+    // preserved, and drop 'pathway' entirely.
+    //
+    // This one has to PERSIST, unlike the read-time substitutions above:
+    // neither retired ID is in vance_get_available_sections() any more, and
+    // vance_sanitize_sortable_sections() drops unregistered IDs on save. Left
+    // as a read-time-only rewrite, the first time an admin saved anything in
+    // the Customizer the saved order would silently lose 'pathway_content'
+    // and Prime Block Home 1 would vanish from the homepage. Writing the
+    // migrated order back once — behind a one-shot option flag, exactly like
+    // the kb → kb-content migration above — closes that window.
+    $vance_pathway_dirty = in_array( 'pathway_content', $sections, true ) || in_array( 'pathway', $sections, true );
+    if ( $vance_pathway_dirty ) {
+        $sections = vance_migrate_retired_pathway_sections( $sections );
+    }
+    if ( ! get_option( 'vance_prime_block_migrated' ) ) {
+        if ( $vance_pathway_dirty ) {
+            set_theme_mod( 'vance_homepage_section_order', implode( ',', $sections ) );
+        }
+        update_option( 'vance_prime_block_migrated', 1, false );
+    }
+
+    // Content Widget visibility (2026-08-21): fill in any widget that is
+    // switched on and configured but was never added to Section Order. See
+    // vance_append_enabled_content_widgets() for why the test is narrower than
+    // "show is true". Computed fresh per request and never persisted, so
+    // toggling the checkbox takes effect immediately in both directions.
+    $sections = vance_append_enabled_content_widgets( $sections );
+
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);
         switch ($section_id) {
             case 'hero':
-                ?>
-    <!-- Hero Section (Patient Style Structure) -->
-    <?php
-    $hero_bg = vance_get_theme_mod('vance_homepage_hero_image');
-    if (!$hero_bg) {
-        $hero_bg = get_template_directory_uri() . '/assets/img/news_hero.png';
-    }
-    
-    $hero_tag        = vance_get_theme_mod('vance_hero_tag_label',  'HEALTHCARE KNOWLEDGE HUB');
-    $hero_tag_bg     = vance_get_theme_mod('vance_hero_tag_bg',     '#ffffff');
-    $hero_tag_color  = vance_get_theme_mod('vance_hero_tag_color',  '#f86409');
-    $hero_tag_border = vance_get_theme_mod('vance_hero_tag_border', '#f86409');
-    $hero_title = vance_get_theme_mod('vance_hero_custom_title', 'Your Partner in <span class="highlight">Lifelong Wellness</span>');
-    $hero_subtitle = vance_get_theme_mod('vance_hero_custom_subtitle', 'Trusted, science-backed information to help you understand your health, manage your IBD condition, and live your best life through clinical nutrition.');
-    
-    $btn1_text = vance_get_theme_mod('vance_hero_button_1_text', "I'm a Practitioner");
-    $btn1_link = vance_get_theme_mod('vance_hero_button_1_link', '/healthcare-professionals/');
-    $btn2_text = vance_get_theme_mod('vance_hero_button_2_text', "I'm a Patient");
-    $btn2_link = vance_get_theme_mod('vance_hero_button_2_link', '/patients/');
-
-    // 2026-05-26: button colour controls (text + bg + border + hover variants).
-    $btn1_text_color       = vance_get_theme_mod('vance_hero_btn1_text_color',       '#ffffff');
-    $btn1_bg_color         = vance_get_theme_mod('vance_hero_btn1_bg_color',         '#008080');
-    $btn1_border_color     = vance_get_theme_mod('vance_hero_btn1_border_color',     '#008080');
-    $btn1_hover_text_color = vance_get_theme_mod('vance_hero_btn1_hover_text_color', '#ffffff');
-    $btn1_hover_bg_color   = vance_get_theme_mod('vance_hero_btn1_hover_bg_color',   '#006666');
-    $btn2_text_color       = vance_get_theme_mod('vance_hero_btn2_text_color',       '#ffffff');
-    $btn2_bg_color         = vance_get_theme_mod('vance_hero_btn2_bg_color',         '');
-    $btn2_border_color     = vance_get_theme_mod('vance_hero_btn2_border_color',     '#ffffff');
-    $btn2_hover_text_color = vance_get_theme_mod('vance_hero_btn2_hover_text_color', '#0A1929');
-    $btn2_hover_bg_color   = vance_get_theme_mod('vance_hero_btn2_hover_bg_color',   '#ffffff');
-    $btn2_bg_decl          = $btn2_bg_color ? 'background: ' . esc_attr($btn2_bg_color) . ';' : 'background: transparent;';
-
-    $mask_enabled = vance_get_theme_mod('vance_hero_mask_toggle', true);
-    // Per-page slider (0-100) takes precedence over the legacy global mask_opacity (0-1) when set.
-    $home_overlay_pct = vance_get_theme_mod('vance_home_hero_overlay', null);
-    if ( $home_overlay_pct !== null && $home_overlay_pct !== '' ) {
-        $mask_opacity = max(0, min(100, absint($home_overlay_pct))) / 100;
-    } else {
-        $mask_opacity = vance_get_theme_mod('vance_hero_mask_opacity', 0.5);
-    }
-    $hero_title_size = vance_get_theme_mod('vance_hero_title_size', 52);
-    $hero_title_color = vance_get_theme_mod('vance_hero_title_color', '#ffffff');
-    $hero_subtitle_color = vance_get_theme_mod('vance_hero_subtitle_color', '#cbd5e1');
-    $hero_bg_color = vance_get_theme_mod('vance_hero_bg_color', '#0A1929');
-
-    $hero_bg_style = "background-color: " . esc_attr($hero_bg_color) . "; background: url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
-    if ($mask_enabled) {
-        $alpha1 = $mask_opacity;
-        $alpha2 = min(1, $alpha1 + 0.15);
-        $hero_bg_style = "background-color: " . esc_attr($hero_bg_color) . "; background: linear-gradient(rgba(10, 25, 41, {$alpha1}), rgba(10, 25, 41, {$alpha2})), url('" . esc_url($hero_bg) . "') no-repeat center center; background-size: cover;";
-    }
-    ?>
-    <style>
-        .hero .vance-hero-btn-1:hover { background: <?php echo esc_attr($btn1_hover_bg_color); ?> !important; color: <?php echo esc_attr($btn1_hover_text_color); ?> !important; border-color: <?php echo esc_attr($btn1_hover_bg_color); ?> !important; }
-        .hero .vance-hero-btn-2:hover { background: <?php echo esc_attr($btn2_hover_bg_color); ?> !important; color: <?php echo esc_attr($btn2_hover_text_color); ?> !important; border-color: <?php echo esc_attr($btn2_hover_bg_color); ?> !important; }
-    </style>
-    <section class="hero patient-hero" style="display: flex; align-items: center; <?php echo $hero_bg_style; ?> color: white; position: relative; overflow: hidden;">
-        <div class="container" style="position:relative;z-index:1;">
-            <div style="max-width: 800px;">
-                <span class="tag-label" style="background: <?php echo esc_attr($hero_tag_bg); ?>; color: <?php echo esc_attr($hero_tag_color); ?>; border: 1.5px solid <?php echo esc_attr($hero_tag_border); ?>;"><?php echo esc_html($hero_tag); ?></span>
-                <h1 style="font-size: <?php echo esc_attr($hero_title_size); ?>px; color: <?php echo esc_attr($hero_title_color); ?>; line-height: 1.1; margin: 16px 0 10px; font-weight: 800; font-family: 'Outfit', sans-serif;">
-                    <?php 
-                    // Ensure highlight spans inherit the customized color if they exist in the title string
-                    $title_display = wp_kses_post($hero_title);
-                    if (strpos($title_display, 'class="highlight"') !== false) {
-                        $title_display = str_replace('class="highlight"', 'class="highlight" style="color: inherit;"', $title_display);
-                    }
-                    echo $title_display; 
-                    ?>
-                </h1>
-                <p style="font-size: 20px; line-height: 1.6; color: <?php echo esc_attr($hero_subtitle_color); ?>; margin: 0 0 32px; max-width: 600px;">
-                    <?php echo esc_html($hero_subtitle); ?>
-                </p>
-                <div class="hero-actions" style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <?php 
-                    $btn1_onclick = (strpos($btn1_link, 'quiz') !== false) ? 'onclick="event.preventDefault(); openQuizModal();"' : '';
-                    $btn2_onclick = (strpos($btn2_link, 'quiz') !== false) ? 'onclick="event.preventDefault(); openQuizModal();"' : '';
-                    ?>
-                    <a href="<?php echo esc_url($btn1_link); ?>" <?php echo $btn1_onclick; ?> class="btn btn-primary vance-hero-btn-1" style="background: <?php echo esc_attr($btn1_bg_color); ?>; color: <?php echo esc_attr($btn1_text_color); ?>; border: 2px solid <?php echo esc_attr($btn1_border_color); ?>; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;"><?php echo esc_html($btn1_text); ?></a>
-                    <a href="<?php echo esc_url($btn2_link); ?>" <?php echo $btn2_onclick; ?> class="btn btn-outline vance-hero-btn-2" style="<?php echo $btn2_bg_decl; ?> color: <?php echo esc_attr($btn2_text_color); ?>; border: 2px solid <?php echo esc_attr($btn2_border_color); ?>; padding: 14px 28px; border-radius: 0; font-weight: 700; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;"><?php echo esc_html($btn2_text); ?></a>
-                </div>
-            </div>
-        </div>
-    </section>
-                <?php
-                break;
-
-            case 'pathway':
-                $tile_radius = vance_get_theme_mod('vance_pathway_tile_radius', 16);
-                $image_radius = vance_get_theme_mod('vance_pathway_tile_image_radius', 8);
-                
-                // Fetch latest posts using Customizer settings
-                $latest_title = vance_get_theme_mod('vance_pathway_latest_title', 'LATEST CONTENT');
-                $latest_count = vance_get_theme_mod('vance_pathway_latest_count', 5);
-                $latest_cat   = (int) vance_get_theme_mod('vance_pathway_latest_category', 0);
-                $show_date    = vance_get_theme_mod('vance_pathway_latest_show_date', true);
-
-                // Include all Content Hub Station CPTs so their posts appear
-                $cpt_post_types = array(
-                    'post', 'news', 'research', 'oped', 'review',
-                    'whitepaper', 'podcast', 'webinar', 'course', 'infographic',
-                );
-
-                $query_args = array(
-                    'numberposts' => $latest_count,
-                    'post_status' => 'publish',
-                    'post_type'   => $cpt_post_types,
-                    'orderby'     => 'date',
-                    'order'       => 'DESC',
-                );
-                if ($latest_cat > 0) {
-                    $query_args['category'] = $latest_cat;
-                }
-                $latest_posts = get_posts($query_args);
-                ?>
-    <!-- Enhanced Pathway Split View Section -->
-    <?php
-    $pathway_hover_color    = vance_get_theme_mod('vance_pathway_card_hover_color', '#008080');
-    $pathway_icon_bg        = vance_get_theme_mod('vance_pathway_icon_bg_color', '#0A1929');
-    $pathway_icon_hover_bg  = vance_get_theme_mod('vance_pathway_icon_hover_bg_color', 'rgba(255,255,255,0.2)');
-    $pathway_who_label      = vance_get_theme_mod('vance_pathway_who_label', 'Who Am I?');
-    $pathway_section_bg     = vance_get_theme_mod('vance_pathway_section_bg', '#f8fafc');
-    ?>
-    <style>
-        .pathway-tiles-section {
-            padding: 80px 0 60px;
-            background: <?php echo esc_attr($pathway_section_bg); ?>;
-        }
-        .pathway-split-grid {
-            display: grid;
-            grid-template-columns: 3fr 7fr;
-            gap: 40px;
-            align-items: stretch;
-        }
-        .pathway-card-icon {
-            width: 28px;
-            /* Initial icon colour controlled by Customizer - use CSS filter to tint to icon_bg colour */
-            filter: brightness(0) invert(1);
-            opacity: 0.9;
-            transition: filter 0.3s ease, opacity 0.3s ease;
-        }
-        .pathway-card:hover .pathway-card-icon {
-            filter: brightness(0) invert(1);
-            opacity: 1;
-        }
-        .pathway-card {
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            padding: 20px 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            border: 1.5px solid #e2e8f0;
-            border-radius: 0;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            height: 100%;
-            justify-content: space-between;
-        }
-        .pathway-card:hover {
-            background: <?php echo esc_attr($pathway_hover_color); ?>;
-            border-color: <?php echo esc_attr($pathway_hover_color); ?>;
-            transform: translateY(-4px);
-            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
-        }
-        .pathway-card:hover h2,
-        .pathway-card:hover p {
-            color: white !important;
-        }
-        .pathway-card:hover .pathway-icon-wrap {
-            background: <?php echo esc_attr($pathway_icon_hover_bg); ?> !important;
-        }
-        @media (max-width: 992px) {
-            .pathway-split-grid { grid-template-columns: 1fr; }
-            .bento-grid-news { grid-template-columns: 1fr; grid-template-rows: auto; }
-            .pathway-tiles-section { padding-top: 60px; margin-top: 0; }
-        }
-    </style>
-    <section class="pathway-tiles-section">
-        <div class="container">
-            <div class="pathway-split-grid">
-                <!-- Left: Stacked Tiles -->
-                <div class="pathway-tiles-stack" style="<?php echo $pwc_tools_stack_style; ?>">
-                    <!-- Section Label: Who Am I? -->
-                    <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
-                        <div class="section-label-left">
-                            <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
-                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html($pathway_who_label); ?></h2>
-                        </div>
-                    </div>
-                    <!-- For Practitioners -->
-                    <?php 
-                    $prac_title = vance_get_theme_mod('vance_practitioner_tile_title', 'For Practitioners');
-                    $prac_desc = vance_get_theme_mod('vance_practitioner_tile_desc', 'Access clinical reviews, evidence-based guidelines, and professional tools tailored for modern healthcare practitioners.');
-                    $prac_extra = vance_get_theme_mod('vance_practitioner_tile_extra', 'Bridging science and clinical outcomes');
-                    $prac_img = vance_get_theme_mod('vance_practitioner_tile_image');
-                    $prac_link = vance_get_theme_mod('vance_practitioner_tile_link', '/healthcare-professionals/');
-                    $prac_tile_radius = vance_get_theme_mod('vance_practitioner_tile_radius', 16);
-                    $prac_img_radius = vance_get_theme_mod('vance_practitioner_image_radius', 8);
-                    ?>
-                    <a href="<?php echo esc_url($prac_link); ?>" class="pathway-card" style="border-radius: 0; flex: 1;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 14px;">
-                                <div class="pathway-icon-wrap" style="width: 48px; height: 48px; background: <?php echo esc_attr($pathway_icon_bg); ?>; border-radius: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.3s;">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/img/icons/icon-practitioner-new.png" alt="Practitioner" class="pathway-card-icon"> 
-                                </div>
-                                <h2 style="font-size: 22px; font-weight: 800; color: #0A1929; margin: 0; font-family: 'Outfit', sans-serif;"><?php echo esc_html($prac_title); ?></h2>
-                            </div>
-                            <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html($prac_desc); ?></p>
-                            <p style="font-weight: 700; color: var(--primary-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px;"><?php echo esc_html($prac_extra); ?></p>
-                        </div>
-                        <?php if ($prac_img) : ?>
-                        <div style="width: 100%; height: 80px; background: url('<?php echo esc_url($prac_img); ?>') center center / cover; border-radius: 0; margin-top: 10px;"></div>
-                        <?php endif; ?>
-                    </a>
-
-                    <!-- For Patients -->
-                    <?php 
-                    $pat_title = vance_get_theme_mod('vance_patient_tile_title', 'For Patients');
-                    $pat_desc = vance_get_theme_mod('vance_patient_tile_desc', 'Learn about chronic conditions, health optimization, and healthy living through our expert-led patient curriculum.');
-                    $pat_extra = vance_get_theme_mod('vance_patient_tile_extra', 'Empowering your health journey daily');
-                    $pat_img = vance_get_theme_mod('vance_patient_tile_image');
-                    $pat_link = vance_get_theme_mod('vance_patient_tile_link', '/patients/');
-                    $pat_tile_radius = vance_get_theme_mod('vance_patient_tile_radius', 16);
-                    $pat_img_radius = vance_get_theme_mod('vance_patient_image_radius', 8);
-                    ?>
-                    <a href="<?php echo esc_url($pat_link); ?>" class="pathway-card" style="border-radius: 0; flex: 1;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 14px;">
-                                <div class="pathway-icon-wrap" style="width: 48px; height: 48px; background: <?php echo esc_attr($pathway_icon_bg); ?>; border-radius: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.3s;">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/img/icons/icon-patient-new.png" alt="Patient" class="pathway-card-icon">
-                                </div>
-                                <h2 style="font-size: 22px; font-weight: 800; color: #0A1929; margin: 0; font-family: 'Outfit', sans-serif;"><?php echo esc_html($pat_title); ?></h2>
-                            </div>
-                            <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html($pat_desc); ?></p>
-                            <p style="font-weight: 700; color: var(--primary-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px;"><?php echo esc_html($pat_extra); ?></p>
-                        </div>
-                        <?php if ($pat_img) : ?>
-                        <div style="width: 100%; height: 80px; background: url('<?php echo esc_url($pat_img); ?>') center center / cover; border-radius: 0; margin-top: 10px;"></div>
-                        <?php endif; ?>
-                    </a>
-                </div>
-
-                <!-- Right: Latest Content Bento -->
-                <div class="latest-content-column">
-                    <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
-                        <div class="section-label-left">
-                            <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
-                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html($latest_title); ?></h2>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($latest_posts) && count($latest_posts) >= 3) : ?>
-                    <div class="bento-grid-news bento-grid-news--grow">
-                        <?php $p = $latest_posts[0]; ?>
-                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
-                            <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
-                            <div class="bento-content-overlay">
-                                <span class="tag" style="background: var(--primary-color);">Featured</span>
-                                <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo get_the_title($p->ID); ?></h3>
-                                <p class="bento-featured-excerpt"><?php echo esc_html(wp_trim_words(get_the_excerpt($p->ID), 24)); ?></p>
-                                <?php echo vance_card_meta_footer_html($p->ID); ?>
-                            </div>
-                        </a>
-                        <div class="latest-list-box">
-                            <?php foreach (array_slice($latest_posts, 1) as $p) : ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
-                                <div class="latest-list-text">
-                                    <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php
-                                        // Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
-                                        $main_cat = get_term(vance_post_overlay_main_category_id($p->ID), 'category');
-                                        echo ($main_cat && !is_wp_error($main_cat)) ? esc_html($main_cat->name) : 'Latest';
-                                    ?></span>
-                                    <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
-                                </div>
-                                <?php $list_thumb = get_the_post_thumbnail_url($p->ID, 'thumbnail'); if ($list_thumb) : ?>
-                                <img class="latest-list-thumb" src="<?php echo esc_url($list_thumb); ?>" alt="">
-                                <?php endif; ?>
-                            </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <?php elseif (!empty($latest_posts)) : ?>
-                        <div style="display: flex; flex-direction: column; gap: 16px;">
-                            <?php foreach ($latest_posts as $p) : ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
-                                <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
-                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
-                                <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
-                                <?php if ($show_date) : ?>
-                                <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
-                                <?php endif; ?>
-                            </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php else : ?>
-                        <div style="background: white; border-radius: 0; padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
-                            <p style="color: #64748b; margin: 0;">No posts found for this selection.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </section>
-                <?php
-                break;
-
-            case 'pathway_content':
-                // Cloned from 'pathway' (Who Am I? tiles + Latest Content bento).
-                // Replaces the two left-side audience cards with TOOL cards:
-                // - Healthcare Quiz  -> /healthcare-quiz/
-                // - Ask AI            -> /ask-ai/
-                // Each card now gives the image full visual weight (180px hero strip,
-                // not the original 80px afterthought) since this block is image-led.
-                $pwc_hover_color    = vance_get_theme_mod('vance_pwc_card_hover_color', '#008080');
-                $pwc_icon_bg        = vance_get_theme_mod('vance_pwc_icon_bg_color', '#0A1929');
-                $pwc_icon_hover_bg  = vance_get_theme_mod('vance_pwc_icon_hover_bg_color', 'rgba(255,255,255,0.2)');
-                $pwc_label          = vance_get_theme_mod('vance_pwc_label', 'Featured Tools');
-                $pwc_section_bg     = vance_get_theme_mod('vance_pwc_section_bg', '#ffffff');
-                $pwc_latest_title   = vance_get_theme_mod('vance_pwc_latest_title', 'LATEST CONTENT');
-                $pwc_latest_count   = vance_get_theme_mod('vance_pwc_latest_count', 6);
-                $pwc_latest_cat     = (int) vance_get_theme_mod('vance_pwc_latest_category', 0);
-                $pwc_show_date      = vance_get_theme_mod('vance_pwc_latest_show_date', true);
-
-                // 2026-05-26: layout select - 'left' (tools beside content, tools on left,
-                // historical default), 'right' (tools beside content, tools on right),
-                // 'stacked' (tools full-width row above the content list).
-                $pwc_layout = vance_get_theme_mod('vance_pwc_layout', 'left');
-                if ( ! in_array( $pwc_layout, array( 'left', 'right', 'stacked' ), true ) ) { $pwc_layout = 'left'; }
-
-                // 2026-05-26: banner style + colour controls. style = card (default,
-                // existing 2-card layout), image_text (horizontal banner), image
-                // (image-led banner with overlay), pill (compact pill).
-                $pwc_style                 = vance_get_theme_mod( 'vance_pwc_style', 'card' );
-                if ( ! in_array( $pwc_style, array( 'card', 'image_text', 'image', 'pill' ), true ) ) { $pwc_style = 'card'; }
-                $pwc_section_label_color   = vance_get_theme_mod( 'vance_pwc_section_label_color',   '#0f172a' );
-                $pwc_card_title_color      = vance_get_theme_mod( 'vance_pwc_card_title_color',      '#0A1929' );
-                $pwc_card_title_hover_color= vance_get_theme_mod( 'vance_pwc_card_title_hover_color','#ffffff' );
-                $pwc_card_desc_color       = vance_get_theme_mod( 'vance_pwc_card_desc_color',       '#64748b' );
-                $pwc_card_eyebrow_color    = vance_get_theme_mod( 'vance_pwc_card_eyebrow_color',    '#008080' );
-                $pwc_tools_column_bg       = vance_get_theme_mod( 'vance_pwc_tools_column_bg',       '' );
-
-                // Inline style for the tools column wrapper. When a bg is set,
-                // include vertical+horizontal padding so the colour reads as a
-                // coloured block instead of a sliver behind the cards.
-                $pwc_tools_stack_style = 'display: flex; flex-direction: column; gap: 24px; height: 100%;';
-                if ( $pwc_tools_column_bg !== '' ) {
-                    $pwc_tools_stack_style .= ' background: ' . esc_attr( $pwc_tools_column_bg ) . '; padding: 24px;';
-                }
-
-                $pwc_cpt = array(
-                    'post', 'news', 'research', 'oped', 'review',
-                    'whitepaper', 'podcast', 'webinar', 'course', 'infographic',
-                );
-                $pwc_args = array(
-                    'numberposts' => $pwc_latest_count,
-                    'post_status' => 'publish',
-                    'post_type'   => $pwc_cpt,
-                    'orderby'     => 'date',
-                    'order'       => 'DESC',
-                );
-                if ($pwc_latest_cat > 0) { $pwc_args['category'] = $pwc_latest_cat; }
-                $pwc_latest_posts = get_posts($pwc_args);
-                ?>
-    <!-- Pathway Content (Featured Tools + Latest Content) -->
-    <style>
-        .pathway-content-section {
-            padding: 80px 0 0;
-            background: <?php echo esc_attr($pwc_section_bg); ?>;
-        }
-        /* The next section down (Quick Reads / Most Popular Articles) is a
-           generic content-widget instance whose own 80px top padding is
-           shared by every content-widget placement sitewide — editing that
-           file would shrink the gap everywhere it's used, not just here.
-           Scoping the reduction to this specific widget's own id (#vance-cw-1)
-           keeps the change local to this one spot on the homepage. Combined
-           with dropping this section's own bottom padding to 0 above, that's
-           a 75px reduction (40px here + 35px there) in the gap between the
-           two sections. */
-        #vance-cw-1 {
-            padding-top: 45px !important;
-        }
-        /* Local copy of the split-grid rules — the originals live in the
-           'pathway' case and aren't emitted when pathway is hidden, so this
-           block needs its own copy. */
-        .pathway-content-section .pathway-split-grid {
-            display: grid;
-            /* Tools column pinned to ~the height of one stacked tool card so the
-               two cards render roughly SQUARE; content takes the rest. */
-            grid-template-columns: 220px minmax(0, 1fr);
-            gap: 40px;
-            align-items: stretch;
-        }
-        /* Layout: tools on the RIGHT - swap visual order via grid-column overrides
-           so the DOM stays in the same order (a11y + SEO friendly). */
-        .pathway-content-section.layout-right .pathway-split-grid {
-            grid-template-columns: minmax(0, 1fr) 220px;
-        }
-        .pathway-content-section.layout-right .pathway-tiles-stack    { grid-column: 2; }
-        .pathway-content-section.layout-right .latest-content-column  { grid-column: 1; grid-row: 1; }
-        /* Layout: STACKED - tools row across the top, content list below. */
-        .pathway-content-section.layout-stacked .pathway-split-grid {
-            grid-template-columns: 1fr;
-            gap: 48px;
-        }
-        .pathway-content-section.layout-stacked .pathway-tiles-stack {
-            flex-direction: row !important;
-            flex-wrap: wrap;
-            height: auto !important;
-            align-items: stretch;
-        }
-        .pathway-content-section.layout-stacked .pathway-tiles-stack > .section-label {
-            flex-basis: 100%;
-        }
-        .pathway-content-section.layout-stacked .pwc-card { flex: 1 1 0 !important; min-width: 240px; }
-        .pathway-content-section .pathway-tiles-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            height: 100%;
-        }
-        /* The label is a flex item inside .pathway-tiles-stack, so the
-           container's gap:24px already provides spacing to the next item.
-           Zero out the label's own margin-bottom on THIS block so the first
-           tool card starts at the same Y as the featured news card on the
-           right (which has no flex gap). */
-        .pathway-content-section .pathway-tiles-stack > .section-label { margin-bottom: 0 !important; }
-        /* The tools column stretches to fill the row (height:100% above), but
-           .latest-content-column was a plain block — its label + bento grid
-           only took their own content height, leaving the image/article list
-           shorter than the tools column with dead space below. Making this a
-           flex column too, with the grid as the flexible item, lets the
-           image and article list stretch down to match the tools column's
-           full height. */
-        .pathway-content-section .latest-content-column {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        .pathway-content-section .latest-content-column .bento-grid-news.bento-grid-news--grow {
-            flex: 1;
-            min-height: 0;
-        }
-        @media (max-width: 992px) {
-            .pathway-content-section .pathway-split-grid { grid-template-columns: 1fr; }
-            .pathway-content-section.layout-right .pathway-split-grid { grid-template-columns: 1fr; }
-            /* On mobile every layout collapses to a single column with tools on top. */
-            .pathway-content-section.layout-right .pathway-tiles-stack   { grid-column: 1; grid-row: 1; }
-            .pathway-content-section.layout-right .latest-content-column { grid-column: 1; grid-row: 2; }
-            .pathway-content-section.layout-stacked .pathway-tiles-stack { flex-direction: column !important; }
-            .pathway-content-section .bento-grid-news { grid-template-columns: 1fr; grid-template-rows: auto; }
-        }
-        .pwc-card {
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            padding: 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            border: 1.5px solid #e2e8f0;
-            border-radius: 0;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            /* flex:1 inside the height:100% stack splits available column
-               height between the two cards so they both end at the same Y
-               as the featured news card on the right. */
-            flex: 1;
-            min-height: 0;
-        }
-        .pwc-card:hover {
-            background: <?php echo esc_attr($pwc_hover_color); ?>;
-            border-color: <?php echo esc_attr($pwc_hover_color); ?>;
-            transform: translateY(-4px);
-            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
-        }
-        .pwc-card-image {
-            width: 100%;
-            /* Was 180px — pushed each card to ~340px which made the stack
-               overflow the right column. Now a tight 70px strip, so each
-               card is ~150px and the two fit cleanly inside the featured
-               news card's vertical envelope. */
-            height: 70px;
-            background-position: center center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-color: <?php echo esc_attr($pwc_icon_bg); ?>;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .pwc-card-image .pwc-fallback-icon {
-            font-size: 28px;
-            color: #ffffff;
-            opacity: 0.85;
-            font-weight: 800;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: 0.5px;
-        }
-        .pwc-card-body {
-            padding: 16px 20px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-height: 0;
-            justify-content: space-between;
-        }
-        .pwc-card-body p {
-            -webkit-line-clamp: 2;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .pwc-card:hover .pwc-card-body h2,
-        .pwc-card:hover .pwc-card-body p {
-            color: white !important;
-        }
-        @media (max-width: 992px) {
-            .pathway-content-section { padding-top: 60px; }
-            .pwc-card-image { height: 60px; }
-        }
-    </style>
-    <section class="pathway-content-section layout-<?php echo esc_attr($pwc_layout); ?>">
-        <div class="container">
-            <div class="pathway-split-grid">
-                <!-- Tools column (style: card / image_text / image / pill; position controlled by layout-* on parent section) -->
-                <div class="pathway-tiles-stack" style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
-                    <!-- Section Label: Featured Tools -->
-                    <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
-                        <div class="section-label-left">
-                            <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
-                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: <?php echo esc_attr( $pwc_section_label_color ); ?>;"><?php echo esc_html($pwc_label); ?></h2>
-                        </div>
-                    </div>
-
-                    <?php
-                    // Build the two tool cards into a normalised array, then render
-                    // each one in whichever style the admin selected.
-                    $pwc_cards = array(
-                        array(
-                            'title'         => vance_get_theme_mod('vance_hquiz_tile_title', 'Gastro Health Survey'),
-                            'desc'          => vance_get_theme_mod('vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.'),
-                            'eyebrow'       => vance_get_theme_mod('vance_hquiz_tile_extra', 'Find your starting point'),
-                            'image'         => vance_get_theme_mod('vance_hquiz_tile_image'),
-                            'link'          => vance_get_theme_mod('vance_hquiz_tile_link',  '/healthcare-quiz/'),
-                            'fallback_icon' => '?',
-                        ),
-                        array(
-                            'title'         => vance_get_theme_mod('vance_askai_tile_title', 'VANCE-Ai'),
-                            'desc'          => vance_get_theme_mod('vance_askai_tile_desc',  'Ask any health question and get an evidence-backed answer in seconds. Powered by curated clinical content, available 24/7.'),
-                            'eyebrow'       => vance_get_theme_mod('vance_askai_tile_extra', 'Personalised answers, 24/7'),
-                            'image'         => vance_get_theme_mod('vance_askai_tile_image'),
-                            'link'          => vance_get_theme_mod('vance_askai_tile_link',  '/ask-ai/'),
-                            'fallback_icon' => 'AI',
-                        ),
-                    );
-
-                    // Inline styles for the hover-state title colour. The base
-                    // .pwc-card and banner :hover rules live in the existing
-                    // <style> block at the top of the case; we override the
-                    // title colour on hover via a scoped CSS rule per render.
-                    ?>
-                    <style>
-                        .pathway-content-section .pwc-card:hover .pwc-card-title,
-                        .pathway-content-section .pwc-banner:hover .pwc-banner-title { color: <?php echo esc_attr( $pwc_card_title_hover_color ); ?> !important; }
-                        .pathway-content-section .pwc-banner {
-                            display: flex;
-                            text-decoration: none;
-                            transition: transform 0.2s ease, box-shadow 0.2s ease;
-                            flex: 1;
-                            min-height: 0;
-                        }
-                        .pathway-content-section .pwc-banner:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,0.10); }
-                        /* Image-led banner */
-                        .pathway-content-section .pwc-banner--image > div { position: relative; overflow: hidden; padding: 26px 24px; color: #ffffff; min-height: 160px; flex: 1; }
-                        .pathway-content-section .pwc-banner--image::after { content: ''; display: block; }
-                        /* Pill banner */
-                        .pathway-content-section .pwc-banner--pill > div { background: #ffffff; border: 1.5px solid #0A1929; padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-height: 72px; flex: 1; }
-                        /* Horizontal image+text banner */
-                        .pathway-content-section .pwc-banner--image_text > div { display: flex; align-items: center; gap: 18px; padding: 22px; color: #ffffff; min-height: 140px; flex: 1; }
-                    </style>
-
-                    <?php foreach ( $pwc_cards as $card ) :
-                        $c_title = esc_html( $card['title'] );
-                        $c_desc  = esc_html( $card['desc'] );
-                        $c_eye   = esc_html( $card['eyebrow'] );
-                        $c_img   = $card['image'];
-                        $c_link  = esc_url( $card['link'] );
-                        $c_fi    = esc_html( $card['fallback_icon'] );
-
-                        if ( $pwc_style === 'image' ) :
-                            // Image-led banner with dark overlay. Falls back to a flat
-                            // teal background when no image set.
-                            $bg = $c_img
-                                ? "background-image: linear-gradient(135deg, rgba(10,25,41,0.55) 0%, rgba(10,25,41,0.90) 100%), url('" . esc_url( $c_img ) . "'); background-size: cover; background-position: center;"
-                                : "background: linear-gradient(135deg, " . esc_attr( $pwc_card_eyebrow_color ) . " 0%, #0A1929 100%);";
-                    ?>
-                        <a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--image">
-                            <div style="<?php echo $bg; ?>">
-                                <?php if ( $c_eye !== '' ) : ?>
-                                    <div style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;"><?php echo $c_eye; ?></div>
-                                <?php endif; ?>
-                                <h3 class="pwc-banner-title" style="margin: 0 0 6px; font-size: 22px; font-weight: 800; color: #ffffff; line-height: 1.15; font-family: 'Outfit', sans-serif;"><?php echo $c_title; ?></h3>
-                                <p style="margin: 0; font-size: 13px; opacity: 0.9; max-width: 320px; line-height: 1.5;"><?php echo $c_desc; ?></p>
-                            </div>
-                        </a>
-                    <?php elseif ( $pwc_style === 'pill' ) : ?>
-                        <a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--pill">
-                            <div>
-                                <div style="display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1;">
-                                    <span style="flex-shrink: 0; width: 32px; height: 32px; background: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; font-family: 'Outfit', sans-serif; margin-top: 2px;"><?php echo $c_fi; ?></span>
-                                    <div style="min-width: 0; flex: 1;">
-                                        <div class="pwc-banner-title" style="font-size: 14px; font-weight: 700; color: <?php echo esc_attr( $pwc_card_title_color ); ?>; font-family: 'Outfit', sans-serif; line-height: 1.3;"><?php echo $c_title; ?></div>
-                                        <div style="font-size: 12px; color: <?php echo esc_attr( $pwc_card_desc_color ); ?>; line-height: 1.4; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo $c_desc; ?></div>
-                                    </div>
-                                </div>
-                                <span style="background: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; color: #ffffff; padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; margin-top: 2px;">Open &rarr;</span>
-                            </div>
-                        </a>
-                    <?php elseif ( $pwc_style === 'image_text' ) : ?>
-                        <a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--image_text">
-                            <div style="background: linear-gradient(135deg, <?php echo esc_attr( $pwc_card_eyebrow_color ); ?> 0%, #0A1929 100%);">
-                                <div style="flex-shrink: 0; width: 64px; height: 64px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center;">
-                                    <?php if ( $c_img ) : ?>
-                                        <img src="<?php echo esc_url( $c_img ); ?>" alt="" style="width: 36px; height: 36px; object-fit: contain; filter: brightness(0) invert(1);">
-                                    <?php else : ?>
-                                        <span style="color: #ffffff; font-size: 22px; font-weight: 800; font-family: 'Outfit', sans-serif;"><?php echo $c_fi; ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <?php if ( $c_eye !== '' ) : ?>
-                                        <div style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px;"><?php echo $c_eye; ?></div>
-                                    <?php endif; ?>
-                                    <h3 class="pwc-banner-title" style="margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #ffffff; font-family: 'Outfit', sans-serif;"><?php echo $c_title; ?></h3>
-                                    <p style="margin: 0; font-size: 13px; opacity: 0.88; line-height: 1.4;"><?php echo $c_desc; ?></p>
-                                </div>
-                            </div>
-                        </a>
-                    <?php else : // 'card' (default — existing 2-card stacked layout) ?>
-                        <a href="<?php echo $c_link; ?>" class="pwc-card" style="flex: 1;">
-                            <div class="pwc-card-image" style="<?php echo $c_img ? 'background-image: url(\'' . esc_url( $c_img ) . '\');' : ''; ?>">
-                                <?php if ( ! $c_img ) : ?>
-                                    <span class="pwc-fallback-icon"><?php echo $c_fi; ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="pwc-card-body">
-                                <div>
-                                    <h2 class="pwc-card-title" style="font-size: 22px; font-weight: 800; color: <?php echo esc_attr( $pwc_card_title_color ); ?>; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif; transition: color 0.2s ease;"><?php echo $c_title; ?></h2>
-                                    <p style="color: <?php echo esc_attr( $pwc_card_desc_color ); ?>; font-size: 14px; margin: 0 0 10px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><?php echo $c_desc; ?></p>
-                                </div>
-                                <p style="font-weight: 700; color: <?php echo esc_attr( $pwc_card_eyebrow_color ); ?>; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;"><?php echo $c_eye; ?></p>
-                            </div>
-                        </a>
-                    <?php endif; endforeach; ?>
-                </div>
-
-                <!-- Right: Latest Content Bento (independent customizer settings — vance_pwc_latest_*) -->
-                <div class="latest-content-column">
-                    <div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
-                        <div class="section-label-left">
-                            <div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
-                            <h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html($pwc_latest_title); ?></h2>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($pwc_latest_posts) && count($pwc_latest_posts) >= 3) : ?>
-                    <div class="bento-grid-news bento-grid-news--grow">
-                        <?php $p = $pwc_latest_posts[0]; ?>
-                        <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
-                            <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
-                            <div class="bento-content-overlay">
-                                <span class="tag" style="background: var(--primary-color);">Featured</span>
-                                <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo get_the_title($p->ID); ?></h3>
-                                <p class="bento-featured-excerpt"><?php echo esc_html(wp_trim_words(get_the_excerpt($p->ID), 24)); ?></p>
-                                <?php echo vance_card_meta_footer_html($p->ID); ?>
-                            </div>
-                        </a>
-                        <div class="latest-list-box">
-                            <?php foreach (array_slice($pwc_latest_posts, 1) as $p) : ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="latest-list-item" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
-                                <div class="latest-list-text">
-                                    <span class="latest-list-cat" style="color: <?php echo esc_attr(vance_post_eyebrow_color($p->ID)); ?>;"><?php
-                                        // Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
-                                        $main_cat = get_term(vance_post_overlay_main_category_id($p->ID), 'category');
-                                        echo ($main_cat && !is_wp_error($main_cat)) ? esc_html($main_cat->name) : 'Latest';
-                                    ?></span>
-                                    <h4 class="latest-list-title"><?php echo get_the_title($p->ID); ?></h4>
-                                </div>
-                                <?php $list_thumb = get_the_post_thumbnail_url($p->ID, 'thumbnail'); if ($list_thumb) : ?>
-                                <img class="latest-list-thumb" src="<?php echo esc_url($list_thumb); ?>" alt="">
-                                <?php endif; ?>
-                            </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <?php elseif (!empty($pwc_latest_posts)) : ?>
-                        <div style="display: flex; flex-direction: column; gap: 16px;">
-                            <?php foreach ($pwc_latest_posts as $p) : ?>
-                            <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
-                                <span class="meta" style="color: var(--primary-color); margin-bottom: 8px;"><?php $cats = get_the_category($p->ID); echo !empty($cats) ? esc_html($cats[0]->name) : 'Latest'; ?></span>
-                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
-                                <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
-                                <?php if ($pwc_show_date) : ?>
-                                <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
-                                <?php endif; ?>
-                            </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php else : ?>
-                        <div style="background: white; border-radius: 0; padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
-                            <p style="color: #64748b; margin: 0;">No posts found for this selection.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </section>
-                <?php
+                // Renders the single static hero, or a carousel once a
+                // second hero slide is enabled. Slide 1 reads the original
+                // vance_hero_* keys, so nothing changes until one is added.
+                vance_render_hero_carousel();
                 break;
 
             case 'promo':
@@ -1202,10 +514,29 @@ body {
                     $promo_btn_l = vance_get_theme_mod('vance_promo_button_link', wp_registration_url());
                     $promo_w = vance_get_theme_mod('vance_promo_width', 'container');
                     $promo_l = vance_get_theme_mod('vance_promo_layout', 'right');
+
+                    // Optional border. Scope mirrors the Width control: 'full'
+                    // outlines the full-bleed band, 'container' the inner card.
+                    $promo_border_decl = '';
+                    if ( vance_get_theme_mod('vance_promo_border_enable', false) ) {
+                        $promo_bw = absint( vance_get_theme_mod('vance_promo_border_width', 1) );
+                        $promo_bs = vance_get_theme_mod('vance_promo_border_style', 'solid');
+                        if ( ! in_array( $promo_bs, array('solid','dashed','dotted','double'), true ) ) { $promo_bs = 'solid'; }
+                        $promo_bc = vance_get_theme_mod('vance_promo_border_color', '#e2e8f0');
+                        if ( $promo_bw > 0 ) {
+                            $promo_border_decl = ' border: ' . $promo_bw . 'px ' . esc_attr($promo_bs) . ' ' . esc_attr($promo_bc) . ';';
+                        }
+                    }
+                    $promo_border_scope = vance_get_theme_mod('vance_promo_border_scope', 'container');
+                    $promo_border_full  = ( $promo_border_scope === 'full' ) ? $promo_border_decl : '';
+                    $promo_border_inner = ( $promo_border_scope !== 'full' ) ? $promo_border_decl : '';
+                    // Omit the attribute entirely when there's no border, so
+                    // the markup is unchanged for sites that leave this off.
+                    $promo_inner_attr   = $promo_border_inner !== '' ? ' style="' . trim( $promo_border_inner ) . '"' : '';
                     ?>
-    <section class="promo-block-section" style="background-color: <?php echo esc_attr($promo_bg); ?>; color: <?php echo esc_attr($promo_txt_c); ?>;">
+    <section class="promo-block-section" style="background-color: <?php echo esc_attr($promo_bg); ?>; color: <?php echo esc_attr($promo_txt_c); ?>;<?php echo $promo_border_full; ?>">
         <div class="<?php echo $promo_w === 'container' ? 'container' : 'container-fluid'; ?>">
-            <div class="promo-container layout-<?php echo esc_attr($promo_l); ?>">
+            <div class="promo-container layout-<?php echo esc_attr($promo_l); ?>"<?php echo $promo_inner_attr; ?>>
                 <div class="promo-content">
                     <h2 style="font-family: 'Outfit', sans-serif; font-size: 38px; font-weight: 800; margin-bottom: 24px; color: inherit;"><?php echo esc_html($promo_h); ?></h2>
                     <div style="font-size: 18px; line-height: 1.6; opacity: 0.9; margin-bottom: 32px;"><?php echo wpautop(esc_html($promo_t)); ?></div>

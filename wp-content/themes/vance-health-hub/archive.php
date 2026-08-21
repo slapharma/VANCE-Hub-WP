@@ -179,6 +179,14 @@ if ( is_category() ) {
     if ( is_category() && function_exists( 'vance_render_category_promo' ) ) {
         vance_render_category_promo( get_queried_object_id() );
     }
+
+    // Global Prime Block for category archives (Customizer → Homepage → Prime
+    // Block Categories). One block, shown identically on every archive; it
+    // bails on its own when the opt-in toggle is off. A direct call rather
+    // than a hook, matching the category promo block directly above.
+    if ( function_exists( 'vance_render_prime_block_categories' ) ) {
+        vance_render_prime_block_categories();
+    }
     ?>
 
     <div class="container" style="padding: 60px 20px;">

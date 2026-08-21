@@ -214,21 +214,48 @@
 				showToast('PDF export is still loading, try again in a moment.', 3500);
 				return;
 			}
+			var label = pdfBtn.textContent;
 			pdfBtn.disabled = true;
+			pdfBtn.textContent = 'Building PDF…';
+
+			// The off-screen offset MUST live on a WRAPPER, never on the element
+			// handed to html2pdf. html2pdf clones that element into an
+			// inline-block container and measures it; a clone that is itself
+			// position:fixed contributes no in-flow height, so the container
+			// measures zero and the export rasterises to a 0px-tall canvas — a
+			// blank PDF, with no error thrown anywhere. Measured on the live
+			// page: fixed-on-element 0x0, wrapper-holds-offset 794x<content>.
+			// This is the same trap, and the same fix, as page-dashboard.php's
+			// meal-plan export — see the long comment there.
+			//
+			// `absolute`, not `fixed`: a fixed wrapper is positioned against the
+			// viewport, so its document-space box moves with the scroll offset,
+			// and html2canvas captures from the document origin — which turns
+			// the gap into leading blank pages.
+			var holder = document.createElement('div');
+			holder.style.cssText = 'position:absolute; left:-10000px; top:0; width:794px;'; // 794px ≈ A4 at 96dpi
 			var el = buildPdfElement();
-			document.body.appendChild(el);
+			holder.appendChild(el);
+			document.body.appendChild(holder);
+
+			var cleanup = function () {
+				if (holder.parentNode) { holder.parentNode.removeChild(holder); }
+				pdfBtn.disabled = false;
+				pdfBtn.textContent = label;
+			};
+
 			window.html2pdf().set({
 				margin: 10,
 				filename: (CFG.recipe.slug || 'recipe') + '.pdf',
 				image: { type: 'jpeg', quality: 0.95 },
-				html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', logging: false },
+				// scrollX/scrollY default to the page's current scroll offset;
+				// pinning them to 0 is the second half of the blank-page fix and
+				// covers html2pdf re-parenting the clone into its own overlay
+				// before html2canvas ever sees it.
+				html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', logging: false, scrollX: 0, scrollY: 0 },
 				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-			}).from(el).save().then(function () {
-				document.body.removeChild(el);
-				pdfBtn.disabled = false;
-			}).catch(function () {
-				document.body.removeChild(el);
-				pdfBtn.disabled = false;
+			}).from(el).save().then(cleanup, function () {
+				cleanup();
 				showToast('Could not build the PDF, please try again.', 3500);
 			});
 		});
@@ -271,8 +298,11 @@
 				}).join('') + '</tr></table>';
 		}
 
+		// Deliberately NO positioning here — the caller's off-screen wrapper owns
+		// that. Anything that takes this element out of normal flow makes
+		// html2pdf measure it as zero-height and emit a blank PDF.
 		var wrap = document.createElement('div');
-		wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:190mm;background:#fff;padding:14px;font-family:Arial,sans-serif;';
+		wrap.style.cssText = 'width:100%;box-sizing:border-box;background:#fff;padding:14px;font-family:Arial,sans-serif;';
 		wrap.innerHTML =
 			'<div style="border-bottom:3px solid ' + TEAL + ';padding-bottom:10px;margin-bottom:14px;">' +
 				'<div style="font-size:10px;font-weight:700;color:' + TEAL + ';text-transform:uppercase;letter-spacing:0.6px;">Vance Medical Hub</div>' +

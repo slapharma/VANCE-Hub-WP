@@ -53,72 +53,11 @@ $cta_desc       = $cm( 'vance_gi_hub_cta_desc', 'The Vance Health Hub dashboard 
 $cta_btn_txt    = $cm( 'vance_gi_hub_cta_btn_text', 'Go to My Dashboard' );
 $cta_btn_url    = $cm( 'vance_gi_hub_cta_btn_url', home_url( '/dashboard/' ) );
 
-/* Helper: resolve a condition page URL by slug. The conditions sit at the top
-   level on the live site, so the child path is tried first (in case the
-   hierarchy is restored) and the bare slug gives the canonical permalink today,
-   avoiding the /gi-health/<slug>/ 301 hop. */
-function vance_gi_page_url( string $slug ): string {
-    $page = get_page_by_path( 'gi-health/' . $slug );
-    if ( ! $page ) {
-        $page = get_page_by_path( $slug );
-    }
-    if ( $page ) {
-        return get_permalink( $page );
-    }
-    return home_url( '/' . $slug . '/' );
-}
-
-$conditions = [
-    [
-        'slug'  => 'inflammatory-bowel-disease',
-        'image' => 'ibd.jpg',
-        'alt'   => 'Four friends sitting and talking around a table in a cafe',
-        'title' => 'Inflammatory Bowel Disease (IBD)',
-        'desc'  => "The umbrella term for long-term conditions, mainly Crohn\u{2019}s disease and ulcerative colitis, that cause ongoing inflammation of the digestive tract.",
-    ],
-    [
-        'slug'  => 'ulcerative-colitis',
-        'image' => 'ulcerative-colitis.jpg',
-        'alt'   => 'Two women walking and talking together on a sunlit city street',
-        'title' => 'Ulcerative Colitis (UC)',
-        'desc'  => 'A form of IBD causing inflammation and ulcers in the lining of the colon and rectum.',
-    ],
-    [
-        'slug'  => 'crohns-disease',
-        'image' => 'crohns.jpg',
-        'alt'   => 'A man sitting at his kitchen table, reading a letter over a cup of tea',
-        'title' => "Crohn\u{2019}s Disease",
-        'desc'  => 'A form of IBD that can inflame any part of the gut, from mouth to anus, often the small intestine.',
-    ],
-    [
-        'slug'  => 'microscopic-colitis',
-        'image' => 'microscopic-colitis.jpg',
-        'alt'   => 'An older woman wrapped in a blanket on a sofa, drinking from a mug',
-        'title' => 'Microscopic Colitis',
-        'desc'  => 'Inflammation of the colon visible only under a microscope, causing chronic watery diarrhoea.',
-    ],
-    [
-        'slug'  => 'irritable-bowel-syndrome',
-        'image' => 'ibs.jpg',
-        'alt'   => 'A man and his dog looking out across the water from a waterfront pier',
-        'title' => 'Irritable Bowel Syndrome (IBS)',
-        'desc'  => 'A common, long-term condition affecting how the gut works, causing abdominal pain, bloating, and bouts of diarrhoea, constipation or both.',
-    ],
-    [
-        'slug'  => 'colorectal-cancer',
-        'image' => 'colorectal-cancer.jpg',
-        'alt'   => 'Two men sitting on a sofa at home, talking and smiling together',
-        'title' => 'Colorectal Cancer',
-        'desc'  => 'Cancer that develops in the colon or rectum, often growing slowly from small growths called polyps.',
-    ],
-    [
-        'slug'  => 'diverticular-disease',
-        'image' => 'diverticular-disease.jpg',
-        'alt'   => 'A carer handing a glass of water to an older woman sitting on a sofa',
-        'title' => 'Diverticular Disease &amp; Diverticulitis',
-        'desc'  => 'Small pouches that form in the wall of the colon, which can sometimes cause pain or become inflamed.',
-    ],
-];
+/* The condition cards (photo, alt, title, description) and the slug → URL
+   helper both live in functions.php now — the homepage "Gastro Conditions"
+   section renders the same seven conditions and must not carry a second copy
+   of the list. See vance_gi_condition_cards() / vance_gi_page_url(). */
+$conditions = vance_gi_condition_cards();
 ?>
 
 <main id="main-content">
