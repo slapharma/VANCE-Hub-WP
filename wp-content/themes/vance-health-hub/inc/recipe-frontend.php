@@ -148,6 +148,11 @@ function vance_recipe_planner_script_config() {
 				$preload = array(
 					'name' => isset( $p['name'] ) ? (string) $p['name'] : '',
 					'days' => vance_recipe_planner_days_from_saved( $p['days'] ),
+					// The history key travels with the plan so the save dialog
+					// can offer "update this plan" — without it the planner has
+					// no way to say WHICH saved row it is editing, and every
+					// save could only ever append a new copy.
+					'key'  => $key,
 				);
 			}
 			break;
@@ -162,6 +167,9 @@ function vance_recipe_planner_script_config() {
 	return array(
 		'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 		'nonce'        => wp_create_nonce( 'vance_tool_save_ibd-recipes' ),
+		// Separate nonce: the tool-history mutation handlers (update in place)
+		// all check 'vance_dashboard_nonce', not the per-tool save nonce.
+		'dashNonce'    => wp_create_nonce( 'vance_dashboard_nonce' ),
 		'loggedIn'     => $logged_in,
 		'toolSlug'     => 'ibd-recipes',
 		'recipes'      => vance_recipe_planner_data(),

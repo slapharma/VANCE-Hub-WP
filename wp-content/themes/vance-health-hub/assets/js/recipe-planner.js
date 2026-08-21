@@ -60,6 +60,14 @@
 	var armedBar       = document.getElementById('vance-rh-armed');
 	var armedText      = document.getElementById('vance-rh-armed-text');
 	var armedCancel    = document.getElementById('vance-rh-armed-cancel');
+	var autofillBtn    = document.getElementById('vance-rh-autofill');
+	var saveModal      = document.getElementById('vance-rh-savemodal');
+	var saveModalClose = document.getElementById('vance-rh-savemodal-close');
+	var saveOptCurrent = document.getElementById('vance-rh-saveopt-current');
+	var saveOptCurSub  = document.getElementById('vance-rh-saveopt-current-sub');
+	var saveCurrentBtn = document.getElementById('vance-rh-save-current');
+	var saveNewBtn     = document.getElementById('vance-rh-save-new');
+	var saveNewName    = document.getElementById('vance-rh-save-newname');
 	var picker         = document.getElementById('vance-rh-picker');
 	var pickerTitle    = document.getElementById('vance-rh-picker-title');
 	var pickerSearch   = document.getElementById('vance-rh-picker-search');
@@ -157,6 +165,72 @@
 		dayState.meals[slot] = null;
 		saveState();
 		renderPlanner();
+	}
+
+	// --- "Let Vance Create Your Plan" ---------------------------------------
+
+	// Recipe categories are plural for snacks ("snacks") while the planner slot
+	// key is singular ("snack"); everything else matches 1:1.
+	var SLOT_CATEGORY = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner', snack: 'snacks' };
+
+	function recipesForSlot(slot) {
+		var cat = SLOT_CATEGORY[slot] || slot;
+		return CFG.recipes.filter(function (r) { return r.category === cat; });
+	}
+
+	/**
+	 * Fill every empty slot of the week with a random recipe of the right kind.
+	 *
+	 * Already-filled slots are left alone — this is "finish my plan", not "throw
+	 * my plan away". Within a day, it avoids repeating a recipe across slots
+	 * where the pool is big enough to allow it, so a day doesn't come back as
+	 * the same meal three times.
+	 */
+	function autofillPlan() {
+		var pools = {};
+		SLOT_KEYS.forEach(function (slot) { pools[slot] = recipesForSlot(slot); });
+
+		var filled = 0;
+		state.days.forEach(function (dayState) {
+			var usedToday = {};
+			SLOT_KEYS.forEach(function (slot) {
+				if (dayState.meals[slot]) {
+					usedToday[dayState.meals[slot].slug] = true;
+					return;
+				}
+				var pool = pools[slot];
+				if (!pool.length) { return; }
+				var fresh = pool.filter(function (r) { return !usedToday[r.slug]; });
+				var from = fresh.length ? fresh : pool;
+				var recipe = from[Math.floor(Math.random() * from.length)];
+				dayState.meals[slot] = {
+					slug: recipe.slug,
+					name: recipe.name,
+					calories: recipe.calories || 0,
+					minutes: recipe.minutes || 0
+				};
+				usedToday[recipe.slug] = true;
+				filled++;
+			});
+		});
+
+		saveState();
+		renderPlanner();
+
+		if (!filled) {
+			showToast('Your week is already full — clear a slot to swap something in.', 4000);
+		} else {
+			showToast('Filled ' + filled + ' meal' + (filled === 1 ? '' : 's') + ' for you ✓ Swap anything you like.', 4500);
+		}
+	}
+
+	if (autofillBtn) {
+		autofillBtn.addEventListener('click', function () {
+			autofillBtn.disabled = true;
+			try { autofillPlan(); } finally { autofillBtn.disabled = false; }
+			var planner = document.getElementById('planner');
+			if (planner) { planner.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+		});
 	}
 
 	// --- Arming a recipe from a card's "+" button (or ?add=) -----------------
@@ -312,6 +386,100 @@
 		};
 	}
 
+	// The saved-plan row this session is editing, if the planner was opened via
+	// ?plan=<key>. Null means there is nothing to update and the save dialog
+	// only offers "save as a new plan".
+	var editingKey = (CFG.preloadPlan && CFG.preloadPlan.key) ? CFG.preloadPlan.key : null;
+
+	function openSaveModal() {
+		if (!buildPayload().days.length) {
+			showToast('Add at least one meal before saving.', 3500);
+			return;
+		}
+		// Anonymous users can't choose between updating and adding — there is
+		// nothing saved yet. Skip straight to the register flow.
+		if (!CFG.loggedIn) { doSave(); return; }
+		if (!saveModal) { doSave(); return; }
+
+		if (saveOptCurrent) {
+			saveOptCurrent.hidden = !editingKey;
+			if (editingKey && saveOptCurSub && CFG.preloadPlan && CFG.preloadPlan.name) {
+				saveOptCurSub.textContent = 'Overwrite "' + CFG.preloadPlan.name + '" with the week below.';
+			}
+		}
+		if (saveNewName) {
+			saveNewName.value = (planNameInput && planNameInput.value) || state.name || '';
+		}
+		saveModal.classList.add('is-open');
+		saveModal.setAttribute('aria-hidden', 'false');
+		if (saveNewName) { saveNewName.focus(); }
+	}
+
+	function closeSaveModal() {
+		if (!saveModal) { return; }
+		saveModal.classList.remove('is-open');
+		saveModal.setAttribute('aria-hidden', 'true');
+	}
+
+	if (saveModalClose) { saveModalClose.addEventListener('click', closeSaveModal); }
+	if (saveModal) {
+		saveModal.addEventListener('click', function (e) { if (e.target === saveModal) { closeSaveModal(); } });
+	}
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape' && saveModal && saveModal.classList.contains('is-open')) { closeSaveModal(); }
+	});
+
+	// "Save as a new plan" — the existing append path, with the dialog's name.
+	if (saveNewBtn) {
+		saveNewBtn.addEventListener('click', function () {
+			if (saveNewName && planNameInput) {
+				planNameInput.value = saveNewName.value;
+				state.name = saveNewName.value;
+				saveState();
+			}
+			closeSaveModal();
+			doSave();
+		});
+	}
+
+	// "Save current plan" — overwrite the row opened for editing, in place.
+	if (saveCurrentBtn) {
+		saveCurrentBtn.addEventListener('click', function () {
+			if (!editingKey) { return; }
+			var payload = buildPayload();
+			if (!payload.days.length) {
+				showToast('Add at least one meal before saving.', 3500);
+				return;
+			}
+			// Keep the plan's existing name unless the planner field has been
+			// edited — "update" shouldn't silently rename it.
+			if (!payload.name && CFG.preloadPlan) { payload.name = CFG.preloadPlan.name || ''; }
+
+			saveCurrentBtn.disabled = true;
+			var fd = new FormData();
+			fd.append('action', 'vance_update_tool_entry');
+			fd.append('nonce', CFG.dashNonce);
+			fd.append('tool', CFG.toolSlug);
+			fd.append('id', editingKey);
+			fd.append('payload', JSON.stringify(payload));
+			fetch(CFG.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
+				.then(function (r) { return r.json(); })
+				.then(function (j) {
+					saveCurrentBtn.disabled = false;
+					if (j && j.success) {
+						closeSaveModal();
+						showToast('Plan updated ✓', 3500);
+					} else {
+						showToast((j && j.data && j.data.message) || (typeof j.data === 'string' ? j.data : '') || 'Could not update, please try again.', 4500);
+					}
+				})
+				.catch(function () {
+					saveCurrentBtn.disabled = false;
+					showToast('Network error, please try again.', 4500);
+				});
+		});
+	}
+
 	function doSave() {
 		var payload = buildPayload();
 		if (!payload.days.length) {
@@ -360,7 +528,10 @@
 			});
 	}
 
-	if (saveBtn) { saveBtn.addEventListener('click', doSave); }
+	// The save button now opens the dialog rather than saving straight away;
+	// openSaveModal() falls through to doSave() when there is no choice to make
+	// (anonymous, or the dialog markup isn't on the page).
+	if (saveBtn) { saveBtn.addEventListener('click', openSaveModal); }
 	if (planNameInput) {
 		planNameInput.addEventListener('input', function () { state.name = planNameInput.value; saveState(); });
 	}

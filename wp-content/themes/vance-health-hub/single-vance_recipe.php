@@ -130,6 +130,9 @@ while ( have_posts() ) :
 						<a id="vance-rs-addplan-trigger" href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:8px;text-decoration:none;">
 							Add to meal plan
 						</a>
+						<a id="vance-rs-viewplan" href="<?php echo esc_url( home_url( '/gastro-meal-planner/#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:8px;border:1px solid var(--primary-color);text-decoration:none;">
+							View plan
+						</a>
 						<button type="button" id="vance-rs-pdf" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:8px;border:1px solid var(--primary-color);cursor:pointer;">
 							Download PDF
 						</button>
