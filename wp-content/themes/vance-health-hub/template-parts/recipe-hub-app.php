@@ -81,11 +81,12 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 				<h2 class="vance-rh-h2" style="margin-bottom:6px;"><?php esc_html_e( 'Your Weekly Plan', 'vance-health-hub' ); ?></h2>
 				<input type="text" class="vance-rh-plan-name" id="vance-rh-plan-name" placeholder="<?php esc_attr_e( 'Name this plan (optional)', 'vance-health-hub' ); ?>">
 			</div>
-			<div style="display:flex;align-items:center;gap:18px;">
+			<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
 				<div class="vance-rh-totals">
 					<span><b id="vance-rh-total-meals">0</b> <?php esc_html_e( 'meals', 'vance-health-hub' ); ?></span>
 					<span><b id="vance-rh-total-kcal">0</b> kcal</span>
 				</div>
+				<button type="button" class="vance-rh-autofill" id="vance-rh-autofill"><?php esc_html_e( 'Let Vance Create Your Plan', 'vance-health-hub' ); ?></button>
 				<button type="button" class="vance-rh-save" id="vance-rh-save"><?php esc_html_e( 'Save this meal plan', 'vance-health-hub' ); ?></button>
 			</div>
 		</div>
@@ -126,6 +127,42 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 		</div>
 		<input type="search" class="vance-rh-picker-search" id="vance-rh-picker-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
 		<div class="vance-rh-picker-list" id="vance-rh-picker-list"></div>
+	</div>
+</div>
+
+<?php
+/**
+ * Save dialog. "Update this plan" is only offered when a saved plan was opened
+ * for editing (?plan=<key>) — otherwise there is nothing to update and the
+ * dialog collapses to naming a new plan. JS toggles that row's visibility.
+ */
+?>
+<div class="vance-rh-savemodal" id="vance-rh-savemodal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vance-rh-savemodal-title">
+	<div class="vance-rh-savemodal-panel">
+		<div class="vance-rh-picker-head">
+			<strong id="vance-rh-savemodal-title"><?php esc_html_e( 'Save this meal plan', 'vance-health-hub' ); ?></strong>
+			<button type="button" class="vance-rh-picker-close" id="vance-rh-savemodal-close" aria-label="<?php esc_attr_e( 'Close', 'vance-health-hub' ); ?>">&times;</button>
+		</div>
+		<div class="vance-rh-savemodal-body">
+			<div class="vance-rh-saveopt" id="vance-rh-saveopt-current" hidden>
+				<div class="vance-rh-saveopt-text">
+					<strong><?php esc_html_e( 'Save current plan', 'vance-health-hub' ); ?></strong>
+					<span id="vance-rh-saveopt-current-sub"><?php esc_html_e( 'Overwrite the plan you opened, keeping its name.', 'vance-health-hub' ); ?></span>
+				</div>
+				<button type="button" class="vance-rh-save" id="vance-rh-save-current"><?php esc_html_e( 'Update', 'vance-health-hub' ); ?></button>
+			</div>
+			<div class="vance-rh-saveopt">
+				<div class="vance-rh-saveopt-text" style="width:100%;">
+					<strong><?php esc_html_e( 'Save as a new plan', 'vance-health-hub' ); ?></strong>
+					<span><?php esc_html_e( 'Keeps any existing plan untouched and adds this one to your dashboard.', 'vance-health-hub' ); ?></span>
+					<?php /* aria-label, not a .screen-reader-text <label>: that class is only
+					         defined scoped under .vance-askai in this theme, so an unscoped one
+					         would render as a visible duplicate label above the field. */ ?>
+					<input type="text" id="vance-rh-save-newname" class="vance-rh-plan-name" style="width:100%;margin-top:10px;" aria-label="<?php esc_attr_e( 'Name for the new plan', 'vance-health-hub' ); ?>" placeholder="<?php esc_attr_e( 'Name this plan', 'vance-health-hub' ); ?>" maxlength="120">
+				</div>
+				<button type="button" class="vance-rh-save" id="vance-rh-save-new"><?php esc_html_e( 'Save new', 'vance-health-hub' ); ?></button>
+			</div>
+		</div>
 	</div>
 </div>
 

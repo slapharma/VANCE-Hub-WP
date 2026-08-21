@@ -950,6 +950,52 @@ function vance_rename_tool_entry() {
 add_action( 'wp_ajax_vance_rename_tool_entry', 'vance_rename_tool_entry' );
 
 /**
+ * AJAX: overwrite one saved tool result's payload in place.
+ *
+ * Backs the meal planner's "Update this plan" save option: when a plan has been
+ * opened for editing (?plan=<key>), saving should replace that row rather than
+ * append a second, near-identical copy of it. The entry keeps its id, its `ts`
+ * and its position in the list — only the payload changes.
+ *
+ * Expects POST: nonce ('vance_dashboard_nonce'), tool, id, payload (JSON).
+ */
+function vance_update_tool_entry() {
+    $req = vance_tool_history_request();
+
+    $payload = array();
+    if ( isset( $_POST['payload'] ) && '' !== $_POST['payload'] ) {
+        $decoded = json_decode( wp_unslash( $_POST['payload'] ), true );
+        if ( is_array( $decoded ) ) {
+            $payload = $decoded;
+        }
+    }
+    // Unlike the append path, an empty payload here would silently destroy the
+    // saved plan it is meant to update — refuse instead.
+    if ( empty( $payload ) ) {
+        wp_send_json_error( 'Empty payload' );
+    }
+
+    $entries = $req['entries'];
+    $updated = false;
+    foreach ( $entries as &$entry ) {
+        if ( is_array( $entry ) && vance_tool_history_key( $entry ) === $req['id'] ) {
+            $entry['payload'] = $payload;
+            $updated          = true;
+            break;
+        }
+    }
+    unset( $entry ); // break the reference before reusing $entries
+
+    if ( ! $updated ) {
+        wp_send_json_error( 'Not found' );
+    }
+
+    update_user_meta( $req['user_id'], $req['meta_key'], $entries );
+    wp_send_json_success( 'Updated' );
+}
+add_action( 'wp_ajax_vance_update_tool_entry', 'vance_update_tool_entry' );
+
+/**
  * Create/update a FluentCRM contact and apply the audience + opt-in tags that
  * drive the member/HCP nurture funnels. Safe no-op if FluentCRM isn't active
  * — a marketing plugin must never be able to block signup.

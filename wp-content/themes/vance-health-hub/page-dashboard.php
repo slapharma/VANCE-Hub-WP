@@ -1470,6 +1470,16 @@ get_header();
                                 .vance-mp-daychip { font-size:12px; color:#475569; background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.16); padding:6px 12px; border-radius:0; }
                                 .vance-mp-daychip strong { color:#0F172A; }
                                 .vance-mp-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+                                /* Actions sit in the card head, pushed right, so they stay usable
+                                   while the card is collapsed. The toggle takes the remaining
+                                   space so the two never overlap; on narrow screens the head
+                                   wraps and the actions drop to their own full-width row. */
+                                .vance-mp-actions--head { margin-left:auto; gap:8px; justify-content:flex-end; }
+                                .vance-mp-head .vance-mp-toggle { flex:0 1 auto; min-width:0; }
+                                .vance-mp-head .vance-mp-title { overflow-wrap:anywhere; }
+                                @media (max-width: 720px) {
+                                    .vance-mp-actions--head { margin-left:0; width:100%; justify-content:flex-start; }
+                                }
                                 .vance-mp-textbtn { background:none; border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:#0EA5E9; padding:8px 6px; }
                                 .vance-mp-textbtn.vance-mp-danger { color:#EF4444; }
                                 .vance-mp-textbtn:focus-visible { outline:2px solid var(--primary-color); outline-offset:2px; }
@@ -1602,6 +1612,21 @@ get_header();
                                                 <span class="vance-mp-title"><?php echo esc_html($plan_name); ?></span>
                                             </button>
                                             <div class="vance-mp-meta"><?php echo esc_html(implode(' · ', $meta_bits)); ?></div>
+                                            <?php
+                                            // Actions live in the HEAD, not the collapsible panel, so
+                                            // edit/PDF/view/rename/delete stay reachable on a collapsed
+                                            // card. They are siblings of .vance-mp-toggle, never inside
+                                            // it, so clicking one cannot also expand the card.
+                                            ?>
+                                            <div class="vance-mp-actions vance-mp-actions--head">
+                                                <?php if ($is_structured): ?>
+                                                    <a href="<?php echo esc_url( home_url( '/gastro-meal-planner/?plan=' . rawurlencode( $key ) . '#planner' ) ); ?>" class="vance-btn-inverted vance-btn--sm" data-no-tool-modal>Edit meal plan</a>
+                                                    <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="<?php echo (int) $mp_i; ?>">Download PDF</button>
+                                                    <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan-index="<?php echo (int) $mp_i; ?>">View full</button>
+                                                <?php endif; ?>
+                                                <button type="button" class="vance-mp-textbtn" onclick="renameMealPlan('<?php echo esc_js($key); ?>', '<?php echo esc_js($plan_name); ?>')">Rename</button>
+                                                <button type="button" class="vance-mp-textbtn vance-mp-danger" onclick="deleteMealPlan('<?php echo esc_js($key); ?>')">Delete</button>
+                                            </div>
                                         </div>
                                         <div id="<?php echo esc_attr($panel_id); ?>" class="vance-expand-panel vance-mp-panel">
                                             <div class="vance-mp-panel-inner">
@@ -1631,15 +1656,6 @@ get_header();
                                                         <?php endforeach; ?>
                                                     </div>
                                                 <?php endif; ?>
-                                                <div class="vance-mp-actions">
-                                                    <?php if ($is_structured): ?>
-                                                        <a href="<?php echo esc_url( home_url( '/gastro-meal-planner/?plan=' . rawurlencode( $key ) . '#planner' ) ); ?>" class="vance-btn-inverted vance-btn--sm" data-no-tool-modal>Edit meal plan</a>
-                                                        <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="<?php echo (int) $mp_i; ?>">Download PDF</button>
-                                                        <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan-index="<?php echo (int) $mp_i; ?>">View full</button>
-                                                    <?php endif; ?>
-                                                    <button type="button" class="vance-mp-textbtn" onclick="renameMealPlan('<?php echo esc_js($key); ?>', '<?php echo esc_js($plan_name); ?>')">Rename</button>
-                                                    <button type="button" class="vance-mp-textbtn vance-mp-danger" onclick="deleteMealPlan('<?php echo esc_js($key); ?>')">Delete</button>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
