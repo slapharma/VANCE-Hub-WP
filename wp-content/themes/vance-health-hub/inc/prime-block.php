@@ -142,7 +142,11 @@ function vance_render_prime_block( array $vals ) {
 	<!-- Prime Block (Featured Tools + Latest Content) -->
 	<style>
 		<?php echo $sel; ?>.pathway-content-section {
-			padding: 80px 0 0;
+			/* Bottom padding was 0, so in the stacked-bottom layout the Featured
+			   Tools row ran straight into whatever section follows. 50px gives
+			   it room to breathe without reopening the gap the #vance-cw-1 trim
+			   below was added to close. */
+			padding: 80px 0 50px;
 			background: <?php echo esc_attr( $section_bg ); ?>;
 		}
 		<?php if ( $tighten_next_cw ) : ?>
