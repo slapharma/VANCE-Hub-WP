@@ -171,12 +171,28 @@ function vance_hero_resolved_slides() {
 function vance_hero_slide_bg_style( array $s ) {
 	$bg_color = esc_attr( $s['bg_color'] );
 	$img      = esc_url( $s['image'] );
-	if ( ! empty( $s['mask_toggle'] ) ) {
-		$alpha1 = max( 0, min( 100, absint( $s['mask_opacity_pct'] ) ) ) / 100;
-		$alpha2 = min( 1, $alpha1 + 0.15 );
-		return "background-color: {$bg_color}; background: linear-gradient(rgba(10, 25, 41, {$alpha1}), rgba(10, 25, 41, {$alpha2})), url('{$img}') no-repeat center center; background-size: cover;";
+
+	// The colour is emitted AFTER the `background` shorthand, never before it.
+	// The shorthand resets every sub-property it does not itself name —
+	// background-color included — so a `background-color` declared first is
+	// silently discarded and computes to transparent. That matters here rather
+	// than being cosmetic: hero images are often PNGs with transparency, and
+	// what should show through them is this colour, not the page behind.
+	$layers = ! empty( $s['mask_toggle'] )
+		? sprintf(
+			"linear-gradient(rgba(10, 25, 41, %s), rgba(10, 25, 41, %s)), url('%s') no-repeat center center",
+			max( 0, min( 100, absint( $s['mask_opacity_pct'] ) ) ) / 100,
+			min( 1, ( max( 0, min( 100, absint( $s['mask_opacity_pct'] ) ) ) / 100 ) + 0.15 ),
+			$img
+		)
+		: sprintf( "url('%s') no-repeat center center", $img );
+
+	$style = "background: {$layers}; background-size: cover;";
+	// Guard the empty case so a cleared colour setting can't emit `background-color: ;`.
+	if ( '' !== $bg_color ) {
+		$style .= " background-color: {$bg_color};";
 	}
-	return "background-color: {$bg_color}; background: url('{$img}') no-repeat center center; background-size: cover;";
+	return $style;
 }
 
 /**
