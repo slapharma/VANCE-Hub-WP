@@ -46,6 +46,10 @@ require_once get_template_directory() . '/inc/gastro-conditions.php';
 // Hero carousel — resolves hero slides and renders either the single static
 // hero (default) or a carousel once a second slide is enabled.
 require_once get_template_directory() . '/inc/hero-carousel.php';
+// Spotlight hero — the light, search-led homepage hero. Which of the two
+// renderers runs is decided by `vance_hero_style`; both stay loaded so the
+// switch is instant and neither one's saved settings are ever discarded.
+require_once get_template_directory() . '/inc/hero-spotlight.php';
 
 /**
  * Rebrand migration helper.
@@ -3709,6 +3713,110 @@ function vance_customize_register( $wp_customize ) {
         'priority'    => 31,
         'panel'       => 'vance_homepage_panel',
     ) );
+
+    // -- Which hero design the homepage uses ---------------------------------
+    // Everything else in THIS section belongs to the classic dark hero (it is
+    // that hero's slide 1). The spotlight hero's own copy lives in its own
+    // section below, so switching designs never overwrites the other one's
+    // settings — flip this back and the old hero returns intact.
+    $wp_customize->add_setting( 'vance_hero_style', array(
+        'default'           => 'spotlight',
+        'sanitize_callback' => function ( $v ) { return in_array( $v, array( 'spotlight', 'carousel' ), true ) ? $v : 'spotlight'; },
+    ) );
+    $wp_customize->add_control( 'vance_hero_style', array(
+        'label'       => __( 'Homepage hero design', 'vance-health-hub' ),
+        'description' => __( 'Spotlight is the light, search-led hero. Classic is the dark hero configured by the rest of this section (and by the Hero Slide sections).', 'vance-health-hub' ),
+        'section'     => 'vance_hero_settings',
+        'type'        => 'select',
+        'choices'     => array(
+            'spotlight' => __( 'Spotlight — light, search-led', 'vance-health-hub' ),
+            'carousel'  => __( 'Classic — dark hero / carousel', 'vance-health-hub' ),
+        ),
+    ) );
+
+    // -- Spotlight hero ------------------------------------------------------
+    // Same field-list-driven registration the Hero Slide sections use. Every
+    // default comes from vance_hero_spotlight_field_defaults(), so the control
+    // list and the renderer cannot drift apart.
+    $wp_customize->add_section( 'vance_hero_spotlight_settings', array(
+        'title'       => __( 'Hero — Spotlight', 'vance-health-hub' ),
+        'description' => __( 'The light, search-led homepage hero. Only rendered while "Homepage hero design" (in the Hero section) is set to Spotlight. Headline, intro and both buttons start out inheriting whatever the classic hero says; editing them here stores a Spotlight-only override and leaves the classic hero untouched.', 'vance-health-hub' ),
+        'priority'    => 30.5,
+        'panel'       => 'vance_homepage_panel',
+    ) );
+
+    $vance_hs_fields = array(
+        'image'              => array( 'type' => 'image',    'label' => 'Photograph', 'description' => 'Leave blank for the supplied photo, which already has its edges feathered to melt into the background. A replacement wants roughly 1400&times;875 and a light, uncluttered left-hand side.' ),
+        'image_alt'          => array( 'type' => 'text',     'label' => 'Photograph — alt text' ),
+        'title'              => array( 'type' => 'html',     'label' => 'Headline', 'description' => 'Prefilled from the classic hero, so the homepage keeps saying what it says today. Wrap words in &lt;span class="highlight"&gt;…&lt;/span&gt; to accent them in the brand teal.' ),
+        'title_color'        => array( 'type' => 'color',    'label' => 'Headline Colour' ),
+        'intro'              => array( 'type' => 'textarea', 'label' => 'Intro Paragraph' ),
+        'intro_color'        => array( 'type' => 'color',    'label' => 'Body Text Colour' ),
+        'bg_from'            => array( 'type' => 'color',    'label' => 'Background — Top' ),
+        'bg_to'              => array( 'type' => 'color',    'label' => 'Background — Bottom', 'description' => 'The photograph is dissolved into these two colours, so changing them keeps its edges seamless.' ),
+        'btn1_text'          => array( 'type' => 'text',     'label' => 'Button 1, Text' ),
+        'btn1_link'          => array( 'type' => 'text',     'label' => 'Button 1, Link', 'description' => 'Prefilled from the classic hero. Clear it to fall back to the gastro conditions hub.' ),
+        'btn1_bg_color'      => array( 'type' => 'color',    'label' => 'Button 1, Background' ),
+        'btn1_text_color'    => array( 'type' => 'color',    'label' => 'Button 1, Text Colour' ),
+        'btn1_hover_bg'      => array( 'type' => 'color',    'label' => 'Button 1, Background on Hover' ),
+        'btn2_text'          => array( 'type' => 'text',     'label' => 'Button 2, Text' ),
+        'btn2_link'          => array( 'type' => 'text',     'label' => 'Button 2, Link', 'description' => 'Prefilled from the classic hero. Clear it to fall back to the Knowledgebase.' ),
+        'show_search'        => array( 'type' => 'checkbox', 'label' => 'Show the search field' ),
+        'search_label'       => array( 'type' => 'text',     'label' => 'Search — Prompt' ),
+        'search_placeholder' => array( 'type' => 'text',     'label' => 'Search — Placeholder' ),
+        'show_card'          => array( 'type' => 'checkbox', 'label' => 'Show the trust card' ),
+        'card_title'         => array( 'type' => 'text',     'label' => 'Trust Card — Heading' ),
+        'card_text'          => array( 'type' => 'textarea', 'label' => 'Trust Card — Body' ),
+        'card_bg_color'      => array( 'type' => 'color',    'label' => 'Trust Card — Background' ),
+    );
+    $vance_hs_defaults = vance_hero_spotlight_field_defaults();
+
+    foreach ( $vance_hs_fields as $hs_field => $hs_meta ) {
+        $hs_id = 'vance_hero_spotlight_' . $hs_field;
+
+        switch ( $hs_meta['type'] ) {
+            case 'color':
+                $hs_sanitize = 'sanitize_hex_color';
+                break;
+            case 'image':
+                $hs_sanitize = 'esc_url_raw';
+                break;
+            case 'checkbox':
+                $hs_sanitize = 'vance_sanitize_checkbox';
+                break;
+            case 'textarea':
+                $hs_sanitize = 'sanitize_textarea_field';
+                break;
+            case 'html':
+                // The renderer runs the headline through wp_kses_post() and the
+                // highlight <span> is documented, so sanitize to the same
+                // allow-list on save rather than stripping every tag.
+                $hs_sanitize = 'wp_kses_post';
+                break;
+            default:
+                $hs_sanitize = 'sanitize_text_field';
+        }
+
+        $wp_customize->add_setting( $hs_id, array(
+            'default'           => isset( $vance_hs_defaults[ $hs_field ] ) ? $vance_hs_defaults[ $hs_field ] : '',
+            'sanitize_callback' => $hs_sanitize,
+        ) );
+
+        $hs_args = array(
+            'label'   => $hs_meta['label'],
+            'section' => 'vance_hero_spotlight_settings',
+        );
+        if ( isset( $hs_meta['description'] ) ) { $hs_args['description'] = $hs_meta['description']; }
+
+        if ( $hs_meta['type'] === 'color' ) {
+            $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $hs_id, $hs_args ) );
+        } elseif ( $hs_meta['type'] === 'image' ) {
+            $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $hs_id, $hs_args ) );
+        } else {
+            $hs_args['type'] = ( $hs_meta['type'] === 'html' ) ? 'text' : $hs_meta['type'];
+            $wp_customize->add_control( $hs_id, $hs_args );
+        }
+    }
 
     $wp_customize->add_setting( 'vance_homepage_hero_image', array(
         'default'           => '',

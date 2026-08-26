@@ -508,10 +508,19 @@ body {
         $section_id = trim($section_id);
         switch ($section_id) {
             case 'hero':
-                // Renders the single static hero, or a carousel once a
-                // second hero slide is enabled. Slide 1 reads the original
-                // vance_hero_* keys, so nothing changes until one is added.
-                vance_render_hero_carousel();
+                // Two hero designs share this slot, chosen in Customize →
+                // Homepage → Hero:
+                //   spotlight — the light, search-led hero (default).
+                //   carousel  — the previous dark hero; renders as a single
+                //               static slide until a second slide is enabled.
+                //               Slide 1 still reads the original vance_hero_*
+                //               keys, so switching back restores the old hero
+                //               exactly as it was configured.
+                if (vance_get_theme_mod('vance_hero_style', 'spotlight') === 'carousel') {
+                    vance_render_hero_carousel();
+                } else {
+                    vance_render_hero_spotlight();
+                }
                 break;
 
             case 'promo':

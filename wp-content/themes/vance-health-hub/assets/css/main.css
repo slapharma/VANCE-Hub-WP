@@ -3748,3 +3748,431 @@ body.home .hero {
         border-right: 1.5px solid #fff;
     }
 }
+
+/* ============================================================================
+   HOMEPAGE HERO — "SPOTLIGHT" LAYOUT  (inc/hero-spotlight.php)
+   ----------------------------------------------------------------------------
+   The light, search-led hero. Deliberately does NOT reuse the .hero class: the
+   shared .hero rules above hard-code a dark navy background, white text and a
+   fixed min-height for the patient/HCP page heroes, and inheriting them here
+   would mean overriding almost every declaration.
+
+   Colours arrive as custom properties on the section's style attribute, set
+   from the Customizer. The *-rgb pair carries the two background colours as
+   bare "r, g, b" triples because the photograph's dissolve gradients need the
+   same colour at both full and zero alpha, and `transparent` is not usable as
+   the zero stop (it computes to rgba(0,0,0,0), so the ramp runs through grey).
+   ========================================================================== */
+
+.vhh-hero-spotlight {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(180deg, var(--vhh-hs-from, #ECF5F5) 0%, var(--vhh-hs-to, #F6F9FA) 100%);
+    padding: clamp(44px, 5.4vw, 78px) 0 clamp(40px, 4.4vw, 64px);
+}
+
+/* The category cards row that normally follows the hero is pulled up 80px to
+   overlap the dark hero's deep bottom padding. This hero has no such padding
+   to overlap, so the same offset would slice the search field in half. */
+.vhh-hero-spotlight + .category-cards-section {
+    margin-top: 0;
+}
+
+/* --- Photograph ---------------------------------------------------------- */
+
+.vhh-hero-spotlight__media {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 52%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.vhh-hero-spotlight__media img {
+    width: 100%;
+    height: 100%;
+    /* 42% horizontally keeps the couple clear of the seam where the photo
+       dissolves; 22% vertically keeps heads in frame when the box is shorter
+       than the asset's 1.6:1. */
+    object-fit: cover;
+    object-position: 46% 14%;
+}
+
+/* The asset ships with a gentle alpha feather already baked in (see
+   LOCAL/hero_couple_feather.py). These two overlays finish the dissolve in the
+   live background colour, which matters because object-fit: cover crops the
+   baked feather by a different amount at every viewport width — the overlays
+   are measured against the rendered box, so the edges stay soft regardless. */
+.vhh-hero-spotlight__media::before,
+.vhh-hero-spotlight__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.vhh-hero-spotlight__media::before {
+    background: linear-gradient(
+        to right,
+        rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 1) 0%,
+        rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 0.55) 16%,
+        rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 0) 38%
+    );
+}
+
+.vhh-hero-spotlight__media::after {
+    background: linear-gradient(
+        to top,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 1) 0%,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0) 17%
+    );
+}
+
+/* --- Layout -------------------------------------------------------------- */
+
+.vhh-hero-spotlight__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    /* 1.25/0.75 with a 56px gutter reproduces the mockup's split: a copy
+       column wide enough that the search field runs past the point where the
+       photograph starts dissolving, and a card column of ~410px. */
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 56px;
+    align-items: end;
+}
+
+/* --- Type ---------------------------------------------------------------- */
+
+.vhh-hero-spotlight__title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: clamp(32px, 3.9vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -1px;
+    color: var(--vhh-hs-title, #04504E);
+    /* Holds the headline to the mockup's three lines at desktop widths instead
+       of running the full width of the copy column, which the search field
+       below deliberately does use. */
+    max-width: 520px;
+    margin: 0 0 20px;
+}
+
+.vhh-hero-spotlight__title .highlight {
+    color: var(--primary-color, #008080);
+}
+
+.vhh-hero-spotlight__intro {
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--vhh-hs-intro, #3F4B4E);
+    max-width: 520px;
+    margin: 0 0 32px;
+}
+
+/* --- CTAs ---------------------------------------------------------------- */
+
+.vhh-hero-spotlight__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 36px;
+}
+
+.vhh-hero-spotlight__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    /* 15px padding on a 15px/1.15 label clears the 44px minimum touch target
+       without a min-height that would fight the ghost variant's border. */
+    padding: 15px 26px;
+    border-radius: 6px;
+    border: 1.5px solid transparent;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.15;
+    text-decoration: none;
+    cursor: pointer;
+    background: var(--vhh-hs-cta-bg, #6B489E);
+    color: var(--vhh-hs-cta-fg, #ffffff);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.vhh-hero-spotlight__cta svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+}
+
+.vhh-hero-spotlight__cta:hover,
+.vhh-hero-spotlight__cta:focus-visible {
+    background: var(--vhh-hs-cta-hover, #583B82);
+    color: var(--vhh-hs-cta-fg, #ffffff);
+}
+
+.vhh-hero-spotlight__cta--ghost {
+    background: transparent;
+    color: var(--vhh-hs-title, #04504E);
+    /* #5E8F8D rather than the mockup's much paler hairline: at 3.3:1 against
+       the mint background it clears the 3:1 non-text contrast minimum, which
+       the lighter value did not. */
+    border-color: #5E8F8D;
+}
+
+.vhh-hero-spotlight__cta--ghost:hover,
+.vhh-hero-spotlight__cta--ghost:focus-visible {
+    background: #ffffff;
+    color: var(--vhh-hs-title, #04504E);
+    border-color: var(--vhh-hs-title, #04504E);
+}
+
+.vhh-hero-spotlight__cta:focus-visible {
+    outline: 3px solid var(--vhh-hs-title, #04504E);
+    outline-offset: 3px;
+}
+
+/* --- Search -------------------------------------------------------------- */
+
+.vhh-hero-spotlight__search-label {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--vhh-hs-title, #04504E);
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.vhh-hero-spotlight__search-form {
+    display: flex;
+    align-items: stretch;
+    background: #ffffff;
+    border: 1px solid #5E8F8D;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(4, 80, 78, 0.07);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vhh-hero-spotlight__search-form:focus-within {
+    border-color: var(--vhh-hs-title, #04504E);
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.18), 0 6px 20px rgba(4, 80, 78, 0.07);
+}
+
+.vhh-hero-spotlight__search-field {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    padding: 18px 8px 18px 22px;
+    font-family: var(--font-main);
+    font-size: 16px;
+    color: #1F2937;
+    /* The wrapper carries the focus ring, so the field's own outline would
+       double it up inside the rounded border. */
+    outline: none;
+    appearance: none;
+}
+
+.vhh-hero-spotlight__search-field::placeholder {
+    /* Darker than the mockup's grey, which measured 3.6:1 on white. */
+    color: #5F6B72;
+    opacity: 1;
+}
+
+.vhh-hero-spotlight__search-field::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+.vhh-hero-spotlight__search-submit {
+    flex: 0 0 auto;
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--primary-color, #008080);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.vhh-hero-spotlight__search-submit svg {
+    width: 24px;
+    height: 24px;
+}
+
+.vhh-hero-spotlight__search-submit:hover {
+    background: rgba(0, 128, 128, 0.08);
+    color: var(--vhh-hs-title, #04504E);
+}
+
+.vhh-hero-spotlight__search-submit:focus-visible {
+    outline: 3px solid var(--vhh-hs-title, #04504E);
+    outline-offset: -3px;
+}
+
+/* --- Trust card ---------------------------------------------------------- */
+
+.vhh-hero-spotlight__card {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+    padding: 26px 28px;
+    border-radius: 14px;
+    background: var(--vhh-hs-card-bg, #E5F1F1);
+    box-shadow: 0 10px 30px rgba(4, 80, 78, 0.08);
+}
+
+.vhh-hero-spotlight__card-icon {
+    flex: 0 0 auto;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #C1DFDE;
+    color: var(--vhh-hs-title, #04504E);
+}
+
+.vhh-hero-spotlight__card-icon svg {
+    width: 26px;
+    height: 26px;
+}
+
+.vhh-hero-spotlight__card-title {
+    font-family: var(--font-heading);
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.28;
+    color: var(--vhh-hs-title, #04504E);
+    margin: 0 0 10px;
+}
+
+.vhh-hero-spotlight__card-text {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--vhh-hs-intro, #3F4B4E);
+    margin: 0;
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+    .vhh-hero-spotlight__media { width: 46%; }
+    .vhh-hero-spotlight__title { max-width: 420px; }
+    .vhh-hero-spotlight__inner { gap: 32px; }
+}
+
+@media (max-width: 900px) {
+    .vhh-hero-spotlight {
+        padding: 0 0 44px;
+    }
+
+    /* The photo drops out of absolute positioning and back into flow. It is
+       first in source order, so it lands above the headline with no `order`
+       and no second copy of the markup. */
+    .vhh-hero-spotlight__media {
+        position: relative;
+        width: 100%;
+        height: 240px;
+        margin-bottom: 32px;
+        z-index: 0;
+    }
+
+    .vhh-hero-spotlight__media img {
+        object-position: 50% 20%;
+    }
+
+    /* Full-width now, so the single left dissolve becomes a symmetric pair —
+       otherwise the feather baked into the asset's left edge reads as a wash
+       on one side only. */
+    .vhh-hero-spotlight__media::before {
+        background: linear-gradient(
+            to right,
+            rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 1) 0%,
+            rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 0) 15%,
+            rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 0) 85%,
+            rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 1) 100%
+        );
+    }
+
+    .vhh-hero-spotlight__media::after {
+        background: linear-gradient(
+            to top,
+            rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 1) 0%,
+            rgba(var(--vhh-hs-from-rgb, 236, 245, 245), 0) 34%
+        );
+    }
+
+    .vhh-hero-spotlight__inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+    }
+
+    .vhh-hero-spotlight__title,
+    .vhh-hero-spotlight__intro {
+        max-width: none;
+    }
+
+    /* Freed from the 420px cap, the headline can take a larger share of the
+       viewport than the two-column clamp allows.
+
+       Both selectors are doubled up, and both carry !important, to opt this
+       hero out of the global mobile type normalisation: mobile-base.css and
+       mobile-components.css load after this file and pin `h1` to 32px (28px
+       below 480px) and `.container h2` to 28px, with !important, from 768px
+       down. That is right for article and page bodies but flattens this hero
+       — the trust card's 19px heading in particular lands at 28px, larger
+       than the body copy sitting beside it. Among !important declarations the
+       ordinary cascade applies, so the extra class wins on specificity. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__title {
+        font-size: clamp(30px, 5.6vw, 44px) !important;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__card-title {
+        font-size: 19px !important;
+    }
+
+    .vhh-hero-spotlight__card {
+        max-width: none;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .vhh-hero-spotlight__media { height: 190px; }
+    .vhh-hero-spotlight__title { letter-spacing: -0.5px; }
+
+    .vhh-hero-spotlight__actions {
+        gap: 12px;
+    }
+
+    /* Full-width stacked CTAs — side by side they wrap to two lines of text
+       inside a 26px-padded pill at this width. */
+    .vhh-hero-spotlight__cta {
+        width: 100%;
+    }
+
+    .vhh-hero-spotlight__search-field {
+        padding: 16px 6px 16px 16px;
+        /* Keep >= 16px so iOS Safari does not zoom the page on focus. */
+        font-size: 16px;
+    }
+
+    .vhh-hero-spotlight__search-submit { width: 52px; }
+
+    .vhh-hero-spotlight__card {
+        flex-direction: column;
+        gap: 14px;
+        padding: 22px;
+    }
+}
