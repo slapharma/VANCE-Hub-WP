@@ -1597,6 +1597,24 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_kblobby_intro_desc",    array( "default" => "Every collection below is curated and clinically reviewed. Not sure where to begin? Search across all of them at once.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_kblobby_intro_desc",    array( "label" => "Description", "section" => "vance_kblobby_intro", "type" => "textarea" ) );
 
+    $wp_customize->add_section( "vance_kblobby_labels", array( "title" => "Block Labels", "panel" => "vance_kblobby_panel" ) );
+
+    $wp_customize->add_setting( "vance_kblobby_soon_label", array( "default" => "Coming soon", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_soon_label", array(
+        "label"       => "Not-launched label",
+        "description" => "Shown instead of an article count on a collection with nothing published in it yet.",
+        "section"     => "vance_kblobby_labels",
+        "type"        => "text",
+    ) );
+
+    $wp_customize->add_setting( "vance_kblobby_soon_titles", array( "default" => "Webinars and Courses", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_soon_titles", array(
+        "label"       => "Collections not launched yet",
+        "description" => "One block title per line. Those blocks show the label above instead of a count, even if the page they link to has content. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word. Categories with no posts get the label automatically and do not need listing here.",
+        "section"     => "vance_kblobby_labels",
+        "type"        => "textarea",
+    ) );
+
     $wp_customize->add_section( "vance_kblobby_source", array( "title" => "Block Source", "panel" => "vance_kblobby_panel" ) );
     $wp_customize->add_setting( "vance_kblobby_menu_label", array( "default" => "Knowledgebase", "sanitize_callback" => "sanitize_text_field" ) );
     $wp_customize->add_control( "vance_kblobby_menu_label", array(

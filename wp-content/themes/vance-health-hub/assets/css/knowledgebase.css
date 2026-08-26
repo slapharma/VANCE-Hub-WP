@@ -164,6 +164,12 @@
     text-transform: uppercase;
 }
 
+/* A status, not a count - tint it with the block's own (contrast-corrected)
+   accent so it reads as a badge rather than as another grey metric. */
+.kb-block__meta--soon {
+    color: var(--kb-accent-ink);
+}
+
 .kb-block__cta {
     display: inline-flex;
     align-items: center;

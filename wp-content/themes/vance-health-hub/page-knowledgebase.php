@@ -90,11 +90,66 @@ if ( ! function_exists( 'vance_kb_lobby_ink' ) ) :
 	}
 endif;
 
+if ( ! function_exists( 'vance_kb_lobby_meta_label' ) ) :
+	/**
+	 * The small line at the foot of a block.
+	 *
+	 * @param int|null $count Items behind the block, or null when the block has
+	 *                        nothing countable (a plain page). null is NOT the
+	 *                        same as 0: an uncountable block simply gets no line,
+	 *                        while a countable-but-empty one gets the
+	 *                        not-launched-yet label rather than "0 articles".
+	 * @return string Empty string for no line at all.
+	 */
+	function vance_kb_lobby_meta_label( $count ) {
+		if ( null === $count ) {
+			return '';
+		}
+
+		$count = (int) $count;
+
+		if ( $count < 1 ) {
+			return (string) vance_get_theme_mod( 'vance_kblobby_soon_label', 'Coming soon' );
+		}
+
+		return sprintf(
+			/* translators: %s: number of articles in a collection. */
+			_n( '%s article', '%s articles', $count, 'vance-health-hub' ),
+			number_format_i18n( $count )
+		);
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_page_count' ) ) :
+	/**
+	 * How many items a linked PAGE puts behind a block, or null if that page
+	 * isn't a listing we know how to count.
+	 *
+	 * Only the GI Health hub is countable today: it renders one card per entry
+	 * in vance_gi_condition_cards(), so the number tracks that registry instead
+	 * of being typed in here and going stale the next time a condition is added.
+	 * Matched on the page's assigned template rather than its slug, because the
+	 * page can be renamed.
+	 *
+	 * @param int $page_id
+	 * @return int|null
+	 */
+	function vance_kb_lobby_page_count( $page_id ) {
+		$template = get_page_template_slug( $page_id );
+
+		if ( 'page-gi-health.php' === $template && function_exists( 'vance_gi_condition_cards' ) ) {
+			return count( vance_gi_condition_cards() );
+		}
+
+		return null;
+	}
+endif;
+
 if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 	/**
 	 * Resolve the lobby's blocks.
 	 *
-	 * @return array List of array( title, url, desc, meta, accent, term_id ).
+	 * @return array List of array( title, url, desc, meta, soon, accent, term_id ).
 	 */
 	function vance_kb_lobby_items() {
 		$palette = array( '#008080', '#0EA5E9', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444' );
@@ -137,9 +192,27 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 		}
 
 		if ( ! empty( $children ) ) {
+			// Collections the site owner has flagged as not launched yet, matched on
+			// the block's own title. vance_kb_lobby_slugify() STRIPS '&' rather than
+			// reading it as a word, so "Webinars & Courses" and "Webinars and
+			// Courses" fold to different keys and one of the two spellings would
+			// silently never match. Fold the ampersand first, on both sides of the
+			// comparison, so either spelling works.
+			$soon_key = static function ( $text ) {
+				return vance_kb_lobby_slugify( str_replace( '&', ' and ', (string) $text ) );
+			};
+
+			$not_launched = array();
+			foreach ( preg_split( '/\r\n|\r|\n/', (string) vance_get_theme_mod( 'vance_kblobby_soon_titles', 'Webinars and Courses' ) ) as $line ) {
+				$line = $soon_key( $line );
+				if ( '' !== $line ) {
+					$not_launched[] = $line;
+				}
+			}
+
 			foreach ( $children as $i => $item ) {
 				$desc    = trim( (string) $item->description );
-				$meta    = '';
+				$count   = null; // null = nothing countable behind this block.
 				$term_id = 0;
 				$accent  = $palette[ $i % count( $palette ) ];
 
@@ -150,27 +223,34 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 						if ( '' === $desc ) {
 							$desc = trim( wp_strip_all_tags( $term->description ) );
 						}
-						$meta = sprintf(
-							/* translators: %s: number of articles in a category. */
-							_n( '%s article', '%s articles', (int) $term->count, 'vance-health-hub' ),
-							number_format_i18n( (int) $term->count )
-						);
+						$count = (int) $term->count;
 						// Share the homepage section's accent so a block and the
 						// section it leads to read as the same thing.
 						$accent = vance_get_theme_mod( "vance_kb_accent_{$term_id}", $accent );
 					}
-				} elseif ( 'post_type' === $item->type && '' === $desc ) {
+				} elseif ( 'post_type' === $item->type ) {
 					$linked = get_post( (int) $item->object_id );
 					if ( $linked instanceof WP_Post ) {
-						$desc = trim( wp_strip_all_tags( $linked->post_excerpt ) );
+						if ( '' === $desc ) {
+							$desc = trim( wp_strip_all_tags( $linked->post_excerpt ) );
+						}
+						$count = vance_kb_lobby_page_count( (int) $linked->ID );
 					}
+				}
+
+				// An explicit "not launched" flag wins over any count: a page can
+				// be a real listing and still not be ready to promote.
+				$soon = in_array( $soon_key( $item->title ), $not_launched, true );
+				if ( $soon ) {
+					$count = 0;
 				}
 
 				$blocks[] = array(
 					'title'   => $item->title,
 					'url'     => $item->url,
 					'desc'    => $desc,
-					'meta'    => $meta,
+					'meta'    => vance_kb_lobby_meta_label( $count ),
+					'soon'    => ( null !== $count && (int) $count < 1 ),
 					'accent'  => $accent ? $accent : $palette[ $i % count( $palette ) ],
 					'term_id' => $term_id,
 				);
@@ -198,11 +278,8 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 				'title'   => $cat->name,
 				'url'     => get_category_link( $cat->term_id ),
 				'desc'    => trim( wp_strip_all_tags( $cat->description ) ),
-				'meta'    => sprintf(
-					/* translators: %s: number of articles in a category. */
-					_n( '%s article', '%s articles', (int) $cat->count, 'vance-health-hub' ),
-					number_format_i18n( (int) $cat->count )
-				),
+				'meta'    => vance_kb_lobby_meta_label( (int) $cat->count ),
+				'soon'    => ( (int) $cat->count < 1 ),
 				'accent'  => $accent ? $accent : $palette[ $i % count( $palette ) ],
 				'term_id' => (int) $cat->term_id,
 			);
@@ -314,7 +391,7 @@ $kb_intro_desc    = vance_get_theme_mod( 'vance_kblobby_intro_desc', 'Every coll
 
 							<span class="kb-block__foot">
 								<?php if ( $block['meta'] ) : ?>
-									<span class="kb-block__meta"><?php echo esc_html( $block['meta'] ); ?></span>
+									<span class="kb-block__meta<?php echo ! empty( $block['soon'] ) ? ' kb-block__meta--soon' : ''; ?>"><?php echo esc_html( $block['meta'] ); ?></span>
 								<?php endif; ?>
 								<span class="kb-block__cta">
 									<?php esc_html_e( 'Browse', 'vance-health-hub' ); ?>
