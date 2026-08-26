@@ -1565,6 +1565,144 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_userguide_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_userguide_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_userguide_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
+    // ============================================================
+    // KNOWLEDGEBASE LOBBY (page-knowledgebase.php)
+    // The block buttons themselves are NOT edited here — they mirror the
+    // children of the KNOWLEDGEBASE item in Appearance -> Menus, so the
+    // flyout and the lobby cannot drift apart. This panel is the page's
+    // surrounding copy only, plus the label used to find that menu item.
+    // ============================================================
+    $wp_customize->add_panel( "vance_kblobby_panel", array(
+        "title"    => __( "Page - Knowledgebase", "vance-health-hub" ),
+        "priority" => 48,
+    ) );
+
+    $wp_customize->add_section( "vance_kblobby_hero", array( "title" => "Hero Section", "panel" => "vance_kblobby_panel" ) );
+    $wp_customize->add_setting( "vance_kblobby_hero_tag",   array( "default" => "Knowledgebase", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_hero_tag",   array( "label" => "Tag Label", "section" => "vance_kblobby_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_hero_title", array( "default" => 'The whole <span class="highlight">evidence library</span>, one door', "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_kblobby_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_kblobby_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_kblobby_hero_desc",  array( "default" => "Clinical reviews, gastro living guides, health news and courses - every collection in the Vance Medical Hub, grouped so you can go straight to the one you need.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_hero_desc",  array( "label" => "Description", "section" => "vance_kblobby_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_kblobby_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_kblobby_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_kblobby_hero" ) ) );
+    $wp_customize->add_setting( "vance_kblobby_hero_overlay", array( "default" => 72, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_kblobby_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_kblobby_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+
+    $wp_customize->add_section( "vance_kblobby_intro", array( "title" => "Intro Section", "panel" => "vance_kblobby_panel" ) );
+    $wp_customize->add_setting( "vance_kblobby_intro_eyebrow", array( "default" => "Start Here", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_intro_eyebrow", array( "label" => "Eyebrow", "section" => "vance_kblobby_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_intro_title",   array( "default" => "Pick a collection", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_intro_title",   array( "label" => "Title", "section" => "vance_kblobby_intro", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_intro_desc",    array( "default" => "Every collection below is curated and clinically reviewed. Not sure where to begin? Search across all of them at once.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_intro_desc",    array( "label" => "Description", "section" => "vance_kblobby_intro", "type" => "textarea" ) );
+
+    $wp_customize->add_section( "vance_kblobby_labels", array( "title" => "Block Labels", "panel" => "vance_kblobby_panel" ) );
+
+    $wp_customize->add_setting( "vance_kblobby_soon_label", array( "default" => "Coming soon", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_soon_label", array(
+        "label"       => "Not-launched label",
+        "description" => "Shown instead of an article count on a collection with nothing published in it yet.",
+        "section"     => "vance_kblobby_labels",
+        "type"        => "text",
+    ) );
+
+    $wp_customize->add_setting( "vance_kblobby_soon_titles", array( "default" => "Webinars and Courses", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_soon_titles", array(
+        "label"       => "Collections not launched yet",
+        "description" => "One block title per line. Those blocks show the label above instead of a count, even if the page they link to has content. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word. Categories with no posts get the label automatically and do not need listing here.",
+        "section"     => "vance_kblobby_labels",
+        "type"        => "textarea",
+    ) );
+
+    $wp_customize->add_section( "vance_kblobby_source", array( "title" => "Block Source", "panel" => "vance_kblobby_panel" ) );
+    $wp_customize->add_setting( "vance_kblobby_menu_label", array( "default" => "Knowledgebase", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_menu_label", array(
+        "label"       => "Menu item label",
+        "description" => "Which item in the primary menu supplies the block buttons. Matching ignores case, spaces and hyphens, so \"KNOWLEDGEBASE\" and \"Knowledge Base\" both work. Once the menu item points at this page it is matched by link instead and this field stops mattering. If no match is found the page falls back to listing every top-level category.",
+        "section"     => "vance_kblobby_source",
+        "type"        => "text",
+    ) );
+
+    // ============================================================
+    // SEARCH RESULTS PAGE (search.php)
+    // The hero, the refine-search form and the no-results state. Some copy
+    // fields take tokens the template substitutes at render time:
+    //   {query} - what the visitor searched for (escaped before insertion)
+    //   {count} - how many results were found
+    // Anything else is literal.
+    // ============================================================
+    $wp_customize->add_panel( "vance_search_panel", array(
+        "title"    => __( "Page - Search Results", "vance-health-hub" ),
+        "priority" => 49,
+    ) );
+
+    // ---- Hero ----
+    $wp_customize->add_section( "vance_search_hero", array( "title" => "Hero Section", "panel" => "vance_search_panel" ) );
+
+    $wp_customize->add_setting( "vance_search_hero_tag", array( "default" => "Search Results", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_search_hero_tag", array( "label" => "Tag Label", "description" => "Small pill above the heading. Leave blank to hide it.", "section" => "vance_search_hero", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_hero_title", array( "default" => "Results for &#8220;{query}&#8221;", "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_search_hero_title", array( "label" => "Title (HTML allowed)", "description" => "Shown when the visitor searched for something. Use {query} for the search term.", "section" => "vance_search_hero", "type" => "textarea" ) );
+
+    $wp_customize->add_setting( "vance_search_hero_title_empty", array( "default" => "Search the Hub", "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_search_hero_title_empty", array( "label" => "Title when the search box was empty", "section" => "vance_search_hero", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_hero_count_one", array( "default" => "{count} matching item.", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_search_hero_count_one", array( "label" => "Result count - one result", "description" => "Use {count} for the number. Leave blank to hide the line.", "section" => "vance_search_hero", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_hero_count_many", array( "default" => "{count} matching items.", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_search_hero_count_many", array( "label" => "Result count - none or many", "description" => "Use {count} for the number. Leave blank to hide the line.", "section" => "vance_search_hero", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_hero_bg", array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_search_hero_bg", array( "label" => "Hero Background Image", "description" => "Falls back to the global Category Hero image, then to the bundled news hero.", "section" => "vance_search_hero" ) ) );
+
+    $wp_customize->add_setting( "vance_search_hero_overlay", array( "default" => 72, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_search_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_search_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+
+    $wp_customize->add_setting( "vance_search_hero_height", array( "default" => 300, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_search_hero_height", array( "label" => "Hero Height (px)", "section" => "vance_search_hero", "type" => "number", "input_attrs" => array( "min" => 180, "max" => 600, "step" => 10 ) ) );
+
+    $wp_customize->add_setting( "vance_search_hero_title_color", array( "default" => "#ffffff", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_search_hero_title_color", array( "label" => "Title Colour", "section" => "vance_search_hero" ) ) );
+
+    $wp_customize->add_setting( "vance_search_hero_title_size", array( "default" => 42, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_search_hero_title_size", array( "label" => "Title Size (px, desktop)", "description" => "Phones step down to 28px regardless.", "section" => "vance_search_hero", "type" => "number", "input_attrs" => array( "min" => 20, "max" => 72, "step" => 2 ) ) );
+
+    // ---- Refine form ----
+    $wp_customize->add_section( "vance_search_form", array( "title" => "Refine Search Form", "panel" => "vance_search_panel" ) );
+
+    $wp_customize->add_setting( "vance_search_form_show", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_search_form_show", array( "label" => "Show the search box in the hero", "section" => "vance_search_form", "type" => "checkbox" ) );
+
+    $wp_customize->add_setting( "vance_search_form_placeholder", array( "default" => "Refine your search...", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_search_form_placeholder", array( "label" => "Field Placeholder", "section" => "vance_search_form", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_form_button", array( "default" => "Search", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_search_form_button", array( "label" => "Button Label", "section" => "vance_search_form", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_form_btn_bg", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_search_form_btn_bg", array( "label" => "Button Background", "description" => "Blank keeps the theme teal.", "section" => "vance_search_form" ) ) );
+
+    $wp_customize->add_setting( "vance_search_form_btn_color", array( "default" => "", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_search_form_btn_color", array( "label" => "Button Text Colour", "description" => "Blank keeps white.", "section" => "vance_search_form" ) ) );
+
+    // ---- No results ----
+    $wp_customize->add_section( "vance_search_empty", array( "title" => "No Results State", "panel" => "vance_search_panel" ) );
+
+    $wp_customize->add_setting( "vance_search_empty_title", array( "default" => "Nothing matched that search", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_search_empty_title", array( "label" => "Heading", "section" => "vance_search_empty", "type" => "text" ) );
+
+    $wp_customize->add_setting( "vance_search_empty_desc", array( "default" => "Try a broader term, check the spelling, or start from one of these:", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_search_empty_desc", array( "label" => "Message", "section" => "vance_search_empty", "type" => "textarea" ) );
+
+    $wp_customize->add_setting( "vance_search_empty_show_cats", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_search_empty_show_cats", array( "label" => "Show suggested category links", "section" => "vance_search_empty", "type" => "checkbox" ) );
+
+    $wp_customize->add_setting( "vance_search_empty_cat_count", array( "default" => 6, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_search_empty_cat_count", array( "label" => "How many category links", "section" => "vance_search_empty", "type" => "number", "input_attrs" => array( "min" => 1, "max" => 12, "step" => 1 ) ) );
+
     /* ---- Retire orphaned "Our Heritage" panel (unlinked clone of About Us). Reversible: delete this block to restore. Template file & saved values are untouched. ---- */
     foreach ( array( 'vance_heritage_hero', 'vance_heritage_origin', 'vance_heritage_mission', 'vance_heritage_product', 'vance_heritage_platform', 'vance_heritage_cta', 'vance_heritage_promo1', 'vance_heritage_promo2' ) as $vance_retired_sec ) {
         $wp_customize->remove_section( $vance_retired_sec );

@@ -31,6 +31,10 @@ function vance_render_gastro_conditions() {
 
 	$heading      = vance_get_theme_mod( 'vance_gc_heading',  'Gastro Conditions' );
 	$subtitle     = vance_get_theme_mod( 'vance_gc_subtitle', 'Learn about the condition that matters to you' );
+	// Printed into CSS below, so run through the keyword whitelist rather than
+	// trusting the stored value — see vance_sanitize_text_align() in functions.php.
+	$head_align   = vance_sanitize_text_align( vance_get_theme_mod( 'vance_gc_heading_align',  'center' ) );
+	$sub_align    = vance_sanitize_text_align( vance_get_theme_mod( 'vance_gc_subtitle_align', 'center' ) );
 	$section_bg   = vance_get_theme_mod( 'vance_gc_section_bg', '#f8fafc' );
 	$per_row      = max( 1, min( 6, absint( vance_get_theme_mod( 'vance_gc_per_row', 4 ) ) ) );
 	$view_all_bg  = vance_get_theme_mod( 'vance_gc_view_all_bg_color', '#008080' );
@@ -47,8 +51,12 @@ function vance_render_gastro_conditions() {
 			   full 80px read as a gap rather than as breathing room. */
 			padding: 30px 0 80px;
 		}
-		#vance-gastro-conditions .vance-gc-header { text-align: center; margin-bottom: 44px; }
+		/* Alignment moved off the wrapper and onto the two children so the
+		   heading and subtitle can be set independently (Customizer →
+		   Homepage → Gastro Conditions). */
+		#vance-gastro-conditions .vance-gc-header { margin-bottom: 44px; }
 		#vance-gastro-conditions .vance-gc-header h2 {
+			text-align: <?php echo esc_attr( $head_align ); ?>;
 			font-family: 'Outfit', sans-serif;
 			font-size: 38px;
 			font-weight: 800;
@@ -57,6 +65,7 @@ function vance_render_gastro_conditions() {
 			line-height: 1.15;
 		}
 		#vance-gastro-conditions .vance-gc-header p {
+			text-align: <?php echo esc_attr( $sub_align ); ?>;
 			font-size: 17px;
 			color: #64748b;
 			margin: 12px 0 0;

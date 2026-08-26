@@ -94,6 +94,42 @@
                 ?>
                 <a href="<?php echo esc_url($dashboard_url); ?>" class="header-dashboard-link">My Dashboard</a>
                 <?php endif; ?>
+
+                <?php
+                /*
+                 * Site search — a 32px icon button (same box as VANCE-Ai and My
+                 * Dashboard) that expands a search field leftwards over the header
+                 * actions. Collapsed by default so the header keeps its current
+                 * density; results are rendered by search.php.
+                 *
+                 * The field is deliberately NOT wrapped in a <label> we style away:
+                 * an aria-label on the input plus a visible placeholder keeps the
+                 * control announced without adding a hidden-text class this theme
+                 * doesn't otherwise carry outside the VANCE-Ai modal.
+                 *
+                 * Markup order is form-then-button so the absolutely-positioned
+                 * form can sit under the button (z-index) without a wrapper div.
+                 * Behaviour: assets/js/vance-header-search.js. Styles: main.css.
+                 */
+                $vance_search_open = is_search();
+                ?>
+                <div class="vance-header-search<?php echo $vance_search_open ? ' is-open' : ''; ?>" data-vance-search>
+                    <form role="search" method="get" class="vance-header-search__form" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                        <input
+                            type="search"
+                            id="vance-header-search-field"
+                            class="vance-header-search__field"
+                            name="s"
+                            value="<?php echo esc_attr( get_search_query() ); ?>"
+                            placeholder="<?php esc_attr_e( 'Search articles, tools, recipes...', 'vance-health-hub' ); ?>"
+                            aria-label="<?php esc_attr_e( 'Search the Hub', 'vance-health-hub' ); ?>"
+                            autocomplete="off">
+                    </form>
+                    <button type="button" class="vance-header-search__toggle" aria-expanded="<?php echo $vance_search_open ? 'true' : 'false'; ?>" aria-controls="vance-header-search-field" aria-label="<?php esc_attr_e( 'Open search', 'vance-health-hub' ); ?>">
+                        <svg class="vance-header-search__icon vance-header-search__icon--open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                        <svg class="vance-header-search__icon vance-header-search__icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
