@@ -1597,6 +1597,49 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_kblobby_intro_desc",    array( "default" => "Every collection below is curated and clinically reviewed. Not sure where to begin? Search across all of them at once.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_kblobby_intro_desc",    array( "label" => "Description", "section" => "vance_kblobby_intro", "type" => "textarea" ) );
 
+    $wp_customize->add_section( "vance_kblobby_layout", array( "title" => "Layout & Colour", "panel" => "vance_kblobby_panel" ) );
+
+    $wp_customize->add_setting( "vance_kblobby_per_row", array( "default" => 2, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_kblobby_per_row", array(
+        "label"       => "Cards per row",
+        "description" => "Desktop only. Three-up drops to two on tablets, and every setting collapses to one card per row on phones.",
+        "section"     => "vance_kblobby_layout",
+        "type"        => "select",
+        "choices"     => array( 1 => "1 per row", 2 => "2 per row", 3 => "3 per row" ),
+    ) );
+
+    $wp_customize->add_setting( "vance_kblobby_accent_mode", array( "default" => "single", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_accent_mode", array(
+        "label"       => "Card accent colour",
+        "description" => "One colour keeps the page calm and lets the icons and titles do the distinguishing. Per-collection borrows each category's own colour from its homepage Knowledge Base section, which is louder and implies a colour code the site does not otherwise use.",
+        "section"     => "vance_kblobby_layout",
+        "type"        => "select",
+        "choices"     => array( "single" => "One colour for every card", "match" => "Per collection (match homepage sections)" ),
+    ) );
+
+    $wp_customize->add_setting( "vance_kblobby_accent_single", array( "default" => "#8e7dbe", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_kblobby_accent_single", array(
+        "label"       => "Card accent",
+        "description" => "Used when the setting above is \"One colour for every card\". Light colours are handled: the card darkens this automatically for text and icons so it always clears the 4.5:1 contrast minimum, while the card's edge keeps the colour exactly as picked.",
+        "section"     => "vance_kblobby_layout",
+    ) ) );
+
+    $wp_customize->add_setting( "vance_kblobby_peek_count", array( "default" => 3, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_kblobby_peek_count", array(
+        "label"       => "Preview links per card",
+        "description" => "How many of the newest articles each card lists. 0 hides the preview. The Gastro Health hub lists its conditions instead.",
+        "section"     => "vance_kblobby_layout",
+        "type"        => "number",
+        "input_attrs" => array( "min" => 0, "max" => 5, "step" => 1 ),
+    ) );
+
+    $wp_customize->add_setting( "vance_kblobby_peek_label", array( "default" => "Latest inside", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_peek_label", array(
+        "label"   => "Preview heading",
+        "section" => "vance_kblobby_layout",
+        "type"    => "text",
+    ) );
+
     $wp_customize->add_section( "vance_kblobby_labels", array( "title" => "Block Labels", "panel" => "vance_kblobby_panel" ) );
 
     $wp_customize->add_setting( "vance_kblobby_soon_label", array( "default" => "Coming soon", "sanitize_callback" => "sanitize_text_field" ) );
@@ -1607,10 +1650,18 @@ function vance_pages_customize_register( $wp_customize ) {
         "type"        => "text",
     ) );
 
-    $wp_customize->add_setting( "vance_kblobby_soon_titles", array( "default" => "Webinars and Courses", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_kblobby_hidden_titles", array( "default" => "Webinars and Courses", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_hidden_titles", array(
+        "label"       => "Collections hidden from this page",
+        "description" => "One block title per line. These keep their place in the KNOWLEDGEBASE menu but get no card here - for a destination the nav still needs to reach while the lobby has nothing worth promoting about it. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word.",
+        "section"     => "vance_kblobby_labels",
+        "type"        => "textarea",
+    ) );
+
+    $wp_customize->add_setting( "vance_kblobby_soon_titles", array( "default" => "", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_kblobby_soon_titles", array(
         "label"       => "Collections not launched yet",
-        "description" => "One block title per line. Those blocks show the label above instead of a count, even if the page they link to has content. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word. Categories with no posts get the label automatically and do not need listing here.",
+        "description" => "One block title per line. Those blocks show the label above instead of a count, even if the page they link to has content. A title listed as hidden above never appears at all, so listing it here as well has no effect. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word. Categories with no posts get the label automatically and do not need listing here.",
         "section"     => "vance_kblobby_labels",
         "type"        => "textarea",
     ) );
