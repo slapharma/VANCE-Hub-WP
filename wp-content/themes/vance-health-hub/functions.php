@@ -730,6 +730,33 @@ function vance_health_hub_scripts() {
         @filemtime( get_template_directory() . '/assets/css/vance-modal-kit.css' ) ?: '1.0.0'
     );
 
+    // Header search — the expandable field in .header-actions (header.php).
+    // Site-wide: the header renders on every page. Tiny, no dependencies, and
+    // deferred to the footer, so it costs nothing on templates that never open
+    // it. See assets/js/vance-header-search.js.
+    wp_enqueue_script(
+        'vance-header-search',
+        get_template_directory_uri() . '/assets/js/vance-header-search.js',
+        array(),
+        @filemtime( get_template_directory() . '/assets/js/vance-header-search.js' ) ?: '1.0.0',
+        true
+    );
+
+    // Knowledgebase lobby — CSS enqueued only on that page.
+    // is_page_template() alone is NOT enough here: this filename also matches
+    // WP's page-{slug}.php convention, so a Page with slug `knowledgebase`
+    // renders through the template with _wp_page_template still 'default' and
+    // is_page_template() false — the page would load with no styles at all.
+    // (Same trap already documented for page-dashboard.php further down.)
+    if ( is_page_template( 'page-knowledgebase.php' ) || is_page( 'knowledgebase' ) ) {
+        wp_enqueue_style(
+            'vance-knowledgebase',
+            get_template_directory_uri() . '/assets/css/knowledgebase.css',
+            array( 'vance-main-style' ),
+            @filemtime( get_template_directory() . '/assets/css/knowledgebase.css' ) ?: '1.0.0'
+        );
+    }
+
     // GI Health section — CSS enqueued only on hub + condition pages.
     if ( is_page_template( 'page-gi-health.php' ) || is_page_template( 'page-gi-condition.php' ) ) {
         wp_enqueue_style(
@@ -892,7 +919,7 @@ function vance_tool_embed_slim_assets() {
         return;
     }
 
-    foreach ( array( 'vance-askai', 'google-gsi' ) as $handle ) {
+    foreach ( array( 'vance-askai', 'google-gsi', 'vance-header-search' ) as $handle ) {
         wp_dequeue_script( $handle );
     }
     foreach ( array( 'vance-askai', 'dashicons' ) as $handle ) {
@@ -4439,6 +4466,23 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_gc_subtitle', array( 'default' => 'Learn about the condition that matters to you', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_gc_subtitle', array( 'label' => 'Subtitle', 'section' => 'vance_gastro_conditions_settings', 'type' => 'text' ) );
 
+    $wp_customize->add_setting( 'vance_gc_heading_align', array( 'default' => 'center', 'sanitize_callback' => 'vance_sanitize_text_align' ) );
+    $wp_customize->add_control( 'vance_gc_heading_align', array(
+        'label'   => 'Heading Alignment',
+        'section' => 'vance_gastro_conditions_settings',
+        'type'    => 'select',
+        'choices' => array( 'left' => 'Left', 'center' => 'Centre', 'right' => 'Right', 'justify' => 'Justified' ),
+    ) );
+
+    $wp_customize->add_setting( 'vance_gc_subtitle_align', array( 'default' => 'center', 'sanitize_callback' => 'vance_sanitize_text_align' ) );
+    $wp_customize->add_control( 'vance_gc_subtitle_align', array(
+        'label'       => 'Subtitle Alignment',
+        'description' => 'Set independently of the heading. "Justified" only shows on a subtitle long enough to wrap.',
+        'section'     => 'vance_gastro_conditions_settings',
+        'type'        => 'select',
+        'choices'     => array( 'left' => 'Left', 'center' => 'Centre', 'right' => 'Right', 'justify' => 'Justified' ),
+    ) );
+
     $wp_customize->add_setting( 'vance_gc_section_bg', array( 'default' => '#f8fafc', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_gc_section_bg', array( 'label' => 'Section Background Colour', 'section' => 'vance_gastro_conditions_settings' ) ) );
 
@@ -6811,6 +6855,32 @@ function vance_sanitize_scripts( $input ) {
  */
 function vance_sanitize_checkbox( $checked ) {
     return ( ( isset( $checked ) && true == $checked ) ? true : false );
+}
+
+/**
+ * Whitelist a text-align keyword.
+ *
+ * These values are printed straight into a CSS declaration, so sanitize_text_field()
+ * (which several older select controls in this file still use) is not enough — it
+ * would happily pass `left; position:fixed; top:0` through into the stylesheet.
+ * Anything not in the list falls back to the caller's default.
+ *
+ * @param string $value    Submitted value.
+ * @param string $fallback Returned when $value isn't a known keyword.
+ * @return string One of left|center|right|justify.
+ */
+function vance_sanitize_text_align( $value, $fallback = 'center' ) {
+    $allowed = array( 'left', 'center', 'right', 'justify' );
+
+    // Used BOTH as a Customizer sanitize_callback and as a plain guard at render
+    // time. WP calls a sanitize_callback as ( $value, WP_Customize_Setting ), so
+    // $fallback arrives as an object on that path — returning it unchecked would
+    // write an object into the theme mod. Normalise before trusting it.
+    if ( ! is_string( $fallback ) || ! in_array( $fallback, $allowed, true ) ) {
+        $fallback = 'center';
+    }
+
+    return in_array( $value, $allowed, true ) ? $value : $fallback;
 }
 
 /**
