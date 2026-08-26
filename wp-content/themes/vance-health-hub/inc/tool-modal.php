@@ -47,7 +47,7 @@ $vance_tm_tools = array(
     ),
     'healthcare-quiz' => array(
         'title'  => 'Gastro Health Survey',
-        'url'    => home_url( '/healthcare-quiz/' ),
+        'url'    => home_url( '/gastro-health-survey/' ),
         'inline' => true, // reuses openQuizModal()
     ),
 );
@@ -59,6 +59,9 @@ $vance_tm_tools = array(
 // unknown slug and the click falls through to a normal navigation).
 $vance_tm_paths = array(
     '/malnutrition-calculator' => 'malnutrition-calculator',
+    '/gastro-health-survey'    => 'healthcare-quiz',
+    // Legacy path, kept so customizer values and external links
+    // saved before the page was renamed still open the modal.
     '/healthcare-quiz'         => 'healthcare-quiz',
 );
 ?>

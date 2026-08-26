@@ -552,7 +552,7 @@ function vance_render_prime_block_home1() {
 				'desc'          => vance_get_theme_mod( 'vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.' ),
 				'eyebrow'       => vance_get_theme_mod( 'vance_hquiz_tile_extra', 'Find your starting point' ),
 				'image'         => vance_get_theme_mod( 'vance_hquiz_tile_image' ),
-				'link'          => vance_get_theme_mod( 'vance_hquiz_tile_link',  '/healthcare-quiz/' ),
+				'link'          => vance_get_theme_mod( 'vance_hquiz_tile_link',  '/gastro-health-survey/' ),
 				'fallback_icon' => '?',
 			),
 			array(
@@ -602,7 +602,7 @@ function vance_prime_block_vals_for_prefix( $prefix, $wrap_id ) {
 				'desc'          => vance_get_theme_mod( $prefix . 'card1_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.' ),
 				'eyebrow'       => vance_get_theme_mod( $prefix . 'card1_extra', 'Find your starting point' ),
 				'image'         => vance_get_theme_mod( $prefix . 'card1_image' ),
-				'link'          => vance_get_theme_mod( $prefix . 'card1_link',  '/healthcare-quiz/' ),
+				'link'          => vance_get_theme_mod( $prefix . 'card1_link',  '/gastro-health-survey/' ),
 				'fallback_icon' => '?',
 			),
 			array(

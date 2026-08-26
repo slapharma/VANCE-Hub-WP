@@ -66,7 +66,7 @@ $vbn_active = function ( $cond ) {
     <div class="vbn-sheet-handle" aria-hidden="true"></div>
     <ul class="vbn-sheet-links">
         <li><a href="<?php echo esc_url( home_url( '/about-us/' ) ); ?>"><?php esc_html_e( 'About Us', 'vance-health-hub' ); ?></a></li>
-        <li><a href="<?php echo esc_url( home_url( '/healthcare-quiz/' ) ); ?>"><?php esc_html_e( 'Health Survey', 'vance-health-hub' ); ?></a></li>
+        <li><a href="<?php echo esc_url( home_url( '/gastro-health-survey/' ) ); ?>"><?php esc_html_e( 'Health Survey', 'vance-health-hub' ); ?></a></li>
         <li><a href="<?php echo esc_url( home_url( '/get-started-today/' ) ); ?>"><?php esc_html_e( 'Get Started', 'vance-health-hub' ); ?></a></li>
         <li><a href="<?php echo esc_url( home_url( '/contact-us/' ) ); ?>"><?php esc_html_e( 'Contact', 'vance-health-hub' ); ?></a></li>
         <?php if ( is_user_logged_in() ) : ?>

@@ -70,9 +70,9 @@ get_header(); ?>
     $tools = array(
         array(
             // IBD Health Quiz lives as a PHP page template (page-healthcare-quiz.php),
-            // not as a /assets/tools/ bundle — so we just link to /healthcare-quiz/.
+            // not as a /assets/tools/ bundle — so we just link to the survey page.
             'slug'     => 'healthcare-quiz',
-            'page_url' => '/healthcare-quiz/',
+            'page_url' => '/gastro-health-survey/',
             'name'     => 'Gastro Health Survey',
             'tag'      => 'Self-Assessment',
             'desc'     => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.',

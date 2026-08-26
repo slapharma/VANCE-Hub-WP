@@ -40,7 +40,7 @@ function vance_render_category_promo( $term_id ) {
     $tool_urls = array(
         'ibd-recipes'             => home_url( '/gastro-meal-planner/' ),
         'malnutrition-calculator' => home_url( '/malnutrition-calculator/' ),
-        'healthcare-quiz'         => home_url( '/healthcare-quiz/' ),
+        'healthcare-quiz'         => home_url( '/gastro-health-survey/' ),
     );
     $href      = '';
     $data_attr = '';

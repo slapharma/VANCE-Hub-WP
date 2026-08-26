@@ -1024,7 +1024,7 @@ body {
             // Global Quiz Interceptor
             document.addEventListener('click', function(e) {
                 const link = e.target.closest('a');
-                if (link && link.getAttribute('href') && link.getAttribute('href').includes('healthcare-quiz')) {
+                if (link && link.getAttribute('href') && /(healthcare-quiz|gastro-health-survey)/.test(link.getAttribute('href'))) {
                     e.preventDefault();
                     if (typeof openQuizModal === 'function') {
                         openQuizModal();

@@ -294,7 +294,7 @@ function vance_register_prime_block_controls( $wp_customize, $section_id, $prefi
             'title' => 'Gastro Health Survey',
             'desc'  => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.',
             'extra' => 'Find your starting point',
-            'link'  => '/healthcare-quiz/',
+            'link'  => '/gastro-health-survey/',
         ),
         'card2' => array(
             'label' => 'Card 2',
@@ -948,6 +948,46 @@ add_action( 'template_redirect', 'vance_tool_embed_trim_head' );
  * their next request — its JS believes they're logged out, so quiz/tool
  * results silently fail to save instead of persisting to `_sla_*` meta.
  */
+/**
+ * Permanent redirect for the Gastro Health Survey's retired URL.
+ *
+ * The WP page was renamed `healthcare-quiz` -> `gastro-health-survey` (post
+ * 440, still on page-healthcare-quiz.php), which left `/healthcare-quiz/`
+ * returning a 404 while the theme, two saved customizer links and anything
+ * published externally still pointed at it. The in-theme links are now
+ * updated; this covers everything outside the repo — bookmarks, emails,
+ * search results, and PDFs already downloaded by readers.
+ *
+ * Kept deliberately narrow: one exact path, and it no-ops the moment a real
+ * page ever claims that slug again.
+ */
+function vance_redirect_legacy_quiz_slug() {
+	if ( is_admin() ) {
+		return;
+	}
+
+	$path = trim( wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ?: '', '/' );
+	if ( 'healthcare-quiz' !== $path ) {
+		return;
+	}
+
+	// If someone restores a page on the old slug, let it win over this rule.
+	if ( get_page_by_path( 'healthcare-quiz' ) ) {
+		return;
+	}
+
+	$target = get_page_by_path( 'gastro-health-survey' );
+	if ( ! $target ) {
+		return;
+	}
+
+	// Query string is dropped on purpose: the only links carrying one are the
+	// customizer-preview URLs accidentally saved into theme mods.
+	wp_safe_redirect( get_permalink( $target ), 301, 'Vance legacy quiz slug' );
+	exit;
+}
+add_action( 'template_redirect', 'vance_redirect_legacy_quiz_slug', 1 );
+
 function vance_no_cache_account_pages() {
     $slugs     = array( 'dashboard', 'my-notes', 'healthcare-quiz', 'malnutrition-calculator', 'gastro-meal-planner' );
     $templates = array( 'page-dashboard.php', 'page-my-notes.php', 'page-healthcare-quiz.php', 'page-malnutrition-calculator.php', 'page-gastro-recipies.php' );
@@ -4341,7 +4381,7 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_setting( 'vance_hquiz_tile_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'vance_hquiz_tile_image', array( 'label' => 'Healthcare Quiz, Image', 'section' => 'vance_pathway_content_settings' ) ) );
 
-    $wp_customize->add_setting( 'vance_hquiz_tile_link', array( 'default' => '/healthcare-quiz/', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_setting( 'vance_hquiz_tile_link', array( 'default' => '/gastro-health-survey/', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_hquiz_tile_link', array( 'label' => 'Healthcare Quiz, Link', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     // Card 2: Ask AI

@@ -154,7 +154,7 @@ function vug_anim_shot( $img_base, $filename, $alt, $caption, $badges = array(),
 $tools = array(
 	array(
 		'slug'   => 'healthcare-quiz',
-		'url'    => '/healthcare-quiz/',
+		'url'    => '/gastro-health-survey/',
 		'name'   => 'Gastro Health Survey',
 		'tag'    => 'Self-Assessment',
 		'desc'   => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers and lifestyle factors. Get an instant summary you can share with your clinician.',
