@@ -395,3 +395,114 @@
     .vug-dash-grid { grid-template-columns: 1fr; }
     .vug-journey { grid-template-columns: 1fr; }
 }
+
+/* ---------- Download CTA ----------
+   The same PDF offered at four points: hero, sticky sub-nav, a mid-page band
+   after the free tools, and the closing CTA. One button component
+   (vug_download_btn() in page-user-guide.php) with four skins, so the icon,
+   spacing and hover behaviour stay identical wherever it appears. */
+.vug-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+.vug-dl__icon {
+    display: inline-flex;
+    /* Nudge the tray icon onto the cap-height of the label. */
+    margin-top: -1px;
+}
+.vug-dl__meta {
+    display: block;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 10px;
+    letter-spacing: 0.2px;
+}
+.vug-dl__meta--hero {
+    display: inline-block;
+    margin: 0 0 0 14px;
+    color: rgba(255, 255, 255, 0.75);
+    vertical-align: middle;
+}
+/* On the teal CTA and the navy band, white-on-transparent with a solid
+   hover — the inverse of .btn-outline, which assumes a light ground. */
+.vug-dl--onteal {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+}
+.vug-dl--onteal:hover {
+    background: #fff;
+    color: var(--primary-color);
+    border-color: #fff;
+}
+
+/* Sub-nav pill: filled teal so it reads as the one action among nav links. */
+.vug-subnav__dl-item { margin-left: 6px; }
+.vug-subnav a.vug-subnav__download,
+.vug-subnav__download {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 8px 16px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.vug-subnav a.vug-subnav__download:hover {
+    background: #fff;
+    color: var(--primary-color);
+    border-color: #fff;
+}
+
+/* Mid-page band. Navy rather than teal so it does not compete with the
+   teal closing CTA further down the page. */
+.vug-dl-band {
+    background: var(--secondary-color);
+    padding: 56px 0;
+}
+.vug-dl-band__inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 40px;
+}
+.vug-dl-band__text h2 {
+    font-family: var(--font-heading);
+    color: #fff;
+    font-size: 28px;
+    margin: 0 0 10px;
+}
+.vug-dl-band__text p {
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0;
+    max-width: 620px;
+    line-height: 1.65;
+}
+.vug-eyebrow--light { color: var(--primary-light); }
+.vug-dl-band__action { text-align: right; }
+.vug-dl-band__action .vug-dl__meta { color: rgba(255, 255, 255, 0.6); }
+
+.vug-cta-section__meta {
+    margin: 18px 0 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.72);
+    letter-spacing: 0.2px;
+}
+
+@media (max-width: 900px) {
+    .vug-dl-band__inner { grid-template-columns: 1fr; gap: 24px; }
+    .vug-dl-band__action { text-align: left; }
+    .vug-dl-band__text h2 { font-size: 24px; }
+}
+@media (max-width: 560px) {
+    /* The sub-nav is sticky and already wraps to three rows on a phone; a
+       fourth would eat the viewport. Drop the pill here - the hero button sits
+       directly above it, and the band and closing CTA both repeat the offer. */
+    .vug-subnav__dl-item { display: none; }
+    .vug-dl__meta--hero { display: block; margin: 12px 0 0; }
+}

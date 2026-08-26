@@ -68,6 +68,71 @@ $dashboard_tabs = array(
  * @param array  $badges   List of array('icon','text','pos','delay').
  * @param float  $delay    Entrance delay for the figure itself (stagger across a row).
  */
+/**
+ * The downloadable guide, and the human-readable weight of it.
+ *
+ * The file size is read off disk so the label can never drift from the actual
+ * PDF; the page count is the one fact the file cannot tell us cheaply, so it
+ * lives here as a constant and is updated whenever the PDF is rebuilt
+ * (build toolchain: LOCAL/user-guide-pdf/).
+ */
+define( 'VUG_PDF_FILE',  'Vance-Health-Hub-User-Guide.pdf' );
+define( 'VUG_PDF_PAGES', 23 );
+
+/**
+ * "23 pages · PDF · 5.7 MB" — or just "PDF" if the file is missing, so a
+ * failed deploy degrades to a plain label rather than a PHP warning.
+ *
+ * @return string
+ */
+function vug_pdf_meta() {
+	$path = get_template_directory() . '/assets/downloads/' . VUG_PDF_FILE;
+	if ( ! file_exists( $path ) ) {
+		return 'PDF';
+	}
+	// Decimal MB, matching what the browser's own download shelf reports.
+	$mb = filesize( $path ) / 1000000;
+	return sprintf(
+		/* translators: 1: page count, 2: file size in MB */
+		__( '%1$d pages · PDF · %2$s MB', 'vance-health-hub' ),
+		VUG_PDF_PAGES,
+		number_format_i18n( $mb, 1 )
+	);
+}
+
+/**
+ * The download call to action, offered at each point a reader is likely to
+ * want to keep the guide rather than keep scrolling: the hero, the sticky
+ * sub-nav, mid-page after the tools, and the closing CTA.
+ *
+ * All variants point at the same file and carry `download` so the browser
+ * saves it instead of opening a viewer tab.
+ *
+ * @param string $pdf_url URL of the PDF.
+ * @param string $variant 'hero' | 'pill' | 'solid' | 'onteal'.
+ * @param string $label   Button text.
+ * @return string
+ */
+function vug_download_btn( $pdf_url, $variant = 'solid', $label = '' ) {
+	$label   = $label ? $label : __( 'Download User Guide', 'vance-health-hub' );
+	$classes = array(
+		'hero'   => 'btn btn-outline vug-dl',
+		'pill'   => 'vug-subnav__download',
+		'solid'  => 'btn btn-primary vug-dl',
+		'onteal' => 'btn vug-dl vug-dl--onteal',
+	);
+	$class = isset( $classes[ $variant ] ) ? $classes[ $variant ] : $classes['solid'];
+
+	return sprintf(
+		'<a href="%1$s" class="%2$s" download><span class="vug-dl__icon" aria-hidden="true">%3$s</span><span>%4$s</span></a>',
+		esc_url( $pdf_url ),
+		esc_attr( $class ),
+		// Inline so it needs no sprite and inherits currentColor.
+		'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+		esc_html( $label )
+	);
+}
+
 function vug_anim_shot( $img_base, $filename, $alt, $caption, $badges = array(), $delay = 0 ) {
 	ob_start();
 	?>
@@ -128,7 +193,8 @@ $tools = array(
 	$hero_desc    = vance_get_theme_mod( 'vance_userguide_hero_desc', 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.' );
 	$hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_userguide_hero_overlay', 70 ) ) ) ) / 100;
 	$hero_overlay_bottom = min( 1, $hero_overlay + 0.15 );
-	$pdf_url      = get_template_directory_uri() . '/assets/downloads/Vance-Health-Hub-User-Guide.pdf';
+	$pdf_url      = get_template_directory_uri() . '/assets/downloads/' . VUG_PDF_FILE;
+	$pdf_meta     = vug_pdf_meta();
 	?>
 	<section class="hero userguide-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
 		<div class="container">
@@ -137,7 +203,8 @@ $tools = array(
 				<h1><?php echo wp_kses_post( $hero_title ); ?></h1>
 				<p><?php echo esc_html( $hero_desc ); ?></p>
 				<div class="hero-actions" style="margin-top: 24px;">
-					<a href="<?php echo esc_url( $pdf_url ); ?>" class="btn btn-outline" download>Download as PDF</a>
+					<?php echo vug_download_btn( $pdf_url, 'hero' ); ?>
+					<span class="vug-dl__meta vug-dl__meta--hero"><?php echo esc_html( $pdf_meta ); ?></span>
 				</div>
 			</div>
 		</div>
@@ -153,6 +220,8 @@ $tools = array(
 			<li><a href="#vance-ai">VANCE-Ai</a></li>
 			<li><a href="#free-tools">Free Health Tools</a></li>
 			<li><a href="#my-dashboard" class="vug-subnav__highlight">My Dashboard</a></li>
+			<?php // Not a section anchor — the one persistent action on the page. ?>
+			<li class="vug-subnav__dl-item"><?php echo vug_download_btn( $pdf_url, 'pill', __( 'Download', 'vance-health-hub' ) ); ?></li>
 		</ul>
 	</nav>
 
@@ -319,6 +388,25 @@ $tools = array(
 		</div>
 	</section>
 
+	<!-- ============ DOWNLOAD BAND ============
+	     Mid-scroll, straight after the free tools: the point where a reader has
+	     seen enough to want to keep the guide rather than re-find this page. -->
+	<section class="vug-dl-band">
+		<div class="container">
+			<div class="vug-dl-band__inner vug-reveal">
+				<div class="vug-dl-band__text">
+					<span class="vug-eyebrow vug-eyebrow--light"><?php esc_html_e( 'Take it with you', 'vance-health-hub' ); ?></span>
+					<h2><?php esc_html_e( 'The whole guide, as a PDF', 'vance-health-hub' ); ?></h2>
+					<p><?php esc_html_e( 'Everything on this page — every tool, every screenshot, plus a first-week plan and an appointment prep checklist — in one file you can keep on your phone or print for your next appointment.', 'vance-health-hub' ); ?></p>
+				</div>
+				<div class="vug-dl-band__action">
+					<?php echo vug_download_btn( $pdf_url, 'onteal' ); ?>
+					<span class="vug-dl__meta"><?php echo esc_html( $pdf_meta ); ?></span>
+				</div>
+			</div>
+		</div>
+	</section>
+
 	<!-- ============ MY DASHBOARD (centrepiece) ============ -->
 	<section id="my-dashboard" class="vug-section vug-dashboard-section">
 		<div class="container">
@@ -392,8 +480,12 @@ $tools = array(
 			</p>
 			<div class="hero-actions" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
 				<a href="<?php echo esc_url( $vug_join_url ); ?>" class="btn btn-primary"<?php echo $vug_is_logged_in ? '' : ' id="vug-cta-join-btn"'; ?> style="background: white; color: #008080; border: none;">Register Free</a>
+				<?php echo vug_download_btn( $pdf_url, 'onteal' ); ?>
+				<?php if ( ! $vug_is_logged_in ) : ?>
 				<a href="/login/" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;">Already have an account? Sign in</a>
+				<?php endif; ?>
 			</div>
+			<p class="vug-cta-section__meta"><?php echo esc_html( $pdf_meta ); ?></p>
 		</div>
 	</section>
 
