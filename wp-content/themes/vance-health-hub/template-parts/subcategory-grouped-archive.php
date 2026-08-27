@@ -317,17 +317,21 @@ if ( $vance_cat instanceof WP_Term ) {
     ?>
 
     <?php
+    // Prime Block for category archives (Customizer → Homepage → Prime Block
+    // Categories). Called once per placement slot; the block renders in the
+    // slot matching its "Position on the page" setting and bails in the other
+    // two. See archive.php for the same three-slot arrangement.
+    if ( function_exists( 'vance_render_prime_block_categories' ) ) {
+        vance_render_prime_block_categories( 'above_promo' );
+    }
+
     // Configurable per-category promo block (Customizer → Content → Category Promo Blocks).
     if ( is_category() && function_exists( 'vance_render_category_promo' ) ) {
         vance_render_category_promo( get_queried_object_id() );
     }
 
-    // Global Prime Block for category archives (Customizer → Homepage → Prime
-    // Block Categories). One block, shown identically on every archive; it
-    // bails on its own when the opt-in toggle is off. A direct call rather
-    // than a hook, matching the category promo block directly above.
     if ( function_exists( 'vance_render_prime_block_categories' ) ) {
-        vance_render_prime_block_categories();
+        vance_render_prime_block_categories( 'below_promo' );
     }
     ?>
 
@@ -446,4 +450,11 @@ if ( $vance_cat instanceof WP_Term ) {
             <p>No content found.</p>
         <?php endif; ?>
     </div>
+
+    <?php
+    // Third placement slot — end of the page, just above the footer.
+    if ( function_exists( 'vance_render_prime_block_categories' ) ) {
+        vance_render_prime_block_categories( 'above_footer' );
+    }
+    ?>
 </main>

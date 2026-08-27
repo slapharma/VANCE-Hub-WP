@@ -2,13 +2,9 @@
 /**
  * Template Name: Knowledgebase Lobby
  *
- * Landing page behind the KNOWLEDGEBASE nav item: one large block button per
- * destination that currently lives in that menu's flyout, so the flyout and the
- * lobby can never drift apart.
- *
- * To activate: create a Page titled "Knowledgebase", slug `knowledgebase`,
- * choose "Knowledgebase Lobby" as the template, then repoint the KNOWLEDGEBASE
- * menu item at it (it is currently a custom link to the site root).
+ * Landing page behind the KNOWLEDGEBASE nav item: one large block per
+ * destination in that menu's flyout, so the flyout and the lobby cannot drift
+ * apart.
  *
  * Where the blocks come from, in order of preference:
  *   1. The children of the primary menu's KNOWLEDGEBASE item — matched first by
@@ -17,9 +13,14 @@
  *   2. If that menu item can't be found (menu renamed, Mega Menu Pro off,
  *      location unassigned), every top-level category with posts.
  *
- * Copy: Appearance -> Customize -> Page - Knowledgebase.
- * Per-category accent colours are shared with the homepage Knowledge Base
- * sections (`vance_kb_accent_{term_id}`), so a block matches its section.
+ * Each block previews what is actually inside it — the newest few articles for a
+ * category, the first few conditions for the GI Health hub. That preview is the
+ * point of the page: a grid of eight words tells a visitor nothing about which
+ * door to open, and the titles do.
+ *
+ * Everything configurable lives in Appearance -> Customize -> Page -
+ * Knowledgebase: copy, cards per row, accent colour, which collections are
+ * hidden or flagged as not launched, and how many preview links to show.
  */
 
 if ( ! function_exists( 'vance_kb_lobby_slugify' ) ) :
@@ -32,37 +33,86 @@ if ( ! function_exists( 'vance_kb_lobby_slugify' ) ) :
 	}
 endif;
 
+if ( ! function_exists( 'vance_kb_lobby_title_key' ) ) :
+	/**
+	 * Comparison key for the admin-entered title lists (hidden / not launched).
+	 *
+	 * vance_kb_lobby_slugify() STRIPS '&' rather than reading it as a word, so
+	 * "Webinars & Courses" and "Webinars and Courses" fold to different keys and
+	 * one of the two spellings would silently never match. Fold the ampersand
+	 * first so either spelling works.
+	 */
+	function vance_kb_lobby_title_key( $text ) {
+		return vance_kb_lobby_slugify( str_replace( '&', ' and ', (string) $text ) );
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_title_list' ) ) :
+	/**
+	 * Turn a one-per-line Customizer textarea into a list of comparison keys.
+	 *
+	 * @param string $mod     Theme mod name.
+	 * @param string $default Default textarea contents.
+	 * @return string[]
+	 */
+	function vance_kb_lobby_title_list( $mod, $default = '' ) {
+		$out = array();
+
+		foreach ( preg_split( '/\r\n|\r|\n/', (string) vance_get_theme_mod( $mod, $default ) ) as $line ) {
+			$key = vance_kb_lobby_title_key( $line );
+			if ( '' !== $key ) {
+				$out[] = $key;
+			}
+		}
+
+		return $out;
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_text' ) ) :
+	/**
+	 * Plain text for a value this template will esc_html() itself.
+	 *
+	 * Post and term titles come out of WP with entities already in them
+	 * ("Crohn&#8217;s Disease"). Passing that straight to esc_html() escapes the
+	 * ampersand a second time, so the page renders the literal characters
+	 * "&#8217;" instead of an apostrophe. Decode first, then strip tags (that
+	 * order, so an encoded "&lt;script&gt;" is decoded and THEN removed rather
+	 * than surviving as markup), and let the caller escape once at output.
+	 *
+	 * Decoding first also stops wp_trim_words() cutting through the middle of an
+	 * entity and leaving a fragment on the card.
+	 *
+	 * @param string $text
+	 * @return string
+	 */
+	function vance_kb_lobby_text( $text ) {
+		$decoded = html_entity_decode( (string) $text, ENT_QUOTES, get_bloginfo( 'charset' ) );
+
+		return trim( wp_strip_all_tags( $decoded ) );
+	}
+endif;
+
 if ( ! function_exists( 'vance_kb_lobby_ink' ) ) :
 	/**
 	 * Darken an accent until white-background text on it clears WCAG AA (4.5:1).
 	 *
-	 * The shared accent palette carries amber (#F59E0B, 2.1:1 on white) and sky
-	 * (#0EA5E9, 2.8:1). Those are fine as a 5px rule but unreadable as 14px
-	 * bold link text, so the block's text and its filled icon tile use this
-	 * derived colour instead of the raw accent. Teal (#008080, 4.8:1) and the
-	 * other dark stops come back unchanged.
+	 * The site's KB purple (#8e7dbe) is 3.60:1 on white — fine as a 4px rule, and
+	 * unreadable as 14px bold link text. So the block's text and its filled icon
+	 * tile use this derived colour while the rule keeps the true brand colour.
 	 *
-	 * 4.5:1 against white means (1.0 + 0.05) / (L + 0.05) >= 4.5, i.e. a
-	 * relative luminance of at most 0.1833.
+	 * 4.5:1 against white means (1.0 + 0.05) / (L + 0.05) >= 4.5, i.e. a relative
+	 * luminance of at most 0.1833.
 	 *
 	 * @param string $hex Accent colour, #rgb or #rrggbb.
 	 * @return string A #rrggbb colour safe for text on white.
 	 */
 	function vance_kb_lobby_ink( $hex ) {
-		$hex = ltrim( (string) $hex, '#' );
+		$rgb = vance_kb_lobby_rgb( $hex );
 
-		if ( 3 === strlen( $hex ) ) {
-			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-		}
-		if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+		if ( null === $rgb ) {
 			return '#006666'; // --primary-hover; safe fallback for junk input.
 		}
-
-		$rgb = array(
-			hexdec( substr( $hex, 0, 2 ) ),
-			hexdec( substr( $hex, 2, 2 ) ),
-			hexdec( substr( $hex, 4, 2 ) ),
-		);
 
 		$luminance = static function ( $channels ) {
 			$linear = array();
@@ -90,9 +140,57 @@ if ( ! function_exists( 'vance_kb_lobby_ink' ) ) :
 	}
 endif;
 
+if ( ! function_exists( 'vance_kb_lobby_rgb' ) ) :
+	/**
+	 * Parse #rgb / #rrggbb to an [r, g, b] array, or null if it isn't a colour.
+	 *
+	 * @param string $hex
+	 * @return int[]|null
+	 */
+	function vance_kb_lobby_rgb( $hex ) {
+		$hex = ltrim( (string) $hex, '#' );
+
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+			return null;
+		}
+
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) ),
+		);
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_wash' ) ) :
+	/**
+	 * A very pale tint of the accent, for the card's hover fill.
+	 *
+	 * Emitted as rgba() from PHP rather than done in CSS: colour-mix() only
+	 * reached Safari in 16.2, and an opacity on the card itself would fade its
+	 * text along with its background.
+	 *
+	 * @param string $hex
+	 * @param float  $alpha
+	 * @return string
+	 */
+	function vance_kb_lobby_wash( $hex, $alpha = 0.06 ) {
+		$rgb = vance_kb_lobby_rgb( $hex );
+
+		if ( null === $rgb ) {
+			return 'rgba(0, 128, 128, ' . $alpha . ')';
+		}
+
+		return sprintf( 'rgba(%d, %d, %d, %s)', $rgb[0], $rgb[1], $rgb[2], $alpha );
+	}
+endif;
+
 if ( ! function_exists( 'vance_kb_lobby_meta_label' ) ) :
 	/**
-	 * The small line at the foot of a block.
+	 * The small eyebrow above a block's title.
 	 *
 	 * @param int|null $count Items behind the block, or null when the block has
 	 *                        nothing countable (a plain page). null is NOT the
@@ -125,9 +223,9 @@ if ( ! function_exists( 'vance_kb_lobby_page_count' ) ) :
 	 * How many items a linked PAGE puts behind a block, or null if that page
 	 * isn't a listing we know how to count.
 	 *
-	 * Only the GI Health hub is countable today: it renders one card per entry
-	 * in vance_gi_condition_cards(), so the number tracks that registry instead
-	 * of being typed in here and going stale the next time a condition is added.
+	 * Only the GI Health hub is countable today: it renders one card per entry in
+	 * vance_gi_condition_cards(), so the number tracks that registry instead of
+	 * being typed in here and going stale the next time a condition is added.
 	 * Matched on the page's assigned template rather than its slug, because the
 	 * page can be renamed.
 	 *
@@ -145,19 +243,98 @@ if ( ! function_exists( 'vance_kb_lobby_page_count' ) ) :
 	}
 endif;
 
+if ( ! function_exists( 'vance_kb_lobby_peek' ) ) :
+	/**
+	 * What is actually inside a block: up to $limit destinations to preview.
+	 *
+	 * A category previews its newest posts; the GI Health hub previews the first
+	 * few conditions it lists. Anything else previews nothing rather than
+	 * inventing a list.
+	 *
+	 * @param int $term_id Category term id, or 0.
+	 * @param int $page_id Linked page id, or 0.
+	 * @param int $limit   Maximum entries; 0 disables the preview entirely.
+	 * @return array<int, array{title:string,url:string}>
+	 */
+	function vance_kb_lobby_peek( $term_id, $page_id, $limit ) {
+		$limit = (int) $limit;
+		if ( $limit < 1 ) {
+			return array();
+		}
+
+		$out = array();
+
+		if ( $term_id > 0 ) {
+			$posts = get_posts( array(
+				'category'         => $term_id,
+				'numberposts'      => $limit,
+				'post_status'      => 'publish',
+				'orderby'          => 'date',
+				'order'            => 'DESC',
+				'suppress_filters' => false,
+			) );
+
+			foreach ( $posts as $post_obj ) {
+				$out[] = array(
+					'title' => vance_kb_lobby_text( get_the_title( $post_obj ) ),
+					'url'   => get_permalink( $post_obj ),
+				);
+			}
+
+			return $out;
+		}
+
+		if ( $page_id > 0
+			&& 'page-gi-health.php' === get_page_template_slug( $page_id )
+			&& function_exists( 'vance_gi_condition_cards' )
+			&& function_exists( 'vance_gi_page_url' ) ) {
+
+			foreach ( array_slice( vance_gi_condition_cards(), 0, $limit ) as $card ) {
+				$out[] = array(
+					'title' => vance_kb_lobby_text( $card['title'] ),
+					'url'   => vance_gi_page_url( $card['slug'] ),
+				);
+			}
+		}
+
+		return $out;
+	}
+endif;
+
 if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 	/**
 	 * Resolve the lobby's blocks.
 	 *
-	 * @return array List of array( title, url, desc, meta, soon, accent, term_id ).
+	 * @return array List of array( title, url, desc, meta, soon, accent, ink,
+	 *               wash, peek, term_id ).
 	 */
 	function vance_kb_lobby_items() {
+		/*
+		 * Accent colour. "single" paints every block the same brand colour, which
+		 * is the default: with one colour per collection, the palette became the
+		 * loudest thing on the page and implied a category system that does not
+		 * exist. "match" restores the old behaviour, where each block borrows the
+		 * accent its homepage Knowledge Base section already uses.
+		 */
+		$mode   = vance_get_theme_mod( 'vance_kblobby_accent_mode', 'single' );
+		$single = vance_get_theme_mod( 'vance_kblobby_accent_single', '#8e7dbe' );
+		if ( ! vance_kb_lobby_rgb( $single ) ) {
+			$single = '#8e7dbe';
+		}
+
+		// Only consulted in "match" mode; kept as the fallback for a category
+		// with no accent of its own.
 		$palette = array( '#008080', '#0EA5E9', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444' );
-		$blocks  = array();
+
+		$peek_limit = max( 0, min( 5, absint( vance_get_theme_mod( 'vance_kblobby_peek_count', 3 ) ) ) );
+		$hidden     = vance_kb_lobby_title_list( 'vance_kblobby_hidden_titles', 'Webinars and Courses' );
+		$soon_list  = vance_kb_lobby_title_list( 'vance_kblobby_soon_titles', '' );
+
+		$blocks = array();
+		$raw    = array();
 
 		$locations = get_nav_menu_locations();
 		$menu_id   = isset( $locations['primary-menu'] ) ? (int) $locations['primary-menu'] : 0;
-		$children  = array();
 
 		if ( $menu_id ) {
 			$menu_items = wp_get_nav_menu_items( $menu_id );
@@ -184,82 +361,82 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 				if ( $parent_id ) {
 					foreach ( $menu_items as $item ) {
 						if ( (int) $item->menu_item_parent === $parent_id ) {
-							$children[] = $item;
+							$raw[] = $item;
 						}
 					}
 				}
 			}
 		}
 
-		if ( ! empty( $children ) ) {
-			// Collections the site owner has flagged as not launched yet, matched on
-			// the block's own title. vance_kb_lobby_slugify() STRIPS '&' rather than
-			// reading it as a word, so "Webinars & Courses" and "Webinars and
-			// Courses" fold to different keys and one of the two spellings would
-			// silently never match. Fold the ampersand first, on both sides of the
-			// comparison, so either spelling works.
-			$soon_key = static function ( $text ) {
-				return vance_kb_lobby_slugify( str_replace( '&', ' and ', (string) $text ) );
-			};
+		if ( ! empty( $raw ) ) {
+			$i = 0;
 
-			$not_launched = array();
-			foreach ( preg_split( '/\r\n|\r|\n/', (string) vance_get_theme_mod( 'vance_kblobby_soon_titles', 'Webinars and Courses' ) ) as $line ) {
-				$line = $soon_key( $line );
-				if ( '' !== $line ) {
-					$not_launched[] = $line;
+			foreach ( $raw as $item ) {
+				// Hidden collections leave the lobby but stay in the menu — the
+				// nav still needs to reach a page the lobby isn't promoting.
+				if ( in_array( vance_kb_lobby_title_key( $item->title ), $hidden, true ) ) {
+					continue;
 				}
-			}
 
-			foreach ( $children as $i => $item ) {
-				$desc    = trim( (string) $item->description );
+				$desc    = vance_kb_lobby_text( $item->description );
 				$count   = null; // null = nothing countable behind this block.
 				$term_id = 0;
-				$accent  = $palette[ $i % count( $palette ) ];
+				$page_id = 0;
+				$accent  = ( 'single' === $mode ) ? $single : $palette[ $i % count( $palette ) ];
 
 				if ( 'taxonomy' === $item->type && 'category' === $item->object ) {
 					$term = get_term( (int) $item->object_id, 'category' );
 					if ( $term instanceof WP_Term ) {
 						$term_id = (int) $term->term_id;
 						if ( '' === $desc ) {
-							$desc = trim( wp_strip_all_tags( $term->description ) );
+							$desc = vance_kb_lobby_text( $term->description );
 						}
 						$count = (int) $term->count;
-						// Share the homepage section's accent so a block and the
-						// section it leads to read as the same thing.
-						$accent = vance_get_theme_mod( "vance_kb_accent_{$term_id}", $accent );
+						if ( 'match' === $mode ) {
+							$accent = vance_get_theme_mod( "vance_kb_accent_{$term_id}", $accent );
+						}
 					}
 				} elseif ( 'post_type' === $item->type ) {
 					$linked = get_post( (int) $item->object_id );
 					if ( $linked instanceof WP_Post ) {
+						$page_id = (int) $linked->ID;
 						if ( '' === $desc ) {
-							$desc = trim( wp_strip_all_tags( $linked->post_excerpt ) );
+							$desc = vance_kb_lobby_text( $linked->post_excerpt );
 						}
-						$count = vance_kb_lobby_page_count( (int) $linked->ID );
+						$count = vance_kb_lobby_page_count( $page_id );
 					}
 				}
 
 				// An explicit "not launched" flag wins over any count: a page can
 				// be a real listing and still not be ready to promote.
-				$soon = in_array( $soon_key( $item->title ), $not_launched, true );
-				if ( $soon ) {
+				if ( in_array( vance_kb_lobby_title_key( $item->title ), $soon_list, true ) ) {
 					$count = 0;
 				}
 
+				if ( ! vance_kb_lobby_rgb( $accent ) ) {
+					$accent = $single;
+				}
+
 				$blocks[] = array(
-					'title'   => $item->title,
+					'title'   => vance_kb_lobby_text( $item->title ),
 					'url'     => $item->url,
 					'desc'    => $desc,
 					'meta'    => vance_kb_lobby_meta_label( $count ),
 					'soon'    => ( null !== $count && (int) $count < 1 ),
-					'accent'  => $accent ? $accent : $palette[ $i % count( $palette ) ],
+					'accent'  => $accent,
+					'ink'     => vance_kb_lobby_ink( $accent ),
+					'wash'    => vance_kb_lobby_wash( $accent ),
+					'peek'    => vance_kb_lobby_peek( $term_id, $page_id, $peek_limit ),
 					'term_id' => $term_id,
 				);
+
+				$i++;
 			}
 
 			return $blocks;
 		}
 
-		// Fallback - every top-level category that has posts.
+		// Fallback — every top-level category that has posts.
 		$uncat   = get_category_by_slug( 'uncategorized' );
 		$exclude = $uncat ? array( $uncat->term_id ) : array();
 
@@ -271,18 +448,35 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 			'exclude'    => $exclude,
 		) );
 
-		foreach ( $cats as $i => $cat ) {
-			$accent = vance_get_theme_mod( "vance_kb_accent_{$cat->term_id}", $palette[ $i % count( $palette ) ] );
+		$i = 0;
+
+		foreach ( $cats as $cat ) {
+			if ( in_array( vance_kb_lobby_title_key( $cat->name ), $hidden, true ) ) {
+				continue;
+			}
+
+			$accent = ( 'single' === $mode )
+				? $single
+				: vance_get_theme_mod( "vance_kb_accent_{$cat->term_id}", $palette[ $i % count( $palette ) ] );
+
+			if ( ! vance_kb_lobby_rgb( $accent ) ) {
+				$accent = $single;
+			}
 
 			$blocks[] = array(
-				'title'   => $cat->name,
+				'title'   => vance_kb_lobby_text( $cat->name ),
 				'url'     => get_category_link( $cat->term_id ),
-				'desc'    => trim( wp_strip_all_tags( $cat->description ) ),
+				'desc'    => vance_kb_lobby_text( $cat->description ),
 				'meta'    => vance_kb_lobby_meta_label( (int) $cat->count ),
 				'soon'    => ( (int) $cat->count < 1 ),
-				'accent'  => $accent ? $accent : $palette[ $i % count( $palette ) ],
+				'accent'  => $accent,
+				'ink'     => vance_kb_lobby_ink( $accent ),
+				'wash'    => vance_kb_lobby_wash( $accent ),
+				'peek'    => vance_kb_lobby_peek( (int) $cat->term_id, 0, $peek_limit ),
 				'term_id' => (int) $cat->term_id,
 			);
+
+			$i++;
 		}
 
 		return $blocks;
@@ -296,7 +490,8 @@ $kb_blocks = vance_kb_lobby_items();
 /*
  * Block icons. Cycled by position rather than guessed from the title: category
  * names are editable and a wrong-but-confident icon reads worse than a neutral
- * one. Stroke-only 24x24 paths, matching the tool cards on /free-health-tools/.
+ * one. With every block now sharing one accent, these are what tell the cards
+ * apart at a glance, so they matter more than they did.
  */
 $kb_icons = array(
 	'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>',
@@ -307,6 +502,8 @@ $kb_icons = array(
 	'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M3 6l9-3 9 3-9 3-9-3zm0 6l9 3 9-3M3 18l9 3 9-3"/>',
 );
 
+$kb_per_row = max( 1, min( 3, absint( vance_get_theme_mod( 'vance_kblobby_per_row', 2 ) ) ) );
+
 $kb_hero_bg = vance_get_theme_mod( 'vance_kblobby_hero_bg' );
 if ( ! $kb_hero_bg ) {
 	$kb_hero_bg = get_template_directory_uri() . '/assets/img/research_hero.png';
@@ -315,11 +512,13 @@ $kb_hero_overlay        = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_
 $kb_hero_overlay_bottom = min( 1, $kb_hero_overlay + 0.12 );
 $kb_hero_tag            = vance_get_theme_mod( 'vance_kblobby_hero_tag', 'Knowledgebase' );
 $kb_hero_title          = vance_get_theme_mod( 'vance_kblobby_hero_title', 'The whole <span class="highlight">evidence library</span>, one door' );
-$kb_hero_desc           = vance_get_theme_mod( 'vance_kblobby_hero_desc', 'Clinical reviews, gastro living guides, health news and courses - every collection in the Vance Medical Hub, grouped so you can go straight to the one you need.' );
+$kb_hero_desc           = vance_get_theme_mod( 'vance_kblobby_hero_desc', 'Clinical reviews, gastro living guides and health news - every collection in the Vance Medical Hub, grouped so you can go straight to the one you need.' );
 
 $kb_intro_eyebrow = vance_get_theme_mod( 'vance_kblobby_intro_eyebrow', 'Start Here' );
 $kb_intro_title   = vance_get_theme_mod( 'vance_kblobby_intro_title', 'Pick a collection' );
-$kb_intro_desc    = vance_get_theme_mod( 'vance_kblobby_intro_desc', 'Every collection below is curated and clinically reviewed. Not sure where to begin? Search across all of them at once.' );
+$kb_intro_desc    = vance_get_theme_mod( 'vance_kblobby_intro_desc', 'Every collection below is curated and clinically reviewed. Each card shows what is newest inside it, so you can jump straight to an article or open the whole shelf.' );
+
+$kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside' );
 ?>
 
 <main id="main-content" class="kb-lobby">
@@ -364,7 +563,7 @@ $kb_intro_desc    = vance_get_theme_mod( 'vance_kblobby_intro_desc', 'Every coll
 		</div>
 	</section>
 
-	<!-- BLOCK BUTTONS -->
+	<!-- BLOCKS -->
 	<section class="kb-lobby-blocks">
 		<div class="container">
 			<?php if ( empty( $kb_blocks ) ) : ?>
@@ -375,30 +574,58 @@ $kb_intro_desc    = vance_get_theme_mod( 'vance_kblobby_intro_desc', 'Every coll
 
 			<?php else : ?>
 
-				<div class="kb-lobby-grid">
+				<div class="kb-lobby-grid kb-lobby-grid--<?php echo (int) $kb_per_row; ?>">
 					<?php foreach ( $kb_blocks as $i => $block ) : ?>
-						<a class="kb-block" href="<?php echo esc_url( $block['url'] ); ?>" style="--kb-accent: <?php echo esc_attr( $block['accent'] ); ?>; --kb-accent-ink: <?php echo esc_attr( vance_kb_lobby_ink( $block['accent'] ) ); ?>;">
-							<span class="kb-block__icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><?php echo $kb_icons[ $i % count( $kb_icons ) ]; // phpcs:ignore WordPress.Security.EscapeOutput -- hardcoded SVG paths, defined above. ?></svg>
-							</span>
+						<?php
+						/*
+						 * <article> with a stretched title link, not one big <a>:
+						 * the preview entries below are real links, and an <a>
+						 * cannot legally contain another. Same pattern the news
+						 * cards use for their taxonomy chips (main.css
+						 * .card-stretched-link).
+						 */
+						?>
+						<article class="kb-block<?php echo ! empty( $block['soon'] ) ? ' kb-block--soon' : ''; ?>"
+							style="--kb-accent: <?php echo esc_attr( $block['accent'] ); ?>; --kb-accent-ink: <?php echo esc_attr( $block['ink'] ); ?>; --kb-accent-wash: <?php echo esc_attr( $block['wash'] ); ?>;">
 
-							<span class="kb-block__body">
-								<span class="kb-block__title"><?php echo esc_html( $block['title'] ); ?></span>
-								<?php if ( $block['desc'] ) : ?>
-									<span class="kb-block__desc"><?php echo esc_html( wp_trim_words( $block['desc'], 26, '...' ) ); ?></span>
-								<?php endif; ?>
-							</span>
-
-							<span class="kb-block__foot">
-								<?php if ( $block['meta'] ) : ?>
-									<span class="kb-block__meta<?php echo ! empty( $block['soon'] ) ? ' kb-block__meta--soon' : ''; ?>"><?php echo esc_html( $block['meta'] ); ?></span>
-								<?php endif; ?>
-								<span class="kb-block__cta">
-									<?php esc_html_e( 'Browse', 'vance-health-hub' ); ?>
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+							<div class="kb-block__head">
+								<span class="kb-block__icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><?php echo $kb_icons[ $i % count( $kb_icons ) ]; // phpcs:ignore WordPress.Security.EscapeOutput -- hardcoded SVG paths, defined above. ?></svg>
 								</span>
+
+								<div class="kb-block__headings">
+									<?php if ( $block['meta'] ) : ?>
+										<span class="kb-block__meta"><?php echo esc_html( $block['meta'] ); ?></span>
+									<?php endif; ?>
+									<h3 class="kb-block__title">
+										<a class="kb-block__link" href="<?php echo esc_url( $block['url'] ); ?>"><?php echo esc_html( $block['title'] ); ?></a>
+									</h3>
+								</div>
+							</div>
+
+							<?php if ( $block['desc'] ) : ?>
+								<p class="kb-block__desc"><?php echo esc_html( wp_trim_words( $block['desc'], 24, '...' ) ); ?></p>
+							<?php endif; ?>
+
+							<?php if ( ! empty( $block['peek'] ) ) : ?>
+								<div class="kb-block__peek">
+									<span class="kb-block__peek-label"><?php echo esc_html( $kb_peek_label ); ?></span>
+									<ul class="kb-block__peek-list">
+										<?php foreach ( $block['peek'] as $peek ) : ?>
+											<li>
+												<a href="<?php echo esc_url( $peek['url'] ); ?>"><?php echo esc_html( wp_trim_words( $peek['title'], 14, '...' ) ); ?></a>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								</div>
+							<?php endif; ?>
+
+							<?php // Decorative: the title above is the real link, so this must not be announced as a second one. ?>
+							<span class="kb-block__cta" aria-hidden="true">
+								<?php esc_html_e( 'Browse all', 'vance-health-hub' ); ?>
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
 							</span>
-						</a>
+						</article>
 					<?php endforeach; ?>
 				</div>
 

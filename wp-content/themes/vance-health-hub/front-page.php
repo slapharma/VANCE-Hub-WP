@@ -1263,8 +1263,19 @@ body {
                         </article>
                         <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;">
+                <?php else:
+                    /* Standard Grid. The column count is set by the minimum
+                       track width, not a fixed `repeat(n)`: auto-fill then drops
+                       a column on its own as the viewport narrows, which is how
+                       the 4-col grid has always behaved. Inside a 1160px
+                       container with a 24px gap, a 260px minimum lands on four
+                       columns and a 200px minimum on five. Classes rather than
+                       an inline style so the phone breakpoint in main.css can
+                       reach them — an inline grid-template-columns would win
+                       over any stylesheet rule. */
+                    $kb_grid_min = ( $layout === 'grid-5' ) ? 200 : 260;
+                ?>
+                    <div class="va-kb-grid va-kb-grid--min-<?php echo (int) $kb_grid_min; ?>">
                         <?php foreach ($posts_array as $p): ?>
                         <article class="news-card" style="background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
                             <?php

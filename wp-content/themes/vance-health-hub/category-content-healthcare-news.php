@@ -80,8 +80,20 @@ if ( $vhn_cat instanceof WP_Term ) {
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
 
     <?php
+    // Prime Block for category archives (Customizer -> Homepage -> Prime Block
+    // Categories). This template previously skipped the block entirely, so
+    // Healthcare News was the one archive it could never appear on however the
+    // Customizer was set. Same three-slot arrangement as archive.php.
+    if ( function_exists( 'vance_render_prime_block_categories' ) ) {
+        vance_render_prime_block_categories( 'above_promo' );
+    }
+
     if ( function_exists( 'vance_render_category_promo' ) ) {
         vance_render_category_promo( get_queried_object_id() );
+    }
+
+    if ( function_exists( 'vance_render_prime_block_categories' ) ) {
+        vance_render_prime_block_categories( 'below_promo' );
     }
     ?>
 
@@ -194,6 +206,13 @@ if ( $vhn_cat instanceof WP_Term ) {
             <p>No content found.</p>
         <?php endif; ?>
     </div>
+
+    <?php
+    // Third placement slot - end of the page, just above the footer.
+    if ( function_exists( 'vance_render_prime_block_categories' ) ) {
+        vance_render_prime_block_categories( 'above_footer' );
+    }
+    ?>
 </main>
 
 <?php get_footer(); ?>

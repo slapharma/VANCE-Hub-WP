@@ -1,19 +1,23 @@
 /* =====================================================================
    Knowledgebase lobby (page-knowledgebase.php)
 
-   Big block buttons, one per collection in the KNOWLEDGEBASE menu.
-   Enqueued only on that template (functions.php, is_page_template()).
+   Enqueued only on that page (functions.php). Square corners, Inter/Outfit
+   and the teal/navy tokens all come from main.css :root; this file adds no
+   new global tokens.
 
-   Design notes:
-   - Square corners and the teal/navy palette come from main.css :root; this
-     file adds no new tokens. Each block's accent arrives as an inline
-     `--kb-accent` custom property set per-category in the template, shared
-     with the homepage Knowledge Base sections.
-   - The whole block is one <a>, so the hit area is the card, not the title.
-     Its children are <span>s (not <div>s) because an <a> may not contain
-     block-level flow content in valid HTML; display is set here instead.
-   - Hover changes colour and shadow but never size — a scale transform on a
-     grid item nudges its neighbours and makes the pointer skate.
+   Per-card custom properties, all set inline by the template:
+     --kb-accent      the brand colour, used only for the 4px spine and the
+                      preview bullets. Decorative, so a light stop is fine.
+     --kb-accent-ink  the same colour darkened by vance_kb_lobby_ink() until it
+                      clears 4.5:1 on white. Everything that carries meaning -
+                      the eyebrow, the title on hover, the icon tile, the Browse
+                      affordance - uses this one. The site's KB purple #8e7dbe
+                      is 3.60:1 raw, so this is not cosmetic.
+     --kb-accent-wash a ~6% tint of the accent for the hover fill.
+
+   Structure note: the card is an <article> with a stretched title link, not one
+   big <a>. The preview entries are real links and an <a> cannot legally contain
+   another. Same approach main.css uses for news-card taxonomy chips.
    ===================================================================== */
 
 .kb-lobby-intro {
@@ -22,7 +26,7 @@
 }
 
 .kb-lobby-intro__inner {
-    max-width: 640px;
+    max-width: 660px;
     margin: 0 auto;
     text-align: center;
 }
@@ -47,59 +51,58 @@
 .kb-lobby-intro__desc {
     color: var(--text-light);
     margin: 0;
+    font-size: 16px;
+    line-height: 1.65;
 }
 
 .kb-lobby-blocks {
     background: #fff;
-    padding: 40px 0 80px;
+    padding: 44px 0 88px;
 }
 
+/* Explicit column counts rather than auto-fit: the admin picks how many cards
+   sit per row, and auto-fit would quietly override that choice at some widths. */
 .kb-lobby-grid {
     display: grid;
-    /* auto-fit + minmax gives 3 columns in the 1200px container, 2 on tablet
-       and 1 on phones, and stretches a short final row to fill instead of
-       leaving a ragged gap. */
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
+    gap: 28px;
 }
+
+.kb-lobby-grid--1 { grid-template-columns: 1fr; }
+.kb-lobby-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kb-lobby-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .kb-block {
-    /* --kb-accent  : the category's colour, shared with the homepage KB
-                      section. Used only for the 5px top rule, which is
-                      decorative, so a light stop like amber is fine there.
-       --kb-accent-ink : the same colour darkened by vance_kb_lobby_ink() in
-                      page-knowledgebase.php until it clears 4.5:1 on white.
-                      Everything that carries meaning — title on hover, the
-                      Browse link, the filled icon tile — uses this one.
-                      Both are set inline per block; these are the fallbacks. */
     --kb-accent: var(--primary-color);
     --kb-accent-ink: var(--primary-color);
+    --kb-accent-wash: rgba(0, 128, 128, 0.06);
 
+    position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 260px;
-    padding: 30px 28px 26px;
+    padding: 30px 32px 26px;
     background: #fff;
-    color: inherit;
-    border: 1px solid #e2e8f0;
-    border-top: 5px solid var(--kb-accent);
+    border: 1px solid #e6e8ec;
+    /* A spine rather than a top bar: at two-up the cards are wide and short, and
+       a vertical rule anchors the eye at the start of the line instead of
+       drawing a lid across the top. */
+    border-left: 4px solid var(--kb-accent);
     box-shadow: var(--shadow-sm);
-    text-decoration: none;
-    cursor: pointer;
-    transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+    transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.kb-block:hover,
-.kb-block:focus-visible {
-    background: #fcfefe;
+/* Hover changes colour and depth but never size: a transform on a grid item
+   nudges its neighbours and makes the pointer skate off the target. */
+.kb-block:hover {
+    background: var(--kb-accent-wash);
     border-color: var(--kb-accent);
-    border-top-color: var(--kb-accent);
-    box-shadow: 0 14px 28px rgba(10, 25, 41, 0.12);
+    box-shadow: 0 16px 34px rgba(10, 25, 41, 0.11);
 }
 
-.kb-block:focus-visible {
-    outline: 2px solid var(--secondary-color);
-    outline-offset: 3px;
+.kb-block__head {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
 }
 
 .kb-block__icon {
@@ -107,9 +110,8 @@
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: 56px;
-    height: 56px;
-    margin-bottom: 20px;
+    width: 58px;
+    height: 58px;
     background: var(--kb-accent-ink);
     color: #fff;
 }
@@ -119,62 +121,144 @@
     height: 28px;
 }
 
-.kb-block__body {
-    display: block;
-    flex: 1 1 auto;
+.kb-block__headings {
+    min-width: 0; /* lets a long title wrap instead of forcing the row wider */
 }
 
-.kb-block__title {
-    display: block;
-    margin-bottom: 10px;
-    color: var(--secondary-color);
-    font-family: var(--font-heading);
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1.2;
-    transition: color 0.25s ease;
-}
-
-.kb-block:hover .kb-block__title {
-    color: var(--kb-accent-ink);
-}
-
-.kb-block__desc {
-    display: block;
-    color: var(--text-light);
-    font-size: 15px;
-    line-height: 1.6;
-}
-
-.kb-block__foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 22px;
-    padding-top: 16px;
-    border-top: 1px solid #eef2f6;
-}
-
+/* Count moved above the title: it qualifies what you are about to open, so it
+   belongs before it, not stranded at the card's foot. */
 .kb-block__meta {
-    color: var(--text-light);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.6px;
+    display: block;
+    margin-bottom: 5px;
+    color: var(--kb-accent-ink);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
     text-transform: uppercase;
 }
 
-/* A status, not a count - tint it with the block's own (contrast-corrected)
-   accent so it reads as a badge rather than as another grey metric. */
-.kb-block__meta--soon {
+.kb-block__title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.kb-block__link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.kb-block:hover .kb-block__link {
     color: var(--kb-accent-ink);
+}
+
+/* Stretched link: the whole card is the target, while the preview links below
+   stay independently clickable by sitting above this layer. */
+.kb-block__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* The stretched pseudo-element has no box of its own to ring, so draw the focus
+   indicator on it - it covers the card, which is what actually receives the
+   click. 3px per the accessible-product guidance for this sector. */
+.kb-block__link:focus-visible {
+    outline: none;
+}
+
+.kb-block__link:focus-visible::after {
+    outline: 3px solid var(--secondary-color);
+    outline-offset: -3px;
+}
+
+.kb-block__desc {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+/* The point of the redesign: show what is actually behind the door. */
+.kb-block__peek {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #eef1f5;
+}
+
+.kb-block__peek-label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-light);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.kb-block__peek-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kb-block__peek-list li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 7px;
+}
+
+.kb-block__peek-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    background: var(--kb-accent);
+}
+
+/* One line each, ellipsised by CSS rather than by a fixed word count: the word
+   count cannot know the column width, and letting long research titles wrap
+   made every card in a row a different height and left dead space between the
+   wrapped lines where the card's stretched link won the click instead of the
+   preview link. display:block also gives each entry a full-width hit area. */
+.kb-block__peek-list a {
+    position: relative;
+    z-index: 2; /* above the stretched title link */
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.5;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+/* text-decoration, not a border-bottom: the anchor is now full-width, so a
+   border would rule across the empty space after a short title. */
+.kb-block__peek-list a:hover {
+    color: var(--kb-accent-ink);
+    text-decoration: underline;
+}
+
+.kb-block__peek-list a:focus-visible {
+    outline: 3px solid var(--secondary-color);
+    outline-offset: 2px;
 }
 
 .kb-block__cta {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-left: auto;
+    margin-top: auto;
+    padding-top: 22px;
     color: var(--kb-accent-ink);
     font-size: 14px;
     font-weight: 700;
@@ -187,7 +271,17 @@
 }
 
 .kb-block:hover .kb-block__cta svg {
-    transform: translateX(4px);
+    transform: translateX(5px);
+}
+
+/* Not launched yet: mute the card so it reads as a placeholder rather than
+   competing with the collections that do have something behind them. */
+.kb-block--soon .kb-block__icon {
+    background: #94a3b8;
+}
+
+.kb-block--soon .kb-block__meta {
+    color: var(--text-light);
 }
 
 .kb-lobby-empty {
@@ -220,9 +314,22 @@
     margin: 0 0 16px;
 }
 
+/* Three-up gets cramped before two-up does, so it steps down first. */
 @media (max-width: 1023.98px) {
     .kb-lobby-grid {
-        gap: 20px;
+        gap: 22px;
+    }
+
+    .kb-lobby-grid--3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kb-block {
+        padding: 26px 24px 22px;
+    }
+
+    .kb-block__title {
+        font-size: 21px;
     }
 }
 
@@ -239,18 +346,66 @@
         padding: 32px 0 56px;
     }
 
-    .kb-lobby-grid {
-        /* 320px minmax would overflow a 360px viewport once the container's
-           20px side padding is counted. */
+    /* Any column count collapses to one: two cards cannot fit a 360px viewport
+       once the container's 20px side padding is counted. */
+    .kb-lobby-grid--1,
+    .kb-lobby-grid--2,
+    .kb-lobby-grid--3 {
         grid-template-columns: 1fr;
     }
 
-    .kb-block {
-        min-height: 0;
-        padding: 26px 22px 22px;
+    .kb-block__icon {
+        width: 48px;
+        height: 48px;
     }
 
-    .kb-block__title {
-        font-size: 21px;
+    .kb-block__icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .kb-block__peek-list a {
+        /* 16px stops iOS Safari zooming the page, and these are tap targets. */
+        font-size: 16px;
+        line-height: 1.6;
+        /* One line is too little at phone width; allow two and clamp. Browsers
+           without line-clamp simply wrap in full, which is a fine fallback. */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        white-space: normal;
+        text-overflow: clip;
+    }
+
+    /* A one-line entry is only ~26px tall, well under the 44px tap minimum, and
+       these sit close together. Pad the anchor (not the li) so the padding is
+       part of the hit area, and push the bullet down by the same amount so it
+       still lines up with the first line of text. */
+    .kb-block__peek-list a {
+        padding: 9px 0;
+        min-height: 44px;
+    }
+
+    .kb-block__peek-list li {
+        margin-bottom: 4px;
+    }
+
+    .kb-block__peek-list li::before {
+        top: calc(0.62em + 9px);
+    }
+}
+
+/* Touch devices fire :hover on tap and hold it until the next tap, so the
+   arrow-travel and wash are confined to real pointers. mobile-base.css does the
+   same for the site's other lift transitions. */
+@media (hover: none) {
+    .kb-block:hover {
+        background: #fff;
+        border-color: #e6e8ec;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kb-block:hover .kb-block__cta svg {
+        transform: none;
     }
 }
