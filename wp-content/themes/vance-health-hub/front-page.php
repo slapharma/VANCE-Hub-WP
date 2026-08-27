@@ -367,11 +367,14 @@ body {
 
     /* PROMO BLOCK STYLES */
     .promo-block-section {
-        /* 50px above the container, so the container (and its optional
-           background panel) sits inset from the top of the section band rather
-           than flush against it. The container's own 60px top inset then
-           separates the panel edge from the copy. */
-        padding: 50px 0 60px;
+        /* 50px trimmed off each end (was 50px/60px band + 60px/75px container
+           = 110px above the copy and 135px below). The cut is split between
+           the band and the container rather than taken wholly from either:
+           zeroing the band would sit the container's optional background panel
+           flush against the section edge, and taking it all from the container
+           would crowd the copy against that panel's edge. Halving each keeps
+           both insets reading as they were, just tighter. */
+        padding: 25px 0 35px;
         overflow: hidden;
     }
     .promo-container {
@@ -382,8 +385,10 @@ body {
            background colour (and optional border) read as a panel rather than
            as a tight outline around the text. Top is deliberately shorter than
            the other three: the section above contributes no top padding, so
-           60px here is the whole gap above the promo content. */
-        padding: 60px 75px 75px;
+           this is most of the gap above the promo content. Vertical values
+           carry half of the 50px trim described on .promo-block-section above;
+           the 75px sides are untouched. */
+        padding: 35px 75px 50px;
     }
     .promo-container.layout-left { flex-direction: row-reverse; }
     .promo-container.layout-top { flex-direction: column; text-align: center; }
@@ -505,8 +510,19 @@ body {
     // toggling the checkbox takes effect immediately in both directions.
     $sections = vance_append_enabled_content_widgets( $sections );
 
+    // Section seams: a zero-height marker between consecutive sections that
+    // blurs 25px either side of the join, so one section's background colour
+    // (or image, or gradient) fades into the next instead of meeting it at a
+    // hard edge. See "HOMEPAGE SECTION SEAMS" in main.css. Emitted BEFORE each
+    // section rather than after, so the last section never trails one.
+    $vance_seam_after = false;
+
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);
+        if ( $vance_seam_after ) {
+            echo '<div class="vance-hp-seam" aria-hidden="true"></div>';
+        }
+        $vance_seam_after = true;
         switch ($section_id) {
             case 'hero':
                 // Two hero designs share this slot, chosen in Customize →
@@ -1231,7 +1247,7 @@ body {
                             <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background:<?php echo $color; ?>">Featured</span>
-                                <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo get_the_title($p->ID); ?></h3>
+                                <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo esc_html(vance_card_title($p->ID)); ?></h3>
                                 <div class="meta" style="color: rgba(255,255,255,0.8);">By <?php echo get_the_author_meta('display_name', $p->post_author); ?> • <?php echo get_the_date('', $p->ID); ?></div>
                             </div>
                         </a>
@@ -1239,7 +1255,7 @@ body {
                             <?php for($i=1; $i<=2; $i++): $p = $posts_array[$i]; ?>
                             <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-side">
                                 <span class="meta" style="color:<?php echo $color; ?>; margin-bottom:8px;"><?php echo $cat->name; ?></span>
-                                <h4 class="heading-small"><?php echo get_the_title($p->ID); ?></h4>
+                                <h4 class="heading-small"><?php echo esc_html(vance_card_title($p->ID)); ?></h4>
                                 <p class="text-body" style="font-size: 13px; margin-bottom: 8px;"><?php echo wp_trim_words(get_the_excerpt($p->ID), 12); ?></p>
                                 <div class="meta"><?php echo human_time_diff(get_post_time('U', false, $p->ID), current_time('timestamp')) . ' ago'; ?></div>
                             </a>
@@ -1258,7 +1274,7 @@ body {
                                 <?php echo vance_card_eyebrow_html($p->ID, true); ?>
                                 <div class="va-poster-body">
                                     <div class="va-poster-meta"><?php echo esc_html(get_the_date('', $p->ID)); ?> &middot; <?php echo (int) $poster_read; ?> min read</div>
-                                    <h3 class="va-poster-title"><?php echo esc_html(get_the_title($p->ID)); ?></h3>
+                                    <h3 class="va-poster-title"><?php echo esc_html(vance_card_title($p->ID)); ?></h3>
                                 </div>
                             </a>
                         </article>
@@ -1291,7 +1307,7 @@ body {
                             <?php endif; ?>
                             <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column;">
                                 <h3 style="font-size: 16px; margin-bottom: 10px; line-height: 1.4;">
-                                    <a href="<?php echo get_permalink($p->ID); ?>" class="card-stretched-link" style="color: #0f172a; text-decoration: none; font-weight: 600;"><?php echo get_the_title($p->ID); ?></a>
+                                    <a href="<?php echo get_permalink($p->ID); ?>" class="card-stretched-link" style="color: #0f172a; text-decoration: none; font-weight: 600;"><?php echo esc_html(vance_card_title($p->ID)); ?></a>
                                 </h3>
                                 <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <?php echo wp_trim_words(get_the_excerpt($p->ID), 15); ?>
@@ -1431,6 +1447,10 @@ body {
         .premium-subscribe-section .premium-pill { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: <?php echo esc_attr($prem_pill_text); ?>; }
         .premium-subscribe-section .premium-input::placeholder { color: rgba(255,255,255,0.55); }
     </style>
+    <!-- Seam into the premium band. This section sits outside the Section
+         Order loop, so it needs its own; it is also the sharpest join on the
+         page (light grey straight into #2f4f6f). -->
+    <div class="vance-hp-seam" aria-hidden="true"></div>
     <section class="premium-subscribe-section" style="background: <?php echo esc_attr($prem_section_bg); ?>; padding: <?php echo $prem_pad_top; ?>px 0 <?php echo $prem_pad_bot; ?>px; color: <?php echo esc_attr($prem_heading_color); ?>;">
         <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: 60px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 300px;">

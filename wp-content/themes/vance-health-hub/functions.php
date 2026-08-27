@@ -3748,6 +3748,50 @@ function vance_card_eyebrow_html( $post_id = null, $prefer_sub = false ) {
 }
 
 /**
+ * Article title, capped for a card.
+ *
+ * Knowledgebase cards sit in tracks as narrow as ~212px, where a full clinical
+ * title (the longest on the homepage runs to 162 characters) pushes the card
+ * two or three lines taller than its neighbours and drags the meta footer out
+ * of alignment across the row. Capping in PHP rather than clamping in CSS is
+ * deliberate: -webkit-line-clamp hides the overflow but still lets the browser
+ * lay out the whole string, and the cap has to hold in the poster and bento
+ * layouts too, whose titles sit over an image with no fixed line box.
+ *
+ * Distinct from vance_cw_truncate_chars() in inc/content-widget.php, which
+ * cuts at exactly $max and appends the ellipsis after it: this one backs up to
+ * the last word boundary and counts the ellipsis inside the budget, so a
+ * 70-character cap returns at most 70 characters and never splits a word.
+ * mbstring is guarded the same way that helper guards it.
+ *
+ * @param int|null $post_id Post ID (defaults to the current post).
+ * @param int      $max     Maximum length of the returned string, in characters.
+ * @return string Title unchanged when it already fits, else a truncated one.
+ */
+function vance_card_title( $post_id = null, $max = 70 ) {
+    if ( null === $post_id ) {
+        $post_id = get_the_ID();
+    }
+    $title = get_the_title( $post_id );
+    $max   = max( 8, (int) $max );
+    $mb    = function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) && function_exists( 'mb_strrpos' );
+
+    $len = $mb ? mb_strlen( $title ) : strlen( $title );
+    if ( $len <= $max ) {
+        return $title;
+    }
+
+    // Reserve one character for the ellipsis, then back up to the last space.
+    $cut = $mb ? mb_substr( $title, 0, $max - 1 ) : substr( $title, 0, $max - 1 );
+    $sp  = $mb ? mb_strrpos( $cut, ' ' ) : strrpos( $cut, ' ' );
+    if ( false !== $sp && $sp > 0 ) {
+        $cut = $mb ? mb_substr( $cut, 0, $sp ) : substr( $cut, 0, $sp );
+    }
+
+    return rtrim( rtrim( $cut ), ",.;:-" ) . '…';
+}
+
+/**
  * Article-card meta footer (date · read-time · views).
  *
  * Rendered at the BOTTOM of an article card — previously these were overlaid on

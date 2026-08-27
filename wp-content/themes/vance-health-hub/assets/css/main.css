@@ -3452,6 +3452,35 @@ body.home .hero {
     .va-kb-grid--min-200 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 }
 
+/* The five-column track lands the card at ~212px, and .card-meta-footer needs
+   ~248px to lay date / read-time / views out on one nowrap line -- so the view
+   count was being clipped off the right edge. No font or padding trim closes a
+   76px gap (even at 9px the row still overruns), so the row has to wrap.
+
+   Driven by a container query on the card rather than a viewport media query:
+   the overflow is a function of how wide THIS card is, not how wide the window
+   is, and the same grid renders 212px cards at 1440px and 300px cards at 700px.
+   Any future narrow placement gets the fix for free. Browsers without
+   @container support keep the current single-line row.
+
+   Scoped to .va-kb-grid so `container-type` (which brings inline-size
+   containment with it) is not imposed on every .news-card sitewide. */
+.va-kb-grid .news-card { container-type: inline-size; }
+
+@container (max-width: 240px) {
+    .card-meta-footer {
+        flex-wrap: wrap;
+        column-gap: 10px;
+        row-gap: 2px;
+        font-size: 11px;
+    }
+    /* The hairline dividers are dropped rather than kept: a border-left on the
+       item that starts the second line would hang off the left edge with
+       nothing before it. The gap carries the separation instead. */
+    .card-meta-footer .card-meta-item { padding: 0; }
+    .card-meta-footer .card-meta-item + .card-meta-item { border-left: 0; }
+}
+
 /* --- Category promo block (inc/category-promo.php) --- */
 .vance-cat-promo { padding: 8px 0 28px; }
 .vance-cat-promo__inner {
@@ -4181,7 +4210,9 @@ body.home .hero {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    /* A rounded square on the control step, not a circle -- it reads as an
+       icon tile alongside the rest of the scale rather than as an avatar. */
+    border-radius: var(--radius-control);
     background: #C1DFDE;
     color: var(--vhh-hs-title, #04504E);
 }
@@ -4364,6 +4395,55 @@ body.home .hero {
 .oped-readnext-item,
 .oped-readnext-thumb {
     border-radius: var(--radius-article);
+}
+
+/* ============================================================================
+   HOMEPAGE SECTION SEAMS
+   ----------------------------------------------------------------------------
+   The homepage stacks bands of flat colour (white, #f9f9f9, #f4ffff, #dde2e6,
+   #2f4f6f) plus a gradient hero, and every join between them was a hard 1px
+   step. front-page.php emits an empty .vance-hp-seam between consecutive
+   sections; this turns each one into a 50px cross-fade.
+
+   backdrop-filter, not a gradient overlay. A gradient would have to know both
+   colours, which means a rule per pair -- and it cannot do anything at all
+   about a section whose background is a photo or a gradient. Blurring the
+   BACKDROP works from whatever is actually painted there, so a colour, an
+   image and a gradient all soften the same way, and a section recoloured in
+   the Customizer needs no CSS change.
+
+   Geometry: the seam itself is zero-height so it adds nothing to the flow, and
+   its strip is pulled 25px up into the section above and 25px down into the
+   one below -- the blur therefore samples across the join and resolves back to
+   each section's own colour by the ends of the strip, leaving no visible edge
+   of its own.
+
+   z-index 11 clears .vance-testimonials-section (position: relative, z-index:
+   10), which would otherwise paint over the seam above it. It stays far below
+   the sticky header (1000) and the modals (9999+), and content painted below
+   it is what the filter reads, so raising it does not remove anything from the
+   backdrop.
+
+   Browsers without backdrop-filter render an empty transparent strip: the
+   joins simply stay as hard as they are today.
+   ========================================================================== */
+
+.vance-hp-seam {
+    position: relative;
+    z-index: 11;
+    height: 0;
+    pointer-events: none;
+}
+
+.vance-hp-seam::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--vance-seam-height, 50px) / -2);
+    height: var(--vance-seam-height, 50px);
+    -webkit-backdrop-filter: blur(var(--vance-seam-blur, 24px));
+    backdrop-filter: blur(var(--vance-seam-blur, 24px));
 }
 
 /* ============================================================================

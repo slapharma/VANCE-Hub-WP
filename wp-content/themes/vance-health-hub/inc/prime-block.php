@@ -384,6 +384,24 @@ function vance_render_prime_block( array $vals ) {
 			transition: transform 0.2s ease, box-shadow 0.2s ease;
 			flex: 1;
 			min-height: 0;
+			/* The three banner styles are surfaces, so they take
+			   --radius-surface like .pwc-card above -- these are the same
+			   Featured Tools tiles, just a different chosen style, and they
+			   were the only variant still rendering square. The radius has to
+			   be repeated on the child because the child is what actually
+			   paints the background/gradient; `overflow: hidden` on the anchor
+			   alone would clip it, but then the pill variant's 1.5px border
+			   would be sliced square inside a rounded mask. */
+			border-radius: var(--radius-surface, 14px);
+		}
+		<?php echo $sel; ?> .pwc-banner > div {
+			border-radius: inherit;
+			overflow: hidden;
+		}
+		/* Icon tile inside the image+text banner -- an icon tile on the scale,
+		   so --radius-control, matching the buttons and chips around it. */
+		<?php echo $sel; ?> .pwc-banner--image_text > div > div:first-child {
+			border-radius: var(--radius-control, 6px);
 		}
 		<?php echo $sel; ?> .pwc-banner:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,0.10); }
 		/* Image-led banner */
