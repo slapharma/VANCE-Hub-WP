@@ -6,6 +6,16 @@
 :root {
 	--vhh-accent: var(--primary-color, #008080);
 	--vhh-highlight: #008080;
+
+	/* Corner radius, same idiom as --vhh-accent above: alias the host
+	   theme's scale (main.css) and keep a literal fallback so the plugin
+	   stands on its own. The fallback is load-bearing in wp-admin, where
+	   main.css is not enqueued and a bare var() would be invalid, dropping
+	   the declaration and rendering the control square. */
+	--vhh-r-control: var(--radius-control, 6px);
+	--vhh-r-field:   var(--radius-field, 10px);
+	--vhh-r-surface: var(--radius-surface, 14px);
+	--vhh-r-pill:    var(--radius-pill, 999px);
 }
 
 /* The whole-page annotatable wrapper sits between <body> and its former
@@ -58,7 +68,7 @@ mark.vhh-mark--pulse {
 	position: absolute;
 	z-index: 99990;
 	border: none;
-	border-radius: 999px;
+	border-radius: var(--vhh-r-pill);
 	background: var(--vhh-accent);
 	color: #fff;
 	font-size: 13px;
@@ -77,7 +87,7 @@ mark.vhh-mark--pulse {
 	max-width: calc(100vw - 24px);
 	background: #fff;
 	border: 1px solid #e2e8f0;
-	border-radius: 10px;
+	border-radius: var(--vhh-r-surface);
 	box-shadow: 0 10px 32px rgba(15, 23, 42, 0.18);
 	padding: 12px;
 	font-size: 14px;
@@ -98,7 +108,7 @@ mark.vhh-mark--pulse {
 	width: 100%;
 	box-sizing: border-box;
 	border: 1px solid #cbd5e1;
-	border-radius: 6px;
+	border-radius: var(--vhh-r-field);
 	padding: 8px;
 	font: inherit;
 	resize: vertical;
@@ -129,7 +139,7 @@ mark.vhh-mark--pulse {
 	border: 1px solid #cbd5e1;
 	background: #fff;
 	color: #334155;
-	border-radius: 6px;
+	border-radius: var(--vhh-r-control);
 	padding: 6px 12px;
 	font-size: 13px;
 	font-weight: 600;
@@ -167,7 +177,7 @@ mark.vhh-mark--pulse {
 	align-items: center;
 	gap: 8px;
 	border: none;
-	border-radius: 999px;
+	border-radius: var(--vhh-r-pill);
 	background: var(--vhh-accent);
 	color: #fff;
 	font-size: 14px;
@@ -183,7 +193,7 @@ mark.vhh-mark--pulse {
 	justify-content: center;
 	min-width: 20px;
 	height: 20px;
-	border-radius: 999px;
+	border-radius: var(--vhh-r-pill);
 	background: #fff;
 	color: var(--vhh-accent);
 	font-size: 12px;
@@ -218,7 +228,7 @@ mark.vhh-mark--pulse {
 		right: 16px;
 		bottom: 90px;
 		width: 340px;
-		border-radius: 12px;
+		border-radius: var(--vhh-r-surface);
 		transform: translateX(24px);
 	}
 	.vhh-panel--pos-right.vhh-panel--open,
@@ -234,7 +244,7 @@ mark.vhh-mark--pulse {
 		right: 0;
 		bottom: 0;
 		max-height: 65vh;
-		border-radius: 16px 16px 0 0;
+		border-radius: var(--vhh-r-surface) var(--vhh-r-surface) 0 0;
 		transform: translateY(30px);
 	}
 	.vhh-panel--open { transform: translateY(0); }
@@ -248,7 +258,7 @@ mark.vhh-mark--pulse {
 		top: auto;
 		width: 380px;
 		max-height: 60vh;
-		border-radius: 16px 16px 0 0;
+		border-radius: var(--vhh-r-surface) var(--vhh-r-surface) 0 0;
 		transform: translateY(30px);
 	}
 	.vhh-panel--pos-sheet.vhh-panel--open { transform: translateY(0); }
@@ -268,7 +278,7 @@ mark.vhh-mark--pulse {
 }
 .vhh-filter {
 	border: 1px solid #cbd5e1;
-	border-radius: 6px;
+	border-radius: var(--vhh-r-control);
 	font-size: 13px;
 	padding: 4px 6px;
 }
@@ -301,7 +311,7 @@ mark.vhh-mark--pulse {
 
 .vhh-card {
 	border: 1px solid #e2e8f0;
-	border-radius: 10px;
+	border-radius: var(--vhh-r-surface);
 	padding: 10px 12px;
 	margin-bottom: 8px;
 	cursor: pointer;
@@ -344,7 +354,7 @@ mark.vhh-mark--pulse {
 	font-size: 12px;
 	color: #b45309;
 	background: #fffbeb;
-	border-radius: 6px;
+	border-radius: var(--vhh-r-control);
 	padding: 3px 8px;
 	margin-bottom: 6px;
 }
@@ -373,7 +383,7 @@ mark.vhh-mark--pulse {
 	letter-spacing: 0.04em;
 	color: var(--vhh-accent);
 	background: color-mix(in srgb, var(--vhh-accent) 12%, transparent);
-	border-radius: 4px;
+	border-radius: var(--vhh-r-control);
 	padding: 2px 7px;
 }
 @supports not (background: color-mix(in srgb, red 50%, blue)) {
@@ -416,7 +426,7 @@ mark.vhh-mark--pulse {
 	width: 100%;
 	box-sizing: border-box;
 	border: 1px solid #cbd5e1;
-	border-radius: 6px;
+	border-radius: var(--vhh-r-field);
 	padding: 6px 8px;
 	font: inherit;
 	font-size: 13px;
@@ -443,7 +453,7 @@ body.vhh-mode-on .vhh-img-overlay {
 	position: absolute;
 	border: 2px dashed var(--vhh-accent);
 	background: color-mix(in srgb, var(--vhh-accent) 14%, transparent);
-	border-radius: 4px;
+	border-radius: var(--vhh-r-control);
 	pointer-events: auto;
 	cursor: pointer;
 }
@@ -458,7 +468,7 @@ body.vhh-mode-on .vhh-img-overlay {
 	left: -10px;
 	min-width: 20px;
 	height: 20px;
-	border-radius: 999px;
+	border-radius: var(--vhh-r-pill);
 	background: var(--vhh-accent);
 	color: #fff;
 	font-size: 11px;
@@ -483,7 +493,7 @@ body.vhh-mode-on .vhh-img-overlay {
 	background: rgba(15, 23, 42, 0.75);
 	color: #fff;
 	font-size: 12px;
-	border-radius: 6px;
+	border-radius: var(--vhh-r-control);
 	padding: 4px 8px;
 	pointer-events: none;
 	opacity: 0;
@@ -529,7 +539,7 @@ body.vhh-mode-on .vhh-bg-wrap:hover .vhh-img-hint { opacity: 1; }
 	margin: 6px 0;
 	padding: 4px 10px;
 	border: 1px dashed var(--vhh-accent);
-	border-radius: 6px;
+	border-radius: var(--vhh-r-control);
 	background: color-mix(in srgb, var(--vhh-accent) 10%, transparent);
 	color: var(--vhh-accent);
 	font-size: 12px;

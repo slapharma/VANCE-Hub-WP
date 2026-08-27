@@ -79,7 +79,7 @@ $vhh_cfg = VHH_Frontend::client_config(
 			margin: 60px auto;
 			background: #fff;
 			border: 1px solid #e2e8f0;
-			border-radius: 12px;
+			border-radius: var(--vhh-r-surface);
 			padding: 28px;
 			text-align: center;
 		}

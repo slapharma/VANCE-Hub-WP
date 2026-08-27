@@ -2,6 +2,16 @@
  * VHH Annotations — wp-admin styles (AI-edit review modal).
  */
 
+:root {
+	/* Corner radius. Aliases the host theme's scale (main.css) and falls back to
+	   the plugin's own values, which matters in wp-admin where that stylesheet
+	   is not enqueued: a bare var() there is invalid and the radius is dropped. */
+	--vhh-r-control: var(--radius-control, 6px);
+	--vhh-r-field:   var(--radius-field, 10px);
+	--vhh-r-surface: var(--radius-surface, 14px);
+	--vhh-r-pill:    var(--radius-pill, 999px);
+}
+
 body.vhh-modal-open { overflow: hidden; }
 
 .vhh-modal[hidden] { display: none; }
@@ -22,7 +32,7 @@ body.vhh-modal-open { overflow: hidden; }
 .vhh-modal-dialog {
 	position: relative;
 	background: #fff;
-	border-radius: 10px;
+	border-radius: var(--vhh-r-surface);
 	width: min(860px, 96vw);
 	max-height: 88vh;
 	display: flex;
@@ -58,13 +68,13 @@ body.vhh-modal-open { overflow: hidden; }
 	padding: 14px 22px;
 	border-top: 1px solid #e2e8f0;
 	background: #f8fafc;
-	border-radius: 0 0 10px 10px;
+	border-radius: 0 0 var(--vhh-r-surface) var(--vhh-r-surface);
 }
 
 /* Changed-excerpt before/after (rendered HTML) */
 .vhh-xrp {
 	border: 1px solid #e2e8f0;
-	border-radius: 8px;
+	border-radius: var(--vhh-r-surface);
 	margin-bottom: 14px;
 	overflow: hidden;
 }
