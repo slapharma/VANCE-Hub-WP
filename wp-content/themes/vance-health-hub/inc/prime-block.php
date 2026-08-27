@@ -259,8 +259,18 @@ function vance_render_prime_block( array $vals ) {
 			/* On mobile every layout collapses to a single column, tools on top. */
 			<?php echo $sel; ?>.layout-right .pathway-tiles-stack   { grid-column: 1; grid-row: 1; }
 			<?php echo $sel; ?>.layout-right .latest-content-column { grid-column: 1; grid-row: 2; }
+			/* `flex-wrap` has to be reset here as well as the direction. The
+			   stacked rule above pairs `row` with `wrap` so the tool cards can
+			   flow onto a second line; flipping only the direction leaves a
+			   WRAPPING COLUMN, and this container is a stretched grid item, so
+			   its height is definite. Anything that does not fit vertically
+			   therefore wrapped into a second flex column ~300px to the RIGHT
+			   of the viewport, dragging the document to 674px wide on a 390px
+			   phone -- 284px of horizontal scroll on the homepage, and enough
+			   to make Chrome widen the mobile layout viewport, which is what
+			   made the Ask AI intro modal render oversized and clipped. */
 			<?php echo $sel; ?>.layout-stacked .pathway-tiles-stack,
-			<?php echo $sel; ?>.layout-stacked-bottom .pathway-tiles-stack { flex-direction: column !important; }
+			<?php echo $sel; ?>.layout-stacked-bottom .pathway-tiles-stack { flex-direction: column !important; flex-wrap: nowrap; }
 			<?php echo $sel; ?>.layout-stacked-bottom .pathway-tiles-stack   { order: 2; }
 			<?php echo $sel; ?>.layout-stacked-bottom .latest-content-column { order: 1; }
 			<?php echo $sel; ?> .bento-grid-news { grid-template-columns: 1fr; grid-template-rows: auto; }
