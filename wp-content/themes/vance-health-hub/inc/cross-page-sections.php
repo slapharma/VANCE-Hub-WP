@@ -116,7 +116,7 @@ function vance_render_section_patients_tools() {
 					$t_desc  = vance_get_theme_mod( "vance_pat_tool{$i}_desc",  $tool_defaults[ $i ][1] );
 				?>
 				<div class="patient-tool-card" style="display: flex; gap: 16px; padding: 28px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-					<div class="patient-tool-icon" style="flex-shrink: 0; width: 48px; height: 48px; background: linear-gradient(135deg, <?php echo esc_attr( $tool_colors[ $i ][0] ); ?>, <?php echo esc_attr( $tool_colors[ $i ][1] ); ?>); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+					<div class="patient-tool-icon" style="flex-shrink: 0; width: 48px; height: 48px; background: linear-gradient(135deg, <?php echo esc_attr( $tool_colors[ $i ][0] ); ?>, <?php echo esc_attr( $tool_colors[ $i ][1] ); ?>); border-radius: var(--radius-surface, 14px); display: flex; align-items: center; justify-content: center;">
 						<svg width="24" height="24" fill="none" stroke="<?php echo esc_attr( $tool_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $tool_icons[ $i ]; ?></svg>
 					</div>
 					<div>
@@ -194,7 +194,7 @@ function vance_render_section_hcp_resources() {
 					$card_desc  = vance_get_theme_mod( "vance_hcp_res{$i}_desc",  $res_defaults[ $i ][1] );
 				?>
 				<div class="hcp-resource-card" style="display: flex; gap: 20px; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-					<div class="hcp-resource-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $res_colors[ $i ][0] ); ?>, <?php echo esc_attr( $res_colors[ $i ][1] ); ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+					<div class="hcp-resource-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $res_colors[ $i ][0] ); ?>, <?php echo esc_attr( $res_colors[ $i ][1] ); ?>); border-radius: var(--radius-surface, 14px); display: flex; align-items: center; justify-content: center;">
 						<svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $res_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $res_icons[ $i ]; ?></svg>
 					</div>
 					<div>

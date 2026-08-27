@@ -102,11 +102,11 @@ while ( have_posts() ) :
         .va-article-header { background:#fff; border-bottom:1px solid #2f4f6f; }
         .va-article-header .container { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-top:16px; padding-bottom:16px; }
         .va-article-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:14px; color:#64748b; }
-        .va-article-meta .va-cat { background:#8e7dbe; color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:4px; }
+        .va-article-meta .va-cat { background:#8e7dbe; color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:var(--radius-control, 6px); }
         .va-article-meta .va-sep { color:#cbd5e1; }
         .va-article-meta .va-author { display:inline-flex; align-items:center; gap:8px; color:#334155; font-weight:600; }
         .va-article-meta .va-author img { width:26px; height:26px; border-radius:50%; }
-        .vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:10px; padding:12px 20px; font-weight:700; font-size:15px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+        .vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:12px 20px; font-weight:700; font-size:15px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
         .vance-save-btn.is-saved { background:#10B981; }
         .vance-save-btn:hover { filter:brightness(0.96); }
         .vance-save-btn:active { transform:scale(.97); }
@@ -375,7 +375,7 @@ while ( have_posts() ) :
                                         <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Sub-categories</div>
                                         <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
                                             <?php foreach ( $va_sub_categories as $va_sc ) : ?>
-                                                <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>; color: #fff; border-radius: 4px; font-size: 12px; font-weight: 600; text-decoration: none; line-height: 1.4; transition: filter 0.15s ease;">
+                                                <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>; color: #fff; border-radius: var(--radius-control, 6px); font-size: 12px; font-weight: 600; text-decoration: none; line-height: 1.4; transition: filter 0.15s ease;">
                                                     <?php echo esc_html( $va_sc->name ); ?>
                                                 </a>
                                             <?php endforeach; ?>
@@ -388,7 +388,7 @@ while ( have_posts() ) :
                                         <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Tags</div>
                                         <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
                                             <?php foreach ( $va_post_tags as $va_t ) : ?>
-                                                <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag" style="display: inline-block; padding: 4px 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; font-weight: 500; text-decoration: none; line-height: 1.4; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;">
+                                                <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag" style="display: inline-block; padding: 4px 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: var(--radius-control, 6px); font-size: 12px; font-weight: 500; text-decoration: none; line-height: 1.4; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;">
                                                     #<?php echo esc_html( $va_t->name ); ?>
                                                 </a>
                                             <?php endforeach; ?>
@@ -419,13 +419,13 @@ while ( have_posts() ) :
                                 $doc_url = wp_get_attachment_url( $attached_document );
                                 $doc_filename = basename( get_attached_file( $attached_document ) );
                                 if ( $doc_url ) : ?>
-                                    <div class="download-placeholder-card" style="margin-bottom: 12px; height: 120px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px dashed #cbd5e1;">
+                                    <div class="download-placeholder-card" style="margin-bottom: 12px; height: 120px; background: #f3f4f6; border-radius: var(--radius-surface, 14px); display: flex; align-items: center; justify-content: center; border: 1px dashed #cbd5e1;">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                             <polyline points="14 2 14 8 20 8"></polyline>
                                         </svg>
                                     </div>
-                                    <a href="<?php echo esc_url( $doc_url ); ?>" target="_blank" class="download-button" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--primary-color); border-radius: 8px; text-decoration: none; color: white; font-weight: 500;">
+                                    <a href="<?php echo esc_url( $doc_url ); ?>" target="_blank" class="download-button" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--primary-color); border-radius: var(--radius-control, 6px); text-decoration: none; color: white; font-weight: 500;">
                                         <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?php echo esc_html( $doc_filename ); ?></span>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -453,7 +453,7 @@ while ( have_posts() ) :
                                     $link_url = $large_url ? esc_url( $large_url ) : '#';
                                 ?>
                                     <a href="<?php echo $link_url; ?>" class="infographic-popup-link" data-large-src="<?php echo $link_url; ?>">
-                                        <img src="<?php echo esc_url( $small_img[0] ); ?>" alt="Quick Infographic" style="width: 100%; border-radius: 8px;">
+                                        <img src="<?php echo esc_url( $small_img[0] ); ?>" alt="Quick Infographic" style="width: 100%; border-radius: var(--radius-surface, 14px);">
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -631,7 +631,7 @@ while ( have_posts() ) :
                     while ( $related_query->have_posts() ) : $related_query->the_post();
                         $thumb = get_the_post_thumbnail_url(get_the_ID(), 'medium');
                 ?>
-                    <a href="<?php the_permalink(); ?>" class="oped-readnext-item" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>" style="text-decoration: none; display: flex; flex-direction: column; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; border: 1px solid #e2e8f0;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <a href="<?php the_permalink(); ?>" class="oped-readnext-item" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>" style="text-decoration: none; display: flex; flex-direction: column; background: white; border-radius: var(--radius-article, 0); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; border: 1px solid #e2e8f0;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                         <div class="oped-readnext-thumb" style="position: relative; height: 200px; background-color: #cbd5e1; background-image: url('<?php echo $thumb; ?>'); background-size: cover; background-position: center;">
                             <?php echo vance_card_eyebrow_html( get_the_ID() ); ?>
                         </div>

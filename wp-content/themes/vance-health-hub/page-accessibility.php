@@ -34,12 +34,12 @@ get_header(); ?>
 .legal-updated {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(0,128,128,0.08); color: var(--primary-color);
-    font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: var(--radius-surface, 14px);
     border: 1px solid rgba(0,128,128,0.2); margin-bottom: 32px; letter-spacing: 0.3px;
 }
 .legal-contact-box {
     background: linear-gradient(135deg, rgba(0,128,128,0.06), rgba(0,128,128,0.02));
-    border: 1px solid rgba(0,128,128,0.2); border-radius: 12px; padding: 32px 36px; margin-top: 56px;
+    border: 1px solid rgba(0,128,128,0.2); border-radius: var(--radius-surface, 14px); padding: 32px 36px; margin-top: 56px;
 }
 .legal-contact-box h3 { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 18px; color: var(--secondary-color); margin: 0 0 12px; }
 .legal-contact-box p { margin: 0 0 8px; font-size: 15px; }

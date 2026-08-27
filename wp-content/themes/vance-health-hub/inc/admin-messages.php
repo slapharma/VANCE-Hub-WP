@@ -353,7 +353,7 @@ function vance_render_admin_messages_page() {
 
         <h2 class="nav-tab-wrapper" style="margin-top: 28px;">
             <a href="<?php echo $tab_url( 'send' );     ?>" class="nav-tab<?php echo $tab === 'send'     ? ' nav-tab-active' : ''; ?>">Send New</a>
-            <a href="<?php echo $tab_url( 'replies' );  ?>" class="nav-tab<?php echo $tab === 'replies'  ? ' nav-tab-active' : ''; ?>">Replies<?php if ( $pending_replies > 0 ) : ?> <span style="background: #008080; color: white; border-radius: 10px; padding: 1px 8px; font-size: 11px; margin-left: 4px;"><?php echo (int) $pending_replies; ?></span><?php endif; ?></a>
+            <a href="<?php echo $tab_url( 'replies' );  ?>" class="nav-tab<?php echo $tab === 'replies'  ? ' nav-tab-active' : ''; ?>">Replies<?php if ( $pending_replies > 0 ) : ?> <span style="background: #008080; color: white; border-radius: var(--radius-surface, 14px); padding: 1px 8px; font-size: 11px; margin-left: 4px;"><?php echo (int) $pending_replies; ?></span><?php endif; ?></a>
             <a href="<?php echo $tab_url( 'previous' ); ?>" class="nav-tab<?php echo $tab === 'previous' ? ' nav-tab-active' : ''; ?>">Previous</a>
             <a href="<?php echo $tab_url( 'deleted' );  ?>" class="nav-tab<?php echo $tab === 'deleted'  ? ' nav-tab-active' : ''; ?>">Deleted</a>
         </h2>
@@ -599,7 +599,7 @@ function vance_render_admin_messages_page() {
                         <tr>
                             <td><strong><?php echo esc_html( $m->post_title ); ?></strong><br>
                                 <span style="color: #666; font-size: 12px;"><?php echo esc_html( wp_trim_words( $m->post_content, 18 ) ); ?></span></td>
-                            <td><span style="padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; background: <?php echo $sev === 'important' ? '#fff3cd; color: #856404' : ( $sev === 'announcement' ? '#0A1929; color: #fff' : '#def4f4; color: #008080' ); ?>;"><?php echo esc_html( ucfirst( $sev ) ); ?></span></td>
+                            <td><span style="padding: 3px 9px; border-radius: var(--radius-surface, 14px); font-size: 11px; font-weight: 600; background: <?php echo $sev === 'important' ? '#fff3cd; color: #856404' : ( $sev === 'announcement' ? '#0A1929; color: #fff' : '#def4f4; color: #008080' ); ?>;"><?php echo esc_html( ucfirst( $sev ) ); ?></span></td>
                             <td><?php echo $aud_label; ?></td>
                             <td><?php echo esc_html( get_the_date( 'M j, Y g:i a', $m ) ); ?></td>
                             <td><?php
@@ -869,8 +869,8 @@ function vance_admin_messages_render( $post, $context = 'banner' ) {
     $p = $palette[ $sev ] ?? $palette['info'];
 
     $banner_extra = $context === 'banner'
-        ? 'margin: 0 0 18px; border-radius: 8px;'
-        : 'margin: 0 0 14px; border-radius: 6px;';
+        ? 'margin: 0 0 18px; border-radius: var(--radius-surface, 14px);'
+        : 'margin: 0 0 14px; border-radius: var(--radius-surface, 14px);';
 
     ob_start(); ?>
     <article class="vance-msg vance-msg--<?php echo esc_attr( $sev ); ?>" data-msg-id="<?php echo (int) $post->ID; ?>"
@@ -888,7 +888,7 @@ function vance_admin_messages_render( $post, $context = 'banner' ) {
         <div style="font-size: 14px; line-height: 1.6;"><?php echo $body; ?></div>
         <?php if ( $cta_label && $cta_url ) : ?>
             <p style="margin: 12px 0 0;">
-                <a href="<?php echo esc_url( $cta_url ); ?>" class="button" style="background: <?php echo esc_attr( $p['accent'] ); ?>; color: white; border: none; padding: 8px 18px; font-weight: 600; text-decoration: none; display: inline-block; border-radius: 4px;">
+                <a href="<?php echo esc_url( $cta_url ); ?>" class="button" style="background: <?php echo esc_attr( $p['accent'] ); ?>; color: white; border: none; padding: 8px 18px; font-weight: 600; text-decoration: none; display: inline-block; border-radius: var(--radius-control, 6px);">
                     <?php echo esc_html( $cta_label ); ?> →
                 </a>
             </p>

@@ -205,7 +205,7 @@ get_header();
     width: 20px;
     height: 20px;
     border: 2px solid #cbd5e1;
-    border-radius: 4px;
+    border-radius: var(--radius-control, 6px);
     display: flex;
     align-items: center;
     justify-content: center;

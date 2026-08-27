@@ -2325,7 +2325,7 @@ get_header();
                         }
                         .my-tools-grid .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,25,41,0.10); }
                         .my-tools-grid .tool-card__head { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
-                        .my-tools-grid .tool-card__icon { flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+                        .my-tools-grid .tool-card__icon { flex-shrink: 0; width: 56px; height: 56px; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; }
                         .my-tools-grid .tool-card__tag  { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #008080; margin-bottom: 4px; }
                         .my-tools-grid .tool-card__title{ font-size: 19px; color: #0F172A; margin: 0; line-height: 1.3; }
                         .my-tools-grid .tool-card__desc { color: #64748B; font-size: 14px; margin: 0 0 20px 0; line-height: 1.6; flex: 1; }
@@ -3129,7 +3129,7 @@ get_header();
                             <h2 style="margin: 0; color: #0F172A; font-size: 22px;">My Messages</h2>
                             <div style="display:flex; align-items:center; gap:12px;">
                                 <?php if ( $unread_count > 0 ) : ?>
-                                    <span style="background: #008080; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px;"><?php echo (int) $unread_count; ?> new</span>
+                                    <span style="background: #008080; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill, 999px);"><?php echo (int) $unread_count; ?> new</span>
                                 <?php endif; ?>
                                 <button type="button" class="rl-btn rl-btn--primary" id="msg-compose-toggle">New message</button>
                             </div>
@@ -4069,8 +4069,8 @@ get_header();
             let rawContent = chat.transcript;
             
             // Format legacy You: / AI: speakers into styled pills
-            rawContent = rawContent.replace(/<strong>You:<\/strong>|You:/gi, '<br><div style="background:#F1F5F9; color:#64748B; padding:4px 12px; border-radius:12px; display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">USER</div><br>');
-            rawContent = rawContent.replace(/<strong>AI:<\/strong>|AI:/gi, '<br><div style="background:#def4f4; color:#008080; border:1px solid #aedbdb; padding:4px 12px; border-radius:12px; display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">🤖 AI</div><br>');
+            rawContent = rawContent.replace(/<strong>You:<\/strong>|You:/gi, '<br><div style="background:#F1F5F9; color:#64748B; padding:4px 12px; border-radius:var(--radius-surface, 14px); display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">USER</div><br>');
+            rawContent = rawContent.replace(/<strong>AI:<\/strong>|AI:/gi, '<br><div style="background:#def4f4; color:#008080; border:1px solid #aedbdb; padding:4px 12px; border-radius:var(--radius-surface, 14px); display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">🤖 AI</div><br>');
             
             // Remove lingering empty paragraphs if any
             rawContent = rawContent.replace(/<p>\s*<\/p>/gi, '');

@@ -614,10 +614,13 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     --vab-line:  #e2e8f0;
 
     /* Shape — set all four to 0 to return to the house square-corner style */
-    --vab-r-sm:   8px;
-    --vab-r-md:  12px;
-    --vab-r-lg:  20px;
-    --vab-r-pill: 999px;
+    /* Aliases onto the site-wide scale in main.css rather than a second set of
+       numbers. The literal fallbacks are this page's original geometry, kept
+       only for the case where main.css has not loaded. */
+    --vab-r-sm:  var(--radius-control, 6px);
+    --vab-r-md:  var(--radius-field, 10px);
+    --vab-r-lg:  var(--radius-surface, 14px);
+    --vab-r-pill: var(--radius-pill, 999px);
 
     /* Elevation */
     --vab-sh-sm: 0 1px 3px rgba(0,0,0,.08);
@@ -807,8 +810,8 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
    then absorbs whatever slack a shorter (single-line) label leaves, so every
    bar lands on the same baseline across the row. */
 .vabout-stat-label { margin: 12px 0 20px; font-size: .88rem; font-weight: 500; color: var(--vab-muted); }
-.vabout-stat-bar { display: block; height: 4px; margin-top: auto; border-radius: 4px; background: var(--vab-line); overflow: hidden; }
-.vabout-stat-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, var(--vab-teal), var(--vab-teal-soft)); transition: width 1.4s var(--vab-ease); }
+.vabout-stat-bar { display: block; height: 4px; margin-top: auto; border-radius: var(--radius-control, 6px); background: var(--vab-line); overflow: hidden; }
+.vabout-stat-bar i { display: block; height: 100%; width: 0; border-radius: var(--radius-control, 6px); background: linear-gradient(90deg, var(--vab-teal), var(--vab-teal-soft)); transition: width 1.4s var(--vab-ease); }
 .vabout-stat.is-visible .vabout-stat-bar i { width: 100%; }
 
 /* ============================ STORY ============================ */
@@ -943,7 +946,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-feat-ico {
     display: flex; align-items: center; justify-content: center;
     flex: 0 0 44px; width: 44px; height: 44px;
-    border-radius: 10px;
+    border-radius: var(--radius-surface, 14px);
     background: linear-gradient(135deg, rgba(0,128,128,.16), rgba(0,128,128,.05));
     color: var(--vab-teal);
 }

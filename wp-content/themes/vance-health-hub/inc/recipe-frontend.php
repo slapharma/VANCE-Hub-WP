@@ -255,7 +255,7 @@ function vance_recipe_nutrition_panel_html( $post_id ) {
 
 	ob_start();
 	?>
-	<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+	<div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
 		<h3 style="margin:0 0 4px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;color:#0A1929;text-transform:uppercase;letter-spacing:0.4px;">Nutrition</h3>
 		<p style="margin:0 0 16px;font-size:12.5px;color:#94a3b8;">Per serving</p>
 		<?php if ( '' !== $kcal ) : ?>
@@ -270,7 +270,7 @@ function vance_recipe_nutrition_panel_html( $post_id ) {
 					continue;
 				}
 				?>
-				<div style="background:#f8fafc;border-radius:8px;padding:10px 12px;text-align:center;">
+				<div style="background:#f8fafc;border-radius:var(--radius-surface, 14px);padding:10px 12px;text-align:center;">
 					<div style="font-size:18px;font-weight:800;color:#0A1929;"><?php echo esc_html( $m[1] ); ?><span style="font-size:12px;font-weight:600;color:#94a3b8;"><?php echo esc_html( $m[2] ); ?></span></div>
 					<div style="font-size:11.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;"><?php echo esc_html( $m[0] ); ?></div>
 				</div>

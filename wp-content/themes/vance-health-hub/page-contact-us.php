@@ -149,8 +149,8 @@ get_header(); ?>
                             ),
                         );
                         foreach ( $details as $d ) : ?>
-                        <div style="display: flex; gap: 16px; align-items: flex-start; background: white; padding: 20px 24px; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,.06);">
-                            <div style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 10px; background: <?php echo $d['color']; ?>1a; display: flex; align-items: center; justify-content: center;">
+                        <div style="display: flex; gap: 16px; align-items: flex-start; background: white; padding: 20px 24px; border-radius: var(--radius-surface, 14px); box-shadow: 0 1px 6px rgba(0,0,0,.06);">
+                            <div style="flex-shrink: 0; width: 44px; height: 44px; border-radius: var(--radius-surface, 14px); background: <?php echo $d['color']; ?>1a; display: flex; align-items: center; justify-content: center;">
                                 <svg width="22" height="22" fill="none" stroke="<?php echo $d['color']; ?>" viewBox="0 0 24 24"><?php echo $d['icon']; ?></svg>
                             </div>
                             <div>
@@ -204,7 +204,7 @@ get_header(); ?>
                                 if ( empty( $s['url'] ) ) continue; ?>
                             <a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noopener noreferrer"
                                title="<?php echo esc_attr( $s['name'] ); ?>"
-                               style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: white; box-shadow: 0 1px 6px rgba(0,0,0,.1); color: var(--secondary-color); transition: transform .15s, box-shadow .15s;"
+                               style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--radius-surface, 14px); background: white; box-shadow: 0 1px 6px rgba(0,0,0,.1); color: var(--secondary-color); transition: transform .15s, box-shadow .15s;"
                                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 14px rgba(0,0,0,.15)';"
                                onmouseout="this.style.transform='';this.style.boxShadow='0 1px 6px rgba(0,0,0,.1)';">
                                 <svg width="20" height="20" fill="<?php echo $s['fill'] ? 'currentColor' : 'none'; ?>" stroke="<?php echo $s['fill'] ? 'none' : 'currentColor'; ?>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><?php echo $s['icon']; ?></svg>
@@ -216,7 +216,7 @@ get_header(); ?>
                 </div>
 
                 <!-- ─ Right column: contact form ─────────────────────── -->
-                <div style="background: white; border-radius: 20px; padding: 48px 44px; box-shadow: 0 4px 32px rgba(10,25,41,.1);">
+                <div style="background: white; border-radius: var(--radius-surface, 14px); padding: 48px 44px; box-shadow: 0 4px 32px rgba(10,25,41,.1);">
 
                     <!-- Rendered server-side for the no-JS fallback (native POST below actually
                          reached this page) AND used as the JS AJAX success target — JS toggles
@@ -237,7 +237,7 @@ get_header(); ?>
                     <p style="color: var(--text-light); font-size: 15px; margin: 0 0 32px;">Fields marked <span style="color: var(--primary-color);">*</span> are required.</p>
 
                     <?php if ( $contact_error ) : ?>
-                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; color: #dc2626; font-size: 14px;">
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-surface, 14px); padding: 14px 18px; margin-bottom: 24px; color: #dc2626; font-size: 14px;">
                         <?php echo esc_html( $contact_error ); ?>
                     </div>
                     <?php endif; ?>
@@ -245,7 +245,7 @@ get_header(); ?>
                     <form method="post" action="<?php echo esc_url( get_permalink() ); ?>#contact-form" id="contact-form">
                         <?php wp_nonce_field( 'vance_contact_form', 'vance_contact_nonce' ); ?>
                         <input type="hidden" name="vance_recaptcha_token" id="vance_recaptcha_token" value="">
-                        <div id="contact-form-client-error" style="display:none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; color: #dc2626; font-size: 14px;"></div>
+                        <div id="contact-form-client-error" style="display:none; background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-surface, 14px); padding: 14px 18px; margin-bottom: 24px; color: #dc2626; font-size: 14px;"></div>
 
                         <div class="vcontact-name-email-grid" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; margin-bottom: 20px;">
                             <div>
@@ -255,7 +255,7 @@ get_header(); ?>
                                 <input type="text" id="contact_name" name="contact_name" required
                                        value="<?php echo esc_attr( $_POST['contact_name'] ?? '' ); ?>"
                                        placeholder="Your full name"
-                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
+                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-surface, 14px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
                                        onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                        onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';">
                             </div>
@@ -266,7 +266,7 @@ get_header(); ?>
                                 <input type="email" id="contact_email" name="contact_email" required
                                        value="<?php echo esc_attr( $_POST['contact_email'] ?? '' ); ?>"
                                        placeholder="your@email.com"
-                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
+                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-surface, 14px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
                                        onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                        onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';">
                             </div>
@@ -277,7 +277,7 @@ get_header(); ?>
                                 Subject
                             </label>
                             <select id="contact_subject" name="contact_subject"
-                                    style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; appearance: none; cursor: pointer;"
+                                    style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-surface, 14px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; appearance: none; cursor: pointer;"
                                     onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';">
                                 <option value="">Select a topic…</option>
@@ -296,13 +296,13 @@ get_header(); ?>
                             </label>
                             <textarea id="contact_message" name="contact_message" required rows="6"
                                       placeholder="How can we help you?"
-                                      style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.6;"
+                                      style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-surface, 14px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.6;"
                                       onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                       onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';"><?php echo esc_textarea( $_POST['contact_message'] ?? '' ); ?></textarea>
                         </div>
 
                         <button type="submit" name="vance_contact_submit" value="1" class="btn btn-primary"
-                                style="width: 100%; padding: 16px; font-size: 16px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.3px;">
+                                style="width: 100%; padding: 16px; font-size: 16px; font-weight: 700; border: none; border-radius: var(--radius-surface, 14px); cursor: pointer; letter-spacing: 0.3px;">
                             Send Message
                             <svg style="display:inline-block;vertical-align:middle;margin-left:8px;" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                 <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>

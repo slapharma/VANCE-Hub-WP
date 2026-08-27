@@ -2375,7 +2375,7 @@ add_action( 'login_init', 'vance_redirect_wp_login_to_themed_login' );
 function vance_auth_modal_shortcode( $atts ) {
     if ( is_user_logged_in() ) {
         $current_user = wp_get_current_user();
-        return '<div style="max-width:460px;margin:40px auto;padding:48px 40px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 10px 40px rgba(10,25,41,.08);text-align:center;font-family:var(--font-main, \'Inter\', sans-serif);">
+        return '<div style="max-width:460px;margin:40px auto;padding:48px 40px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);box-shadow:0 10px 40px rgba(10,25,41,.08);text-align:center;font-family:var(--font-main, \'Inter\', sans-serif);">
             <span style="display:flex;align-items:center;justify-content:center;width:72px;height:72px;margin:0 auto 24px;border-radius:50%;background:rgba(0,128,128,.10);color:var(--primary-color,#008080);">
                 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
             </span>
@@ -2429,7 +2429,7 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-overlay{position:fixed;inset:0;background:rgba(15,30,30,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;animation:vanceFadeIn .2s ease-out}
     @keyframes vanceFadeIn{from{opacity:0}to{opacity:1}}
     @keyframes vancePopIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
-    .vance-auth-modal{background:#fff;border-radius:16px;padding:26px 28px 22px;max-width:420px;width:100%;box-shadow:0 24px 72px rgba(0,0,0,0.3);animation:vancePopIn .25s ease-out;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;position:relative;max-height:calc(100dvh - 24px);overflow-y:auto}
+    .vance-auth-modal{background:#fff;border-radius:var(--radius-surface, 14px);padding:26px 28px 22px;max-width:420px;width:100%;box-shadow:0 24px 72px rgba(0,0,0,0.3);animation:vancePopIn .25s ease-out;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;position:relative;max-height:calc(100dvh - 24px);overflow-y:auto}
     .vance-auth-close{position:absolute;top:10px;right:12px;background:transparent;border:none;font-size:26px;color:#94a3b8;cursor:pointer;line-height:1;padding:4px 8px;z-index:2}
     .vance-auth-close:hover{color:#1a1a1a}
     .vance-auth-header{text-align:center;margin-bottom:14px}
@@ -2439,18 +2439,18 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-divider{text-align:center;margin:10px 0;color:#999;position:relative;font-size:12px;text-transform:uppercase;letter-spacing:1px}
     .vance-auth-divider span{background:#fff;padding:0 12px;position:relative;z-index:1}
     .vance-auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#2f4f6f}
-    .vance-auth-tabs{display:flex;gap:4px;margin-bottom:14px;background:#f1f5f5;padding:4px;border-radius:10px}
-    .vance-auth-tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;border-radius:7px;font-weight:600;color:#666;transition:all .15s;font-size:14px}
+    .vance-auth-tabs{display:flex;gap:4px;margin-bottom:14px;background:#f1f5f5;padding:4px;border-radius:var(--radius-surface, 14px)}
+    .vance-auth-tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;border-radius:var(--radius-control, 6px);font-weight:600;color:#666;transition:all .15s;font-size:14px}
     .vance-auth-tab.active{background:#fff;color:#008080;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
-    .vance-auth-error{background:#fee;color:#a00;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;border:1px solid #fcc}
+    .vance-auth-error{background:#fee;color:#a00;padding:10px 14px;border-radius:var(--radius-surface, 14px);font-size:13px;margin-bottom:14px;display:none;border:1px solid #fcc}
     .vance-auth-error.active{display:block}
     .vance-auth-form{display:none}
     .vance-auth-form.active{display:block}
     .vance-auth-field{margin-bottom:10px}
     .vance-auth-field label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:4px}
-    .vance-auth-field input{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:8px;font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
+    .vance-auth-field input{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
     .vance-auth-field input:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
-    .vance-auth-field select{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:8px;font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
+    .vance-auth-field select{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
     .vance-auth-field select:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
     .vance-auth-consent{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#666;line-height:1.5;cursor:pointer;margin:0 0 8px;font-weight:400}
     .vance-auth-consent input{width:auto;margin-top:2px}
@@ -2458,7 +2458,7 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-forgot{text-align:right;margin:-6px 0 14px}
     .vance-auth-forgot a{color:#008080;text-decoration:none;font-size:13px}
     .vance-auth-forgot a:hover{text-decoration:underline}
-    .vance-auth-submit{width:100%;padding:13px;background:#008080;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
+    .vance-auth-submit{width:100%;padding:13px;background:#008080;color:#fff;border:none;border-radius:var(--radius-control, 6px);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
     .vance-auth-submit:hover:not(:disabled){background:#006666}
     .vance-auth-submit:disabled{background:#aaa;cursor:not-allowed}
     .vance-auth-footer{text-align:center;margin-top:12px;font-size:12px;color:#888}
@@ -3144,20 +3144,20 @@ function vance_verify_email_shortcode() {
     $had_error       = isset( $_GET['verify_error'] ) && '1' === $_GET['verify_error'];
 
     if ( $is_verified_now ) {
-        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,128,128,0.08)">
+        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 14px);box-shadow:0 8px 32px rgba(0,128,128,0.08)">
             <div style="font-size:48px;margin-bottom:12px">&#10003;</div>
             <h1 style="margin:0 0 8px;color:#008080">Email verified</h1>
             <p style="color:#666;margin-bottom:24px">Your account is ready. Redirecting to your dashboard&hellip;</p>
-            <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Go to dashboard</a>
+            <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:var(--radius-control, 6px);text-decoration:none;font-weight:600">Go to dashboard</a>
             <script>setTimeout(function(){window.location.href=' . wp_json_encode( home_url( '/dashboard/' ) ) . ';},1500);</script>
         </div>';
     }
 
     if ( ! is_user_logged_in() ) {
-        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.08)">
+        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 14px);box-shadow:0 8px 32px rgba(0,0,0,0.08)">
             <h1 style="margin:0 0 8px;color:#1a1a1a">Verify your email</h1>
             <p style="color:#666;margin-bottom:24px">Please sign in to resend your verification email.</p>
-            <a href="' . esc_url( home_url( '/login/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Sign in</a>
+            <a href="' . esc_url( home_url( '/login/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:var(--radius-control, 6px);text-decoration:none;font-weight:600">Sign in</a>
         </div>';
     }
 
@@ -3166,12 +3166,12 @@ function vance_verify_email_shortcode() {
     $ajax_url    = admin_url( 'admin-ajax.php' );
 
     $error_html = $had_error
-        ? '<div style="background:#fee;color:#a00;padding:12px;border-radius:8px;margin-bottom:16px;border:1px solid #fcc;font-size:14px">That verification link was invalid or has already been used. Request a new one below.</div>'
+        ? '<div style="background:#fee;color:#a00;padding:12px;border-radius:var(--radius-control, 6px);margin-bottom:16px;border:1px solid #fcc;font-size:14px">That verification link was invalid or has already been used. Request a new one below.</div>'
         : '';
 
     ob_start();
     ?>
-    <div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+    <div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 14px);box-shadow:0 8px 32px rgba(0,0,0,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
         <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
         <h1 style="margin:0 0 8px;color:#1a1a1a;font-size:24px">Check your inbox</h1>
         <p style="color:#666;margin-bottom:24px;line-height:1.5">
@@ -3180,7 +3180,7 @@ function vance_verify_email_shortcode() {
         </p>
         <?php echo $error_html; // sanitized literal above ?>
         <div id="vance-resend-status" style="margin-bottom:14px;font-size:14px"></div>
-        <button id="vance-resend-btn" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">Resend verification email</button>
+        <button id="vance-resend-btn" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border:none;border-radius:var(--radius-control, 6px);font-size:15px;font-weight:600;cursor:pointer">Resend verification email</button>
         <p style="margin-top:24px;font-size:13px;color:#999">
             Already verified? <a href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>" style="color:#008080">Go to dashboard</a> &middot;
             <a href="<?php echo esc_url( wp_logout_url( home_url() ) ); ?>" style="color:#008080">Sign out</a>
@@ -3488,7 +3488,7 @@ if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'Vance_Customize_
                 <input
                     type="color"
                     value="<?php echo esc_attr( $value ); ?>"
-                    style="width:46px; height:34px; padding:2px; border:1px solid #dcdcde; border-radius:4px; background:#fff; cursor:pointer;"
+                    style="width:46px; height:34px; padding:2px; border:1px solid #dcdcde; border-radius:var(--radius-field, 10px); background:#fff; cursor:pointer;"
                     <?php $this->link(); ?>
                     oninput="var h=this.closest('.vance-color-field').querySelector('.vance-color-hex'); if(h){h.value=this.value.toUpperCase();}"
                 />
@@ -7288,7 +7288,7 @@ function vance_category_tagline_style() {
 
     $is_pill = ( sanitize_hex_color( $bg ) || ( $bwidth > 0 && sanitize_hex_color( $bcolor ) ) );
     // inline-block so a background/border hugs the text; plain block otherwise.
-    $style .= $is_pill ? ' display: inline-block; padding: 5px 14px; border-radius: 4px;' : ' display: block;';
+    $style .= $is_pill ? ' display: inline-block; padding: 5px 14px; border-radius: var(--radius-control, 6px);' : ' display: block;';
 
     if ( sanitize_hex_color( $bg ) ) {
         $style .= ' background-color: ' . $bg . ';';

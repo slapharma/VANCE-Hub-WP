@@ -3185,7 +3185,8 @@ body.home .hero {
     width: 56px;
     height: 56px;
     object-fit: cover;
-    border-radius: 4px;
+    /* Square: this is the thumbnail of an article card. */
+    border-radius: var(--radius-article);
     flex-shrink: 0;
 }
 .va-fl-overflow { margin-top: 22px; }
@@ -4031,7 +4032,7 @@ body.home .hero {
     /* 15px padding on a 15px/1.15 label clears the 44px minimum touch target
        without a min-height that would fight the ghost variant's border. */
     padding: 15px 26px;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
     border: 1.5px solid transparent;
     font-family: var(--font-heading);
     font-size: 15px;
@@ -4094,7 +4095,7 @@ body.home .hero {
     align-items: stretch;
     background: #ffffff;
     border: 1px solid #5E8F8D;
-    border-radius: 10px;
+    border-radius: var(--radius-field);
     box-shadow: 0 6px 20px rgba(4, 80, 78, 0.07);
     overflow: hidden;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -4168,7 +4169,7 @@ body.home .hero {
     max-width: 420px;
     margin-left: auto;
     padding: 26px 28px;
-    border-radius: 14px;
+    border-radius: var(--radius-surface);
     background: var(--vhh-hs-card-bg, #E5F1F1);
     box-shadow: 0 10px 30px rgba(4, 80, 78, 0.08);
 }
@@ -4337,10 +4338,12 @@ body.home .hero {
    Thumbnails are included because a card that clips its image would otherwise
    round the photo's top corners against a square frame.
 
-   The line is drawn at card-shaped post previews. Rows that merely link to an
-   article - `.oped-related-item`, `.oped-readnext-item`, `.gi-cp-article`,
-   `.latest-list-item` - are sidebar list items rather than tiles, so they
-   follow the ordinary scale. Moving that line means editing this list only. */
+   The line is drawn at card-shaped post previews, not at "does it link to a
+   post". `.oped-related-item`, `.gi-cp-article` and `.latest-list-item` are
+   sidebar list rows - flex, a hairline rule, no surface of their own - so they
+   follow the ordinary scale. `.oped-readnext-item` looks like a sibling of
+   those by name but is a real tile (200px thumb, shadow, overflow: hidden), so
+   it belongs here. Moving that line means editing this list only. */
 .news-card,
 .news-card .card-image,
 .news-card .card-image img,
@@ -4356,6 +4359,9 @@ body.home .hero {
 .va-fl-featured,
 .va-fl-featured img,
 .va-fl-item,
-.va-fl-item img {
+.va-fl-item img,
+.va-fl-thumb,
+.oped-readnext-item,
+.oped-readnext-thumb {
     border-radius: var(--radius-article);
 }

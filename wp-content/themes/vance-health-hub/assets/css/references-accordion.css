@@ -23,7 +23,7 @@
 
     margin: 40px 0;
     border: 1px solid var(--vref-line);
-    border-radius: 12px;
+    border-radius: var(--radius-surface);
     background: #fff;
     overflow: hidden;
 }
@@ -61,7 +61,7 @@
     height: 32px;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     background: var(--vref-wash-2);
     color: var(--vref-accent);
 }
@@ -85,7 +85,7 @@
     line-height: 1;
     color: var(--vref-accent-strong);
     background: var(--vref-wash-2);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 4px 9px;
 }
 

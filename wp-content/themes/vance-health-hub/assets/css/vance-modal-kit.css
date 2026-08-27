@@ -10,13 +10,14 @@
  * and fill with the teal wash when selected.
  *
  * That bundle is a build artifact we text-patch in place (CLAUDE.md constraint
- * 6), so its CSS cannot be imported. These rules are a faithful port of it,
+ * 7), so its CSS cannot be imported. These rules are a faithful port of it,
  * with the tokens hoisted to custom properties. If the bundle is ever
  * restyled, mirror the change here.
  *
- * Deliberate exception to the theme's `border-radius: 0` house style: the
- * calculator's rounded cards are the design being adopted, on the modal
- * surfaces only. Nothing here leaks outside a `.vance-mk` scope.
+ * This kit's rounded cards were once the deliberate exception to a square
+ * house style. That is now the house style: --mk-radius and --mk-radius-lg
+ * alias the site-wide scale in main.css (constraint 5), so the modal surfaces
+ * and the rest of the site round by the same numbers.
  *
  * Used by:
  *   inc/quiz-modal.php          — Health Discovery Quiz
@@ -38,8 +39,11 @@
 	--mk-muted: #64748B;
 	--mk-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 	--mk-shadow-lift: 0 6px 20px -4px rgba(0, 128, 128, 0.18);
-	--mk-radius: 12px;
-	--mk-radius-lg: 16px;
+	/* Aliases onto the site-wide scale in main.css rather than a second set of
+	   numbers. The literal fallbacks are what the Modal Kit used before the
+	   scale existed, and only apply if main.css is somehow absent. */
+	--mk-radius: var(--radius-field, 10px);
+	--mk-radius-lg: var(--radius-surface, 14px);
 }
 
 /* =========================================================================
@@ -121,7 +125,7 @@
 	align-items: center;
 	gap: 8px;
 	padding: 6px 14px;
-	border-radius: 100px;
+	border-radius: var(--radius-pill);
 	font-family: 'Outfit', sans-serif;
 	font-size: 11px;
 	font-weight: 700;
@@ -186,7 +190,7 @@
 .vance-mk__progress-track {
 	height: 6px;
 	background: var(--mk-border);
-	border-radius: 99px;
+	border-radius: var(--radius-pill);
 	overflow: hidden;
 }
 
@@ -194,7 +198,7 @@
 	height: 100%;
 	width: 0;
 	background: var(--mk-teal);
-	border-radius: 99px;
+	border-radius: var(--radius-pill);
 	transition: width 0.4s;
 }
 
@@ -270,7 +274,7 @@
 	transition: 0.18s;
 }
 
-.vance-mk__option-mark--box { border-radius: 5px; }
+.vance-mk__option-mark--box { border-radius: var(--radius-control); }
 
 .vance-mk__option.is-selected .vance-mk__option-mark {
 	border-color: var(--mk-teal);

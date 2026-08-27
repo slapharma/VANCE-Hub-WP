@@ -95,14 +95,14 @@ $track_icons = array(
                     $t_desc  = vance_get_theme_mod( "vance_edu_track{$i}_desc",  $track_defaults[ $i ][1] );
                 ?>
                 <button type="button" class="edu-track-card" data-edu-waitlist-trigger data-edu-track="<?php echo esc_attr( $t_title ); ?>" style="display: flex; gap: 24px; padding: 36px; background: white; border: 1px solid transparent; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); align-items: flex-start; cursor: pointer; text-align: left; font: inherit; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s; width: 100%;">
-                    <div class="edu-track-icon" style="flex-shrink: 0; width: 64px; height: 64px; background: <?php echo esc_attr( $track_colors[ $i ][0] ); ?>; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <div class="edu-track-icon" style="flex-shrink: 0; width: 64px; height: 64px; background: <?php echo esc_attr( $track_colors[ $i ][0] ); ?>; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center;">
                         <svg width="32" height="32" fill="none" stroke="<?php echo esc_attr( $track_colors[ $i ][1] ); ?>" viewBox="0 0 24 24"><?php echo $track_icons[ $i ]; ?></svg>
                     </div>
                     <div style="flex: 1;">
                         <h3 style="font-size: 22px; <?php echo $tracks_title_color ? 'color:' . esc_attr( $tracks_title_color ) . ';' : 'color: var(--secondary-color);'; ?> margin-bottom: 12px;"><?php echo esc_html( $t_title ); ?></h3>
                         <p style="<?php echo $tracks_text_color ? 'color:' . esc_attr( $tracks_text_color ) . ';' : 'color: var(--text-light);'; ?> font-size: 15px; margin: 0; line-height: 1.7;"><?php echo esc_html( $t_desc ); ?></p>
                         <div style="margin-top: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--accent-color); border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--primary-color); letter-spacing: 0.3px;">
+                            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--accent-color); border-radius: var(--radius-pill, 999px); font-size: 12px; font-weight: 600; color: var(--primary-color); letter-spacing: 0.3px;">
                                 <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color); display: inline-block;"></span>
                                 In development
                             </span>

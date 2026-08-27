@@ -148,7 +148,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
                     $card_desc  = vance_get_theme_mod( "vance_evidence_pillar{$i}_desc",  $pillar_defaults[ $i ][1] );
                 ?>
                 <div class="evidence-pillar-card" style="display: flex; gap: 20px; padding: 32px; background: <?php echo esc_attr( $evd_card_bg ); ?>; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-                    <div class="evidence-pillar-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $pillar_colors[ $i ][0] ); ?>, <?php echo esc_attr( $pillar_colors[ $i ][1] ); ?>); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div class="evidence-pillar-icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $pillar_colors[ $i ][0] ); ?>, <?php echo esc_attr( $pillar_colors[ $i ][1] ); ?>); border-radius: var(--radius-surface, 14px); display: flex; align-items: center; justify-content: center;">
                         <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $pillar_colors[ $i ][2] ); ?>" viewBox="0 0 24 24"><?php echo $pillar_icons[ $i ]; ?></svg>
                     </div>
                     <div>

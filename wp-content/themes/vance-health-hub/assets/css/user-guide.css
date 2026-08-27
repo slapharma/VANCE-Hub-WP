@@ -103,7 +103,7 @@
     font-weight: 700;
     font-size: 13px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 999px; /* intentional exception: numbered step badges read better round */
+    border-radius: var(--radius-pill); /* intentional exception: numbered step badges read better round */
 }
 
 /* ---------- Media (screenshots / GIFs) ---------- */
@@ -199,7 +199,7 @@
     color: #fff;
     font-size: 12px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
 }
 
 /* ---------- Animated screenshots ----------

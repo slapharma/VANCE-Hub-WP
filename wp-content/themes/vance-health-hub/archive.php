@@ -245,12 +245,12 @@ if ( is_category() ) {
                             ?>
                                 <div class="va-card-taxonomy" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
                                     <?php foreach ( $va_card_sub_cats as $va_csc ) : ?>
-                                        <a href="<?php echo esc_url( get_category_link( $va_csc->term_id ) ); ?>" class="va-card-chip va-card-chip--cat" style="display: inline-block; padding: 3px 9px; background: var(--primary-color, #008080); color: #fff; border-radius: 4px; font-size: 11px; font-weight: 600; text-decoration: none; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.3px;">
+                                        <a href="<?php echo esc_url( get_category_link( $va_csc->term_id ) ); ?>" class="va-card-chip va-card-chip--cat" style="display: inline-block; padding: 3px 9px; background: var(--primary-color, #008080); color: #fff; border-radius: var(--radius-control, 6px); font-size: 11px; font-weight: 600; text-decoration: none; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.3px;">
                                             <?php echo esc_html( $va_csc->name ); ?>
                                         </a>
                                     <?php endforeach; ?>
                                     <?php foreach ( $va_card_tags as $va_ct ) : ?>
-                                        <a href="<?php echo esc_url( get_tag_link( $va_ct->term_id ) ); ?>" class="va-card-chip va-card-chip--tag" style="display: inline-block; padding: 3px 9px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 11px; font-weight: 500; text-decoration: none; line-height: 1.4;">
+                                        <a href="<?php echo esc_url( get_tag_link( $va_ct->term_id ) ); ?>" class="va-card-chip va-card-chip--tag" style="display: inline-block; padding: 3px 9px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: var(--radius-control, 6px); font-size: 11px; font-weight: 500; text-decoration: none; line-height: 1.4;">
                                             #<?php echo esc_html( $va_ct->name ); ?>
                                         </a>
                                     <?php endforeach; ?>

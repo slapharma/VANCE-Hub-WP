@@ -33,12 +33,12 @@ get_header(); ?>
 .legal-updated {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(0,128,128,0.08); color: var(--primary-color);
-    font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: var(--radius-surface, 14px);
     border: 1px solid rgba(0,128,128,0.2); margin-bottom: 32px; letter-spacing: 0.3px;
 }
 .legal-emergency-box {
     background: rgba(220,38,38,0.06); border-left: 4px solid #dc2626;
-    border-radius: 0 8px 8px 0; padding: 18px 24px; margin: 8px 0 32px;
+    border-radius: 0 var(--radius-surface, 14px) var(--radius-surface, 14px) 0; padding: 18px 24px; margin: 8px 0 32px;
 }
 .legal-emergency-box p { margin: 0; font-size: 15px; color: #7f1d1d; font-weight: 600; line-height: 1.7; }
 </style>

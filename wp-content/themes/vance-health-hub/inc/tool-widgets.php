@@ -79,7 +79,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 			width: 100%; box-sizing: border-box;
 			min-height: 46px; padding: 12px 14px;
 			background: #F8FAFC; color: #1F2937;
-			border: 1px solid #E2E8F0; border-radius: 12px;
+			border: 1px solid #E2E8F0; border-radius: var(--radius-surface, 14px);
 			font-family: 'Inter', sans-serif; font-size: 15px;
 			outline: none; transition: 0.2s;
 		}
@@ -100,12 +100,12 @@ function vance_tool_widgets_emit_modal_css_once() {
 			-webkit-backdrop-filter: blur(16px);
 			backdrop-filter: blur(16px);
 			border-top: 1px solid #2f4f6f;
-			border-radius: 0 0 16px 16px;
+			border-radius: 0 0 var(--radius-surface, 14px) var(--radius-surface, 14px);
 		}
 		.vance-tw-modal .vance-tw-btn-go {
 			min-height: 46px; padding: 13px 28px;
 			background: #008080; color: #ffffff;
-			border: none; border-radius: 12px;
+			border: none; border-radius: var(--radius-surface, 14px);
 			font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
 			cursor: pointer;
 			box-shadow: 0 4px 12px rgba(0,128,128,0.2);
@@ -118,7 +118,7 @@ function vance_tool_widgets_emit_modal_css_once() {
 			min-height: 46px; padding: 13px 20px;
 			background: transparent;
 			border: 2px solid #E2E8F0; color: #64748B;
-			border-radius: 12px; cursor: pointer;
+			border-radius: var(--radius-surface, 14px); cursor: pointer;
 			font-family: 'Inter', sans-serif;
 			font-size: 14px; font-weight: 600;
 			transition: 0.18s;
