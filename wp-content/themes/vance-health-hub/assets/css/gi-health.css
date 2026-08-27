@@ -446,7 +446,11 @@
 }
 .gi-cp-nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .gi-cp-nav a {
-    color: #2f4f6f; font-size: 13px; padding: 8px 16px; display: block;
+    /* min-height + centring rather than more padding: these sit in a wrapping
+       flex row, so padding alone would also push them wider and drop the row
+       count. 8px/16px kept the label at 38px, under the 44px touch minimum. */
+    color: #2f4f6f; font-size: 13px; padding: 8px 16px;
+    display: flex; align-items: center; justify-content: center; min-height: 44px;
     background: #fff; border: 1px solid #2f4f6f; font-weight: 500; white-space: nowrap;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
@@ -500,9 +504,14 @@
 .gi-cp-tile.is-centered { text-align: center; }
 .gi-cp-tile-eyebrow { font-size: 12px; color: var(--gi-primary-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 .gi-cp-tile-big { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 26px; color: var(--gi-primary); margin-bottom: 6px; }
-.gi-cp-tile h4 { color: var(--gi-primary); font-size: 15px; margin-bottom: 6px; font-weight: 600; }
+/* 17px, raised with the tile copy below: at 15px the heading would have been
+   SMALLER than the 16px paragraph it introduces. */
+.gi-cp-tile h4 { color: var(--gi-primary); font-size: 17px; margin-bottom: 6px; font-weight: 600; }
 .gi-cp-tile-img { width: 100%; max-width: 240px; height: auto; display: block; margin: 0 auto 16px; }
-.gi-cp-tile p { font-size: 14px; color: #4a6a6a; margin-bottom: 0; line-height: 1.6; }
+/* 16px, not 14px. This is real explanatory copy about a person's condition
+   ("Can affect any part of the gut..."), not a caption, and there are eleven
+   such paragraphs on the IBD page alone. */
+.gi-cp-tile p { font-size: 16px; color: #4a6a6a; margin-bottom: 0; line-height: 1.6; }
 
 /* numbered diagnosis-style steps */
 .gi-cp-steps { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
