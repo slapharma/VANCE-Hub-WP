@@ -88,6 +88,17 @@ function vance_render_gastro_conditions() {
 			background-color: #0A1929;
 			background-size: cover;
 			background-position: center center;
+			/* Both declarations are load-bearing against the same bug. The
+			   default `background-repeat: repeat` plus the default
+			   `background-origin: padding-box` tiled the image's BOTTOM row of
+			   pixels into the 1px border ring at the TOP of every tile -- the
+			   background is clipped to the border box but positioned from the
+			   padding box, so that ring fell outside the image's own area. The
+			   scrim below is `inset: 0`, i.e. the padding box, so it never
+			   covered the ring either: each tile wore a hairline of unrelated,
+			   unscrimmed colour along its top edge. */
+			background-repeat: no-repeat;
+			background-origin: border-box;
 			border: 1px solid rgba(10,25,41,0.08);
 			transition: transform 0.28s ease, box-shadow 0.28s ease;
 		}

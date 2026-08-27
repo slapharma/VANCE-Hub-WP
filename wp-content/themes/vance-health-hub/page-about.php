@@ -946,7 +946,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-feat-ico {
     display: flex; align-items: center; justify-content: center;
     flex: 0 0 44px; width: 44px; height: 44px;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-control, 6px);
     background: linear-gradient(135deg, rgba(0,128,128,.16), rgba(0,128,128,.05));
     color: var(--vab-teal);
 }

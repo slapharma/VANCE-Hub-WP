@@ -123,8 +123,8 @@ $track_icons = array(
 
             <?php if ( $wl_action ) : ?>
             <form class="edu-waitlist-form" action="<?php echo esc_url( $wl_action ); ?>" method="post" target="_blank" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
-                <input type="email" name="EMAIL" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px;">
-                <select name="ROLE" style="padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px; background: white;">
+                <input type="email" name="EMAIL" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px;">
+                <select name="ROLE" style="padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px; background: white;">
                     <option value="">I am a…</option>
                     <option value="patient">Patient</option>
                     <option value="caregiver">Caregiver / Family</option>
@@ -139,8 +139,8 @@ $track_icons = array(
             <?php else : ?>
             <form class="edu-waitlist-form" id="edu-waitlist-selfhosted-form" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
                 <?php wp_nonce_field( 'vance_edu_waitlist', 'edu_waitlist_nonce' ); ?>
-                <input type="email" name="EMAIL" id="edu-waitlist-email" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px;">
-                <select name="ROLE" id="edu-waitlist-role" style="padding: 14px 20px; border: none; border-radius: var(--radius-md); font-size: 16px; background: white;">
+                <input type="email" name="EMAIL" id="edu-waitlist-email" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px;">
+                <select name="ROLE" id="edu-waitlist-role" style="padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px; background: white;">
                     <option value="">I am a…</option>
                     <option value="patient">Patient</option>
                     <option value="caregiver">Caregiver / Family</option>
