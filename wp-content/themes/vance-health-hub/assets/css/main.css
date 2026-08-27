@@ -4365,3 +4365,24 @@ body.home .hero {
 .oped-readnext-thumb {
     border-radius: var(--radius-article);
 }
+
+/* ============================================================================
+   JETPACK SHAREDADDY — TOUCH TARGET
+   ----------------------------------------------------------------------------
+   The plugin renders its share buttons at 30px tall (13px/23px label inside
+   4px/3px padding), which made them the smallest controls on the site and
+   short of the 44px minimum touch target. Sharedaddy exposes no size setting
+   and its markup is generated, so the height is corrected here rather than by
+   patching the plugin -- which a plugin update would undo.
+
+   min-height + inline-flex, not extra padding: the buttons carry an icon and
+   a label side by side, and vertical padding on an inline-block would push
+   the two out of alignment with each other.
+   ========================================================================== */
+
+.sharedaddy .sd-content ul li a.sd-button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+}

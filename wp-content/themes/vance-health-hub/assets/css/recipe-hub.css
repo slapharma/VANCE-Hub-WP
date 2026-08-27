@@ -11,7 +11,9 @@
 
 .vance-rh-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .vance-rh-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.vance-rh-chip { display: inline-block; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
+/* inline-flex + min-height rather than taller padding, so the pill grows to
+   the 44px touch minimum without the label drifting off centre. Was 36px. */
+.vance-rh-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
 .vance-rh-chip.is-active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
 .vance-rh-search { flex: 0 0 240px; max-width: 100%; padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; }
 
