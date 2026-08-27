@@ -102,14 +102,16 @@ function vug_pdf_meta() {
 
 /**
  * The download call to action, offered at each point a reader is likely to
- * want to keep the guide rather than keep scrolling: the hero, the sticky
- * sub-nav, mid-page after the tools, and the closing CTA.
+ * want to keep the guide rather than keep scrolling: the hero, mid-page after
+ * the tools, and the closing CTA. The sticky sub-nav used to carry a fourth
+ * copy as a filled 'pill'; that was removed so the bar holds section anchors
+ * only, and the variant went with it.
  *
  * All variants point at the same file and carry `download` so the browser
  * saves it instead of opening a viewer tab.
  *
  * @param string $pdf_url URL of the PDF.
- * @param string $variant 'hero' | 'pill' | 'solid' | 'onteal'.
+ * @param string $variant 'hero' | 'solid' | 'onteal'.
  * @param string $label   Button text.
  * @return string
  */
@@ -117,7 +119,6 @@ function vug_download_btn( $pdf_url, $variant = 'solid', $label = '' ) {
 	$label   = $label ? $label : __( 'Download User Guide', 'vance-health-hub' );
 	$classes = array(
 		'hero'   => 'btn btn-outline vug-dl',
-		'pill'   => 'vug-subnav__download',
 		'solid'  => 'btn btn-primary vug-dl',
 		'onteal' => 'btn vug-dl vug-dl--onteal',
 	);
@@ -220,8 +221,6 @@ $tools = array(
 			<li><a href="#vance-ai">VANCE-Ai</a></li>
 			<li><a href="#free-tools">Free Health Tools</a></li>
 			<li><a href="#my-dashboard" class="vug-subnav__highlight">My Dashboard</a></li>
-			<?php // Not a section anchor — the one persistent action on the page. ?>
-			<li class="vug-subnav__dl-item"><?php echo vug_download_btn( $pdf_url, 'pill', __( 'Download', 'vance-health-hub' ) ); ?></li>
 		</ul>
 	</nav>
 

@@ -3452,33 +3452,40 @@ body.home .hero {
     .va-kb-grid--min-200 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 }
 
-/* The five-column track lands the card at ~212px, and .card-meta-footer needs
-   ~248px to lay date / read-time / views out on one nowrap line -- so the view
-   count was being clipped off the right edge. No font or padding trim closes a
-   76px gap (even at 9px the row still overruns), so the row has to wrap.
+/* Homepage knowledgebase cards run the meta on two rows: the date alone, then
+   read-time and view count together beneath it.
 
-   Driven by a container query on the card rather than a viewport media query:
-   the overflow is a function of how wide THIS card is, not how wide the window
-   is, and the same grid renders 212px cards at 1440px and 300px cards at 700px.
-   Any future narrow placement gets the fix for free. Browsers without
-   @container support keep the current single-line row.
+   It also fixes a clipping bug. The five-column track lands the card at ~212px
+   and the three segments need ~248px on one nowrap line, so the view count was
+   cut off the right edge. No font or padding trim closes a 76px gap -- even at
+   9px the row still overruns -- but split across two rows the second line comes
+   to ~132px and fits at the normal 12px.
 
-   Scoped to .va-kb-grid so `container-type` (which brings inline-size
-   containment with it) is not imposed on every .news-card sitewide. */
-.va-kb-grid .news-card { container-type: inline-size; }
+   Scoped to .va-kb-grid, which only front-page.php emits, so the wider cards on
+   archives, search and single keep their one-line meta.
 
-@container (max-width: 240px) {
-    .card-meta-footer {
-        flex-wrap: wrap;
-        column-gap: 10px;
-        row-gap: 2px;
-        font-size: 11px;
-    }
-    /* The hairline dividers are dropped rather than kept: a border-left on the
-       item that starts the second line would hang off the left edge with
-       nothing before it. The gap carries the separation instead. */
-    .card-meta-footer .card-meta-item { padding: 0; }
-    .card-meta-footer .card-meta-item + .card-meta-item { border-left: 0; }
+   Sequenced with :first-child / :nth-child rather than a wrapper element
+   because vance_card_meta_footer_html() drops the read-time segment when it is
+   unavailable and can omit views entirely; addressing positions keeps the rule
+   correct for the two-segment cases, where the date still takes its own row and
+   whatever follows sits below it without a leading divider. */
+.va-kb-grid .card-meta-footer {
+    flex-wrap: wrap;
+    row-gap: 4px;
+}
+
+/* Full-basis date forces the rest of the row onto the next line. */
+.va-kb-grid .card-meta-footer .card-meta-item:first-child {
+    flex-basis: 100%;
+}
+
+/* Whatever starts the second row must not carry the divider it would inherit
+   from `.card-meta-item + .card-meta-item` -- a border-left there hangs off the
+   left edge with nothing before it. The divider between the second-row pair is
+   kept. */
+.va-kb-grid .card-meta-footer .card-meta-item:nth-child(2) {
+    padding-left: 0;
+    border-left: 0;
 }
 
 /* --- Category promo block (inc/category-promo.php) --- */

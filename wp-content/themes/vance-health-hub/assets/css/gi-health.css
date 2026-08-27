@@ -452,6 +452,8 @@
     color: #2f4f6f; font-size: 13px; padding: 8px 16px;
     display: flex; align-items: center; justify-content: center; min-height: 44px;
     background: #fff; border: 1px solid #2f4f6f; font-weight: 500; white-space: nowrap;
+    /* Control step, same as .vug-subnav a and the inner category chips. */
+    border-radius: var(--radius-control, 6px);
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 .gi-cp-nav a:hover { background: #2f4f6f; color: #fff; border-color: #fff; }

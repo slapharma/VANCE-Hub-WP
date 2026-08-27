@@ -43,6 +43,9 @@
     background: #fff;
     border: 1px solid var(--secondary-color);
     padding: 8px 16px;
+    /* Nav chips take the control step, matching the category chips in
+       template-parts/inner-category-nav.php and the sibling .gi-cp-nav. */
+    border-radius: var(--radius-control, 6px);
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 .vug-subnav a:hover { background: var(--secondary-color); color: #fff; }
@@ -403,7 +406,7 @@
 }
 
 /* ---------- Download CTA ----------
-   The same PDF offered at four points: hero, sticky sub-nav, a mid-page band
+   The same PDF offered at three points: hero, a mid-page band
    after the free tools, and the closing CTA. One button component
    (vug_download_btn() in page-user-guide.php) with four skins, so the icon,
    spacing and hover behaviour stay identical wherever it appears. */
@@ -443,28 +446,9 @@
     border-color: #fff;
 }
 
-/* Sub-nav pill: filled teal so it reads as the one action among nav links. */
-.vug-subnav__dl-item { margin-left: 6px; }
-.vug-subnav a.vug-subnav__download,
-.vug-subnav__download {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    white-space: nowrap;
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-    background: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    padding: 8px 16px;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    border-radius: var(--radius-pill);
-}
-.vug-subnav a.vug-subnav__download:hover {
-    background: #fff;
-    color: var(--primary-color);
-    border-color: #fff;
-}
+/* The sub-nav's filled teal download pill was removed: the bar now carries
+   section anchors only. The offer still appears in the hero, the mid-page band
+   and the closing CTA. */
 
 /* Mid-page band. Navy rather than teal so it does not compete with the
    teal closing CTA further down the page. */
@@ -507,9 +491,5 @@
     .vug-dl-band__text h2 { font-size: 24px; }
 }
 @media (max-width: 560px) {
-    /* The sub-nav is sticky and already wraps to three rows on a phone; a
-       fourth would eat the viewport. Drop the pill here - the hero button sits
-       directly above it, and the band and closing CTA both repeat the offer. */
-    .vug-subnav__dl-item { display: none; }
     .vug-dl__meta--hero { display: block; margin: 12px 0 0; }
 }
