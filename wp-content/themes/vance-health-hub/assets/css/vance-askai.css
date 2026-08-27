@@ -1665,7 +1665,7 @@ body.vance-askai-open { overflow: hidden; }
 	box-shadow: 0 6px 20px rgba(0, 128, 128, 0.3);
 }
 
-.vance-askai-modal .vance-askai__minibtn { border-radius: var(--radius-surface); }
+.vance-askai-modal .vance-askai__minibtn { border-radius: var(--radius-control); }
 
 /* The composer's frosted reading-level panel predates the kit and was the one
    piece still reading as a different product. Flatten it to a plain card. */
