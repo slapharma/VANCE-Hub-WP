@@ -61,6 +61,22 @@ function vance_prime_block_style_choices() {
 }
 
 /**
+ * Where the Categories instance sits on a category archive.
+ *
+ * The archive templates call vance_render_prime_block_categories() once per
+ * slot; the block renders in whichever slot matches this setting and bails in
+ * the other two. 'below_promo' is the historical position, so it stays the
+ * default and nothing moves for an existing install.
+ */
+function vance_prime_block_placement_choices() {
+	return array(
+		'above_promo'  => __( 'Above the category promo block', 'vance-health-hub' ),
+		'below_promo'  => __( 'Below the category promo block', 'vance-health-hub' ),
+		'above_footer' => __( 'Above the footer (end of the page)', 'vance-health-hub' ),
+	);
+}
+
+/**
  * Render one Prime Block instance from a fully-resolved values array.
  *
  * Deliberately does NOT read theme mods itself — the wrappers below own that,
@@ -85,6 +101,12 @@ function vance_prime_block_style_choices() {
  *     @type int    $latest_count        How many posts to fetch.
  *     @type int    $latest_cat          Category id filter (0 = all).
  *     @type bool   $latest_show_date    Show the relative date in the fallback list.
+ *     @type bool   $latest_show_thumbs  Show the postage-stamp thumbnail on each
+ *                                       article row (the featured cell always
+ *                                       keeps its image).
+ *     @type bool   $accent_bar_show     Show the small accent bar beside each
+ *                                       column heading.
+ *     @type string $accent_bar_color    Colour of that accent bar.
  *     @type bool   $tighten_next_cw     Emit the legacy #vance-cw-1 top-padding trim.
  * }
  */
@@ -113,6 +135,13 @@ function vance_render_prime_block( array $vals ) {
 	$latest_cat          = absint( isset( $vals['latest_cat'] ) ? $vals['latest_cat'] : 0 );
 	$latest_show_date    = ! empty( $vals['latest_show_date'] );
 	$tighten_next_cw     = ! empty( $vals['tighten_next_cw'] );
+
+	// Both of these default to ON when the key is absent, so a values array
+	// written before they existed keeps rendering exactly as it did.
+	$latest_show_thumbs  = ! isset( $vals['latest_show_thumbs'] ) || ! empty( $vals['latest_show_thumbs'] );
+	$accent_bar_show     = ! isset( $vals['accent_bar_show'] )    || ! empty( $vals['accent_bar_show'] );
+	$accent_bar_color    = (string) ( isset( $vals['accent_bar_color'] ) ? $vals['accent_bar_color'] : '' );
+	if ( '' === $accent_bar_color ) { $accent_bar_color = '#008080'; }
 
 	// Tools column inline style. When a background colour is set, add padding
 	// so the colour reads as a block rather than a sliver behind the cards.
@@ -358,6 +387,161 @@ function vance_render_prime_block( array $vals ) {
 			<?php echo $sel; ?>.pathway-content-section { padding-top: 60px; }
 			<?php echo $sel; ?> .pwc-card-image { height: 60px; }
 		}
+
+		/* ====================================================================
+		 * Chrome the homepage used to supply.
+		 *
+		 * .section-label, .section-label-left, .color-bar, .tag and the whole
+		 * .latest-list-* family were only ever declared inside front-page.php's
+		 * inline <style>, and .bento-grid-news--grow only exists there too
+		 * (main.css carries the plain .bento-grid-news, not the grow variant).
+		 * So a Prime Block rendered anywhere OTHER than the homepage lost all
+		 * of it: the 6px accent bar collapsed into a full-width slab stacked
+		 * above the heading, and every article row dropped its thumbnail
+		 * underneath the title instead of pinning it to the right edge.
+		 *
+		 * Declaring them here — scoped to this instance's own id, like every
+		 * other rule in this block — makes the block genuinely self-contained
+		 * and identical wherever it is placed. Scoping is what keeps this from
+		 * fighting front-page.php: an id beats a bare class, so on the homepage
+		 * these win for THIS block and leave every other section alone.
+		 * ================================================================== */
+		<?php echo $sel; ?> .section-label {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			justify-content: space-between;
+		}
+		<?php echo $sel; ?> .section-label-left {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			min-width: 0;
+		}
+		<?php echo $sel; ?> .section-label h2 { margin: 0; font-family: 'Outfit', sans-serif; }
+		/* Never grow, never shrink: a bare `width` alone loses to the flex
+		   container's own sizing, which is how this became a full-width bar. */
+		<?php echo $sel; ?> .color-bar { flex: 0 0 6px; width: 6px; border-radius: 0; }
+		<?php echo $sel; ?> .tag {
+			background: var(--primary-color, #008080);
+			color: #ffffff;
+			padding: 4px 12px;
+			font-size: 11px;
+			text-transform: uppercase;
+			font-weight: 700;
+			border-radius: 0;
+			display: inline-block;
+			margin-bottom: 12px;
+		}
+		<?php echo $sel; ?> .bento-grid-news {
+			display: grid;
+			grid-template-columns: 2fr 1fr;
+			grid-template-rows: repeat(2, 200px);
+			gap: 24px;
+		}
+		<?php echo $sel; ?> .bento-grid-news.bento-grid-news--grow {
+			grid-template-rows: auto;
+			align-items: stretch;
+			/* Small gap rather than flush: the shared border below frames the
+			   image and the list as one section, this just stops them touching. */
+			gap: 20px;
+			border: 1.5px solid #e2e8f0;
+		}
+		<?php echo $sel; ?> .bento-grid-news.bento-grid-news--grow .bento-cell-featured {
+			width: 100%;
+			max-height: 460px;
+		}
+		<?php echo $sel; ?> .latest-list-box {
+			grid-row: 1 / -1;
+			display: flex;
+			flex-direction: column;
+			background: #ffffff;
+			overflow: hidden;
+		}
+		<?php echo $sel; ?> .latest-list-item {
+			/* Grow to divide the box height evenly (so the rows line up with
+			   the featured cell) but never shrink below content height. */
+			flex: 1 0 auto;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			padding: 10px <?php echo $latest_show_thumbs ? '20px' : '16px'; ?> 10px 0;
+			text-decoration: none;
+			border-bottom: 1px solid #2f4f6f;
+			transition: background 0.2s ease;
+		}
+		<?php echo $sel; ?> .latest-list-item:last-child { border-bottom: none; }
+		<?php echo $sel; ?> .latest-list-item:hover { background: #f8fafc; }
+		<?php echo $sel; ?> .latest-list-item:focus-visible {
+			outline: 3px solid <?php echo esc_attr( $accent_bar_color ); ?>;
+			outline-offset: -3px;
+		}
+		<?php echo $sel; ?> .latest-list-text {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			gap: 4px;
+			flex: 1;
+			min-width: 0;
+		}
+		/* Postage-stamp thumbnail pinned to the right edge of each row. */
+		<?php echo $sel; ?> .latest-list-thumb {
+			width: 48px;
+			height: 48px;
+			object-fit: cover;
+			flex-shrink: 0;
+		}
+		<?php echo $sel; ?> .latest-list-cat {
+			font-size: 9px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: var(--primary-color, #008080); /* per-post overlay colour set inline */
+			line-height: 1.2;
+		}
+		<?php echo $sel; ?> .latest-list-title {
+			margin: 0;
+			font-family: 'Outfit', sans-serif;
+			font-size: 14px;
+			font-weight: 500;
+			line-height: 1.4;
+			color: #0f172a;
+			transition: color 0.2s ease;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+		<?php echo $sel; ?> .latest-list-item:hover .latest-list-title { color: var(--primary-color, #008080); }
+		/* card-meta-footer (main.css) recoloured for the dark featured overlay. */
+		<?php echo $sel; ?> .bento-content-overlay .card-meta-footer {
+			border-top-color: rgba(255,255,255,0.25);
+			color: rgba(255,255,255,0.78);
+		}
+		<?php echo $sel; ?> .bento-content-overlay .card-meta-footer .card-meta-item + .card-meta-item {
+			border-left-color: rgba(255,255,255,0.25);
+		}
+		<?php echo $sel; ?> .pwc-card:focus-visible,
+		<?php echo $sel; ?> .pwc-banner:focus-visible,
+		<?php echo $sel; ?> .bento-cell-featured:focus-visible {
+			outline: 3px solid <?php echo esc_attr( $accent_bar_color ); ?>;
+			outline-offset: 3px;
+		}
+		@media (max-width: 992px) {
+			/* The list drops below the featured cell, full width. */
+			<?php echo $sel; ?> .latest-list-box { grid-row: auto; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			<?php echo $sel; ?> .pwc-card,
+			<?php echo $sel; ?> .pwc-banner,
+			<?php echo $sel; ?> .latest-list-item,
+			<?php echo $sel; ?> .latest-list-title,
+			<?php echo $sel; ?> .bento-cell-featured img { transition: none !important; }
+			<?php echo $sel; ?> .pwc-card:hover,
+			<?php echo $sel; ?> .pwc-banner:hover { transform: none !important; }
+			<?php echo $sel; ?> .bento-cell-featured:hover img { transform: none !important; }
+		}
 	</style>
 	<section id="<?php echo esc_attr( $wrap_id ); ?>" class="pathway-content-section <?php echo esc_attr( $layout_class ); ?>">
 		<div class="container">
@@ -366,7 +550,9 @@ function vance_render_prime_block( array $vals ) {
 				<div class="pathway-tiles-stack" style="<?php echo $tools_stack_style; // phpcs:ignore WordPress.Security.EscapeOutput ?>">
 					<div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
 						<div class="section-label-left">
-							<div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
+							<?php if ( $accent_bar_show ) : ?>
+							<div class="color-bar" style="background: <?php echo esc_attr( $accent_bar_color ); ?>; height: 20px;"></div>
+							<?php endif; ?>
 							<h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: <?php echo esc_attr( $section_label_color ); ?>;"><?php echo esc_html( $label ); ?></h2>
 						</div>
 					</div>
@@ -466,7 +652,9 @@ function vance_render_prime_block( array $vals ) {
 				<div class="latest-content-column">
 					<div class="section-label" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
 						<div class="section-label-left">
-							<div class="color-bar" style="background: var(--primary-color); height: 20px;"></div>
+							<?php if ( $accent_bar_show ) : ?>
+							<div class="color-bar" style="background: <?php echo esc_attr( $accent_bar_color ); ?>; height: 20px;"></div>
+							<?php endif; ?>
 							<h2 style="font-size: 20px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0; line-height: 20px; color: #0f172a;"><?php echo esc_html( $latest_title ); ?></h2>
 						</div>
 					</div>
@@ -494,8 +682,12 @@ function vance_render_prime_block( array $vals ) {
 									?></span>
 									<h4 class="latest-list-title"><?php echo esc_html( get_the_title( $p->ID ) ); ?></h4>
 								</div>
-								<?php $list_thumb = get_the_post_thumbnail_url( $p->ID, 'thumbnail' ); if ( $list_thumb ) : ?>
-								<img class="latest-list-thumb" src="<?php echo esc_url( $list_thumb ); ?>" alt="">
+								<?php
+								// The featured cell above keeps its image either way; this
+								// controls only the postage-stamp thumbnails on the list rows.
+								$list_thumb = $latest_show_thumbs ? get_the_post_thumbnail_url( $p->ID, 'thumbnail' ) : '';
+								if ( $list_thumb ) : ?>
+								<img class="latest-list-thumb" src="<?php echo esc_url( $list_thumb ); ?>" alt="" loading="lazy" width="48" height="48">
 								<?php endif; ?>
 							</a>
 							<?php endforeach; ?>
@@ -568,6 +760,9 @@ function vance_render_prime_block_home1() {
 		'latest_count'        => vance_get_theme_mod( 'vance_pwc_latest_count', 6 ),
 		'latest_cat'          => (int) vance_get_theme_mod( 'vance_pwc_latest_category', 0 ),
 		'latest_show_date'    => vance_get_theme_mod( 'vance_pwc_latest_show_date', true ),
+		'latest_show_thumbs'  => vance_get_theme_mod( 'vance_pwc_latest_show_thumbs', true ),
+		'accent_bar_show'     => vance_get_theme_mod( 'vance_pwc_accent_bar_show', true ),
+		'accent_bar_color'    => vance_get_theme_mod( 'vance_pwc_accent_bar_color', '#008080' ),
 		'tighten_next_cw'     => true,
 	) );
 }
@@ -577,11 +772,22 @@ function vance_render_prime_block_home1() {
  * (Home 2 and Categories). Defaults mirror Home 1's out-of-the-box content so
  * a freshly-enabled instance is immediately usable.
  *
- * @param string $prefix  Setting prefix, e.g. 'vance_pb2_'.
- * @param string $wrap_id DOM id for the instance.
+ * @param string $prefix   Setting prefix, e.g. 'vance_pb2_'.
+ * @param string $wrap_id  DOM id for the instance.
+ * @param array  $defaults Per-instance default overrides. Only the keys that
+ *                         genuinely differ between instances live here — today
+ *                         that is 'latest_show_thumbs', which ships OFF for the
+ *                         Categories block (the archive layout reads cleaner
+ *                         without them) and ON for the homepage blocks. Must
+ *                         stay in step with the defaults passed to
+ *                         vance_register_prime_block_controls() in functions.php,
+ *                         or the Customizer will show a state the front end
+ *                         does not render.
  * @return array Values array for vance_render_prime_block().
  */
-function vance_prime_block_vals_for_prefix( $prefix, $wrap_id ) {
+function vance_prime_block_vals_for_prefix( $prefix, $wrap_id, array $defaults = array() ) {
+	$thumbs_default = ! array_key_exists( 'latest_show_thumbs', $defaults ) || ! empty( $defaults['latest_show_thumbs'] );
+
 	return array(
 		'wrap_id'             => $wrap_id,
 		'label'               => vance_get_theme_mod( $prefix . 'label', 'Featured Tools' ),
@@ -618,6 +824,9 @@ function vance_prime_block_vals_for_prefix( $prefix, $wrap_id ) {
 		'latest_count'        => vance_get_theme_mod( $prefix . 'latest_count', 6 ),
 		'latest_cat'          => (int) vance_get_theme_mod( $prefix . 'latest_category', 0 ),
 		'latest_show_date'    => vance_get_theme_mod( $prefix . 'latest_show_date', true ),
+		'latest_show_thumbs'  => vance_get_theme_mod( $prefix . 'latest_show_thumbs', $thumbs_default ),
+		'accent_bar_show'     => vance_get_theme_mod( $prefix . 'accent_bar_show', true ),
+		'accent_bar_color'    => vance_get_theme_mod( $prefix . 'accent_bar_color', '#008080' ),
 	);
 }
 
@@ -627,15 +836,68 @@ function vance_render_prime_block_home2() {
 }
 
 /**
- * Prime Block Categories — one global block shown identically on every
- * category archive. Gated behind its own opt-in checkbox, in the same
- * bail-early style as vance_render_category_promo().
+ * Per-instance default overrides for the Categories block. See the $defaults
+ * docblock on vance_prime_block_vals_for_prefix() — functions.php reads the
+ * same array when registering the controls, so the two can't drift.
  */
-function vance_render_prime_block_categories() {
+function vance_prime_block_categories_defaults() {
+	return array(
+		// The archive already leads with a hero and (usually) a promo card, so
+		// the extra 48px thumbnails on every list row made the column noisy.
+		'latest_show_thumbs' => false,
+	);
+}
+
+/**
+ * Is the Prime Block switched on for this particular category?
+ *
+ * Defaults to TRUE so ticking the master switch behaves the way it always has
+ * — on for every archive — and unticking individual categories is the opt-out.
+ * Non-category archives (post-type archives, tag pages) have no term to key
+ * off, so they follow the master switch alone.
+ */
+function vance_prime_block_category_enabled( $term_id ) {
+	$term_id = (int) $term_id;
+	if ( $term_id <= 0 ) {
+		return true;
+	}
+	return (bool) vance_get_theme_mod( 'vance_pbc_cat_' . $term_id, true );
+}
+
+/**
+ * Prime Block Categories — one configured block, shown on the category
+ * archives it is enabled for. Gated behind its own opt-in checkbox, in the
+ * same bail-early style as vance_render_category_promo().
+ *
+ * The archive templates call this once per placement slot; it renders in the
+ * slot matching the "Position on the page" setting and bails in the other two.
+ * The default slot matches the historical position, so a template that has not
+ * been updated to pass a slot still renders the block exactly where it was.
+ *
+ * @param string $slot Which call site this is: above_promo|below_promo|above_footer.
+ */
+function vance_render_prime_block_categories( $slot = 'below_promo' ) {
 	if ( ! vance_get_theme_mod( 'vance_pbc_show_on_categories', false ) ) {
 		return;
 	}
-	vance_render_prime_block( vance_prime_block_vals_for_prefix( 'vance_pbc_', 'vance-prime-block-categories' ) );
+
+	$placement = vance_get_theme_mod( 'vance_pbc_placement', 'below_promo' );
+	if ( ! array_key_exists( $placement, vance_prime_block_placement_choices() ) ) {
+		$placement = 'below_promo';
+	}
+	if ( $placement !== $slot ) {
+		return;
+	}
+
+	if ( is_category() && ! vance_prime_block_category_enabled( get_queried_object_id() ) ) {
+		return;
+	}
+
+	vance_render_prime_block( vance_prime_block_vals_for_prefix(
+		'vance_pbc_',
+		'vance-prime-block-categories',
+		vance_prime_block_categories_defaults()
+	) );
 }
 
 // ============================================================================

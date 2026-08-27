@@ -209,6 +209,89 @@ function vance_gi_condition_cards() {
 }
 
 /**
+ * Every category, ordered parent-first with children directly under their own
+ * parent, ready for Customizer labelling.
+ *
+ * get_categories() returns one flat alphabetical list, which interleaves
+ * parents and children: "Understanding Your Condition" lands between "Tools &
+ * Resources" and "White Papers" with nothing to say it belongs to Gastro
+ * Living. In a section that repeats eight controls per category that made the
+ * sub-category settings effectively unfindable — the reason the category promo
+ * block looked broken for sub-categories when it was in fact rendering
+ * correctly all along.
+ *
+ * Names are entity-decoded here because term names are stored encoded
+ * ("Diagnosis &amp; Treatment") and the Customizer escapes labels again on
+ * output, which would otherwise render the raw entity to the admin.
+ *
+ * @return array List of rows: term (WP_Term), depth (int), name (string,
+ *               decoded), indented (string, name prefixed by depth markers),
+ *               path (string, full "Parent → Child" breadcrumb).
+ */
+function vance_customizer_category_tree() {
+    static $cache = null;
+    if ( null !== $cache ) {
+        return $cache;
+    }
+
+    $terms = get_categories( array(
+        'hide_empty' => false,
+        'orderby'    => 'name',
+        'order'      => 'ASC',
+    ) );
+
+    $by_parent = array();
+    foreach ( $terms as $term ) {
+        $by_parent[ (int) $term->parent ][] = $term;
+    }
+
+    $rows = array();
+    $walk = function ( $parent_id, $depth, $path ) use ( &$walk, &$rows, $by_parent ) {
+        if ( empty( $by_parent[ $parent_id ] ) ) {
+            return;
+        }
+        foreach ( $by_parent[ $parent_id ] as $term ) {
+            $name      = html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' );
+            $term_path = ( '' === $path ) ? $name : $path . ' → ' . $name;
+            $rows[]    = array(
+                'term'     => $term,
+                'depth'    => $depth,
+                'name'     => $name,
+                'indented' => str_repeat( '— ', $depth ) . $name,
+                'path'     => $term_path,
+            );
+            $walk( (int) $term->term_id, $depth + 1, $term_path );
+        }
+    };
+    $walk( 0, 0, '' );
+
+    // Orphans: a term whose parent no longer exists would never be reached by
+    // the walk above and would silently lose its controls. Append them flat.
+    if ( count( $rows ) < count( $terms ) ) {
+        $seen = array();
+        foreach ( $rows as $row ) {
+            $seen[ (int) $row['term']->term_id ] = true;
+        }
+        foreach ( $terms as $term ) {
+            if ( isset( $seen[ (int) $term->term_id ] ) ) {
+                continue;
+            }
+            $name   = html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' );
+            $rows[] = array(
+                'term'     => $term,
+                'depth'    => 0,
+                'name'     => $name,
+                'indented' => $name,
+                'path'     => $name,
+            );
+        }
+    }
+
+    $cache = $rows;
+    return $cache;
+}
+
+/**
  * Register the full Customizer control set for one Prime Block instance.
  *
  * Home 1 does NOT go through here — it is pinned to the legacy
@@ -227,9 +310,17 @@ function vance_gi_condition_cards() {
  * @param float                $priority
  * @param string               $description
  * @param bool                 $with_category_toggle Add the "show on category
- *                             archives" opt-in checkbox at the top.
+ *                             archives" opt-in checkbox, the placement select
+ *                             and the per-category on/off list at the top.
+ * @param array                $defaults Per-instance default overrides, passed
+ *                             straight through from
+ *                             vance_prime_block_categories_defaults() and
+ *                             friends. MUST match what the front end resolves
+ *                             in vance_prime_block_vals_for_prefix(), or a
+ *                             never-touched control will show a state the page
+ *                             does not render.
  */
-function vance_register_prime_block_controls( $wp_customize, $section_id, $prefix, $title, $priority, $description = '', $with_category_toggle = false ) {
+function vance_register_prime_block_controls( $wp_customize, $section_id, $prefix, $title, $priority, $description = '', $with_category_toggle = false, array $defaults = array() ) {
     $wp_customize->add_section( $section_id, array(
         'title'       => $title,
         'priority'    => $priority,
@@ -241,10 +332,40 @@ function vance_register_prime_block_controls( $wp_customize, $section_id, $prefi
         $wp_customize->add_setting( $prefix . 'show_on_categories', array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
         $wp_customize->add_control( $prefix . 'show_on_categories', array(
             'label'       => __( 'Show on category archive pages', 'vance-health-hub' ),
-            'description' => __( 'When ticked, this block appears on every category archive, directly below the category promo block.', 'vance-health-hub' ),
+            'description' => __( 'Master switch. Leave this unticked and the block never appears, whatever the per-category boxes below say.', 'vance-health-hub' ),
             'section'     => $section_id,
             'type'        => 'checkbox',
         ) );
+
+        // Where the block sits on the archive. One setting for the whole
+        // instance — the block is a single shared design shown on many pages,
+        // so a per-category position would be 20-odd selects for a choice that
+        // is really about the page template, not the category.
+        $wp_customize->add_setting( $prefix . 'placement', array( 'default' => 'below_promo', 'sanitize_callback' => 'sanitize_key' ) );
+        $wp_customize->add_control( $prefix . 'placement', array(
+            'label'       => __( 'Position on the page', 'vance-health-hub' ),
+            'description' => __( 'Where the block sits relative to the category promo block. "Above the footer" puts it after the article grid, at the very end of the page.', 'vance-health-hub' ),
+            'section'     => $section_id,
+            'type'        => 'select',
+            'choices'     => vance_prime_block_placement_choices(),
+        ) );
+
+        // Per-category on/off. Defaults to ticked so the master switch keeps
+        // its original "on everywhere" behaviour and these are an opt-OUT.
+        // Listed parent-first with children indented underneath, because a flat
+        // alphabetical list interleaves the two and gives no clue which parent
+        // a sub-category belongs to.
+        foreach ( vance_customizer_category_tree() as $vpb_row ) {
+            $wp_customize->add_setting( $prefix . 'cat_' . $vpb_row['term']->term_id, array(
+                'default'           => true,
+                'sanitize_callback' => 'vance_sanitize_checkbox',
+            ) );
+            $wp_customize->add_control( $prefix . 'cat_' . $vpb_row['term']->term_id, array(
+                'label'   => $vpb_row['indented'],
+                'section' => $section_id,
+                'type'    => 'checkbox',
+            ) );
+        }
     }
 
     $wp_customize->add_setting( $prefix . 'label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -283,6 +404,24 @@ function vance_register_prime_block_controls( $wp_customize, $section_id, $prefi
         $wp_customize->add_setting( $prefix . $key, array( 'default' => $meta[0], 'sanitize_callback' => 'sanitize_hex_color' ) );
         $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . $key, array( 'label' => $meta[1], 'section' => $section_id ) ) );
     }
+
+    // -- The accent bar beside each column heading --
+    // The small vertical rule to the left of "Featured Tools" / "Latest
+    // Content". Hard-coded to the brand teal until now, and invisible outside
+    // the homepage because its width rule lived in front-page.php.
+    $wp_customize->add_setting( $prefix . 'accent_bar_show', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( $prefix . 'accent_bar_show', array(
+        'label'       => __( 'Show heading accent bar', 'vance-health-hub' ),
+        'description' => __( 'The short vertical rule to the left of the "Featured Tools" and "Latest Content" headings. Untick to drop it from both.', 'vance-health-hub' ),
+        'section'     => $section_id,
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( $prefix . 'accent_bar_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'accent_bar_color', array(
+        'label'   => __( 'Heading Accent Bar Colour', 'vance-health-hub' ),
+        'section' => $section_id,
+    ) ) );
 
     $wp_customize->add_setting( $prefix . 'tools_column_bg', array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $prefix . 'tools_column_bg', array(
@@ -347,6 +486,18 @@ function vance_register_prime_block_controls( $wp_customize, $section_id, $prefi
 
     $wp_customize->add_setting( $prefix . 'latest_show_date', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
     $wp_customize->add_control( $prefix . 'latest_show_date', array( 'label' => 'Content Column, Show Post Date', 'section' => $section_id, 'type' => 'checkbox' ) );
+
+    // Default comes from the caller so the Categories block can ship with these
+    // off while the homepage blocks keep them on. Mirrors the resolver default
+    // in vance_prime_block_vals_for_prefix().
+    $vpb_thumbs_default = ! array_key_exists( 'latest_show_thumbs', $defaults ) || ! empty( $defaults['latest_show_thumbs'] );
+    $wp_customize->add_setting( $prefix . 'latest_show_thumbs', array( 'default' => $vpb_thumbs_default, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( $prefix . 'latest_show_thumbs', array(
+        'label'       => __( 'Content Column, Show Article Thumbnails', 'vance-health-hub' ),
+        'description' => __( 'The small square image on each row of the article list. The large featured article keeps its image either way.', 'vance-health-hub' ),
+        'section'     => $section_id,
+        'type'        => 'checkbox',
+    ) );
 }
 
 /**
@@ -4550,13 +4701,48 @@ function vance_customize_register( $wp_customize ) {
 
     $wp_customize->add_setting( 'vance_pwc_latest_show_date', array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ) );
     $wp_customize->add_control( 'vance_pwc_latest_show_date', array( 'label' => 'Right Column, Show Post Date', 'section' => 'vance_pathway_content_settings', 'type' => 'checkbox' ) );
+
+    // Parity with the shared registrar (Home 2 / Categories). Home 1 keeps its
+    // legacy vance_pwc_* keys, so these are declared by hand rather than
+    // generated. Both default ON: this instance is the live homepage block and
+    // nothing about it should move.
+    $wp_customize->add_setting( 'vance_pwc_latest_show_thumbs', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( 'vance_pwc_latest_show_thumbs', array(
+        'label'       => __( 'Right Column, Show Article Thumbnails', 'vance-health-hub' ),
+        'description' => __( 'The small square image on each row of the article list. The large featured article keeps its image either way.', 'vance-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_pwc_accent_bar_show', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( 'vance_pwc_accent_bar_show', array(
+        'label'       => __( 'Show heading accent bar', 'vance-health-hub' ),
+        'description' => __( 'The short vertical rule to the left of the "Featured Tools" and "Latest Content" headings.', 'vance-health-hub' ),
+        'section'     => 'vance_pathway_content_settings',
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( 'vance_pwc_accent_bar_color', array( 'default' => '#008080', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_accent_bar_color', array(
+        'label'   => __( 'Heading Accent Bar Colour', 'vance-health-hub' ),
+        'section' => 'vance_pathway_content_settings',
+    ) ) );
     // 2.6.8 Prime Block Home 2 + Prime Block Categories.
     // Both use the clean vance_pb2_* / vance_pbc_* prefixes (Home 1 stays
     // pinned to the legacy vance_pwc_* / vance_hquiz_* / vance_askai_* keys so
     // its saved values survive), so one registration helper serves both.
     vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_home2_settings', 'vance_pb2_', __( 'Prime Block Home 2', 'vance-health-hub' ), 31.72, __( 'A second, independently-configured Prime Block. Showing/hiding and position are controlled by Homepage → Section Order — add or remove "Prime Block Home 2" there.', 'vance-health-hub' ) );
 
-    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_categories_settings', 'vance_pbc_', __( 'Prime Block Categories', 'vance-health-hub' ), 31.74, __( 'One Prime Block shown identically on every category archive page, directly below the category promo block. Off until you tick the box below.', 'vance-health-hub' ), true );
+    vance_register_prime_block_controls(
+        $wp_customize,
+        'vance_prime_block_categories_settings',
+        'vance_pbc_',
+        __( 'Prime Block Categories', 'vance-health-hub' ),
+        31.74,
+        __( 'One Prime Block, shown on the category archives you tick below. Off until you tick the master switch. Choose where it sits with "Position on the page"; every category is on by default, so untick the ones you want to leave it off.', 'vance-health-hub' ),
+        true,
+        vance_prime_block_categories_defaults()
+    );
 
     // 2.6.9 Gastro Conditions — one big animated tile per GI condition plus a
     // "view all" tile. The condition list itself comes from
