@@ -7034,11 +7034,17 @@ function vance_customize_register( $wp_customize ) {
     foreach ( $categories as $cat ) {
         $kb_section = "vance_kb_cat_{$cat->term_id}";
 
+        // Term names are stored HTML-encoded, so "Diagnosis & Treatment" comes
+        // back as "Diagnosis &amp; Treatment". The Customizer renders section
+        // titles through an escaping JS template, so the entity has to be
+        // decoded here or the admin reads the raw "&amp;".
+        $kb_cat_name = wp_specialchars_decode( $cat->name, ENT_QUOTES );
+
         $wp_customize->add_section( $kb_section, array(
             // The post count in the title is the disambiguator: it is what
             // would have shown at a glance that "Clinical Trial Reviews" is
             // empty and could never render whatever was set on it.
-            'title'       => sprintf( '%1$s (%2$d)', $cat->name, (int) $cat->count ),
+            'title'       => sprintf( '%1$s (%2$d)', $kb_cat_name, (int) $cat->count ),
             'description' => sprintf(
                 /* translators: 1: category slug, 2: term ID */
                 __( 'Slug: %1$s &middot; Term ID: %2$d', 'vance-health-hub' ),
