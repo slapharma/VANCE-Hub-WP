@@ -3148,11 +3148,11 @@ get_header();
                             <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:5px;" for="msg-compose-subject">Subject</label>
                             <input type="text" id="msg-compose-subject" required minlength="3" maxlength="150"
                                    placeholder="What is your message about?"
-                                   style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; box-sizing:border-box; font-family:inherit; margin-bottom:14px;">
+                                   style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; box-sizing:border-box; font-family:inherit; margin-bottom:14px; border-radius: var(--radius-field, 10px);">
                             <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:5px;" for="msg-compose-body">Message</label>
                             <textarea id="msg-compose-body" required minlength="10" maxlength="4000" rows="6"
                                       placeholder="Write your message… plain text, **bold**, *italic*, and URLs work."
-                                      style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; line-height:1.55; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+                                      style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; line-height:1.55; box-sizing:border-box; resize:vertical; font-family:inherit; border-radius: var(--radius-field, 10px);"></textarea>
                             <p style="margin:10px 0 14px; font-size:11.5px; color:#94A3B8; line-height:1.5;">
                                 Your name and email address are shared with the Vance team so they can reply. Please do
                                 not include health information you would not want held on record — see our
@@ -3503,7 +3503,7 @@ get_header();
                             <div class="rl-reader__foot" style="flex-direction:column; align-items:stretch; gap:10px;">
                                 <div style="display:flex; gap:8px;">
                                     <input type="text" id="doc-ask-input" placeholder="Ask about this document…"
-                                           style="flex:1; min-width:0; padding:10px 12px; border:1px solid #CBD5E1; font-family:inherit; font-size:14px;">
+                                           style="flex:1; min-width:0; padding:10px 12px; border:1px solid #CBD5E1; font-family:inherit; font-size:14px; border-radius: var(--radius-field, 10px);">
                                     <button type="button" class="rl-btn rl-btn--primary" id="doc-ask-send">Ask</button>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
