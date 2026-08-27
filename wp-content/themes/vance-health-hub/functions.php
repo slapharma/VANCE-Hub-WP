@@ -7005,73 +7005,106 @@ function vance_customize_register( $wp_customize ) {
     ) ) );
 
     // 6. Dynamic Knowledgebase Sections
-    $wp_customize->add_section( 'vance_knowledgebase_sections', array(
-        'title'       => __( 'Knowledge Base', 'vance-health-hub' ),
-        'description' => __( 'Control which categories appear as content sections on the homepage.', 'vance-health-hub' ),
-        'priority'    => 35,
-        'panel'       => 'vance_content_panel',
+    //
+    // One Customizer SECTION per category, not one shared section holding every
+    // category's controls. The flat list had grown to ten controls x ~25
+    // categories in a single scrolling pane, where the only thing separating
+    // one category's "Number of Posts" from another's was the name quoted in
+    // the label -- and three of the categories are called "Clinical Reviews",
+    // "Clinical Trial Reviews" and "Clinical Trial Abstracts". A value entered
+    // one row off lands on a different category and silently does nothing
+    // visible, which is what happened on 2026-08-27.
+    //
+    // Setting IDs are deliberately unchanged: only the section each control is
+    // attached to moves, so every saved theme mod carries over with no
+    // migration. The labels drop their "%s" name prefix, which the section
+    // title now carries.
+    $wp_customize->add_panel( 'vance_kb_panel', array(
+        'title'       => __( 'Knowledge Base Categories', 'vance-health-hub' ),
+        'description' => __( 'One section per category, listed alphabetically. Each controls how that category appears as a content block on the homepage. The number after a name is its published post count, the same figure shown in Posts &rarr; Categories -- a category showing 0 has nothing to render.', 'vance-health-hub' ),
+        // Sits between "Content &amp; Knowledge Base" (12) and "Footer" (13).
+        'priority'    => 12.5,
     ) );
 
-    // KB Mini-Hero Settings have been consolidated in the "Knowledge Base Mini-Hero" section above.
+    // get_categories() returns name-ascending by default, so incrementing the
+    // priority as we go renders the sections alphabetically.
+    $categories  = get_categories( array( 'hide_empty' => false ) );
+    $kb_priority = 10;
 
-    $categories = get_categories( array( 'hide_empty' => false ) );
-    
     foreach ( $categories as $cat ) {
+        $kb_section = "vance_kb_cat_{$cat->term_id}";
+
+        $wp_customize->add_section( $kb_section, array(
+            // The post count in the title is the disambiguator: it is what
+            // would have shown at a glance that "Clinical Trial Reviews" is
+            // empty and could never render whatever was set on it.
+            'title'       => sprintf( '%1$s (%2$d)', $cat->name, (int) $cat->count ),
+            'description' => sprintf(
+                /* translators: 1: category slug, 2: term ID */
+                __( 'Slug: %1$s &middot; Term ID: %2$d', 'vance-health-hub' ),
+                esc_html( $cat->slug ),
+                (int) $cat->term_id
+            ),
+            'priority'    => $kb_priority,
+            'panel'       => 'vance_kb_panel',
+        ) );
+        $kb_priority++;
+
         // Show/Hide Toggle
         $wp_customize->add_setting( "vance_kb_show_{$cat->term_id}", array(
             'default'           => true,
             'sanitize_callback' => 'vance_sanitize_checkbox',
         ) );
         $wp_customize->add_control( "vance_kb_show_{$cat->term_id}", array(
-            'label'   => sprintf( __( 'Show "%s" Section', 'vance-health-hub' ), $cat->name ),
-            'section' => 'vance_knowledgebase_sections',
+            'label'   => __( 'Show this section on the homepage', 'vance-health-hub' ),
+            'section' => $kb_section,
             'type'    => 'checkbox',
         ) );
-        
+
         // Priority (Order)
         $wp_customize->add_setting( "vance_kb_priority_{$cat->term_id}", array(
             'default'           => 10,
             'sanitize_callback' => 'absint',
         ) );
         $wp_customize->add_control( "vance_kb_priority_{$cat->term_id}", array(
-            'label'       => sprintf( __( '"%s" Priority (Order)', 'vance-health-hub' ), $cat->name ),
+            'label'       => __( 'Priority (Order)', 'vance-health-hub' ),
             'description' => __( 'Lower numbers appear first.', 'vance-health-hub' ),
-            'section'     => 'vance_knowledgebase_sections',
+            'section'     => $kb_section,
             'type'        => 'number',
             'input_attrs' => array( 'min' => 1, 'max' => 100 ),
         ) );
-        
+
         // Description
         $wp_customize->add_setting( "vance_kb_desc_{$cat->term_id}", array(
             'default'           => $cat->description,
             'sanitize_callback' => 'sanitize_textarea_field',
         ) );
         $wp_customize->add_control( "vance_kb_desc_{$cat->term_id}", array(
-            'label'   => sprintf( __( '"%s" Description', 'vance-health-hub' ), $cat->name ),
-            'section' => 'vance_knowledgebase_sections',
+            'label'   => __( 'Description', 'vance-health-hub' ),
+            'section' => $kb_section,
             'type'    => 'textarea',
         ) );
-        
+
         // Post Count
         $wp_customize->add_setting( "vance_kb_count_{$cat->term_id}", array(
             'default'           => 4,
             'sanitize_callback' => 'absint',
         ) );
         $wp_customize->add_control( "vance_kb_count_{$cat->term_id}", array(
-            'label'       => sprintf( __( '"%s" Number of Posts', 'vance-health-hub' ), $cat->name ),
-            'section'     => 'vance_knowledgebase_sections',
+            'label'       => __( 'Number of Posts', 'vance-health-hub' ),
+            'section'     => $kb_section,
             'type'        => 'number',
             'input_attrs' => array( 'min' => 1, 'max' => 12, 'step' => 1 ),
         ) );
-        
+
         $wp_customize->add_setting( "vance_kb_view_all_{$cat->term_id}", array(
             'default'           => 'View All',
             'sanitize_callback' => 'sanitize_text_field',
         ) );
 
         $wp_customize->add_control( "vance_kb_view_all_{$cat->term_id}", array(
-            'label'   => sprintf( __( '"%s" View All Label', 'vance-health-hub' ), $cat->name ),
-            'section' => 'vance_knowledgebase_sections',
+            'label'   => __( 'View All Label', 'vance-health-hub' ),
+            'section' => $kb_section,
             'type'    => 'text',
         ) );
 
@@ -7081,9 +7114,9 @@ function vance_customize_register( $wp_customize ) {
             'sanitize_callback' => 'sanitize_text_field',
         ) );
         $wp_customize->add_control( "vance_kb_layout_{$cat->term_id}", array(
-            'label'       => sprintf( __( '"%s" Layout', 'vance-health-hub' ), $cat->name ),
+            'label'       => __( 'Layout', 'vance-health-hub' ),
             'description' => __( 'The two Standard Grid options use the same card, just sized to fit four or five per row on desktop; both step down to fewer columns on narrower screens. Raise "Number of Posts" to a multiple of the column count so the last row does not come up short.', 'vance-health-hub' ),
-            'section'     => 'vance_knowledgebase_sections',
+            'section'     => $kb_section,
             'type'        => 'select',
             'choices'     => array(
                 'grid-4'     => 'Standard Grid (4 Cols)',
@@ -7101,9 +7134,9 @@ function vance_customize_register( $wp_customize ) {
             'sanitize_callback' => 'vance_sanitize_kb_posters_cols',
         ) );
         $wp_customize->add_control( "vance_kb_posters_cols_{$cat->term_id}", array(
-            'label'       => sprintf( __( '"%s" Posters per row', 'vance-health-hub' ), $cat->name ),
+            'label'       => __( 'Posters per row', 'vance-health-hub' ),
             'description' => __( 'How many poster cards per row (Posters layout only).', 'vance-health-hub' ),
-            'section'     => 'vance_knowledgebase_sections',
+            'section'     => $kb_section,
             'type'        => 'select',
             'choices'     => array(
                 '3' => __( '3 per row', 'vance-health-hub' ),
@@ -7117,9 +7150,9 @@ function vance_customize_register( $wp_customize ) {
             'sanitize_callback' => 'vance_sanitize_kb_posters_rows',
         ) );
         $wp_customize->add_control( "vance_kb_posters_rows_{$cat->term_id}", array(
-            'label'       => sprintf( __( '"%s" Poster rows', 'vance-health-hub' ), $cat->name ),
+            'label'       => __( 'Poster rows', 'vance-health-hub' ),
             'description' => __( 'How many rows of poster cards to show (Posters layout only).', 'vance-health-hub' ),
-            'section'     => 'vance_knowledgebase_sections',
+            'section'     => $kb_section,
             'type'        => 'select',
             'choices'     => array(
                 '1' => __( '1 row', 'vance-health-hub' ),
@@ -7145,9 +7178,9 @@ function vance_customize_register( $wp_customize ) {
             $wp_customize,
             "vance_kb_accent_{$cat->term_id}",
             array(
-                'label'       => sprintf( __( '"%s" Accent Colour', 'vance-health-hub' ), $cat->name ),
+                'label'       => __( 'Accent Colour', 'vance-health-hub' ),
                 'description' => __( 'Sets the colour bar next to the section heading, and the Featured tag colour in Bento layout.', 'vance-health-hub' ),
-                'section'     => 'vance_knowledgebase_sections',
+                'section'     => $kb_section,
             )
         ) );
 
@@ -7162,9 +7195,9 @@ function vance_customize_register( $wp_customize ) {
             $wp_customize,
             "vance_kb_title_color_{$cat->term_id}",
             array(
-                'label'       => sprintf( __( '"%s" Title Colour', 'vance-health-hub' ), $cat->name ),
+                'label'       => __( 'Title Colour', 'vance-health-hub' ),
                 'description' => __( 'Colour of the category heading (H2) shown next to the accent bar.', 'vance-health-hub' ),
-                'section'     => 'vance_knowledgebase_sections',
+                'section'     => $kb_section,
             )
         ) );
     }
