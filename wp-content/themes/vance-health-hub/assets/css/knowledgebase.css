@@ -41,6 +41,7 @@
     font-weight: 700;
     letter-spacing: 1.2px;
     text-transform: uppercase;
+    border-radius: var(--radius-control);
 }
 
 .kb-lobby-intro__title {
@@ -88,6 +89,7 @@
     border-left: 4px solid var(--kb-accent);
     box-shadow: var(--shadow-sm);
     transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    border-radius: var(--radius-surface);
 }
 
 /* Hover changes colour and depth but never size: a transform on a grid item
@@ -114,6 +116,7 @@
     height: 58px;
     background: var(--kb-accent-ink);
     color: #fff;
+    border-radius: var(--radius-control);
 }
 
 .kb-block__icon svg {

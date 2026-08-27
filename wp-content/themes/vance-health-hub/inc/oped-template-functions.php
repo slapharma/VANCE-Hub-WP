@@ -82,7 +82,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
         .oped-meta-section {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
             padding: 20px;
             margin-bottom: 20px;
         }
@@ -110,7 +110,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
         }
         .oped-media-preview img {
             max-width: 200px;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
             border: 1px solid #e5e7eb;
         }
         .oped-media-preview audio {
@@ -128,7 +128,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
             color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 0;
+            border-radius: var(--radius-control, 6px);
             cursor: pointer;
             font-size: 13px;
         }
@@ -225,7 +225,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
         <div class="oped-meta-section">
             <h4><span class="dashicons dashicons-video-alt3"></span> Video Summary</h4>
             <p>Enter a video URL (YouTube, Vimeo) or paste embed code</p>
-            <textarea name="oped_video_summary" id="oped_video_summary" rows="3" style="width: 100%; font-family: monospace; font-size: 13px; padding: 10px; border-radius: 0; border: 1px solid #d1d5db;"><?php echo esc_textarea( $video_summary ); ?></textarea>
+            <textarea name="oped_video_summary" id="oped_video_summary" rows="3" style="width: 100%; font-family: monospace; font-size: 13px; padding: 10px; border-radius: var(--radius-field, 10px); border: 1px solid #d1d5db;"><?php echo esc_textarea( $video_summary ); ?></textarea>
             <p style="margin-top: 8px; font-size: 12px; color: #9ca3af;">
                 <strong>Examples:</strong> https://www.youtube.com/watch?v=VIDEO_ID or https://vimeo.com/VIDEO_ID
             </p>
@@ -246,7 +246,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
             <hr style="margin: 20px 0; border: none; border-top: 1px solid #FFD6C4;">
             
             <p><strong>Option 2:</strong> Paste embed code from external platforms (Quizlet, Typeform, etc.)</p>
-            <textarea name="oped_quiz_embed" id="oped_quiz_embed" rows="4" style="width: 100%; font-family: monospace; font-size: 13px; padding: 10px; border-radius: 0; border: 1px solid #d1d5db;"><?php echo esc_textarea( $quiz_embed ); ?></textarea>
+            <textarea name="oped_quiz_embed" id="oped_quiz_embed" rows="4" style="width: 100%; font-family: monospace; font-size: 13px; padding: 10px; border-radius: var(--radius-field, 10px); border: 1px solid #d1d5db;"><?php echo esc_textarea( $quiz_embed ); ?></textarea>
         </div>
 
         <!-- Attached Document -->
@@ -266,7 +266,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
                     $doc_url = wp_get_attachment_url( $attached_document );
                     $doc_filename = basename( get_attached_file( $attached_document ) );
                     if ( $doc_url ) {
-                        echo '<div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: white; padding: 8px; border-radius: 0; border: 1px solid #eee;">
+                        echo '<div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: white; padding: 8px; border-radius: var(--radius-surface, 14px); border: 1px solid #eee;">
                             <span class="dashicons dashicons-media-default"></span>
                             <a href="' . esc_url( $doc_url ) . '" target="_blank">' . esc_html( $doc_filename ) . '</a>
                         </div>';
@@ -306,7 +306,7 @@ function vance_digital_assets_meta_box_callback( $post ) {
                 } else if (mediaType === 'image') {
                     previewDiv.html('<img src="' + attachment.url + '" alt="Preview">');
                 } else {
-                     previewDiv.html('<div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: white; padding: 8px; border-radius: 0; border: 1px solid #eee;"><span class="dashicons dashicons-media-default"></span><a href="' + attachment.url + '" target="_blank">' + attachment.filename + '</a></div>');
+                     previewDiv.html('<div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: white; padding: 8px; border-radius: var(--radius-surface, 14px); border: 1px solid #eee;"><span class="dashicons dashicons-media-default"></span><a href="' + attachment.url + '" target="_blank">' + attachment.filename + '</a></div>');
                 }
                 
                 button.text('Change File');
@@ -419,7 +419,7 @@ function vance_article_settings_meta_box_callback( $post ) {
         .oped-setting-field textarea {
             width: 100%;
             padding: 8px;
-            border-radius: 0;
+            border-radius: var(--radius-field, 10px);
             border: 1px solid #d1d5db;
         }
         .oped-setting-field .description {
@@ -538,7 +538,7 @@ function vance_single_meta_box_instructions() {
         .oped-template-guide {
             background: linear-gradient(135deg, #def4f4 0%, #FFECE3 100%);
             border: 1px solid #FFD6C4;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
             padding: 20px;
             margin-bottom: 20px;
         }

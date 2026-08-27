@@ -45,7 +45,34 @@ It clobbers `SLA Pharma` (the parent entity kept unchanged per legal decision) a
 
 Only `\bSLA\b` (word-boundary) is safe as a bare pattern.
 
-### 5. Cross-file contracts — rename both sides in the same commit
+### 5. Corner radius is a token scale — never hard-code a radius, never re-square a card
+The site was originally authored square. It now runs on a three-step scale defined once in
+`assets/css/main.css` `:root`, taken from the homepage spotlight hero:
+
+| Token | Value | Used for |
+|---|---|---|
+| `--radius-control` | 6px | buttons, icon tiles, chips, badges, avatars |
+| `--radius-field` | 10px | inputs, selects, search bars, dropdown menus |
+| `--radius-surface` | 14px | cards, panels, modals, banners, media boxes |
+| `--radius-pill` | 999px | deliberately-round pills and toggles |
+| `--radius-article` | 0 | **article cards only** |
+
+`--radius-md` and `--radius-lg` are kept as aliases of control/surface so the ~43 older call
+sites inherit the scale. Two rules:
+
+1. **Article cards are the one square exception, enforced in exactly one block** — the
+   "Article cards stay square" rule at the end of `main.css`. It sits last on purpose: several
+   of those selectors are also styled earlier with `var(--radius-lg)`, and at equal specificity
+   the later rule wins. Add or remove post tiles *there*, never by scattering `border-radius: 0`
+   into the component. That block is also why a `.va-fl-featured` or `.bento-cell-*` renders
+   square while its neighbours round.
+2. **`border-radius: 0` inside a `@media (max-width: …)` is usually correct** — six rules square
+   a modal/sheet/iframe when it goes full-bleed on mobile. Don't "fix" those.
+
+PHP files use `var(--radius-*, Npx)` with a literal fallback because several render where
+`main.css` is absent: the wp-login screen, admin message threads, and tool embeds.
+
+### 6. Cross-file contracts — rename both sides in the same commit
 | Contract | Server | Client |
 |---|---|---|
 | AJAX action names | `wp_ajax_vance_*` | `action: 'vance_*'` in fetch/ajax calls |
@@ -53,7 +80,7 @@ Only `\bSLA\b` (word-boundary) is safe as a bare pattern.
 | REST routes | `register_rest_route('vance-health/v1', ...)` | `fetch('/wp-json/vance-health/v1/ai-chat', ...)` |
 | postMessage types | `if (e.data.type === 'VANCE_SAVE_MALNUTRITION_RESULT')` | `parent.postMessage({ type: 'VANCE_SAVE_MALNUTRITION_RESULT', ... })` |
 
-### 6. Minified JS tool bundles are text-rewritten in place
+### 7. Minified JS tool bundles are text-rewritten in place
 `assets/tools/ai-widget/index-*.js`, `assets/tools/blood-test/index-*.js`, `assets/tools/malnutrition-calculator/index-*.js` are Vite build artifacts from the (separate) `temp_calc/` and `temp_malnutrition_calc/` React sources. The rebrand strings/colors/message types were patched directly into the bundles. If anyone rebuilds from source, the brand will revert — re-run the `LOCAL/vance_*.py` transformers on the source before build, or port the substitution lists into the build step.
 
 ---
@@ -195,4 +222,4 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 - `vance_ai_rename.py` — chatbot VanceAI → AI rename (round 2)
 - `check*.py`, `sanitize_php.py`, `recover.py`, `update_customizer.py` — PHP lint/sanity helpers
 
-These are kept on disk but never committed or deployed. Re-run them on the React source trees in `temp_calc/` and `temp_malnutrition_calc/` before rebuilding the tool bundles (see constraint 6 above).
+These are kept on disk but never committed or deployed. Re-run them on the React source trees in `temp_calc/` and `temp_malnutrition_calc/` before rebuilding the tool bundles (see constraint 7 above).

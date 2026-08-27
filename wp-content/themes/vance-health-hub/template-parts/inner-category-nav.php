@@ -112,14 +112,14 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 if ( $vance_subcat_parent > 0 ) {
                     // Glassy button: frosted translucent fill, blur, soft shadow,
                     // rounded. No icon in this mode.
-                    $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; padding: 14px 18px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: 0; background: rgba(255,255,255,0.55); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); border: 1px solid rgba(15,23,42,0.10); box-shadow: 0 6px 20px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.65); transition: all 0.2s;";
+                    $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; padding: 14px 18px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: rgba(255,255,255,0.55); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); border: 1px solid rgba(15,23,42,0.10); box-shadow: 0 6px 20px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.65); transition: all 0.2s;";
                     $text_style = "font-size: 13px; font-weight: 600; color: #0f172a; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
                 } else {
-                    $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; background: #F8FAFC; border: 1px solid #e2e8f0; border-radius: 0; padding: 12px; text-decoration: none; transition: all 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); width: 100%; overflow: hidden;";
+                    $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; background: #F8FAFC; border: 1px solid #e2e8f0; border-radius: var(--radius-control, 6px); padding: 12px; text-decoration: none; transition: all 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); width: 100%; overflow: hidden;";
                     $text_style = "font-size: 12px; font-weight: 600; color: #334155; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
                 }
 
-                $icon_container_style = "width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 0;";
+                $icon_container_style = "width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: var(--radius-control, 6px);";
                 $icon_img_style = "width: 12px; height: 12px; object-fit: contain;";
 
                 if ( $is_active ) {

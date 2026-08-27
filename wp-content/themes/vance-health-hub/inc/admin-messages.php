@@ -945,14 +945,14 @@ function vance_admin_messages_render_with_thread( $post, $current_user_id ) {
             <button type="button"
                     class="vance-msg-reply-toggle button"
                     data-msg-id="<?php echo (int) $post->ID; ?>"
-                    style="background: #008080; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 0;">
+                    style="background: #008080; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 6px);">
                 Reply
             </button>
             <button type="button"
                     class="vance-msg-delete button"
                     data-msg-id="<?php echo (int) $post->ID; ?>"
                     data-nonce="<?php echo esc_attr( $delete_nonce ); ?>"
-                    style="background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 0;">
+                    style="background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 6px);">
                 Delete from my inbox
             </button>
         </div>
@@ -963,8 +963,8 @@ function vance_admin_messages_render_with_thread( $post, $current_user_id ) {
               style="display: none; margin-top: 12px; padding: 14px; background: white; border: 1px solid #e2e8f0;">
             <textarea required minlength="3" maxlength="4000" placeholder="Write your reply… plain text, **bold**, *italic*, and URLs work." rows="4" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; font-size: 13px; line-height: 1.55; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
             <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <button type="submit" class="button" style="background: #008080; color: white; border: none; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 0;">Send reply</button>
-                <button type="button" class="vance-msg-reply-cancel button" style="background: transparent; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 0;">Cancel</button>
+                <button type="submit" class="button" style="background: #008080; color: white; border: none; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: var(--radius-control, 6px);">Send reply</button>
+                <button type="button" class="vance-msg-reply-cancel button" style="background: transparent; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 6px);">Cancel</button>
                 <span class="vance-msg-reply-status" style="margin-left: auto; align-self: center; font-size: 12px; color: #64748b;"></span>
             </div>
         </form>

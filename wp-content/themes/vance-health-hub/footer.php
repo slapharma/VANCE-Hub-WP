@@ -7,14 +7,14 @@
                 $nl_head = vance_get_theme_mod('vance_newsletter_heading', 'Join the Hub');
                 $nl_desc = vance_get_theme_mod('vance_newsletter_desc', 'Get the latest clinical reviews and tools.');
             ?>
-            <div class="newsletter-bar" style="background: #0A1929; border-radius: 0; padding: 40px; margin-bottom: 60px; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            <div class="newsletter-bar" style="background: #0A1929; border-radius: var(--radius-surface, 14px); padding: 40px; margin-bottom: 60px; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
                 <div style="flex: 1; min-width: min(300px, 100%);">
                     <h3 style="color: white; margin-bottom: 8px; font-size: 24px; font-weight: 700;"><?php echo esc_html($nl_head); ?></h3>
                     <p style="color: #94a3b8; margin: 0; font-size: 16px;"><?php echo esc_html($nl_desc); ?></p>
                 </div>
                 <!-- Generic Form action for Mailchimp/HubSpot -->
                 <form action="<?php echo esc_url($nl_action); ?>" method="post" target="_blank" style="display: flex; gap: 10px; flex: 1; min-width: min(300px, 100%); flex-wrap: wrap;">
-                    <input type="email" name="EMAIL" placeholder="Enter your professional email" required style="flex: 1 1 200px; padding: 12px 16px; font-size: 16px; border-radius: 0; border: 1px solid #334155; background: #1e293b; color: white;">
+                    <input type="email" name="EMAIL" placeholder="Enter your professional email" required style="flex: 1 1 200px; padding: 12px 16px; font-size: 16px; border-radius: var(--radius-field, 10px); border: 1px solid #334155; background: #1e293b; color: white;">
                     <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_<?php echo md5($nl_action); ?>" tabindex="-1" value=""></div>
                     <button type="submit" class="btn btn-primary" style="white-space: nowrap; padding: 12px 24px;">Subscribe</button>
                 </form>
@@ -113,8 +113,8 @@
     <!-- Guest Save Modal -->
     <div id="guest-save-modal" class="infographic-modal">
         <span class="modal-close" onclick="closeGuestModal()">&times;</span>
-        <div class="modal-content" style="max-width: 450px; background: white; padding: 40px; border-radius: 0; text-align: center;">
-            <div style="width: 64px; height: 64px; background: #def4f4; border-radius: 0; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+        <div class="modal-content" style="max-width: 450px; background: white; padding: 40px; border-radius: var(--radius-surface, 14px); text-align: center;">
+            <div style="width: 64px; height: 64px; background: #def4f4; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
                 <span style="font-size: 32px;">🔖</span>
             </div>
             <h2 style="font-size: 24px; color: #0f172a; margin-bottom: 12px; font-family: var(--font-heading);">Join the Vance Medical Hub</h2>
@@ -130,8 +130,8 @@
             </div>
 
             <form id="guest-save-email-form" style="text-align:left;" novalidate>
-                <input type="email" id="guest-save-email" name="email" required autocomplete="email" inputmode="email" placeholder="Email address" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #E2E8F0;font-size:15px;margin-bottom:10px;border-radius:0;">
-                <input type="password" id="guest-save-password" name="password" required minlength="8" autocomplete="new-password" placeholder="Password, 8 characters minimum" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #E2E8F0;font-size:15px;margin-bottom:10px;border-radius:0;">
+                <input type="email" id="guest-save-email" name="email" required autocomplete="email" inputmode="email" placeholder="Email address" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #E2E8F0;font-size:15px;margin-bottom:10px;border-radius:var(--radius-field, 10px);">
+                <input type="password" id="guest-save-password" name="password" required minlength="8" autocomplete="new-password" placeholder="Password, 8 characters minimum" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #E2E8F0;font-size:15px;margin-bottom:10px;border-radius:var(--radius-field, 10px);">
                 <!-- Honeypot — bots fill anything visible; real users don't fill display:none fields -->
                 <div style="position:absolute;left:-5000px;" aria-hidden="true">
                     <input type="text" id="guest-save-hp" tabindex="-1" value="">
@@ -141,7 +141,7 @@
                     <span>I agree to the <a href="<?php echo esc_url( home_url( '/terms-of-use/' ) ); ?>" target="_blank" style="color:#008080;">Terms</a> and <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>" target="_blank" style="color:#008080;">Privacy Policy</a>.</span>
                 </label>
                 <div id="guest-save-error" role="alert" style="display:none;padding:10px 14px;margin-bottom:12px;background:#FEF2F2;border-left:3px solid #DC2626;color:#991B1B;font-size:13px;text-align:left;"></div>
-                <button type="submit" id="guest-save-submit" style="width:100%;padding:14px;background:#008080;color:white;border:none;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.4px;text-transform:uppercase;border-radius:0;">Create account</button>
+                <button type="submit" id="guest-save-submit" style="width:100%;padding:14px;background:#008080;color:white;border:none;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.4px;text-transform:uppercase;border-radius:var(--radius-control, 6px);">Create account</button>
             </form>
 
             <p style="font-size: 14px; color: #94a3b8; margin: 16px 0 0;">Already have an account? <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>" style="color: #008080; font-weight: 600; text-decoration: none;">Sign In</a></p>
@@ -266,7 +266,7 @@
         height: auto;
         max-height: 90vh;
         object-fit: contain;
-        border-radius: 0;
+        border-radius: var(--radius-surface, 14px);
         box-shadow: 0 0 30px rgba(0,0,0,0.5);
     }
     .modal-close {
@@ -362,12 +362,12 @@
                     <div class="flashcard-container active" style="perspective: 1000px; cursor: pointer;">
                         <div class="flashcard-inner" style="position: relative; width: 100%; min-height: 200px; text-align: center; transition: transform 0.6s; transform-style: preserve-3d;">
                             <!-- Front -->
-                            <div class="flashcard-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; background: #f9fafb; border-radius: 0; border: 1px solid #e5e7eb;">
+                            <div class="flashcard-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; background: #f9fafb; border-radius: var(--radius-surface, 14px); border: 1px solid #e5e7eb;">
                                 <div style="font-weight: 700; color: var(--secondary-color); font-size: 16px;">${card.question}</div>
                                 <div style="position: absolute; bottom: 10px; font-size: 12px; color: var(--text-light);">Click to reveal answer</div>
                             </div>
                             <!-- Back -->
-                            <div class="flashcard-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; background: #def4f4; border-radius: 0; border: 1px solid var(--primary-color); transform: rotateY(180deg);">
+                            <div class="flashcard-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; background: #def4f4; border-radius: var(--radius-surface, 14px); border: 1px solid var(--primary-color); transform: rotateY(180deg);">
                                 <div style="color: var(--secondary-color); font-size: 15px; line-height: 1.5;">${card.answer}</div>
                             </div>
                         </div>

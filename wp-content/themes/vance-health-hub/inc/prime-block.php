@@ -283,7 +283,7 @@ function vance_render_prime_block( array $vals ) {
 			padding: 0;
 			box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 			border: 1.5px solid #e2e8f0;
-			border-radius: 0;
+			border-radius: var(--radius-surface, 14px);
 			transition: all 0.3s ease;
 			overflow: hidden;
 			/* flex:1 inside the height:100% stack splits available column height
@@ -431,7 +431,7 @@ function vance_render_prime_block( array $vals ) {
 		<?php echo $sel; ?> .section-label h2 { margin: 0; font-family: 'Outfit', sans-serif; }
 		/* Never grow, never shrink: a bare `width` alone loses to the flex
 		   container's own sizing, which is how this became a full-width bar. */
-		<?php echo $sel; ?> .color-bar { flex: 0 0 6px; width: 6px; border-radius: 0; }
+		<?php echo $sel; ?> .color-bar { flex: 0 0 6px; width: 6px; border-radius: var(--radius-control, 6px); }
 		<?php echo $sel; ?> .tag {
 			background: var(--primary-color, #008080);
 			color: #ffffff;
@@ -439,7 +439,7 @@ function vance_render_prime_block( array $vals ) {
 			font-size: 11px;
 			text-transform: uppercase;
 			font-weight: 700;
-			border-radius: 0;
+			border-radius: var(--radius-control, 6px);
 			display: inline-block;
 			margin-bottom: 12px;
 		}
@@ -717,7 +717,7 @@ function vance_render_prime_block( array $vals ) {
 							<?php endforeach; ?>
 						</div>
 					<?php else : ?>
-						<div style="background: white; border-radius: 0; padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
+						<div style="background: white; border-radius: var(--radius-surface, 14px); padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
 							<p style="color: #64748b; margin: 0;">No posts found for this selection.</p>
 						</div>
 					<?php endif; ?>

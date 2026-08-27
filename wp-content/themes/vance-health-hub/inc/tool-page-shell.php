@@ -107,7 +107,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 .tool-page-hero p { font-size: 19px; color: #CBD5E1; max-width: 760px; margin: 0 auto; font-weight: 500; }
 .tool-page-hero .tool-page-badge {
     display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,255,255,0.10); padding: 6px 16px; border-radius: 0;
+    background: rgba(255,255,255,0.10); padding: 6px 16px; border-radius: var(--radius-control, 6px);
     margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.2);
     font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; color: white;
 }
@@ -115,7 +115,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 @keyframes vance-tool-pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
 .tool-page-container { max-width: 1100px; margin: -40px auto 0; padding: 0 20px 40px; position: relative; z-index: 10; }
-.tool-page-card { background: white; border: 2px solid var(--primary-color); border-radius: 0; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.10); overflow: hidden; }
+.tool-page-card { background: white; border: 2px solid var(--primary-color); border-radius: var(--radius-surface, 14px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.10); overflow: hidden; }
 .tool-page-card__head {
     padding: 18px 24px; background: #F8FAFC; border-bottom: 1px solid #2f4f6f;
     display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;
@@ -147,7 +147,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--primary-color); color: white; padding: 14px 22px; font-weight: 600;
     box-shadow: 0 12px 32px rgba(10,25,41,0.20); z-index: 100002;
-    opacity: 0; transition: opacity 0.2s; pointer-events: none; border-radius: 0;
+    opacity: 0; transition: opacity 0.2s; pointer-events: none; border-radius: var(--radius-field, 10px);
 }
 .tool-page-toast.is-visible { opacity: 1; }
 

@@ -77,7 +77,7 @@ $track_icons = array(
     <section class="edu-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: 64px 0;">
         <div class="container">
             <div class="text-center max-600 edu-intro-inner" style="margin: 0 auto 0;">
-                <span class="edu-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: 0;">
+                <span class="edu-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 6px);">
                     <?php echo esc_html( $intro_eyebrow ); ?>
                 </span>
                 <h2 class="edu-intro-title" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . ';' : 'color: var(--secondary-color);'; ?> margin: 0 0 12px;"><?php echo esc_html( $intro_title ); ?></h2>

@@ -58,13 +58,13 @@ if ( is_array( $saved_chats ) ) {
         .notes-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: white; border-bottom: 1px solid #2f4f6f; }
         .notes-editor-container { flex: 1; display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; width: 100%; padding: 40px 20px; }
         .note-title-input { font-size: 24px; font-weight: 700; border: none; outline: none; width: 100%; margin-bottom: 20px; background: transparent; font-family: 'Outfit', sans-serif; color: #0f172a; }
-        .toolbar { display: flex; gap: 8px; margin-bottom: 16px; padding: 8px; background: white; border-radius: 0; border: 1px solid #e2e8f0; }
-        .toolbar button { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 0; color: #64748b; }
+        .toolbar { display: flex; gap: 8px; margin-bottom: 16px; padding: 8px; background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; }
+        .toolbar button { background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-control, 6px); color: #64748b; }
         .toolbar button:hover { background: #f1f5f9; color: #0f172a; }
-        .editor-content { flex: 1; background: white; border-radius: 0; padding: 32px; border: 1px solid #e2e8f0; outline: none; overflow-y: auto; font-size: 16px; line-height: 1.6; color: #334155; min-height: 400px; }
-        .btn-save { background: #008080; color: white; border: none; padding: 10px 20px; border-radius: 0; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .editor-content { flex: 1; background: white; border-radius: var(--radius-surface, 14px); padding: 32px; border: 1px solid #e2e8f0; outline: none; overflow-y: auto; font-size: 16px; line-height: 1.6; color: #334155; min-height: 400px; }
+        .btn-save { background: #008080; color: white; border: none; padding: 10px 20px; border-radius: var(--radius-control, 6px); font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .btn-save:hover { background: #006666; }
-        .btn-pdf { background: #fff; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 16px; border-radius: 0; font-weight: 600; cursor: pointer; margin-right: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-pdf { background: #fff; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 16px; border-radius: var(--radius-control, 6px); font-weight: 600; cursor: pointer; margin-right: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
         .btn-pdf:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
         .status-msg { margin-right: 16px; font-size: 13px; color: #10b981; opacity: 0; transition: opacity 0.3s; }
     </style>

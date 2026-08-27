@@ -21,11 +21,38 @@
     --container-width: 1200px;
     --header-height: 80px;
 
-    /* Shadows & Radius */
+    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --radius-md: 0px;
-    --radius-lg: 0px;
+
+    /* --- Corner radius scale ------------------------------------------------
+       The homepage spotlight hero is the reference for the whole site's corner
+       language, and it already carries three steps:
+
+           CTA buttons ......  6px  ->  --radius-control
+           search field ..... 10px  ->  --radius-field
+           trust card ....... 14px  ->  --radius-surface
+
+       Everything rounds. The single deliberate exception is the article card —
+       post tiles stay square so an editorial grid reads as a wall of articles
+       rather than a tray of widgets. That exception is enforced in one place
+       (see "Article cards stay square" below), never by ad-hoc zeroes.
+
+       Thin elements need no special casing: CSS clamps a radius that exceeds
+       half the box, so a 4px accent bar given --radius-control renders as a
+       pill on its own. */
+    --radius-control: 6px;   /* buttons, icon tiles, chips, badges, avatars   */
+    --radius-field:   10px;  /* inputs, selects, search bars, dropdown menus  */
+    --radius-surface: 14px;  /* cards, panels, modals, banners, media boxes   */
+    --radius-pill:    999px; /* deliberately-round pills and toggles          */
+    --radius-article: 0;     /* article cards — the one square exception      */
+
+    /* Legacy aliases. ~43 call sites already reference these and they split
+       cleanly along the new scale: --radius-md sits on buttons, links and list
+       rows; --radius-lg on cards, panels and wrappers. Keeping the names means
+       those sites inherit the system without being touched. */
+    --radius-md: var(--radius-control);
+    --radius-lg: var(--radius-surface);
 }
 
 * {
@@ -34,15 +61,22 @@
     box-sizing: border-box;
 }
 
-/* Global Reset for Square Corners */
-img, 
-button, 
-.btn, 
-.button, 
-input[type="submit"], 
-input[type="button"], 
+/* Global corner-radius default.
+
+   `img` is deliberately absent. An image should take its shape from whatever
+   clips it — a rounded card with `overflow: hidden`, or an explicit rule for
+   an avatar — so giving every image a radius of its own only fights those
+   containers. This selector list previously carried `border-radius: 0
+   !important`, which is why several components downstream still re-declare
+   their radius with `!important`; those declarations remain correct, they are
+   simply no longer load-bearing. */
+button,
+.btn,
+.button,
+input[type="submit"],
+input[type="button"],
 input[type="reset"] {
-    border-radius: 0 !important;
+    border-radius: var(--radius-control);
 }
 
 body {
@@ -130,6 +164,7 @@ h6 {
     padding: 0 16px;
     text-decoration: none;
     transition: background-color 0.2s, color 0.2s;
+    border-radius: var(--radius-control);
 }
 
 .header-dashboard-link:hover {
@@ -340,7 +375,7 @@ h6 {
     background: white;
     min-width: 220px;
     padding: 12px 0;
-    border-radius: 0;
+    border-radius: var(--radius-field);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     opacity: 0;
     visibility: hidden;
@@ -425,7 +460,7 @@ h6 {
     background: white;
     min-width: 200px;
     padding: 12px 0;
-    border-radius: 0;
+    border-radius: var(--radius-field);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     opacity: 0;
     visibility: hidden;
@@ -514,7 +549,7 @@ body.home .hero {
     background: rgba(255, 255, 255, 0.08);
     display: inline-block;
     padding: 8px 16px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -530,7 +565,7 @@ body.home .hero {
     background: rgba(0, 128, 128, 0.08);
     display: inline-block;
     padding: 8px 16px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -588,7 +623,7 @@ body.home .hero {
     min-width: 120px;
     flex: 1;
     padding: 24px 12px;
-    border-radius: 0;
+    border-radius: var(--radius-surface);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
     text-align: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -608,7 +643,7 @@ body.home .hero {
 .category-card-icon {
     width: 44px;
     height: 44px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -659,7 +694,7 @@ body.home .hero {
     scroll-margin-top: 120px;
     padding: 60px;
     background: white;
-    border-radius: 0;
+    border-radius: var(--radius-surface);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
@@ -693,7 +728,7 @@ body.home .hero {
 .category-bar {
     width: 4px;
     height: 28px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
 }
 
 .view-all-link {
@@ -815,7 +850,7 @@ body.home .hero {
     top: 16px;
     left: 16px;
     padding: 4px 12px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
@@ -965,7 +1000,7 @@ body.home .hero {
     background: rgba(255, 255, 255, 0.95);
     color: #16a34a;
     padding: 4px 10px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
@@ -984,7 +1019,7 @@ body.home .hero {
     background: rgba(255, 255, 255, 0.95);
     color: #f59e0b;
     padding: 4px 10px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 12px;
     font-weight: 700;
 }
@@ -1042,7 +1077,7 @@ body.home .hero {
     width: 36px;
     height: 36px;
     background: #10b981;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1128,7 +1163,7 @@ body.home .hero {
     width: 48px;
     height: 48px;
     background: rgba(0, 0, 0, 0.5);
-    border-radius: 0;
+    border-radius: var(--radius-control);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1147,7 +1182,7 @@ body.home .hero {
     background: rgba(0, 0, 0, 0.75);
     color: white;
     padding: 2px 8px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 11px;
     font-weight: 600;
 }
@@ -1243,7 +1278,7 @@ body.home .hero {
 .tool-icon {
     width: 56px;
     height: 56px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1455,7 +1490,7 @@ body.home .hero {
     background: var(--primary-color);
     color: white;
     padding: 6px 16px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
@@ -1583,7 +1618,7 @@ body.home .hero {
 .oped-asset-icon {
     width: 40px;
     height: 40px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1629,7 +1664,7 @@ body.home .hero {
     background: rgba(10, 25, 41, 0.85);
     color: white;
     padding: 8px 16px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     font-size: 13px;
     opacity: 0;
     transition: opacity 0.3s;
@@ -1760,7 +1795,7 @@ body.home .hero {
 .oped-share-btn {
     width: 44px;
     height: 44px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1839,6 +1874,7 @@ body.home .hero {
     background: white;
     border-top: 1px solid #2f4f6f;
     padding: 40px 0;
+    border-radius: var(--radius-surface);
 }
 
 .oped-nav-wrapper {
@@ -2106,7 +2142,7 @@ body.home .hero {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     background: #def4f4;
     color: var(--primary-color);
     transition: all 0.3s ease;
@@ -2343,7 +2379,7 @@ body.home .hero {
 .author-avatar {
     width: 80px;
     height: 80px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
     background: #E5E7EB;
     margin: 0 auto 20px;
     border: 4px solid #F9FAFB;
@@ -2541,6 +2577,7 @@ body.home .hero {
     cursor: pointer;
     padding: 10px;
     z-index: 1100;
+    border-radius: var(--radius-control);
 }
 
 .mobile-menu-toggle svg {
@@ -3229,8 +3266,10 @@ body.home .hero {
    scrim, coloured sections); on plain white it degrades gracefully to a premium
    frosted-white card.
 
-   NOTE: main.css line ~45 forces `border-radius:0 !important` on buttons/img/.btn.
-   Every rounded glass surface below therefore re-declares radius with !important.
+   NOTE: the `!important` on the radii below is historical. It existed to beat
+   a `border-radius:0 !important` reset that this file used to apply to
+   buttons/img/.btn; that reset is now the rounded default at the top of the
+   file, so these declarations are merely redundant rather than load-bearing.
    ===================================================================== */
 :root {
     --glass-fill:        linear-gradient(135deg, rgba(255,255,255,0.80) 0%, rgba(222,244,244,0.62) 100%);
@@ -3240,7 +3279,7 @@ body.home .hero {
     --glass-shadow:      0 8px 32px rgba(10,25,41,0.12), inset 0 1px 0 rgba(255,255,255,0.7);
     --glass-shadow-lg:   0 24px 64px rgba(10,25,41,0.28), inset 0 1px 0 rgba(255,255,255,0.7);
     --glass-blur:        blur(16px) saturate(120%);
-    --glass-radius:      0; /* square corners to match the theme's flat aesthetic */
+    --glass-radius:      var(--radius-surface); /* glass panels are surfaces */
 }
 
 /* --- Glass surfaces --- */
@@ -3263,7 +3302,7 @@ body.home .hero {
     backdrop-filter: blur(24px) saturate(130%);
     border: var(--glass-border);
     box-shadow: var(--glass-shadow-lg);
-    border-radius: 0 !important;
+    border-radius: var(--radius-surface) !important;
 }
 
 /* Modal scrim — teal->navy wash so a frosted panel reads clearly on top */
@@ -3289,7 +3328,7 @@ body.home .hero {
     color: #fff;
     background: var(--primary-color);
     border: 1px solid var(--primary-color);
-    border-radius: 0 !important;
+    border-radius: var(--radius-control) !important;
     cursor: pointer;
     text-decoration: none;
     transition: background-color .2s ease, transform .15s ease, box-shadow .2s ease;
@@ -3322,7 +3361,7 @@ body.home .hero {
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
     border: 1px solid rgba(0,128,128,0.35);
-    border-radius: 0 !important;
+    border-radius: var(--radius-control) !important;
     cursor: pointer;
     text-decoration: none;
     transition: background-color .2s ease, color .2s ease, transform .15s ease;
@@ -3572,6 +3611,7 @@ body.home .hero {
     border: 1.5px solid var(--primary-color);
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
+    border-radius: var(--radius-control);
 }
 
 .vance-header-search__toggle:hover {
@@ -3627,6 +3667,7 @@ body.home .hero {
     font-size: 14px;
     line-height: 32px;
     outline: none;
+    border-radius: var(--radius-field);
 }
 
 /* While the field is open it overlays the rest of .header-actions. Hiding the
@@ -3695,6 +3736,7 @@ body.home .hero {
         border: none;
         background: transparent;
         color: var(--secondary-color);
+        border-radius: var(--radius-control);
     }
 
     .vance-header-search__toggle:hover {
@@ -3728,6 +3770,7 @@ body.home .hero {
            the header on every mobile page. */
         border-bottom: 0 solid #2f4f6f;
         transition: max-height 0.25s ease, padding 0.25s ease;
+        border-radius: var(--radius-field);
     }
 
     .vance-header-search.is-open .vance-header-search__form {
@@ -3766,6 +3809,7 @@ body.home .hero {
     font-family: var(--font-main);
     font-size: 16px;
     outline: none;
+    border-radius: var(--radius-field);
 }
 
 .vance-search-again__field:focus {
@@ -3784,6 +3828,7 @@ body.home .hero {
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
+    border-radius: var(--radius-control);
 }
 
 .vance-search-again__submit:hover {
@@ -4272,4 +4317,45 @@ body.home .hero {
         gap: 14px;
         padding: 22px;
     }
+}
+
+
+/* ==========================================================================
+   Article cards stay square
+   ==========================================================================
+   The one deliberate exception to the radius scale. Every tile below is a
+   post tile — its whole surface is a link to a permalink — and they are kept
+   square so an editorial grid reads as a wall of articles rather than a tray
+   of widgets.
+
+   This block is the single enforcement point, and it lives at the end of the
+   file on purpose: several of these selectors are also styled earlier with
+   `var(--radius-lg)`, and at equal specificity the later rule wins. Add new
+   post tiles here rather than scattering `border-radius: 0` through the
+   component that renders them.
+
+   Thumbnails are included because a card that clips its image would otherwise
+   round the photo's top corners against a square frame.
+
+   The line is drawn at card-shaped post previews. Rows that merely link to an
+   article - `.oped-related-item`, `.oped-readnext-item`, `.gi-cp-article`,
+   `.latest-list-item` - are sidebar list items rather than tiles, so they
+   follow the ordinary scale. Moving that line means editing this list only. */
+.news-card,
+.news-card .card-image,
+.news-card .card-image img,
+.news-card .card-content,
+.bento-cell-featured,
+.bento-cell-side,
+.vance-cw-card,
+.vance-cw-side-card,
+.vance-cw-bento-featured,
+.va-poster-card,
+.va-poster-card img,
+.va-poster-link,
+.va-fl-featured,
+.va-fl-featured img,
+.va-fl-item,
+.va-fl-item img {
+    border-radius: var(--radius-article);
 }

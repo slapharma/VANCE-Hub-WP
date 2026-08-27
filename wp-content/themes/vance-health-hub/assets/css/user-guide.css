@@ -137,6 +137,7 @@
     color: var(--secondary-color);
     line-height: 1.6;
     margin: 0 0 24px;
+    border-radius: var(--radius-surface);
 }
 
 /* ---------- Healthcare journey (4-step) ---------- */
@@ -152,6 +153,7 @@
     box-shadow: var(--shadow-sm);
     border-top: 4px solid var(--primary-color);
     position: relative;
+    border-radius: var(--radius-surface);
 }
 .vug-journey__num {
     display: inline-flex;
@@ -164,6 +166,7 @@
     font-weight: 700;
     font-size: 14px;
     margin-bottom: 14px;
+    border-radius: var(--radius-control);
 }
 .vug-journey__step h3 { font-family: var(--font-heading); font-size: 17px; color: var(--secondary-color); margin: 0 0 8px; }
 .vug-journey__step p { font-size: 14px; color: var(--text-light); line-height: 1.6; margin: 0; }
@@ -250,6 +253,7 @@
     max-width: 80%;
     opacity: 0;
     transform: translateY(10px) scale(0.94);
+    border-radius: var(--radius-control);
 }
 .vug-anim-shot.is-visible .vug-badge {
     animation: vug-badge-in 0.55s cubic-bezier(.22,1,.36,1) both var(--vug-badge-delay, 0s);
@@ -328,6 +332,7 @@
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(0,128,128,0.10);
     transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: var(--radius-surface);
 }
 .vug-dash-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .vug-dash-card__icon { font-size: 26px; display: block; margin-bottom: 10px; }
@@ -378,6 +383,7 @@
     background: none; border: none;
     color: #fff; font-size: 36px; line-height: 1;
     cursor: pointer;
+    border-radius: var(--radius-control);
 }
 
 /* ---------- Responsive ---------- */
@@ -452,6 +458,7 @@
     border: 1px solid var(--primary-color);
     padding: 8px 16px;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border-radius: var(--radius-pill);
 }
 .vug-subnav a.vug-subnav__download:hover {
     background: #fff;

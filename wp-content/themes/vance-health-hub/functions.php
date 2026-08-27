@@ -1710,7 +1710,7 @@ function vance_render_content_hub_dashboard() {
     );
     ?>
     <div class="wrap" style="max-width: 1200px; margin: 30px auto;">
-        <div style="background: white; border-radius: 0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+        <div style="background: white; border-radius: var(--radius-surface, 14px); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1 style="font-size: 32px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;">CONTENT HUB STATION</h1>
@@ -1721,9 +1721,9 @@ function vance_render_content_hub_dashboard() {
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
             <?php foreach ($cpts as $slug => $data) : ?>
-            <div style="background: white; border-radius: 0; border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
-                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <img src="<?php echo vance_get_category_icon_url($data['name']); ?>" style="width: 28px; height: 28px; object-fit: contain; filter: none !important;">
                     </div>
                     <div>
@@ -1733,8 +1733,8 @@ function vance_render_content_hub_dashboard() {
                 </div>
                 
                 <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: 0;">View All</a>
-                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: 0;">+ Add New</a>
+                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: var(--radius-control, 6px);">View All</a>
+                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: var(--radius-control, 6px);">+ Add New</a>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -1756,7 +1756,7 @@ function vance_render_media_hub_dashboard() {
     );
     ?>
     <div class="wrap" style="max-width: 1200px; margin: 30px auto;">
-        <div style="background: white; border-radius: 0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+        <div style="background: white; border-radius: var(--radius-surface, 14px); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1 style="font-size: 32px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;">MEDIA HUB STATION</h1>
@@ -1767,9 +1767,9 @@ function vance_render_media_hub_dashboard() {
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
             <?php foreach ($cpts as $slug => $data) : ?>
-            <div style="background: white; border-radius: 0; border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
-                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <img src="<?php echo vance_get_category_icon_url($data['name']); ?>" style="width: 28px; height: 28px; object-fit: contain; filter: none !important;">
                     </div>
                     <div>
@@ -1779,8 +1779,8 @@ function vance_render_media_hub_dashboard() {
                 </div>
                 
                 <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: 0;">View All</a>
-                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: 0;">+ Add New</a>
+                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: var(--radius-control, 6px);">View All</a>
+                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: var(--radius-control, 6px);">+ Add New</a>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -7634,7 +7634,7 @@ function vance_login_logo() {
             padding-bottom: 30px; 
         }
         body.login { background-color: #f8fafc; }
-        .login form { box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: 0; border: 1px solid #e2e8f0; }
+        .login form { box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; }
         .wp-core-ui .button-primary { background: #008080; border-color: #008080; }
     </style>
     <?php 
@@ -7711,14 +7711,14 @@ function vance_enhanced_login_styles() {
         
         .login form {
             background: white;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
             padding: 32px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             border: none;
         }
         
         .login form .input {
-            border-radius: 0;
+            border-radius: var(--radius-field, 10px);
             border: 2px solid #E2E8F0;
             padding: 8px 12px;
             font-size: 14px;
@@ -7732,7 +7732,7 @@ function vance_enhanced_login_styles() {
         .wp-core-ui .button-primary {
             background: #008080;
             border-color: #008080;
-            border-radius: 0;
+            border-radius: var(--radius-control, 6px);
             padding: 8px 24px;
             font-weight: 700;
             text-transform: uppercase;
@@ -7766,14 +7766,14 @@ function vance_enhanced_login_styles() {
         .login .success {
             background: #def4f4;
             border-left: 4px solid #008080;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
             padding: 12px 16px;
         }
         
         .login #login_error {
             background: #FEE2E2;
             border-left: 4px solid #EF4444;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
             padding: 12px 16px;
         }
     </style>
@@ -7786,7 +7786,7 @@ add_action('login_enqueue_scripts', 'vance_enhanced_login_styles');
  */
 function vance_add_register_link_to_login() {
     echo '<p style="text-align: center; margin-top: 20px;">
-        <a href="' . home_url('/register/') . '" style="color: white; font-weight: 600; text-decoration: none; background: #008080; padding: 10px 24px; border-radius: 0; display: inline-block; box-shadow: 0 4px 12px rgba(0,128,128, 0.3);">Create New Account</a>
+        <a href="' . home_url('/register/') . '" style="color: white; font-weight: 600; text-decoration: none; background: #008080; padding: 10px 24px; border-radius: var(--radius-control, 6px); display: inline-block; box-shadow: 0 4px 12px rgba(0,128,128, 0.3);">Create New Account</a>
     </p>';
 }
 add_action('login_footer', 'vance_add_register_link_to_login');
@@ -8175,7 +8175,7 @@ function vance_testimonials_shortcode( $atts ) {
         <div class="container">
             <?php if ( $heading ) : ?>
                 <div class="section-label" style="display: flex; align-items: center; gap: 12px; margin-bottom: 40px; border-bottom: 2px solid <?php echo esc_attr( $underline ); ?>; padding-bottom: 16px; justify-content: <?php echo esc_attr( $h_justify ); ?>; text-align: <?php echo esc_attr( $h_align ); ?>;">
-                    <div class="color-bar" style="background: <?php echo esc_attr( $accent ); ?>; width: 6px; height: <?php echo max( 16, $heading_size ); ?>px; border-radius: 0;"></div>
+                    <div class="color-bar" style="background: <?php echo esc_attr( $accent ); ?>; width: 6px; height: <?php echo max( 16, $heading_size ); ?>px; border-radius: var(--radius-control, 6px);"></div>
                     <h2 style="margin: 0; font-size: <?php echo $heading_size; ?>px; font-weight: 800; color: <?php echo esc_attr( $heading_col ); ?>; font-family: 'Outfit', sans-serif; text-transform: uppercase;"><?php echo esc_html( $heading ); ?></h2>
                 </div>
             <?php endif; ?>
@@ -8193,7 +8193,7 @@ function vance_testimonials_shortcode( $atts ) {
                 <div class="vance-testimonials-viewport" style="overflow: hidden;">
                     <div class="vance-testimonials-track" style="display: flex; gap: 16px; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform;">
                         <?php foreach ( $items as $item ) : ?>
-                            <div class="vance-testimonial-card" style="flex: 0 0 auto; box-sizing: border-box; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; padding: 24px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
+                            <div class="vance-testimonial-card" style="flex: 0 0 auto; box-sizing: border-box; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-surface, 14px); padding: 24px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
                                 <div style="position: absolute; top: 14px; right: 14px;">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="<?php echo esc_attr( $accent ); ?>" style="opacity: 0.1;">
                                         <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
@@ -8206,9 +8206,9 @@ function vance_testimonials_shortcode( $atts ) {
 
                                 <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid <?php echo esc_attr( $card_border ); ?>; padding-top: 14px; margin-top: auto;">
                                     <?php if ( ! empty( $item['image'] ) ) : ?>
-                                        <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 40px; height: 40px; border-radius: 0; object-fit: cover; border: 2px solid <?php echo esc_attr( $sec_bg ); ?>; flex-shrink: 0;">
+                                        <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 40px; height: 40px; border-radius: var(--radius-control, 6px); object-fit: cover; border: 2px solid <?php echo esc_attr( $sec_bg ); ?>; flex-shrink: 0;">
                                     <?php else : ?>
-                                        <div style="width: 40px; height: 40px; border-radius: 0; background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: 'Outfit', sans-serif; flex-shrink: 0;">
+                                        <div style="width: 40px; height: 40px; border-radius: var(--radius-control, 6px); background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: 'Outfit', sans-serif; flex-shrink: 0;">
                                             <?php echo esc_html( strtoupper( substr( $item['name'], 0, 1 ) ) ); ?>
                                         </div>
                                     <?php endif; ?>
@@ -8226,10 +8226,10 @@ function vance_testimonials_shortcode( $atts ) {
 
                 <?php if ( $tcount > 1 ) : ?>
                     <div class="vance-testimonials-controls" aria-hidden="false" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                        <button type="button" class="vance-tslide-prev" aria-label="Previous testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
+                        <button type="button" class="vance-tslide-prev" aria-label="Previous testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-control, 6px); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
-                        <button type="button" class="vance-tslide-next" aria-label="Next testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
+                        <button type="button" class="vance-tslide-next" aria-label="Next testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-control, 6px); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </button>
                     </div>
@@ -8493,13 +8493,13 @@ function vance_quiz_modal_styles() {
     <style>
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-option-item {
-            display: flex; align-items: center; gap: 15px; padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 0; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 15px; padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: var(--radius-surface, 14px); cursor: pointer; transition: all 0.2s;
         }
         .modal-option-item:hover { border-color: #008080; background: #fffcf9; }
         .modal-option-item.selected { border-color: #008080; background: #def4f4; }
         .modal-option-item.selected .modal-option-radio { border-color: #008080 !important; background: #008080; box-shadow: inset 0 0 0 4px white; }
         .option-text { font-size: 15px; font-weight: 600; color: #334155; }
-        .modal-btn-save { background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 14px 24px; border-radius: 0; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .modal-btn-save { background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 14px 24px; border-radius: var(--radius-control, 6px); font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .modal-btn-save:hover { background: #f8fafc; color: #475569; }
     </style>
     <?php

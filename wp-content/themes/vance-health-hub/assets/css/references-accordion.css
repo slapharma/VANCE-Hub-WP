@@ -49,6 +49,7 @@
     font-family: inherit;
     color: var(--vref-ink);
     transition: background 0.2s ease;
+    border-radius: var(--radius-control);
 }
 .vref__toggle:hover { background: var(--vref-wash); }
 .vref__toggle:focus-visible { outline: 3px solid var(--vref-accent); outline-offset: -3px; }

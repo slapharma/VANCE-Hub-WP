@@ -43,7 +43,7 @@ $ajax_url       = admin_url( 'admin-ajax.php' );
 .vance-reg-overlay.is-open { display: flex; }
 .vance-reg-modal {
     background: white; max-width: 460px; width: 100%; padding: 36px 32px;
-    box-shadow: 0 30px 80px rgba(10,25,41,0.30); position: relative; border-radius: 0;
+    box-shadow: 0 30px 80px rgba(10,25,41,0.30); position: relative; border-radius: var(--radius-surface, 14px);
     border-top: 4px solid var(--primary-color);
 }
 .vance-reg-modal h2 {
@@ -55,7 +55,7 @@ $ajax_url       = admin_url( 'admin-ajax.php' );
 .vance-reg-modal input,
 .vance-reg-modal select {
     width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px;
-    background: #fff; box-sizing: border-box; border-radius: 0;
+    background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 10px);
 }
 .vance-reg-modal input:focus,
 .vance-reg-modal select:focus { outline: none; border-color: var(--primary-color); }

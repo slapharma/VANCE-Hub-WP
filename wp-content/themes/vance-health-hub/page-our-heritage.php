@@ -109,7 +109,7 @@ get_header(); ?>
                     $p_title = vance_get_theme_mod("vance_heritage_p{$i}_title", $pillar_defaults[$i][0]);
                     $p_desc = vance_get_theme_mod("vance_heritage_p{$i}_desc", $pillar_defaults[$i][1]);
                 ?>
-                <div class="pillar" style="background:rgba(255,255,255,0.5); border:1px solid rgba(0,0,0,0.05); border-radius: 0;">
+                <div class="pillar" style="background:rgba(255,255,255,0.5); border:1px solid rgba(0,0,0,0.05); border-radius: var(--radius-surface, 14px);">
                     <h4 style="<?php echo $styles['title']; ?>"><?php echo esc_html($p_title); ?></h4>
                     <p style="<?php echo $styles['text']; ?>"><?php echo esc_html($p_desc); ?></p>
                 </div>
@@ -164,7 +164,7 @@ get_header(); ?>
                     $v_title = vance_get_theme_mod("vance_heritage_val{$i}_title", $val_defaults[$i][0]);
                     $v_desc = vance_get_theme_mod("vance_heritage_val{$i}_desc", $val_defaults[$i][1]);
                 ?>
-                <div style="background:white;padding:32px;border-radius:0;box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                <div style="background:white;padding:32px;border-radius:var(--radius-surface, 14px);box-shadow:0 4px 6px rgba(0,0,0,0.05);">
                     <h4 style="color:var(--secondary-color);font-family:'Outfit',sans-serif;font-weight:700;margin-bottom:12px; <?php echo $styles['title']; ?>"><?php echo esc_html($v_title); ?></h4>
                     <p style="color:var(--text-light);font-size:15px;line-height:1.6;margin:0; <?php echo $styles['text']; ?>"><?php echo esc_html($v_desc); ?></p>
                 </div>
@@ -204,7 +204,7 @@ get_header(); ?>
                         $f_title = vance_get_theme_mod("vance_heritage_feat{$i}_title", $feat_defaults[$i][0]);
                         $f_desc = vance_get_theme_mod("vance_heritage_feat{$i}_desc", $feat_defaults[$i][1]);
                     ?>
-                    <div style="background:#f8f9fa;padding:24px;border-radius:0;">
+                    <div style="background:#f8f9fa;padding:24px;border-radius:var(--radius-surface, 14px);">
                         <h4 style="font-size:16px;color:var(--secondary-color);font-family:'Outfit',sans-serif;font-weight:700;margin-bottom:8px; <?php echo $styles['title']; ?>"><?php echo esc_html($f_title); ?></h4>
                         <p style="font-size:14px;color:var(--text-light);margin:0;line-height:1.5; <?php echo $styles['text']; ?>"><?php echo esc_html($f_desc); ?></p>
                     </div>
@@ -243,7 +243,7 @@ get_header(); ?>
                     $pl_title = vance_get_theme_mod("vance_heritage_plat{$i}_title", $plat_defaults[$i][0]);
                     $pl_desc = vance_get_theme_mod("vance_heritage_plat{$i}_desc", $plat_defaults[$i][1]);
                 ?>
-                <div style="background:rgba(255,255,255,0.05);padding:24px;border-radius:0;border:1px solid rgba(255,255,255,0.1);">
+                <div style="background:rgba(255,255,255,0.05);padding:24px;border-radius:var(--radius-surface, 14px);border:1px solid rgba(255,255,255,0.1);">
                     <h4 style="color:white;font-family:'Outfit',sans-serif;font-weight:600;margin-bottom:10px;font-size:18px; <?php echo $styles['title']; ?>"><?php echo esc_html($pl_title); ?></h4>
                     <p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0;line-height:1.6; <?php echo $styles['text']; ?>"><?php echo esc_html($pl_desc); ?></p>
                 </div>
@@ -272,9 +272,9 @@ get_header(); ?>
             <div style="display:flex; flex-wrap:wrap; gap:60px; align-items:center; <?php echo $flex_dir; ?>">
                 <div style="flex:1; min-width:300px;">
                     <?php if ($img) : ?>
-                        <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($title); ?>" style="width:100%; border-radius:0; box-shadow:0 20px 40px rgba(0,0,0,0.1);">
+                        <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($title); ?>" style="width:100%; border-radius:var(--radius-surface, 14px); box-shadow:0 20px 40px rgba(0,0,0,0.1);">
                     <?php else: ?>
-                        <div style="width:100%; aspect-ratio:16/9; background:#eee; border-radius:0; display:flex; align-items:center; justify-content:center; color:#ccc;">No Image Selected</div>
+                        <div style="width:100%; aspect-ratio:16/9; background:#eee; border-radius:var(--radius-surface, 14px); display:flex; align-items:center; justify-content:center; color:#ccc;">No Image Selected</div>
                     <?php endif; ?>
                 </div>
                 <div style="flex:1; min-width:300px;">
@@ -305,8 +305,8 @@ get_header(); ?>
             <h2 style="font-family:'Outfit',sans-serif; font-weight:800; margin-bottom:16px; <?php if(strpos($styles['title'],'font-size')===false) echo 'font-size:36px;'; ?> <?php echo $styles['title']; ?>"><?php echo esc_html($cta_title); ?></h2>
             <p style="opacity:0.9; margin-bottom:32px; line-height:1.6; <?php if(strpos($styles['text'],'font-size')===false) echo 'font-size:18px;'; ?> <?php echo $styles['text']; ?>"><?php echo esc_html($cta_desc); ?></p>
             <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-                <a href="<?php echo esc_url($cta_btn1_url); ?>" class="btn" style="background:white;color:#EB5A33;font-weight:700;padding:12px 28px;border-radius:0;text-decoration:none;"><?php echo esc_html($cta_btn1_lbl); ?></a>
-                <a href="<?php echo esc_url($cta_btn2_url); ?>" class="btn" style="background:transparent;border:2px solid white;color:white;font-weight:700;padding:10px 28px;border-radius:0;text-decoration:none;"><?php echo esc_html($cta_btn2_lbl); ?></a>
+                <a href="<?php echo esc_url($cta_btn1_url); ?>" class="btn" style="background:white;color:#EB5A33;font-weight:700;padding:12px 28px;border-radius:var(--radius-control, 6px);text-decoration:none;"><?php echo esc_html($cta_btn1_lbl); ?></a>
+                <a href="<?php echo esc_url($cta_btn2_url); ?>" class="btn" style="background:transparent;border:2px solid white;color:white;font-weight:700;padding:10px 28px;border-radius:var(--radius-control, 6px);text-decoration:none;"><?php echo esc_html($cta_btn2_lbl); ?></a>
             </div>
         </div>
     </section>
@@ -330,7 +330,7 @@ get_header(); ?>
 </main>
 
 <style>
-.pillar { background:white; padding:32px; border-radius:0; border:1px solid #e2e8f0; text-align:center; }
+.pillar { background:white; padding:32px; border-radius:var(--radius-surface, 14px); border:1px solid #e2e8f0; text-align:center; }
 .pillar h4 { font-family:'Outfit',sans-serif; color:var(--secondary-color); margin-bottom:12px; font-weight:800; }
 .pillar p { font-size:14px; color:var(--text-light); }
 </style>

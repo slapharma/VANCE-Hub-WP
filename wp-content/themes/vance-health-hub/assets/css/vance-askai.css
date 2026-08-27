@@ -4,7 +4,7 @@
  * One stylesheet for all three surfaces: the site-wide modal, the inline mount
  * on /ask-ai/, and the floating "Ask AI" pill shown on text selection.
  *
- * Follows the theme's flat, squared-corner language (--radius-md is 0) and the
+ * Follows the theme's corner-radius scale (--radius-control/field/surface) and the
  * brand teal. Contrast, focus rings, touch targets and reduced-motion follow the
  * accessible/clinical design profile.
  */
@@ -54,6 +54,7 @@
 	border: 1px solid var(--askai-line);
 	box-shadow: 0 24px 60px rgba(10, 25, 41, 0.28);
 	overflow: hidden;
+	border-radius: var(--radius-surface);
 }
 
 /* =========================================================================
@@ -73,6 +74,7 @@
 .vance-askai--inline {
 	border: 1px solid var(--askai-line);
 	height: min(72vh, 680px);
+	border-radius: var(--radius-surface);
 }
 
 .vance-askai__header {
@@ -93,6 +95,7 @@
 	height: 38px;
 	flex: 0 0 38px;
 	background: rgba(255, 255, 255, 0.16);
+	border-radius: var(--radius-control);
 }
 
 .vance-askai__badge svg { width: 20px; height: 20px; }
@@ -134,6 +137,7 @@
 	color: #ffffff;
 	cursor: pointer;
 	transition: background-color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai__iconbtn:hover { background: rgba(255, 255, 255, 0.18); }
@@ -159,6 +163,7 @@
 	line-height: 1.65;
 	white-space: normal;
 	overflow-wrap: anywhere;
+	border-radius: var(--radius-surface);
 }
 
 .vance-askai__msg--user {
@@ -181,6 +186,7 @@
 	border: 1px solid #FCA5A5;
 	color: #991B1B;
 	font-size: 14px;
+	border-radius: var(--radius-surface);
 }
 
 .vance-askai__msg a {
@@ -253,6 +259,7 @@
 	border: 1px solid var(--askai-teal);
 	cursor: pointer;
 	transition: background-color 200ms ease-out, color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai__suggestion:hover {
@@ -312,7 +319,7 @@
 	color: var(--askai-ink);
 	background: #ffffff;
 	border: 1px solid #CBD5E1;
-	border-radius: 0;
+	border-radius: var(--radius-field);
 	/* Draggable from the bottom-right corner. */
 	resize: vertical;
 	overflow-y: auto;
@@ -349,6 +356,7 @@
 	border: 1px solid var(--askai-teal);
 	cursor: pointer;
 	transition: background-color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai__send:hover:not(:disabled) {
@@ -405,6 +413,7 @@
 	-webkit-backdrop-filter: blur(10px) saturate(140%);
 	backdrop-filter: blur(10px) saturate(140%);
 	overflow: hidden;
+	border-radius: var(--radius-surface);
 }
 
 /* Sheen across the top edge, the "glass" cue. */
@@ -443,6 +452,7 @@
 	color: #ffffff;
 	background: var(--askai-teal);
 	box-shadow: 0 1px 4px rgba(0, 128, 128, 0.4);
+	border-radius: var(--radius-control);
 }
 
 .vance-askai__level-input {
@@ -538,6 +548,7 @@
 	border: 1px solid #CBD5E1;
 	cursor: pointer;
 	transition: color 200ms ease-out, border-color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai__minibtn:hover {
@@ -566,6 +577,7 @@
 	vertical-align: text-bottom;
 	background: var(--askai-teal);
 	animation: vance-askai-caret 900ms steps(2, start) infinite;
+	border-radius: var(--radius-control);
 }
 
 @keyframes vance-askai-caret {
@@ -584,6 +596,7 @@
 	color: #78350F;
 	background: #FFFBEB;
 	border-left: 3px solid #D97706;
+	border-radius: var(--radius-surface);
 }
 
 /* --- Expanded disclaimer ----------------------------------------------- */
@@ -681,8 +694,9 @@
 	justify-content: center;
 	background: #ffffff;
 	border: 1px solid rgba(15, 23, 42, 0.12);
-	/* !important beats the theme-wide `button { border-radius:0 !important }`
-	   reset in main.css, which would otherwise square these AI controls. */
+	/* Circular by design. The !important is a leftover from the old
+	   `button { border-radius:0 !important }` reset in main.css; it now only
+	   guards against the rounded default, which is a plain declaration. */
 	border-radius: 50% !important;
 	color: #0F172A;
 	box-shadow: 0 2px 10px rgba(10, 25, 41, 0.18);
@@ -899,6 +913,7 @@
 	border: 0;
 	text-decoration: underline;
 	cursor: pointer;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai-intro__register:hover { color: var(--primary-color, #008080); }
@@ -915,6 +930,7 @@
 		radial-gradient(120% 90% at 80% 12%, rgba(0, 128, 128, 0.12), rgba(0, 128, 128, 0) 60%),
 		linear-gradient(160deg, #F3FAFA 0%, #E8F3F5 100%);
 	border-left: 1px solid rgba(0, 128, 128, 0.10);
+	border-radius: var(--radius-surface);
 }
 
 .vance-askai-intro__media > img {
@@ -922,7 +938,7 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	border-radius: 14px !important; /* beat main.css `img { border-radius:0 !important }` */
+	border-radius: var(--radius-surface, 14px) !important; /* legacy !important; main.css no longer squares img */
 }
 
 /* Built-in "VANCE-Ai in use" illustration = a representative (not real) product
@@ -1128,7 +1144,7 @@
 	color: #ffffff;
 	background: var(--primary-color, #008080);
 	border: 0;
-	border-radius: 0 !important; /* square corners */
+	border-radius: var(--radius-control) !important;
 	box-shadow: 0 4px 12px rgba(0, 128, 128, 0.28);
 	cursor: pointer;
 	transition: background-color 200ms ease-out, transform 200ms ease-out, box-shadow 200ms ease-out;
@@ -1169,6 +1185,7 @@
 	border: 0;
 	cursor: pointer;
 	transition: background-color 200ms ease-out, color 200ms ease-out;
+	border-radius: var(--radius-pill);
 }
 
 .vance-askai-pill:hover { background: var(--primary-hover, #006666); }
@@ -1207,6 +1224,7 @@
 	background: #ffffff;
 	border: 1px solid #E2E8F0;
 	box-shadow: 0 6px 18px rgba(10, 25, 41, 0.30);
+	border-radius: var(--radius-surface);
 }
 
 .vance-askai-notes.is-busy { cursor: progress; }
@@ -1239,6 +1257,7 @@
 	border: 0;
 	cursor: pointer;
 	transition: color 200ms ease-out, background-color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai-notes__close:hover { color: #0A1929; background: #F1F5F9; }
@@ -1291,6 +1310,7 @@
 	border-bottom: 1px solid #2f4f6f;
 	cursor: pointer;
 	transition: background-color 200ms ease-out, color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai-notes__item:last-child { border-bottom: 0; }
@@ -1332,6 +1352,7 @@
 	color: #0A1929;
 	background: #ffffff;
 	border: 1px solid #E2E8F0;
+	border-radius: var(--radius-field);
 }
 
 .vance-askai-notes__input::placeholder { color: #94A3B8; }
@@ -1349,6 +1370,7 @@
 	border: 0;
 	cursor: pointer;
 	transition: background-color 200ms ease-out;
+	border-radius: var(--radius-control);
 }
 
 .vance-askai-notes__create:hover { background: var(--primary-hover, #006666); }
@@ -1389,6 +1411,7 @@
 	flex: none;
 	color: #ffffff;
 	background: var(--primary-color, #008080);
+	border-radius: var(--radius-control);
 }
 
 .vance-askai-notes__doneicon svg { width: 15px; height: 15px; }

@@ -59,7 +59,7 @@ function vance_tool_embed_shortcode( $atts ) {
         '<div class="tool-embed-container" style="margin: 40px 0;">
             <iframe 
                 src="%s" 
-                style="width:100%%; height:%s; border:none; border-radius:0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" 
+                style="width:100%%; height:%s; border:none; border-radius:var(--radius-surface, 14px); box-shadow: 0 4px 6px rgba(0,0,0,0.1);" 
                 loading="lazy"
                 title="%s"
                 allow="clipboard-write"
@@ -82,7 +82,7 @@ function vance_tool_embed_styles() {
             max-width: 100%;
             background: #f8f9fa;
             padding: 20px;
-            border-radius: 0;
+            border-radius: var(--radius-surface, 14px);
         }
         
         @media (max-width: 768px) {

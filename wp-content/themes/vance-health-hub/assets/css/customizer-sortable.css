@@ -23,6 +23,7 @@
 	border-bottom: 1px solid #f0f0f1;
 	user-select: none;
 	transition: background 0.15s ease;
+	border-radius: var(--radius-control);
 }
 
 .vance-sortable-item:last-child {
@@ -99,6 +100,7 @@
 	min-height: 38px;
 	margin: 0;
 	visibility: visible !important;
+	border-radius: var(--radius-control);
 }
 
 /* While being dragged */

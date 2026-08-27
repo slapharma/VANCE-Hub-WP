@@ -13,8 +13,9 @@
  *   note only those weights are loaded — do not reach for 800/900 here.)
  *
  * The mockup's rounded geometry (20px cards, pill badges) is scoped to this
- * page and driven by --vab-r-*, because main.css forces square corners site-wide.
- * Set those four vars to 0 to fall back to the house square style.
+ * page and driven by --vab-r-*, which predate the site-wide radius scale in
+ * main.css. They now sit alongside it rather than fighting it; --vab-r-sm/md/lg
+ * simply run larger than --radius-control/field/surface for this page's look.
  *
  * Every existing `vance_about_*` theme mod is still read, so Customizer content
  * survives this redesign. New settings added for the mockup's imagery are
@@ -627,9 +628,10 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     --vab-ease: cubic-bezier(.4,0,.2,1);
 }
 
-/* main.css applies `border-radius:0 !important` to img/.btn site-wide. Most
-   images here sit in a rounded, overflow-hidden wrapper so they need no
-   override; the two that are rounded directly must out-shout that !important. */
+/* These two are rounded directly rather than by an overflow-hidden wrapper.
+   The !important is historical - it beat a `border-radius:0 !important` reset
+   that main.css no longer applies - but it is kept so this page's deliberately
+   larger geometry still wins over the site-wide scale. */
 .vabout .vabout-btn { border-radius: var(--vab-r-pill) !important; }
 .vabout .vabout-digital-media img { border-radius: var(--vab-r-lg) !important; }
 
@@ -659,7 +661,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-pill {
     display: inline-block;
     padding: 7px 16px;
-    border-radius: 0;
+    border-radius: var(--radius-pill, 999px);
     background: rgba(0,128,128,.10);
     color: var(--vab-teal-dark);
     font-family: var(--font-main, 'Inter', sans-serif);
