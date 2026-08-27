@@ -3395,6 +3395,23 @@ body.home .hero {
     .vance-expand-chevron, .vance-expand-panel { transition: none !important; }
 }
 
+/* --- Knowledge Base "Standard Grid" layouts (front-page.php 'kb-content') ---
+   Two column counts off one card. The minimum track width is what sets the
+   count: in the 1160px container with a 24px gap, 260px gives four per row and
+   200px gives five, and auto-fill sheds a column by itself as the viewport
+   narrows. The 4-col values are lifted verbatim from the inline style this
+   replaced, so that layout renders byte-identically to before. */
+.va-kb-grid { display: grid; gap: 24px; }
+.va-kb-grid--min-260 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.va-kb-grid--min-200 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+@media (max-width: 599.98px) {
+    /* Left to itself the 200px track still fits two columns down to ~464px,
+       where the 260px track has already dropped to one. Below 600px the
+       five-column grid borrows the four-column sizing so both collapse at the
+       same point and phones never get a pair of 208px cards. */
+    .va-kb-grid--min-200 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
+
 /* --- Category promo block (inc/category-promo.php) --- */
 .vance-cat-promo { padding: 8px 0 28px; }
 .vance-cat-promo__inner {

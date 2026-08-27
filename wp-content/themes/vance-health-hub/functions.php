@@ -7037,11 +7037,13 @@ function vance_customize_register( $wp_customize ) {
             'sanitize_callback' => 'sanitize_text_field',
         ) );
         $wp_customize->add_control( "vance_kb_layout_{$cat->term_id}", array(
-            'label'   => sprintf( __( '"%s" Layout', 'vance-health-hub' ), $cat->name ),
-            'section' => 'vance_knowledgebase_sections',
-            'type'    => 'select',
-            'choices' => array(
+            'label'       => sprintf( __( '"%s" Layout', 'vance-health-hub' ), $cat->name ),
+            'description' => __( 'The two Standard Grid options use the same card, just sized to fit four or five per row on desktop; both step down to fewer columns on narrower screens. Raise "Number of Posts" to a multiple of the column count so the last row does not come up short.', 'vance-health-hub' ),
+            'section'     => 'vance_knowledgebase_sections',
+            'type'        => 'select',
+            'choices'     => array(
                 'grid-4'     => 'Standard Grid (4 Cols)',
+                'grid-5'     => 'Standard Grid (5 Cols)',
                 'bento'      => 'Bento Grid (News Style)',
                 'asymmetric' => 'Asymmetric (Review Style)',
                 'posters'    => 'Posters (Opinion Style)',
