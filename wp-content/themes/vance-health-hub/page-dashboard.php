@@ -933,7 +933,7 @@ get_header();
                                     </div>
 
                                     <div style="display: flex; justify-content: flex-end;">
-                                        <button type="submit" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:12px 32px; border-radius:0; font-weight:600; cursor:pointer;">Update Profile</button>
+                                        <button type="submit" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:12px 32px; border-radius:var(--radius-control, 6px); font-weight:600; cursor:pointer;">Update Profile</button>
                                     </div>
                                 </div>
                             </div>
@@ -951,8 +951,8 @@ get_header();
                         <h3 style="margin:0 0 8px 0; font-size:16px; color:#0F172A;">Invite friends</h3>
                         <p style="color:#64748B; font-size:13px; margin:0 0 16px 0;">Share your personal link — anyone who joins the Hub through it counts toward your invites below.</p>
                         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <input type="text" readonly id="ref-link-input" value="<?php echo esc_attr( $ref_link ); ?>" style="flex:1; min-width:240px; padding:10px; border:1px solid #E2E8F0; border-radius:0; font-size:13px; background:#F8FAFC; color:#0F172A;">
-                            <button type="button" class="ref-copy" data-url="<?php echo esc_attr( $ref_link ); ?>" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; border-radius:0; font-weight:600; cursor:pointer;">Copy link</button>
+                            <input type="text" readonly id="ref-link-input" value="<?php echo esc_attr( $ref_link ); ?>" style="flex:1; min-width:240px; padding:10px; border:1px solid #E2E8F0; border-radius:var(--radius-field, 10px); font-size:13px; background:#F8FAFC; color:#0F172A;">
+                            <button type="button" class="ref-copy" data-url="<?php echo esc_attr( $ref_link ); ?>" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; border-radius:var(--radius-control, 6px); font-weight:600; cursor:pointer;">Copy link</button>
                         </div>
                         <p style="margin:16px 0 0 0; font-size:13px; color:#0F172A;"><strong><?php echo esc_html( $ref_count ); ?></strong> <?php echo 1 === $ref_count ? 'person has' : 'people have'; ?> joined using your link.</p>
                     </div>
@@ -1011,7 +1011,7 @@ get_header();
                             <?php if(empty($quiz_results)): ?>
                                 <div style="text-align:center; padding:40px;">
                                     <p style="color:#64748B; margin-bottom:20px;">You haven't completed your health profile responses yet.</p>
-                                    <button onclick="openQuizModal()" class="btn-primary" style="display:inline-block; background:#008080; color:white; border:none; padding:10px 24px; border-radius:0; font-weight:600; cursor:pointer;">Start Discovery Quiz</button>
+                                    <button onclick="openQuizModal()" class="btn-primary" style="display:inline-block; background:#008080; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 6px); font-weight:600; cursor:pointer;">Start Discovery Quiz</button>
                                 </div>
                             <?php else: ?>
                                 <div class="dash-list">
@@ -1117,8 +1117,8 @@ get_header();
                                     // changed in the modal after page load would have
                                     // been written back from this page's old copy.)
                                     ?>
-                                    <textarea id="dash-additional-details" name="additional_details" rows="5" placeholder="Anything else you would like to keep a record of — symptoms, observations, how you have been feeling…" style="width:100%; padding:14px; border:1px solid #E2E8F0; border-radius:0; font-size:14px; background:#F8FAFC; margin-bottom:12px; resize:vertical;"><?php echo esc_textarea($profile['additional_details']); ?></textarea>
-                                    <button type="submit" style="width:100%; padding:10px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:0; font-weight:700; color:#475569; cursor:pointer; transition:all 0.2s;">Save notes</button>
+                                    <textarea id="dash-additional-details" name="additional_details" rows="5" placeholder="Anything else you would like to keep a record of — symptoms, observations, how you have been feeling…" style="width:100%; padding:14px; border:1px solid #E2E8F0; border-radius:var(--radius-field, 10px); font-size:14px; background:#F8FAFC; margin-bottom:12px; resize:vertical;"><?php echo esc_textarea($profile['additional_details']); ?></textarea>
+                                    <button type="submit" style="width:100%; padding:10px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:var(--radius-control, 6px); font-weight:700; color:#475569; cursor:pointer; transition:all 0.2s;">Save notes</button>
                                     <p id="dashboard-additional-details-msg" role="status" aria-live="polite" style="display:none; margin:10px 0 0; font-size:13px; line-height:1.5;"></p>
                                 </form>
                             </div>
