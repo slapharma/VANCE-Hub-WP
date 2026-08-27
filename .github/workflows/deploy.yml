@@ -26,6 +26,8 @@ env:
   # domains/vancehealthhub.co.uk/ during the 2026-04 rebrand. Earlier versions
   # of this workflow still referenced the old name; see RECONCILIATION-2026-05-25
   # for the incident this fix addresses.
+  # Site root. The cache purge runs wp-cli from here, not from the theme dir.
+  REMOTE_SITE: domains/vancehealthhub.co.uk/public_html
   REMOTE_THEME: domains/vancehealthhub.co.uk/public_html/wp-content/themes/vance-health-hub
   LOCAL_THEME: wp-content/themes/vance-health-hub
   REMOTE_PLUGIN: domains/vancehealthhub.co.uk/public_html/wp-content/plugins/vhh-annotations
@@ -156,6 +158,52 @@ jobs:
              tar xzf - && \
              echo 'PLUGIN_DEPLOY_OK'"
 
+      # Without this, a green deploy did NOT mean a changed site. LiteSpeed
+      # keeps serving the previous HTML until something purges it, so the new
+      # files sit on disk behind a stale page cache. Observed on 2026-08-26:
+      # the homepage still rendered the old hero (x-litespeed-cache: hit,
+      # Age 21) while a cache-busted request already showed the new one.
+      #
+      # This step warns rather than fails, deliberately. If the purge cannot
+      # run, the deploy itself still succeeded and the code IS live — failing
+      # the run would misreport that. But it must not pass silently either, so
+      # it asserts on LiteSpeed's own "Purged All" acknowledgement and warns
+      # when the plugin is active and that string does not come back.
+      #
+      # Jetpack Boost is not purged, and does not need to be: it exposes no
+      # purge subcommand, and its only cache here is wp-content/boost-cache/
+      # static/, whose filenames are content hashes — changed CSS produces a
+      # new filename on its own. Confirmed after the 2026-08-26 deploy.
+      #
+      # The remote script is one double-quoted multi-line argument rather than
+      # backslash-continued lines: $REMOTE_SITE still interpolates locally, the
+      # single quotes inside stay literal, and it survives editing.
+      - name: Purge caches
+        if: success()
+        run: |
+          set -uo pipefail
+          ssh -i ~/.ssh/hostinger_sla -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            set -u
+            cd ~/$REMOTE_SITE 2>/dev/null || { echo 'PURGE_SKIP: site dir ~/$REMOTE_SITE not found'; exit 0; }
+            command -v wp >/dev/null 2>&1 || { echo 'PURGE_SKIP: wp-cli not on PATH'; exit 0; }
+            wp cache flush 2>&1 | sed 's/^/object-cache: /' || true
+            if wp plugin is-active litespeed-cache >/dev/null 2>&1; then
+              wp litespeed-purge all 2>&1 | sed 's/^/litespeed: /' || true
+            else
+              echo 'litespeed: plugin inactive, nothing to purge'
+            fi
+          " | tee /tmp/purge.out
+
+          if grep -q 'PURGE_SKIP' /tmp/purge.out; then
+            echo "::warning::Cache purge skipped — $(grep -m1 'PURGE_SKIP' /tmp/purge.out). The deploy landed, but the site may serve stale HTML until a cache is purged by hand."
+          elif grep -q 'plugin inactive' /tmp/purge.out; then
+            echo "::notice::LiteSpeed plugin is inactive; only the object cache was flushed."
+          elif ! grep -qi 'Purged All' /tmp/purge.out; then
+            echo "::warning::LiteSpeed is active but did not acknowledge the purge (no 'Purged All' in its output). The site may still be serving the previous HTML — purge by hand via hPanel → Cache Manager → Purge All."
+          else
+            echo "Caches purged."
+          fi
+
       - name: Post-deploy reminder
         if: success()
         run: |
@@ -165,9 +213,10 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "A pre-deploy backup was written on the server as \`vance-health-hub-pre-deploy-*.tar.gz\` (one level above the theme dir)." >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Manual follow-ups (no CLI hook available):**" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Purge Hostinger cache: hPanel → Cache Manager → Purge All" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Purge LiteSpeed plugin cache (if installed)" >> "$GITHUB_STEP_SUMMARY"
+          echo "The object cache and the LiteSpeed page cache are purged by the **Purge caches** step — read that step for a warning before assuming a change is visible." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Manual follow-ups:**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Only if the Purge caches step warned: hPanel → Cache Manager → Purge All" >> "$GITHUB_STEP_SUMMARY"
           echo "- If CSS changed, bump the \`wp_enqueue_style\` version in \`functions.php\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Run the smoke tests listed in CLAUDE.md" >> "$GITHUB_STEP_SUMMARY"
           echo "- First plugin deploy only: activate over SSH with \`wp plugin activate vhh-annotations\` (run from the site's public_html)" >> "$GITHUB_STEP_SUMMARY"
