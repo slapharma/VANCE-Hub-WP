@@ -3427,12 +3427,92 @@ body.home .hero {
 }
 .vance-cat-promo__text { font-size: 15px; line-height: 1.6; color: #475569; margin: 0; max-width: 60ch; }
 .vance-cat-promo__body .vance-btn-inverted { margin-top: 6px; }
+
+/* --- Category promo layouts (vance_cat_promo_layout_choices()) ---------
+   Five variants over one markup skeleton. `image_left` is the historical
+   rendering and is what `.has-image` above already produces, so it needs no
+   rules of its own — the four below are the deviations from it. */
+
+/* Image right, text left. DOM order is unchanged (media first) so the picture
+   still follows the heading for a screen reader; only the visual column
+   order swaps. */
+.vance-cat-promo__inner--image_right.has-image { grid-template-columns: 1fr minmax(220px, 320px); }
+.vance-cat-promo__inner--image_right.has-image .vance-cat-promo__media { grid-column: 2; grid-row: 1; }
+.vance-cat-promo__inner--image_right.has-image .vance-cat-promo__body { grid-column: 1; grid-row: 1; }
+
+/* Image on top, copy beneath, both full width. */
+.vance-cat-promo__inner--stacked.has-image { grid-template-columns: 1fr; }
+.vance-cat-promo__inner--stacked.has-image .vance-cat-promo__media { min-height: 260px; }
+.vance-cat-promo__inner--stacked.has-image .vance-cat-promo__body { padding: 28px 36px 32px; }
+
+/* Full-width banner: copy sits over the photo, which is painted onto this
+   element inline (see inc/category-promo.php) under a dark scrim. */
+/* Doubled-up class on purpose: `.vance-cat-promo__inner.has-image` above is a
+   two-class selector, so a single-class `--banner` rule would lose to it and
+   the banner would inherit the two-column image grid. */
+.vance-cat-promo__inner--banner,
+.vance-cat-promo__inner--banner.has-image {
+    grid-template-columns: 1fr;
+    background-size: cover;
+    background-position: center;
+    padding: 0;
+    min-height: 280px;
+    align-items: center;
+}
+.vance-cat-promo__inner--banner .vance-cat-promo__body,
+.vance-cat-promo__inner--banner.has-image .vance-cat-promo__body {
+    padding: 40px 44px;
+    max-width: 640px;
+}
+/* The scrim is what buys these their contrast, so they are only recoloured
+   when an image is actually present. */
+.vance-cat-promo__inner--banner.has-image .vance-cat-promo__eyebrow { color: #7fdcdc; }
+.vance-cat-promo__inner--banner.has-image .vance-cat-promo__title { color: #ffffff; font-size: 32px; }
+.vance-cat-promo__inner--banner.has-image .vance-cat-promo__text { color: rgba(255,255,255,0.88); }
+
+/* Text only: a compact centred strip, for a category that wants an
+   announcement rather than a picture. */
+.vance-cat-promo__inner--text {
+    padding: 26px 36px;
+    text-align: center;
+}
+.vance-cat-promo__inner--text .vance-cat-promo__body {
+    align-items: center;
+    gap: 10px;
+}
+.vance-cat-promo__inner--text .vance-cat-promo__title { font-size: 22px; }
+.vance-cat-promo__inner--text .vance-cat-promo__text { max-width: 68ch; }
+
 @media (max-width: 767.98px) {
     .vance-cat-promo__inner.has-image { grid-template-columns: 1fr; }
     .vance-cat-promo__media { min-height: 160px; }
     .vance-cat-promo__inner,
     .vance-cat-promo__inner.has-image .vance-cat-promo__body { padding: 24px; }
     .vance-cat-promo__title { font-size: 22px; }
+
+    /* Every side-by-side variant collapses to a single column, image first. */
+    .vance-cat-promo__inner--image_right.has-image { grid-template-columns: 1fr; }
+    .vance-cat-promo__inner--image_right.has-image .vance-cat-promo__media { grid-column: 1; grid-row: 1; }
+    .vance-cat-promo__inner--image_right.has-image .vance-cat-promo__body { grid-column: 1; grid-row: 2; }
+    .vance-cat-promo__inner--stacked.has-image .vance-cat-promo__media { min-height: 180px; }
+    .vance-cat-promo__inner--stacked.has-image .vance-cat-promo__body { padding: 24px; }
+    /* The banner keeps its scrim but loses the horizontal fade, which does not
+       read at phone width — a flat overlay holds contrast at any crop. */
+    .vance-cat-promo__inner--banner,
+    .vance-cat-promo__inner--banner.has-image { min-height: 0; padding: 0; }
+    .vance-cat-promo__inner--banner .vance-cat-promo__body,
+    .vance-cat-promo__inner--banner.has-image .vance-cat-promo__body {
+        padding: 28px 24px;
+        background: rgba(10,25,41,0.72);
+        max-width: none;
+    }
+    .vance-cat-promo__inner--banner.has-image .vance-cat-promo__title { font-size: 24px; }
+    .vance-cat-promo__inner--text { padding: 22px 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vance-cat-promo .vance-glass--interactive { transition: none; }
+    .vance-cat-promo .vance-glass--interactive:hover { transform: none; }
 }
 
 /* =====================================================================

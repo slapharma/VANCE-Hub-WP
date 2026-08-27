@@ -6170,7 +6170,7 @@ function vance_customize_register( $wp_customize ) {
     // anywhere. Front-end: vance_render_category_promo() (inc/category-promo.php).
     $wp_customize->add_section( 'vance_category_promos', array(
         'title'       => __( 'Category Promo Blocks', 'vance-health-hub' ),
-        'description' => __( 'Add a promotional card to each category page (below the sub-category nav, above the articles). Tick "Show" and set a heading. The button can open an interactive tool in a modal, or link to any URL.', 'vance-health-hub' ),
+        'description' => __( 'Add a promotional card to each category page (below the sub-category nav, above the articles). Tick "Show" and set a heading, then pick a layout. The button can open an interactive tool in a modal, or link to any URL. Controls are grouped by category, parents first with their sub-categories directly underneath, and each is labelled with its full "Parent -> Child" path.', 'vance-health-hub' ),
         'priority'    => 34.4,
         'panel'       => 'vance_content_panel',
     ) );
@@ -6182,8 +6182,19 @@ function vance_customize_register( $wp_customize ) {
         'healthcare-quiz'         => __( 'Open: Gastro Health Survey', 'vance-health-hub' ),
     );
 
-    foreach ( $categories as $cat ) {
-        $vance_promo_prefix = sprintf( '%s', $cat->name );
+    // Walk the category TREE, not the flat alphabetical list get_categories()
+    // returns. Flat ordering drops each sub-category between two unrelated
+    // parents with nothing to say which parent it belongs to, and with eight
+    // controls repeated per category that made the sub-category settings
+    // effectively unfindable in a section 160-odd controls long. Every label is
+    // also prefixed with the full "Parent -> Child" path, since at that length
+    // the heading that would otherwise supply the context has long scrolled off.
+    foreach ( vance_customizer_category_tree() as $vance_promo_row ) {
+        $cat = $vance_promo_row['term'];
+        // Trailing separator included here so it can never be forgotten at a
+        // call site -- the labels used to concatenate straight onto the name and
+        // read "Understanding Your ConditionShow promo block".
+        $vance_promo_prefix = $vance_promo_row['path'] . ' — ';
 
         $wp_customize->add_setting( "vance_cat_promo_show_{$cat->term_id}", array(
             'default'           => false,
@@ -6193,6 +6204,18 @@ function vance_customize_register( $wp_customize ) {
             'label'   => $vance_promo_prefix . __( 'Show promo block', 'vance-health-hub' ),
             'section' => 'vance_category_promos',
             'type'    => 'checkbox',
+        ) );
+
+        $wp_customize->add_setting( "vance_cat_promo_layout_{$cat->term_id}", array(
+            'default'           => 'image_left',
+            'sanitize_callback' => 'sanitize_key',
+        ) );
+        $wp_customize->add_control( "vance_cat_promo_layout_{$cat->term_id}", array(
+            'label'       => $vance_promo_prefix . __( 'Layout', 'vance-health-hub' ),
+            'description' => __( 'How the card is arranged. "Full-width banner" lays the text over the image; "Text only" ignores the image and renders a compact centred strip.', 'vance-health-hub' ),
+            'section'     => 'vance_category_promos',
+            'type'        => 'select',
+            'choices'     => vance_cat_promo_layout_choices(),
         ) );
 
         $wp_customize->add_setting( "vance_cat_promo_eyebrow_{$cat->term_id}", array(
@@ -6231,7 +6254,7 @@ function vance_customize_register( $wp_customize ) {
         ) );
         $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_cat_promo_image_{$cat->term_id}", array(
             'label'       => $vance_promo_prefix . __( 'Image (optional)', 'vance-health-hub' ),
-            'description' => __( 'Shown on the left of the card. Recommended ~600x400px.', 'vance-health-hub' ),
+            'description' => __( 'Position depends on the Layout above. Recommended ~600x400px, or ~1600x600px for the full-width banner layout. Ignored by the "Text only" layout.', 'vance-health-hub' ),
             'section'     => 'vance_category_promos',
         ) ) );
 
