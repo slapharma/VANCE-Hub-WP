@@ -1381,6 +1381,85 @@ function vance_redirect_legacy_quiz_slug() {
 }
 add_action( 'template_redirect', 'vance_redirect_legacy_quiz_slug', 1 );
 
+/**
+ * Permanent redirects for superseded pages.
+ *
+ * Distinct from vance_redirect_legacy_quiz_slug() above, which covers a slug
+ * whose page no longer exists. Every source below IS a real published page —
+ * it is just a duplicate or a dead end that should never have stayed live:
+ *
+ *   gastro-recipies      Renders the identical tool to /gastro-meal-planner/
+ *                        via the same template. Audited 2026-08-28: the meal
+ *                        planner (id 3293, template explicitly assigned,
+ *                        modified 2026-08-20) carries all 18 internal links
+ *                        in the theme; this one (id 767) carries none and is
+ *                        the older of the two. The template FILE is named
+ *                        page-gastro-recipies.php, which makes this look like
+ *                        the canonical URL. It is not — that is a filename
+ *                        coincidence, and the misspelling ("recipies") is
+ *                        reason enough not to keep it as the public URL.
+ *
+ *   meal-plan            Blank. Renders a hero and an empty content div.
+ *   take-our-survey      Blank. Superseded by /gastro-health-survey/.
+ *   take-a-quiz-2        Blank. The "-2" suffix means a deleted page still
+ *                        holds /take-a-quiz/. The quiz IS the survey.
+ *   clinical-reviews-2   Blank. A static twin of a live category archive.
+ *
+ * Query strings are preserved, unlike the quiz rule above — its sources were
+ * customizer-preview URLs where the query string was the bug. Here a visitor
+ * could legitimately arrive with one (e.g. a UTM tag) and should keep it.
+ *
+ * 301 rather than 302 on purpose: the point is to consolidate duplicate
+ * content for search. Note that browsers cache a 301 indefinitely, so
+ * reverting one is slow for anyone who has already followed it.
+ */
+function vance_redirect_superseded_pages() {
+	if ( is_admin() ) {
+		return;
+	}
+
+	// slug => target. A string is a page path; array('category', $slug) is a term.
+	$map = array(
+		'gastro-recipies'    => 'gastro-meal-planner',
+		'meal-plan'          => 'gastro-meal-planner',
+		'take-our-survey'    => 'gastro-health-survey',
+		'take-a-quiz-2'      => 'gastro-health-survey',
+		'clinical-reviews-2' => array( 'category', 'content-clinical-reviews' ),
+	);
+
+	$path = trim( wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ?: '', '/' );
+	if ( ! isset( $map[ $path ] ) ) {
+		return;
+	}
+
+	$target = $map[ $path ];
+
+	if ( is_array( $target ) ) {
+		$term = get_category_by_slug( $target[1] );
+		if ( ! $term ) { return; }
+		$url = get_category_link( $term );
+	} else {
+		$page = get_page_by_path( $target );
+		// Never redirect into a 404: if the destination has gone, leave the
+		// source rendering whatever it renders today.
+		if ( ! $page || 'publish' !== $page->post_status ) { return; }
+		$url = get_permalink( $page );
+	}
+
+	if ( ! $url ) {
+		return;
+	}
+
+	$query = wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY );
+	if ( $query ) {
+		$url .= ( strpos( $url, '?' ) === false ? '?' : '&' ) . $query;
+	}
+
+	wp_safe_redirect( $url, 301, 'Vance superseded page' );
+	exit;
+}
+add_action( 'template_redirect', 'vance_redirect_superseded_pages', 1 );
+
 function vance_no_cache_account_pages() {
     $slugs     = array( 'dashboard', 'my-notes', 'healthcare-quiz', 'malnutrition-calculator', 'gastro-meal-planner' );
     $templates = array( 'page-dashboard.php', 'page-my-notes.php', 'page-healthcare-quiz.php', 'page-malnutrition-calculator.php', 'page-gastro-recipies.php' );
