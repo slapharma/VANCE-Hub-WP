@@ -4672,6 +4672,75 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 }
 
 /* ============================================================================
+   ARTICLE SIDEBAR — EXPLORE PANEL
+   ----------------------------------------------------------------------------
+   The article page's replacement for the inner category nav bar, which now
+   renders on category archives only. Same eight categories, same source
+   (vance_inner_nav_categories()), and deliberately the same button treatment as
+   that bar -- transparent, #008080 border and label, white on hover, no
+   animation -- so moving between an article and a category page does not feel
+   like moving between two designs.
+
+   Two columns rather than the bar's eight: the sidebar gives ~292px of content
+   width, so each button gets ~140px, which fits the longest category name on
+   two wrapped lines. Grid stretch equalises the heights, so all eight stay the
+   same size however their labels break.
+   ========================================================================== */
+
+.va-jump-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.va-jump-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* min-height keeps a one-word button the same size as a three-line one when
+       it is the only short label in the grid and nothing else stretches it. */
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid #008080;
+    border-radius: var(--radius-control, 6px);
+    background: transparent;
+    color: #008080;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    /* Explicit `none`: main.css sets `a { transition: color 0.2s }` sitewide and
+       these would otherwise inherit it. Matches the nav bar, which is not
+       animated either. */
+    transition: none;
+}
+
+.va-jump-btn:hover,
+.va-jump-btn:focus-visible {
+    background: #ffffff;
+    border-color: #008080;
+    color: #008080;
+}
+
+.va-jump-btn:focus-visible {
+    outline: 2px solid #008080;
+    outline-offset: 2px;
+}
+
+/* The category this article belongs to, tinted like the nav bar's active item. */
+.va-jump-btn.is-current {
+    background: rgba(0, 128, 128, 0.10);
+    font-weight: 700;
+}
+
+@media (max-width: 480px) {
+    /* The sidebar is full width on a phone, so two columns would give very wide,
+       very short buttons. One column reads better. */
+    .va-jump-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================================
    PROMO BLOCK — band, width and the container-fluid fix
    ----------------------------------------------------------------------------
    The old .promo-* family is gone. The homepage, Knowledgebase and category

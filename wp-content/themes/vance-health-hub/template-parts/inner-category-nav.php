@@ -31,28 +31,16 @@ if ( $vance_subcat_parent > 0 ) {
         return;
     }
 
-    // Get Uncategorized ID to exclude
-    $uncat = get_category_by_slug( 'uncategorized' );
-    $exclude_ids = array();
-    if ( $uncat ) {
-        $exclude_ids[] = $uncat->term_id;
-    }
+    // Category list comes from vance_inner_nav_categories() so the article
+    // sidebar's "Explore" panel, which replaced this bar on single posts, is
+    // guaranteed to offer the same set.
+    $cats = vance_inner_nav_categories();
 
     // Stored values may be 0 (an empty Customizer submit sanitised by absint).
-    // Clamp to sane defaults so we never emit repeat(0, 1fr) — invalid CSS that
-    // collapses the horizontal bar into a single vertical column.
-    $total_items = (int) vance_get_theme_mod( 'vance_inner_nav_total_items', 8 );
-    if ( $total_items < 1 ) { $total_items = 8; }
+    // Clamp to a sane default so we never emit repeat(0, 1fr) — invalid CSS
+    // that collapses the horizontal bar into a single vertical column.
     $col_count = (int) vance_get_theme_mod( 'vance_inner_nav_cards_per_row', 8 );
     if ( $col_count < 1 ) { $col_count = 8; }
-
-    $cats = get_categories( array(
-        'orderby'    => 'count',
-        'order'      => 'DESC',
-        'number'     => $total_items,
-        'hide_empty' => true,
-        'exclude'    => $exclude_ids,
-    ) );
 }
 
 // Nothing to show → bail (avoids an empty bar overlapping the hero).
@@ -213,9 +201,31 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
         overflow-x: visible;
         justify-content: center;
     }
-    .cat-mini-card { 
+    .cat-mini-card {
         width: 100% !important;
         flex: 1;
+    }
+
+    /* Let the label wrap on the desktop grid. At eight across in a 1160px
+       container each button gets ~84px of text, and seven of the eight category
+       names need more -- "Understanding Your Condition" needs 175px, so it
+       truncated to about half. Nothing fits eight across on one line at a
+       legible size, so the label wraps onto two or three lines instead and the
+       grid stretches every button to the tallest, keeping the row even.
+
+       !important because the base look is set inline, and scoped to this
+       breakpoint because below it the bar is a horizontal scroll row of chips,
+       where single-line labels are correct. */
+    .inner-cat-nav .cat-mini-card {
+        white-space: normal !important;
+        align-items: center;
+        min-height: 48px;
+    }
+    .inner-cat-nav .cat-mini-card span:not(.cat-mini-icon) {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        text-align: center;
     }
 }
 

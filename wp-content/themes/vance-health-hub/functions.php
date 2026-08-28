@@ -1854,6 +1854,38 @@ add_action( 'admin_menu', 'vance_strip_content_cpt_menus', PHP_INT_MAX );
 /**
  * Get SVG Icon for Category
  */
+/**
+ * The categories the inner category nav offers, top-level by post count.
+ *
+ * Lives here rather than inline in the template part because the article
+ * sidebar's "Explore" panel offers the same set: an article page no longer
+ * carries the nav bar, so the panel is its replacement, and the two listing
+ * different categories would be worse than either listing none.
+ *
+ * @param int|null $limit Defaults to the vance_inner_nav_total_items setting.
+ * @return WP_Term[]
+ */
+function vance_inner_nav_categories( $limit = null ) {
+    if ( null === $limit ) {
+        $limit = (int) vance_get_theme_mod( 'vance_inner_nav_total_items', 8 );
+    }
+    // Stored values may be 0 (an empty Customizer submit sanitised by absint).
+    if ( $limit < 1 ) {
+        $limit = 8;
+    }
+
+    $uncat   = get_category_by_slug( 'uncategorized' );
+    $exclude = $uncat ? array( $uncat->term_id ) : array();
+
+    return get_categories( array(
+        'orderby'    => 'count',
+        'order'      => 'DESC',
+        'number'     => $limit,
+        'hide_empty' => true,
+        'exclude'    => $exclude,
+    ) );
+}
+
 function vance_get_category_icon_url($name) {
     if (empty($name)) return '';
     

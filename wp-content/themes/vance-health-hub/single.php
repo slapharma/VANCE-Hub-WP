@@ -84,7 +84,14 @@ while ( have_posts() ) :
         </div>
     </section>
 
-    <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
+    <?php
+    // The inner category nav bar is deliberately NOT here. On an article it sat
+    // between the hero and the header bar, pushing the piece the reader came
+    // for further down, and it duplicates what the sidebar now offers: the
+    // "Explore" panel further down this template lists the same categories from
+    // the same vance_inner_nav_categories() source. The bar belongs to category
+    // archives, which is where it still renders.
+    ?>
 
     <?php
     // =========================================================================
@@ -573,6 +580,49 @@ while ( have_posts() ) :
                     </div>
 
                     <!-- Related Articles -->
+                    <?php
+                    // EXPLORE — the article page's replacement for the inner
+                    // category nav bar, which now renders on category archives
+                    // only. Same categories, same order, from the shared
+                    // vance_inner_nav_categories(), so the two can never offer
+                    // different destinations.
+                    //
+                    // Rendered as a 2 x 4 grid of equal buttons: the sidebar
+                    // gives ~292px of content width, and at two across each
+                    // button has ~140px, which is enough for the longest
+                    // category name on two wrapped lines. Grid stretch keeps
+                    // every button the height of the tallest, so the block
+                    // stays even however the labels break.
+                    $va_jump_cats = function_exists( 'vance_inner_nav_categories' )
+                        ? vance_inner_nav_categories()
+                        : array();
+                    $va_jump_current = get_the_category();
+                    $va_jump_current = ! empty( $va_jump_current ) ? (int) $va_jump_current[0]->term_id : 0;
+                    if ( ! empty( $va_jump_cats ) ) : ?>
+                    <div class="oped-sidebar-block va-jump-block">
+                        <h4>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                            </svg>
+                            <?php esc_html_e( 'Explore', 'vance-health-hub' ); ?>
+                        </h4>
+                        <div class="oped-sidebar-content">
+                            <nav class="va-jump-grid" aria-label="<?php esc_attr_e( 'Browse other categories', 'vance-health-hub' ); ?>">
+                                <?php foreach ( $va_jump_cats as $va_jump_cat ) :
+                                    $va_jump_is_current = ( $va_jump_current === (int) $va_jump_cat->term_id );
+                                ?>
+                                    <a class="va-jump-btn<?php echo $va_jump_is_current ? ' is-current' : ''; ?>"
+                                       href="<?php echo esc_url( get_category_link( $va_jump_cat->term_id ) ); ?>"
+                                       <?php echo $va_jump_is_current ? 'aria-current="page"' : ''; ?>>
+                                        <?php echo esc_html( $va_jump_cat->name ); ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </nav>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="oped-sidebar-block oped-related-articles">
                         <h4>Related Articles</h4>
                         <div class="oped-sidebar-content">

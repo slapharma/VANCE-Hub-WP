@@ -37,7 +37,10 @@
         </div>
     </section>
 
-    <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
+    <?php
+    // No inner category nav here either: it is a category-archive component and
+    // a generic page is not one. See the note in single.php.
+    ?>
 
     <div class="container" style="padding: 60px 20px;">
         <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
