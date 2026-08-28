@@ -17,8 +17,27 @@
 > ```
 >
 > Note the menu that was previously live was `Primary - main`, **not** the menu
-> called `Primary Menu` (term_id 2, unassigned, 7 stale items). That one is a
-> decoy and should probably be deleted.
+> that used to be called `Primary Menu`. That one was a decoy: term_id 2, slug
+> `primary-menu` — the same string as the *location* slug, which is exactly why
+> it was easy to mistake for the live menu — assigned to nothing, referenced by
+> nothing in the code, and holding 7 category links. **Deleted 2026-08-28.**
+>
+> Its contents are recorded here because deleting a menu is not reversible.
+> Three of its categories carry content and are already in the KNOWLEDGEBASE
+> panel; the other five archives were empty, so nothing lost a route:
+>
+> | Link | Category | Posts |
+> |---|---|---|
+> | Healthcare News | `content-healthcare-news` | 29 — in KNOWLEDGEBASE |
+> | Clinical Reviews | `content-clinical-reviews` | 28 — in KNOWLEDGEBASE |
+> | Expert Opinions | `content-expert-opinions` | 0 |
+> | Media Library | `content-media-library` | 0 |
+> | Education Courses | `content-education-courses` | 0 |
+> | Tools & Resources | `content-tools-resources` | 0 |
+> | Infographic Gallery | `content-infographic` | 0 |
+>
+> `content-infographic` exists but is empty — worth knowing when the
+> Infographics download lands, since it is not a ready home for it today.
 
 ---
 
