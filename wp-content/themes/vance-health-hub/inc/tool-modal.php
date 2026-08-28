@@ -102,6 +102,50 @@ $vance_tm_paths = array(
     overflow: hidden;
     padding: 0;
 }
+/* ---------------------------------------------------------------------------
+   Match the health quiz's modal treatment (requested 2026-08-28).
+
+   Both modals already worked; they just looked like different products. The
+   quiz uses the modal kit (assets/css/vance-modal-kit.css): a flat navy scrim
+   and a solid near-white card. This modal used the glass kit: a teal-to-navy
+   radial-gradient scrim and a frosted translucent panel. Measured on the live
+   site, the two sets of values were:
+
+                  quiz (.vance-mk-scrim / .vance-mk)   this modal (glass)
+     scrim        rgba(10,25,41,.55), blur(6px)        radial teal->navy, blur(6px)
+     inset        24px 16px                            clamp(12px,3vw,40px)
+     panel bg     #f8fafc                              translucent white->teal
+     panel blur   none                                 blur(24px) saturate(130%)
+     panel border none                                 1px rgba(255,255,255,.65)
+     panel shadow 0 24px 60px rgba(10,25,41,.28)       glass shadow
+
+   The glass classes stay on the element rather than being stripped from the
+   markup: they carry the `prefers-reduced-transparency` fallbacks, and those
+   should keep working. These rules simply restate the visual layer, doubled on
+   the element's own class so they out-rank the single-class glass rules on
+   specificity rather than on load order — Jetpack Boost concatenates the
+   stylesheets and load order is not ours to guarantee.
+
+   Note the glass scrim tints via background-IMAGE, not background-color, so
+   both have to be reset or the gradient survives underneath.
+   --------------------------------------------------------------------------- */
+.vance-tool-modal.vance-glass-scrim {
+    padding: 24px 16px;
+    background-image: none;
+    background-color: rgba(10, 25, 41, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.vance-tool-modal__panel.vance-glass-panel {
+    background-image: none;
+    background-color: #f8fafc;
+    border: 0;
+    border-radius: var(--radius-surface, 14px);
+    box-shadow: 0 24px 60px rgba(10, 25, 41, 0.28);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 .vance-tool-modal__bar {
     flex: 0 0 auto;
     display: flex;
@@ -155,8 +199,19 @@ $vance_tm_paths = array(
     .vance-tool-modal__spinner { animation-duration: 1.6s; }
 }
 @media (max-width: 600px) {
-    .vance-tool-modal { padding: 0; }
-    .vance-tool-modal__panel { max-width: none; height: 100vh; height: 100dvh; border-radius: 0 !important; }
+    /* Doubled class to match the specificity of the quiz-look overrides above,
+       which set an inset and a radius. Without it those would out-rank these
+       and the modal would stop going full-bleed on phones. */
+    .vance-tool-modal,
+    .vance-tool-modal.vance-glass-scrim { padding: 0; }
+    .vance-tool-modal__panel,
+    .vance-tool-modal__panel.vance-glass-panel {
+        max-width: none;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0 !important;
+        box-shadow: none;
+    }
 }
 </style>
 <script>
