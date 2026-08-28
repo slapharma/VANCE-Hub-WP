@@ -118,9 +118,11 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 // renders in; restating it would just be a second place to keep
                 // in step.
                 $card_style = "display: flex; align-items: center; justify-content: center; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080; transition: none;";
-                $card_style .= ( $vance_subcat_parent > 0 ) ? " padding: 14px 18px;" : " padding: 12px;";
+                // Padding carries most of the height: two 10px lines are only ~25px,
+                // so the 24px of vertical padding was the larger half of the old 55px.
+                $card_style .= ( $vance_subcat_parent > 0 ) ? " padding: 10px 14px;" : " padding: 8px;";
 
-                $text_size  = ( $vance_subcat_parent > 0 ) ? "13px" : "12px";
+                $text_size  = ( $vance_subcat_parent > 0 ) ? "11px" : "10px";
                 $text_style = "font-size: {$text_size}; font-weight: 600; color: #008080; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
                 // The current category still has to be identifiable, so it keeps
                 // a fill -- but a tint of the same teal, and the same #008080
@@ -152,7 +154,13 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
     scrollbar-width: none;
 }
 .inner-cat-nav::-webkit-scrollbar { display: none; }
-.cat-mini-card { flex: 0 0 auto; width: auto !important; }
+.cat-mini-card {
+    flex: 0 0 auto;
+    width: auto !important;
+    /* 44px touch minimum. Also the desktop height: 55px was the old size and
+       this is the 20% reduction, which happens to land exactly on the floor. */
+    min-height: 44px;
+}
 
 /* Desktop: Configurable Grid */
 @media (min-width: 992px) {
@@ -181,7 +189,7 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
     .inner-cat-nav .cat-mini-card {
         white-space: normal !important;
         align-items: center;
-        min-height: 48px;
+        min-height: 44px;
     }
     .inner-cat-nav .cat-mini-card span {
         white-space: normal !important;
