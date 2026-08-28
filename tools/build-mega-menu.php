@@ -164,6 +164,30 @@ function vh_link( $menu_id, $parent, $title, $spec ) {
 	return vh_add( $menu_id, $spec );
 }
 
+/**
+ * Add a placeholder row for content that does not exist yet.
+ *
+ * Uses Max Mega Menu's per-item "Disable link", so the row renders as plain
+ * text with no href at all — a reader sees the shape of what is coming and
+ * cannot click into a page that was never written. nav-mega.css greys these
+ * and appends a "Soon" chip.
+ *
+ * Deliberately NOT a link to a stub page: this site already carries 12 blank
+ * pages that exist only because something needed somewhere to point.
+ */
+function vh_soon( $menu_id, $parent, $title ) {
+	$id = vh_add( $menu_id, array(
+		'title'    => $title,
+		'parent'   => $parent,
+		'position' => vh_pos(),
+		'url'      => '#',
+	) );
+	if ( $id ) {
+		vh_mm( $id, array( 'disable_link' => 'true' ) );
+	}
+	return $id;
+}
+
 // ---------- THE HUB ----------
 say( '' );
 say( 'THE HUB' );
@@ -173,7 +197,6 @@ $created['hub'] = $hub;
 $c = vh_col( $MENU_ID, $hub, 'Start here', array( 'url' => '#' ), 3, 1, true );
 vh_link( $MENU_ID, $c, 'Get Started',        array( 'path' => 'get-started-today' ) );
 vh_link( $MENU_ID, $c, 'How to Use the Hub', array( 'path' => 'how-to-use-the-hub' ) );
-vh_link( $MENU_ID, $c, 'User Guide',         array( 'path' => 'user-guide' ) );
 vh_link( $MENU_ID, $c, 'Create an Account',  array( 'path' => 'register' ) );
 
 $c = vh_col( $MENU_ID, $hub, 'Free Health Tools', array( 'path' => 'free-health-tools' ), 3, 2 );
@@ -181,16 +204,31 @@ vh_link( $MENU_ID, $c, 'Malnutrition Calculator', array( 'path' => 'malnutrition
 vh_link( $MENU_ID, $c, 'Gastro Health Survey',    array( 'path' => 'gastro-health-survey' ) );
 vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-meal-planner' ) );
 
-$c = vh_col( $MENU_ID, $hub, 'Your Account', array( 'path' => 'dashboard' ), 3, 3 );
+/*
+ * Patient Downloads — placeholder, 2026-08-28. Only the User Guide exists
+ * today (moved here from "Start here", where it sat alongside orientation
+ * pages rather than the resource it is). The rest are vh_soon() rows: real
+ * structure, no href, no stub pages. Swap each one for a vh_link() as its
+ * asset lands.
+ */
+$c = vh_col( $MENU_ID, $hub, 'Patient Downloads', array( 'path' => 'user-guide' ), 3, 3 );
+vh_link( $MENU_ID, $c, 'User Guide', array( 'path' => 'user-guide' ) );
+vh_soon( $MENU_ID, $c, 'IBD Travel Guide' );
+vh_soon( $MENU_ID, $c, 'Infographics' );
+
+$c = vh_col( $MENU_ID, $hub, 'Your Account', array( 'path' => 'dashboard' ), 3, 4 );
 vh_link( $MENU_ID, $c, 'My Dashboard', array( 'path' => 'dashboard' ) );
 vh_link( $MENU_ID, $c, 'My Notes',     array( 'path' => 'my-notes' ) );
 
-$c = vh_col( $MENU_ID, $hub, 'For Professionals', array( 'path' => 'healthcare-professionals' ), 3, 5 );
-vh_link( $MENU_ID, $c, 'HCP Hub',              array( 'path' => 'healthcare-professionals' ) );
-vh_link( $MENU_ID, $c, 'Clinical Data Reviews', array( 'cat'  => 'content-clinical-reviews' ) );
-vh_link( $MENU_ID, $c, 'Webinars & Courses',   array( 'path' => 'webinars-and-courses' ) );
-
-$c = vh_col( $MENU_ID, $hub, 'Vance Medical', array( 'path' => 'about-us' ), 3, 6 );
+/*
+ * The "For Professionals" column was removed on 2026-08-28: the site is
+ * focusing on patients. Its clinician CTA rail went with it for the same
+ * reason -- a "Create a practitioner account" button sitting where the
+ * professionals column used to be reads as an oversight, not an offer.
+ * Clinical Data Reviews and Webinars & Courses both remain reachable from
+ * the KNOWLEDGEBASE panel, so no content lost its only route.
+ */
+$c = vh_col( $MENU_ID, $hub, 'Vance Medical', array( 'path' => 'about-us' ), 3, 5 );
 vh_link( $MENU_ID, $c, 'Who We Are',   array( 'path' => 'about-us' ) );
 vh_link( $MENU_ID, $c, 'Our Heritage', array( 'path' => 'our-heritage' ) );
 vh_link( $MENU_ID, $c, 'Contact Us',   array( 'path' => 'contact-us' ) );
@@ -253,7 +291,7 @@ function vh_widget( $base, $parent_item, $span, $order, $settings ) {
 say( '' );
 say( 'Widgets' );
 
-$w = vh_widget( 'vhh_nav_cta', $created['hub'], 3, 4, array(
+$w = vh_widget( 'vhh_nav_cta', $created['hub'], 9, 6, array(
 	'eyebrow'  => 'Always on',
 	'heading'  => 'Ask VANCE-Ai anything about gut health',
 	'text'     => "Evidence-based answers drawn from the Hub's own clinical library, any time of day.",
@@ -261,17 +299,7 @@ $w = vh_widget( 'vhh_nav_cta', $created['hub'], 3, 4, array(
 	'btn_url'  => home_url( '/ask-ai/' ),
 	'icon'     => 'sparkles',
 ) );
-say( "  $w  -> THE HUB row 1" );
-
-$w = vh_widget( 'vhh_nav_cta', $created['hub'], 6, 7, array(
-	'eyebrow'  => 'For clinicians',
-	'heading'  => 'Give your patients somewhere reliable to go',
-	'text'     => 'Create a practitioner account to share tools and access the clinical library in full.',
-	'btn_text' => 'Create a practitioner account',
-	'btn_url'  => home_url( '/register/' ),
-	'icon'     => 'shield',
-) );
-say( "  $w  -> THE HUB row 2" );
+say( "  $w  -> THE HUB, full-width banner" );
 
 $w = vh_widget( 'vhh_nav_featured', $created['kb'], 6, 3, array(
 	'title'     => 'Latest from the Hub',
@@ -315,7 +343,7 @@ say( '--- VERIFY ---' );
  * what it attempted is not a verification.
  */
 $expected = array(
-	'THE HUB'           => array( 'Start here' => 4, 'Free Health Tools' => 3, 'Your Account' => 2, 'For Professionals' => 3, 'Vance Medical' => 3 ),
+	'THE HUB'           => array( 'Start here' => 3, 'Free Health Tools' => 3, 'Patient Downloads' => 3, 'Your Account' => 2, 'Vance Medical' => 3 ),
 	'KNOWLEDGEBASE'     => array( 'Browse the library' => 5, 'By content type' => 3 ),
 	'CONDITIONS'        => array(),
 );

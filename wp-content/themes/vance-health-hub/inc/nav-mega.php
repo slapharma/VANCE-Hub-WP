@@ -343,8 +343,17 @@ class VHH_Nav_CTA_Widget extends WP_Widget {
 		$text    = isset( $instance['text'] ) ? $instance['text'] : '';
 		$icon    = vance_nav_icon( isset( $instance['icon'] ) ? $instance['icon'] : '', 14 );
 
+		/*
+		 * A CTA spanning most of the panel is a banner, not a rail, and the
+		 * tall column layout looks stretched at that width. Max Mega Menu
+		 * stores the cell's span on the widget instance, so the widget can
+		 * pick its own layout instead of needing a separate admin setting.
+		 */
+		$span = isset( $instance['mega_menu_columns'] ) ? (int) $instance['mega_menu_columns'] : 0;
+		$wide = $span >= 8 ? ' vance-nav-cta--wide' : '';
+
 		echo $args['before_widget'];
-		echo '<div class="vance-nav-cta">';
+		echo '<div class="vance-nav-cta' . $wide . '">';
 
 		if ( $eyebrow !== '' ) {
 			echo '<span class="vance-nav-cta__eyebrow">' . esc_html( $eyebrow ) . '</span>';
