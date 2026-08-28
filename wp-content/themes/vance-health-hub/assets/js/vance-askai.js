@@ -908,20 +908,28 @@
 				} else {
 					bubble.innerHTML = formatReply(message.content);
 				}
-				log.appendChild(bubble);
 
 				// The picker belongs to the LAST message only: once the reader
 				// answers, their reply becomes the last message and the picker
 				// disappears on the next render. It is also held back while the
 				// bubble is still being revealed, so the options do not appear
 				// before the line introducing them has finished typing.
-				if ('user' !== message.role
-					&& index === state.messages.length - 1
-					&& !(state.reveal && state.reveal.index === index)) {
-					var askSpec = parseAskBlock(message.content);
-					if (askSpec) {
-						log.appendChild(buildQuestionPicker(askSpec));
-					}
+				var revealing = !!(state.reveal && state.reveal.index === index);
+				var askSpec = ('user' === message.role || revealing)
+					? null
+					: parseAskBlock(message.content);
+
+				// The model is allowed to send the block with no line of context
+				// in front of it, and usually does. Appending the bubble anyway
+				// leaves a blank bordered pill above the picker, so skip it when
+				// stripping the block leaves nothing to say. Only in the settled
+				// render -- mid-reveal the bubble still carries the caret.
+				if (!askSpec || stripAskBlock(message.content) !== '') {
+					log.appendChild(bubble);
+				}
+
+				if (askSpec && index === state.messages.length - 1) {
+					log.appendChild(buildQuestionPicker(askSpec));
 				}
 			});
 		}
