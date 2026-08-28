@@ -4130,7 +4130,10 @@ body.home .hero {
 
 /* --- Search -------------------------------------------------------------- */
 
-.vhh-hero-spotlight__search-label {
+/* __slot-label is the Contact/About equivalent: the prompt sitting above the
+   white band that replaces the search field on those pages. */
+.vhh-hero-spotlight__search-label,
+.vhh-hero-spotlight__slot-label {
     display: block;
     font-family: var(--font-heading);
     font-size: 16px;
@@ -4140,7 +4143,11 @@ body.home .hero {
     cursor: pointer;
 }
 
-.vhh-hero-spotlight__search-form {
+/* The white card treatment is shared with __slot, the Contact/About band, so
+   the three heroes cannot drift apart on border, radius or shadow. __slot
+   overrides `display` to grid further down; everything else it inherits. */
+.vhh-hero-spotlight__search-form,
+.vhh-hero-spotlight__slot {
     display: flex;
     align-items: stretch;
     background: #ffffff;
@@ -4370,6 +4377,244 @@ body.home .hero {
         gap: 14px;
         padding: 22px;
     }
+}
+
+
+/* ============================================================================
+   CONTACT & ABOUT HEROES — the spotlight layout, page variant
+   (inc/page-hero-spotlight.php)
+   ----------------------------------------------------------------------------
+   Those two pages render the SAME .vhh-hero-spotlight section as the homepage,
+   so the band, the photograph's dissolve, the type scale, the CTAs, the card
+   and the whole responsive ladder above are inherited rather than repeated —
+   including the doubled-class !important rules that opt this hero out of the
+   global mobile type normalisation.
+
+   Only three things are genuinely new, and they are all in the block below:
+
+     __eyebrow  the pill above the headline. The homepage hero has none; both
+                page heroes have carried one for as long as they have existed
+                ("Get in Touch", "About Vance Medical Hub").
+     __slot     what fills the band where the homepage puts its search field —
+                three direct-contact cells on Contact, three assurance badges
+                on About. Its white card treatment is shared with
+                __search-form higher up, so only the interior lives here.
+     __card--stat  the card variant that leads on a figure instead of a
+                heading, used by About to surface stat 1.
+
+   Neither page renders any of this until its hero design is switched to
+   Spotlight; both default to the classic dark hero.
+   ========================================================================== */
+
+/* --- Eyebrow ------------------------------------------------------------- */
+
+.vhh-hero-spotlight__eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vhh-hs-title, #04504E);
+    background: #DCEBEA;
+    /* The same hairline as the ghost CTA and the search field, at 3.3:1 on the
+       mint band. A paler tint reads as no border at all against #ECF5F5 — the
+       chip's own fill is only 1.1:1 against it, so the border IS the edge. */
+    border: 1px solid #5E8F8D;
+    border-radius: var(--radius-control);
+    padding: 7px 13px;
+    margin: 0 0 20px;
+}
+
+/* --- Utility band -------------------------------------------------------- */
+
+.vhh-hero-spotlight__slot {
+    /* Overrides the flex inherited from the shared __search-form rule. */
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* The badge variant is a <ul>. */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contact — email / phone / opening hours */
+
+.vhh-hero-spotlight__line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: inherit;
+    border-right: 1px solid #DCE9E8;
+    transition: background-color 0.2s ease;
+}
+
+.vhh-hero-spotlight__line:last-child { border-right: 0; }
+
+a.vhh-hero-spotlight__line { cursor: pointer; }
+a.vhh-hero-spotlight__line:hover { background: #F3F9F9; }
+
+a.vhh-hero-spotlight__line:focus-visible {
+    /* Inset, because the cell sits flush inside the band's rounded overflow
+       clip — an outset ring would be sliced off at the corners. */
+    outline: 3px solid var(--vhh-hs-title, #04504E);
+    outline-offset: -3px;
+}
+
+.vhh-hero-spotlight__line-ico {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-control);
+    background: var(--vhh-hs-card-bg, #E5F1F1);
+    color: var(--vhh-hs-title, #04504E);
+}
+
+.vhh-hero-spotlight__line-ico svg { width: 17px; height: 17px; }
+
+.vhh-hero-spotlight__line-body { min-width: 0; }
+
+.vhh-hero-spotlight__line-k {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    /* 6.3:1 on white. The mockup's lighter grey measured 4.1:1, which this
+       size cannot carry. */
+    color: #4F6462;
+    margin-bottom: 3px;
+}
+
+.vhh-hero-spotlight__line-v {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #143633;
+    /* Email addresses have no break opportunities and the cell is a third of
+       the band; without this one long address widens the whole grid. */
+    overflow-wrap: anywhere;
+}
+
+a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
+    color: var(--vhh-hs-title, #04504E);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* About — the three assurance badges */
+
+.vhh-hero-spotlight__badge {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 18px;
+    border-right: 1px solid #DCE9E8;
+}
+
+.vhh-hero-spotlight__badge:last-child { border-right: 0; }
+
+.vhh-hero-spotlight__badge-ico {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-control);
+    background: var(--vhh-hs-title, #04504E);
+    color: #ffffff;
+}
+
+.vhh-hero-spotlight__badge-ico svg { width: 15px; height: 15px; }
+
+.vhh-hero-spotlight__badge-t {
+    font-family: var(--font-heading);
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #143633;
+}
+
+/* --- Figure card (About) ------------------------------------------------- */
+
+.vhh-hero-spotlight__card--stat {
+    /* Stacked rather than icon-beside-body: the figure is the point, so it
+       gets the full width of the card instead of sharing a row. */
+    flex-direction: column;
+    gap: 14px;
+}
+
+.vhh-hero-spotlight__stat-fig {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0;
+}
+
+.vhh-hero-spotlight__stat-num {
+    font-family: var(--font-heading);
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--vhh-hs-title, #04504E);
+    /* "30+", "100%", "100,000+" — admins can put any of the three stats here,
+       and the grouped forms need even digit widths. */
+    font-variant-numeric: tabular-nums;
+}
+
+.vhh-hero-spotlight__stat-lab {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--vhh-hs-title, #04504E);
+    max-width: 185px;
+}
+
+.vhh-hero-spotlight__stat-rule {
+    display: block;
+    width: 56px;
+    height: 3px;
+    background: #C1DFDE;
+    border-radius: var(--radius-control);
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    /* The band's cells go from a row of three to a stack, so the dividers
+       have to turn with them. */
+    .vhh-hero-spotlight__slot {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .vhh-hero-spotlight__line,
+    .vhh-hero-spotlight__badge {
+        border-right: 0;
+        border-bottom: 1px solid #DCE9E8;
+    }
+
+    .vhh-hero-spotlight__line:last-child,
+    .vhh-hero-spotlight__badge:last-child {
+        border-bottom: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    /* The shared __card rule stacks to column at this width; the figure card
+       is already a column, so it only needs its gap tightening. */
+    .vhh-hero-spotlight__card--stat { gap: 12px; }
+
+    .vhh-hero-spotlight__stat-num { font-size: 46px; }
 }
 
 

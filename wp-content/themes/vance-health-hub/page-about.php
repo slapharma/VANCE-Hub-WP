@@ -169,7 +169,18 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 
     <?php
     /* ============================ HERO ============================ */
-    if (vance_get_theme_mod('vance_about_hero_show', true)) :
+    // Two hero designs share this slot, chosen in Customize → Page - About Us →
+    // Hero Section → "About hero design":
+    //   classic   — the dark navy band below (default; nothing changes on deploy).
+    //   spotlight — the light, action-led hero, inc/page-hero-spotlight.php.
+    // The spotlight reads the same tag/title/description settings the classic
+    // hero uses, and fills its white band from the same Badge 1–3 labels, so
+    // switching is a change of layout only.
+    $vabout_spotlight = function_exists('vance_page_hero_spotlight_active') && vance_page_hero_spotlight_active('about');
+
+    if (vance_get_theme_mod('vance_about_hero_show', true) && $vabout_spotlight) :
+        vance_render_page_hero_spotlight('about');
+    elseif (vance_get_theme_mod('vance_about_hero_show', true)) :
         $hero_img      = vance_get_theme_mod('vance_about_hero_img', $vabout_img . 'diverse-patients-clinic.jpg');
         $hero_bg_color = vance_get_theme_mod('vance_about_hero_bg_color');
         $hero_tag      = vance_get_theme_mod('vance_about_hero_tag', 'About Vance Medical Hub');
@@ -222,7 +233,13 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
             3 => array('100,000+', 'Patients Supported Globally',         'users'),
         );
     ?>
-    <section class="vabout-stats<?php echo vance_get_theme_mod('vance_about_hero_show', true) ? ' vabout-stats-overlap' : ''; ?>">
+    <?php
+    /* .vabout-stats-overlap exists to clear the DARK hero's fade-out. The
+       spotlight hero has no such fade, so the same 100px offset reads as a
+       hole between the hero and the stats — normal section spacing instead. */
+    $vabout_stats_overlap = vance_get_theme_mod('vance_about_hero_show', true) && !$vabout_spotlight;
+    ?>
+    <section class="vabout-stats<?php echo $vabout_stats_overlap ? ' vabout-stats-overlap' : ''; ?>">
         <div class="container">
             <div class="vabout-stats-grid">
                 <?php for ($i = 1; $i <= 3; $i++) :
@@ -295,7 +312,9 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         // Blank lines split the copy into paragraphs; the first reads as the lead.
         $paras = array_values(array_filter(array_map('trim', preg_split('/\R{2,}|\R/u', (string) $desc))));
     ?>
-    <section class="vabout-story<?php echo ($p % 2 === 1) ? '' : ' vabout-bg-white'; ?>" style="<?php echo $styles['section']; ?>">
+    <?php /* #our-story is the spotlight hero's primary CTA target. On the first
+             promo block only, so the anchor stays unique when block 2 is on. */ ?>
+    <section<?php echo ($p === 1) ? ' id="our-story"' : ''; ?> class="vabout-story<?php echo ($p % 2 === 1) ? '' : ' vabout-bg-white'; ?>" style="<?php echo $styles['section']; ?>">
         <div class="container">
             <div class="vabout-story-grid<?php echo ($layout === 'img-right') ? ' is-flipped' : ''; ?>">
                 <div class="vabout-story-media reveal">

@@ -1754,6 +1754,16 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_search_empty_cat_count", array( "default" => 6, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_search_empty_cat_count", array( "label" => "How many category links", "section" => "vance_search_empty", "type" => "number", "input_attrs" => array( "min" => 1, "max" => 12, "step" => 1 ) ) );
 
+    /* ---- Contact / About "Spotlight" heroes ----
+       Registered here rather than in the file that renders them because their
+       sections hang off the Contact and About panels, which are built above.
+       Adds a design toggle to each page's existing Hero Section (defaulting to
+       the classic dark hero, so nothing changes until an admin switches it)
+       plus one section per page for the spotlight's own settings. */
+    if ( function_exists( 'vance_page_hero_spotlight_customize' ) ) {
+        vance_page_hero_spotlight_customize( $wp_customize );
+    }
+
     /* ---- Retire orphaned "Our Heritage" panel (unlinked clone of About Us). Reversible: delete this block to restore. Template file & saved values are untouched. ---- */
     foreach ( array( 'vance_heritage_hero', 'vance_heritage_origin', 'vance_heritage_mission', 'vance_heritage_product', 'vance_heritage_platform', 'vance_heritage_cta', 'vance_heritage_promo1', 'vance_heritage_promo2' ) as $vance_retired_sec ) {
         $wp_customize->remove_section( $vance_retired_sec );

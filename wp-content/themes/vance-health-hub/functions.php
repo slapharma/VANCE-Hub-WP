@@ -52,6 +52,13 @@ require_once get_template_directory() . '/inc/hero-carousel.php';
 // renderers runs is decided by `vance_hero_style`; both stay loaded so the
 // switch is instant and neither one's saved settings are ever discarded.
 require_once get_template_directory() . '/inc/hero-spotlight.php';
+// The same spotlight hero carried across to the Contact and About pages. Kept
+// separate from the homepage renderer because the two pages fill the search
+// field's slot with their own content, but it reuses the homepage's stylesheet
+// block, colour defaults and vance_hex_to_rgb_triple() — so this must load
+// AFTER hero-spotlight.php. Both pages default to their classic dark hero;
+// `vance_contact_hero_style` / `vance_about_hero_style` switch them over.
+require_once get_template_directory() . '/inc/page-hero-spotlight.php';
 // Primary-menu mega panels — the stylesheet and the three widgets that fill a
 // Max Mega Menu grid cell (icon tiles, CTA rail, live featured articles).
 // Panel structure itself is admin-side; see docs/MEGA-MENU-SETUP.md (repo root).

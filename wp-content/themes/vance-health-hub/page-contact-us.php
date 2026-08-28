@@ -64,6 +64,17 @@ get_header(); ?>
 
     <!-- ══ HERO SECTION ══════════════════════════════════════════════════ -->
     <?php
+    // Two hero designs share this slot, chosen in Customize → Page - Contact Us
+    // → Hero Section → "Contact hero design":
+    //   classic   — the dark navy band below (default; nothing changes on deploy).
+    //   spotlight — the light, action-led hero, inc/page-hero-spotlight.php.
+    // The spotlight reads the same tag/title/description settings the classic
+    // hero uses, so switching is a change of layout only — no copy moves and
+    // nothing has to be re-typed to switch back.
+    if ( function_exists( 'vance_page_hero_spotlight_active' ) && vance_page_hero_spotlight_active( 'contact' ) ) :
+        vance_render_page_hero_spotlight( 'contact' );
+    else :
+
     $hero_img      = vance_get_theme_mod( 'vance_contact_hero_img',   get_template_directory_uri() . '/assets/img/hcp_hero.png' );
     $hero_bg_color = vance_get_theme_mod( 'vance_contact_hero_bg_color' );
     $hero_tag      = vance_get_theme_mod( 'vance_contact_hero_tag',   'Get in Touch' );
@@ -94,6 +105,7 @@ get_header(); ?>
             </div>
         </div>
     </section>
+    <?php endif; // end classic / spotlight hero ?>
 
     <!-- ══ MAIN CONTENT: DETAILS + FORM ═════════════════════════════════ -->
     <?php
