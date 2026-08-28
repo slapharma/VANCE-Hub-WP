@@ -333,6 +333,37 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
         background-color: #2F4F6F !important;
     }
 
+    /* Un-trap the off-canvas panel from the header's compositing layer.
+     *
+     * main.css gives .site-header `transform: translateZ(0)` as a Chromium
+     * stale-paint workaround. A non-none transform makes an element a
+     * containing block for `position: fixed` DESCENDANTS — and the drawer
+     * (#mega-menu-primary-menu) is one. So the drawer resolves its top/left
+     * against the 70px header box instead of the viewport.
+     *
+     * Today that is invisible, because the mobile header is itself
+     * `position: fixed; top: 0`, so the two origins coincide. It is correct
+     * by coincidence, not by design. Measured on the live site at 375px
+     * (2026-08-28): pushing the header to `top: 40px` moved the drawer to
+     * `top: 40px` with it, leaving a 40px gap above and 40px overflowing
+     * below. Anything that offsets the header does that for real — the WP
+     * admin bar (32px for logged-in editors), a promo strip, or a consent
+     * banner that pushes content down.
+     *
+     * The paint workaround is not needed here: it targets a STICKY header
+     * above an overflow:hidden hero, and this header is fixed, which already
+     * gets its own layer. Verified with the same probe after the override:
+     * the drawer's offsetParent becomes null (viewport-anchored), the header
+     * stays fixed at top:0/h:70, all four drawer links stay hit-testable,
+     * and the document gains no horizontal overflow.
+     *
+     * Do not replace this with `will-change: transform` — that creates the
+     * same containing block and reinstates the bug. */
+    body.mega-menu-primary-menu .site-header,
+    .site-header {
+        transform: none !important;
+    }
+
     /* Reveal the off-canvas panel on open. Max Mega Menu Pro toggles the
      * `.mega-menu-open` class on click (confirmed: aria-expanded flips,
      * class is applied) but on this install its own generated stylesheet
