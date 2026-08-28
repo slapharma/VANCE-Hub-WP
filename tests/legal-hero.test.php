@@ -48,6 +48,27 @@ $GLOBALS['PAGES'] = array(
 
 require_once $THEME . '/inc/legal-hero.php';
 
+/*
+ * --probe=<template> renders ONE template and exits.
+ *
+ * Section 9 needs each template rendered as the FIRST thing a request does,
+ * because vance_legal_hero_styles() prints its block once per request behind a
+ * static -- which is right for WordPress, where only one policy page renders,
+ * and wrong for a suite that has already rendered eleven heroes by then. So
+ * section 9 shells back into this file once per template.
+ *
+ * That is not a workaround: a fresh process is a truer model of the real
+ * request than an in-process render, and the cascade order this section exists
+ * to protect is a property of the whole emitted document.
+ *
+ * Top-level function declarations are hoisted, so render_template() and the WP
+ * stubs in section 8 are callable from up here.
+ */
+if ( isset( $argv[1] ) && strpos( $argv[1], '--probe=' ) === 0 ) {
+    echo render_template( substr( $argv[1], strlen( '--probe=' ) ) );
+    exit( 0 );
+}
+
 /* ---- tiny assertion runner ------------------------------------------ */
 $PASS = 0; $FAIL = 0;
 function check( $name, $got, $want = true ) {
@@ -424,6 +445,81 @@ check( 'page.php: and gets no spotlight hero',
     strpos( $out, 'vhh-hero-spotlight' ) === false );
 check( 'page.php: and still renders its title',
     strpos( $out, 'Some Other Page' ) !== false );
+
+/* ===================================================================== */
+echo "\n=== 9. The document body: one 760px measure, in one place ===\n";
+/*
+ * The Cookie Policy used to run at page.php's 1200px container width while its
+ * four siblings ran at 760px, because .legal-wrap was declared inline in each
+ * of the four bespoke templates and nowhere else. The nine rules that were
+ * byte-identical in all four now live in the renderer's stylesheet.
+ */
+check( 'the stylesheet defines the 760px measure',
+    preg_match( '#\.legal-wrap \{[^}]*max-width: 760px#s', $css ) === 1 );
+foreach ( array( '.legal-wrap h2', '.legal-wrap p', '.legal-wrap ul',
+                 '.legal-wrap a', '.legal-updated' ) as $sel ) {
+    check( "the stylesheet defines $sel",
+        preg_match( '#' . preg_quote( $sel, '#' ) . '\s*\{#', $css ) === 1 );
+}
+
+// The Cookie Policy's tables. Google Site Kit's 70-character cookie names
+// forced Complianz's first grid track to 565px and pushed the grid 41px past a
+// 760px measure. `anywhere` and not `break-word`: only `anywhere` reduces the
+// intrinsic min-content width the track is sized from.
+check( 'the Complianz cookie grid is allowed to break long names',
+    preg_match( '#\.cookies-per-purpose > \*\s*\{[^}]*overflow-wrap: anywhere#s', $css ) === 1 );
+
+/*
+ * ORDER. `.legal-contact-box p`, `.legal-emergency-box p` and
+ * `.legal-disclaimer-box p` all collide with `.legal-wrap p` at EQUAL
+ * specificity (0,1,1), so source order alone decides the winner, and the box
+ * rules won before the consolidation. That is why the four templates call
+ * vance_legal_hero_styles() above their own <style> rather than letting the
+ * hero render print it further down.
+ */
+foreach ( $templates as $file => $doc ) {
+    // A fresh process, so the once-per-request stylesheet guard is unused --
+    // see the --probe note at the top of this file.
+    $out = shell_exec(
+        escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __FILE__ )
+        . ' ' . escapeshellarg( '--probe=' . $file )
+    );
+    $shared = strpos( $out, '.legal-wrap p {' );
+    check( "$file: the shared measure is printed", $shared !== false );
+
+    preg_match_all( '#\.legal-[a-z-]+ p \{#', $out, $bm, PREG_OFFSET_CAPTURE );
+    $boxes = array();
+    foreach ( $bm[0] as $hit ) {
+        if ( strpos( $hit[0], '.legal-wrap' ) === false ) { $boxes[] = $hit; }
+    }
+    check( "$file: it has box rules that collide with it", count( $boxes ) > 0 );
+    $early = array();
+    foreach ( $boxes as $hit ) {
+        if ( $hit[1] < $shared ) { $early[] = $hit[0]; }
+    }
+    check( "$file: every colliding box rule still comes AFTER it: " . implode( ',', $early ),
+        $early, array() );
+
+    // And the template must not declare the shared rules a second time, or the
+    // consolidation has bought nothing.
+    check( "$file: declares the shared measure exactly once",
+        substr_count( $out, '.legal-wrap p {' ), 1 );
+}
+
+// page.php's two branches.
+$out = render_template( 'page.php', 'cookie-policy-uk', 'Cookie Policy (UK)' );
+check( 'page.php: a policy document is set in .legal-wrap',
+    strpos( $out, '<div class="legal-wrap">' ) !== false );
+check( 'page.php: and NOT in the generic full-width container',
+    strpos( $out, '<div class="container" style="padding: 60px 20px;">' ) === false );
+check( 'page.php: no inline line-height fighting .legal-wrap p',
+    strpos( $out, '<div class="entry-content" style="line-height: 1.8;">' ) === false );
+
+$out = render_template( 'page.php', 'some-other-page', 'Some Other Page' );
+check( 'page.php: an ordinary page keeps the generic container',
+    strpos( $out, '<div class="container" style="padding: 60px 20px;">' ) !== false );
+check( 'page.php: and is not narrowed to the policy measure',
+    strpos( $out, '<div class="legal-wrap">' ) === false );
 
 /* ===================================================================== */
 echo "\n----------------------------------------------------------\n";

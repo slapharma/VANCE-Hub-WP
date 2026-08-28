@@ -62,6 +62,27 @@
     // a generic page is not one. See the note in single.php.
     ?>
 
+    <?php if ( $vance_legal_doc ) : ?>
+    <?php
+    /*
+     * A policy document gets the same 760px measure as its four siblings, which
+     * carry their own templates. Before this it ran at the generic 1200px
+     * container width, so the Cookie Policy was the one document in the set set
+     * across a line length nothing else on the site uses.
+     *
+     * .legal-wrap and its typography come from inc/legal-hero.php, printed by
+     * the hero above. No inline line-height here: `.legal-wrap p` sets it, as
+     * it does on the other four.
+     */
+    ?>
+    <div class="legal-wrap">
+        <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+            <div class="entry-content">
+                <?php the_content(); ?>
+            </div>
+        </article>
+    </div>
+    <?php else : ?>
     <div class="container" style="padding: 60px 20px;">
         <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
             <div class="entry-content" style="line-height: 1.8;">
@@ -69,6 +90,7 @@
             </div>
         </article>
     </div>
+    <?php endif; ?>
     <?php endwhile; ?>
 
 <?php get_footer(); ?>

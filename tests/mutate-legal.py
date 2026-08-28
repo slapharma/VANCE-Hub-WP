@@ -95,6 +95,26 @@ MUTANTS = [
      "\t\tif ( $d['slug'] === $slug ) {",
      "\t\tif ( true ) {"),
 
+    (RENDERER,
+     "the 760px measure is dropped, so the Cookie Policy runs full-width again",
+     ".legal-wrap {\n    max-width: 760px;",
+     ".legal-wrap {\n    max-width: 1200px;"),
+
+    (RENDERER,
+     "the Complianz guard goes, so long cookie names blow the grid out again",
+     ".legal-wrap .cookies-per-purpose > * {\n    overflow-wrap: anywhere;",
+     ".legal-wrap .cookies-per-purpose > * {\n    overflow-wrap: break-word;"),
+
+    (TERMS,
+     "a template stops printing the shared block early, so the box rules lose",
+     "require_once get_template_directory() . '/inc/legal-hero.php';\nvance_legal_hero_styles();",
+     "require_once get_template_directory() . '/inc/legal-hero.php';"),
+
+    (PAGE,
+     "the Cookie Policy body goes back to the generic full-width container",
+     '<div class="legal-wrap">\n        <article id="post-',
+     '<div class="container" style="padding: 60px 20px;">\n        <article id="post-'),
+
     (TERMS,
      "a template stops calling the renderer, so it ships with no hero at all",
      "vance_render_legal_hero( 'terms' );",

@@ -26,7 +26,7 @@ cd tests && node reveal.test.js
 cd tests && php legal-hero.test.php
 ```
 
-All four exit non-zero on failure. As of 2026-08-28: 193 / 79 / 22 / 143 checks.
+All four exit non-zero on failure. As of 2026-08-28: 193 / 79 / 22 / 171 checks.
 
 ## What each covers
 

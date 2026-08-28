@@ -469,6 +469,107 @@ function vance_legal_hero_styles() {
     color: var(--primary-color, #008080);
 }
 
+/* --- The document body ---------------------------------------------------- */
+
+/* `.legal-wrap` is the 760px measure the policy text is set in. It used to be
+   declared four times over -- once inline in each of the four bespoke
+   templates, byte-identical in all four -- and not at all for the Cookie
+   Policy, which is Complianz-generated content on page.php and so ran at the
+   1200px container width while its four siblings ran at 760px.
+
+   The nine rules that were identical in all four live here now. Each template
+   keeps only its OWN extras (.legal-contact-box, .legal-toc,
+   .legal-emergency-box, .legal-disclaimer-box, .legal-table, .legal-rights-grid),
+   because those genuinely differ per page.
+
+   ORDER IS LOAD-BEARING, so the four templates call vance_legal_hero_styles()
+   ABOVE their own <style> block rather than relying on the hero render further
+   down to print it. Four of their extras collide with `.legal-wrap p` at
+   EQUAL specificity (0,1,1) -- `.legal-contact-box p`, `.legal-emergency-box p`,
+   `.legal-disclaimer-box p` -- so the winner is decided by source order alone.
+   They won before this consolidation and they must keep winning. */
+
+.legal-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 100px;
+}
+
+.legal-wrap h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--secondary-color);
+    margin: 48px 0 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(0,128,128,0.15);
+}
+
+.legal-wrap h2:first-of-type { margin-top: 32px; }
+
+.legal-wrap p {
+    color: #4a5568;
+    line-height: 1.85;
+    font-size: 15.5px;
+    margin: 0 0 16px;
+}
+
+.legal-wrap ul {
+    color: #4a5568;
+    line-height: 1.85;
+    font-size: 15.5px;
+    margin: 0 0 16px;
+    padding-left: 24px;
+}
+
+.legal-wrap ul li { margin-bottom: 8px; }
+
+.legal-wrap a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.legal-wrap a:hover { text-decoration: underline; }
+
+.legal-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,128,128,0.08);
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: var(--radius-surface, 14px);
+    border: 1px solid rgba(0,128,128,0.2);
+    margin-bottom: 32px;
+    letter-spacing: 0.3px;
+}
+
+/* The Cookie Policy's tables, which no other document in the set has.
+
+   Complianz lays each cookie out as a three-column grid whose tracks are sized
+   from their content. Google Site Kit registers cookies named
+   `googlesitekit_1.182.0_657cf9db12b75b3f20dea04eaef74818_modules::analytics-4`
+   -- one unbreakable 70-character token -- which forced the first track to
+   565px and pushed the grid 41px past a 760px measure. It fitted at the old
+   1200px width, so narrowing the page is what exposed it.
+
+   `overflow-wrap: anywhere` rather than `break-word` on purpose: only
+   `anywhere` reduces an element's intrinsic min-content width, which is the
+   thing the grid track is sized from. `break-word` would let the text wrap and
+   leave the track just as wide. Measured on the live document: 41px over to
+   nothing over, with no horizontal scroll anywhere on the page.
+
+   Scoped under .legal-wrap and written against Complianz's markup, so if the
+   plugin renames these classes the rule simply stops matching and the document
+   is no worse off than it was. */
+.legal-wrap .cookies-per-purpose > * {
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
 /* --- Spacing ------------------------------------------------------------- */
 
 /* The four bespoke templates open their body with .legal-wrap, which carries

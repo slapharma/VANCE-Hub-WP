@@ -7,62 +7,18 @@ get_header(); ?>
 
 <main id="main-content">
 
+<?php
+/*
+ * The policy-document stylesheet, printed BEFORE this template's own <style>
+ * because the order is load-bearing: the box rules below collide with
+ * `.legal-wrap p` at equal specificity and have always won by coming later.
+ * Idempotent -- the hero render further down will not print it twice.
+ */
+require_once get_template_directory() . '/inc/legal-hero.php';
+vance_legal_hero_styles();
+?>
+
 <style>
-.legal-wrap {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 64px 24px 100px;
-}
-.legal-wrap h2 {
-    font-family: 'Outfit', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--secondary-color);
-    margin: 48px 0 12px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid rgba(0,128,128,0.15);
-}
-.legal-wrap h2:first-of-type {
-    margin-top: 32px;
-}
-.legal-wrap p {
-    color: #4a5568;
-    line-height: 1.85;
-    font-size: 15.5px;
-    margin: 0 0 16px;
-}
-.legal-wrap ul {
-    color: #4a5568;
-    line-height: 1.85;
-    font-size: 15.5px;
-    margin: 0 0 16px;
-    padding-left: 24px;
-}
-.legal-wrap ul li {
-    margin-bottom: 8px;
-}
-.legal-wrap a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 600;
-}
-.legal-wrap a:hover {
-    text-decoration: underline;
-}
-.legal-updated {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0,128,128,0.08);
-    color: var(--primary-color);
-    font-size: 13px;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: var(--radius-surface, 14px);
-    border: 1px solid rgba(0,128,128,0.2);
-    margin-bottom: 32px;
-    letter-spacing: 0.3px;
-}
 .legal-toc {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -131,14 +87,9 @@ get_header(); ?>
 <?php
 /*
  * The policy-document hero. Replaces the dark `legal-hero` band that stood
- * here until 2026-08-28; there is no toggle back to it, by request.
- *
- * Required in from the template rather than functions.php so this file stands
- * on its own: all five policy pages load it the same way, and none of them
- * depends on a bootstrap line in a file three other sessions are editing.
- * require_once makes the repeat free.
+ * here until 2026-08-28; there is no toggle back to it, by request. The
+ * renderer is required in by the prelude at the top of this file.
  */
-require_once get_template_directory() . '/inc/legal-hero.php';
 vance_render_legal_hero( 'terms' );
 ?>
 
