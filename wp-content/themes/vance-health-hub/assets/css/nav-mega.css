@@ -92,51 +92,72 @@
 }
 
 /* -----------------------------------------------------------------------------
-   2. GRID ROWS AND COLUMNS
+   2. COLUMNS
 
-   The plugin lays the grid out with its own float/flex rules and percentage
-   widths (.mega-menu-columns-N-of-12). Those are left alone — only the gutters
-   and the divider between link columns are set here.
+   Max Mega Menu emits TWO different panel structures, and this file has to
+   match whichever the admin picked. Confirmed by reading the rendered DOM on
+   the live site (2026-08-28), not from the documentation:
+
+     Sub Menu Display Mode = "Mega Menu"   <-- what this site uses
+       ul.mega-sub-menu                              the panel
+        └ li.mega-menu-item.mega-menu-columns-3-of-12  A COLUMN
+           ├ a.mega-menu-link                        column heading
+           └ ul.mega-sub-menu > li > a               the links
+       There is NO li.mega-menu-row and NO li.mega-menu-column in this mode.
+
+     Grid layout builder
+       ul.mega-sub-menu > li.mega-menu-row > ul > li.mega-menu-column > ul > li
+
+   Every rule below therefore carries both selector forms. Writing only the
+   grid form is the mistake this file shipped with first time: the selectors
+   matched nothing and the panel rendered completely unstyled, which only
+   showed up when the built menu was read back out of a real browser.
+
+   Column widths come from the plugin's own .mega-menu-columns-N-of-12 classes
+   and are left alone here — only gutters and rhythm are set.
    -------------------------------------------------------------------------- */
 @media (min-width: 769px) {
 
-	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-row {
-		margin: 0;
-	}
-
-	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-row + li.mega-menu-row {
-		margin-top: 24px;
-		padding-top: 24px;
-		border-top: 1px solid #eef2f2;
-	}
-
+	/* gutters between columns */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column {
 		padding: 0 14px;
 	}
 
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item:first-child,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column:first-child {
 		padding-left: 0;
 	}
 
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item:last-child,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column:last-child {
 		padding-right: 0;
+	}
+
+	/* Grid layout only: a divider between stacked rows. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-row + li.mega-menu-row {
+		margin-top: 24px;
+		padding-top: 24px;
+		border-top: 1px solid #eef2f2;
 	}
 }
 
 /* -----------------------------------------------------------------------------
    3. COLUMN HEADINGS AND LINK LISTS
 
-   A second-level menu item renders as the column heading; its children render
-   as the link list. Both are <a class="mega-menu-link">, distinguished only by
-   depth — hence the child-combinator selectors.
-
-   Headings are <a> or <span>, never <h*> or <p>: mobile-base.css and
+   Headings are <a>, never <h*> or <p>: mobile-base.css and
    mobile-components.css load after this file and pin h1/h2/p sizes with
    !important below 768px, which would silently blow up a heading in the drawer.
+
+   On the second row: in the flat structure the panel is a wrapping row, so
+   "row 2" is simply columns 5+ wrapping onto a new line. There is no row
+   element to hang a divider on, so the rhythm between rows comes from the
+   column bottom margin below.
    -------------------------------------------------------------------------- */
 @media (min-width: 769px) {
 
 	/* --- the column heading --- */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
 		display: block;
 		font-family: var(--font-heading, 'Outfit', sans-serif);
@@ -151,19 +172,27 @@
 		border-bottom: 1px solid #e4eaea;
 	}
 
-	/* A heading whose parent item has "Disable link" set is not clickable, so it
-	   must not offer a pointer or a hover colour. The plugin marks these with
-	   .mega-disable-link. */
+	/* Breathing room so a wrapped second row does not collide with the first. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item {
+		margin-bottom: 22px;
+	}
+
+	/* A heading whose item has "Disable link" set is not clickable, so it must
+	   not offer a pointer. The plugin marks these .mega-disable-link, drops the
+	   href entirely and gives the <a> role="button". */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-disable-link > a.mega-menu-link,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-disable-link > a.mega-menu-link {
 		cursor: default;
 	}
 
-	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:hover,
-	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:focus {
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:hover,
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:focus,
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:hover {
 		color: var(--primary-hover, #006666);
 	}
 
 	/* --- the links underneath it --- */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
 		display: block;
 		font-family: var(--font-main, 'Inter', sans-serif);
@@ -179,21 +208,23 @@
 		transition: background-color .16s ease, color .16s ease;
 	}
 
-	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:hover,
-	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:focus {
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:hover,
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:focus,
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:hover {
 		background: var(--accent-color, #F3F4F6);
 		color: var(--primary-color, #008080);
 	}
 
-	/* Keyboard focus must stay visible against the pale hover background. The
-	   plugin's own focus handling only manages open/close state, not a ring. */
+	/* Keyboard focus must stay visible against the pale hover background. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu a.mega-menu-link:focus-visible,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column a.mega-menu-link:focus-visible {
 		outline: 2px solid var(--primary-color, #008080);
 		outline-offset: 1px;
 	}
 
-	/* Second-level items inside a column carry the plugin's dropdown indicator
-	   by default; in a mega panel there is nothing to expand. */
+	/* The dropdown caret belongs on the menu bar, not on a heading inside an
+	   already-open panel. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu .mega-indicator,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column .mega-indicator {
 		display: none;
 	}
@@ -572,7 +603,8 @@
 		background: none;
 	}
 
-	/* Column headings inside the drawer. */
+	/* Column headings inside the drawer (both panel structures). */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
 		font-family: var(--font-heading, 'Outfit', sans-serif);
 		font-size: 10.5px;
@@ -584,7 +616,8 @@
 		min-height: 0;
 	}
 
-	/* Every tappable row clears 44px. */
+	/* Every tappable row clears 44px (both panel structures). */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link,
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
 		display: flex;
 		align-items: center;
