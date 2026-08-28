@@ -4405,55 +4405,38 @@ body.home .hero {
 }
 
 /* ============================================================================
-   PROMO BLOCK
+   PROMO BLOCK — band, width and the container-fluid fix
    ----------------------------------------------------------------------------
-   Moved here from front-page.php's inline <style> when inc/promo-block.php was
-   shared with the Knowledgebase template, which does not load that sheet.
-   Nothing else in the theme defines a .promo-* selector and neither mobile
-   sheet touches one, so living in main.css cannot change which rule wins.
+   The old .promo-* family is gone. The homepage, Knowledgebase and category
+   promos now all render the .vance-cat-promo card (inc/promo-block.php), whose
+   own styles live further up this file. What survives here is the part the
+   homepage block had and the category one did not: an optional coloured band
+   behind the card, and the full-width switch.
+
+   .container-fluid is defined here for the first time. The homepage promo has
+   offered a "Full Width" option for as long as it has existed and emitted this
+   class for it, but NOTHING in the theme ever styled it -- picking Full Width
+   produced an unstyled div, so the content ran to the very edge of the viewport
+   with no gutter at all. It now behaves as the container does, minus the
+   max-width.
    ========================================================================== */
 
-.promo-block-section {
-    /* 50px trimmed off each end (was 50px/60px band + 60px/75px container
-       = 110px above the copy and 135px below). The cut is split between the
-       band and the container rather than taken wholly from either: zeroing the
-       band would sit the container's optional background panel flush against
-       the section edge, and taking it all from the container would crowd the
-       copy against that panel's edge. Halving each keeps both insets reading
-       as they were, just tighter. */
-    padding: 25px 0 35px;
-    overflow: hidden;
+.container-fluid {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
 }
 
-.promo-container {
-    display: flex;
-    align-items: center;
-    gap: 60px;
-    /* Inset the content off the container edge so the container's own
-       background colour (and optional border) read as a panel rather than as a
-       tight outline around the text. Top is deliberately shorter than the other
-       three: the section above contributes no top padding, so this is most of
-       the gap above the promo content. Vertical values carry half of the 50px
-       trim described on .promo-block-section above; the 75px sides are
-       untouched. */
-    padding: 35px 75px 50px;
-}
-
-.promo-container.layout-left { flex-direction: row-reverse; }
-.promo-container.layout-top { flex-direction: column; text-align: center; }
-.promo-content { flex: 1; }
-.promo-image-box {
-    flex: 1;
-    border-radius: var(--radius-surface, 14px);
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-}
-.promo-image-box img { width: 100%; height: auto; display: block; }
-
-@media (max-width: 768px) {
-    /* 75px each side leaves too little room for the copy on a phone. */
-    .promo-container { flex-direction: column !important; text-align: center; gap: 30px; padding: 36px 24px; }
-    .promo-image-box { width: 100%; }
+/* A promo carrying a band colour needs breathing room above and below it; one
+   sitting transparently on the page (every category promo today) keeps the
+   tighter rhythm .vance-cat-promo already sets. Keyed off the inline style the
+   renderer only writes when a colour is set, so no extra class is needed. */
+.vance-cat-promo[style*="background-color"] {
+    padding-top: 40px;
+    padding-bottom: 40px;
 }
 
 /* ============================================================================
