@@ -244,8 +244,69 @@
 			.replace(/"/g, '&quot;');
 	}
 
+	// A clarifying-questions turn arrives as a ```vance-ask fenced block holding
+	// one line of JSON (see vance_ai_clarifying_rule() in inc/askai-functions.php).
+	// It is stripped out of the visible text and replaced by a picker, so the
+	// reader clicks an answer instead of typing one.
+	var ASK_BLOCK_RE = /```vance-ask\s*([\s\S]*?)```/;
+
+	/**
+	 * Pull the question spec out of a reply.
+	 *
+	 * Returns null whenever there is nothing usable — no block, malformed JSON,
+	 * or a shape that is not a non-empty questions array. Callers treat null as
+	 * "this is an ordinary reply", so a model that ignores the format, or emits
+	 * a truncated block, degrades to plain text rather than breaking the turn.
+	 */
+	function parseAskBlock(raw) {
+		var match = ASK_BLOCK_RE.exec(String(raw || ''));
+		if (!match) {
+			return null;
+		}
+		var spec;
+		try {
+			spec = JSON.parse(match[1]);
+		} catch (e) {
+			return null;
+		}
+		if (!spec || !spec.questions || !spec.questions.length) {
+			return null;
+		}
+		var questions = [];
+		spec.questions.forEach(function (q) {
+			if (!q || !q.question || !q.options || !q.options.length) {
+				return;
+			}
+			var options = [];
+			q.options.forEach(function (o) {
+				var label = o && o.label ? String(o.label) : (typeof o === 'string' ? o : '');
+				if (label) {
+					options.push({ label: label, description: o && o.description ? String(o.description) : '' });
+				}
+			});
+			if (options.length) {
+				questions.push({
+					header: q.header ? String(q.header) : '',
+					question: String(q.question),
+					multiSelect: !!q.multiSelect,
+					options: options
+				});
+			}
+		});
+		return questions.length ? { questions: questions } : null;
+	}
+
+	/**
+	 * The visible text of a reply: the fenced block removed, whatever the model
+	 * wrapped around it kept. Applied inside formatReply so the progressive
+	 * reveal never flashes raw JSON on its way past.
+	 */
+	function stripAskBlock(raw) {
+		return String(raw || '').replace(ASK_BLOCK_RE, '').replace(/\n{3,}/g, '\n\n').trim();
+	}
+
 	function formatReply(raw) {
-		var text = escapeHtml(raw);
+		var text = escapeHtml(stripAskBlock(raw));
 
 		// Citations: "Read more: <title> | <url>" becomes a titled link. The
 		// separator class still accepts dashes so conversations saved before the
@@ -664,6 +725,167 @@
 		return wrap;
 	}
 
+	/**
+	 * Build the clarifying-question picker for one reply.
+	 *
+	 * One group per question: a header chip, the question, its options as
+	 * toggles, and an always-present "Other" that reveals a free-text box. The
+	 * answers are composed into a single ordinary user message and sent through
+	 * ask(), so nothing downstream needs to know the picker exists — the
+	 * conversation history stays plain text and reloads fine.
+	 */
+	function buildQuestionPicker(spec) {
+		var wrap = document.createElement('div');
+		wrap.className = 'vance-askai__ask';
+
+		// answers[i] = { picked: [labels], other: '' }
+		var answers = spec.questions.map(function () { return { picked: [], other: '' }; });
+
+		spec.questions.forEach(function (q, qi) {
+			var group = document.createElement('div');
+			group.className = 'vance-askai__askq';
+
+			if (q.header) {
+				var chip = document.createElement('span');
+				chip.className = 'vance-askai__askchip';
+				chip.textContent = q.header;
+				group.appendChild(chip);
+			}
+
+			var title = document.createElement('p');
+			title.className = 'vance-askai__asktitle';
+			title.textContent = q.question;
+			group.appendChild(title);
+
+			if (q.multiSelect) {
+				var hint = document.createElement('p');
+				hint.className = 'vance-askai__askhint';
+				hint.textContent = 'Choose as many as apply';
+				group.appendChild(hint);
+			}
+
+			var list = document.createElement('div');
+			list.className = 'vance-askai__askopts';
+
+			var otherInput = null;
+
+			function setPressed(button, on) {
+				button.classList.toggle('is-selected', on);
+				button.setAttribute('aria-pressed', on ? 'true' : 'false');
+			}
+
+			q.options.forEach(function (opt) {
+				var button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'vance-askai__askopt';
+				button.setAttribute('aria-pressed', 'false');
+
+				var label = document.createElement('span');
+				label.className = 'vance-askai__askopt-label';
+				label.textContent = opt.label;
+				button.appendChild(label);
+
+				if (opt.description) {
+					var desc = document.createElement('span');
+					desc.className = 'vance-askai__askopt-desc';
+					desc.textContent = opt.description;
+					button.appendChild(desc);
+				}
+
+				button.addEventListener('click', function () {
+					var picked = answers[qi].picked;
+					var at = picked.indexOf(opt.label);
+					if (q.multiSelect) {
+						if (at === -1) { picked.push(opt.label); } else { picked.splice(at, 1); }
+						setPressed(button, at === -1);
+					} else {
+						// Single-select: clear the siblings, keep "Other" text.
+						answers[qi].picked = (at === -1) ? [opt.label] : [];
+						Array.prototype.forEach.call(list.querySelectorAll('.vance-askai__askopt'), function (b) {
+							setPressed(b, false);
+						});
+						setPressed(button, at === -1);
+					}
+				});
+
+				list.appendChild(button);
+			});
+
+			// "Other" is added by the client, never by the model — the prompt
+			// tells it not to offer one, so this is the single free-text route
+			// and it is present on every question.
+			var other = document.createElement('button');
+			other.type = 'button';
+			other.className = 'vance-askai__askopt vance-askai__askopt--other';
+            other.setAttribute('aria-pressed', 'false');
+			other.appendChild(document.createTextNode('Other\u2026'));
+			other.addEventListener('click', function () {
+				var showing = other.classList.toggle('is-selected');
+				other.setAttribute('aria-pressed', showing ? 'true' : 'false');
+				otherInput.hidden = !showing;
+				if (showing) {
+					otherInput.focus();
+				} else {
+					otherInput.value = '';
+					answers[qi].other = '';
+				}
+			});
+			list.appendChild(other);
+			group.appendChild(list);
+
+			otherInput = document.createElement('input');
+			otherInput.type = 'text';
+			otherInput.className = 'vance-askai__askother';
+			otherInput.placeholder = 'Tell me in your own words\u2026';
+			otherInput.hidden = true;
+			otherInput.addEventListener('input', function () {
+				answers[qi].other = otherInput.value;
+			});
+			group.appendChild(otherInput);
+
+			wrap.appendChild(group);
+		});
+
+		var actions = document.createElement('div');
+		actions.className = 'vance-askai__askactions';
+
+		var send = document.createElement('button');
+		send.type = 'button';
+		send.className = 'vance-askai__asksend';
+		send.textContent = 'Send answers';
+		send.addEventListener('click', function () {
+			var lines = [];
+			spec.questions.forEach(function (q, qi) {
+				var parts = answers[qi].picked.slice();
+				var free = (answers[qi].other || '').trim();
+				if (free) { parts.push(free); }
+				if (parts.length) {
+					lines.push(q.question + ' ' + parts.join('; '));
+				}
+			});
+			if (!lines.length) {
+				// Nothing chosen: say so rather than sending an empty turn.
+				wrap.classList.add('is-empty');
+				window.setTimeout(function () { wrap.classList.remove('is-empty'); }, 1200);
+				return;
+			}
+			ask(lines.join('\n'));
+		});
+		actions.appendChild(send);
+
+		var skip = document.createElement('button');
+		skip.type = 'button';
+		skip.className = 'vance-askai__askskip';
+		skip.textContent = 'Skip, just answer';
+		skip.addEventListener('click', function () {
+			ask('Skip the questions and answer my original question as best you can.');
+		});
+		actions.appendChild(skip);
+
+		wrap.appendChild(actions);
+		return wrap;
+	}
+
 	function renderSurface(surface) {
 		var log = surface.log;
 		log.innerHTML = '';
@@ -687,6 +909,20 @@
 					bubble.innerHTML = formatReply(message.content);
 				}
 				log.appendChild(bubble);
+
+				// The picker belongs to the LAST message only: once the reader
+				// answers, their reply becomes the last message and the picker
+				// disappears on the next render. It is also held back while the
+				// bubble is still being revealed, so the options do not appear
+				// before the line introducing them has finished typing.
+				if ('user' !== message.role
+					&& index === state.messages.length - 1
+					&& !(state.reveal && state.reveal.index === index)) {
+					var askSpec = parseAskBlock(message.content);
+					if (askSpec) {
+						log.appendChild(buildQuestionPicker(askSpec));
+					}
+				}
 			});
 		}
 

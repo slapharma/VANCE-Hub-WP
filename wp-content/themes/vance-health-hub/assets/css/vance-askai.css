@@ -1695,3 +1695,170 @@ body.vance-askai-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
 	.vance-askai-modal .vance-askai__suggestion:hover { transform: none; }
 }
+
+/* ============================================================================
+   CLARIFYING-QUESTION PICKER
+   ----------------------------------------------------------------------------
+   Rendered under the opening reply when it carries a ```vance-ask block, so the
+   reader clicks an answer instead of typing one. Built by buildQuestionPicker()
+   in assets/js/vance-askai.js; the block itself never reaches the bubble.
+
+   Options are <button aria-pressed> rather than checkboxes or radios: a group
+   can be single- or multi-select depending on what the model asked for, and one
+   pressable control styles identically for both. "Other" is the same control
+   with a text field revealed underneath.
+   ========================================================================== */
+
+.vance-askai__ask {
+    margin: 4px 0 8px;
+    padding: 16px;
+    border: 1px solid rgba(0, 128, 128, 0.22);
+    border-radius: var(--radius-surface, 14px);
+    background: rgba(0, 128, 128, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.vance-askai__ask.is-empty {
+    /* Nothing picked when "Send answers" was pressed. */
+    border-color: rgba(220, 38, 38, 0.55);
+}
+
+.vance-askai__askq { display: flex; flex-direction: column; gap: 8px; }
+
+.vance-askai__askchip {
+    align-self: flex-start;
+    padding: 3px 9px;
+    border-radius: var(--radius-control, 6px);
+    background: rgba(0, 128, 128, 0.12);
+    color: #00696b;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.vance-askai__asktitle {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: #0f172a;
+}
+
+.vance-askai__askhint {
+    margin: -4px 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.vance-askai__askopts { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.vance-askai__askopt {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    /* 10px/14px puts the single-line variant at 44px, the touch minimum. */
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-control, 6px);
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.vance-askai__askopt:hover { border-color: #008080; }
+
+.vance-askai__askopt:focus-visible {
+    outline: 2px solid #008080;
+    outline-offset: 2px;
+}
+
+.vance-askai__askopt.is-selected {
+    background: #008080;
+    border-color: #008080;
+    color: #fff;
+}
+
+.vance-askai__askopt-label { font-weight: 600; }
+
+.vance-askai__askopt-desc { font-size: 11.5px; color: #64748b; line-height: 1.35; }
+
+.vance-askai__askopt.is-selected .vance-askai__askopt-desc { color: rgba(255, 255, 255, 0.85); }
+
+.vance-askai__askopt--other { font-style: italic; }
+
+.vance-askai__askother {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-field, 10px);
+    font: inherit;
+    font-size: 13px;
+    color: #0f172a;
+    background: #fff;
+}
+
+.vance-askai__askother:focus-visible {
+    outline: 2px solid #008080;
+    outline-offset: 1px;
+    border-color: #008080;
+}
+
+.vance-askai__askactions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.vance-askai__asksend {
+    min-height: 44px;
+    padding: 11px 20px;
+    border: 0;
+    border-radius: var(--radius-control, 6px);
+    background: #008080;
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.vance-askai__asksend:hover { background: #00696b; }
+
+.vance-askai__askskip {
+    min-height: 44px;
+    padding: 11px 14px;
+    border: 0;
+    background: none;
+    color: #64748b;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.vance-askai__askskip:hover { color: #0f172a; }
+
+.vance-askai__asksend:focus-visible,
+.vance-askai__askskip:focus-visible {
+    outline: 2px solid #008080;
+    outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+    /* Full-width options read better than a ragged two-per-row wrap on a phone. */
+    .vance-askai__askopt { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vance-askai__askopt { transition: none; }
+}
