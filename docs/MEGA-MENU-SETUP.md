@@ -1,5 +1,28 @@
 # Primary menu — mega panel setup
 
+> **BUILT AND LIVE — 28 August 2026.**
+>
+> The menu described below has been built and is live. It was created with
+> `tools/build-mega-menu.php` (run via `wp eval-file`), not by hand in the
+> admin, so this document is now a *record and a rollback plan* rather than a
+> to-do list. Re-running that script rebuilds the menu from scratch.
+>
+> **The live menu is `Primary - mega` (term_id 122).** The previous menu,
+> `Primary - main` (term_id 20), is untouched and still exists.
+>
+> **Rollback — one command, no data loss:**
+>
+> ```bash
+> wp menu location assign 20 primary-menu
+> ```
+>
+> Note the menu that was previously live was `Primary - main`, **not** the menu
+> called `Primary Menu` (term_id 2, unassigned, 7 stale items). That one is a
+> decoy and should probably be deleted.
+
+---
+
+
 The code half of this feature ships in the theme:
 
 | File | What it does |
