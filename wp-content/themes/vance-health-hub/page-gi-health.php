@@ -170,27 +170,65 @@ $conditions = vance_gi_condition_cards();
 
 </main>
 
+<?php /* .gi-reveal starts at opacity 0 in gi-health.css so the page never flashes
+         its content before the animation begins. That is only safe while
+         something is guaranteed to reveal it again -- with scripting off,
+         nothing is, and the page would render permanently blank. */ ?>
+<noscript><style>.gi-reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
+
 <script>
 (function () {
   'use strict';
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // The Customizer preview renders inside an iframe it moves and scales between
+  // device sizes, and IntersectionObserver reports unreliably through that: the
+  // entries never arrive and an admin is left editing a blank page. Same reason
+  // as page-about.php. Keep this in step with page-gi-condition.php, which
+  // carries the same block.
+  var inCustomizer = <?php echo is_customize_preview() ? 'true' : 'false'; ?>;
+
   function initReveal() {
     var items = document.querySelectorAll('.gi-reveal');
     if (!items.length) return;
-    if (reduceMotion || !('IntersectionObserver' in window)) {
-      items.forEach(function (el) { el.classList.add('is-visible'); });
-      return;
+
+    function showAll() {
+      Array.prototype.forEach.call(items, function (el) { el.classList.add('is-visible'); });
     }
+
+    if (inCustomizer || reduceMotion || !('IntersectionObserver' in window)) { showAll(); return; }
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-    items.forEach(function (el) { io.observe(el); });
+    Array.prototype.forEach.call(items, function (el) { io.observe(el); });
+
+    // Content must never be left invisible. Anything already on screen is
+    // revealed directly after 1.2s if the observer has not reported on it, and
+    // after 5s nothing may still be hidden for any reason.
+    setTimeout(function () {
+      Array.prototype.forEach.call(items, function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < (window.innerHeight || 0) && r.bottom > 0) {
+          el.classList.add('is-visible');
+          io.unobserve(el);
+        }
+      });
+    }, 1200);
+    setTimeout(showAll, 5000);
   }
 
-  document.addEventListener('DOMContentLoaded', function () { initReveal(); });
+  // Not a plain DOMContentLoaded listener: this script is concatenated and
+  // deferred by Jetpack Boost on the live site, so by the time it runs the
+  // event has usually already fired -- and a listener added afterwards never
+  // calls initReveal at all, leaving the whole page at opacity 0.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initReveal);
+  } else {
+    initReveal();
+  }
 })();
 </script>
 

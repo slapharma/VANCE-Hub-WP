@@ -61,6 +61,15 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag'   => 'vance_contact_hero_tag',
 			'legacy_title' => 'vance_contact_hero_title',
 			'legacy_desc'  => 'vance_contact_hero_desc',
+			// The fallbacks the CLASSIC hero passes to get_theme_mod(), copied
+			// verbatim. They are what the page says on a site that has never
+			// edited these fields, so the spotlight has to say the same or
+			// switching design silently empties the hero -- and only on the
+			// live site, because the Customizer preview serves each setting's
+			// registered default and looks perfectly fine.
+			'legacy_tag_default'   => 'Get in Touch',
+			'legacy_title_default' => 'We\'d Love to <span class="highlight">Hear From You</span>',
+			'legacy_desc_default'  => 'Whether you\'re a patient, healthcare professional, researcher, or media contact, our team is here to help. Reach out and we\'ll respond within one business day.',
 			// A separate image key, NOT vance_contact_hero_img. The classic
 			// default (hcp_hero.png) was chosen to sit under a 78% navy veil;
 			// dropped onto a pale band with no veil it reads as a dark smear.
@@ -84,6 +93,10 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag'   => 'vance_about_hero_tag',
 			'legacy_title' => 'vance_about_hero_title',
 			'legacy_desc'  => 'vance_about_hero_desc',
+			// As above: the classic hero's own fallbacks, copied verbatim.
+			'legacy_tag_default'   => 'About Vance Medical Hub',
+			'legacy_title_default' => 'Trusted by Patients.<br><span class="highlight">Driven by Science.</span>',
+			'legacy_desc_default'  => 'We bridge pharmaceutical expertise with nutritional science to empower patients living with gastrointestinal conditions, delivering evidence-based care you can trust.',
 			// Likewise not vance_about_hero_img: its saved default,
 			// diverse-patients-clinic.jpg, is a low-resolution watermarked
 			// stock frame that only survives because the navy veil hides it.
@@ -220,9 +233,12 @@ function vance_page_hero_spotlight_values( $page ) {
 	}
 
 	// Copy comes from the classic hero's keys — see 'legacy_*' in the config.
-	$vals['eyebrow'] = vance_get_theme_mod( $c['legacy_tag'], '' );
-	$vals['title']   = vance_get_theme_mod( $c['legacy_title'], '' );
-	$vals['intro']   = vance_get_theme_mod( $c['legacy_desc'], '' );
+	// The defaults matter as much as the keys: an unsaved setting returns
+	// whatever default is passed here, so passing '' would render an empty
+	// hero on every site that has not edited these fields.
+	$vals['eyebrow'] = vance_get_theme_mod( $c['legacy_tag'],   $c['legacy_tag_default'] );
+	$vals['title']   = vance_get_theme_mod( $c['legacy_title'], $c['legacy_title_default'] );
+	$vals['intro']   = vance_get_theme_mod( $c['legacy_desc'],  $c['legacy_desc_default'] );
 
 	// Only reached when an admin has deliberately cleared button 2's link.
 	// Resolved by slug so it follows the page wherever it lives, with the
@@ -305,9 +321,12 @@ function vance_page_hero_spotlight_tel( $phone ) {
  * @return array<int, array{key: string, label: string, value: string, href: string}>
  */
 function vance_page_hero_spotlight_lines() {
-	$email = vance_get_theme_mod( 'vance_contact_email', '' );
-	$phone = vance_get_theme_mod( 'vance_contact_phone', '' );
-	$hours = vance_get_theme_mod( 'vance_contact_hours', '' );
+	// Defaults copied from page-contact-us.php, which passes these same
+	// fallbacks to get_theme_mod() further down the page. Passing '' would
+	// empty the band wherever an admin has never opened Contact Information.
+	$email = vance_get_theme_mod( 'vance_contact_email', 'team@vancemedicalfoods.co.uk' );
+	$phone = vance_get_theme_mod( 'vance_contact_phone', '+44 (0)1628 526 005' );
+	$hours = vance_get_theme_mod( 'vance_contact_hours', 'Monday – Friday, 9:00 am – 5:00 pm GMT' );
 
 	$lines = array();
 
@@ -385,10 +404,13 @@ function vance_render_page_hero_spotlight( $page ) {
 
 	$slot_items = ( $c['slot'] === 'lines' )
 		? vance_page_hero_spotlight_lines()
+		// Defaults copied from page-about.php's own $badge_defaults, for the
+		// same reason as the hero copy above: '' here empties the band on any
+		// site that has never edited the badges.
 		: array_values( array_filter( array(
-			vance_get_theme_mod( 'vance_about_badge1_label', '' ),
-			vance_get_theme_mod( 'vance_about_badge2_label', '' ),
-			vance_get_theme_mod( 'vance_about_badge3_label', '' ),
+			vance_get_theme_mod( 'vance_about_badge1_label', 'Pharma-Grade Quality' ),
+			vance_get_theme_mod( 'vance_about_badge2_label', 'Clinician Approved' ),
+			vance_get_theme_mod( 'vance_about_badge3_label', 'Evidence-Based' ),
 		) ) );
 
 	// The About badges have their own long-standing visibility switch; honour
