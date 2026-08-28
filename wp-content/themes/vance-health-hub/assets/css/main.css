@@ -3519,18 +3519,28 @@ body.home .hero {
     padding: 0;
     align-items: stretch;
 }
-/* The promo photo is scaled DOWN to fit its panel, not cropped to fill it:
-   these are product and lifestyle shots where cutting the edges off loses the
-   subject. `contain` letterboxes instead, and the spare space is left
-   transparent so the card's own surface shows through behind it.
+/* The promo photo fills its panel edge to edge, top and bottom.
 
-   background-repeat is pinned here and is load-bearing. It is unset elsewhere,
-   so it defaults to `repeat` — which never mattered under `cover` because the
-   image always filled the box, but under `contain` it would tile the picture
-   across the letterbox space. Same trap as the gastro condition tiles. */
+   This deliberately reverses b1f4ff6, which had moved the panel to `contain` so
+   product and lifestyle shots were never cropped. The two cannot both hold: the
+   panel's height is set by the text column beside it (the grid is
+   align-items: stretch), so an image whose aspect ratio differs from the panel's
+   is either cropped or letterboxed. `contain` left a visible band of card
+   surface above and below the photo, which read as a layout fault rather than as
+   a deliberate fit.
+
+   `center` keeps the loss symmetrical, which suits these photographs — the
+   subject sits mid-frame in all of them. An asset that cannot survive a crop
+   wants a re-crop to roughly the panel's ratio before upload, not a change here;
+   changing it back re-opens the gap on every other promo block.
+
+   background-repeat stays pinned. It is inert under `cover`, since the image
+   always covers the box, but it is unset elsewhere and defaults to `repeat` —
+   so it is the thing that stops the picture tiling if anyone moves this rule
+   back toward `contain`. Same trap as the gastro condition tiles. */
 .vance-cat-promo__media {
     min-height: 220px;
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
