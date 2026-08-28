@@ -1109,8 +1109,19 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // The Customizer preview renders inside an iframe that WordPress moves and
+    // scales between its device sizes, and IntersectionObserver reports
+    // unreliably through that -- so entries never arrive, and every .reveal
+    // element (the story, trust and digital photographs among them) sits at
+    // opacity 0 while an admin is trying to look at the page. Which ones are
+    // caught by the in-viewport failsafe below depends on how tall the hero is,
+    // so changing hero design appears to "lose" a different set of images each
+    // time. An editing surface must never hide content: skip the animation
+    // there entirely and let everything render as-is.
+    var inCustomizer = <?php echo is_customize_preview() ? 'true' : 'false'; ?>;
+
     // Only allow the reveal styles to hide content now that JS is running.
-    if ('IntersectionObserver' in window) root.classList.add('vabout-js');
+    if (!inCustomizer && 'IntersectionObserver' in window) root.classList.add('vabout-js');
 
     /* ---- Count-up for the stat figures ---- */
     function runCounter(el) {
