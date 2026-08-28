@@ -48,36 +48,13 @@ if ( empty( $cats ) ) {
     return;
 }
 ?>
-<style>
-    /* Category icons, painted #008080 to match the button border and label.
-     *
-     * A CSS mask rather than the filter chain this used to carry. The old rule
-     * was the usual brightness/sepia/saturate/hue-rotate stack that approximates
-     * a target colour from black -- it lands NEAR a colour, never exactly on
-     * one, and retuning it for teal would mean solving for six values and still
-     * being a few points out. Masking paints the glyph with a real
-     * background-color instead, so it is #008080 by construction.
-     *
-     * Safe here because every icon is an SVG (vance_get_category_icon_url())
-     * drawn on transparency: the mask keys off alpha, so it takes the shape and
-     * discards whatever colour the file itself carries.
-     *
-     * front-page.php also emits .orange-icon, but with an inline
-     * `filter: brightness(0) invert(1)` that overrides any class rule, so its
-     * icons are unaffected either way. */
-    .cat-mini-icon {
-        display: block;
-        width: 12px;
-        height: 12px;
-        background-color: #008080;
-        -webkit-mask-repeat: no-repeat;
-                mask-repeat: no-repeat;
-        -webkit-mask-position: center;
-                mask-position: center;
-        -webkit-mask-size: contain;
-                mask-size: contain;
-    }
-</style>
+<?php
+// The category icons that used to sit in these buttons are gone. They were a
+// 20px chip plus a 12px glyph inside a button whose only job is a category
+// name, and at eight across they spent ~26px of the ~110px available on
+// decoration. vance_get_category_icon_url() is untouched -- front-page.php
+// still uses it.
+?>
 <?php if ( $vance_subcat_parent > 0 ) : ?>
 <style>
     /* Sub-category nav cards jump to sections on THIS page. Smooth-scroll and
@@ -96,7 +73,12 @@ if ( empty( $cats ) ) {
 // the historical -50px overlap into the hero.
 $wrapper_style = ( $vance_subcat_parent > 0 )
     ? 'position: relative; z-index: 1; margin: 0 0 40px; padding: 30px 0; background: linear-gradient(180deg, #e9f3f3 0%, #f6fafa 100%); border-bottom: 1px solid rgba(15,23,42,0.06);'
-    : 'position: relative; z-index: 20; margin-top: -50px; margin-bottom: 40px; pointer-events: none;';
+    // Global mode used to be pulled up 50px so the bar straddled the bottom of
+    // the hero, which is why it also needed z-index: 20 to sit above it and
+    // pointer-events: none so the overlapping strip did not swallow clicks
+    // meant for the hero. It now sits fully below the hero, so all three go: a
+    // plain block in the flow with a normal gap above and below.
+    : 'position: relative; margin: 30px 0 40px;';
 ?>
 <div class="inner-cat-nav-wrapper" style="<?php echo $wrapper_style; ?>">
     <div class="container">
@@ -107,7 +89,7 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
         </div>
         <?php endif; ?>
         <!-- Grid layout for desktop, Scroll for mobile -->
-        <div class="inner-cat-nav" style="pointer-events: auto;">
+        <div class="inner-cat-nav">
             
             <?php foreach ( $cats as $cat ) :
                 $is_active = ( is_category() && get_queried_object_id() === $cat->term_id );
@@ -117,7 +99,6 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 $card_href = ( $vance_subcat_parent > 0 )
                     ? '#va-subcat-' . (int) $cat->term_id
                     : esc_url( get_category_link( $cat->term_id ) );
-                $icon = vance_get_theme_mod("vance_cat_card_icon_{$cat->term_id}", '');
                 
                 // One button treatment for both modes: transparent by default,
                 // white on hover, a #008080 border that does not change between
@@ -136,18 +117,11 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 // face (--font-main, Inter) from body, which is already what it
                 // renders in; restating it would just be a second place to keep
                 // in step.
-                $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080; transition: none;";
+                $card_style = "display: flex; align-items: center; justify-content: center; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080; transition: none;";
                 $card_style .= ( $vance_subcat_parent > 0 ) ? " padding: 14px 18px;" : " padding: 12px;";
 
                 $text_size  = ( $vance_subcat_parent > 0 ) ? "13px" : "12px";
                 $text_style = "font-size: {$text_size}; font-weight: 600; color: #008080; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
-
-                // The chip was #f1f5f9 grey, which was the last off-palette
-                // element inside an otherwise all-teal button. A 10% tint of the
-                // same teal keeps the chip's grouping job without introducing a
-                // second colour.
-                $icon_container_style = "width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,128,128,0.10); border-radius: var(--radius-control, 6px);";
-
                 // The current category still has to be identifiable, so it keeps
                 // a fill -- but a tint of the same teal, and the same #008080
                 // border as the rest rather than one of its own. Its old label
@@ -160,18 +134,6 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 }
             ?>
                 <a href="<?php echo $card_href; ?>" class="cat-mini-card <?php echo $vance_subcat_parent > 0 ? 'cat-mini-card--glass ' : ''; ?><?php echo $is_active ? 'active' : ''; ?>" style="<?php echo $card_style; ?>" title="<?php echo esc_attr( $cat->name ); ?>">
-                    <?php if ( $vance_subcat_parent <= 0 ) : ?>
-                        <?php $cat_icon = $icon ?: vance_get_category_icon_url($cat->name); ?>
-                        <div style="<?php echo $icon_container_style; ?>">
-                            <?php if ($cat_icon): ?>
-                                <?php // Masked span, not an <img>: see .cat-mini-icon above. ?>
-                                <span class="cat-mini-icon" role="img" aria-hidden="true" style="-webkit-mask-image: url('<?php echo esc_url($cat_icon); ?>'); mask-image: url('<?php echo esc_url($cat_icon); ?>');"></span>
-                            <?php else: ?>
-                                <div style="font-size: 12px;">📁</div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-
                     <span style="<?php echo $text_style; ?>"><?php echo esc_html( $cat->name ); ?></span>
                 </a>
             <?php endforeach; ?>
@@ -221,7 +183,7 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
         align-items: center;
         min-height: 48px;
     }
-    .inner-cat-nav .cat-mini-card span:not(.cat-mini-icon) {
+    .inner-cat-nav .cat-mini-card span {
         white-space: normal !important;
         overflow: visible !important;
         text-overflow: clip !important;
