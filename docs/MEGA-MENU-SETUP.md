@@ -1,5 +1,37 @@
 # Primary menu — mega panel setup
 
+> ## ⚠ THE MENU IS NOW MAINTAINED BY HAND
+>
+> As of **2026-08-28** the live menu is edited directly in Appearance → Menus.
+> This document is no longer a description of what is live — it is the record
+> of how the menu was originally built and why.
+>
+> **Do not run `tools/build-mega-menu.php` against the live menu.** It is a
+> wipe-and-recreate, not a merge: it hard-deletes every item and rebuilds from
+> the snapshot in this document. It now refuses to run on a menu that holds a
+> location unless you force it with `VANCE_MENU_REBUILD=1`, and forcing it
+> would discard every hand edit made since.
+>
+> **To see what is actually live**, and to check it for real faults:
+>
+> ```bash
+> wp eval-file tools/audit-mega-menu.php
+> ```
+>
+> That is read-only. It checks the things that are wrong regardless of how the
+> menu is arranged — dead links, panels not set to Mega Menu, order-0 columns
+> that silently sort last, broken placeholders, orphaned widgets — and prints
+> the live structure. It deliberately does **not** compare against the tree
+> below any more, because honest edits are not faults.
+>
+> Known divergences from the tree below, all deliberate: User Guide moved back
+> to "Start here"; Patient Downloads reduced to its two placeholder rows; and
+> "How to Use the Hub" removed along with its page (WordPress cleaned up the
+> menu item automatically — no dead link was left behind).
+
+---
+
+
 > **BUILT AND LIVE — 28 August 2026.**
 >
 > The menu described below has been built and is live. It was created with
@@ -176,14 +208,12 @@ THE HUB                                      [custom link, Disable link]
 ├─ ROW 1 ─────────────────────────────────────────────────────────────
 ├─ Start here                                [custom link, Disable link]
 │  ├─ Get Started                            /get-started-today/
-│  ├─ How to Use the Hub                     /how-to-use-the-hub/
 │  └─ Create an Account                      /register/
 ├─ Free Health Tools                         /free-health-tools/
 │  ├─ Malnutrition Calculator                /malnutrition-calculator/
 │  ├─ Gastro Health Survey                   /gastro-health-survey/
 │  └─ Recipes & Meal Planner                 /gastro-meal-planner/
 ├─ Patient Downloads                         /user-guide/
-│  ├─ User Guide                             /user-guide/
 │  ├─ IBD Travel Guide                       [placeholder, Disable link]
 │  └─ Infographics                           [placeholder, Disable link]
 ├─ Your Account                              /dashboard/

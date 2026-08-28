@@ -80,8 +80,44 @@ function vh_mm( $item_id, $settings ) {
 
 /* ------------------------------------------------- 1. reset menu + widgets */
 
+/*
+ * SAFETY GUARD — read this before removing it.
+ *
+ * This script is a WIPE, not a merge: it hard-deletes every item in the target
+ * menu and rebuilds from the spec below. That was fine while the script owned
+ * the menu. It no longer does — the menu has been edited by hand since
+ * 2026-08-28 (User Guide moved back to "Start here", Patient Downloads reduced
+ * to its two placeholders, "How to Use the Hub" removed along with its page).
+ * Running this unguarded would silently discard all of that.
+ *
+ * So it now refuses to touch a menu that is assigned to a location unless you
+ * say so explicitly:
+ *
+ *     VANCE_MENU_REBUILD=1 wp eval-file tools/build-mega-menu.php
+ *
+ * Before you do: the spec in this file is a snapshot of how the menu looked on
+ * 2026-08-28, NOT of how it looks now. Reconcile it against the live menu
+ * first — `wp eval-file tools/audit-mega-menu.php` prints the live structure.
+ */
 $menu = wp_get_nav_menu_object( $MENU_NAME );
+
 if ( $menu ) {
+	$locations = array_map( 'intval', (array) get_nav_menu_locations() );
+	$is_live   = in_array( (int) $menu->term_id, $locations, true );
+
+	if ( $is_live && ! getenv( 'VANCE_MENU_REBUILD' ) ) {
+		$count = count( (array) wp_get_nav_menu_items( $menu->term_id ) );
+		say( 'REFUSING TO RUN.' );
+		say( '' );
+		say( "  '{$MENU_NAME}' (#{$menu->term_id}) is LIVE on a menu location and holds {$count} items." );
+		say( '  This script would hard-delete all of them and rebuild from its own spec,' );
+		say( '  which is a snapshot from 2026-08-28 and does not include later hand edits.' );
+		say( '' );
+		say( '  To see the live structure:  wp eval-file tools/audit-mega-menu.php' );
+		say( '  To rebuild anyway:          VANCE_MENU_REBUILD=1 wp eval-file tools/build-mega-menu.php' );
+		return;
+	}
+
 	foreach ( (array) wp_get_nav_menu_items( $menu->term_id ) as $it ) {
 		wp_delete_post( $it->ID, true );
 	}
