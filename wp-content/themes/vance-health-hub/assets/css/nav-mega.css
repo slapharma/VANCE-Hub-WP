@@ -202,6 +202,13 @@
 		text-transform: none;
 		letter-spacing: 0;
 		color: var(--text-main, #1F2937);
+		/* Rows are 50% taller than the 36px they started at (2026-08-28
+		   request). min-height + flex centring rather than fatter padding, so
+		   a label that wraps to two lines grows the row instead of bursting
+		   out of a fixed box. */
+		display: flex;
+		align-items: center;
+		min-height: 54px;
 		padding: 8px 10px;
 		margin-left: -10px;
 		border-radius: var(--radius-control, 6px);
@@ -268,7 +275,7 @@
 /* -----------------------------------------------------------------------------
    5. ICON TILES  (VHH_Nav_Tiles_Widget)
    -------------------------------------------------------------------------- */
-.vance-nav-tiles {
+#mega-menu-wrap-primary-menu .vance-nav-tiles {
 	display: grid;
 	grid-template-columns: repeat(var(--vance-nav-tile-cols, 3), minmax(0, 1fr));
 	gap: 10px;
@@ -277,7 +284,7 @@
 	list-style: none;
 }
 
-.vance-nav-tile {
+#mega-menu-wrap-primary-menu .vance-nav-tile {
 	display: flex;
 	gap: 12px;
 	align-items: flex-start;
@@ -285,23 +292,26 @@
 	background: #fff;
 	border: 1px solid #e4eaea;
 	border-radius: var(--radius-surface, 14px);
-	padding: 13px 14px;
+	/* Left padding is load-bearing: main.css zeroes padding on every
+	   .main-nav anchor, which pinned the icon flush to the tile edge until
+	   these rules were re-scoped above. */
+	padding: 13px 16px 13px 18px;
 	transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
 }
 
-.vance-nav-tile:hover,
-.vance-nav-tile:focus {
+#mega-menu-wrap-primary-menu .vance-nav-tile:hover,
+#mega-menu-wrap-primary-menu .vance-nav-tile:focus {
 	border-color: var(--primary-pale, #aedbdb);
 	background: #f9fdfd;
 	box-shadow: 0 4px 14px -8px rgba(0, 128, 128, .5);
 }
 
-.vance-nav-tile:focus-visible {
+#mega-menu-wrap-primary-menu .vance-nav-tile:focus-visible {
 	outline: 2px solid var(--primary-color, #008080);
 	outline-offset: 2px;
 }
 
-.vance-nav-tile__icon {
+#mega-menu-wrap-primary-menu .vance-nav-tile__icon {
 	flex: 0 0 34px;
 	width: 34px;
 	height: 34px;
@@ -312,17 +322,17 @@
 	color: var(--primary-hover, #006666);
 }
 
-.vance-nav-tile__icon svg {
+#mega-menu-wrap-primary-menu .vance-nav-tile__icon svg {
 	width: 19px;
 	height: 19px;
 	display: block;
 }
 
-.vance-nav-tile__text {
+#mega-menu-wrap-primary-menu .vance-nav-tile__text {
 	min-width: 0;
 }
 
-.vance-nav-tile__title {
+#mega-menu-wrap-primary-menu .vance-nav-tile__title {
 	display: block;
 	font-family: var(--font-main, 'Inter', sans-serif);
 	font-size: 13.5px;
@@ -331,7 +341,7 @@
 	color: var(--text-main, #1F2937);
 }
 
-.vance-nav-tile__desc {
+#mega-menu-wrap-primary-menu .vance-nav-tile__desc {
 	display: block;
 	font-size: 11.5px;
 	font-weight: 400;
@@ -342,13 +352,13 @@
 
 /* A tile flagged "feature" in the widget — the odd one out at the end of a row
    that asks a question rather than naming a condition. */
-.vance-nav-tile--feature {
+#mega-menu-wrap-primary-menu .vance-nav-tile--feature {
 	grid-column: span 2;
 	border-color: var(--primary-pale, #aedbdb);
 	background: #f4fcfc;
 }
 
-.vance-nav-tile--feature .vance-nav-tile__icon {
+#mega-menu-wrap-primary-menu .vance-nav-tile--feature .vance-nav-tile__icon {
 	background: var(--primary-color, #008080);
 	color: #fff;
 }
@@ -356,7 +366,7 @@
 /* -----------------------------------------------------------------------------
    6. CTA RAIL  (VHH_Nav_CTA_Widget)
    -------------------------------------------------------------------------- */
-.vance-nav-cta {
+#mega-menu-wrap-primary-menu .vance-nav-cta {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
@@ -367,7 +377,7 @@
 	padding: 20px;
 }
 
-.vance-nav-cta__eyebrow {
+#mega-menu-wrap-primary-menu .vance-nav-cta__eyebrow {
 	font-family: var(--font-main, 'Inter', sans-serif);
 	font-size: 10.5px;
 	font-weight: 600;
@@ -376,7 +386,7 @@
 	color: var(--primary-hover, #006666);
 }
 
-.vance-nav-cta__title {
+#mega-menu-wrap-primary-menu .vance-nav-cta__title {
 	font-family: var(--font-heading, 'Outfit', sans-serif);
 	font-size: 17px;
 	font-weight: 600;
@@ -385,42 +395,47 @@
 	color: var(--secondary-color, #0A1929);
 }
 
-.vance-nav-cta__text {
+#mega-menu-wrap-primary-menu .vance-nav-cta__text {
 	font-size: 12.5px;
 	line-height: 1.5;
 	color: #47565c;
 	margin: 0;
 }
 
-.vance-nav-cta__btn {
+#mega-menu-wrap-primary-menu .vance-nav-cta__btn {
 	align-self: flex-start;
 	margin-top: auto;
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
 	background: var(--primary-color, #008080);
-	color: #fff;
+	/* !important guards the one property main.css sets on EVERY .main-nav
+	   anchor. The ID prefix already wins on specificity, but this button is
+	   the single element where losing the colour is invisible-text rather
+	   than a cosmetic slip, so it is worth the belt and braces. */
+	color: #fff !important;
 	text-decoration: none;
 	font-size: 12.5px;
 	font-weight: 600;
 	line-height: 1.2;
-	padding: 9px 16px;
+	/* Extra left/right padding per the 2026-08-28 request. */
+	padding: 10px 24px;
 	border-radius: var(--radius-control, 6px);
 	transition: background-color .16s ease;
 }
 
-.vance-nav-cta__btn:hover,
-.vance-nav-cta__btn:focus {
+#mega-menu-wrap-primary-menu .vance-nav-cta__btn:hover,
+#mega-menu-wrap-primary-menu .vance-nav-cta__btn:focus {
 	background: var(--primary-hover, #006666);
-	color: #fff;
+	color: #fff !important;
 }
 
-.vance-nav-cta__btn:focus-visible {
+#mega-menu-wrap-primary-menu .vance-nav-cta__btn:focus-visible {
 	outline: 2px solid var(--secondary-color, #0A1929);
 	outline-offset: 2px;
 }
 
-.vance-nav-cta__btn svg {
+#mega-menu-wrap-primary-menu .vance-nav-cta__btn svg {
 	width: 14px;
 	height: 14px;
 	display: block;
@@ -433,24 +448,24 @@
    square" rule at the end of main.css: post tiles are the site's one deliberate
    square exception, and a menu panel is not a reason to break it.
    -------------------------------------------------------------------------- */
-.vance-nav-feature {
+#mega-menu-wrap-primary-menu .vance-nav-feature {
 	display: grid;
 	grid-template-columns: repeat(var(--vance-nav-feature-cols, 2), minmax(0, 1fr));
 	gap: 14px;
 }
 
-.vance-nav-feature__card {
+#mega-menu-wrap-primary-menu .vance-nav-feature__card {
 	display: flex;
 	flex-direction: column;
 	text-decoration: none;
 }
 
-.vance-nav-feature__card:focus-visible {
+#mega-menu-wrap-primary-menu .vance-nav-feature__card:focus-visible {
 	outline: 2px solid var(--primary-color, #008080);
 	outline-offset: 3px;
 }
 
-.vance-nav-feature__thumb {
+#mega-menu-wrap-primary-menu .vance-nav-feature__thumb {
 	position: relative;
 	display: block;
 	aspect-ratio: 16 / 9;
@@ -459,7 +474,7 @@
 	background: linear-gradient(135deg, var(--secondary-color, #0A1929), #12414a);
 }
 
-.vance-nav-feature__thumb img {
+#mega-menu-wrap-primary-menu .vance-nav-feature__thumb img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
@@ -467,11 +482,11 @@
 	transition: transform .3s ease;
 }
 
-.vance-nav-feature__card:hover .vance-nav-feature__thumb img {
+#mega-menu-wrap-primary-menu .vance-nav-feature__card:hover .vance-nav-feature__thumb img {
 	transform: scale(1.04);
 }
 
-.vance-nav-feature__chip {
+#mega-menu-wrap-primary-menu .vance-nav-feature__chip {
 	position: absolute;
 	z-index: 2;
 	top: 9px;
@@ -487,7 +502,7 @@
 	border-radius: var(--radius-pill, 999px);
 }
 
-.vance-nav-feature__title {
+#mega-menu-wrap-primary-menu .vance-nav-feature__title {
 	display: block;
 	font-family: var(--font-main, 'Inter', sans-serif);
 	font-size: 13.5px;
@@ -498,11 +513,11 @@
 	transition: color .16s ease;
 }
 
-.vance-nav-feature__card:hover .vance-nav-feature__title {
+#mega-menu-wrap-primary-menu .vance-nav-feature__card:hover .vance-nav-feature__title {
 	color: var(--primary-color, #008080);
 }
 
-.vance-nav-feature__date {
+#mega-menu-wrap-primary-menu .vance-nav-feature__date {
 	display: block;
 	font-size: 10.5px;
 	font-weight: 500;
@@ -512,7 +527,7 @@
 	margin-top: 6px;
 }
 
-.vance-nav-feature__more {
+#mega-menu-wrap-primary-menu .vance-nav-feature__more {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
@@ -523,12 +538,12 @@
 	text-decoration: none;
 }
 
-.vance-nav-feature__more:hover {
+#mega-menu-wrap-primary-menu .vance-nav-feature__more:hover {
 	color: var(--primary-hover, #006666);
 	gap: 9px;
 }
 
-.vance-nav-feature__more svg {
+#mega-menu-wrap-primary-menu .vance-nav-feature__more svg {
 	width: 15px;
 	height: 15px;
 	display: block;

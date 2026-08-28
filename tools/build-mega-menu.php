@@ -113,6 +113,17 @@ say( 'Cleared previous panel widgets.' );
 
 /* ---------------------------------------------------------- 2. the tree */
 
+/**
+ * NOTE ON ORDER VALUES — they start at 1, never 0.
+ *
+ * megamenu.php:1100 only rewrites an item's menu_order when
+ * `0 !== $item->megamenu_order`. Zero is treated as "not set", so a column
+ * given order 0 keeps its raw menu_order and sorts to the END of the panel.
+ * Measured 2026-08-28: KNOWLEDGEBASE rendered as
+ * [By content type][widget][Browse the library] because Browse had order 0.
+ */
+
+
 $created = array();
 
 /** Add a top-level panel item. */
@@ -159,27 +170,27 @@ say( 'THE HUB' );
 $hub = vh_top( $MENU_ID, 'THE HUB', array( 'url' => '#' ), true );
 $created['hub'] = $hub;
 
-$c = vh_col( $MENU_ID, $hub, 'Start here', array( 'url' => '#' ), 3, 0, true );
+$c = vh_col( $MENU_ID, $hub, 'Start here', array( 'url' => '#' ), 3, 1, true );
 vh_link( $MENU_ID, $c, 'Get Started',        array( 'path' => 'get-started-today' ) );
 vh_link( $MENU_ID, $c, 'How to Use the Hub', array( 'path' => 'how-to-use-the-hub' ) );
 vh_link( $MENU_ID, $c, 'User Guide',         array( 'path' => 'user-guide' ) );
 vh_link( $MENU_ID, $c, 'Create an Account',  array( 'path' => 'register' ) );
 
-$c = vh_col( $MENU_ID, $hub, 'Free Health Tools', array( 'path' => 'free-health-tools' ), 3, 1 );
+$c = vh_col( $MENU_ID, $hub, 'Free Health Tools', array( 'path' => 'free-health-tools' ), 3, 2 );
 vh_link( $MENU_ID, $c, 'Malnutrition Calculator', array( 'path' => 'malnutrition-calculator' ) );
 vh_link( $MENU_ID, $c, 'Gastro Health Survey',    array( 'path' => 'gastro-health-survey' ) );
 vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-meal-planner' ) );
 
-$c = vh_col( $MENU_ID, $hub, 'Your Account', array( 'path' => 'dashboard' ), 3, 2 );
+$c = vh_col( $MENU_ID, $hub, 'Your Account', array( 'path' => 'dashboard' ), 3, 3 );
 vh_link( $MENU_ID, $c, 'My Dashboard', array( 'path' => 'dashboard' ) );
 vh_link( $MENU_ID, $c, 'My Notes',     array( 'path' => 'my-notes' ) );
 
-$c = vh_col( $MENU_ID, $hub, 'For Professionals', array( 'path' => 'healthcare-professionals' ), 3, 4 );
+$c = vh_col( $MENU_ID, $hub, 'For Professionals', array( 'path' => 'healthcare-professionals' ), 3, 5 );
 vh_link( $MENU_ID, $c, 'HCP Hub',              array( 'path' => 'healthcare-professionals' ) );
 vh_link( $MENU_ID, $c, 'Clinical Data Reviews', array( 'cat'  => 'content-clinical-reviews' ) );
 vh_link( $MENU_ID, $c, 'Webinars & Courses',   array( 'path' => 'webinars-and-courses' ) );
 
-$c = vh_col( $MENU_ID, $hub, 'Vance Medical', array( 'path' => 'about-us' ), 3, 5 );
+$c = vh_col( $MENU_ID, $hub, 'Vance Medical', array( 'path' => 'about-us' ), 3, 6 );
 vh_link( $MENU_ID, $c, 'Who We Are',   array( 'path' => 'about-us' ) );
 vh_link( $MENU_ID, $c, 'Our Heritage', array( 'path' => 'our-heritage' ) );
 vh_link( $MENU_ID, $c, 'Contact Us',   array( 'path' => 'contact-us' ) );
@@ -190,13 +201,14 @@ say( 'KNOWLEDGEBASE' );
 $kb = vh_top( $MENU_ID, 'KNOWLEDGEBASE', array( 'path' => 'knowledgebase' ) );
 $created['kb'] = $kb;
 
-$c = vh_col( $MENU_ID, $kb, 'Browse the library', array( 'path' => 'knowledgebase' ), 3, 0 );
+$c = vh_col( $MENU_ID, $kb, 'Browse the library', array( 'path' => 'knowledgebase' ), 3, 1 );
 vh_link( $MENU_ID, $c, 'All Articles',            array( 'path' => 'knowledgebase' ) );
 vh_link( $MENU_ID, $c, 'Gastro Health Explained', array( 'path' => 'gastro-health-explained' ) );
 vh_link( $MENU_ID, $c, 'Webinars & Courses',      array( 'path' => 'webinars-and-courses' ) );
 vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-meal-planner' ) );
+vh_link( $MENU_ID, $c, 'View all gastro conditions', array( 'path' => 'gastro-health-explained' ) );
 
-$c = vh_col( $MENU_ID, $kb, 'By content type', array( 'url' => '#' ), 3, 1, true );
+$c = vh_col( $MENU_ID, $kb, 'By content type', array( 'url' => '#' ), 3, 2, true );
 vh_link( $MENU_ID, $c, 'Gastro Living Insights', array( 'cat' => 'content-gastro-living' ) );
 vh_link( $MENU_ID, $c, 'Gastro Health News',     array( 'cat' => 'content-healthcare-news' ) );
 vh_link( $MENU_ID, $c, 'Clinical Data Reviews',  array( 'cat' => 'content-clinical-reviews' ) );
@@ -241,7 +253,7 @@ function vh_widget( $base, $parent_item, $span, $order, $settings ) {
 say( '' );
 say( 'Widgets' );
 
-$w = vh_widget( 'vhh_nav_cta', $created['hub'], 3, 3, array(
+$w = vh_widget( 'vhh_nav_cta', $created['hub'], 3, 4, array(
 	'eyebrow'  => 'Always on',
 	'heading'  => 'Ask VANCE-Ai anything about gut health',
 	'text'     => "Evidence-based answers drawn from the Hub's own clinical library, any time of day.",
@@ -251,7 +263,7 @@ $w = vh_widget( 'vhh_nav_cta', $created['hub'], 3, 3, array(
 ) );
 say( "  $w  -> THE HUB row 1" );
 
-$w = vh_widget( 'vhh_nav_cta', $created['hub'], 6, 6, array(
+$w = vh_widget( 'vhh_nav_cta', $created['hub'], 6, 7, array(
 	'eyebrow'  => 'For clinicians',
 	'heading'  => 'Give your patients somewhere reliable to go',
 	'text'     => 'Create a practitioner account to share tools and access the clinical library in full.',
@@ -261,7 +273,7 @@ $w = vh_widget( 'vhh_nav_cta', $created['hub'], 6, 6, array(
 ) );
 say( "  $w  -> THE HUB row 2" );
 
-$w = vh_widget( 'vhh_nav_featured', $created['kb'], 6, 2, array(
+$w = vh_widget( 'vhh_nav_featured', $created['kb'], 6, 3, array(
 	'title'     => 'Latest from the Hub',
 	'cat'       => 0,
 	'count'     => 2,
@@ -281,7 +293,7 @@ $tiles = implode( "\n", array(
 	'* quiz | Not sure where to start? | Take the short self-assessment and get a summary you can share with your clinician. | ' . home_url( '/gastro-health-survey/' ),
 ) );
 
-$w = vh_widget( 'vhh_nav_tiles', $created['cond'], 12, 0, array(
+$w = vh_widget( 'vhh_nav_tiles', $created['cond'], 12, 1, array(
 	'title' => 'Understanding digestive conditions',
 	'cols'  => 3,
 	'tiles' => $tiles,
@@ -291,8 +303,69 @@ say( "  $w  -> CONDITIONS" );
 /* ------------------------------------------------------------- 4. summary */
 
 say( '' );
+say( '--- VERIFY ---' );
+
+/*
+ * Assert the tree that came OUT matches the tree that went IN.
+ *
+ * The first run reported "32 items, no missing-page warnings" and was treated
+ * as a success -- but one item (Webinars & Courses under Browse the library)
+ * was silently absent afterwards, and nothing caught it because nothing ever
+ * compared the result against the intent. A build script that only reports
+ * what it attempted is not a verification.
+ */
+$expected = array(
+	'THE HUB'           => array( 'Start here' => 4, 'Free Health Tools' => 3, 'Your Account' => 2, 'For Professionals' => 3, 'Vance Medical' => 3 ),
+	'KNOWLEDGEBASE'     => array( 'Browse the library' => 5, 'By content type' => 3 ),
+	'CONDITIONS'        => array(),
+);
+
+$items    = wp_get_nav_menu_items( $MENU_ID );
+$by_id    = array();
+$children = array();
+foreach ( $items as $i ) {
+	$by_id[ $i->ID ] = $i;
+	$children[ (int) $i->menu_item_parent ][] = $i;
+}
+
+$problems = array();
+foreach ( $expected as $top_title => $cols ) {
+	$top = null;
+	foreach ( $children[0] as $t ) { if ( $t->title === $top_title ) { $top = $t; } }
+	if ( ! $top ) { $problems[] = "MISSING top-level: $top_title"; continue; }
+
+	$found_cols = array();
+	foreach ( ( $children[ $top->ID ] ?? array() ) as $col ) { $found_cols[ $col->title ] = count( $children[ $col->ID ] ?? array() ); }
+
+	foreach ( $cols as $col_title => $want ) {
+		if ( ! isset( $found_cols[ $col_title ] ) ) { $problems[] = "MISSING column: $top_title > $col_title"; continue; }
+		if ( $found_cols[ $col_title ] !== $want ) {
+			$problems[] = "WRONG CHILD COUNT: $top_title > $col_title has {$found_cols[$col_title]}, expected $want";
+		}
+	}
+	foreach ( $found_cols as $col_title => $n ) {
+		if ( ! isset( $cols[ $col_title ] ) ) { $problems[] = "UNEXPECTED column: $top_title > $col_title"; }
+	}
+}
+
+// No column may carry order 0 -- see the note above.
+foreach ( $items as $i ) {
+	$mm = get_post_meta( $i->ID, '_megamenu', true );
+	if ( ! is_array( $mm ) || ! isset( $mm['mega_menu_order'] ) || ! is_array( $mm['mega_menu_order'] ) ) { continue; }
+	foreach ( $mm['mega_menu_order'] as $parent => $ord ) {
+		if ( 0 === (int) $ord ) { $problems[] = "ORDER 0 (will sort last): {$i->title}"; }
+	}
+}
+
+if ( $problems ) {
+	say( 'FAILED:' );
+	foreach ( $problems as $p ) { say( '  ' . $p ); }
+} else {
+	say( 'all columns present with the expected child counts; no order-0 values' );
+}
+
+say( '' );
 say( '--- RESULT ---' );
-$items = wp_get_nav_menu_items( $MENU_ID );
 say( 'menu id: ' . $MENU_ID . '   items: ' . count( $items ) );
 $loc = get_nav_menu_locations();
 say( 'primary-menu location currently points at menu: ' . ( isset( $loc['primary-menu'] ) ? $loc['primary-menu'] : 'none' ) );
