@@ -133,9 +133,14 @@ Same day. **All three new toggles default to `classic`.**
   removed from `customizer-pages.php`. That block used to be registered and then
   removed again at the end of the same function, so ~200 settings existed that no
   admin could ever see.
-- `inc/retired-redirects.php` is new: a `slug => destination` table and a 301. It runs
-  on the request **path**, not on the queried object, so it works whether the page is
-  published, trashed or gone. `/our-heritage/` → `/about/`.
+- `inc/retired-redirects.php` is new: a `slug => replacement slug` table and a 301. It
+  runs on the request **path**, not on the queried object, so it works whether the page
+  is published, trashed or gone. `/our-heritage/` → `/about-us/`.
+  ⚠ It stores a SLUG and resolves it with `get_page_by_path()` on purpose. The first
+  version hard-coded `/about/` — which is not the About page, it is a slug WordPress
+  itself 301s to `/about-us/`. That turned a redirect whose whole job is to be the last
+  hop into a two-hop chain, and it was only caught by following the live `Location`
+  headers rather than trusting the first 301. **`curl -sIL` and read every hop.**
 - The WP Page (id 389) is trashed, and the orphaned template removed from the server
   by hand — **necessary, because neither deploy path ever deletes.** Both untar over
   the live theme, so a file deleted in the repo lives on indefinitely on the server.

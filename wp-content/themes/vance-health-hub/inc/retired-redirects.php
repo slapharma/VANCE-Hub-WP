@@ -23,9 +23,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * slug => destination path.
+ * retired slug => the SLUG of the page that replaces it.
  *
- * @return array<string, string>
+ * A slug, not a path, and resolved through get_page_by_path() below, because a
+ * hard-coded path lands one hop short. The first version of this file sent
+ * /our-heritage/ to '/about/' -- which is not the About page, it is a slug
+ * WordPress itself 301s to /about-us/. That made a two-hop chain out of a
+ * redirect whose whole job is to be the last one. Letting WordPress name the
+ * destination also means a future slug change carries the redirect with it.
+ *
+ * @return array<string, array{slug: string, path: string}>
  */
 function vance_retired_redirects() {
 	return array(
@@ -40,7 +47,7 @@ function vance_retired_redirects() {
 		 * the database. They cost nothing, and they are the only copy of what
 		 * that page said.
 		 */
-		'our-heritage' => '/about/',
+		'our-heritage' => array( 'slug' => 'about-us', 'path' => '/about-us/' ),
 	);
 }
 
@@ -77,7 +84,13 @@ function vance_retired_redirect() {
 		return;
 	}
 
-	$target = home_url( $map[ $slug ] );
+	// Resolve to the canonical permalink so this is the only hop. The literal
+	// path is a last resort for a site where that page has been renamed or
+	// removed -- it will chain through WordPress's own canonical redirect, which
+	// is still better than a 404.
+	$dest   = $map[ $slug ];
+	$page   = get_page_by_path( $dest['slug'] );
+	$target = $page ? get_permalink( $page ) : home_url( $dest['path'] );
 
 	// A row whose destination is its own slug would loop the browser.
 	if ( untrailingslashit( $target ) === untrailingslashit( home_url( $path ) ) ) {
