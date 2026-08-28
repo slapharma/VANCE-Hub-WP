@@ -50,51 +50,79 @@ jobs:
             exit 1
           fi
 
-      # 2026-08-21 incident (run 32476704759): this step failed after ~5s with a
-      # bare "Process completed with exit code 1", and the runs immediately
-      # before and after it were both green. Cause: `ssh-keyscan` reaches out
-      # over the network and exits non-zero when it cannot, and the step runs
-      # under the runner's default `bash -e` — so one transient blip reaching
-      # Hostinger failed the whole deploy. `2>/dev/null` also threw away the one
-      # message that would have said so.
+      # The host keys are PINNED here rather than fetched with `ssh-keyscan`.
       #
-      # Retry with linear backoff, keep stderr for the summary, and only give up
-      # after the last attempt. Failing hard at that point is deliberate: if the
-      # host is genuinely unreachable the deploy steps cannot work either, and
-      # skipping the keyscan would silently drop host-key verification rather
-      # than fix anything.
+      # History. 2026-08-21 (run 32476704759): a keyscan blip failed the deploy
+      # with a bare exit 1. That was fixed by retrying five times with backoff.
+      # 2026-08-28: the retries were not enough — two consecutive deploys
+      # (9051211, e2c5dc8) burned all five attempts over ~2 minutes each and
+      # failed, while plain SSH to the same host from a workstation succeeded
+      # throughout. So Hostinger is intermittently refusing the runner's
+      # outbound probe on 65002, not going down.
+      #
+      # Pinning removes the network call entirely. It is also strictly SAFER
+      # than a keyscan: a keyscan trusts whatever answers on the port at deploy
+      # time, which is trust-on-first-use repeated on every run — it would have
+      # happily pinned an impostor. These three keys are a fixed value in
+      # version control, reviewable in a diff.
+      #
+      # Captured 2026-08-28 and cross-checked two ways before being committed:
+      # a fresh `ssh-keyscan -p 65002 82.29.185.3`, and the local known_hosts
+      # entry that every successful `BatchMode=yes` connection had already been
+      # verifying against. Both agreed on all three keys.
+      #
+      #   ED25519  SHA256:uYewCMfDcHJBLw+c6WpKvXyBZNH5XJbC7MyQW+53NdA
+      #   ECDSA    SHA256:j6rY+cratr8viDkFhiqWCCZWksaXxjyQag975s5JO1M
+      #   RSA      SHA256:FmsWcq/3D307ZZbbNT0RTmRvji6gI6AVhMk3CfY+rNE
+      #
+      # IF THE DEPLOY EVER FAILS WITH "Host key verification failed", do not
+      # paste in a new key to make it go away — that is the one message this
+      # pin exists to produce. Either Hostinger rebuilt/migrated the server, or
+      # something is answering on that port that should not be. Confirm the new
+      # fingerprints out of band (hPanel, or an SSH session you already trust),
+      # then update the three lines and the fingerprints above in one commit.
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
         run: |
-          set -uo pipefail
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/hostinger_sla
           chmod 600 ~/.ssh/hostinger_sla
-          touch ~/.ssh/known_hosts
+
+          # printf, not a heredoc: a heredoc body has to sit at column 0, and a
+          # line at column 0 ends the YAML block scalar this step is written in
+          # — the file stops parsing and the workflow never runs. Quoted printf
+          # arguments can be indented with the rest of the step.
+          printf '%s\n' \
+            '[82.29.185.3]:65002 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFgHS5aTxSUNmvNPyI6jyI3mxQ3aeFZTnvSs7F61jXng' \
+            '[82.29.185.3]:65002 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBN3NRrdEdKneGSG55VCpK5HT1jk9lyaVXWVXJa+j5p3PacssQo7cf3bq2uMAAcq58gfBSrGAs7QS5M4OsTAJwtE=' \
+            '[82.29.185.3]:65002 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7BpVpzjtWz4F1J0yDP+93K29QUw1Q/VhSfqUxDwnQzsap0cwYSzjzB39RkWR4FtIqwI4AgNHit9I9rbA+/nW5YQallqZ9PWR5ux3CovJ7TFju8kNAHwiTgHVQtM3flM676GqYSOWZ0c4dhnl42HZHpVf0H52oCekYgqdW9Je3EV32ohiMY+UScZPZcoKpzC6JMiGdnlHB/tDD5PE/7u5pbWT5NPk++q4Xywl/N8Bz+kzTjk1o3pUlKtRpPf5/r6uq8WsMQGgoQ11Sr7e85LjZnD2yuYLIkJ5mzQdU6rux3b5aJb77sk6vUcuq7SY+O6yP/1z1D54TRLQA1K/DlW4+Lf8Ao/hggqemy7snFRfVjhHr3A4X3BNKGjOy3ufsvQYWw1oqwVkzOOouKtjotkSgWU96heQo/F5kU7E+WP+2LTCslnG8MeRFiVVFQ3Zrl24Q2lH9vYrHv+LgX5EeeYlbMQ73OIz3IGoehsKZj6RxBc0I9eIAglmzb0kbRJAwtLs=' \
+            > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-          attempts=5
-          for attempt in $(seq 1 "$attempts"); do
-            # Collect to a temp file first: appending straight to known_hosts
-            # would leave a partial write behind on a failed attempt.
-            if ssh-keyscan -T 15 -p "$SSH_PORT" -H "$SSH_HOST" >/tmp/keyscan.out 2>/tmp/keyscan.err \
-               && [ -s /tmp/keyscan.out ]; then
-              cat /tmp/keyscan.out >> ~/.ssh/known_hosts
-              echo "ssh-keyscan succeeded on attempt ${attempt}/${attempts} ($(wc -l < /tmp/keyscan.out) host keys)."
-              break
-            fi
-            if [ "$attempt" -eq "$attempts" ]; then
-              echo "::error::ssh-keyscan could not reach ${SSH_HOST}:${SSH_PORT} after ${attempts} attempts. Last stderr below."
-              cat /tmp/keyscan.err >&2 || true
-              exit 1
-            fi
-            backoff=$(( attempt * 5 ))
-            echo "ssh-keyscan attempt ${attempt}/${attempts} failed; retrying in ${backoff}s."
-            cat /tmp/keyscan.err >&2 || true
-            sleep "$backoff"
-          done
+          # Make the pin binding for every ssh in this job without having to
+          # repeat -o flags on each of the four call sites. `yes`, not the
+          # default `ask`: on a runner there is no tty, so `ask` degrades to an
+          # error anyway, but saying it outright means the intent survives
+          # somebody later running this interactively.
+          printf '%s\n' \
+            'Host *' \
+            '    StrictHostKeyChecking yes' \
+            '    UserKnownHostsFile ~/.ssh/known_hosts' \
+            > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+          # A heredoc that lost its terminator, or an edit that dropped a line,
+          # would otherwise surface later as a confusing auth failure.
+          keys=$(ssh-keygen -lf ~/.ssh/known_hosts | wc -l)
+          if [ "$keys" -ne 3 ]; then
+            echo "::error::Pinned known_hosts should hold 3 host keys, found ${keys}. The printf block in this step is malformed."
+            exit 1
+          fi
+          echo "Pinned ${keys} host keys for ${SSH_HOST}:${SSH_PORT} (no network call):"
+          ssh-keygen -lf ~/.ssh/known_hosts
 
       - name: Verify remote theme path exists
         run: |
