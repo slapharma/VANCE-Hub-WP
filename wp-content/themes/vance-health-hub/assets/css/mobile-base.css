@@ -364,6 +364,34 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
         transform: none !important;
     }
 
+    /* Top-level drawer rows: 40px -> 46px, clearing the 44px touch minimum.
+     *
+     * Max Mega Menu's generated stylesheet pins these at `height: 40px;
+     * line-height: 40px` inside its own `@only screen and (max-width: 768px)`
+     * block, using a DOUBLE-ID selector
+     * (#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li > a). A
+     * single-ID override loses to it outright — measured, not assumed: a
+     * first attempt scoped to `body.mega-menu-primary-menu ...` left all four
+     * rows at 40px. Hence the matching double-ID selector plus !important.
+     *
+     * height must be released to `auto` as well as setting min-height; the
+     * plugin's explicit 40px would otherwise keep winning on the height
+     * property itself. line-height drops from 40px to 1.4 so a label that
+     * wraps to two lines does not inherit a 40px leading.
+     *
+     * Verified live at 375px (2026-08-28): all four rows 40px -> 46px, every
+     * row still hit-testable at its centre, the expand arrow keeps its 14x20
+     * box, the drawer stays 300x812 at x=0, and the document gains no
+     * horizontal overflow. */
+    body.mega-menu-primary-menu #mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item > a.mega-menu-link,
+    #mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item > a.mega-menu-link {
+        display: flex !important;
+        align-items: center !important;
+        height: auto !important;
+        min-height: 46px !important;
+        line-height: 1.4 !important;
+    }
+
     /* Reveal the off-canvas panel on open. Max Mega Menu Pro toggles the
      * `.mega-menu-open` class on click (confirmed: aria-expanded flips,
      * class is applied) but on this install its own generated stylesheet
