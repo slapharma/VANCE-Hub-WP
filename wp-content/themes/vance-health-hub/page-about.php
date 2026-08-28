@@ -233,13 +233,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
             3 => array('100,000+', 'Patients Supported Globally',         'users'),
         );
     ?>
-    <?php
-    /* .vabout-stats-overlap exists to clear the DARK hero's fade-out. The
-       spotlight hero has no such fade, so the same 100px offset reads as a
-       hole between the hero and the stats — normal section spacing instead. */
-    $vabout_stats_overlap = vance_get_theme_mod('vance_about_hero_show', true) && !$vabout_spotlight;
-    ?>
-    <section class="vabout-stats<?php echo $vabout_stats_overlap ? ' vabout-stats-overlap' : ''; ?>">
+    <section class="vabout-stats<?php echo vance_get_theme_mod('vance_about_hero_show', true) ? ' vabout-stats-overlap' : ''; ?>">
         <div class="container">
             <div class="vabout-stats-grid">
                 <?php for ($i = 1; $i <= 3; $i++) :
