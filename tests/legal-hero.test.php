@@ -106,7 +106,7 @@ set_mods( array() );
 $first = render( 'privacy' );
 check( 'privacy: headline renders',   strpos( $first, 'Privacy Policy' ) !== false );
 check( 'privacy: eyebrow renders',    strpos( $first, '__eyebrow">Privacy<' ) !== false );
-check( 'privacy: intro renders',      strpos( $first, 'right to privacy' ) !== false );
+check( 'privacy: intro renders',      strpos( $first, 'protecting your personal data' ) !== false );
 check( 'privacy: card email is the theme default, not empty',
     strpos( $first, 'mailto:team@vancemedicalfoods.co.uk' ) !== false );
 check( 'privacy: no empty mailto: anywhere', strpos( $first, 'mailto:"' ) === false );
@@ -124,9 +124,13 @@ echo "\n=== 1. The copy is the copy the dark heroes carried ===\n";
 /*
  * Switching hero design must not silently reword a legal document. Each
  * headline below is asserted against the literal the template rendered before
- * this hero existed. The three intros that were deliberately CHANGED are
- * listed as changes, with the old text asserted GONE so the change stays
- * deliberate rather than becoming a regression somebody re-introduces.
+ * this hero existed.
+ *
+ * The intros that were deliberately CHANGED are listed as changes, with the
+ * old wording asserted GONE. That direction matters more than it looks: an
+ * intro that merely "contains the new text" would also pass if somebody
+ * restored the old sentence alongside it, and three of these four rewrites
+ * were requested precisely because the old sentence was wrong or too long.
  */
 $carried_titles = array(
     'privacy'       => 'Privacy Policy',
@@ -140,8 +144,6 @@ foreach ( $carried_titles as $doc => $title ) {
         vance_legal_hero_docs()[ $doc ]['title'], $title );
 }
 
-check( 'privacy: intro is carried verbatim',
-    strpos( vance_legal_hero_docs()['privacy']['intro'], 'collect, use, and safeguard your information' ) !== false );
 check( 'disclaimer: intro is carried verbatim',
     vance_legal_hero_docs()['disclaimer']['intro'],
     'Please read this before using Vance Medical Hub, its articles, tools or VANCE-Ai.' );
@@ -151,8 +153,21 @@ check( 'terms: the pre-rebrand "Gastro Health Hub" is gone',
     stripos( vance_legal_hero_docs()['terms']['intro'], 'Gastro Health Hub' ) === false );
 check( 'terms: and the intro names Vance Medical Hub instead',
     strpos( vance_legal_hero_docs()['terms']['intro'], 'Vance Medical Hub' ) !== false );
-check( 'accessibility: intro still opens with the sentence it carried',
-    strpos( vance_legal_hero_docs()['accessibility']['intro'], 'We want everyone to be able to use Vance Medical Hub.' ) === 0 );
+// Privacy and Accessibility, reworded by the client on 2026-08-28.
+check( 'privacy: intro is the client-supplied wording',
+    vance_legal_hero_docs()['privacy']['intro'],
+    'We are committed to protecting your personal data and privacy. This policy explains how we collect, use, and protect your data.' );
+check( 'privacy: the superseded wording is gone',
+    strpos( vance_legal_hero_docs()['privacy']['intro'], 'safeguard your information' ), false );
+check( 'accessibility: intro is the client-supplied wording',
+    vance_legal_hero_docs()['accessibility']['intro'],
+    'This statement sets out the standards we hold, and how to tell us when something does not work for you.' );
+check( 'accessibility: the superseded opening sentence is gone',
+    strpos( vance_legal_hero_docs()['accessibility']['intro'], 'We want everyone to be able to use' ), false );
+// It was four rendered lines at the old length; the cap keeps it from creeping
+// back there without anybody noticing.
+check( 'accessibility: intro is short enough to stay under three lines',
+    strlen( vance_legal_hero_docs()['accessibility']['intro'] ) < 130 );
 check( 'cookies: has an intro of its own (the generic hero had none)',
     strlen( vance_legal_hero_docs()['cookies']['intro'] ) > 40 );
 
@@ -280,6 +295,19 @@ check( 'the mobile rule restores the top padding main.css zeroes for the photo',
     preg_match( '#@media \(max-width: 900px\)\s*\{\s*/\*.*?\*/\s*\.vhh-hero-spotlight--legal \{\s*padding: \d+px#s', $css ) === 1 );
 check( 'the card link is coloured',
     strpos( $css, '.vhh-hero-spotlight__card-text a' ) !== false );
+
+/*
+ * The headline cap. main.css's 520px let "Accessibility Statement" fit at
+ * 1280px and wrap on anything wider -- so this is asserted as a NUMBER large
+ * enough for the longest title at the type scale's 56px ceiling (579px
+ * measured), not merely as "a rule exists".
+ */
+preg_match( '#\.vhh-hero-spotlight--legal \.vhh-hero-spotlight__title \{\s*max-width: (\d+)px#', $css, $mw );
+check( 'the headline has a cap of its own', isset( $mw[1] ) );
+check( 'and it clears the longest title at the 56px ceiling',
+    isset( $mw[1] ) && (int) $mw[1] >= 600 );
+check( 'without reaching past the copy column',
+    isset( $mw[1] ) && (int) $mw[1] <= 690 );
 
 /*
  * Every class the renderer emits either has a rule in the block above, or one

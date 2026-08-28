@@ -92,7 +92,11 @@ function vance_legal_hero_docs() {
 			'title'   => __( 'Privacy Policy', 'vance-health-hub' ),
 			'short'   => __( 'Privacy Policy', 'vance-health-hub' ),
 			'kicker'  => __( 'Your data', 'vance-health-hub' ),
-			'intro'   => __( 'We are committed to protecting your personal data and your right to privacy. This policy explains how we collect, use, and safeguard your information.', 'vance-health-hub' ),
+			// Reworded by the client on 2026-08-28, tightening the two clauses.
+			// The dark hero's wording was 'your right to privacy ... safeguard
+			// your information'; tests/legal-hero.test.php asserts the old text
+			// stays gone, so nobody restores it as a 'fix'.
+			'intro'   => __( 'We are committed to protecting your personal data and privacy. This policy explains how we collect, use, and protect your data.', 'vance-health-hub' ),
 			'icon'    => 'shield',
 			'slug'    => 'privacy-policy',
 			'path'    => '/privacy-policy/',
@@ -144,11 +148,11 @@ function vance_legal_hero_docs() {
 			'title'   => __( 'Accessibility Statement', 'vance-health-hub' ),
 			'short'   => __( 'Accessibility Statement', 'vance-health-hub' ),
 			'kicker'  => __( 'Using this site', 'vance-health-hub' ),
-			// Extended by a clause. The classic hero's single short sentence
-			// ("We want everyone to be able to use Vance Medical Hub.") sat
-			// under a 52px headline and read as a caption; the standard it is
-			// held to is the useful half and was already in the body.
-			'intro'   => __( 'We want everyone to be able to use Vance Medical Hub. This statement sets out the standard we hold the site to, where we currently fall short, and how to tell us when something does not work for you.', 'vance-health-hub' ),
+			// Rewritten by the client on 2026-08-28. The dark hero's line was
+			// "We want everyone to be able to use Vance Medical Hub.", which sat
+			// under a 52px headline and read as a caption; an intermediate
+			// version ran to four lines. This is the settled wording.
+			'intro'   => __( 'This statement sets out the standards we hold, and how to tell us when something does not work for you.', 'vance-health-hub' ),
 			'icon'    => 'access',
 			'slug'    => 'accessibility',
 			'path'    => '/accessibility/',
@@ -429,6 +433,23 @@ function vance_legal_hero_styles() {
     .vhh-hero-spotlight__slot--docs .vhh-hero-spotlight__line:nth-last-child(-n + 2) {
         border-bottom: 0;
     }
+}
+
+/* --- Headline ------------------------------------------------------------ */
+
+/* main.css caps the headline at 520px, which holds the homepage's three-line
+   headline off the search field below it. Every headline here is a document
+   title that belongs on ONE line, and the longest -- "Accessibility Statement"
+   -- measures 579px at the type scale's 56px ceiling. At 520px it therefore fit
+   on a 1280px screen with 4px to spare and wrapped on anything wider, which is
+   the worst possible place for a cap to sit.
+
+   640px clears the longest title at the ceiling with room, and stays inside the
+   690px copy column, so it cannot reach the motif. It deliberately also
+   overrides the 420px cap main.css applies below 1100px: that cap exists to
+   hold a three-line headline in shape, and these are one line. */
+.vhh-hero-spotlight--legal .vhh-hero-spotlight__title {
+    max-width: 640px;
 }
 
 /* --- The card's one addition --------------------------------------------- */

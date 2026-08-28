@@ -27,8 +27,23 @@ PAGE     = os.path.join(THEME, 'page.php')
 MUTANTS = [
     (RENDERER,
      "the intro default is emptied -- the bug that shipped the About hero blank",
-     "'intro'   => __( 'We are committed to protecting your personal data and your right to privacy. This policy explains how we collect, use, and safeguard your information.', 'vance-health-hub' ),",
+     "'intro'   => __( 'We are committed to protecting your personal data and privacy. This policy explains how we collect, use, and protect your data.', 'vance-health-hub' ),",
      "'intro'   => '',"),
+
+    (RENDERER,
+     "the superseded Privacy wording is restored alongside the client's",
+     "'intro'   => __( 'We are committed to protecting your personal data and privacy. This policy explains how we collect, use, and protect your data.', 'vance-health-hub' ),",
+     "'intro'   => __( 'We are committed to protecting your personal data and your right to privacy. This policy explains how we collect, use, and safeguard your information.', 'vance-health-hub' ),"),
+
+    (RENDERER,
+     "the Accessibility intro creeps back to its four-line length",
+     "'intro'   => __( 'This statement sets out the standards we hold, and how to tell us when something does not work for you.', 'vance-health-hub' ),",
+     "'intro'   => __( 'We want everyone to be able to use Vance Medical Hub. This statement sets out the standard we hold the site to, where we currently fall short, and how to tell us when something does not work for you.', 'vance-health-hub' ),"),
+
+    (RENDERER,
+     "the headline cap goes back to a value that wraps the longest title",
+     ".vhh-hero-spotlight--legal .vhh-hero-spotlight__title {\n    max-width: 640px;\n}",
+     ".vhh-hero-spotlight--legal .vhh-hero-spotlight__title {\n    max-width: 520px;\n}"),
 
     (RENDERER,
      "the contact email is read with an '' default instead of the theme's",
