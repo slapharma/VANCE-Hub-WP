@@ -4399,10 +4399,12 @@ body.home .hero {
 
 
 /* ============================================================================
-   CONTACT & ABOUT HEROES — the spotlight layout, page variant
+   PAGE HEROES — the spotlight layout, page variant
    (inc/page-hero-spotlight.php)
    ----------------------------------------------------------------------------
-   Those two pages render the SAME .vhh-hero-spotlight section as the homepage,
+   Contact, About and the three free-tool pages — the Gastro Health Survey, the
+   meal planner and the malnutrition calculator — render the SAME
+   .vhh-hero-spotlight section as the homepage,
    so the band, the photograph's dissolve, the type scale, the CTAs, the card
    and the whole responsive ladder above are inherited rather than repeated —
    including the doubled-class !important rules that opt this hero out of the
@@ -4419,9 +4421,12 @@ body.home .hero {
                 __search-form higher up, so only the interior lives here.
      __card--stat  the card variant that leads on a figure instead of a
                 heading, used by About to surface stat 1.
+     __slot--tools the three tool pages' band. Not a fourth band: it renders
+                the lines markup unchanged and adds only the two things a tool
+                name needs that an email address does not.
 
-   Neither page renders any of this until its hero design is switched to
-   Spotlight; both default to the classic dark hero.
+   No page renders any of this until its own hero design is switched to
+   Spotlight; all five default to the classic dark hero.
    ========================================================================== */
 
 /* --- Eyebrow ------------------------------------------------------------- */
@@ -4644,6 +4649,54 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 }
 
 
+
+/* --- The three free tools: the band of sibling tools ---------------------- */
+
+/* Cells identical to Contact's direct lines, because the renderer emits the
+   same markup for both -- so the icon tile, the caption/value pair, the
+   dividers and the whole responsive stack are inherited, not repeated. Only
+   what a tool NAME needs and an email address does not lives here. */
+
+.vhh-hero-spotlight__slot--tools .vhh-hero-spotlight__line-v {
+    /* The lines variant sets `overflow-wrap: anywhere` so that one unbreakable
+       email address cannot widen the band. Tool names are ordinary words --
+       "Gastro Recipes & Meal Planner" -- and that rule would break them
+       mid-word, so it is wound back to normal wrapping here. */
+    overflow-wrap: normal;
+}
+
+/* Every cell in THIS band is a link; in the lines band they are not (opening
+   hours is plain text). So the affordance has to read as one before anybody
+   hovers. Drawn from two borders rather than an arrow glyph: an empty
+   pseudo-element is not announced, and the cell's own words already say where
+   it goes. */
+.vhh-hero-spotlight__slot--tools .vhh-hero-spotlight__line::after {
+    content: "";
+    flex: 0 0 auto;
+    margin-left: auto;
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(45deg);
+    color: var(--vhh-hs-title, #04504E);
+    opacity: 0.45;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.vhh-hero-spotlight__slot--tools a.vhh-hero-spotlight__line:hover::after,
+.vhh-hero-spotlight__slot--tools a.vhh-hero-spotlight__line:focus-visible::after {
+    opacity: 1;
+    transform: rotate(45deg) translate(2px, -2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vhh-hero-spotlight__slot--tools .vhh-hero-spotlight__line::after {
+        transition: none;
+    }
+}
+
+
 /* ==========================================================================
    Article cards stay square
    ==========================================================================
@@ -4836,11 +4889,19 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 
    THE TWO NUMBERS ARE COUPLED. Changing --vance-seam-blur on its own re-creates
    the original bug, because the strip stops being able to contain the ramp:
-   keep height >= 3.3 * blur. The current pair is 52px / 15.6px (51.5 needed, so
-   it just fits), giving a ~26px visible fade with a 1.06/px^2 break. That is
-   the earlier 80px / 24px pair -- which faded over ~39px -- with both numbers
-   scaled by 0.65 to shorten the blend by 35% while keeping the ratio, and hence
-   the freedom from edges, intact.
+   keep height >= 3.3 * blur. To resize the blend, scale BOTH by the same factor
+   -- that holds the ratio, so the containment comes along for free, and it also
+   measures best. The pair has been shortened twice from the 80px / 24px that
+   first fixed the edges (x0.65, then x0.70); at each step the exact
+   proportional pair beat every rounded alternative on the slope-break metric
+   (36.4/10.92 scores 1.15/px^2 where 36/10.8 scores 1.56 and 38/11 scores 2.07),
+   which is why these are odd numbers rather than tidy ones.
+
+   Now at 36.4px / 10.92px: a ~18px visible fade, 45% of the original, with a
+   1.15/px^2 break against the 37.3 of the unmasked version. Note the break does
+   creep up as the pair shrinks -- the same shape over fewer pixels is steeper --
+   so there is a floor to this. Much below ~30px of strip it stops reading as a
+   blur and becomes a plain soft edge.
 
    z-index 11 clears .vance-testimonials-section (position: relative, z-index:
    10), which would otherwise paint over the seam above it. It stays far below
@@ -4864,10 +4925,10 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(var(--vance-seam-height, 52px) / -2);
-    height: var(--vance-seam-height, 52px);
-    -webkit-backdrop-filter: blur(var(--vance-seam-blur, 15.6px));
-    backdrop-filter: blur(var(--vance-seam-blur, 15.6px));
+    top: calc(var(--vance-seam-height, 36.4px) / -2);
+    height: var(--vance-seam-height, 36.4px);
+    -webkit-backdrop-filter: blur(var(--vance-seam-blur, 10.92px));
+    backdrop-filter: blur(var(--vance-seam-blur, 10.92px));
     /* Feathers the filter itself, not a colour over it: the element's alpha is
        what the backdrop-filter is composited through, so a gradient mask ramps
        the blur from none, to full, to none. Without it the strip's own top and
