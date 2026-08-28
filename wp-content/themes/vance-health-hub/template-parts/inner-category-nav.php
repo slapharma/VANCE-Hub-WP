@@ -111,14 +111,17 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 // backdrop blur and the lift shadow all go with the rest of the
                 // decoration, because a blurred backdrop is not transparent.
                 //
-                // No `transition` on either: the buttons are not animated, so the
-                // background swaps instantly on hover.
+                // `transition: none` rather than just omitting one: main.css sets
+                // `a { transition: color 0.2s }` sitewide, which these anchors
+                // inherit. It animates nothing here now that the label is #008080
+                // in both states, but leaving it would mean the buttons still
+                // carry a transition, so it is turned off explicitly.
                 //
                 // No font-family in here on purpose. The anchor inherits the site
                 // face (--font-main, Inter) from body, which is already what it
                 // renders in; restating it would just be a second place to keep
                 // in step.
-                $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080;";
+                $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080; transition: none;";
                 $card_style .= ( $vance_subcat_parent > 0 ) ? " padding: 14px 18px;" : " padding: 12px;";
 
                 $text_size  = ( $vance_subcat_parent > 0 ) ? "13px" : "12px";
