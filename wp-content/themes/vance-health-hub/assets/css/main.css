@@ -4815,10 +4815,29 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
    the Customizer needs no CSS change.
 
    Geometry: the seam itself is zero-height so it adds nothing to the flow, and
-   its strip is pulled 25px up into the section above and 25px down into the
-   one below -- the blur therefore samples across the join and resolves back to
-   each section's own colour by the ends of the strip, leaving no visible edge
-   of its own.
+   its strip is pulled half its height up into the section above and half down
+   into the one below, so the blur samples across the join.
+
+   The strip must be MASKED, and taller than the blur reaches, or it draws the
+   very edges it exists to remove. CSS blur(R) is a Gaussian with sigma = R/2
+   and spreads visibly to about +/-2.5 sigma, so blur(24px) needs +/-30px. The
+   first version gave it a 50px strip -- only +/-25px -- and switched the filter
+   on and off at the strip edges with no mask. The colour jump there is tiny
+   (~2/255), but the SLOPE jump is not: the fade is running at full tilt one
+   pixel and is flat the next. That second-derivative break is what the eye
+   reads as a line, and it is why the joins looked like deliberate separator
+   bands with a hard rule down each side.
+
+   Modelling the composite (blurred backdrop alpha-mixed back over the raw one)
+   puts the worst slope break at 37.3/px^2, sitting exactly on the strip edge at
+   y=+25px. Keeping blur(24px) but giving it an 80px strip and fading the mask
+   over the outer 22% each end drops that to 0.33/px^2 and moves it off the edge
+   -- while leaving the visible fade the same 39px wide it already was. The
+   full-strength zone actually narrows, +/-25px to +/-22px, so slightly LESS
+   content near a section boundary is blurred than before.
+
+   The two numbers are coupled: changing --vance-seam-blur on its own re-breaks
+   it. Scale --vance-seam-height with it, roughly height >= 3.3 * blur.
 
    z-index 11 clears .vance-testimonials-section (position: relative, z-index:
    10), which would otherwise paint over the seam above it. It stays far below
@@ -4842,10 +4861,16 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(var(--vance-seam-height, 50px) / -2);
-    height: var(--vance-seam-height, 50px);
+    top: calc(var(--vance-seam-height, 80px) / -2);
+    height: var(--vance-seam-height, 80px);
     -webkit-backdrop-filter: blur(var(--vance-seam-blur, 24px));
     backdrop-filter: blur(var(--vance-seam-blur, 24px));
+    /* Feathers the filter itself, not a colour over it: the element's alpha is
+       what the backdrop-filter is composited through, so a gradient mask ramps
+       the blur from none, to full, to none. Without it the strip's own top and
+       bottom edges are visible wherever the two sides differ. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
 }
 
 /* ============================================================================
