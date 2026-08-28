@@ -1,0 +1,615 @@
+/* =============================================================================
+   nav-mega.css — interior of the primary-menu mega panels.
+
+   Scope: this file styles ONLY what sits inside a Max Mega Menu panel, plus the
+   panel's own geometry. It deliberately does not touch the menu BAR — the
+   top-level link colour, weight and baseline alignment are already owned by
+   main.css (see the "#mega-menu-wrap-primary-menu" block there, ~line 288-365)
+   and duplicating those rules here would just create a second place to fix.
+
+   Plugin: Max Mega Menu 3.10.5 (free). Panels are built in Appearance → Menus
+   with the plugin's grid builder; the structure this file expects is:
+
+       li.mega-menu-megamenu                 top-level item
+        └ ul.mega-sub-menu                   THE PANEL
+           └ li.mega-menu-row                a grid row
+              └ ul.mega-sub-menu
+                 └ li.mega-menu-column       a grid column
+                    └ ul.mega-sub-menu
+                       ├ li.mega-menu-item-has-children   a link column
+                       │   ├ a.mega-menu-link             column heading
+                       │   └ ul.mega-sub-menu > li > a    the links
+                       └ li.widget_*                      a widget cell
+
+   See docs/MEGA-MENU-SETUP.md in the repo root for the admin-side build.
+
+   ---------------------------------------------------------------------------
+   Why !important appears on the panel geometry (and nowhere else)
+
+   Max Mega Menu ships its own generated stylesheet for this menu location, at
+   the same double-ID specificity used here. Whichever file loads last wins, and
+   load order is not ours to guarantee: the plugin regenerates its CSS on save,
+   and Jetpack Boost concatenates everything into one bundle. main.css already
+   made this call for the top-level link colour and font-weight for exactly the
+   same reason. Marking only the load-bearing geometry (position / width / left
+   / right) keeps the escape hatch narrow — every cosmetic rule below wins on
+   specificity alone and stays overridable.
+   ---------------------------------------------------------------------------
+
+   Corner radii come from the token scale in main.css :root — never hard-coded.
+   Article thumbnails inside the featured cards use --radius-article (0), so a
+   post tile in the menu matches a post tile everywhere else on the site.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. PANEL GEOMETRY (desktop only)
+
+   Goal: the panel spans the site container, edge-aligned with the logo on the
+   left and the search button on the right, rather than being pinned to the
+   narrow nav wrapper.
+
+   Method: neutralise every `position` between .site-header and the panel, so
+   the panel's containing block becomes .site-header itself — which is already
+   positioned (position:sticky, plus a transform:translateZ(0) paint fix). Then
+   `top:100%` is the bottom of the 80px header, and left/right + auto margins
+   reproduce .container's max-width:1200px + padding:0 20px.
+
+   No vw units: 100vw includes the scrollbar in several browsers and would push
+   the panel ~15px wide of the container.
+
+   position:fixed must NEVER be used inside a panel. .site-header's transform
+   makes it a containing block for fixed descendants too, so a fixed child is
+   trapped in the header instead of the viewport. This is the same mechanism
+   behind the mobile drawer fault in SITE-QA-REVIEW-2026-08-07.
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) {
+
+	/* Clear the positioned ancestors between .site-header and the panel. */
+	.site-header .main-nav,
+	.site-header #mega-menu-wrap-primary-menu,
+	.site-header #mega-menu-wrap-primary-menu #mega-menu-primary-menu,
+	.site-header #mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu {
+		position: static !important;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu > ul.mega-sub-menu {
+		position: absolute !important;
+		top: 100% !important;
+		left: 20px !important;
+		right: 20px !important;
+		width: auto !important;
+		max-width: calc(var(--container-width, 1200px) - 40px) !important;
+		margin: 0 auto !important;
+
+		box-sizing: border-box;
+		padding: 28px 32px 26px;
+		background: #fff;
+		border: 1px solid #e4eaea;
+		border-top: 0;
+		border-radius: 0 0 var(--radius-surface, 14px) var(--radius-surface, 14px);
+		box-shadow: 0 24px 48px -18px rgba(10, 25, 41, .22);
+	}
+}
+
+/* -----------------------------------------------------------------------------
+   2. GRID ROWS AND COLUMNS
+
+   The plugin lays the grid out with its own float/flex rules and percentage
+   widths (.mega-menu-columns-N-of-12). Those are left alone — only the gutters
+   and the divider between link columns are set here.
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) {
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-row {
+		margin: 0;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-row + li.mega-menu-row {
+		margin-top: 24px;
+		padding-top: 24px;
+		border-top: 1px solid #eef2f2;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column {
+		padding: 0 14px;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column:first-child {
+		padding-left: 0;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column:last-child {
+		padding-right: 0;
+	}
+}
+
+/* -----------------------------------------------------------------------------
+   3. COLUMN HEADINGS AND LINK LISTS
+
+   A second-level menu item renders as the column heading; its children render
+   as the link list. Both are <a class="mega-menu-link">, distinguished only by
+   depth — hence the child-combinator selectors.
+
+   Headings are <a> or <span>, never <h*> or <p>: mobile-base.css and
+   mobile-components.css load after this file and pin h1/h2/p sizes with
+   !important below 768px, which would silently blow up a heading in the drawer.
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) {
+
+	/* --- the column heading --- */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
+		display: block;
+		font-family: var(--font-heading, 'Outfit', sans-serif);
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.4;
+		letter-spacing: .1em;
+		text-transform: uppercase;
+		color: var(--primary-color, #008080);
+		padding: 0 0 9px;
+		margin: 0 0 10px;
+		border-bottom: 1px solid #e4eaea;
+	}
+
+	/* A heading whose parent item has "Disable link" set is not clickable, so it
+	   must not offer a pointer or a hover colour. The plugin marks these with
+	   .mega-disable-link. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-disable-link > a.mega-menu-link {
+		cursor: default;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:hover,
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item:not(.mega-disable-link) > a.mega-menu-link:focus {
+		color: var(--primary-hover, #006666);
+	}
+
+	/* --- the links underneath it --- */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
+		display: block;
+		font-family: var(--font-main, 'Inter', sans-serif);
+		font-size: 14px;
+		font-weight: 500;
+		line-height: 1.4;
+		text-transform: none;
+		letter-spacing: 0;
+		color: var(--text-main, #1F2937);
+		padding: 8px 10px;
+		margin-left: -10px;
+		border-radius: var(--radius-control, 6px);
+		transition: background-color .16s ease, color .16s ease;
+	}
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:hover,
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link:focus {
+		background: var(--accent-color, #F3F4F6);
+		color: var(--primary-color, #008080);
+	}
+
+	/* Keyboard focus must stay visible against the pale hover background. The
+	   plugin's own focus handling only manages open/close state, not a ring. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column a.mega-menu-link:focus-visible {
+		outline: 2px solid var(--primary-color, #008080);
+		outline-offset: 1px;
+	}
+
+	/* Second-level items inside a column carry the plugin's dropdown indicator
+	   by default; in a mega panel there is nothing to expand. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column .mega-indicator {
+		display: none;
+	}
+}
+
+/* -----------------------------------------------------------------------------
+   4. WIDGET CELLS — shared
+
+   Everything from here down is markup this theme controls (inc/nav-mega.php and
+   the Custom HTML widgets documented in docs/MEGA-MENU-SETUP.md), so the
+   selectors are plain classes. They still need the panel prefix on a few rules
+   to beat the plugin's generic "li inside a sub-menu" resets.
+   -------------------------------------------------------------------------- */
+#mega-menu-wrap-primary-menu .vance-nav-widget,
+#mega-menu-wrap-primary-menu li.mega-menu-item.widget_custom_html,
+#mega-menu-wrap-primary-menu li.mega-menu-item[class*="vhh_nav_"] {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+/* The plugin prints a widget title above the widget body. Panels supply their
+   own headings, so an empty title field must not leave a gap. */
+#mega-menu-wrap-primary-menu .mega-block-title:empty {
+	display: none;
+}
+
+#mega-menu-wrap-primary-menu .mega-block-title {
+	font-family: var(--font-heading, 'Outfit', sans-serif);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	color: var(--primary-color, #008080);
+	padding: 0 0 9px;
+	margin: 0 0 10px;
+	border-bottom: 1px solid #e4eaea;
+}
+
+/* -----------------------------------------------------------------------------
+   5. ICON TILES  (VHH_Nav_Tiles_Widget)
+   -------------------------------------------------------------------------- */
+.vance-nav-tiles {
+	display: grid;
+	grid-template-columns: repeat(var(--vance-nav-tile-cols, 3), minmax(0, 1fr));
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.vance-nav-tile {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+	text-decoration: none;
+	background: #fff;
+	border: 1px solid #e4eaea;
+	border-radius: var(--radius-surface, 14px);
+	padding: 13px 14px;
+	transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+.vance-nav-tile:hover,
+.vance-nav-tile:focus {
+	border-color: var(--primary-pale, #aedbdb);
+	background: #f9fdfd;
+	box-shadow: 0 4px 14px -8px rgba(0, 128, 128, .5);
+}
+
+.vance-nav-tile:focus-visible {
+	outline: 2px solid var(--primary-color, #008080);
+	outline-offset: 2px;
+}
+
+.vance-nav-tile__icon {
+	flex: 0 0 34px;
+	width: 34px;
+	height: 34px;
+	display: grid;
+	place-items: center;
+	border-radius: var(--radius-control, 6px);
+	background: var(--primary-wash, #def4f4);
+	color: var(--primary-hover, #006666);
+}
+
+.vance-nav-tile__icon svg {
+	width: 19px;
+	height: 19px;
+	display: block;
+}
+
+.vance-nav-tile__text {
+	min-width: 0;
+}
+
+.vance-nav-tile__title {
+	display: block;
+	font-family: var(--font-main, 'Inter', sans-serif);
+	font-size: 13.5px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--text-main, #1F2937);
+}
+
+.vance-nav-tile__desc {
+	display: block;
+	font-size: 11.5px;
+	font-weight: 400;
+	line-height: 1.4;
+	color: var(--text-light, #6B7280);
+	margin-top: 3px;
+}
+
+/* A tile flagged "feature" in the widget — the odd one out at the end of a row
+   that asks a question rather than naming a condition. */
+.vance-nav-tile--feature {
+	grid-column: span 2;
+	border-color: var(--primary-pale, #aedbdb);
+	background: #f4fcfc;
+}
+
+.vance-nav-tile--feature .vance-nav-tile__icon {
+	background: var(--primary-color, #008080);
+	color: #fff;
+}
+
+/* -----------------------------------------------------------------------------
+   6. CTA RAIL  (VHH_Nav_CTA_Widget)
+   -------------------------------------------------------------------------- */
+.vance-nav-cta {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	height: 100%;
+	background: var(--primary-wash, #def4f4);
+	border: 1px solid var(--primary-pale, #aedbdb);
+	border-radius: var(--radius-surface, 14px);
+	padding: 20px;
+}
+
+.vance-nav-cta__eyebrow {
+	font-family: var(--font-main, 'Inter', sans-serif);
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: var(--primary-hover, #006666);
+}
+
+.vance-nav-cta__title {
+	font-family: var(--font-heading, 'Outfit', sans-serif);
+	font-size: 17px;
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: -.01em;
+	color: var(--secondary-color, #0A1929);
+}
+
+.vance-nav-cta__text {
+	font-size: 12.5px;
+	line-height: 1.5;
+	color: #47565c;
+	margin: 0;
+}
+
+.vance-nav-cta__btn {
+	align-self: flex-start;
+	margin-top: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	background: var(--primary-color, #008080);
+	color: #fff;
+	text-decoration: none;
+	font-size: 12.5px;
+	font-weight: 600;
+	line-height: 1.2;
+	padding: 9px 16px;
+	border-radius: var(--radius-control, 6px);
+	transition: background-color .16s ease;
+}
+
+.vance-nav-cta__btn:hover,
+.vance-nav-cta__btn:focus {
+	background: var(--primary-hover, #006666);
+	color: #fff;
+}
+
+.vance-nav-cta__btn:focus-visible {
+	outline: 2px solid var(--secondary-color, #0A1929);
+	outline-offset: 2px;
+}
+
+.vance-nav-cta__btn svg {
+	width: 14px;
+	height: 14px;
+	display: block;
+}
+
+/* -----------------------------------------------------------------------------
+   7. FEATURED ARTICLE CARDS  (VHH_Nav_Featured_Widget)
+
+   Thumbnails take --radius-article (0) on purpose. See the "Article cards stay
+   square" rule at the end of main.css: post tiles are the site's one deliberate
+   square exception, and a menu panel is not a reason to break it.
+   -------------------------------------------------------------------------- */
+.vance-nav-feature {
+	display: grid;
+	grid-template-columns: repeat(var(--vance-nav-feature-cols, 2), minmax(0, 1fr));
+	gap: 14px;
+}
+
+.vance-nav-feature__card {
+	display: flex;
+	flex-direction: column;
+	text-decoration: none;
+}
+
+.vance-nav-feature__card:focus-visible {
+	outline: 2px solid var(--primary-color, #008080);
+	outline-offset: 3px;
+}
+
+.vance-nav-feature__thumb {
+	position: relative;
+	display: block;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: var(--radius-article, 0);
+	background: linear-gradient(135deg, var(--secondary-color, #0A1929), #12414a);
+}
+
+.vance-nav-feature__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform .3s ease;
+}
+
+.vance-nav-feature__card:hover .vance-nav-feature__thumb img {
+	transform: scale(1.04);
+}
+
+.vance-nav-feature__chip {
+	position: absolute;
+	z-index: 2;
+	top: 9px;
+	left: 9px;
+	background: rgba(255, 255, 255, .94);
+	color: var(--primary-hover, #006666);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	line-height: 1.4;
+	padding: 3px 8px;
+	border-radius: var(--radius-pill, 999px);
+}
+
+.vance-nav-feature__title {
+	display: block;
+	font-family: var(--font-main, 'Inter', sans-serif);
+	font-size: 13.5px;
+	font-weight: 600;
+	line-height: 1.38;
+	color: var(--text-main, #1F2937);
+	margin-top: 10px;
+	transition: color .16s ease;
+}
+
+.vance-nav-feature__card:hover .vance-nav-feature__title {
+	color: var(--primary-color, #008080);
+}
+
+.vance-nav-feature__date {
+	display: block;
+	font-size: 10.5px;
+	font-weight: 500;
+	letter-spacing: .04em;
+	text-transform: uppercase;
+	color: var(--text-light, #6B7280);
+	margin-top: 6px;
+}
+
+.vance-nav-feature__more {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 14px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--primary-color, #008080);
+	text-decoration: none;
+}
+
+.vance-nav-feature__more:hover {
+	color: var(--primary-hover, #006666);
+	gap: 9px;
+}
+
+.vance-nav-feature__more svg {
+	width: 15px;
+	height: 15px;
+	display: block;
+	transition: transform .16s ease;
+}
+
+/* -----------------------------------------------------------------------------
+   8. MOBILE (≤768px) — the plugin's off-canvas drawer
+
+   The drawer stacks every grid cell vertically. Two problems follow:
+
+     a) The card-shaped widgets become enormous. Two article thumbnails and a
+        CTA card per panel turn a five-item menu into a scroll marathon. The
+        featured cards and CTA rails are hidden, and nothing is lost — both
+        duplicate a link that is already in the tree.
+
+        The condition tiles are NOT hidden: they are the only route to those
+        seven pages. They are restyled into the same plain rows the link lists
+        use, rather than being duplicated as a second hidden list in the DOM.
+
+     b) Rows are too short to hit. The plugin's default drawer row is ~38px;
+        44px is the accessible minimum, so 46px is set here with room for two
+        lines of text.
+
+   Note the panel geometry from §1 is scoped to min-width:769px and simply does
+   not apply here — the drawer is the plugin's own fixed-position panel and must
+   keep its own positioning. Nothing in this block touches position.
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+
+	#mega-menu-wrap-primary-menu .vance-nav-cta,
+	#mega-menu-wrap-primary-menu .vance-nav-feature,
+	#mega-menu-wrap-primary-menu .vance-nav-feature__more {
+		display: none;
+	}
+
+	/* Tiles collapse to plain rows: one column, no icon, no description. */
+	#mega-menu-wrap-primary-menu .vance-nav-tiles {
+		display: block;
+		gap: 0;
+	}
+
+	#mega-menu-wrap-primary-menu .vance-nav-tile {
+		display: flex;
+		align-items: center;
+		min-height: 46px;
+		gap: 0;
+		background: none;
+		border: 0;
+		border-left: 2px solid #e4eaea;
+		/* Squared on purpose, and correctly so per the corner-radius rules in
+		   CLAUDE.md: a card that goes full-bleed inside a mobile sheet stops
+		   being a card. Do not "restore" a token here. */
+		border-radius: 0;
+		padding: 11px 0 11px 12px;
+		box-shadow: none;
+	}
+
+	#mega-menu-wrap-primary-menu .vance-nav-tile__icon,
+	#mega-menu-wrap-primary-menu .vance-nav-tile__desc {
+		display: none;
+	}
+
+	#mega-menu-wrap-primary-menu .vance-nav-tile__title {
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	/* The feature tile spans two columns on desktop; there is one column here. */
+	#mega-menu-wrap-primary-menu .vance-nav-tile--feature {
+		grid-column: auto;
+		background: none;
+	}
+
+	/* Column headings inside the drawer. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
+		font-family: var(--font-heading, 'Outfit', sans-serif);
+		font-size: 10.5px;
+		font-weight: 600;
+		letter-spacing: .1em;
+		text-transform: uppercase;
+		color: var(--primary-color, #008080);
+		padding: 14px 0 6px;
+		min-height: 0;
+	}
+
+	/* Every tappable row clears 44px. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu li.mega-menu-column > ul.mega-sub-menu > li.mega-menu-item > ul.mega-sub-menu > li.mega-menu-item > a.mega-menu-link {
+		display: flex;
+		align-items: center;
+		min-height: 46px;
+		font-size: 14px;
+		line-height: 1.4;
+		padding: 11px 0 11px 12px;
+		border-left: 2px solid #e4eaea;
+	}
+}
+
+/* -----------------------------------------------------------------------------
+   9. REDUCED MOTION
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+
+	.vance-nav-tile,
+	.vance-nav-cta__btn,
+	.vance-nav-feature__thumb img,
+	.vance-nav-feature__title,
+	.vance-nav-feature__more svg {
+		transition: none;
+	}
+
+	.vance-nav-feature__card:hover .vance-nav-feature__thumb img {
+		transform: none;
+	}
+}
