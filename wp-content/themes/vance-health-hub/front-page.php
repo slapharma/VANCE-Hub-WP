@@ -480,7 +480,7 @@ body {
     $sections = vance_append_enabled_content_widgets( $sections );
 
     // Section seams: a zero-height marker between consecutive sections that
-    // blurs 40px either side of the join, so one section's background colour
+    // blurs 26px either side of the join, so one section's background colour
     // (or image, or gradient) fades into the next instead of meeting it at a
     // hard edge. See "HOMEPAGE SECTION SEAMS" in main.css. Emitted BEFORE each
     // section rather than after, so the last section never trails one.

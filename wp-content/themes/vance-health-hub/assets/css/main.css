@@ -4830,14 +4830,17 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 
    Modelling the composite (blurred backdrop alpha-mixed back over the raw one)
    puts the worst slope break at 37.3/px^2, sitting exactly on the strip edge at
-   y=+25px. Keeping blur(24px) but giving it an 80px strip and fading the mask
-   over the outer 22% each end drops that to 0.33/px^2 and moves it off the edge
-   -- while leaving the visible fade the same 39px wide it already was. The
-   full-strength zone actually narrows, +/-25px to +/-22px, so slightly LESS
-   content near a section boundary is blurred than before.
+   y=+25px. Masking the filter instead -- fading it over the outer 22% at each
+   end, inside a strip sized to contain the blur -- drops that by two orders of
+   magnitude and moves it off the edge entirely.
 
-   The two numbers are coupled: changing --vance-seam-blur on its own re-breaks
-   it. Scale --vance-seam-height with it, roughly height >= 3.3 * blur.
+   THE TWO NUMBERS ARE COUPLED. Changing --vance-seam-blur on its own re-creates
+   the original bug, because the strip stops being able to contain the ramp:
+   keep height >= 3.3 * blur. The current pair is 52px / 15.6px (51.5 needed, so
+   it just fits), giving a ~26px visible fade with a 1.06/px^2 break. That is
+   the earlier 80px / 24px pair -- which faded over ~39px -- with both numbers
+   scaled by 0.65 to shorten the blend by 35% while keeping the ratio, and hence
+   the freedom from edges, intact.
 
    z-index 11 clears .vance-testimonials-section (position: relative, z-index:
    10), which would otherwise paint over the seam above it. It stays far below
@@ -4861,10 +4864,10 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(var(--vance-seam-height, 80px) / -2);
-    height: var(--vance-seam-height, 80px);
-    -webkit-backdrop-filter: blur(var(--vance-seam-blur, 24px));
-    backdrop-filter: blur(var(--vance-seam-blur, 24px));
+    top: calc(var(--vance-seam-height, 52px) / -2);
+    height: var(--vance-seam-height, 52px);
+    -webkit-backdrop-filter: blur(var(--vance-seam-blur, 15.6px));
+    backdrop-filter: blur(var(--vance-seam-blur, 15.6px));
     /* Feathers the filter itself, not a colour over it: the element's alpha is
        what the backdrop-filter is composited through, so a gradient mask ramps
        the blur from none, to full, to none. Without it the strip's own top and
