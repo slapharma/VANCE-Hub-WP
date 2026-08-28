@@ -199,7 +199,7 @@ if ( ! function_exists( 'vance_kb_lobby_meta_label' ) ) :
 	 *                        not-launched-yet label rather than "0 articles".
 	 * @return string Empty string for no line at all.
 	 */
-	function vance_kb_lobby_meta_label( $count ) {
+	function vance_kb_lobby_meta_label( $count, $unit = 'article' ) {
 		if ( null === $count ) {
 			return '';
 		}
@@ -208,6 +208,28 @@ if ( ! function_exists( 'vance_kb_lobby_meta_label' ) ) :
 
 		if ( $count < 1 ) {
 			return (string) vance_get_theme_mod( 'vance_kblobby_soon_label', 'Coming soon' );
+		}
+
+		/*
+		 * Spelled out per unit rather than interpolating a noun: _n() needs
+		 * literal strings to be extractable for translation, and "7 articles"
+		 * on the conditions hub - which is what this said before the unit
+		 * existed - was simply untrue.
+		 */
+		switch ( $unit ) {
+			case 'condition':
+				return sprintf(
+					/* translators: %s: number of conditions in a collection. */
+					_n( '%s condition', '%s conditions', $count, 'vance-health-hub' ),
+					number_format_i18n( $count )
+				);
+
+			case 'recipe':
+				return sprintf(
+					/* translators: %s: number of recipes in a collection. */
+					_n( '%s recipe', '%s recipes', $count, 'vance-health-hub' ),
+					number_format_i18n( $count )
+				);
 		}
 
 		return sprintf(
@@ -236,7 +258,21 @@ if ( ! function_exists( 'vance_kb_lobby_page_count' ) ) :
 		$template = get_page_template_slug( $page_id );
 
 		if ( 'page-gi-health.php' === $template && function_exists( 'vance_gi_condition_cards' ) ) {
-			return count( vance_gi_condition_cards() );
+			return array(
+				'count' => count( vance_gi_condition_cards() ),
+				'unit'  => 'condition',
+			);
+		}
+
+		// The meal planner lists the vance_recipe post type, so its number
+		// tracks what is published rather than a figure typed in here.
+		if ( 'page-gastro-recipies.php' === $template && post_type_exists( 'vance_recipe' ) ) {
+			$counts = wp_count_posts( 'vance_recipe' );
+
+			return array(
+				'count' => isset( $counts->publish ) ? (int) $counts->publish : 0,
+				'unit'  => 'recipe',
+			);
 		}
 
 		return null;
@@ -284,8 +320,13 @@ if ( ! function_exists( 'vance_kb_lobby_peek' ) ) :
 			return $out;
 		}
 
-		if ( $page_id > 0
-			&& 'page-gi-health.php' === get_page_template_slug( $page_id )
+		if ( $page_id < 1 ) {
+			return $out;
+		}
+
+		$template = get_page_template_slug( $page_id );
+
+		if ( 'page-gi-health.php' === $template
 			&& function_exists( 'vance_gi_condition_cards' )
 			&& function_exists( 'vance_gi_page_url' ) ) {
 
@@ -295,9 +336,352 @@ if ( ! function_exists( 'vance_kb_lobby_peek' ) ) :
 					'url'   => vance_gi_page_url( $card['slug'] ),
 				);
 			}
+
+			return $out;
+		}
+
+		if ( 'page-gastro-recipies.php' === $template && post_type_exists( 'vance_recipe' ) ) {
+			$recipes = get_posts( array(
+				'post_type'        => 'vance_recipe',
+				'numberposts'      => $limit,
+				'post_status'      => 'publish',
+				'orderby'          => 'date',
+				'order'            => 'DESC',
+				'suppress_filters' => false,
+			) );
+
+			foreach ( $recipes as $recipe ) {
+				$out[] = array(
+					'title' => vance_kb_lobby_text( get_the_title( $recipe ) ),
+					'url'   => get_permalink( $recipe ),
+				);
+			}
 		}
 
 		return $out;
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_path' ) ) :
+	/**
+	 * Normalised path for comparing two menu destinations.
+	 *
+	 * The lobby has to answer two questions about a URL: "is this the page we
+	 * are already on?" and "have we already shown this destination?". Both are
+	 * about the destination, not the string, so host, scheme, query, fragment
+	 * and the trailing slash are all dropped before comparing.
+	 *
+	 * @param string $url
+	 * @return string Path with no leading/trailing slash, or '' for '#'-style
+	 *                placeholder links.
+	 */
+	function vance_kb_lobby_path( $url ) {
+		$path = (string) wp_parse_url( (string) $url, PHP_URL_PATH );
+
+		return trim( $path, '/' );
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_children' ) ) :
+	/**
+	 * The menu items whose parent is $parent_id, in menu order.
+	 *
+	 * @param WP_Post[] $items     Full menu, as returned by wp_get_nav_menu_items().
+	 * @param int       $parent_id
+	 * @return WP_Post[]
+	 */
+	function vance_kb_lobby_children( $items, $parent_id ) {
+		$out = array();
+
+		foreach ( $items as $item ) {
+			if ( (int) $item->menu_item_parent === (int) $parent_id ) {
+				$out[] = $item;
+			}
+		}
+
+		return $out;
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_is_column_heading' ) ) :
+	/**
+	 * Is this menu item a mega-panel column heading rather than a destination?
+	 *
+	 * The KNOWLEDGEBASE panel is a Max Mega Menu grid, and in that plugin a
+	 * SECOND-level item renders as a column heading while its THIRD-level
+	 * children render as the links beneath it. So the lobby's direct children
+	 * are "Browse the library" and "By content type" - a heading pointing back
+	 * at this very page, and a heading with its link disabled. Reading only the
+	 * direct children therefore produced two cards that either went nowhere or
+	 * went to the page the visitor was already on. That is what this detects, so
+	 * the lobby can descend a level and show the real collections.
+	 *
+	 * A heading is recognised by where it points, never by its depth: a panel
+	 * built as a plain flyout has real destinations at level two and must keep
+	 * working unchanged.
+	 *
+	 * @param WP_Post $item      Menu item.
+	 * @param int     $this_page ID of the page being rendered.
+	 * @param string  $this_path Normalised path of the page being rendered.
+	 * @return bool
+	 */
+	function vance_kb_lobby_is_column_heading( $item, $this_page, $this_path ) {
+		// "Disable link" in Max Mega Menu, and WP's own custom-link placeholder.
+		$url = trim( (string) $item->url );
+		if ( '' === $url || '#' === $url ) {
+			return true;
+		}
+
+		// Points at this page - by object, and by path for a custom link typed
+		// out by hand.
+		if ( 'post_type' === $item->type && (int) $item->object_id === (int) $this_page ) {
+			return true;
+		}
+
+		return ( '' !== $this_path && vance_kb_lobby_path( $url ) === $this_path );
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_svg' ) ) :
+	/**
+	 * One inline icon from the lobby's set, by key.
+	 *
+	 * Outline paths on a 24x24 box, stroke-width 1.7 - the same drawing as the
+	 * block icons further down, so a tool tile and a collection card do not look
+	 * like they came from two different libraries. An unknown key returns '' and
+	 * the caller renders no icon rather than a wrong one.
+	 *
+	 * @param string $key
+	 * @return string
+	 */
+	function vance_kb_lobby_svg( $key ) {
+		$paths = array(
+			'calculator' => '<rect x="4" y="3" width="16" height="18" rx="2" stroke-width="1.7"/><path stroke-linecap="round" stroke-width="1.7" d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+			'clipboard'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>',
+			'leaf'       => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 20c0-8 5-13 16-13 0 9-5 13-11 13a5 5 0 01-5-5zM4 20c2-4 5-6 9-7.5"/>',
+			'sparkles'   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9.5 3.5l1.4 3.6 3.6 1.4-3.6 1.4-1.4 3.6-1.4-3.6L4.5 8.5l3.6-1.4 1.4-3.6zM17 13l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9.9-2.3z"/>',
+			'grid'       => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/>',
+		);
+
+		return isset( $paths[ $key ] ) ? $paths[ $key ] : '';
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_topics' ) ) :
+	/**
+	 * The topic tiles: every CHILD category that actually carries posts.
+	 *
+	 * The collection cards open a whole shelf, and 85 articles in Gastro Living
+	 * is not a browsable unit. The child terms are the real subjects ("Tests &
+	 * Treatments", "Food & Nutrition") and, until now, nothing on this page
+	 * reached them - they existed only inside an archive a visitor had to open
+	 * first.
+	 *
+	 * hide_empty is what keeps this honest: a topic tile leading to an empty
+	 * archive is worse than no tile, and five of the site's child terms are
+	 * empty today.
+	 *
+	 * @param int $limit Maximum tiles; 0 for no limit.
+	 * @return array<int, array{title:string,url:string,count:int,parent:string}>
+	 */
+	function vance_kb_lobby_topics( $limit = 0 ) {
+		$terms = get_categories( array(
+			'orderby'      => 'count',
+			'order'        => 'DESC',
+			'hide_empty'   => true,
+			'hierarchical' => false,
+		) );
+
+		$out = array();
+
+		foreach ( $terms as $term ) {
+			if ( ! $term->parent ) {
+				continue; // Top-level terms are the collection cards above.
+			}
+
+			$parent = get_term( (int) $term->parent, 'category' );
+
+			$out[] = array(
+				'title'  => vance_kb_lobby_text( $term->name ),
+				'url'    => get_category_link( (int) $term->term_id ),
+				'count'  => (int) $term->count,
+				'parent' => ( $parent instanceof WP_Term ) ? vance_kb_lobby_text( $parent->name ) : '',
+			);
+		}
+
+		if ( $limit > 0 ) {
+			$out = array_slice( $out, 0, (int) $limit );
+		}
+
+		return $out;
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_tools' ) ) :
+	/**
+	 * The tool tiles.
+	 *
+	 * Sourced from the primary menu's "Free Health Tools" item for the same
+	 * reason the collection cards are sourced from KNOWLEDGEBASE: the nav is
+	 * where these are curated, and a second hand-typed list would drift. The
+	 * built-in list below is the fallback for a renamed or missing menu item,
+	 * not the primary source.
+	 *
+	 * Menu items carry no description on this site, so the copy comes from a
+	 * path-keyed map. Keyed by path rather than by title because the titles are
+	 * admin-editable and the URLs are the contract.
+	 *
+	 * @param string $menu_label Menu item whose children are the tools.
+	 * @param bool   $with_ai    Append the Ask AI tile.
+	 * @return array<int, array{title:string,url:string,desc:string,icon:string}>
+	 */
+	function vance_kb_lobby_tools( $menu_label = 'Free Health Tools', $with_ai = true ) {
+		// Copy + icon for the tools this site actually ships, keyed by path.
+		$known = array(
+			'malnutrition-calculator' => array(
+				'icon' => 'calculator',
+				'desc' => 'Screen for malnutrition risk in under two minutes, then save the score to your dashboard to track it over time.',
+			),
+			'gastro-health-survey'    => array(
+				'icon' => 'clipboard',
+				'desc' => 'A short self-assessment covering symptom patterns, dietary triggers and lifestyle, with a summary you can take to your clinician.',
+			),
+			'gastro-meal-planner'     => array(
+				'icon' => 'leaf',
+				'desc' => 'Gut-friendly recipes you can filter by condition and build into a weekly plan.',
+			),
+			'ask-ai'                  => array(
+				'icon' => 'sparkles',
+				'desc' => "Ask a question in plain English and get an evidence-based answer drawn from the Hub's own clinical library, any time of day.",
+			),
+		);
+
+		$fallback = array(
+			array( 'title' => 'Malnutrition Calculator', 'path' => 'malnutrition-calculator' ),
+			array( 'title' => 'Gastro Health Survey',    'path' => 'gastro-health-survey' ),
+			array( 'title' => 'Recipes &amp; Meal Planner',  'path' => 'gastro-meal-planner' ),
+		);
+
+		$found     = array();
+		$locations = get_nav_menu_locations();
+		$menu_id   = isset( $locations['primary-menu'] ) ? (int) $locations['primary-menu'] : 0;
+
+		if ( $menu_id ) {
+			$items = wp_get_nav_menu_items( $menu_id );
+
+			if ( ! empty( $items ) ) {
+				$needle    = vance_kb_lobby_slugify( $menu_label );
+				$parent_id = 0;
+
+				foreach ( $items as $item ) {
+					if ( vance_kb_lobby_slugify( $item->title ) === $needle ) {
+						$parent_id = (int) $item->ID;
+						break;
+					}
+				}
+
+				if ( $parent_id ) {
+					foreach ( vance_kb_lobby_children( $items, $parent_id ) as $item ) {
+						$url = trim( (string) $item->url );
+						if ( '' === $url || '#' === $url ) {
+							continue; // A heading, not a tool.
+						}
+
+						$found[] = array(
+							'title' => vance_kb_lobby_text( $item->title ),
+							'url'   => $url,
+							'desc'  => vance_kb_lobby_text( $item->description ),
+							'path'  => vance_kb_lobby_path( $url ),
+						);
+					}
+				}
+			}
+		}
+
+		if ( empty( $found ) ) {
+			foreach ( $fallback as $tool ) {
+				$found[] = array(
+					'title' => vance_kb_lobby_text( $tool['title'] ),
+					'url'   => home_url( '/' . $tool['path'] . '/' ),
+					'desc'  => '',
+					'path'  => $tool['path'],
+				);
+			}
+		}
+
+		/*
+		 * Ask AI hangs off THE HUB panel's CTA banner rather than the tools
+		 * column, so it is never among the children above - and it is the tool
+		 * the hub leads with everywhere else. Appended last, and only if the
+		 * page is really there.
+		 */
+		if ( $with_ai && ! in_array( 'ask-ai', wp_list_pluck( $found, 'path' ), true ) ) {
+			$ask = get_page_by_path( 'ask-ai' );
+			if ( $ask instanceof WP_Post && 'publish' === $ask->post_status ) {
+				$found[] = array(
+					'title' => 'Ask VANCE-Ai',
+					'url'   => get_permalink( $ask ),
+					'desc'  => '',
+					'path'  => 'ask-ai',
+				);
+			}
+		}
+
+		$out = array();
+
+		foreach ( $found as $tool ) {
+			$meta = isset( $known[ $tool['path'] ] ) ? $known[ $tool['path'] ] : array();
+
+			if ( '' === $tool['desc'] && ! empty( $meta['desc'] ) ) {
+				$tool['desc'] = $meta['desc'];
+			}
+
+			// Last resort: the linked page's own excerpt, so a tool added to the
+			// menu later still gets a line rather than a bare title.
+			if ( '' === $tool['desc'] ) {
+				$page = get_page_by_path( $tool['path'] );
+				if ( $page instanceof WP_Post ) {
+					$tool['desc'] = vance_kb_lobby_text( $page->post_excerpt );
+				}
+			}
+
+			$out[] = array(
+				'title' => $tool['title'],
+				'url'   => $tool['url'],
+				'desc'  => $tool['desc'],
+				'icon'  => isset( $meta['icon'] ) ? $meta['icon'] : 'grid',
+			);
+		}
+
+		return $out;
+	}
+endif;
+
+if ( ! function_exists( 'vance_kb_lobby_latest' ) ) :
+	/**
+	 * The newest articles across every collection.
+	 *
+	 * The per-card previews answer "what is in THIS shelf"; this answers "what
+	 * has the Hub published lately", which is the other reason a returning
+	 * visitor opens this page.
+	 *
+	 * @param int $limit
+	 * @return WP_Post[]
+	 */
+	function vance_kb_lobby_latest( $limit ) {
+		$limit = (int) $limit;
+
+		if ( $limit < 1 ) {
+			return array();
+		}
+
+		return get_posts( array(
+			'numberposts'      => $limit,
+			'post_status'      => 'publish',
+			'orderby'          => 'date',
+			'order'            => 'DESC',
+			'suppress_filters' => false,
+		) );
 	}
 endif;
 
@@ -359,11 +743,56 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 				}
 
 				if ( $parent_id ) {
-					foreach ( $menu_items as $item ) {
-						if ( (int) $item->menu_item_parent === $parent_id ) {
-							$raw[] = $item;
+					$this_path = vance_kb_lobby_path( get_permalink( $this_page ) );
+
+					/*
+					 * Descend through mega-panel column headings. In the live
+					 * KNOWLEDGEBASE panel the direct children are "Browse the
+					 * library" (which points back at this page) and "By content
+					 * type" (link disabled); the real collections sit one level
+					 * further down. Reading only the direct children rendered a
+					 * lobby of two cards that went nowhere. See
+					 * vance_kb_lobby_is_column_heading() for what counts as a
+					 * heading - it is about where an item points, not how deep
+					 * it sits, so a plain flyout keeps working untouched.
+					 */
+					foreach ( vance_kb_lobby_children( $menu_items, $parent_id ) as $item ) {
+						$kids = vance_kb_lobby_children( $menu_items, (int) $item->ID );
+
+						if ( ! empty( $kids ) && vance_kb_lobby_is_column_heading( $item, $this_page, $this_path ) ) {
+							foreach ( $kids as $kid ) {
+								$raw[] = $kid;
+							}
+							continue;
 						}
+
+						$raw[] = $item;
 					}
+
+					/*
+					 * Two things the flattened list carries that a lobby must
+					 * not show: an entry for this very page ("All Articles" is
+					 * the panel's own link home), and the same destination
+					 * twice ("View all gastro conditions" repeats "Gastro
+					 * Health Explained" so the column gets a footer link).
+					 * Compared by path, so /a/ and https://host/a/ match, and
+					 * the first spelling of each destination wins.
+					 */
+					$seen = array();
+					$kept = array();
+
+					foreach ( $raw as $item ) {
+						$path = vance_kb_lobby_path( $item->url );
+
+						if ( '' === $path || $path === $this_path || isset( $seen[ $path ] ) ) {
+							continue;
+						}
+
+						$seen[ $path ] = true;
+						$kept[]        = $item;
+					}
+
+					$raw = $kept;
 				}
 			}
 		}
@@ -380,6 +809,7 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 
 				$desc    = vance_kb_lobby_text( $item->description );
 				$count   = null; // null = nothing countable behind this block.
+				$unit    = 'article';
 				$term_id = 0;
 				$page_id = 0;
 				$accent  = ( 'single' === $mode ) ? $single : $palette[ $i % count( $palette ) ];
@@ -403,7 +833,12 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 						if ( '' === $desc ) {
 							$desc = vance_kb_lobby_text( $linked->post_excerpt );
 						}
-						$count = vance_kb_lobby_page_count( $page_id );
+
+						$page_meta = vance_kb_lobby_page_count( $page_id );
+						if ( null !== $page_meta ) {
+							$count = (int) $page_meta['count'];
+							$unit  = $page_meta['unit'];
+						}
 					}
 				}
 
@@ -421,7 +856,7 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 					'title'   => vance_kb_lobby_text( $item->title ),
 					'url'     => $item->url,
 					'desc'    => $desc,
-					'meta'    => vance_kb_lobby_meta_label( $count ),
+					'meta'    => vance_kb_lobby_meta_label( $count, $unit ),
 					'soon'    => ( null !== $count && (int) $count < 1 ),
 					'accent'  => $accent,
 					'ink'     => vance_kb_lobby_ink( $accent ),
@@ -519,6 +954,56 @@ $kb_intro_title   = vance_get_theme_mod( 'vance_kblobby_intro_title', 'Pick a co
 $kb_intro_desc    = vance_get_theme_mod( 'vance_kblobby_intro_desc', 'Every collection below is curated and clinically reviewed. Each card shows what is newest inside it, so you can jump straight to an article or open the whole shelf.' );
 
 $kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside' );
+
+/*
+ * The four sections added below the collection cards. Each is independently
+ * switchable, because what they show is only worth showing while it is true:
+ * the topic strip is meaningless until child categories carry posts, and the
+ * conditions strip duplicates a collection card if the GI hub is ever dropped
+ * from the menu.
+ */
+$kb_stats_show = (bool) vance_get_theme_mod( 'vance_kblobby_stats_show', true );
+$kb_stats_articles  = vance_get_theme_mod( 'vance_kblobby_stats_articles',   'Articles' );
+$kb_stats_shelves   = vance_get_theme_mod( 'vance_kblobby_stats_shelves',    'Collections' );
+$kb_stats_condition = vance_get_theme_mod( 'vance_kblobby_stats_conditions', 'Conditions covered' );
+$kb_stats_tools     = vance_get_theme_mod( 'vance_kblobby_stats_tools',      'Free tools' );
+
+$kb_topics_show    = (bool) vance_get_theme_mod( 'vance_kblobby_topics_show', true );
+$kb_topics_eyebrow = vance_get_theme_mod( 'vance_kblobby_topics_eyebrow', 'By Topic' );
+$kb_topics_title   = vance_get_theme_mod( 'vance_kblobby_topics_title', 'Go straight to a subject' );
+$kb_topics_desc    = vance_get_theme_mod( 'vance_kblobby_topics_desc', 'The collections above are whole shelves. These are the subjects inside them, so you can skip a step.' );
+$kb_topics_max     = max( 0, absint( vance_get_theme_mod( 'vance_kblobby_topics_max', 8 ) ) );
+
+$kb_cond_show    = (bool) vance_get_theme_mod( 'vance_kblobby_cond_show', true );
+$kb_cond_eyebrow = vance_get_theme_mod( 'vance_kblobby_cond_eyebrow', 'Conditions' );
+$kb_cond_title   = vance_get_theme_mod( 'vance_kblobby_cond_title', 'Start from your condition' );
+$kb_cond_desc    = vance_get_theme_mod( 'vance_kblobby_cond_desc', 'Each condition has its own guide - what it is, how it is diagnosed, and what living with it actually involves.' );
+$kb_cond_link    = vance_get_theme_mod( 'vance_kblobby_cond_link_text', 'View all conditions' );
+
+$kb_tools_show    = (bool) vance_get_theme_mod( 'vance_kblobby_tools_show', true );
+$kb_tools_eyebrow = vance_get_theme_mod( 'vance_kblobby_tools_eyebrow', 'Free Tools' );
+$kb_tools_title   = vance_get_theme_mod( 'vance_kblobby_tools_title', 'Turn the evidence into a number' );
+$kb_tools_desc    = vance_get_theme_mod( 'vance_kblobby_tools_desc', 'The Hub is not only reading. These are free to use with no account, and you can save every result to a private dashboard once you have one.' );
+$kb_tools_cta     = vance_get_theme_mod( 'vance_kblobby_tools_cta', 'Open' );
+$kb_tools_menu    = vance_get_theme_mod( 'vance_kblobby_tools_menu_label', 'Free Health Tools' );
+$kb_tools_with_ai = (bool) vance_get_theme_mod( 'vance_kblobby_tools_with_ai', true );
+
+$kb_latest_show    = (bool) vance_get_theme_mod( 'vance_kblobby_latest_show', true );
+$kb_latest_eyebrow = vance_get_theme_mod( 'vance_kblobby_latest_eyebrow', 'Just Published' );
+$kb_latest_title   = vance_get_theme_mod( 'vance_kblobby_latest_title', 'Newest across the library' );
+$kb_latest_desc    = vance_get_theme_mod( 'vance_kblobby_latest_desc', 'The most recent additions, whichever collection they landed in.' );
+$kb_latest_count   = max( 0, min( 8, absint( vance_get_theme_mod( 'vance_kblobby_latest_count', 4 ) ) ) );
+
+// Resolved once here rather than inside the markup, so the stats strip can
+// count what the page is actually about to render instead of guessing.
+$kb_topics     = $kb_topics_show ? vance_kb_lobby_topics( $kb_topics_max ) : array();
+$kb_conditions = ( $kb_cond_show && function_exists( 'vance_gi_condition_cards' ) && function_exists( 'vance_gi_page_url' ) )
+	? vance_gi_condition_cards()
+	: array();
+$kb_tools  = $kb_tools_show ? vance_kb_lobby_tools( $kb_tools_menu, $kb_tools_with_ai ) : array();
+$kb_latest = $kb_latest_show ? vance_kb_lobby_latest( $kb_latest_count ) : array();
+
+$kb_hub_url = function_exists( 'vance_gi_hub_url' ) ? vance_gi_hub_url() : '';
 ?>
 
 <main id="main-content" class="kb-lobby">
@@ -548,6 +1033,52 @@ $kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside
 		</div>
 	</section>
 
+
+	<?php
+	/*
+	 * SCALE STRIP
+	 *
+	 * Directly under the hero, because the first question this page has to
+	 * answer is "is there anything in here?" - and until now the honest answer
+	 * from the page itself was two empty cards.
+	 *
+	 * Every figure is counted at render time. None of them is editable, on
+	 * purpose: a hand-typed "150+ articles" is a claim that rots, and this is a
+	 * clinical site.
+	 */
+	if ( $kb_stats_show ) :
+		$kb_post_counts = wp_count_posts( 'post' );
+		$kb_stat_rows   = array(
+			array( 'n' => isset( $kb_post_counts->publish ) ? (int) $kb_post_counts->publish : 0, 'label' => $kb_stats_articles ),
+			array( 'n' => count( $kb_blocks ), 'label' => $kb_stats_shelves ),
+			array( 'n' => function_exists( 'vance_gi_condition_cards' ) ? count( vance_gi_condition_cards() ) : 0, 'label' => $kb_stats_condition ),
+			array( 'n' => count( $kb_tools ), 'label' => $kb_stats_tools ),
+		);
+
+		// A zero is not a boast, it is a gap - drop the cell rather than
+		// advertise it. That also makes the strip disappear on a bare install.
+		$kb_stat_rows = array_values( array_filter( $kb_stat_rows, static function ( $row ) {
+			return $row['n'] > 0 && '' !== trim( (string) $row['label'] );
+		} ) );
+
+		if ( ! empty( $kb_stat_rows ) ) :
+			?>
+			<section class="kb-stats">
+				<div class="container">
+					<ul class="kb-stats__list">
+						<?php foreach ( $kb_stat_rows as $kb_stat ) : ?>
+							<li class="kb-stat">
+								<span class="kb-stat__num"><?php echo esc_html( number_format_i18n( $kb_stat['n'] ) ); ?></span>
+								<span class="kb-stat__label"><?php echo esc_html( $kb_stat['label'] ); ?></span>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			</section>
+			<?php
+		endif;
+	endif;
+	?>
 	<?php
 	// Knowledgebase Promo Block + Prime Block. Each is called at all three
 	// slots and renders only in the one matching its own "Position on the
@@ -650,6 +1181,174 @@ $kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside
 			<?php endif; ?>
 		</div>
 	</section>
+
+
+	<!-- TOPICS -->
+	<?php if ( ! empty( $kb_topics ) ) : ?>
+		<section class="kb-topics">
+			<div class="container">
+				<div class="kb-sec-head">
+					<?php if ( $kb_topics_eyebrow ) : ?>
+						<span class="kb-sec-head__eyebrow"><?php echo esc_html( $kb_topics_eyebrow ); ?></span>
+					<?php endif; ?>
+					<h2 class="kb-sec-head__title"><?php echo esc_html( $kb_topics_title ); ?></h2>
+					<?php if ( $kb_topics_desc ) : ?>
+						<p class="kb-sec-head__desc"><?php echo esc_html( $kb_topics_desc ); ?></p>
+					<?php endif; ?>
+				</div>
+
+				<ul class="kb-topic-grid">
+					<?php foreach ( $kb_topics as $kb_topic ) : ?>
+						<li>
+							<a class="kb-topic" href="<?php echo esc_url( $kb_topic['url'] ); ?>">
+								<span class="kb-topic__title"><?php echo esc_html( $kb_topic['title'] ); ?></span>
+								<span class="kb-topic__meta">
+									<?php
+									// Parent first: "Tests & Treatments" means little
+									// on its own, "Gastro Living" says which shelf it
+									// came off.
+									if ( $kb_topic['parent'] ) {
+										echo esc_html( $kb_topic['parent'] ) . '<span class="kb-topic__dot" aria-hidden="true"> &middot; </span>';
+									}
+									echo esc_html( vance_kb_lobby_meta_label( $kb_topic['count'] ) );
+									?>
+								</span>
+							</a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<!-- CONDITIONS -->
+	<?php if ( ! empty( $kb_conditions ) ) : ?>
+		<section class="kb-conditions">
+			<div class="container">
+				<div class="kb-sec-head">
+					<?php if ( $kb_cond_eyebrow ) : ?>
+						<span class="kb-sec-head__eyebrow"><?php echo esc_html( $kb_cond_eyebrow ); ?></span>
+					<?php endif; ?>
+					<h2 class="kb-sec-head__title"><?php echo esc_html( $kb_cond_title ); ?></h2>
+					<?php if ( $kb_cond_desc ) : ?>
+						<p class="kb-sec-head__desc"><?php echo esc_html( $kb_cond_desc ); ?></p>
+					<?php endif; ?>
+				</div>
+
+				<ul class="kb-cond-grid">
+					<?php foreach ( $kb_conditions as $kb_cond ) : ?>
+						<li>
+							<a class="kb-cond" href="<?php echo esc_url( vance_gi_page_url( $kb_cond['slug'] ) ); ?>">
+								<span class="kb-cond__title"><?php echo esc_html( vance_kb_lobby_text( $kb_cond['title'] ) ); ?></span>
+								<span class="kb-cond__desc"><?php echo esc_html( wp_trim_words( vance_kb_lobby_text( $kb_cond['desc'] ), 16, '...' ) ); ?></span>
+							</a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+
+				<?php if ( $kb_hub_url && $kb_cond_link ) : ?>
+					<p class="kb-sec-more">
+						<a href="<?php echo esc_url( $kb_hub_url ); ?>">
+							<?php echo esc_html( $kb_cond_link ); ?>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+						</a>
+					</p>
+				<?php endif; ?>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<!-- TOOLS -->
+	<?php if ( ! empty( $kb_tools ) ) : ?>
+		<section class="kb-tools">
+			<div class="container">
+				<div class="kb-sec-head kb-sec-head--invert">
+					<?php if ( $kb_tools_eyebrow ) : ?>
+						<span class="kb-sec-head__eyebrow"><?php echo esc_html( $kb_tools_eyebrow ); ?></span>
+					<?php endif; ?>
+					<h2 class="kb-sec-head__title"><?php echo esc_html( $kb_tools_title ); ?></h2>
+					<?php if ( $kb_tools_desc ) : ?>
+						<p class="kb-sec-head__desc"><?php echo esc_html( $kb_tools_desc ); ?></p>
+					<?php endif; ?>
+				</div>
+
+				<ul class="kb-tool-grid">
+					<?php foreach ( $kb_tools as $kb_tool ) : ?>
+						<?php $kb_tool_icon = vance_kb_lobby_svg( $kb_tool['icon'] ); ?>
+						<li>
+							<a class="kb-tool" href="<?php echo esc_url( $kb_tool['url'] ); ?>">
+								<?php if ( $kb_tool_icon ) : ?>
+									<span class="kb-tool__icon" aria-hidden="true">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><?php echo $kb_tool_icon; // phpcs:ignore WordPress.Security.EscapeOutput -- hardcoded SVG paths from vance_kb_lobby_svg(). ?></svg>
+									</span>
+								<?php endif; ?>
+								<span class="kb-tool__title"><?php echo esc_html( $kb_tool['title'] ); ?></span>
+								<?php if ( $kb_tool['desc'] ) : ?>
+									<span class="kb-tool__desc"><?php echo esc_html( wp_trim_words( $kb_tool['desc'], 22, '...' ) ); ?></span>
+								<?php endif; ?>
+								<span class="kb-tool__cta">
+									<?php echo esc_html( $kb_tools_cta ); ?>
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+								</span>
+							</a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<!-- LATEST -->
+	<?php if ( ! empty( $kb_latest ) ) : ?>
+		<section class="kb-latest">
+			<div class="container">
+				<div class="kb-sec-head">
+					<?php if ( $kb_latest_eyebrow ) : ?>
+						<span class="kb-sec-head__eyebrow"><?php echo esc_html( $kb_latest_eyebrow ); ?></span>
+					<?php endif; ?>
+					<h2 class="kb-sec-head__title"><?php echo esc_html( $kb_latest_title ); ?></h2>
+					<?php if ( $kb_latest_desc ) : ?>
+						<p class="kb-sec-head__desc"><?php echo esc_html( $kb_latest_desc ); ?></p>
+					<?php endif; ?>
+				</div>
+
+				<?php
+				/*
+				 * .news-card / .card-image / .card-content / .card-stretched-link
+				 * are the site's existing post tile, borrowed wholesale rather
+				 * than reinvented here: the classes carry the whole-card click
+				 * target and, through the "Article cards stay square" rule at the
+				 * end of main.css, the square corners every post tile on the site
+				 * has. A private tile class would have had to be added to that
+				 * list to stay in the system.
+				 */
+				?>
+				<div class="kb-latest-grid">
+					<?php foreach ( $kb_latest as $kb_post ) : ?>
+						<?php
+						$kb_post_cats = get_the_category( $kb_post->ID );
+						$kb_post_cat  = ! empty( $kb_post_cats ) ? vance_kb_lobby_text( $kb_post_cats[0]->name ) : '';
+						$kb_post_img  = get_the_post_thumbnail_url( $kb_post, 'medium_large' );
+						?>
+						<article class="news-card kb-latest-card">
+							<?php // No thumbnail: a flat tinted panel, not a broken frame. The card's border-top: none on .card-content needs something above it. ?>
+							<div class="card-image kb-latest-card__image<?php echo $kb_post_img ? '' : ' kb-latest-card__image--empty'; ?>"<?php echo $kb_post_img ? ' style="background-image: url(\'' . esc_url( $kb_post_img ) . '\');"' : ''; ?>></div>
+
+							<div class="card-content">
+								<?php if ( $kb_post_cat ) : ?>
+									<span class="kb-latest-card__cat"><?php echo esc_html( $kb_post_cat ); ?></span>
+								<?php endif; ?>
+								<h3 class="kb-latest-card__title">
+									<a class="card-stretched-link" href="<?php echo esc_url( get_permalink( $kb_post ) ); ?>"><?php echo esc_html( vance_kb_lobby_text( get_the_title( $kb_post ) ) ); ?></a>
+								</h3>
+								<time class="kb-latest-card__date" datetime="<?php echo esc_attr( get_the_date( 'c', $kb_post ) ); ?>"><?php echo esc_html( get_the_date( '', $kb_post ) ); ?></time>
+							</div>
+						</article>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
 
 	<?php
 	// Any editorial copy typed into the Page itself renders under the blocks, so

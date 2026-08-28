@@ -1675,6 +1675,125 @@ function vance_pages_customize_register( $wp_customize ) {
         "type"        => "text",
     ) );
 
+
+    // ---- Scale strip (under the hero) ----
+    // Priorities from 170 so these five sections sit AFTER the ones above,
+    // which take WP's default of 160 and are ordered by registration.
+    $wp_customize->add_section( "vance_kblobby_stats", array( "title" => "Scale Strip", "panel" => "vance_kblobby_panel", "priority" => 170 ) );
+    $wp_customize->add_setting( "vance_kblobby_stats_show", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_kblobby_stats_show", array(
+        "label"       => "Show the strip",
+        "description" => "The row of figures under the hero. The numbers themselves are counted at render time and cannot be typed in - only their labels are editable, so the page can never claim more than the library holds. A figure that comes back as zero drops its cell.",
+        "section"     => "vance_kblobby_stats",
+        "type"        => "checkbox",
+    ) );
+    $wp_customize->add_setting( "vance_kblobby_stats_articles", array( "default" => "Articles", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_stats_articles", array( "label" => "Label - published articles", "section" => "vance_kblobby_stats", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_stats_shelves", array( "default" => "Collections", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_stats_shelves", array( "label" => "Label - collections", "description" => "Counts the cards actually rendered below, so hiding a collection updates this too.", "section" => "vance_kblobby_stats", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_stats_conditions", array( "default" => "Conditions covered", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_stats_conditions", array( "label" => "Label - conditions", "section" => "vance_kblobby_stats", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_stats_tools", array( "default" => "Free tools", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_stats_tools", array( "label" => "Label - free tools", "section" => "vance_kblobby_stats", "type" => "text" ) );
+
+    // ---- Topics ----
+    $wp_customize->add_section( "vance_kblobby_topics", array( "title" => "Topics Section", "panel" => "vance_kblobby_panel", "priority" => 171 ) );
+    $wp_customize->add_setting( "vance_kblobby_topics_show", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_kblobby_topics_show", array(
+        "label"       => "Show Section",
+        "description" => "Tiles for the sub-categories inside the collections above - the subjects a visitor can actually browse. Only sub-categories that carry posts are listed, so a tile never opens an empty archive. The section hides itself when there are none.",
+        "section"     => "vance_kblobby_topics",
+        "type"        => "checkbox",
+    ) );
+    $wp_customize->add_setting( "vance_kblobby_topics_eyebrow", array( "default" => "By Topic", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_topics_eyebrow", array( "label" => "Eyebrow", "section" => "vance_kblobby_topics", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_topics_title", array( "default" => "Go straight to a subject", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_topics_title", array( "label" => "Title", "section" => "vance_kblobby_topics", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_topics_desc", array( "default" => "The collections above are whole shelves. These are the subjects inside them, so you can skip a step.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_topics_desc", array( "label" => "Description", "section" => "vance_kblobby_topics", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_kblobby_topics_max", array( "default" => 8, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_kblobby_topics_max", array(
+        "label"       => "Maximum tiles",
+        "description" => "Busiest sub-categories first. 0 shows every one that has posts.",
+        "section"     => "vance_kblobby_topics",
+        "type"        => "number",
+        "input_attrs" => array( "min" => 0, "max" => 24, "step" => 1 ),
+    ) );
+
+    // ---- Conditions ----
+    $wp_customize->add_section( "vance_kblobby_cond", array( "title" => "Conditions Section", "panel" => "vance_kblobby_panel", "priority" => 172 ) );
+    $wp_customize->add_setting( "vance_kblobby_cond_show", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_kblobby_cond_show", array(
+        "label"       => "Show Section",
+        "description" => "One tile per GI condition. The list is the same registry the homepage and the Gastro Health Explained hub use, so a condition added there appears here with no further work.",
+        "section"     => "vance_kblobby_cond",
+        "type"        => "checkbox",
+    ) );
+    $wp_customize->add_setting( "vance_kblobby_cond_eyebrow", array( "default" => "Conditions", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_cond_eyebrow", array( "label" => "Eyebrow", "section" => "vance_kblobby_cond", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_cond_title", array( "default" => "Start from your condition", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_cond_title", array( "label" => "Title", "section" => "vance_kblobby_cond", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_cond_desc", array( "default" => "Each condition has its own guide - what it is, how it is diagnosed, and what living with it actually involves.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_cond_desc", array( "label" => "Description", "section" => "vance_kblobby_cond", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_kblobby_cond_link_text", array( "default" => "View all conditions", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_cond_link_text", array( "label" => "Link under the tiles", "description" => "Points at the Gastro Health Explained hub. Leave blank to hide it.", "section" => "vance_kblobby_cond", "type" => "text" ) );
+
+    // ---- Tools ----
+    $wp_customize->add_section( "vance_kblobby_tools", array( "title" => "Tools Section", "panel" => "vance_kblobby_panel", "priority" => 173 ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_show", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_show", array(
+        "label"       => "Show Section",
+        "description" => "The navy band. Like the collection cards, the tiles mirror the primary menu rather than being typed in here - so the nav and this page cannot disagree about what the Hub offers.",
+        "section"     => "vance_kblobby_tools",
+        "type"        => "checkbox",
+    ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_eyebrow", array( "default" => "Free Tools", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_eyebrow", array( "label" => "Eyebrow", "section" => "vance_kblobby_tools", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_title", array( "default" => "Turn the evidence into a number", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_title", array( "label" => "Title", "section" => "vance_kblobby_tools", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_desc", array( "default" => "The Hub is not only reading. These are free to use with no account, and you can save every result to a private dashboard once you have one.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_desc", array( "label" => "Description", "section" => "vance_kblobby_tools", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_cta", array( "default" => "Open", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_cta", array( "label" => "Tile link text", "section" => "vance_kblobby_tools", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_menu_label", array( "default" => "Free Health Tools", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_menu_label", array(
+        "label"       => "Menu item label",
+        "description" => "Which item in the primary menu supplies the tool tiles - its children become the tiles. Matching ignores case, spaces and hyphens. If no match is found the section falls back to the three calculators the Hub ships.",
+        "section"     => "vance_kblobby_tools",
+        "type"        => "text",
+    ) );
+    $wp_customize->add_setting( "vance_kblobby_tools_with_ai", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_kblobby_tools_with_ai", array(
+        "label"       => "Add an Ask AI tile",
+        "description" => "Ask AI sits in the menu's CTA banner rather than the tools column, so it is never picked up by the label above. Ticked, it is appended last - and only if the Ask AI page is published.",
+        "section"     => "vance_kblobby_tools",
+        "type"        => "checkbox",
+    ) );
+
+    // ---- Latest ----
+    $wp_customize->add_section( "vance_kblobby_latest", array( "title" => "Latest Articles Section", "panel" => "vance_kblobby_panel", "priority" => 174 ) );
+    $wp_customize->add_setting( "vance_kblobby_latest_show", array( "default" => true, "sanitize_callback" => "vance_sanitize_checkbox" ) );
+    $wp_customize->add_control( "vance_kblobby_latest_show", array(
+        "label"       => "Show Section",
+        "description" => "The newest posts from every collection at once. The per-card previews above answer \"what is on this shelf\"; this answers \"what is new\", which is the other reason someone opens this page.",
+        "section"     => "vance_kblobby_latest",
+        "type"        => "checkbox",
+    ) );
+    $wp_customize->add_setting( "vance_kblobby_latest_eyebrow", array( "default" => "Just Published", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_latest_eyebrow", array( "label" => "Eyebrow", "section" => "vance_kblobby_latest", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_latest_title", array( "default" => "Newest across the library", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_kblobby_latest_title", array( "label" => "Title", "section" => "vance_kblobby_latest", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_kblobby_latest_desc", array( "default" => "The most recent additions, whichever collection they landed in.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_kblobby_latest_desc", array( "label" => "Description", "section" => "vance_kblobby_latest", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_kblobby_latest_count", array( "default" => 4, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_kblobby_latest_count", array(
+        "label"       => "How many articles",
+        "description" => "1-8. Four fills one row at desktop width.",
+        "section"     => "vance_kblobby_latest",
+        "type"        => "number",
+        "input_attrs" => array( "min" => 1, "max" => 8, "step" => 1 ),
+    ) );
+
     // ============================================================
     // SEARCH RESULTS PAGE (search.php)
     // The hero, the refine-search form and the no-results state. Some copy
