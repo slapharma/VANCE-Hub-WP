@@ -7,14 +7,35 @@
 > admin, so this document is now a *record and a rollback plan* rather than a
 > to-do list. Re-running that script rebuilds the menu from scratch.
 >
-> **The live menu is `Primary - mega` (term_id 122).** The previous menu,
-> `Primary - main` (term_id 20), is untouched and still exists.
+> **The live menu is `Primary - mega` (term_id 122).**
 >
-> **Rollback — one command, no data loss:**
+> `Primary - main` (term_id 20), the flyout menu that was live until this work,
+> was **deleted on request 2026-08-28**. Rollback is therefore no longer a
+> location swap — it is a rebuild:
 >
 > ```bash
-> wp menu location assign 20 primary-menu
+> wp eval-file tools/restore-primary-main.php     # recreates it, assigns nothing
+> wp menu location assign <new id> primary-menu   # the script prints the id
 > ```
+>
+> That script was written from a capture taken immediately before the delete and
+> was tested against the real menu while it still existed: all 14 items matched
+> on parent, title, type, object and URL. (The first draft did not — it rebuilt
+> KNOWLEDGEBASE as a page item rather than the custom link it actually was. That
+> is why it was diffed rather than assumed.)
+>
+> ### After ANY menu surgery, run the audit
+>
+> ```bash
+> wp eval-file tools/audit-mega-menu.php
+> ```
+>
+> Menu items have twice been **hard-deleted after a clean build**: one on
+> 2026-08-28, then three more while unrelated menus were being deleted. Both
+> times `build-mega-menu.php` had verified its own work and passed, because the
+> loss happened afterwards — a self-check that runs once at build time cannot
+> see it. The audit is read-only and can be run any time; re-run
+> `build-mega-menu.php` to repair, it is idempotent.
 >
 > Note the menu that was previously live was `Primary - main`, **not** the menu
 > that used to be called `Primary Menu`. That one was a decoy: term_id 2, slug
