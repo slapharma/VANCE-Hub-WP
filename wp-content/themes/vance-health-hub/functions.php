@@ -51,6 +51,10 @@ require_once get_template_directory() . '/inc/hero-carousel.php';
 // Spotlight hero — the light, search-led homepage hero. Which of the two
 // renderers runs is decided by `vance_hero_style`; both stay loaded so the
 // switch is instant and neither one's saved settings are ever discarded.
+// Retired pages: a slug => destination table and the 301 that serves it, so a
+// withdrawn URL lands somewhere useful instead of 404ing. Loaded early because
+// it hooks template_redirect at priority 1.
+require_once get_template_directory() . '/inc/retired-redirects.php';
 require_once get_template_directory() . '/inc/hero-spotlight.php';
 // The same spotlight hero carried across to Contact, About and the three
 // free-tool pages (Gastro Health Survey, meal planner, malnutrition

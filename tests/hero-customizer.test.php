@@ -86,6 +86,11 @@ $expected_sections = array(
     'hquiz'        => 'vance_hquiz_hero',
     'recipes'      => 'vance_tools_hero_recipes',
     'malnutrition' => 'vance_tools_hero_malnutrition',
+    // Registered in functions.php, not customizer-pages.php -- at
+    // customize_register priority 10, while this runs at 20.
+    'askai'        => 'vance_askai_settings',
+    'evidence'     => 'vance_evidence_hero',
+    'userguide'    => 'vance_userguide_hero',
 );
 foreach ( vance_page_hero_spotlight_pages() as $p ) {
     check( "$p toggle registered", isset( $m->settings[ 'vance_' . $p . '_hero_style' ] ) );

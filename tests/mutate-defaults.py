@@ -26,6 +26,16 @@ MUTANTS = [
  ("the original bug: '' default for the survey's own subtitle",
   "'legacy_desc_default'  => 'A short, evidence-based questionnaire",
   "'legacy_desc_default'  => '', 'unused'  => 'A short, evidence-based questionnaire"),
+ ("the original bug: '' default for a pillar in the band",
+  "1 => 'Clinical Trials',", "1 => '',"),
+ ("the original bug: '' default for the inherited join label",
+  "'legacy_btn1_default' => 'Explore the Evidence Library',",
+  "'legacy_btn1_default' => '',"),
+ ("Ask AI falls back to what functions.php registers, not the template",
+  "'legacy_tag_default'   => 'Information Assistant',",
+  "'legacy_tag_default'   => 'Beta Feature v1.0',"),
+ ("the User Guide PDF filename drifts from the template's constant",
+  "'Vance-Health-Hub-User-Guide.pdf' );", "'Vance-Health-Hub-User-Guide-v2.pdf' );"),
 ]
 try:
     for name, find, repl in MUTANTS:

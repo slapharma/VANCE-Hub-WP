@@ -117,11 +117,14 @@ as compromised:
 - Body text, post meta, customizer serialised values still contain `slahealth.co.uk` / `vancemedical.co.uk` — run targeted `wp search-replace` per (§6.3)
 - `_sla_*` meta keys — **do NOT** search-replace these
 
-### WP admin: bind the Turn Evidence page template
-Create a WP Page titled `Turn Evidence into Action`, slug `turn-evidence-into-action`, empty content. Template defaults render all copy (§6.4).
+### ~~WP admin: bind the Turn Evidence page template~~ — DONE
+Verified live 2026-08-28. The page is bound and published, but at slug
+**`get-started-today`** (page id 398), not `turn-evidence-into-action` — that slug
+404s. Anything referring to the old URL is stale.
 
-### Customizer controls missing for new evidence page
-`page-turn-evidence-into-action.php` reads ~20 `vance_evidence_*` theme mods but the controls aren't registered in `customizer-pages.php`. Page works with defaults; admin cannot edit copy until registered (§6.5).
+### ~~Customizer controls missing for new evidence page~~ — DONE
+`customizer-pages.php` registers ~110 `vance_evidence_*` settings, the full hero set
+included. Verified 2026-08-28.
 
 ---
 

@@ -22,7 +22,7 @@ cd tests && php hero-customizer.test.php
 cd tests && node reveal.test.js
 ```
 
-All three exit non-zero on failure. As of 2026-08-28: 138 / 55 / 22 checks.
+All three exit non-zero on failure. As of 2026-08-28: 193 / 79 / 22 checks.
 
 ## What each covers
 

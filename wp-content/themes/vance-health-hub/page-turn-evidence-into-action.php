@@ -88,6 +88,21 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
         ? esc_attr( $evd_hero_bg_color )
         : "linear-gradient(rgba(10,25,41," . esc_attr( $hero_overlay ) . "), rgba(10,25,41," . esc_attr( $hero_overlay_bottom ) . ")), url('" . esc_url( $hero_bg ) . "') no-repeat center center";
     ?>
+    <?php
+    /*
+     * Which hero. Defaults to 'classic' (Appearance > Customize > Page - Get
+     * Started > Hero Section > "Get Started hero design"), so this page renders
+     * exactly what it always has until an admin switches it.
+     *
+     * NOTE the id below. #evd-hero-join-btn is the analytics hook on the join
+     * CTA; the spotlight hero's buttons do not carry it, so switching design
+     * stops that one click being attributed. Everything else about the CTA --
+     * its label and its pinned /login/?tab=signup link -- is preserved, the
+     * label by being read from the same theme mod this hero reads.
+     */
+    if ( function_exists( 'vance_page_hero_spotlight_active' ) && vance_page_hero_spotlight_active( 'evidence' ) ) :
+        vance_render_page_hero_spotlight( 'evidence' );
+    else : ?>
     <section class="hero evidence-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: <?php echo $hero_section_bg; ?>; background-size: cover;">
         <div class="container">
             <div class="hero-content">
@@ -100,6 +115,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
     <!-- EVIDENCE PILLARS -->
     <?php

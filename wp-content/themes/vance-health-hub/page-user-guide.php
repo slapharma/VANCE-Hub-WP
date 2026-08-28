@@ -197,6 +197,20 @@ $tools = array(
 	$pdf_url      = get_template_directory_uri() . '/assets/downloads/' . VUG_PDF_FILE;
 	$pdf_meta     = vug_pdf_meta();
 	?>
+	<?php
+	/*
+	 * Which hero. Defaults to 'classic' (Appearance > Customize > Page - User
+	 * Guide > Hero Section > "User Guide hero design"), so this page renders
+	 * exactly what it always has until an admin switches it.
+	 *
+	 * The spotlight hero keeps the PDF as its second button, including the
+	 * `download` attribute, but drops the "$pdf_meta" line beside it (file size
+	 * and date). That is survivable here and only here: the same download is
+	 * offered twice more further down this page, both times with the meta.
+	 */
+	if ( function_exists( 'vance_page_hero_spotlight_active' ) && vance_page_hero_spotlight_active( 'userguide' ) ) :
+		vance_render_page_hero_spotlight( 'userguide' );
+	else : ?>
 	<section class="hero userguide-hero" style="padding: 72px 0 116px; min-height: 332px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>') no-repeat center center; background-size: cover;">
 		<div class="container">
 			<div class="hero-content">
@@ -210,6 +224,7 @@ $tools = array(
 			</div>
 		</div>
 	</section>
+	<?php endif; ?>
 
 	<!-- IN-PAGE NAV (same sticky pill-nav structure as the GI condition pages' .gi-cp-nav —
 	     replicated locally in user-guide.css rather than loading gi-health.css on this page) -->

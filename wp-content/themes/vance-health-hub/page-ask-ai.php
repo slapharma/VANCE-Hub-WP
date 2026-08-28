@@ -92,6 +92,11 @@ $agent_data = array(
     z-index: 10;
 }
 
+/* The -40px pulls the chat card up into the classic hero's dark band. The
+   spotlight hero ends at its own padding with nothing to bite into, so the
+   same offset would cut the card into the mint. */
+.askai-page--spotlight .askai-container { margin-top: 28px; }
+
 .chat-main {
     background: white;
     border-radius: var(--radius-surface, 14px);
@@ -169,7 +174,19 @@ $agent_data = array(
 }
 </style>
 
-<div class="askai-page">
+<?php
+/*
+ * Which hero. Defaults to 'classic', so this page renders exactly what it
+ * always has until an admin sets Appearance > Customize > Content >
+ * VANCE-Ai Configuration > "Ask AI hero design" to Spotlight.
+ */
+$askai_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
+    && vance_page_hero_spotlight_active( 'askai' );
+?>
+<div class="askai-page<?php echo $askai_spotlight ? ' askai-page--spotlight' : ''; ?>">
+    <?php if ( $askai_spotlight ) : ?>
+    <?php vance_render_page_hero_spotlight( 'askai' ); ?>
+    <?php else : ?>
     <section class="askai-hero">
         <div class="container">
             <div class="hero-badge">
@@ -183,6 +200,7 @@ $agent_data = array(
             <p><?php echo esc_html($hero_subtitle); ?></p>
         </div>
     </section>
+    <?php endif; ?>
 
     <div class="askai-container">
         <main class="chat-main">

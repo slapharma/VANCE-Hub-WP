@@ -4421,9 +4421,12 @@ body.home .hero {
                 __search-form higher up, so only the interior lives here.
      __card--stat  the card variant that leads on a figure instead of a
                 heading, used by About to surface stat 1.
-     __slot--tools the three tool pages' band. Not a fourth band: it renders
-                the lines markup unchanged and adds only the two things a tool
-                name needs that an email address does not.
+     __slot--tools the three tool pages' band, and Ask AI's and the User
+                Guide's. Not a fourth band: it renders the lines markup
+                unchanged and adds only the two things a tool name needs that
+                an email address does not.
+     __slot--pillars  Get Started Today's band. The badges markup unchanged,
+                laid out two-by-two because it carries four cells.
 
    No page renders any of this until its own hero design is switched to
    Spotlight; all five default to the classic dark hero.
@@ -4693,6 +4696,42 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 @media (prefers-reduced-motion: reduce) {
     .vhh-hero-spotlight__slot--tools .vhh-hero-spotlight__line::after {
         transition: none;
+    }
+}
+
+
+
+/* --- Get Started Today: the four evidence pillars ------------------------ */
+
+/* The badges markup unchanged -- a tick beside a phrase -- with one more cell
+   than any other band on the site and much longer phrases in them. Four equal
+   columns inside the copy column measure under 130px each, which puts
+   "Peer-Reviewed Science" on three lines, so this band goes two-by-two.
+
+   Scoped to min-width 901px deliberately. The shared rule at max-width 900px
+   collapses every band to a single stack, this block sits AFTER it in the file,
+   and both selectors are one class deep -- so an unscoped grid-template-columns
+   here would win at every width and the band would never stack on a phone. */
+@media (min-width: 901px) {
+    .vhh-hero-spotlight__slot--pillars {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* The shared rule rules off the right of every cell but the last, which is
+       right for one row and wrong for a 2x2 -- it leaves a hairline floating
+       down the right of cell 3. Draw the grid's interior lines instead. */
+    .vhh-hero-spotlight__slot--pillars .vhh-hero-spotlight__badge {
+        border-right: 0;
+        border-bottom: 1px solid #DCE9E8;
+    }
+
+    .vhh-hero-spotlight__slot--pillars .vhh-hero-spotlight__badge:nth-child(odd) {
+        border-right: 1px solid #DCE9E8;
+    }
+
+    .vhh-hero-spotlight__slot--pillars .vhh-hero-spotlight__badge:nth-last-child(-n + 2) {
+        border-bottom: 0;
     }
 }
 

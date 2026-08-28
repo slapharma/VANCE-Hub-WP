@@ -130,9 +130,36 @@ check( "survey band names the calculator",  strpos( $p3, "IBD Malnutrition Calcu
 check( "planner band names the survey",     strpos( $p4, "Gastro Health Survey" ) !== false );
 check( "calculator band names the survey",  strpos( $p5, "Gastro Health Survey" ) !== false );
 
+// Ask AI, Get Started Today and the User Guide. Ask AI's defaults are the
+// third set on this page to disagree with what functions.php REGISTERS
+// ('Beta Feature v1.0', 'Ask complex clinical questions...') -- the template's
+// are what an unsaved front end actually renders, and these must be those.
+set_mods( array( "vance_askai_hero_style" => "spotlight" ) );
+$p6 = render( "askai" );
+check( "askai: eyebrow is not empty",  strpos( $p6, "Information Assistant" ) !== false );
+check( "askai: headline is not empty", strpos( $p6, "VANCE-Ai" ) !== false );
+check( "askai: intro is not empty",    strpos( $p6, "drawn from articles published" ) !== false );
+
+set_mods( array( "vance_evidence_hero_style" => "spotlight" ) );
+$p7 = render( "evidence" );
+check( "evidence: eyebrow is not empty",  strpos( $p7, "Evidence to Practice" ) !== false );
+check( "evidence: headline is not empty", strpos( $p7, "into Action" ) !== false );
+check( "evidence: intro is not empty",    strpos( $p7, "Rigorous clinical research" ) !== false );
+check( "evidence: band has pillar 1",     strpos( $p7, "Clinical Trials" ) !== false );
+check( "evidence: band has pillar 4",     strpos( $p7, "Expert Consensus" ) !== false );
+check( "evidence: button 1 keeps the classic label",
+       strpos( $p7, "Explore the Evidence Library" ) !== false );
+
+set_mods( array( "vance_userguide_hero_style" => "spotlight" ) );
+$p8 = render( "userguide" );
+check( "userguide: eyebrow is not empty",  strpos( $p8, "User Guide" ) !== false );
+check( "userguide: headline is not empty", strpos( $p8, "Get the most out of" ) !== false );
+check( "userguide: intro is not empty",    strpos( $p8, "credible source you turn to" ) !== false );
+
 // Nothing may render as an empty element on a pristine site.
 foreach ( array( "contact" => $p1, "about" => $p2,
-                 "hquiz" => $p3, "recipes" => $p4, "malnutrition" => $p5 ) as $pg => $html ) {
+                 "hquiz" => $p3, "recipes" => $p4, "malnutrition" => $p5,
+                 "askai" => $p6, "evidence" => $p7, "userguide" => $p8 ) as $pg => $html ) {
     check( "$pg: no empty headline",  preg_match( '/__title"><\/h1>/', $html ), 0 );
     check( "$pg: no empty eyebrow",   preg_match( '/__eyebrow"><\/span>/', $html ), 0 );
 }
@@ -317,6 +344,80 @@ foreach ( array( 'hquiz' => 'M8.8 11.6h6.4', 'recipes' => 'M3.4 11.4h17.2',
     set_mods( array( 'vance_' . $pg . '_hero_style' => 'spotlight' ) );
     check( "$pg: card shows its own icon", strpos( render( $pg ), $needle ) !== false );
 }
+
+echo "\n=== 5c. Ask AI, Get Started Today and the User Guide ===\n";
+
+// The band is three cells WHATEVER page it is on. A tool page always drops one
+// tool (its own) so the shelf cell lands; Ask AI and the User Guide are not
+// tools, so all three are listed and the shelf would make a fourth.
+set_mods( array( 'vance_askai_hero_style' => 'spotlight' ) );
+$ai = render( 'askai' );
+check( 'markup is balanced', tags_balanced( $ai ) );
+check( 'askai lists all three tools',
+       strpos( $ai, 'Gastro Health Survey' ) !== false
+    && strpos( $ai, 'Meal Planner' ) !== false
+    && strpos( $ai, 'IBD Malnutrition Calculator' ) !== false );
+check( 'askai has NO "browse all" cell (that would be a fourth)',
+       strpos( $ai, 'href="https://example.test/tools-resources/"' ), false );
+check( 'every band is exactly three cells',
+       substr_count( $ai, 'vhh-hero-spotlight__line-ico' ), 3 );
+set_mods( array( 'vance_malnutrition_hero_style' => 'spotlight' ) );
+check( 'including on a tool page, where one is the shelf',
+       substr_count( render( 'malnutrition' ), 'vhh-hero-spotlight__line-ico' ), 3 );
+// ...and it stays three when an admin clears a tool, because the shelf appears.
+set_mods( array( 'vance_askai_hero_style' => 'spotlight', 'vance_tool_recipes_name' => '' ) );
+$ai2 = render( 'askai' );
+check( 'a cleared tool brings the shelf cell back',
+       strpos( $ai2, 'href="https://example.test/tools-resources/"' ) !== false );
+check( 'and the band is still three cells',
+       substr_count( $ai2, 'vhh-hero-spotlight__line-ico' ), 3 );
+
+set_mods( array( 'vance_askai_hero_style' => 'spotlight' ) );
+check( 'askai ghost CTA resolves to the Knowledgebase',
+       strpos( render( 'askai' ), 'https://example.test/knowledgebase/' ) !== false );
+
+// Get Started Today: the four pillars, in the badges markup.
+set_mods( array( 'vance_evidence_hero_style' => 'spotlight',
+                 'vance_evidence_pillar2_title' => 'Registry Outcomes' ) );
+$ev = render( 'evidence' );
+check( 'markup is balanced', tags_balanced( $ev ) );
+check( 'band uses the badges markup',   strpos( $ev, 'vhh-hero-spotlight__slot--badges' ) !== false );
+check( 'and carries the pillars modifier', strpos( $ev, 'vhh-hero-spotlight__slot--pillars' ) !== false );
+check( 'a renamed pillar renames in the band', strpos( $ev, 'Registry Outcomes' ) !== false );
+check( 'and the old name is gone',             strpos( $ev, 'Real-World Data' ) === false );
+check( 'four cells, not three',                substr_count( $ev, 'vhh-hero-spotlight__badge-ico' ), 4 );
+check( 'the join CTA keeps its pinned link',   strpos( $ev, 'href="/login/?tab=signup"' ) !== false );
+check( 'pillars anchor is the ghost CTA',      strpos( $ev, 'href="#pillars"' ) !== false );
+
+// Button 1's LABEL is inherited from the classic hero on this page only, so a
+// Customizer relabel follows the design switch instead of reverting.
+set_mods( array( 'vance_evidence_hero_style' => 'spotlight',
+                 'vance_evidence_hero_btn1_text' => 'Join Now!' ) );
+check( 'a relabelled join button follows the switch',
+       strpos( render( 'evidence' ), 'Join Now!' ) !== false );
+$evd = vance_page_hero_spotlight_field_defaults( 'evidence' );
+check( 'evidence declares NO btn1_text of its own', array_key_exists( 'btn1_text', $evd ), false );
+$cond = vance_page_hero_spotlight_field_defaults( 'contact' );
+check( 'every other page still does',              array_key_exists( 'btn1_text', $cond ) );
+
+// The User Guide keeps the PDF, as a real download.
+set_mods( array( 'vance_userguide_hero_style' => 'spotlight' ) );
+$ug = render( 'userguide' );
+check( 'markup is balanced', tags_balanced( $ug ) );
+check( 'the PDF is button 2',        strpos( $ug, 'Vance-Health-Hub-User-Guide.pdf' ) !== false );
+check( 'and is a real download',     strpos( $ug, '.pdf" download>' ) !== false );
+check( 'no other button downloads',  substr_count( $ug, ' download>' ), 1 );
+set_mods( array( 'vance_contact_hero_style' => 'spotlight' ) );
+check( 'Contact\'s buttons carry no download attribute',
+       strpos( render( 'contact' ), ' download>' ), false );
+
+// The PDF filename is duplicated: page-user-guide.php defines it as a constant
+// this file cannot see during Customizer registration, so page-hero-spotlight
+// carries a literal fallback. Hold the two together.
+$ug_src = file_get_contents( $THEME . "/page-user-guide.php" );
+$ug_pdf = basename( vance_page_hero_spotlight_config( 'userguide' )['btn2_link'] );
+check( "the PDF fallback ($ug_pdf) matches VUG_PDF_FILE in the template",
+       preg_match( "/define\(\s*'VUG_PDF_FILE',\s*'" . preg_quote( $ug_pdf, '/' ) . "'/", $ug_src ), 1 );
 
 echo "\n=== 6. Colours reach the style attribute, and the dissolve maths is right ===\n";
 set_mods( array(

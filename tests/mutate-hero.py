@@ -26,6 +26,24 @@ MUTANTS = [
  ("every card goes back to one hard-wired icon",
   "vance_page_hero_spotlight_icon( $c['card_icon'] )",
   "vance_page_hero_spotlight_icon( 'chat' )"),
+ ("the shelf cell is added unconditionally again",
+  "if ( count( $cells ) < count( $tools ) ) {", "if ( true ) {"),
+ ("the pillars band stops reading its settings",
+  "$title = vance_get_theme_mod( 'vance_evidence_pillar' . $i . '_title', $default );",
+  "$title = '';"),
+ ("button 1 stops inheriting the classic label",
+  "$vals['btn1_text'] = vance_get_theme_mod( $c['legacy_btn1'], $c['legacy_btn1_default'] );",
+  "$vals['btn1_text'] = 'Explore the Evidence Library';"),
+ ("the PDF button loses its download attribute",
+  "! empty( $c['btn2_download'] ) ? ' download' : ''", "''"),
+ # NB not "$slot_markup = 'lines'": that feeds plain strings to the lines
+ # markup and fatals, so the suite exits non-zero without a single failing
+ # assertion -- red for the wrong reason, and no evidence of coverage. This
+ # mutant is the realistic version of the same slip (a slot listed under the
+ # wrong markup) and it produces real FAILs.
+ ("the tools band is mis-listed as a badges band",
+  "array( 'badges', 'pillars' ), true ) ? 'badges' : 'lines';",
+  "array( 'badges', 'pillars', 'tools' ), true ) ? 'badges' : 'lines';"),
 ]
 
 try:

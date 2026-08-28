@@ -19,7 +19,7 @@ Three heroes exist today:
 | Design | Renderer | Used by |
 |---|---|---|
 | Spotlight (light, mint band) | [inc/hero-spotlight.php](wp-content/themes/vance-health-hub/inc/hero-spotlight.php) | homepage |
-| Spotlight, page variant | [inc/page-hero-spotlight.php](wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php) | `/contact-us/`, `/about/`, and the three free-tool pages — `/gastro-health-survey/`, `/gastro-meal-planner/`, `/malnutrition-calculator/` |
+| Spotlight, page variant | [inc/page-hero-spotlight.php](wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php) | eight pages: `/contact-us/`, `/about/`, the three free tools (`/gastro-health-survey/`, `/gastro-meal-planner/`, `/malnutrition-calculator/`), `/ask-ai/`, `/get-started-today/`, `/user-guide/` |
 | Classic dark navy | `.hero` in `assets/css/main.css`, plus per-template bespoke ones | everything else |
 
 **Read `inc/page-hero-spotlight.php` end to end before writing anything.** It is the
@@ -85,6 +85,62 @@ edge, which is the edge the band dissolves.
 navy. The spotlight band has no depth to bite into, so both wind that back to `+28px`
 under `.quiz-page-wrapper.is-spotlight` / `.tool-page--spotlight`. **Any further
 template whose content overlaps its hero needs the same.**
+
+### Update — Ask AI, Get Started Today, the User Guide, and Our Heritage retired
+
+Same day. **All three new toggles default to `classic`.**
+
+- Three more config entries: `askai`, `evidence`, `userguide`. Ask AI's Customizer
+  controls live in `functions.php` (section `vance_askai_settings`, panel
+  `vance_content_panel`) rather than `customizer-pages.php` — that file registers at
+  `customize_register` priority 10 and this one at 20, so the section exists in time.
+- `page-ask-ai.php` also needed the `-40px` overlap wound back
+  (`.askai-page--spotlight`).
+- **Get Started Today lives at `/get-started-today/`, not
+  `/turn-evidence-into-action/`, which 404s.** CLAUDE.md's "bind the Turn Evidence page
+  template" task is therefore already done; corrected there.
+- Two new mechanisms, both earning their keep on exactly one page so far:
+  - `legacy_btn1` / `legacy_btn1_default` — button 1's LABEL inherited from the
+    classic hero, the way the eyebrow/headline/intro already are. Get Started Today
+    needs it: an admin relabelled that CTA "Join Now!" in the Customizer, so a
+    spotlight button carrying the code default would have silently renamed the page's
+    primary call to action. Declaring it drops `btn1_text` from that page's own field
+    list, so there is still only one place to type the label.
+  - `btn2_download` — adds the `download` attribute, for the User Guide's PDF.
+- **The band is always three cells.** `vance_page_hero_spotlight_tools()` adds the
+  "browse all free tools" cell only when it has dropped something. A tool page always
+  drops itself, so it lands; Ask AI and the User Guide are not tools, so all three are
+  listed and a fourth cell would squeeze them. It also means clearing a tool's name
+  brings the shelf back rather than leaving a gap.
+- Get Started Today gets a band of its own, `pillars` — the four evidence pillars, read
+  from the settings the pillar cards further down the page already use. It renders the
+  **badges** markup, so there are still only two band shapes in the CSS; its modifier
+  only lays four cells out two-by-two, and does so inside `@media (min-width: 901px)`
+  so it cannot beat the shared rule that stacks every band on a phone.
+
+**One thing was lost on purpose, and one by accident of design:**
+
+- `#evd-hero-join-btn`, the analytics id on Get Started Today's join CTA, is not on the
+  spotlight button. The label and the pinned `/login/?tab=signup` link both survive;
+  the click attribution does not. Add the id to the renderer if that number matters.
+- The User Guide hero's `$pdf_meta` line (file size and date) beside the download. The
+  same download appears twice more further down that page, both times with the meta,
+  which is the only reason this was acceptable.
+
+**Our Heritage is retired**, per §4.2's warning and an explicit decision:
+
+- `page-our-heritage.php` deleted, and its ~420 lines of Customizer registration
+  removed from `customizer-pages.php`. That block used to be registered and then
+  removed again at the end of the same function, so ~200 settings existed that no
+  admin could ever see.
+- `inc/retired-redirects.php` is new: a `slug => destination` table and a 301. It runs
+  on the request **path**, not on the queried object, so it works whether the page is
+  published, trashed or gone. `/our-heritage/` → `/about/`.
+- The WP Page (id 389) is trashed, and the orphaned template removed from the server
+  by hand — **necessary, because neither deploy path ever deletes.** Both untar over
+  the live theme, so a file deleted in the repo lives on indefinitely on the server.
+- The saved `vance_heritage_*` theme mods are deliberately still in the database. They
+  are the only remaining copy of what that page said.
 
 **Current live state, all five:**
 
@@ -226,8 +282,8 @@ opt-outs.
 | `page-education.php` | `vance_edu_hero_*` | |
 | `page-tools-resources.php` | `vance_tools_hero_*` | |
 | `page-knowledgebase.php` | `vance_kblobby_hero_*` | Separate from the `kb-mini-hero` in `front-page.php` |
-| `page-turn-evidence-into-action.php` | `vance_evidence_hero_*` | CLAUDE.md §6.5 says these controls are unregistered. **That is stale** — verified 2026-08-28, `customizer-pages.php` registers 110 `vance_evidence_*` settings including the full hero set. Nothing to fix; CLAUDE.md needs correcting |
-| `page-user-guide.php` | `vance_userguide_hero_*` | |
+| ~~`page-turn-evidence-into-action.php`~~ | `vance_evidence_hero_*` | **DONE** — `vance_evidence_hero_style`. Lives at `/get-started-today/`; `/turn-evidence-into-action/` 404s |
+| ~~`page-user-guide.php`~~ | `vance_userguide_hero_*` | **DONE** — `vance_userguide_hero_style` |
 | `page-gi-health.php`, `page-gi-condition.php` | — | Also carry the `.gi-reveal` animation, see §7 |
 | `page.php` | — | **Generic page fallback.** Covers Accessibility, Medical Disclaimer and any page without its own template. Highest blast radius on this list — do it late and check what actually uses it |
 | `archive.php` | `vance_cat_hero_*` | **Category archives** — a post type, per the brief |
@@ -241,16 +297,12 @@ means deleting that CSS too.
 
 | Template | Class | Key prefix |
 |---|---|---|
-| `page-ask-ai.php` | `askai-hero` | `vance_askai_hero_*` |
+| ~~`page-ask-ai.php`~~ | ~~`askai-hero`~~ | **DONE** — `vance_askai_hero_style`. Its controls are in `functions.php`, section `vance_askai_settings` |
 | ~~`page-healthcare-quiz.php`~~ | ~~`quiz-hero`~~ | **DONE** — `vance_hquiz_hero_style` |
 | ~~`page-gastro-recipies.php`~~ | ~~`vance-rh-hero`~~ | **DONE** — `vance_recipes_hero_style` |
 | ~~`page-malnutrition-calculator.php`~~ | ~~`tool-page-hero`~~ | **DONE** — `vance_malnutrition_hero_style`. It was never listed here; its hero comes from `inc/tool-page-shell.php`, which now draws either |
 | `page-terms-of-use.php`, `tpl-privacy-policy.php`, `page-accessibility.php`, `page-medical-disclaimer.php` | `legal-hero` | — Four templates share it; convert together |
-| `page-our-heritage.php` | `vance-about-hero` | `vance_heritage_hero_*` |
-
-⚠ **`page-our-heritage.php` is being retired.** `customizer-pages.php` removes its whole
-panel at the end of registration. Confirm with the client before spending effort — it is
-an unlinked clone of About.
+| ~~`page-our-heritage.php`~~ | ~~`vance-about-hero`~~ | **RETIRED**, not converted — template deleted, page trashed, `/our-heritage/` 301s to `/about/` |
 
 **`page-ask-ai.php` is the last unconverted tool page.** It is not one of the three
 the client calls free tools — those are the three on the Tools & Resources grid — but
@@ -284,7 +336,15 @@ cd tests && python mutate-hero.py && python mutate-defaults.py
 
 `php -l` every touched file. PHP and Node are both on PATH on this machine.
 
-Counts as of commit `411d002`: **138 / 55 / 22**, and 9 + 8 mutants all red.
+Counts after Ask AI / Get Started / User Guide: **193 / 79 / 22**, and 14 + 12 mutants
+all red.
+
+⚠ **A mutant that goes red by crashing is not evidence of coverage.** One added this
+round forced every band through the lines markup, which fed plain strings to code
+expecting arrays: PHP fatal, non-zero exit, and not one failing assertion. It read as
+"went RED" in the runner's output. Replaced with the realistic version of the same
+slip — a slot listed under the wrong markup — which produces 18 real FAILs. **Check the
+failing count, not just the colour.**
 
 ### 5.1 Traps that have already cost real time
 

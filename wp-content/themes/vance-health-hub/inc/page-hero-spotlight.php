@@ -52,6 +52,14 @@ function vance_page_hero_spotlight_config( $page ) {
 	$img    = get_template_directory_uri() . '/assets/img/about/';
 	$img_gi = get_template_directory_uri() . '/assets/img/gi-health/';
 
+	// The User Guide's downloadable PDF. page-user-guide.php defines VUG_PDF_FILE,
+	// but only while that template is rendering -- this function also runs during
+	// Customizer registration, where it is not defined. The literal is the
+	// fallback, and tests/hero-render.test.php asserts it still matches the
+	// constant in that template, so the two cannot drift.
+	$pdf = get_template_directory_uri() . '/assets/downloads/'
+		. ( defined( 'VUG_PDF_FILE' ) ? VUG_PDF_FILE : 'Vance-Health-Hub-User-Guide.pdf' );
+
 	$conf = array(
 		'contact' => array(
 			'name'         => __( 'Contact Us', 'vance-health-hub' ),
@@ -256,6 +264,128 @@ function vance_page_hero_spotlight_config( $page ) {
 			'card_title'   => __( 'MUST, IBD-NST and GLIM, in one pass', 'vance-health-hub' ),
 			'card_text'    => __( 'Three validated screening frameworks combined into a single score, so one set of answers covers all of them.', 'vance-health-hub' ),
 		),
+
+		/*
+		 * ---- Ask AI, Get Started Today, the User Guide -------------------
+		 *
+		 * Ask AI and the User Guide both take the `tools` band. Neither is one
+		 * of the three free tools, so nothing is dropped from the list and the
+		 * band shows all three -- see vance_page_hero_spotlight_tools(), which
+		 * only adds the "browse all" cell when it has dropped something, so
+		 * every band on the site is three cells wide.
+		 *
+		 * The User Guide could have had a band of jump links instead, but the
+		 * page already renders a sticky sub-nav immediately below the hero
+		 * that does exactly that, better. Pointing at the three things the
+		 * guide is teaching you to use says something the sub-nav does not.
+		 *
+		 * Get Started Today gets its own band: the four evidence pillars, which
+		 * are the page's whole argument and already exist as settings.
+		 */
+		'askai' => array(
+			'name'         => __( 'Ask AI', 'vance-health-hub' ),
+			'short_name'   => __( 'Ask AI', 'vance-health-hub' ),
+			// Registered in functions.php at customize_register priority 10;
+			// this file runs at 20, so both panel and section exist by then.
+			'panel'        => 'vance_content_panel',
+			'section'      => 'vance_askai_hero_spotlight',
+			'section_title'    => __( 'VANCE-Ai Hero — Spotlight', 'vance-health-hub' ),
+			'style_section'    => 'vance_askai_settings',
+			'classic_template' => 'page-ask-ai.php',
+			'priority'     => 160,
+			'legacy_tag'   => 'vance_askai_hero_badge',
+			'legacy_title' => 'vance_askai_hero_title',
+			'legacy_desc'  => 'vance_askai_hero_subtitle',
+			// The TEMPLATE's fallbacks, which are what an unsaved site renders.
+			// functions.php registers different ones ('Beta Feature v1.0', 'Ask
+			// complex clinical questions...') that only the Customizer ever sees.
+			'legacy_tag_default'   => 'Information Assistant',
+			'legacy_title_default' => 'VANCE-Ai',
+			'legacy_desc_default'  => 'Ask anything about IBD, clinical nutrition and gastrointestinal health. Every answer is drawn from articles published on the Vance Medical Hub, with links to the sources used.',
+			'image'        => $img_gi . 'crohns.jpg',
+			'image_alt'    => __( 'A man at a kitchen table reading a letter, one hand resting at his chin', 'vance-health-hub' ),
+			'btn1_text'    => __( 'Ask a question', 'vance-health-hub' ),
+			// The chat mount point, which is the first thing below the hero.
+			'btn1_link'    => '#vance-askai-inline',
+			'btn2_text'    => __( 'Browse the Knowledgebase', 'vance-health-hub' ),
+			'btn2_link'    => '',
+			'btn2_fallback_slug' => 'knowledgebase',
+			'btn2_fallback_path' => '/knowledgebase/',
+			'slot'         => 'tools',
+			'slot_label'   => __( 'Or use one of the free tools', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'chat',
+			'card_title'   => __( 'Every answer shows its sources', 'vance-health-hub' ),
+			'card_text'    => __( 'Answers are drawn from articles published on this Hub and linked back to them, so you can read the thing itself rather than take the summary on trust.', 'vance-health-hub' ),
+		),
+		'evidence' => array(
+			'name'         => __( 'Get Started Today', 'vance-health-hub' ),
+			'short_name'   => __( 'Get Started', 'vance-health-hub' ),
+			'panel'        => 'vance_evidence_panel',
+			'section'      => 'vance_evidence_hero_spotlight',
+			'style_section'    => 'vance_evidence_hero',
+			'classic_template' => 'page-turn-evidence-into-action.php',
+			'priority'     => 160,
+			'legacy_tag'   => 'vance_evidence_hero_tag',
+			'legacy_title' => 'vance_evidence_hero_title',
+			'legacy_desc'  => 'vance_evidence_hero_desc',
+			'legacy_tag_default'   => 'Evidence to Practice',
+			'legacy_title_default' => 'Turn <span class="highlight">Evidence</span> into Action',
+			'legacy_desc_default'  => 'Rigorous clinical research only matters when it reaches the patient. Vance Medical translates peer-reviewed science and real-world data into practical protocols that clinicians and patients can act on.',
+			// Button 1's LABEL is shared with the classic hero, unlike every
+			// other page here. It has to be: an admin relabelled it "Join Now!"
+			// in the Customizer, so a spotlight button carrying the code default
+			// would silently rename the page's primary CTA on switching design.
+			// Declaring legacy_btn1 drops btn1_text from this page's own field
+			// list, the same way the stat card drops card_title.
+			'legacy_btn1'         => 'vance_evidence_hero_btn1_text',
+			'legacy_btn1_default' => 'Explore the Evidence Library',
+			// The classic hero pins this link rather than reading a theme mod,
+			// because the saved one still pointed at #pillars long after the
+			// label became "Join Now!". Pinned here for the same reason.
+			'btn1_link'    => '/login/?tab=signup',
+			'image'        => $img . 'pharma-manufacturing.jpg',
+			'image_alt'    => __( 'Two scientists in white coats examining samples together in a bright laboratory', 'vance-health-hub' ),
+			'btn2_text'    => __( 'See the four sources', 'vance-health-hub' ),
+			'btn2_link'    => '#pillars',
+			'slot'         => 'pillars',
+			'slot_label'   => __( 'Everything here is anchored in one of these', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'flask',
+			'card_title'   => __( 'Graded against recognised criteria', 'vance-health-hub' ),
+			'card_text'    => __( 'Every recommendation is anchored in at least one of the four evidence streams and graded against internationally-recognised quality criteria.', 'vance-health-hub' ),
+		),
+		'userguide' => array(
+			'name'         => __( 'User Guide', 'vance-health-hub' ),
+			'short_name'   => __( 'User Guide', 'vance-health-hub' ),
+			'panel'        => 'vance_userguide_panel',
+			'section'      => 'vance_userguide_hero_spotlight',
+			'style_section'    => 'vance_userguide_hero',
+			'classic_template' => 'page-user-guide.php',
+			'priority'     => 160,
+			'legacy_tag'   => 'vance_userguide_hero_tag',
+			'legacy_title' => 'vance_userguide_hero_title',
+			'legacy_desc'  => 'vance_userguide_hero_desc',
+			'legacy_tag_default'   => 'User Guide',
+			'legacy_title_default' => 'Get the most out of <span class="highlight">Vance Medical Hub</span>',
+			'legacy_desc_default'  => 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.',
+			'image'        => $img_gi . 'ibd.jpg',
+			'image_alt'    => __( 'Four people around a cafe table looking at a laptop together', 'vance-health-hub' ),
+			'btn1_text'    => __( 'Start with your journey', 'vance-health-hub' ),
+			'btn1_link'    => '#your-journey',
+			// The classic hero's own PDF button. It survives the switch because
+			// the same download is offered twice more further down the page, but
+			// keeping it above the fold costs one attribute -- see btn2_download.
+			'btn2_text'    => __( 'Download the PDF guide', 'vance-health-hub' ),
+			'btn2_link'    => $pdf,
+			'btn2_download' => true,
+			'slot'         => 'tools',
+			'slot_label'   => __( 'What the guide will show you', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'book',
+			'card_title'   => __( 'Tuned to your condition, once you join', 'vance-health-hub' ),
+			'card_text'    => __( 'The research, tools and AI answers you see are filtered to the condition you tell us about, so the Hub stops being a generic health website.', 'vance-health-hub' ),
+		),
 	);
 
 	return isset( $conf[ $page ] ) ? $conf[ $page ] : null;
@@ -271,7 +401,7 @@ function vance_page_hero_spotlight_config( $page ) {
  * @return string[]
  */
 function vance_page_hero_spotlight_pages() {
-	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition' );
+	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition', 'askai', 'evidence', 'userguide' );
 }
 
 /**
@@ -376,6 +506,14 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 		$d['card_title'] = $c['card_title'];
 	}
 
+	// A page that inherits button 1's label from its classic hero gets no
+	// control of its own for it, exactly as the stat card gets no heading --
+	// two places to type one label is how the classic hero's link and label
+	// drifted apart in the first place.
+	if ( ! empty( $c['legacy_btn1'] ) ) {
+		unset( $d['btn1_text'] );
+	}
+
 	return $d;
 }
 
@@ -407,6 +545,10 @@ function vance_page_hero_spotlight_values( $page ) {
 	$vals['title']   = vance_get_theme_mod( $c['legacy_title'], $c['legacy_title_default'] );
 	$vals['intro']   = vance_get_theme_mod( $c['legacy_desc'],  $c['legacy_desc_default'] );
 
+	if ( ! empty( $c['legacy_btn1'] ) ) {
+		$vals['btn1_text'] = vance_get_theme_mod( $c['legacy_btn1'], $c['legacy_btn1_default'] );
+	}
+
 	// Only reached when an admin has deliberately cleared button 2's link,
 	// and only on the pages whose config names a page to fall back to.
 	if ( ! $vals['btn2_link'] && ! empty( $c['btn2_fallback_slug'] ) ) {
@@ -425,7 +567,7 @@ function vance_page_hero_spotlight_values( $page ) {
  * Same stroke weight and 24-unit box as the homepage hero's icons so the two
  * read as one family.
  *
- * @param string $name mail|phone|clock|check|chat|flask|clipboard|bowl|calculator|grid
+ * @param string $name mail|phone|clock|check|chat|flask|clipboard|bowl|calculator|grid|book
  * @return string SVG markup, already safe (no dynamic values).
  */
 function vance_page_hero_spotlight_icon( $name ) {
@@ -441,6 +583,7 @@ function vance_page_hero_spotlight_icon( $name ) {
 		'bowl'       => '<path d="M3.4 11.4h17.2a8.6 8.6 0 0 1-17.2 0z"/><path d="M8.2 8.4c0-1.7 1.3-2 1.3-3.4"/><path d="M12 8.4c0-1.7 1.3-2 1.3-3.4"/><path d="M15.8 8.4c0-1.7 1.3-2 1.3-3.4"/>',
 		'calculator' => '<rect x="4.6" y="2.6" width="14.8" height="18.8" rx="2.4"/><rect x="8" y="6" width="8" height="3.2" rx="1"/><path d="M8.6 13h.02"/><path d="M12 13h.02"/><path d="M15.4 13h.02"/><path d="M8.6 17h.02"/><path d="M12 17h.02"/><path d="M15.4 17h.02"/>',
 		'grid'       => '<rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.8"/>',
+		'book'       => '<path d="M4 4.6A1.6 1.6 0 0 1 5.6 3H11v18H5.6A1.6 1.6 0 0 1 4 19.4z"/><path d="M20 4.6A1.6 1.6 0 0 0 18.4 3H13v18h5.4a1.6 1.6 0 0 0 1.6-1.6z"/>',
 	);
 	if ( ! isset( $paths[ $name ] ) ) { return ''; }
 
@@ -601,16 +744,54 @@ function vance_page_hero_spotlight_tools( $page ) {
 		);
 	}
 
-	// Third cell: the shelf, for anyone who wants neither of the other two.
-	// Always present, so the band reads as three columns like Contact's.
-	$cells[] = array(
-		'key'   => 'grid',
-		'label' => __( 'More', 'vance-health-hub' ),
-		'value' => __( 'Browse all free tools', 'vance-health-hub' ),
-		'href'  => vance_page_hero_spotlight_page_url( 'tools-resources', '/tools-resources/' ),
-	);
+	// The shelf, for anyone who wants none of the ones listed -- but only when
+	// a cell is actually missing. On a tool page one tool is always dropped (its
+	// own), so this lands and the band is three wide. On Ask AI and the User
+	// Guide, which are not tools, all three are listed and adding a fourth cell
+	// would squeeze them all. Either way the band is exactly three columns, and
+	// it stays three if an admin clears a tool's name.
+	if ( count( $cells ) < count( $tools ) ) {
+		$cells[] = array(
+			'key'   => 'grid',
+			'label' => __( 'More', 'vance-health-hub' ),
+			'value' => __( 'Browse all free tools', 'vance-health-hub' ),
+			'href'  => vance_page_hero_spotlight_page_url( 'tools-resources', '/tools-resources/' ),
+		);
+	}
 
 	return $cells;
+}
+
+/**
+ * The four evidence pillars, for Get Started Today's utility band.
+ *
+ * The page's own argument is "Four Sources. One Standard.", and the four are
+ * already settings -- the pillar cards further down the page render the same
+ * titles. Reading them here means an admin renames a pillar once.
+ *
+ * Defaults are page-turn-evidence-into-action.php's own $pillar_defaults,
+ * copied verbatim for the usual reason: '' would empty the band on any site
+ * that has never edited them.
+ *
+ * @return string[] Pillar titles, empty ones dropped.
+ */
+function vance_page_hero_spotlight_pillars() {
+	$defaults = array(
+		1 => 'Clinical Trials',
+		2 => 'Real-World Data',
+		3 => 'Peer-Reviewed Science',
+		4 => 'Expert Consensus',
+	);
+
+	$out = array();
+	foreach ( $defaults as $i => $default ) {
+		$title = vance_get_theme_mod( 'vance_evidence_pillar' . $i . '_title', $default );
+		if ( $title !== '' ) {
+			$out[] = $title;
+		}
+	}
+
+	return $out;
 }
 
 /**
@@ -664,6 +845,9 @@ function vance_render_page_hero_spotlight( $page ) {
 		case 'tools':
 			$slot_items = vance_page_hero_spotlight_tools( $page );
 			break;
+		case 'pillars':
+			$slot_items = vance_page_hero_spotlight_pillars();
+			break;
 		default:
 			// Defaults copied from page-about.php's own $badge_defaults, for the
 			// same reason as the hero copy above: '' here empties the band on any
@@ -677,6 +861,17 @@ function vance_render_page_hero_spotlight( $page ) {
 
 	// The About badges have their own long-standing visibility switch; honour
 	// it here rather than making an admin turn the same row off twice.
+	// Two shapes of band, not five. 'lines' is an icon tile beside a caption
+	// and a value, optionally a link; 'badges' is a tick beside a phrase.
+	// Every slot is one of those two with a modifier on top, which is what
+	// keeps the cell treatment, the dividers and the responsive stack in a
+	// single place.
+	$slot_markup = in_array( $c['slot'], array( 'badges', 'pillars' ), true ) ? 'badges' : 'lines';
+	$slot_class  = 'vhh-hero-spotlight__slot--' . $slot_markup;
+	if ( $c['slot'] !== $slot_markup ) {
+		$slot_class .= ' vhh-hero-spotlight__slot--' . $c['slot'];
+	}
+
 	$show_slot = ! empty( $s['show_slot'] ) && $slot_items;
 	if ( $c['slot'] === 'badges' && ! vance_get_theme_mod( 'vance_about_badges_show', true ) ) {
 		$show_slot = false;
@@ -716,7 +911,10 @@ function vance_render_page_hero_spotlight( $page ) {
 					</a>
 					<?php endif; ?>
 					<?php if ( $s['btn2_text'] !== '' ) : ?>
-					<a class="vhh-hero-spotlight__cta vhh-hero-spotlight__cta--ghost" href="<?php echo esc_url( $s['btn2_link'] ); ?>"><?php echo esc_html( $s['btn2_text'] ); ?></a>
+					<?php /* `download` only where the config says the target is a file: on
+					         a normal link it is meaningless, and on a cross-origin one the
+					         browser ignores it anyway. */ ?>
+					<a class="vhh-hero-spotlight__cta vhh-hero-spotlight__cta--ghost" href="<?php echo esc_url( $s['btn2_link'] ); ?>"<?php echo ! empty( $c['btn2_download'] ) ? ' download' : ''; ?>><?php echo esc_html( $s['btn2_text'] ); ?></a>
 					<?php endif; ?>
 				</div>
 				<?php endif; ?>
@@ -727,17 +925,7 @@ function vance_render_page_hero_spotlight( $page ) {
 					<span class="vhh-hero-spotlight__slot-label"><?php echo esc_html( $s['slot_label'] ); ?></span>
 					<?php endif; ?>
 
-					<?php if ( $c['slot'] !== 'badges' ) :
-						// 'tools' reuses the lines markup wholesale -- icon tile,
-						// caption, value, optional href -- so it inherits the cell
-						// treatment, the dividers and the whole responsive stack.
-						// Its own modifier carries only what a tool name needs and
-						// an email address does not.
-						$slot_class = 'vhh-hero-spotlight__slot--lines';
-						if ( $c['slot'] !== 'lines' ) {
-							$slot_class .= ' vhh-hero-spotlight__slot--' . $c['slot'];
-						}
-						?>
+					<?php if ( $slot_markup === 'lines' ) : ?>
 					<div class="vhh-hero-spotlight__slot <?php echo esc_attr( $slot_class ); ?>">
 						<?php foreach ( $slot_items as $line ) :
 							$tag = $line['href'] ? 'a' : 'div';
@@ -752,7 +940,7 @@ function vance_render_page_hero_spotlight( $page ) {
 						<?php endforeach; ?>
 					</div>
 					<?php else : ?>
-					<ul class="vhh-hero-spotlight__slot vhh-hero-spotlight__slot--badges">
+					<ul class="vhh-hero-spotlight__slot <?php echo esc_attr( $slot_class ); ?>">
 						<?php foreach ( $slot_items as $badge ) : ?>
 						<li class="vhh-hero-spotlight__badge">
 							<span class="vhh-hero-spotlight__badge-ico"><?php echo vance_page_hero_spotlight_icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
