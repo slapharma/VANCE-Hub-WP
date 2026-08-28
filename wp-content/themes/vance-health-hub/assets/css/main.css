@@ -3501,7 +3501,21 @@ body.home .hero {
     padding: 0;
     align-items: stretch;
 }
-.vance-cat-promo__media { min-height: 220px; background-size: cover; background-position: center; }
+/* The promo photo is scaled DOWN to fit its panel, not cropped to fill it:
+   these are product and lifestyle shots where cutting the edges off loses the
+   subject. `contain` letterboxes instead, and the spare space is left
+   transparent so the card's own surface shows through behind it.
+
+   background-repeat is pinned here and is load-bearing. It is unset elsewhere,
+   so it defaults to `repeat` — which never mattered under `cover` because the
+   image always filled the box, but under `contain` it would tile the picture
+   across the letterbox space. Same trap as the gastro condition tiles. */
+.vance-cat-promo__media {
+    min-height: 220px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 .vance-cat-promo__body {
     display: flex;
     flex-direction: column;
