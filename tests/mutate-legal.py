@@ -21,6 +21,7 @@ THEME = os.path.join(os.path.dirname(HERE), 'wp-content', 'themes', 'vance-healt
 
 RENDERER = os.path.join(THEME, 'inc', 'legal-hero.php')
 TERMS    = os.path.join(THEME, 'page-terms-of-use.php')
+PRIVACY  = os.path.join(THEME, 'tpl-privacy-policy.php')
 PAGE     = os.path.join(THEME, 'page.php')
 
 # (file, description, find, replace)
@@ -106,6 +107,31 @@ MUTANTS = [
      ".legal-wrap .cookies-per-purpose > * {\n    overflow-wrap: break-word;"),
 
     (RENDERER,
+     "the subheading rule loses its id, so Complianz sizes h3 like an h2 again",
+     ".legal-wrap h3,\n.legal-wrap #cmplz-document h3 {",
+     ".legal-wrap h3 {"),
+
+    (RENDERER,
+     "the subheading grows to its heading's size, flattening the hierarchy",
+     ".legal-wrap #cmplz-document h3 {\n    font-family: 'Outfit', sans-serif;\n    font-size: 16px;",
+     ".legal-wrap #cmplz-document h3 {\n    font-family: 'Outfit', sans-serif;\n    font-size: 22px;"),
+
+    (RENDERER,
+     "the subheading shrinks below the plugin h4 beneath it",
+     ".legal-wrap #cmplz-document h3 {\n    font-family: 'Outfit', sans-serif;\n    font-size: 16px;",
+     ".legal-wrap #cmplz-document h3 {\n    font-family: 'Outfit', sans-serif;\n    font-size: 13px;"),
+
+    # Anchored on the first rule inside the block, NOT on "<style>\n": that
+    # also matches the word <style> inside the PHP comment above it, and
+    # replace(..., 1) then injected the mutant into a comment where it did
+    # nothing and the mutant reported STAYED GREEN. See the ambiguity guard in
+    # main() -- it now catches this class of mistake by itself.
+    (PRIVACY,
+     "the Privacy Policy re-declares the shared subheading, so it can drift",
+     "<style>\n.legal-toc {",
+     "<style>\n.legal-wrap h3 { font-size: 19px; }\n.legal-toc {"),
+
+    (RENDERER,
      "the Complianz type override loses its id, so the plugin outranks it",
      ".legal-wrap #cmplz-document p,\n.legal-wrap #cmplz-document li,\n.legal-wrap #cmplz-document td {",
      ".legal-wrap p,\n.legal-wrap li,\n.legal-wrap td {"),
@@ -168,8 +194,18 @@ def main():
     try:
         for path, desc, find, repl in MUTANTS:
             src = originals[path]
-            if find not in src:
+            hits = src.count(find)
+            if hits == 0:
                 print('  SKIP (pattern not found)  %s' % desc)
+                skipped += 1
+                continue
+            if hits > 1:
+                # replace(..., 1) would pick whichever came first, which is not
+                # necessarily the one the mutant means. One such mutant landed
+                # inside a PHP comment and reported STAYED GREEN -- a mutant
+                # that silently tested nothing, which is the same failure as a
+                # SKIP wearing a different hat. Narrow the pattern.
+                print('  AMBIGUOUS (%d matches)      %s' % (hits, desc))
                 skipped += 1
                 continue
             write(path, src.replace(find, repl, 1))

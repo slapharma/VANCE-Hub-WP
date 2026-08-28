@@ -19,13 +19,6 @@ vance_legal_hero_styles();
 ?>
 
 <style>
-.legal-wrap h3 {
-    font-family: 'Outfit', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--secondary-color);
-    margin: 28px 0 8px;
-}
 .legal-toc {
     background: #f8fafc;
     border: 1px solid #e2e8f0;

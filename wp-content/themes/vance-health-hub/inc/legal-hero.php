@@ -507,6 +507,35 @@ function vance_legal_hero_styles() {
 
 .legal-wrap h2:first-of-type { margin-top: 32px; }
 
+/* The subheading. Declarations copied verbatim from tpl-privacy-policy.php,
+   which was the only document that had any bare h3s and so the only one that
+   ever defined this.
+
+   The second selector is the Cookie Policy's. Complianz sets
+   `#cmplz-document h2, #cmplz-document h3` to 22px in ONE rule, so its h3s
+   were rendering at exactly their h2 size -- no hierarchy at all -- and at
+   (1,0,1) the plugin outranks `.legal-wrap h3`. Carrying the id in a second
+   selector on the SAME rule beats it at (1,1,1) without duplicating the
+   declarations, so the two can never drift.
+
+   (`.legal-wrap p` a few rules down needs a separate block rather than this
+   shape, because its Complianz counterpart has to cover `li` and `td` too and
+   `.legal-wrap p`'s margin must not follow them there.)
+
+   `.legal-contact-box h3` and `.legal-toc h3` collide with the first selector
+   at equal specificity and win by coming later, which is why the templates
+   print their own <style> after this one -- see the ORDER note above. Every
+   h3 in the other three documents is inside one of those two boxes, so this
+   rule changes nothing outside the Privacy Policy and the Cookie Policy. */
+.legal-wrap h3,
+.legal-wrap #cmplz-document h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 28px 0 8px;
+}
+
 .legal-wrap p {
     color: #4a5568;
     line-height: 1.85;

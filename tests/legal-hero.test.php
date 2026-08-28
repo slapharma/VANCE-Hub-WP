@@ -482,6 +482,27 @@ preg_match(
     $css, $cmplz_p
 );
 check( 'the Complianz type scale is overridden at all', isset( $cmplz_p[2] ) );
+
+/*
+ * The subheading. Complianz sets `#cmplz-document h2, #cmplz-document h3` to
+ * one size in a single rule, so the Cookie Policy's h3s rendered at exactly
+ * their h2 size. The shared rule carries the id in a second selector so it
+ * outranks that at (1,1,1) -- lose the id and the plugin wins again, and the
+ * page silently goes back to having no heading hierarchy.
+ */
+preg_match( '#(\.legal-wrap h3,\s*\.legal-wrap \#cmplz-document h3)\s*\{([^}]*)\}#s', $css, $h3 );
+check( 'the subheading rule covers both the plain and the Complianz case',
+    isset( $h3[1] ) );
+check( 'and it does so in ONE rule, so the two cannot drift',
+    isset( $h3[2] ) && substr_count( $h3[2], 'font-size' ) === 1 );
+preg_match( '#font-size: ([\d.]+)px#', isset( $h3[2] ) ? $h3[2] : '', $h3size );
+preg_match( '#\.legal-wrap h2 \{[^}]*font-size: ([\d.]+)px#s', $css, $h2size );
+check( 'the subheading is smaller than the heading above it',
+    isset( $h3size[1], $h2size[1] ) && (float) $h3size[1] < (float) $h2size[1] );
+// Complianz's own h4 is 15px and h5 14px, so an h3 at or below 15px would
+// flatten the bottom of the ladder instead of the top.
+check( 'and still larger than the plugin h4 beneath it',
+    isset( $h3size[1] ) && (float) $h3size[1] > 15.0 );
 check( 'the override is id-qualified, or it cannot outrank the plugin',
     isset( $cmplz_p[1] ) && strpos( $cmplz_p[1], '#cmplz-document' ) !== false );
 check( 'and its body size is in step with .legal-wrap p',
@@ -506,23 +527,43 @@ foreach ( $templates as $file => $doc ) {
     $shared = strpos( $out, '.legal-wrap p {' );
     check( "$file: the shared measure is printed", $shared !== false );
 
-    preg_match_all( '#\.legal-[a-z-]+ p \{#', $out, $bm, PREG_OFFSET_CAPTURE );
-    $boxes = array();
-    foreach ( $bm[0] as $hit ) {
-        if ( strpos( $hit[0], '.legal-wrap' ) === false ) { $boxes[] = $hit; }
+    /*
+     * Every `.legal-<box> <tag>` in a template collides with the shared
+     * `.legal-wrap <tag>` for the same tag at equal specificity, so ALL of them
+     * have to stay after it -- not just the `p` ones. `.legal-contact-box h3`
+     * and `.legal-toc h3` joined the list when h3 moved into the shared block.
+     */
+    preg_match_all( '#\.legal-([a-z-]+) ([a-z][a-z0-9]*) \{#', $out, $bm, PREG_OFFSET_CAPTURE | PREG_SET_ORDER );
+    $shared_at = array();
+    $boxes     = array();
+    foreach ( $bm as $hit ) {
+        $tag = $hit[2][0];
+        if ( $hit[1][0] === 'wrap' ) {
+            // First occurrence only: the shared block is printed first.
+            if ( ! isset( $shared_at[ $tag ] ) ) { $shared_at[ $tag ] = $hit[0][1]; }
+        } else {
+            $boxes[] = array( 'sel' => $hit[0][0], 'tag' => $tag, 'at' => $hit[0][1] );
+        }
     }
-    check( "$file: it has box rules that collide with it", count( $boxes ) > 0 );
+    check( "$file: it has box rules that collide with the shared ones",
+        count( $boxes ) > 0 );
+
     $early = array();
-    foreach ( $boxes as $hit ) {
-        if ( $hit[1] < $shared ) { $early[] = $hit[0]; }
+    foreach ( $boxes as $b ) {
+        // Only a box rule for a tag the shared block also styles can collide.
+        if ( isset( $shared_at[ $b['tag'] ] ) && $b['at'] < $shared_at[ $b['tag'] ] ) {
+            $early[] = $b['sel'];
+        }
     }
-    check( "$file: every colliding box rule still comes AFTER it: " . implode( ',', $early ),
+    check( "$file: every colliding box rule still comes AFTER its shared rule: " . implode( ',', $early ),
         $early, array() );
 
     // And the template must not declare the shared rules a second time, or the
     // consolidation has bought nothing.
     check( "$file: declares the shared measure exactly once",
         substr_count( $out, '.legal-wrap p {' ), 1 );
+    check( "$file: declares the shared subheading exactly once",
+        substr_count( $out, '.legal-wrap h3,' ) + substr_count( $out, '.legal-wrap h3 {' ), 1 );
 }
 
 // page.php's two branches.
