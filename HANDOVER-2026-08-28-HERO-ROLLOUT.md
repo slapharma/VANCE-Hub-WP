@@ -10,15 +10,16 @@ radius token scale, the cross-file contracts) all still apply and are not repeat
 ## 1. What this task is
 
 The homepage runs a light, action-led hero — the "spotlight" design. It has now been
-carried across to **Contact Us** and **About Us**. The job for the next session is to
-carry it across to **every remaining page and post type**.
+carried across to **Contact Us**, **About Us** and the **three free-tool pages**. The
+job for the next session is to carry it across to **every remaining page and post
+type**.
 
 Three heroes exist today:
 
 | Design | Renderer | Used by |
 |---|---|---|
 | Spotlight (light, mint band) | [inc/hero-spotlight.php](wp-content/themes/vance-health-hub/inc/hero-spotlight.php) | homepage |
-| Spotlight, page variant | [inc/page-hero-spotlight.php](wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php) | `/contact-us/`, `/about/` |
+| Spotlight, page variant | [inc/page-hero-spotlight.php](wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php) | `/contact-us/`, `/about/`, and the three free-tool pages — `/gastro-health-survey/`, `/gastro-meal-planner/`, `/malnutrition-calculator/` |
 | Classic dark navy | `.hero` in `assets/css/main.css`, plus per-template bespoke ones | everything else |
 
 **Read `inc/page-hero-spotlight.php` end to end before writing anything.** It is the
@@ -44,9 +45,61 @@ All committed and deployed to `vancehealthhub.co.uk` on 2026-08-28.
   see §7
 - `tests/` — three harnesses plus two mutation runners, see [tests/README.md](tests/README.md)
 
-**Current live state:** both toggles are switched **on**. On Contact, the white band is
-deliberately **off** (`vance_contact_hero_spot_show_slot => false`) — that is the
-client's choice, do not "fix" it.
+### Update, later the same day — the three free-tools pages
+
+Commit `411d002`, deployed and verified live. **All three default to `classic`, so
+nothing about the live pages changed.**
+
+- `inc/page-hero-spotlight.php` — three more config entries (`hquiz`, `recipes`,
+  `malnutrition`), a `tools` slot variant, per-page card icons, and two config keys
+  the original two pages did not need. See §3.5.
+- `assets/css/main.css` — a small `__slot--tools` block. **It went out inside
+  commit `0794cd4`, not `411d002`** — see §6.1.
+- `page-healthcare-quiz.php`, `page-gastro-recipies.php` — the design branch
+- `inc/tool-page-shell.php` — an opt-in `$vance_tool_hero_page`, so the shell can
+  draw either hero. `page-malnutrition-calculator.php` sets it. Any future tool page
+  built on the shell gets the choice by setting one variable.
+- `template-parts/recipe-hub-app.php` — `id="recipes"`, which the category chips
+  have always linked to and nothing on the page carried
+- `functions.php`, `tests/*` — comment and coverage
+
+**The band on all three carries the OTHER two tools plus a link to Tools &
+Resources**, reading each tool's own name and badge settings. That was the one real
+design decision and it is worth re-reading §3.4 before changing it: a visitor who
+lands on one tool from search cannot otherwise tell the other two exist, and doing it
+this way means renaming a tool in the Customizer renames it in the other two heroes
+with no second copy to keep in sync. The alternative the client may prefer —
+at-a-glance facts (time to complete, what you get) — needs new copy per page and is
+a new `slot` variant, not an edit to this one.
+
+**Photographs: every candidate was opened before it was chosen, and that mattered.**
+The obvious pick for the survey, `about/gut-health-wellness.jpg`, is a flat-lay on a
+**black chalkboard** — exactly the dark smear §6.4 warns about. The survey ended up
+on `gi-health/ibs.jpg`, which is also the IBS condition page's photograph: the
+best-lit asset in the theme for a pale band, carrying nothing IBS-specific, but a
+dedicated one would be better. The planner uses `about/wellness-kitchen.jpg` and the
+calculator `about/digital-health-tech.jpg`; both are genuinely light down the left
+edge, which is the edge the band dissolves.
+
+**Card overlap.** The quiz and calculator cards pull up `-40px` to bite into deep
+navy. The spotlight band has no depth to bite into, so both wind that back to `+28px`
+under `.quiz-page-wrapper.is-spotlight` / `.tool-page--spotlight`. **Any further
+template whose content overlaps its hero needs the same.**
+
+**Current live state, all five:**
+
+| Page | Toggle | State |
+|---|---|---|
+| Contact Us | `vance_contact_hero_style` | **spotlight**, with the white band deliberately **off** (`vance_contact_hero_spot_show_slot => false`) — the client's choice, do not "fix" it |
+| About Us | `vance_about_hero_style` | **spotlight** |
+| Gastro Health Survey | `vance_hquiz_hero_style` | classic — never switched on |
+| Meal planner | `vance_recipes_hero_style` | classic — never switched on |
+| Malnutrition calculator | `vance_malnutrition_hero_style` | classic — never switched on |
+
+The three tool pages were verified live in the classic state on 2026-08-28: each still
+renders its own dark hero, `vhh-hero-spotlight` appears nowhere in their HTML, and the
+two new anchors do — which is what proved the deploy had landed. Nobody has seen any
+of the three spotlight heroes rendered.
 
 Design reference (mockups, as-built): https://claude.ai/code/artifact/45add81d-a122-45c1-8497-8ac4c2635d9c
 
@@ -93,18 +146,46 @@ should be filled from settings the page **already has**, not new ones:
 
 - Contact → email / phone / opening hours, as real `mailto:` / `tel:` links
 - About → the three assurance badges, with stat 1 as the floating card
+- each free tool → the **other** two tools and a link to Tools & Resources, reading
+  each one's own name and badge settings (`vance_page_hero_spotlight_tools()`)
 
 For each new page, find the equivalent before inventing anything.
 
+The tools band is the clearest illustration of the rule, because the obvious answer
+was wrong. A tool page's visitor came for the tool — but the tool is already on the
+screen below the fold, so putting facts about it in the band says nothing new. What
+they cannot see is that the other two tools exist and are equally free. Ask what the
+page does **not** already tell them.
+
+Mechanically it is also the cheapest kind of variant to add: it reuses the `lines`
+markup unchanged, so the renderer branches on "not badges" and the only new CSS is
+word-wrapping and a chevron.
+
 ### 3.5 Adding a page, concretely
 
-1. Add an entry to `vance_page_hero_spotlight_config()`. Everything else — defaults,
-   value resolution, Customizer controls — is driven from it.
-2. If the page needs a band or card shape that does not exist yet, add a `slot` or
-   `card` variant and its CSS.
-3. Add the branch to the template.
-4. Add the page to sections 0 and 0b of `tests/hero-render.test.php`.
-5. Run all three suites **and** both mutation runners.
+1. Add an entry to `vance_page_hero_spotlight_config()`, and its key to
+   `vance_page_hero_spotlight_pages()`. Everything else — defaults, value
+   resolution, Customizer controls — is driven from those two.
+2. Two of those config keys cannot be derived from the page key, and getting either
+   wrong fails **silently in WordPress** rather than loudly in the suite:
+   - `style_section` — the existing Customizer section the design toggle goes in.
+     It is not always `vance_{page}_hero`: the tool pages keep their hero controls
+     under the Tools panel, in sections named after the tool. A toggle registered
+     into a section that does not exist is dropped without a warning.
+   - `classic_template` — the file holding the classic hero's own fallbacks, which
+     is what section 0b holds the `legacy_*_default` values against.
+   Give it a `section_title` too if another spotlight section already shares its
+   panel; `hero-customizer.test.php` fails if two in one panel share a title.
+3. If the page needs a band or card shape that does not exist yet, add a `slot` or
+   `card` variant and its CSS. A `slot` that is a list of icon + caption + value
+   should reuse the `lines` markup and add only a modifier, as `tools` does — the
+   renderer already branches on "not badges".
+4. Add the branch to the template. Respect any embed/chromeless mode it has.
+5. Add the page to **section 0** of `tests/hero-render.test.php` — the pristine
+   case. Sections 0b, 7 and 8 walk `vance_page_hero_spotlight_pages()` and need no
+   edit. Section 0 is still non-negotiable and still hand-written, because 0b can
+   only check defaults that section 0 has proved are real.
+6. Run all three suites **and** both mutation runners.
 
 ---
 
@@ -113,23 +194,28 @@ For each new page, find the equivalent before inventing anything.
 `vance_get_theme_mod()` key prefixes are given so you can find each hero's saved
 settings without hunting.
 
-### 4.1 The big win — 16 templates share one `.hero` class
+### 4.1 The big win — 15 templates share one `.hero` class
 
 `.hero` is defined once in `assets/css/main.css:518` (dark navy gradient, `min-height:
 460px`, `padding: 100px 0 160px`). These templates use it:
 
 ```
 archive.php                    page-healthcare-professionals.php   page-turn-evidence-into-action.php
-category-content-healthcare-news.php  page-healthcare-quiz.php     page-user-guide.php
+category-content-healthcare-news.php                               page-user-guide.php
 page-ask-ai.php                page-knowledgebase.php              page.php
 page-education.php             page-patients.php                   search.php
 page-gi-condition.php          page-tools-resources.php            template-parts/subcategory-grouped-archive.php
 page-gi-health.php
 ```
 
-**Do not simply restyle `.hero`.** It would convert all sixteen at once with no toggle
+⚠ This list said sixteen and named `page-healthcare-quiz.php`. **That was wrong** —
+that template has never carried `.hero`; its hero is the bespoke `quiz-hero` styled
+inline, which is why it is listed in §4.2 as well. It is now converted. Fifteen
+remain, and the sentence below still holds for all of them.
+
+**Do not simply restyle `.hero`.** It would convert all fifteen at once with no toggle
 and no way back, and several of them override it locally. Convert them one at a time
-behind their own toggles. Judgement call worth raising with the client early: sixteen
+behind their own toggles. Judgement call worth raising with the client early: fifteen
 separate Customizer toggles may be worse UX than one estate-wide switch with per-page
 opt-outs.
 
@@ -156,14 +242,21 @@ means deleting that CSS too.
 | Template | Class | Key prefix |
 |---|---|---|
 | `page-ask-ai.php` | `askai-hero` | `vance_askai_hero_*` |
-| `page-healthcare-quiz.php` | `quiz-hero` | `vance_hquiz_hero_*` |
-| `page-gastro-recipies.php` | `vance-rh-hero` | — (see `recipe-hub.css`) |
+| ~~`page-healthcare-quiz.php`~~ | ~~`quiz-hero`~~ | **DONE** — `vance_hquiz_hero_style` |
+| ~~`page-gastro-recipies.php`~~ | ~~`vance-rh-hero`~~ | **DONE** — `vance_recipes_hero_style` |
+| ~~`page-malnutrition-calculator.php`~~ | ~~`tool-page-hero`~~ | **DONE** — `vance_malnutrition_hero_style`. It was never listed here; its hero comes from `inc/tool-page-shell.php`, which now draws either |
 | `page-terms-of-use.php`, `tpl-privacy-policy.php`, `page-accessibility.php`, `page-medical-disclaimer.php` | `legal-hero` | — Four templates share it; convert together |
 | `page-our-heritage.php` | `vance-about-hero` | `vance_heritage_hero_*` |
 
 ⚠ **`page-our-heritage.php` is being retired.** `customizer-pages.php` removes its whole
 panel at the end of registration. Confirm with the client before spending effort — it is
 an unlinked clone of About.
+
+**`page-ask-ai.php` is the last unconverted tool page.** It is not one of the three
+the client calls free tools — those are the three on the Tools & Resources grid — but
+if it is converted, its band should almost certainly be the same `tools` variant, and
+`vance_page_hero_spotlight_tools()` will need a fourth entry and a decision about
+whether Ask AI belongs in the other three pages' bands too.
 
 ### 4.3 Post types
 
@@ -191,6 +284,8 @@ cd tests && python mutate-hero.py && python mutate-defaults.py
 
 `php -l` every touched file. PHP and Node are both on PATH on this machine.
 
+Counts as of commit `411d002`: **138 / 55 / 22**, and 9 + 8 mutants all red.
+
 ### 5.1 Traps that have already cost real time
 
 - **The Customizer preview is not evidence about the live site.** It serves each
@@ -211,6 +306,16 @@ cd tests && python mutate-hero.py && python mutate-defaults.py
 - **No rendered page is visible from this harness.** The Browser pane does not display,
   cannot open `file://` paths, and cannot load `claude.ai` artifact URLs. Ask the client
   for a screenshot for anything visual, and say plainly when you have not seen it.
+- **You CAN open the image files.** The Read tool renders them. Do it before choosing
+  any hero photograph — filenames lie by omission. `gut-health-wellness.jpg` sounds
+  like the obvious survey image and is a flat-lay on black.
+- **Pick a live-grep marker that only the markup can satisfy.** Grepping the deployed
+  page for `is-spotlight` reported a hit on a page rendering the classic hero: it was
+  matching the rule `.quiz-page-wrapper.is-spotlight` inside the template's own inline
+  `<style>`. Grep for the attribute (`class="quiz-page-wrapper"`) instead. And pick at
+  least one marker that is **new in the commit you just pushed** — `id="recipes"` and
+  `id="tool"` are what actually proved the deploy had landed, because they are absent
+  from the commit before it.
 
 ---
 
@@ -219,7 +324,28 @@ cd tests && python mutate-hero.py && python mutate-defaults.py
 ### 6.1 A parallel session shares this working tree
 Another agent commits to `main` throughout the day. **Never `git add -A`** — stage your
 own paths explicitly. `git fetch` before every push; HEAD moved four times during the
-Contact/About work.
+Contact/About work, and twice more during the free-tools work — including once
+*between* the commit and the push.
+
+**It runs both ways, and the other direction is the one that surprises you.** During
+the free-tools work the parallel session staged broadly and swept this session's
+finished `assets/css/main.css` into *its* commit (`0794cd4`, "Shorten the section-seam
+blend by a further 30%"), which was pushed and deployed before this session committed
+anything. So:
+
+- Stylesheet changes can ship **ahead of** the PHP that uses them. Harmless here — the
+  rules only matched classes nothing emitted yet — but do not assume your CSS and your
+  templates go live together.
+- **Re-check `git diff --cached` right before committing, not just `git status` at the
+  start.** The staged `main.css` at commit time contained only the other session's two
+  unrelated colour tweaks; committing it would have put their in-progress work live
+  under this session's message. `git diff --cached -U0 -- <file> | grep '^@@'` tells
+  you in one line whether the hunks are anywhere near your work.
+- A file "still differing from HEAD" does **not** mean your change is uncommitted. Check
+  the marker, not the file: `git show HEAD:<file> | grep -c <something-you-added>`.
+- `git show --stat HEAD~1` can name a commit you do not recognise because HEAD moved
+  under you mid-session. Resolve commits by SHA, not by `HEAD~n`, once you know another
+  agent is committing.
 
 ### 6.2 Push = live deploy
 `.github/workflows/deploy.yml` fires on any push to `main` touching the theme, and ships
