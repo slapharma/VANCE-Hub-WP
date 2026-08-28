@@ -1602,10 +1602,10 @@ body.home .hero {
 }
 
 .oped-article-body blockquote {
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid #008080;
     padding: 16px 24px;
     margin: 32px 0;
-    background: #FFF8F5;
+    background: #def4f4;
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     font-style: italic;
 }

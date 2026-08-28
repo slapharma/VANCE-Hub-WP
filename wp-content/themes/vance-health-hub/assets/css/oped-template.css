@@ -185,7 +185,13 @@
     line-height: 1.15;
     letter-spacing: -1px;
     color: var(--secondary-color);
-    margin: 0 0 75px;
+    /* 37.5px, halved from 75px. This is the ONLY thing setting the gap below
+       the title: whatever follows -- a quote, a paragraph -- has its own top
+       margin collapsed into this one, so the rendered gap is this value alone.
+       Note the floor: the article body's blockquote carries margin-top 32px and
+       paragraphs 24px, so dropping below 32px stops shrinking the gap before a
+       quote and starts being ignored. */
+    margin: 0 0 37.5px;
 }
 
 .oped-article-body p {
@@ -221,11 +227,17 @@
     }
 }
 
+/* Quote block. The accent is the literal #008080 rather than
+   var(--primary-color) -- which resolves to the same colour today -- because
+   the background is a hard-coded tint of that exact teal. Left as a token, a
+   future palette change would move the rule and strand the background.
+   Duplicated in main.css: both sheets load on singular pages and style this
+   selector at equal specificity, so whichever loads last wins. Change both. */
 .oped-article-body blockquote {
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid #008080;
     padding: 16px 24px;
     margin: 32px 0;
-    background: #FFF8F5;
+    background: #def4f4;
     border-radius: var(--radius-surface);
     font-style: italic;
     color: var(--text-main);

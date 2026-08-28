@@ -318,7 +318,7 @@ while ( have_posts() ) :
                         </div>
                     <?php endif; ?>
 
-                    <div class="va-article-disclaimer" style="margin-top:40px; padding:20px 24px; background:#EEF6F6; border-left:4px solid var(--primary-color); font-size:14px; line-height:1.75; color:#475569;">
+                    <div class="va-article-disclaimer" style="margin-top:40px; padding:20px 24px; background:#e4def4; border-left:4px solid #6B489E; font-size:14px; line-height:1.75; color:#475569;">
                         <strong style="color:var(--secondary-color);">For general information only.</strong> This article is for general information and is not a substitute for professional medical advice, diagnosis or treatment. It reflects the best available evidence at the time of writing and may not capture the most recent developments. Always talk to your GP, pharmacist or healthcare team before acting on anything you read here, and never disregard professional advice or delay seeking it because of something on this site. Where we mention products from Vance Medical Foods Ltd we identify this clearly.
                         <div style="margin-top:12px; font-size:12.5px; color:#94a3b8;">
                             <?php
