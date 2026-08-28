@@ -148,6 +148,31 @@ function vance_promo_sanitize_layout( $value ) {
 }
 
 /**
+ * Historical defaults for the two prefix-addressed instances.
+ *
+ * The homepage block and the category block disagreed about what an unset
+ * setting meant, and the merge has to preserve BOTH answers or a block silently
+ * changes appearance. The clearest example: the homepage offered "Image
+ * Position" defaulting to Right, the category block defaults to image_left, and
+ * vance_promo_layout has never actually been saved on this site -- so folding
+ * them onto one default flipped the live homepage image to the other side.
+ *
+ * MUST stay in step with the defaults vance_register_promo_block_controls()
+ * registers for these instances, or a never-touched control shows a state the
+ * page does not render.
+ */
+function vance_promo_prefixed_defaults() {
+	return array(
+		'layout'     => 'image_right',      // was "Image Position: Right"
+		'heading'    => 'Experience the Hub',
+		'cta_label'  => 'Get Started Now',  // stored as {prefix}button_text
+		'link'       => wp_registration_url(),
+		'bg_color'   => '#F8FAFC',
+		'text_color' => '#0F172A',
+	);
+}
+
+/**
  * Resolve one instance's settings.
  *
  * Reads through vance_get_theme_mod() for the prefix instances (they may have
@@ -155,23 +180,30 @@ function vance_promo_sanitize_layout( $value ) {
  * vance_get_theme_mod falls through to the same place, so one call is correct
  * for both.
  *
- * @param callable $key Field-name to setting-id mapper.
+ * @param callable $key      Field-name to setting-id mapper.
+ * @param array    $defaults  Per-instance overrides; see
+ *                            vance_promo_prefixed_defaults(). Anything absent
+ *                            falls back to the category block's own defaults,
+ *                            which are the blank/off ones.
  * @return array
  */
-function vance_promo_block_vals( $key ) {
+function vance_promo_block_vals( $key, array $defaults = array() ) {
+	$d = function ( $field, $fallback ) use ( $defaults ) {
+		return array_key_exists( $field, $defaults ) ? $defaults[ $field ] : $fallback;
+	};
 	return array(
-		'layout'       => vance_promo_normalise_layout( vance_get_theme_mod( $key( 'layout' ), 'image_left' ) ),
-		'eyebrow'      => trim( (string) vance_get_theme_mod( $key( 'eyebrow' ), '' ) ),
-		'heading'      => trim( (string) vance_get_theme_mod( $key( 'heading' ), '' ) ),
-		'text'         => trim( (string) vance_get_theme_mod( $key( 'text' ), '' ) ),
-		'image'        => trim( (string) vance_get_theme_mod( $key( 'image' ), '' ) ),
-		'cta_label'    => trim( (string) vance_get_theme_mod( $key( 'cta_label' ), 'Explore' ) ),
-		'tool'         => trim( (string) vance_get_theme_mod( $key( 'tool' ), '' ) ),
-		'link'         => trim( (string) vance_get_theme_mod( $key( 'link' ), '' ) ),
-		// Styling. All default empty/false so a category promo, which never had
-		// any of these, emits exactly the markup it emitted before the merge.
-		'band_bg'      => trim( (string) vance_get_theme_mod( $key( 'bg_color' ), '' ) ),
-		'text_color'   => trim( (string) vance_get_theme_mod( $key( 'text_color' ), '' ) ),
+		'layout'       => vance_promo_normalise_layout( vance_get_theme_mod( $key( 'layout' ), $d( 'layout', 'image_left' ) ) ),
+		'eyebrow'      => trim( (string) vance_get_theme_mod( $key( 'eyebrow' ), $d( 'eyebrow', '' ) ) ),
+		'heading'      => trim( (string) vance_get_theme_mod( $key( 'heading' ), $d( 'heading', '' ) ) ),
+		'text'         => trim( (string) vance_get_theme_mod( $key( 'text' ), $d( 'text', '' ) ) ),
+		'image'        => trim( (string) vance_get_theme_mod( $key( 'image' ), $d( 'image', '' ) ) ),
+		'cta_label'    => trim( (string) vance_get_theme_mod( $key( 'cta_label' ), $d( 'cta_label', 'Explore' ) ) ),
+		'tool'         => trim( (string) vance_get_theme_mod( $key( 'tool' ), $d( 'tool', '' ) ) ),
+		'link'         => trim( (string) vance_get_theme_mod( $key( 'link' ), $d( 'link', '' ) ) ),
+		// Styling. Blank/off for the category instances, which never had any of
+		// these, so they emit exactly the markup they emitted before the merge.
+		'band_bg'      => trim( (string) vance_get_theme_mod( $key( 'bg_color' ), $d( 'bg_color', '' ) ) ),
+		'text_color'   => trim( (string) vance_get_theme_mod( $key( 'text_color' ), $d( 'text_color', '' ) ) ),
 		'card_bg'      => trim( (string) vance_get_theme_mod( $key( 'container_bg_color' ), '' ) ),
 		'border_on'    => (bool) vance_get_theme_mod( $key( 'border_enable' ), false ),
 		'border_width' => absint( vance_get_theme_mod( $key( 'border_width' ), 1 ) ),
@@ -295,7 +327,7 @@ function vance_render_promo_home() {
 	if ( ! vance_get_theme_mod( 'vance_promo_show', false ) ) {
 		return;
 	}
-	vance_render_promo_block( vance_promo_block_vals( vance_promo_keys_prefixed( 'vance_promo_' ) ) );
+	vance_render_promo_block( vance_promo_block_vals( vance_promo_keys_prefixed( 'vance_promo_' ), vance_promo_prefixed_defaults() ) );
 }
 
 /**
@@ -316,7 +348,7 @@ function vance_render_promo_knowledgebase( $slot = 'below_intro' ) {
 	if ( $placement !== $slot ) {
 		return;
 	}
-	vance_render_promo_block( vance_promo_block_vals( vance_promo_keys_prefixed( 'vance_kbpromo_' ) ) );
+	vance_render_promo_block( vance_promo_block_vals( vance_promo_keys_prefixed( 'vance_kbpromo_' ), vance_promo_prefixed_defaults() ) );
 }
 
 /**

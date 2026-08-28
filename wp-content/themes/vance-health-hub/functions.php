@@ -366,6 +366,12 @@ function vance_customizer_category_tree() {
  * }
  */
 function vance_register_promo_block_controls( $wp_customize, $section_id, $key, array $args = array() ) {
+    // Per-instance defaults, so the controls agree with what
+    // vance_promo_block_vals() resolves for this same instance.
+    $dflt = isset( $args['defaults'] ) ? $args['defaults'] : array();
+    $d    = function ( $field, $fallback ) use ( $dflt ) {
+        return array_key_exists( $field, $dflt ) ? $dflt[ $field ] : $fallback;
+    };
     $show_key     = isset( $args['show_key'] ) ? $args['show_key'] : $key( 'show' );
     $show_label   = isset( $args['show_label'] ) ? $args['show_label'] : __( 'Show promo block', 'vance-health-hub' );
     $placement    = isset( $args['placement'] ) ? $args['placement'] : '';
@@ -391,7 +397,7 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     }
 
     // -- Content ----------------------------------------------------------
-    $wp_customize->add_setting( $key( 'layout' ), array( 'default' => 'image_left', 'sanitize_callback' => 'vance_promo_sanitize_layout' ) );
+    $wp_customize->add_setting( $key( 'layout' ), array( 'default' => $d( 'layout', 'image_left' ), 'sanitize_callback' => 'vance_promo_sanitize_layout' ) );
     $wp_customize->add_control( $key( 'layout' ), array(
         'label'       => $p . __( 'Layout', 'vance-health-hub' ),
         'description' => __( 'Banner puts the copy over the photo. Text only ignores the image without deleting it.', 'vance-health-hub' ),
@@ -403,7 +409,7 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     $wp_customize->add_setting( $key( 'eyebrow' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( $key( 'eyebrow' ), array( 'label' => $p . __( 'Eyebrow', 'vance-health-hub' ), 'section' => $section_id, 'type' => 'text' ) );
 
-    $wp_customize->add_setting( $key( 'heading' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_setting( $key( 'heading' ), array( 'default' => $d( 'heading', '' ), 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( $key( 'heading' ), array( 'label' => $p . __( 'Heading', 'vance-health-hub' ), 'section' => $section_id, 'type' => 'text' ) );
 
     $wp_customize->add_setting( $key( 'text' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_textarea_field' ) );
@@ -413,7 +419,7 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key( 'image' ), array( 'label' => $p . __( 'Image', 'vance-health-hub' ), 'section' => $section_id ) ) );
 
     // -- Call to action ---------------------------------------------------
-    $wp_customize->add_setting( $key( 'cta_label' ), array( 'default' => 'Explore', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_setting( $key( 'cta_label' ), array( 'default' => $d( 'cta_label', 'Explore' ), 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( $key( 'cta_label' ), array( 'label' => $p . __( 'Button label', 'vance-health-hub' ), 'section' => $section_id, 'type' => 'text' ) );
 
     $wp_customize->add_setting( $key( 'tool' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_key' ) );
@@ -429,7 +435,7 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     // sanitize_text_field, but kept as type=text rather than type=url: an
     // <input type="url"> refuses a relative path, and several of these links
     // are site-relative like /ask-ai/. esc_url_raw passes those through intact.
-    $wp_customize->add_setting( $key( 'link' ), array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+    $wp_customize->add_setting( $key( 'link' ), array( 'default' => $d( 'link', '' ), 'sanitize_callback' => 'esc_url_raw' ) );
     $wp_customize->add_control( $key( 'link' ), array(
         'label'       => $p . __( 'Button link', 'vance-health-hub' ),
         'description' => __( 'Used only when "Button opens" is set to a custom URL. A site-relative path such as /ask-ai/ is fine.', 'vance-health-hub' ),
@@ -448,7 +454,7 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
         'choices' => array( 'container' => __( 'Container (narrow)', 'vance-health-hub' ), 'full' => __( 'Full width', 'vance-health-hub' ) ),
     ) );
 
-    $wp_customize->add_setting( $key( 'bg_color' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_setting( $key( 'bg_color' ), array( 'default' => $d( 'bg_color', '' ), 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $key( 'bg_color' ), array(
         'label'       => $p . __( 'Band background colour', 'vance-health-hub' ),
         'description' => __( 'The full-width strip behind the card. Blank leaves the page background showing.', 'vance-health-hub' ),
@@ -462,7 +468,7 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
         'section'     => $section_id,
     ) ) );
 
-    $wp_customize->add_setting( $key( 'text_color' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_setting( $key( 'text_color' ), array( 'default' => $d( 'text_color', '' ), 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $key( 'text_color' ), array(
         'label'   => $p . __( 'Text colour', 'vance-health-hub' ),
         'section' => $section_id,
@@ -5012,6 +5018,7 @@ function vance_customize_register( $wp_customize ) {
         array(
             'show_label' => __( 'Show on the Knowledgebase page', 'vance-health-hub' ),
             'placement'  => 'kb_page',
+            'defaults'   => vance_promo_prefixed_defaults(),
         )
     );
 
@@ -7064,7 +7071,10 @@ function vance_customize_register( $wp_customize ) {
         $wp_customize,
         'vance_promo_block',
         vance_promo_keys_prefixed( 'vance_promo_' ),
-        array( 'show_label' => __( 'Show Promo Block', 'vance-health-hub' ) )
+        array(
+            'show_label' => __( 'Show Promo Block', 'vance-health-hub' ),
+            'defaults'   => vance_promo_prefixed_defaults(),
+        )
     );
 
     // 8. Join Block Settings
