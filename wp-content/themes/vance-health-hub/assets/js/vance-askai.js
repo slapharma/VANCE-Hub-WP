@@ -249,6 +249,14 @@
 	// It is stripped out of the visible text and replaced by a picker, so the
 	// reader clicks an answer instead of typing one.
 	var ASK_BLOCK_RE = /```vance-ask\s*([\s\S]*?)```/;
+	// The same block while it is still arriving. The progressive reveal feeds
+	// formatReply a growing prefix of the reply, so for most of the reveal the
+	// opening fence is present and the closing one is not -- ASK_BLOCK_RE cannot
+	// match, and without these two the reader watches the raw JSON type itself
+	// out character by character before it disappears.
+	var ASK_OPEN_RE = /```vance-ask[\s\S]*$/;
+	// And the fence label itself part-typed, e.g. "```van".
+	var ASK_FENCE_RE = /```[a-z-]*$/;
 
 	/**
 	 * Pull the question spec out of a reply.
@@ -302,7 +310,12 @@
 	 * reveal never flashes raw JSON on its way past.
 	 */
 	function stripAskBlock(raw) {
-		return String(raw || '').replace(ASK_BLOCK_RE, '').replace(/\n{3,}/g, '\n\n').trim();
+		return String(raw || '')
+			.replace(ASK_BLOCK_RE, '')
+			.replace(ASK_OPEN_RE, '')
+			.replace(ASK_FENCE_RE, '')
+			.replace(/\n{3,}/g, '\n\n')
+			.trim();
 	}
 
 	function formatReply(raw) {
