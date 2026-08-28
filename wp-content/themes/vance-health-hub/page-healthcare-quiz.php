@@ -117,6 +117,12 @@ get_header();
 /* Bottom margin so the card doesn't hug the footer. */
 .quiz-page-wrapper > .quiz-container { margin-bottom: 60px; }
 
+/* The -40px above pulls the quiz card up into the classic hero's deep navy
+   band, which is 80px tall at the bottom and swallows it. The spotlight hero
+   ends at its own padding with nothing to bite into, so the same offset would
+   cut the card into the mint. Undo it, and give the card the ordinary gap. */
+.quiz-page-wrapper.is-spotlight .quiz-container { margin-top: 28px; }
+
 @media (max-width: 600px) {
     .quiz-hero { padding: 48px 0; }
     .quiz-hero h1 { font-size: 36px; }
@@ -350,8 +356,20 @@ get_header();
 
 </style>
 
-<div class="quiz-page-wrapper">
+<?php
+/*
+ * Which hero. Defaults to 'classic', so this file renders exactly what it
+ * always has until an admin sets Appearance > Customize > Page - Gastro Health
+ * Survey > Hero Section > "Survey hero design" to Spotlight.
+ */
+$hq_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
+    && vance_page_hero_spotlight_active( 'hquiz' );
+?>
+<div class="quiz-page-wrapper<?php echo $hq_spotlight ? ' is-spotlight' : ''; ?>">
 
+    <?php if ( $hq_spotlight ) : ?>
+    <?php vance_render_page_hero_spotlight( 'hquiz' ); ?>
+    <?php else : ?>
     <section class="quiz-hero">
         <div class="container">
             <div class="hero-badge">
@@ -364,6 +382,7 @@ get_header();
             <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
 
     <div class="quiz-container">
         <div class="progress-bar-container">

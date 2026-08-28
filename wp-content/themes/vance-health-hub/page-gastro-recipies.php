@@ -59,6 +59,22 @@ $vance_hero_alpha_bottom  = min( 1, $vance_hero_alpha_top + 0.05 );
 .vance-recipe-hub--embed .vance-rh-hero { display: none; }
 </style>
 
+<?php
+/*
+ * Which hero. Defaults to 'classic' (Appearance > Customize > Tools &
+ * Resources > IBD Recipes, Hero > "Meal planner hero design"), so this page
+ * renders exactly what it always has until an admin switches it.
+ *
+ * The embed check is the same one the CSS above makes for the classic hero
+ * (.vance-recipe-hub--embed .vance-rh-hero { display: none }) -- inside the
+ * unified tool modal the page IS the tool, and a hero of any design is chrome
+ * the modal already provides.
+ */
+if ( ! $vance_embed
+	&& function_exists( 'vance_page_hero_spotlight_active' )
+	&& vance_page_hero_spotlight_active( 'recipes' ) ) :
+	vance_render_page_hero_spotlight( 'recipes' );
+else : ?>
 <section class="vance-rh-hero">
 	<div class="container">
 		<span class="vance-rh-badge"><?php echo esc_html( $vance_hero_badge ); ?></span>
@@ -66,6 +82,7 @@ $vance_hero_alpha_bottom  = min( 1, $vance_hero_alpha_top + 0.05 );
 		<p class="vance-rh-subtitle"><?php echo esc_html( $vance_hero_subtitle ); ?></p>
 	</div>
 </section>
+<?php endif; ?>
 
 <?php get_template_part( 'template-parts/recipe-hub-app' ); ?>
 

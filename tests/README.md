@@ -22,14 +22,14 @@ cd tests && php hero-customizer.test.php
 cd tests && node reveal.test.js
 ```
 
-All three exit non-zero on failure. As of 2026-08-28: 84 / 22 / 22 checks.
+All three exit non-zero on failure. As of 2026-08-28: 138 / 55 / 22 checks.
 
 ## What each covers
 
 | File | Covers |
 |---|---|
-| `hero-render.test.php` | `inc/page-hero-spotlight.php` — the Contact/About spotlight heroes: the design toggle, copy inheritance, both utility bands, both card variants, `tel:` normalisation, and the CSS in `assets/css/main.css` that backs the classes the renderer emits |
-| `hero-customizer.test.php` | The Customizer registration for those heroes — sections, panels, sanitizers, and that the control list matches the renderer's field list exactly |
+| `hero-render.test.php` | `inc/page-hero-spotlight.php` — the Contact, About and three free-tool spotlight heroes: the design toggle, copy inheritance, all three utility bands, both card variants, per-page card icons, `tel:` normalisation, and the CSS in `assets/css/main.css` that backs the classes the renderer emits |
+| `hero-customizer.test.php` | The Customizer registration for those heroes — sections, panels, sanitizers, which section each toggle lands in, that two sections sharing a panel cannot share a title, and that the control list matches the renderer's field list exactly |
 | `reveal.test.js` | The `.gi-reveal` scroll animation in `page-gi-health.php` / `page-gi-condition.php`, extracted from the templates themselves, under every condition that used to leave content invisible |
 
 ## Mutation runners — read this before trusting a green run
@@ -59,13 +59,23 @@ If one is interrupted, check `git diff` before doing anything else.
 
 ## Adding a hero to the suite
 
-`hero-render.test.php` is driven by `vance_page_hero_spotlight_config()`, so a
-new page added to that config picks up most coverage automatically. Two
-sections need a line each per page:
+`hero-render.test.php` is driven by `vance_page_hero_spotlight_pages()`, so a
+new page added to that config picks up most coverage automatically — sections
+0b, 7 and 8 all walk the list and need no edit.
+
+One section still needs a line per page:
 
 - **Section 0** — the pristine case: nothing saved but the toggle, asserting
   real copy still renders. This is non-negotiable; a `''` default renders empty
   on the live site while looking perfect in the Customizer preview, and only
-  this section catches it.
-- **Section 0b** — asserts each `legacy_*_default` appears verbatim in the
-  classic template, so the two cannot drift apart.
+  this section catches it. Section 0b then proves those same defaults appear
+  verbatim in the file named by the config's `classic_template`, so the two
+  cannot drift apart — but 0b can only check the defaults 0 has proved are
+  real, so write both.
+
+Two things a new page must also declare in the config, because neither is
+derivable from the page key and getting either wrong fails silently in
+WordPress rather than loudly here:
+
+- `style_section` — the existing Customizer section the design toggle goes in.
+- `classic_template` — the file holding the classic hero's own fallbacks.

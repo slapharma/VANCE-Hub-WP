@@ -29,6 +29,9 @@ $vance_tool_hero_overlay = vance_get_theme_mod( 'vance_tool_malnutrition_hero_ov
 $vance_tool_save_label   = 'Save my screening result';
 $vance_tool_autoresize   = true;
 $vance_tool_brand_css    = vance_tool_brand_css_calculator();
+// Lets the shell draw the spotlight hero when this page's design is switched
+// to it; 'classic' until an admin says otherwise.
+$vance_tool_hero_page    = 'malnutrition';
 
 require get_template_directory() . '/inc/tool-page-shell.php';
 

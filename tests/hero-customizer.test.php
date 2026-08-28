@@ -76,8 +76,42 @@ check( "'classic' survives",   $san( 'classic' ),   'classic' );
 check( "junk falls back",      $san( '<script>' ), 'classic' );
 check( "empty falls back",     $san( '' ),         'classic' );
 
+echo "\n=== The toggle lands in each page's own hero section ===\n";
+// Not derivable from the page key: the tool pages keep their hero controls
+// under the Tools panel, in sections named after the tool. A toggle registered
+// into a section that does not exist is silently dropped by WordPress.
+$expected_sections = array(
+    'contact'      => 'vance_contact_hero',
+    'about'        => 'vance_about_hero',
+    'hquiz'        => 'vance_hquiz_hero',
+    'recipes'      => 'vance_tools_hero_recipes',
+    'malnutrition' => 'vance_tools_hero_malnutrition',
+);
+foreach ( vance_page_hero_spotlight_pages() as $p ) {
+    check( "$p toggle registered", isset( $m->settings[ 'vance_' . $p . '_hero_style' ] ) );
+    check( "$p toggle defaults to classic", $m->settings[ 'vance_' . $p . '_hero_style' ]['default'], 'classic' );
+    check( "$p toggle sits in $expected_sections[$p]",
+           $m->controls[ 'vance_' . $p . '_hero_style' ]['section'], $expected_sections[ $p ] );
+    $c = vance_page_hero_spotlight_config( $p );
+    check( "$p spotlight section hangs off " . $c['panel'],
+           $m->sections[ $c['section'] ]['panel'], $c['panel'] );
+}
+
+echo "\n=== Section titles are distinct where sections share a panel ===\n";
+// Three of these live under the Tools panel; two of them have to say which
+// tool they belong to or an admin cannot tell them apart.
+$titles = array();
+foreach ( vance_page_hero_spotlight_pages() as $p ) {
+    $c = vance_page_hero_spotlight_config( $p );
+    $titles[ $c['panel'] ][] = $m->sections[ $c['section'] ]['title'];
+}
+foreach ( $titles as $panel => $list ) {
+    check( "$panel: no two spotlight sections share a title",
+           count( array_unique( $list ) ), count( $list ) );
+}
+
 echo "\n=== Every field the renderer reads has a control, and vice versa ===\n";
-foreach ( array( 'contact', 'about' ) as $p ) {
+foreach ( vance_page_hero_spotlight_pages() as $p ) {
     $fields   = array_keys( vance_page_hero_spotlight_field_defaults( $p ) );
     $prefix   = 'vance_' . $p . '_hero_spot_';
     $declared = array();

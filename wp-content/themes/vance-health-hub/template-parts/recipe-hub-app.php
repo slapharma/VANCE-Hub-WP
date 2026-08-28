@@ -40,7 +40,7 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 ?>
 <div class="<?php echo $vance_rh_embedded ? 'vance-rh-embedded' : ''; ?>">
 
-<section class="vance-rh-section">
+<section class="vance-rh-section" id="recipes">
 	<div class="container">
 		<h2 class="vance-rh-h2"><?php esc_html_e( 'Recipes', 'vance-health-hub' ); ?></h2>
 		<div class="vance-rh-controls">

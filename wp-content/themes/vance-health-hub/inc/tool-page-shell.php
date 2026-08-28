@@ -19,6 +19,11 @@
  *   $vance_tool_save_enabled  bool    optional, show the Save CTA (default true)
  *   $vance_tool_autoresize    bool    optional, set iframe height to its scrollHeight on load (default false)
  *   $vance_tool_brand_css     string  optional, raw CSS injected into the iframe contentDocument
+ *   $vance_tool_hero_page     string  optional, a key of vance_page_hero_spotlight_config().
+ *                                     When that page's hero design is set to
+ *                                     Spotlight the light hero replaces the dark
+ *                                     one; otherwise nothing changes. Omit it and
+ *                                     the shell can only draw the dark hero.
  *   $vance_tool_iframe_src    string  optional, override the auto-derived iframe URL
  *                                     (use when the bundle lives somewhere other than
  *                                     /assets/tools/<slug>/index.html)
@@ -46,6 +51,14 @@ $save_label    = isset( $vance_tool_save_label ) ? $vance_tool_save_label : 'Sav
 $save_enabled  = isset( $vance_tool_save_enabled ) ? (bool) $vance_tool_save_enabled : true;
 $autoresize    = isset( $vance_tool_autoresize ) ? (bool) $vance_tool_autoresize : false;
 $brand_css     = isset( $vance_tool_brand_css ) ? (string) $vance_tool_brand_css : '';
+
+// Which hero. A caller that names no page can only get the dark one, and a
+// named page still defaults to 'classic' -- so this changes nothing anywhere
+// until an admin flips that page's control.
+$hero_page = isset( $vance_tool_hero_page ) ? (string) $vance_tool_hero_page : '';
+$spotlight = $hero_page
+    && function_exists( 'vance_page_hero_spotlight_active' )
+    && vance_page_hero_spotlight_active( $hero_page );
 
 // Chromeless "embed" mode — the tool is loaded inside the unified glass tool
 // modal (inc/tool-modal.php) via an iframe pointed at this page + ?tool_embed=1.
@@ -115,6 +128,10 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 @keyframes vance-tool-pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
 .tool-page-container { max-width: 1100px; margin: -40px auto 0; padding: 0 20px 40px; position: relative; z-index: 10; }
+/* The -40px pulls the tool card up into the classic hero's 80px of dark
+   padding. The spotlight hero has none to bite into, so the same offset would
+   cut the card into the mint band instead. */
+.tool-page--spotlight .tool-page-container { margin-top: 28px; }
 .tool-page-card { background: white; border: 2px solid var(--primary-color); border-radius: var(--radius-surface, 14px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.10); overflow: hidden; }
 .tool-page-card__head {
     padding: 18px 24px; background: #F8FAFC; border-bottom: 1px solid #2f4f6f;
@@ -196,7 +213,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
 }
 </style>
 
-<div class="tool-page<?php echo $embed ? ' tool-page--embed' : ''; ?>">
+<div class="tool-page<?php echo $embed ? ' tool-page--embed' : ''; ?><?php echo ( ! $embed && $spotlight ) ? ' tool-page--spotlight' : ''; ?>">
 
     <?php
     // Build optional inline-style strings (only emit declarations when an override is set).
@@ -210,7 +227,9 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
     if ( $tool_subtitle_color ) { $sub_inline .= 'color:' . esc_attr( $tool_subtitle_color ) . ';'; }
     if ( $tool_subtitle_size  ) { $sub_inline .= 'font-size:' . (int) $tool_subtitle_size . 'px;'; }
     ?>
-    <?php if ( ! $embed ) : ?>
+    <?php if ( ! $embed && $spotlight ) : ?>
+    <?php vance_render_page_hero_spotlight( $hero_page ); ?>
+    <?php elseif ( ! $embed ) : ?>
     <section class="tool-page-hero">
         <div class="container">
             <div class="tool-page-badge" style="<?php echo $badge_inline; ?>">
@@ -225,7 +244,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
     </section>
     <?php endif; ?>
 
-    <div class="tool-page-container">
+    <div class="tool-page-container" id="tool">
         <div class="tool-page-card">
             <?php if ( $embed ) : ?>
                 <?php

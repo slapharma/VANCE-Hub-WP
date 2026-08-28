@@ -17,6 +17,15 @@ MUTANTS = [
  ("a default reworded away from the template",
   "'legacy_tag_default'   => 'About Vance Medical Hub',",
   "'legacy_tag_default'   => 'About Us',"),
+ ("a TOOL default reworded away from its template",
+  "'legacy_tag_default'   => 'IBD Screening',",
+  "'legacy_tag_default'   => 'IBD Screener',"),
+ ("the original bug: '' default for a tool's name in the band",
+  "'name_def' => 'Gastro Health Survey',",
+  "'name_def' => '',"),
+ ("the original bug: '' default for the survey's own subtitle",
+  "'legacy_desc_default'  => 'A short, evidence-based questionnaire",
+  "'legacy_desc_default'  => '', 'unused'  => 'A short, evidence-based questionnaire"),
 ]
 try:
     for name, find, repl in MUTANTS:

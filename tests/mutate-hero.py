@@ -16,6 +16,16 @@ MUTANTS = [
   "$vals['eyebrow'] = '';"),
  ("About card reverts to the text variant",
   "if ( $c['card'] === 'stat' ) :", "if ( false ) :"),
+ ("a tool page lists itself in its own band",
+  "if ( $key === $page ) {", "if ( false ) {"),
+ ("the tools band stops reading the tools' own names",
+  "$name = vance_get_theme_mod( $t['name_key'], $t['name_def'] );",
+  "$name = $t['name_def'];"),
+ ("the tools band loses its modifier class",
+  "$slot_class .= ' vhh-hero-spotlight__slot--' . $c['slot'];", "$slot_class .= '';"),
+ ("every card goes back to one hard-wired icon",
+  "vance_page_hero_spotlight_icon( $c['card_icon'] )",
+  "vance_page_hero_spotlight_icon( 'chat' )"),
 ]
 
 try:

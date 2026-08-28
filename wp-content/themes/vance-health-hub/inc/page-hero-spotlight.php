@@ -1,12 +1,12 @@
 <?php
 /**
- * Contact and About page heroes — "spotlight" layout.
+ * Page heroes — "spotlight" layout.
  *
  * The same light, search-led hero the homepage uses (inc/hero-spotlight.php),
- * carried across to /contact-us/ and /about/: a pale mint gradient band with
- * the eyebrow, headline, intro and two CTAs on the left, a photograph
- * dissolving into the background on the right, and a card floating over the
- * lower right.
+ * carried across to /contact-us/, /about/ and the three free-tool pages: a
+ * pale mint gradient band with the eyebrow, headline, intro and two CTAs on
+ * the left, a photograph dissolving into the background on the right, and a
+ * card floating over the lower right.
  *
  * Where the homepage puts its search field, each page puts the thing its own
  * visitors came for:
@@ -16,16 +16,21 @@
  *             form never has to scroll to find them.
  *   about   — the three assurance badges, which the dark hero already shows
  *             as a loose row of ticks.
+ *   the      the OTHER free tools, plus the shelf they sit on. A visitor on
+ *   three    /malnutrition-calculator/ can already see the calculator; what
+ *   tools    they cannot see is that the survey and the meal planner exist
+ *            and are equally free. The cells read each tool's own name and
+ *            badge settings, so renaming a tool in the Customizer renames it
+ *            in the other two heroes as well.
  *
- * Neither of those is new content: both read the settings the pages already
+ * None of those is new content: they all read settings the pages already
  * have. Same for the About card, which is stat 1 from the Trust Badges &
  * Stats section.
  *
- * NEITHER PAGE SWITCHES ON ITS OWN. `vance_contact_hero_style` and
- * `vance_about_hero_style` both default to 'classic', so deploying this file
- * changes nothing until an admin flips the control. That mirrors
- * `vance_hero_style` on the homepage, and it means the dark hero and every
- * one of its saved settings is always one toggle away.
+ * NO PAGE SWITCHES ON ITS OWN. Every `vance_{page}_hero_style` defaults to
+ * 'classic', so deploying this file changes nothing until an admin flips the
+ * control. That mirrors `vance_hero_style` on the homepage, and it means the
+ * dark hero and every one of its saved settings is always one toggle away.
  *
  * @package vance-health-hub
  * @since   2026-08-28
@@ -40,17 +45,29 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  * this, so a page cannot end up with a control the renderer ignores or a
  * default the control list has never heard of.
  *
- * @param string $page 'contact' or 'about'.
+ * @param string $page A key of vance_page_hero_spotlight_config().
  * @return array<string, mixed>|null Null for an unknown page.
  */
 function vance_page_hero_spotlight_config( $page ) {
-	$img = get_template_directory_uri() . '/assets/img/about/';
+	$img    = get_template_directory_uri() . '/assets/img/about/';
+	$img_gi = get_template_directory_uri() . '/assets/img/gi-health/';
 
 	$conf = array(
 		'contact' => array(
 			'name'         => __( 'Contact Us', 'vance-health-hub' ),
+			'short_name'   => __( 'Contact', 'vance-health-hub' ),
 			'panel'        => 'vance_contact_panel',
 			'section'      => 'vance_contact_hero_spotlight',
+			// The section the DESIGN TOGGLE goes in — the page's existing hero
+			// section, so it sits with the classic hero it switches away from.
+			// Not derivable from the page key: the tool pages keep their hero
+			// controls under the Tools panel, named after the tool.
+			'style_section'    => 'vance_contact_hero',
+			// Where the classic hero's fallbacks live. tests/hero-render.test.php
+			// reads this file and asserts each legacy_*_default below appears in
+			// it verbatim, so the two cannot drift and switching design cannot
+			// silently reword the page.
+			'classic_template' => 'page-contact-us.php',
 			'priority'     => 9,
 			// The classic hero's own copy keys. The spotlight hero reads these
 			// directly rather than taking private copies: only the layout is
@@ -78,17 +95,23 @@ function vance_page_hero_spotlight_config( $page ) {
 			'btn1_text'    => __( 'Send us a message', 'vance-health-hub' ),
 			'btn1_link'    => '#contact-form',
 			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
-			'btn2_link'    => '', // empty => resolved to the Ask AI page, see values().
+			'btn2_link'    => '', // empty => resolved from btn2_fallback_slug, see values().
+			'btn2_fallback_slug' => 'ask-ai',
+			'btn2_fallback_path' => '/ask-ai/',
 			'slot'         => 'lines',
 			'slot_label'   => __( 'Prefer to reach us directly?', 'vance-health-hub' ),
 			'card'         => 'text',
+			'card_icon'    => 'chat',
 			'card_title'   => __( 'A real reply, within one business day', 'vance-health-hub' ),
 			'card_text'    => __( 'Messages sent from this page reach the Vance Medical team directly — no ticket queue, no automated loop.', 'vance-health-hub' ),
 		),
 		'about' => array(
 			'name'         => __( 'About Us', 'vance-health-hub' ),
+			'short_name'   => __( 'About', 'vance-health-hub' ),
 			'panel'        => 'vance_about_panel',
 			'section'      => 'vance_about_hero_spotlight',
+			'style_section'    => 'vance_about_hero',
+			'classic_template' => 'page-about.php',
 			'priority'     => 9,
 			'legacy_tag'   => 'vance_about_hero_tag',
 			'legacy_title' => 'vance_about_hero_title',
@@ -112,12 +135,156 @@ function vance_page_hero_spotlight_config( $page ) {
 			'slot'         => 'badges',
 			'slot_label'   => __( 'What everything we publish is held to', 'vance-health-hub' ),
 			'card'         => 'stat',
+			'card_icon'    => 'flask',
 			'card_title'   => '',
 			'card_text'    => __( 'Formulated and reviewed under the same regulatory frameworks as prescription medicines.', 'vance-health-hub' ),
+		),
+
+		/*
+		 * ---- The three free tools ----------------------------------------
+		 *
+		 * Deliberately identical in shape, because they are sold as a set:
+		 * the Tools & Resources page presents exactly these three under one
+		 * "Free Tools" heading, and a visitor who lands on one of them from
+		 * search has no way of knowing the other two exist. So the band that
+		 * holds Contact's phone number holds, here, the other two tools and
+		 * the shelf they sit on — see vance_page_hero_spotlight_tools().
+		 *
+		 * Each one's photograph is its own key, per the rule that a classic
+		 * hero's background was chosen to sit under a ~78% navy veil and
+		 * reads as a dark smear without one. Every image named below was
+		 * looked at before it was chosen; all three are light down their
+		 * left-hand side, which is the edge the band dissolves.
+		 */
+		'hquiz' => array(
+			'name'         => __( 'Gastro Health Survey', 'vance-health-hub' ),
+			'short_name'   => __( 'Survey', 'vance-health-hub' ),
+			'panel'        => 'vance_hquiz_panel',
+			'section'      => 'vance_hquiz_hero_spotlight',
+			'section_title'    => __( 'Hero — Spotlight', 'vance-health-hub' ),
+			'style_section'    => 'vance_hquiz_hero',
+			'classic_template' => 'page-healthcare-quiz.php',
+			'priority'     => 160,
+			'legacy_tag'   => 'vance_hquiz_hero_badge',
+			'legacy_title' => 'vance_hquiz_hero_title',
+			'legacy_desc'  => 'vance_hquiz_hero_subtitle',
+			'legacy_tag_default'   => 'Self-Assessment',
+			'legacy_title_default' => 'Gastro Health Survey',
+			'legacy_desc_default'  => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.',
+			// Currently also the IBS condition page's photograph. It is the
+			// best-lit asset in the theme for a pale band — hazy water down
+			// the whole left edge — and it carries nothing IBS-specific, but
+			// a photograph of its own would be better; the Customizer has a
+			// control for it.
+			'image'        => $img_gi . 'ibs.jpg',
+			'image_alt'    => __( 'A man leaning on a harbour railing beside his dog, looking out over the water', 'vance-health-hub' ),
+			'btn1_text'    => __( 'Start the survey', 'vance-health-hub' ),
+			// The quiz form itself, which is the first thing below the hero.
+			'btn1_link'    => '#health-quiz-form',
+			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
+			'btn2_link'    => '',
+			'btn2_fallback_slug' => 'ask-ai',
+			'btn2_fallback_path' => '/ask-ai/',
+			'slot'         => 'tools',
+			'slot_label'   => __( 'The other free tools', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'clipboard',
+			'card_title'   => __( 'A summary you can hand to your clinician', 'vance-health-hub' ),
+			'card_text'    => __( 'Answer once and the survey returns a plain-language summary of what you reported — yours to keep, print or take to an appointment.', 'vance-health-hub' ),
+		),
+		'recipes' => array(
+			'name'         => __( 'Gastro Recipes & Meal Planner', 'vance-health-hub' ),
+			'short_name'   => __( 'Meal planner', 'vance-health-hub' ),
+			'panel'        => 'vance_tools_panel',
+			'section'      => 'vance_tools_hero_recipes_spotlight',
+			'section_title'    => __( 'Recipes Hero — Spotlight', 'vance-health-hub' ),
+			'style_section'    => 'vance_tools_hero_recipes',
+			'classic_template' => 'page-gastro-recipies.php',
+			'priority'     => 160,
+			'legacy_tag'   => 'vance_tool_recipes_badge',
+			'legacy_title' => 'vance_tool_recipes_name',
+			'legacy_desc'  => 'vance_tool_recipes_subtitle',
+			// NB these are the TEMPLATE's fallbacks, not customizer-pages.php's,
+			// which still say "IBD Recipes & Meal Planner". The template's are
+			// what an unsaved site actually renders — get_theme_mod() answers an
+			// unsaved read with the default the CALLER passes, and the registered
+			// default only seeds the control and the Customizer preview.
+			'legacy_tag_default'   => 'Meal Planning',
+			'legacy_title_default' => 'Gastro Recipes & Meal Planner',
+			'legacy_desc_default'  => 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely, saving plans takes two clicks to create your free account.',
+			'image'        => $img . 'wellness-kitchen.jpg',
+			'image_alt'    => __( 'A woman slicing vegetables at a kitchen counter laid out with fresh produce', 'vance-health-hub' ),
+			'btn1_text'    => __( 'Browse the recipes', 'vance-health-hub' ),
+			'btn1_link'    => '#recipes',
+			'btn2_text'    => __( 'Build a weekly plan', 'vance-health-hub' ),
+			'btn2_link'    => '#planner',
+			'slot'         => 'tools',
+			'slot_label'   => __( 'The other free tools', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'bowl',
+			'card_title'   => __( 'Every recipe carries its nutrition data', 'vance-health-hub' ),
+			'card_text'    => __( 'So a week of meals adds up to numbers — energy, protein, EPA — you can put in front of a dietitian rather than describe.', 'vance-health-hub' ),
+		),
+		'malnutrition' => array(
+			'name'         => __( 'Malnutrition Calculator', 'vance-health-hub' ),
+			'short_name'   => __( 'Calculator', 'vance-health-hub' ),
+			'panel'        => 'vance_tools_panel',
+			'section'      => 'vance_tools_hero_malnutrition_spotlight',
+			'section_title'    => __( 'Calculator Hero — Spotlight', 'vance-health-hub' ),
+			'style_section'    => 'vance_tools_hero_malnutrition',
+			'classic_template' => 'page-malnutrition-calculator.php',
+			'priority'     => 160,
+			'legacy_tag'   => 'vance_tool_malnutrition_badge',
+			'legacy_title' => 'vance_tool_malnutrition_name',
+			'legacy_desc'  => 'vance_tool_malnutrition_subtitle',
+			'legacy_tag_default'   => 'IBD Screening',
+			'legacy_title_default' => 'IBD Malnutrition Calculator',
+			'legacy_desc_default'  => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.',
+			'image'        => $img . 'digital-health-tech.jpg',
+			'image_alt'    => __( 'Two clinicians reviewing a patient record together on a tablet', 'vance-health-hub' ),
+			'btn1_text'    => __( 'Start the screening', 'vance-health-hub' ),
+			// inc/tool-page-shell.php puts this id on the card the tool sits in.
+			'btn1_link'    => '#tool',
+			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
+			'btn2_link'    => '',
+			'btn2_fallback_slug' => 'ask-ai',
+			'btn2_fallback_path' => '/ask-ai/',
+			'slot'         => 'tools',
+			'slot_label'   => __( 'The other free tools', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'calculator',
+			'card_title'   => __( 'MUST, IBD-NST and GLIM, in one pass', 'vance-health-hub' ),
+			'card_text'    => __( 'Three validated screening frameworks combined into a single score, so one set of answers covers all of them.', 'vance-health-hub' ),
 		),
 	);
 
 	return isset( $conf[ $page ] ) ? $conf[ $page ] : null;
+}
+
+/**
+ * Every page this file can render, in Customizer registration order.
+ *
+ * Derived from the config rather than written out again, so adding a page is
+ * one edit: the renderer, the Customizer and tests/hero-render.test.php all
+ * walk this list.
+ *
+ * @return string[]
+ */
+function vance_page_hero_spotlight_pages() {
+	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition' );
+}
+
+/**
+ * A page's permalink, resolved by slug so it follows the page wherever it
+ * lives, with the literal path as a last resort so a link is never href-less.
+ *
+ * @param string $slug     Page slug.
+ * @param string $fallback Path to use when no page has that slug.
+ * @return string
+ */
+function vance_page_hero_spotlight_page_url( $slug, $fallback ) {
+	$page = get_page_by_path( $slug );
+	return $page ? get_permalink( $page ) : home_url( $fallback );
 }
 
 /**
@@ -139,7 +306,7 @@ function vance_page_hero_spotlight_default_style() {
 /**
  * Is the spotlight design switched on for this page?
  *
- * @param string $page 'contact' or 'about'.
+ * @param string $page A key of vance_page_hero_spotlight_config().
  * @return bool
  */
 function vance_page_hero_spotlight_active( $page ) {
@@ -160,7 +327,7 @@ function vance_page_hero_spotlight_active( $page ) {
  * vance_hero_spotlight_field_defaults() rather than retyped, so the three
  * heroes cannot drift apart on brand colour.
  *
- * @param string $page 'contact' or 'about'.
+ * @param string $page A key of vance_page_hero_spotlight_config().
  * @return array<string, mixed> field => default
  */
 function vance_page_hero_spotlight_field_defaults( $page ) {
@@ -215,7 +382,7 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 /**
  * Resolve every field for one page, applying the "empty means auto" fallbacks.
  *
- * @param string $page 'contact' or 'about'.
+ * @param string $page A key of vance_page_hero_spotlight_config().
  * @return array<string, mixed>
  */
 function vance_page_hero_spotlight_values( $page ) {
@@ -240,12 +407,13 @@ function vance_page_hero_spotlight_values( $page ) {
 	$vals['title']   = vance_get_theme_mod( $c['legacy_title'], $c['legacy_title_default'] );
 	$vals['intro']   = vance_get_theme_mod( $c['legacy_desc'],  $c['legacy_desc_default'] );
 
-	// Only reached when an admin has deliberately cleared button 2's link.
-	// Resolved by slug so it follows the page wherever it lives, with the
-	// literal path as a last resort so the button is never href-less.
-	if ( ! $vals['btn2_link'] && $page === 'contact' ) {
-		$ai = get_page_by_path( 'ask-ai' );
-		$vals['btn2_link'] = $ai ? get_permalink( $ai ) : home_url( '/ask-ai/' );
+	// Only reached when an admin has deliberately cleared button 2's link,
+	// and only on the pages whose config names a page to fall back to.
+	if ( ! $vals['btn2_link'] && ! empty( $c['btn2_fallback_slug'] ) ) {
+		$vals['btn2_link'] = vance_page_hero_spotlight_page_url(
+			$c['btn2_fallback_slug'],
+			$c['btn2_fallback_path']
+		);
 	}
 
 	return $vals;
@@ -257,7 +425,7 @@ function vance_page_hero_spotlight_values( $page ) {
  * Same stroke weight and 24-unit box as the homepage hero's icons so the two
  * read as one family.
  *
- * @param string $name mail|phone|clock|check|chat|flask
+ * @param string $name mail|phone|clock|check|chat|flask|clipboard|bowl|calculator|grid
  * @return string SVG markup, already safe (no dynamic values).
  */
 function vance_page_hero_spotlight_icon( $name ) {
@@ -268,6 +436,11 @@ function vance_page_hero_spotlight_icon( $name ) {
 		'check' => '<path d="M4 12.5l5 5L20 6.5"/>',
 		'chat'  => '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.7A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/>',
 		'flask' => '<path d="M9.5 3v6.2L4.6 17a2.6 2.6 0 0 0 2.2 4h10.4a2.6 2.6 0 0 0 2.2-4l-4.9-7.8V3"/><path d="M8 3h8"/><path d="M7.6 14.6h8.8"/>',
+		// The three free tools, one each, plus the shelf they sit on.
+		'clipboard'  => '<path d="M9 4.5H7.4A2.4 2.4 0 0 0 5 6.9v11.7A2.4 2.4 0 0 0 7.4 21h9.2a2.4 2.4 0 0 0 2.4-2.4V6.9a2.4 2.4 0 0 0-2.4-2.4H15"/><rect x="9" y="2.6" width="6" height="3.8" rx="1.4"/><path d="M8.8 11.6h6.4"/><path d="M8.8 15.4h4.2"/>',
+		'bowl'       => '<path d="M3.4 11.4h17.2a8.6 8.6 0 0 1-17.2 0z"/><path d="M8.2 8.4c0-1.7 1.3-2 1.3-3.4"/><path d="M12 8.4c0-1.7 1.3-2 1.3-3.4"/><path d="M15.8 8.4c0-1.7 1.3-2 1.3-3.4"/>',
+		'calculator' => '<rect x="4.6" y="2.6" width="14.8" height="18.8" rx="2.4"/><rect x="8" y="6" width="8" height="3.2" rx="1"/><path d="M8.6 13h.02"/><path d="M12 13h.02"/><path d="M15.4 13h.02"/><path d="M8.6 17h.02"/><path d="M12 17h.02"/><path d="M15.4 17h.02"/>',
+		'grid'       => '<rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.8"/>',
 	);
 	if ( ! isset( $paths[ $name ] ) ) { return ''; }
 
@@ -359,6 +532,88 @@ function vance_page_hero_spotlight_lines() {
 }
 
 /**
+ * The other free tools, for a tool page's utility band.
+ *
+ * The Tools & Resources page presents exactly three tools under one "Free
+ * Tools" heading. A visitor who arrives on one of them from search sees only
+ * that one, so each tool hero's band carries the other two and a link to the
+ * shelf.
+ *
+ * Every name and badge is read from the tool's OWN hero settings -- the same
+ * keys its page renders its own H1 and badge from -- so renaming a tool in the
+ * Customizer renames it here too, and there is no second copy to keep in sync.
+ * The defaults are the ones the classic templates pass, for the usual reason:
+ * get_theme_mod() answers an unsaved read with the caller's default, so '' here
+ * would empty the band on any site that has never edited these fields.
+ *
+ * A tool whose name has been deliberately cleared is dropped rather than
+ * rendered as an empty cell -- the band's grid sizes itself to what survives.
+ *
+ * @param string $page The page doing the rendering; it is never listed.
+ * @return array<int, array{key: string, label: string, value: string, href: string}>
+ */
+function vance_page_hero_spotlight_tools( $page ) {
+	$tools = array(
+		'hquiz' => array(
+			'icon'     => 'clipboard',
+			'slug'     => 'gastro-health-survey',
+			'path'     => '/gastro-health-survey/',
+			'name_key' => 'vance_hquiz_hero_title',
+			'name_def' => 'Gastro Health Survey',
+			'tag_key'  => 'vance_hquiz_hero_badge',
+			'tag_def'  => 'Self-Assessment',
+		),
+		'recipes' => array(
+			'icon'     => 'bowl',
+			'slug'     => 'gastro-meal-planner',
+			'path'     => '/gastro-meal-planner/',
+			'name_key' => 'vance_tool_recipes_name',
+			'name_def' => 'Gastro Recipes & Meal Planner',
+			'tag_key'  => 'vance_tool_recipes_badge',
+			'tag_def'  => 'Meal Planning',
+		),
+		'malnutrition' => array(
+			'icon'     => 'calculator',
+			'slug'     => 'malnutrition-calculator',
+			'path'     => '/malnutrition-calculator/',
+			'name_key' => 'vance_tool_malnutrition_name',
+			'name_def' => 'IBD Malnutrition Calculator',
+			'tag_key'  => 'vance_tool_malnutrition_badge',
+			'tag_def'  => 'IBD Screening',
+		),
+	);
+
+	$cells = array();
+
+	foreach ( $tools as $key => $t ) {
+		if ( $key === $page ) {
+			continue; // never sell a page back to itself
+		}
+		$name = vance_get_theme_mod( $t['name_key'], $t['name_def'] );
+		if ( $name === '' ) {
+			continue;
+		}
+		$cells[] = array(
+			'key'   => $t['icon'],
+			'label' => vance_get_theme_mod( $t['tag_key'], $t['tag_def'] ),
+			'value' => $name,
+			'href'  => vance_page_hero_spotlight_page_url( $t['slug'], $t['path'] ),
+		);
+	}
+
+	// Third cell: the shelf, for anyone who wants neither of the other two.
+	// Always present, so the band reads as three columns like Contact's.
+	$cells[] = array(
+		'key'   => 'grid',
+		'label' => __( 'More', 'vance-health-hub' ),
+		'value' => __( 'Browse all free tools', 'vance-health-hub' ),
+		'href'  => vance_page_hero_spotlight_page_url( 'tools-resources', '/tools-resources/' ),
+	);
+
+	return $cells;
+}
+
+/**
  * Render the spotlight hero for one page.
  *
  * Markup order is media-then-container for the same reason as the homepage
@@ -373,7 +628,7 @@ function vance_page_hero_spotlight_lines() {
  * of the global mobile type normalisation. The modifier only adds what these
  * two pages need on top.
  *
- * @param string $page 'contact' or 'about'.
+ * @param string $page A key of vance_page_hero_spotlight_config().
  * @return void
  */
 function vance_render_page_hero_spotlight( $page ) {
@@ -402,16 +657,23 @@ function vance_render_page_hero_spotlight( $page ) {
 		esc_attr( $s['card_bg_color'] )
 	);
 
-	$slot_items = ( $c['slot'] === 'lines' )
-		? vance_page_hero_spotlight_lines()
-		// Defaults copied from page-about.php's own $badge_defaults, for the
-		// same reason as the hero copy above: '' here empties the band on any
-		// site that has never edited the badges.
-		: array_values( array_filter( array(
-			vance_get_theme_mod( 'vance_about_badge1_label', 'Pharma-Grade Quality' ),
-			vance_get_theme_mod( 'vance_about_badge2_label', 'Clinician Approved' ),
-			vance_get_theme_mod( 'vance_about_badge3_label', 'Evidence-Based' ),
-		) ) );
+	switch ( $c['slot'] ) {
+		case 'lines':
+			$slot_items = vance_page_hero_spotlight_lines();
+			break;
+		case 'tools':
+			$slot_items = vance_page_hero_spotlight_tools( $page );
+			break;
+		default:
+			// Defaults copied from page-about.php's own $badge_defaults, for the
+			// same reason as the hero copy above: '' here empties the band on any
+			// site that has never edited the badges.
+			$slot_items = array_values( array_filter( array(
+				vance_get_theme_mod( 'vance_about_badge1_label', 'Pharma-Grade Quality' ),
+				vance_get_theme_mod( 'vance_about_badge2_label', 'Clinician Approved' ),
+				vance_get_theme_mod( 'vance_about_badge3_label', 'Evidence-Based' ),
+			) ) );
+	}
 
 	// The About badges have their own long-standing visibility switch; honour
 	// it here rather than making an admin turn the same row off twice.
@@ -465,8 +727,18 @@ function vance_render_page_hero_spotlight( $page ) {
 					<span class="vhh-hero-spotlight__slot-label"><?php echo esc_html( $s['slot_label'] ); ?></span>
 					<?php endif; ?>
 
-					<?php if ( $c['slot'] === 'lines' ) : ?>
-					<div class="vhh-hero-spotlight__slot vhh-hero-spotlight__slot--lines">
+					<?php if ( $c['slot'] !== 'badges' ) :
+						// 'tools' reuses the lines markup wholesale -- icon tile,
+						// caption, value, optional href -- so it inherits the cell
+						// treatment, the dividers and the whole responsive stack.
+						// Its own modifier carries only what a tool name needs and
+						// an email address does not.
+						$slot_class = 'vhh-hero-spotlight__slot--lines';
+						if ( $c['slot'] !== 'lines' ) {
+							$slot_class .= ' vhh-hero-spotlight__slot--' . $c['slot'];
+						}
+						?>
+					<div class="vhh-hero-spotlight__slot <?php echo esc_attr( $slot_class ); ?>">
 						<?php foreach ( $slot_items as $line ) :
 							$tag = $line['href'] ? 'a' : 'div';
 							?>
@@ -499,7 +771,7 @@ function vance_render_page_hero_spotlight( $page ) {
 					$stat_label = vance_get_theme_mod( 'vance_about_stat1_label', 'Years of Pharmaceutical Experience' );
 					if ( $stat_num !== '' || $s['card_text'] !== '' ) : ?>
 				<aside class="vhh-hero-spotlight__card vhh-hero-spotlight__card--stat">
-					<span class="vhh-hero-spotlight__card-icon" aria-hidden="true"><?php echo vance_page_hero_spotlight_icon( 'flask' ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
+					<span class="vhh-hero-spotlight__card-icon" aria-hidden="true"><?php echo vance_page_hero_spotlight_icon( $c['card_icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
 					<?php if ( $stat_num !== '' ) : ?>
 					<p class="vhh-hero-spotlight__stat-fig">
 						<span class="vhh-hero-spotlight__stat-num"><?php echo esc_html( $stat_num ); ?></span>
@@ -519,7 +791,7 @@ function vance_render_page_hero_spotlight( $page ) {
 					$card_title = isset( $s['card_title'] ) ? $s['card_title'] : '';
 					if ( $card_title !== '' || $s['card_text'] !== '' ) : ?>
 				<aside class="vhh-hero-spotlight__card">
-					<span class="vhh-hero-spotlight__card-icon" aria-hidden="true"><?php echo vance_page_hero_spotlight_icon( 'chat' ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
+					<span class="vhh-hero-spotlight__card-icon" aria-hidden="true"><?php echo vance_page_hero_spotlight_icon( $c['card_icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
 					<div class="vhh-hero-spotlight__card-body">
 						<?php if ( $card_title !== '' ) : ?>
 						<h2 class="vhh-hero-spotlight__card-title"><?php echo esc_html( $card_title ); ?></h2>
@@ -571,7 +843,15 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		'card_bg_color'   => array( 'type' => 'color',    'label' => 'Card — Background' ),
 	);
 
-	// Per-page wording for the two controls that need it.
+	// Per-page wording for the two controls that need it. The three tool pages
+	// share theirs verbatim: they are the same design filled from the same kind
+	// of setting, and three near-identical paragraphs would drift.
+	$tool_note = array(
+		'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the other two free tools in a white band. Classic is the dark hero configured by the rest of this section.',
+		'section'    => 'The light hero for this page. Only rendered while this page&rsquo;s hero design is set to Spotlight. The badge, title and subtitle are shared with the classic hero &mdash; edit them where you always have, and they follow whichever design is switched on.',
+		'slot_label' => 'Sits above the white band. The band itself lists the OTHER two free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings, and ends with a link to Tools &amp; Resources. Nothing to type here beyond the prompt.',
+	);
+
 	$notes = array(
 		'contact' => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your email, phone and opening hours in a white band. Classic is the dark navy hero configured by the rest of this panel.',
@@ -583,9 +863,12 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'section'    => 'The light hero for this page. Only rendered while "About hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero — edit them in the Hero Section, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself is filled from Badge 1–3 in the Trust Badges &amp; Stats section, and the card shows Stat 1 from that same section.',
 		),
+		'hquiz'        => $tool_note,
+		'recipes'      => $tool_note,
+		'malnutrition' => $tool_note,
 	);
 
-	foreach ( array( 'contact', 'about' ) as $page ) {
+	foreach ( vance_page_hero_spotlight_pages() as $page ) {
 		$c = vance_page_hero_spotlight_config( $page );
 		if ( ! $c ) { continue; }
 
@@ -603,9 +886,11 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			},
 		) );
 		$wp_customize->add_control( $style_id, array(
-			'label'       => sprintf( __( '%s hero design', 'vance-health-hub' ), $c['name'] === 'Contact Us' ? __( 'Contact', 'vance-health-hub' ) : __( 'About', 'vance-health-hub' ) ),
+			'label'       => sprintf( __( '%s hero design', 'vance-health-hub' ), $c['short_name'] ),
 			'description' => $notes[ $page ]['toggle'],
-			'section'     => 'vance_' . $page . '_hero',
+			// NOT 'vance_' . $page . '_hero': the tool pages keep their hero
+			// controls under the Tools panel, in sections named after the tool.
+			'section'     => $c['style_section'],
 			'type'        => 'select',
 			'priority'    => 1,
 			'choices'     => array(
@@ -615,8 +900,10 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		) );
 
 		// -- The spotlight's own section.
+		// Three of these sit in the same panel as each other, so two of them
+		// carry a title that says which tool they belong to.
 		$wp_customize->add_section( $c['section'], array(
-			'title'       => sprintf( __( 'Hero — Spotlight', 'vance-health-hub' ) ),
+			'title'       => isset( $c['section_title'] ) ? $c['section_title'] : __( 'Hero — Spotlight', 'vance-health-hub' ),
 			'description' => $notes[ $page ]['section'],
 			'priority'    => $c['priority'],
 			'panel'       => $c['panel'],
