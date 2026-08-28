@@ -70,14 +70,9 @@ if ( empty( $cats ) ) {
     html { scroll-behavior: smooth; }
     .va-subcat-title { scroll-margin-top: 110px; }
 
-    /* Glassy hover for the sub-category buttons (base look is set inline).
-       Higher specificity than the shared .cat-mini-card:hover so it wins. */
-    .inner-cat-nav .cat-mini-card--glass:hover {
-        background: rgba(255,255,255,0.85) !important;
-        border-color: rgba(0,128,128,0.45) !important;
-        box-shadow: 0 12px 30px rgba(15,23,42,0.14) !important;
-        transform: translateY(-2px);
-    }
+    /* The sub-category buttons had their own frosted hover here. They now share
+       .cat-mini-card:hover with every other one -- white fill, same border, no
+       lift. */
 </style>
 <?php endif; ?>
 <?php
@@ -109,27 +104,38 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                     : esc_url( get_category_link( $cat->term_id ) );
                 $icon = vance_get_theme_mod("vance_cat_card_icon_{$cat->term_id}", '');
                 
-                if ( $vance_subcat_parent > 0 ) {
-                    // Glassy button: frosted translucent fill, blur, soft shadow,
-                    // rounded. No icon in this mode.
-                    $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; padding: 14px 18px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: rgba(255,255,255,0.55); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); border: 1px solid rgba(15,23,42,0.10); box-shadow: 0 6px 20px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.65); transition: all 0.2s;";
-                    $text_style = "font-size: 13px; font-weight: 600; color: #0f172a; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
-                } else {
-                    $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; background: #F8FAFC; border: 1px solid #e2e8f0; border-radius: var(--radius-control, 6px); padding: 12px; text-decoration: none; transition: all 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); width: 100%; overflow: hidden;";
-                    $text_style = "font-size: 12px; font-weight: 600; color: #334155; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
-                }
+                // One button treatment for both modes: transparent by default,
+                // white on hover, a #008080 border that does not change between
+                // those two states, and #008080 label text. The sub-category mode
+                // used to be a frosted-glass button -- the translucent fill, the
+                // backdrop blur and the lift shadow all go with the rest of the
+                // decoration, because a blurred backdrop is not transparent.
+                //
+                // No `transition` on either: the buttons are not animated, so the
+                // background swaps instantly on hover.
+                //
+                // No font-family in here on purpose. The anchor inherits the site
+                // face (--font-main, Inter) from body, which is already what it
+                // renders in; restating it would just be a second place to keep
+                // in step.
+                $card_style = "display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080;";
+                $card_style .= ( $vance_subcat_parent > 0 ) ? " padding: 14px 18px;" : " padding: 12px;";
+
+                $text_size  = ( $vance_subcat_parent > 0 ) ? "13px" : "12px";
+                $text_style = "font-size: {$text_size}; font-weight: 600; color: #008080; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
 
                 $icon_container_style = "width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: var(--radius-control, 6px);";
                 $icon_img_style = "width: 12px; height: 12px; object-fit: contain;";
 
+                // The current category still has to be identifiable, so it keeps
+                // a fill -- but a tint of the same teal, and the same #008080
+                // border as the rest rather than one of its own. Its old label
+                // colours (#0f766e here, #c2410c on the global nav) would have
+                // been the only non-teal text left once everything else went
+                // #008080.
                 if ( $is_active ) {
-                    if ( $vance_subcat_parent > 0 ) {
-                        $card_style .= " border-color: rgba(0,128,128,0.6); background: rgba(0,128,128,0.10);";
-                        $text_style  = "font-size: 13px; font-weight: 700; color: #0f766e; margin: 0; line-height: 1.2;";
-                    } else {
-                        $card_style .= " border-color: #008080; background: #def4f4;";
-                        $text_style  = "font-size: 12px; font-weight: 700; color: #c2410c;";
-                    }
+                    $card_style .= " background: rgba(0,128,128,0.10);";
+                    $text_style  = str_replace( 'font-weight: 600', 'font-weight: 700', $text_style );
                 }
             ?>
                 <a href="<?php echo $card_href; ?>" class="cat-mini-card <?php echo $vance_subcat_parent > 0 ? 'cat-mini-card--glass ' : ''; ?><?php echo $is_active ? 'active' : ''; ?>" style="<?php echo $card_style; ?>" title="<?php echo esc_attr( $cat->name ); ?>">
@@ -179,9 +185,10 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
     }
 }
 
-.cat-mini-card:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+/* Hover changes the fill and nothing else: white in, border stays #008080,
+   no lift and no shadow. !important because the base look is set inline. */
+.cat-mini-card:hover {
+    background: #ffffff !important;
     border-color: #008080 !important;
 }
 </style>
