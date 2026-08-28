@@ -314,6 +314,24 @@ h6 {
         line-height: 1.2 !important;
         padding-bottom: 2px !important;
     }
+    /* Fallout from the rule above, reported 2026-08-28 as "a down arrow
+       floating above the menu item".
+
+       The dropdown caret is a <span class="mega-indicator"> child of that
+       link, and the plugin gives it an explicit height:38px — nearly the
+       whole 40px bar. Its glyph renders at the TOP of that 38px box while
+       the flex-end rule above pins the link's TEXT to the bottom, so the
+       caret ended up floating ~10px clear of the word it belongs to.
+       Measured before/after on the live bar: offset 10px -> -1px, i.e. dead
+       level with the text.
+
+       height:auto lets the span shrink to its glyph so the parent's
+       align-items:flex-end can seat it on the same baseline as the text.
+       Do not set a fixed height here — that is what caused this. */
+    #mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item > a.mega-menu-link > span.mega-indicator {
+        height: auto !important;
+        line-height: inherit !important;
+    }
 }
 
 .main-nav ul {

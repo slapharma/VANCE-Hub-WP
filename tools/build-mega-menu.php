@@ -230,7 +230,6 @@ vh_link( $MENU_ID, $c, 'My Notes',     array( 'path' => 'my-notes' ) );
  */
 $c = vh_col( $MENU_ID, $hub, 'Vance Medical', array( 'path' => 'about-us' ), 3, 5 );
 vh_link( $MENU_ID, $c, 'Who We Are',   array( 'path' => 'about-us' ) );
-vh_link( $MENU_ID, $c, 'Our Heritage', array( 'path' => 'our-heritage' ) );
 vh_link( $MENU_ID, $c, 'Contact Us',   array( 'path' => 'contact-us' ) );
 
 // ---------- KNOWLEDGEBASE ----------
@@ -343,7 +342,7 @@ say( '--- VERIFY ---' );
  * what it attempted is not a verification.
  */
 $expected = array(
-	'THE HUB'           => array( 'Start here' => 3, 'Free Health Tools' => 3, 'Patient Downloads' => 3, 'Your Account' => 2, 'Vance Medical' => 3 ),
+	'THE HUB'           => array( 'Start here' => 3, 'Free Health Tools' => 3, 'Patient Downloads' => 3, 'Your Account' => 2, 'Vance Medical' => 2 ),
 	'KNOWLEDGEBASE'     => array( 'Browse the library' => 5, 'By content type' => 3 ),
 	'CONDITIONS'        => array(),
 );

@@ -153,7 +153,6 @@ THE HUB                                      [custom link, Disable link]
 ├─ ROW 2 ─────────────────────────────────────────────────────────────
 ├─ Vance Medical                             /about-us/
 │  ├─ Who We Are                             /about-us/
-│  ├─ Our Heritage                           /our-heritage/
 │  └─ Contact Us                             /contact-us/
 └─ [widget] CTA: Ask VANCE-Ai                (9 wide, renders as a banner)
 
