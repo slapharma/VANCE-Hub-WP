@@ -97,9 +97,12 @@ if ( ! function_exists( 'vance_kb_lobby_ink' ) ) :
 	/**
 	 * Darken an accent until white-background text on it clears WCAG AA (4.5:1).
 	 *
-	 * The site's KB purple (#8e7dbe) is 3.60:1 on white — fine as a 4px rule, and
-	 * unreadable as 14px bold link text. So the block's text and its filled icon
-	 * tile use this derived colour while the rule keeps the true brand colour.
+	 * The site teal (#008080) is 4.77:1 on white, so it passes as it stands and
+	 * this returns it unchanged. The guard is for what an admin can type into the
+	 * accent field: the KB purple this page shipped with (#8e7dbe) is 3.60:1 -
+	 * fine as a 4px rule, unreadable as 14px bold link text. So the block's text
+	 * and its filled icon tile use the derived colour while the rule keeps
+	 * whatever was chosen.
 	 *
 	 * 4.5:1 against white means (1.0 + 0.05) / (L + 0.05) >= 4.5, i.e. a relative
 	 * luminance of at most 0.1833.
@@ -701,9 +704,9 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 		 * accent its homepage Knowledge Base section already uses.
 		 */
 		$mode   = vance_get_theme_mod( 'vance_kblobby_accent_mode', 'single' );
-		$single = vance_get_theme_mod( 'vance_kblobby_accent_single', '#8e7dbe' );
+		$single = vance_get_theme_mod( 'vance_kblobby_accent_single', '#008080' );
 		if ( ! vance_kb_lobby_rgb( $single ) ) {
-			$single = '#8e7dbe';
+			$single = '#008080';
 		}
 
 		// Only consulted in "match" mode; kept as the fallback for a category
@@ -711,8 +714,16 @@ if ( ! function_exists( 'vance_kb_lobby_items' ) ) :
 		$palette = array( '#008080', '#0EA5E9', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444' );
 
 		$peek_limit = max( 0, min( 5, absint( vance_get_theme_mod( 'vance_kblobby_peek_count', 3 ) ) ) );
-		$hidden     = vance_kb_lobby_title_list( 'vance_kblobby_hidden_titles', 'Webinars and Courses' );
-		$soon_list  = vance_kb_lobby_title_list( 'vance_kblobby_soon_titles', '' );
+		/*
+		 * Webinars & Courses defaults to "not launched" rather than hidden. The
+		 * page behind it is a real Coming Soon with a waitlist form, and hiding
+		 * it left that waitlist reachable only from the nav flyout - while also
+		 * leaving five cards in a two-column grid, so the last row was half
+		 * empty. The muted card states plainly that there is nothing to read
+		 * yet.
+		 */
+		$hidden     = vance_kb_lobby_title_list( 'vance_kblobby_hidden_titles', '' );
+		$soon_list  = vance_kb_lobby_title_list( 'vance_kblobby_soon_titles', 'Webinars and Courses' );
 
 		$blocks = array();
 		$raw    = array();

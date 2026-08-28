@@ -11,8 +11,9 @@
      --kb-accent-ink  the same colour darkened by vance_kb_lobby_ink() until it
                       clears 4.5:1 on white. Everything that carries meaning -
                       the eyebrow, the title on hover, the icon tile, the Browse
-                      affordance - uses this one. The site's KB purple #8e7dbe
-                      is 3.60:1 raw, so this is not cosmetic.
+                      affordance - uses this one. The teal default is 4.77:1
+                      and passes as-is, but an admin can type any colour into
+                      the accent field, so this is not cosmetic.
      --kb-accent-wash a ~6% tint of the accent for the hover fill.
 
    Structure note: the card is an <article> with a stretched title link, not one

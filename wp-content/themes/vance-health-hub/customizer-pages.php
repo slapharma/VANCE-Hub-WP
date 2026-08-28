@@ -1197,7 +1197,7 @@ function vance_pages_customize_register( $wp_customize ) {
         "choices"     => array( "single" => "One colour for every card", "match" => "Per collection (match homepage sections)" ),
     ) );
 
-    $wp_customize->add_setting( "vance_kblobby_accent_single", array( "default" => "#8e7dbe", "sanitize_callback" => "sanitize_hex_color" ) );
+    $wp_customize->add_setting( "vance_kblobby_accent_single", array( "default" => "#008080", "sanitize_callback" => "sanitize_hex_color" ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, "vance_kblobby_accent_single", array(
         "label"       => "Card accent",
         "description" => "Used when the setting above is \"One colour for every card\". Light colours are handled: the card darkens this automatically for text and icons so it always clears the 4.5:1 contrast minimum, while the card's edge keeps the colour exactly as picked.",
@@ -1230,7 +1230,7 @@ function vance_pages_customize_register( $wp_customize ) {
         "type"        => "text",
     ) );
 
-    $wp_customize->add_setting( "vance_kblobby_hidden_titles", array( "default" => "Webinars and Courses", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_kblobby_hidden_titles", array( "default" => "", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_kblobby_hidden_titles", array(
         "label"       => "Collections hidden from this page",
         "description" => "One block title per line. These keep their place in the KNOWLEDGEBASE menu but get no card here - for a destination the nav still needs to reach while the lobby has nothing worth promoting about it. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word.",
@@ -1238,7 +1238,7 @@ function vance_pages_customize_register( $wp_customize ) {
         "type"        => "textarea",
     ) );
 
-    $wp_customize->add_setting( "vance_kblobby_soon_titles", array( "default" => "", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_kblobby_soon_titles", array( "default" => "Webinars and Courses", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_kblobby_soon_titles", array(
         "label"       => "Collections not launched yet",
         "description" => "One block title per line. Those blocks show the label above instead of a count, even if the page they link to has content. A title listed as hidden above never appears at all, so listing it here as well has no effect. Matching ignores case, spacing and punctuation, and treats \"&\" and \"and\" as the same word. Categories with no posts get the label automatically and do not need listing here.",
