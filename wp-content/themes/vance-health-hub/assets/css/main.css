@@ -4431,7 +4431,12 @@ body.home .hero {
 .vhh-hero-spotlight__slot {
     /* Overrides the flex inherited from the shared __search-form rule. */
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Auto columns, NOT repeat(3, ...): both bands drop a cell whose setting is
+       empty — clear the office phone and Contact renders two — and a fixed
+       three-column track would leave the missing third as a blank slab of
+       white. Auto-flow gives exactly as many equal columns as there are cells. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     /* The badge variant is a <ul>. */
     list-style: none;
     margin: 0;
@@ -4591,9 +4596,12 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 /* --- Responsive ---------------------------------------------------------- */
 
 @media (max-width: 900px) {
-    /* The band's cells go from a row of three to a stack, so the dividers
-       have to turn with them. */
+    /* The band's cells go from a row to a stack, so the dividers turn with
+       them. grid-auto-flow has to be reset explicitly — it is what puts the
+       cells side by side above this breakpoint. */
     .vhh-hero-spotlight__slot {
+        grid-auto-flow: row;
+        grid-auto-columns: auto;
         grid-template-columns: minmax(0, 1fr);
     }
 
