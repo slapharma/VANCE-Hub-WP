@@ -4405,6 +4405,58 @@ body.home .hero {
 }
 
 /* ============================================================================
+   PROMO BLOCK
+   ----------------------------------------------------------------------------
+   Moved here from front-page.php's inline <style> when inc/promo-block.php was
+   shared with the Knowledgebase template, which does not load that sheet.
+   Nothing else in the theme defines a .promo-* selector and neither mobile
+   sheet touches one, so living in main.css cannot change which rule wins.
+   ========================================================================== */
+
+.promo-block-section {
+    /* 50px trimmed off each end (was 50px/60px band + 60px/75px container
+       = 110px above the copy and 135px below). The cut is split between the
+       band and the container rather than taken wholly from either: zeroing the
+       band would sit the container's optional background panel flush against
+       the section edge, and taking it all from the container would crowd the
+       copy against that panel's edge. Halving each keeps both insets reading
+       as they were, just tighter. */
+    padding: 25px 0 35px;
+    overflow: hidden;
+}
+
+.promo-container {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    /* Inset the content off the container edge so the container's own
+       background colour (and optional border) read as a panel rather than as a
+       tight outline around the text. Top is deliberately shorter than the other
+       three: the section above contributes no top padding, so this is most of
+       the gap above the promo content. Vertical values carry half of the 50px
+       trim described on .promo-block-section above; the 75px sides are
+       untouched. */
+    padding: 35px 75px 50px;
+}
+
+.promo-container.layout-left { flex-direction: row-reverse; }
+.promo-container.layout-top { flex-direction: column; text-align: center; }
+.promo-content { flex: 1; }
+.promo-image-box {
+    flex: 1;
+    border-radius: var(--radius-surface, 14px);
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+.promo-image-box img { width: 100%; height: auto; display: block; }
+
+@media (max-width: 768px) {
+    /* 75px each side leaves too little room for the copy on a phone. */
+    .promo-container { flex-direction: column !important; text-align: center; gap: 30px; padding: 36px 24px; }
+    .promo-image-box { width: 100%; }
+}
+
+/* ============================================================================
    HOMEPAGE SECTION SEAMS
    ----------------------------------------------------------------------------
    The homepage stacks bands of flat colour (white, #f9f9f9, #f4ffff, #dde2e6,

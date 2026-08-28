@@ -125,13 +125,21 @@ get_header(); ?>
                     <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 40px;">
 
                         <?php
+                        // 'color' MUST be a literal hex: the tile background
+                        // below is built as "<color>1a" to get a 10% tint, and
+                        // that only works on a hex. Email used
+                        // var(--primary-color) here, so the tile resolved to
+                        // "var(--primary-color)1a" -- invalid, dropped by the
+                        // parser, and the icon sat on no background at all
+                        // while Phone and Office Hours (both hex) rendered
+                        // theirs correctly.
                         $details = array(
                             array(
                                 'label' => 'Email',
                                 'value' => $detail_email,
                                 'href'  => 'mailto:' . antispambot( $detail_email ),
                                 'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>',
-                                'color' => 'var(--primary-color)',
+                                'color' => '#8b5cf6',
                             ),
                             array(
                                 'label' => 'Phone',

@@ -365,46 +365,15 @@ body {
         .bento-grid-opinions { grid-template-columns: 1fr; }
     }
 
-    /* PROMO BLOCK STYLES */
-    .promo-block-section {
-        /* 50px trimmed off each end (was 50px/60px band + 60px/75px container
-           = 110px above the copy and 135px below). The cut is split between
-           the band and the container rather than taken wholly from either:
-           zeroing the band would sit the container's optional background panel
-           flush against the section edge, and taking it all from the container
-           would crowd the copy against that panel's edge. Halving each keeps
-           both insets reading as they were, just tighter. */
-        padding: 25px 0 35px;
-        overflow: hidden;
-    }
-    .promo-container {
-        display: flex;
-        align-items: center;
-        gap: 60px;
-        /* Inset the content off the container edge so the container's own
-           background colour (and optional border) read as a panel rather than
-           as a tight outline around the text. Top is deliberately shorter than
-           the other three: the section above contributes no top padding, so
-           this is most of the gap above the promo content. Vertical values
-           carry half of the 50px trim described on .promo-block-section above;
-           the 75px sides are untouched. */
-        padding: 35px 75px 50px;
-    }
-    .promo-container.layout-left { flex-direction: row-reverse; }
-    .promo-container.layout-top { flex-direction: column; text-align: center; }
-    .promo-content { flex: 1; }
-    .promo-image-box { flex: 1; border-radius: var(--radius-surface, 14px); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-    .promo-image-box img { width: 100%; height: auto; display: block; }
-    
+    /* The Promo Block's styles moved to assets/css/main.css when the block
+       was shared with the Knowledgebase template, which does not load this
+       inline sheet. Nothing else in the theme defines a .promo-* selector. */
+
     /* The .pathway-tiles-section overlap rules that used to live here went with
        the retired 'pathway' (Who Am I? tiles) section — nothing emits that
        class any more. */
 
-    @media (max-width: 768px) {
-        /* 75px each side leaves too little room for the copy on a phone. */
-        .promo-container { flex-direction: column !important; text-align: center; gap: 30px; padding: 36px 24px; }
-        .promo-image-box { width: 100%; }
-    }
+
 </style>
 
     <?php
@@ -541,64 +510,10 @@ body {
                 break;
 
             case 'promo':
-                if (vance_get_theme_mod('vance_promo_show', false)) :
-                    $promo_h = vance_get_theme_mod('vance_promo_heading', 'Experience the Hub');
-                    $promo_t = vance_get_theme_mod('vance_promo_text', '');
-                    $promo_img = vance_get_theme_mod('vance_promo_image');
-                    $promo_bg = vance_get_theme_mod('vance_promo_bg_color', '#F8FAFC');
-                    $promo_txt_c = vance_get_theme_mod('vance_promo_text_color', '#0F172A');
-                    $promo_btn_t = vance_get_theme_mod('vance_promo_button_text', 'Get Started Now');
-                    $promo_btn_l = vance_get_theme_mod('vance_promo_button_link', wp_registration_url());
-                    $promo_w = vance_get_theme_mod('vance_promo_width', 'container');
-                    $promo_l = vance_get_theme_mod('vance_promo_layout', 'right');
-
-                    // Optional border. Scope mirrors the Width control: 'full'
-                    // outlines the full-bleed band, 'container' the inner card.
-                    $promo_border_decl = '';
-                    if ( vance_get_theme_mod('vance_promo_border_enable', false) ) {
-                        $promo_bw = absint( vance_get_theme_mod('vance_promo_border_width', 1) );
-                        $promo_bs = vance_get_theme_mod('vance_promo_border_style', 'solid');
-                        if ( ! in_array( $promo_bs, array('solid','dashed','dotted','double'), true ) ) { $promo_bs = 'solid'; }
-                        $promo_bc = vance_get_theme_mod('vance_promo_border_color', '#e2e8f0');
-                        if ( $promo_bw > 0 ) {
-                            $promo_border_decl = ' border: ' . $promo_bw . 'px ' . esc_attr($promo_bs) . ' ' . esc_attr($promo_bc) . ';';
-                        }
-                    }
-                    $promo_border_scope = vance_get_theme_mod('vance_promo_border_scope', 'container');
-                    $promo_border_full  = ( $promo_border_scope === 'full' ) ? $promo_border_decl : '';
-                    $promo_border_inner = ( $promo_border_scope !== 'full' ) ? $promo_border_decl : '';
-
-                    // Inner container styling: border (when scoped here) plus
-                    // the optional container background colour. Blank colour =
-                    // transparent, so the section band shows through as before.
-                    $promo_inner_style = $promo_border_inner;
-                    $promo_container_bg = vance_get_theme_mod('vance_promo_container_bg_color', '');
-                    if ( $promo_container_bg !== '' ) {
-                        $promo_inner_style .= ' background-color: ' . esc_attr($promo_container_bg) . ';';
-                    }
-                    // Omit the attribute entirely when nothing is set, so the
-                    // markup is unchanged for sites using neither.
-                    $promo_inner_style = trim( $promo_inner_style );
-                    $promo_inner_attr  = $promo_inner_style !== '' ? ' style="' . $promo_inner_style . '"' : '';
-                    ?>
-    <section class="promo-block-section" style="background-color: <?php echo esc_attr($promo_bg); ?>; color: <?php echo esc_attr($promo_txt_c); ?>;<?php echo $promo_border_full; ?>">
-        <div class="<?php echo $promo_w === 'container' ? 'container' : 'container-fluid'; ?>">
-            <div class="promo-container layout-<?php echo esc_attr($promo_l); ?>"<?php echo $promo_inner_attr; ?>>
-                <div class="promo-content">
-                    <h2 style="font-family: 'Outfit', sans-serif; font-size: 38px; font-weight: 800; margin-bottom: 24px; color: inherit;"><?php echo esc_html($promo_h); ?></h2>
-                    <div style="font-size: 18px; line-height: 1.6; opacity: 0.9; margin-bottom: 32px;"><?php echo wpautop(esc_html($promo_t)); ?></div>
-                    <a href="<?php echo esc_url($promo_btn_l); ?>" class="btn btn-primary" style="background: var(--primary-color); color: white; padding: 14px 40px; font-weight: 800;"><?php echo esc_html($promo_btn_t); ?></a>
-                </div>
-                <?php if ($promo_img) : ?>
-                <div class="promo-image-box">
-                    <img src="<?php echo esc_url($promo_img); ?>" alt="Promo">
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </section>
-                    <?php
-                endif;
+                // Markup and settings live in inc/promo-block.php so the
+                // Knowledgebase template can render the same block from its own
+                // vance_kbpromo_* keys. The visibility check moved in with it.
+                vance_render_promo_home();
                 break;
 
             case 'cats':

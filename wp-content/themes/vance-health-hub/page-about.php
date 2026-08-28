@@ -679,6 +679,10 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     background: rgba(120,191,191,.18);
     border: 1px solid rgba(120,191,191,.35);
     color: var(--vab-teal-soft);
+    /* The hero eyebrow drops off --radius-pill onto the control step so it
+       matches .tag-label, the equivalent pill in the contact-us hero. The
+       lighter .vabout-pill further down the page keeps its full round. */
+    border-radius: var(--radius-control, 6px);
 }
 
 /* ---------- Buttons ---------- */

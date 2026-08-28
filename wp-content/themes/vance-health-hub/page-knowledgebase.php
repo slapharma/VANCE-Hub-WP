@@ -548,6 +548,15 @@ $kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside
 		</div>
 	</section>
 
+	<?php
+	// Knowledgebase Promo Block + Prime Block. Each is called at all three
+	// slots and renders only in the one matching its own "Position on the
+	// page" setting, so an admin can move either without touching this file.
+	// Same call-at-every-slot pattern as vance_render_prime_block_categories().
+	if ( function_exists( 'vance_render_promo_knowledgebase' ) ) { vance_render_promo_knowledgebase( 'below_hero' ); }
+	if ( function_exists( 'vance_render_prime_block_knowledgebase' ) ) { vance_render_prime_block_knowledgebase( 'below_hero' ); }
+	?>
+
 	<!-- INTRO -->
 	<section class="kb-lobby-intro">
 		<div class="container">
@@ -562,6 +571,15 @@ $kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside
 			</div>
 		</div>
 	</section>
+
+	<?php
+	// Knowledgebase Promo Block + Prime Block. Each is called at all three
+	// slots and renders only in the one matching its own "Position on the
+	// page" setting, so an admin can move either without touching this file.
+	// Same call-at-every-slot pattern as vance_render_prime_block_categories().
+	if ( function_exists( 'vance_render_promo_knowledgebase' ) ) { vance_render_promo_knowledgebase( 'below_intro' ); }
+	if ( function_exists( 'vance_render_prime_block_knowledgebase' ) ) { vance_render_prime_block_knowledgebase( 'below_intro' ); }
+	?>
 
 	<!-- BLOCKS -->
 	<section class="kb-lobby-blocks">
@@ -650,6 +668,15 @@ $kb_peek_label = vance_get_theme_mod( 'vance_kblobby_peek_label', 'Latest inside
 			endif;
 		endwhile;
 	endif;
+	?>
+
+	<?php
+	// Knowledgebase Promo Block + Prime Block. Each is called at all three
+	// slots and renders only in the one matching its own "Position on the
+	// page" setting, so an admin can move either without touching this file.
+	// Same call-at-every-slot pattern as vance_render_prime_block_categories().
+	if ( function_exists( 'vance_render_promo_knowledgebase' ) ) { vance_render_promo_knowledgebase( 'above_footer' ); }
+	if ( function_exists( 'vance_render_prime_block_knowledgebase' ) ) { vance_render_prime_block_knowledgebase( 'above_footer' ); }
 	?>
 
 </main>

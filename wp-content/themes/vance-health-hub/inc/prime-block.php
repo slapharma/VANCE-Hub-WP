@@ -928,6 +928,38 @@ function vance_render_prime_block_categories( $slot = 'below_promo' ) {
 	) );
 }
 
+/**
+ * Prime Block Knowledgebase — one configured block on the Knowledgebase page.
+ *
+ * Same shape as vance_render_prime_block_categories(): gated behind its own
+ * opt-in checkbox, and the template calls it once per placement slot so it
+ * renders in the slot matching "Position on the page" and bails in the others.
+ * Slots are the Knowledgebase template's own, so it shares
+ * vance_kb_page_placement_choices() with the Knowledgebase promo block rather
+ * than the archive's vance_prime_block_placement_choices().
+ *
+ * @param string $slot Which call site this is; see vance_kb_page_placement_choices().
+ */
+function vance_render_prime_block_knowledgebase( $slot = 'below_intro' ) {
+	if ( ! vance_get_theme_mod( 'vance_pbk_show', false ) ) {
+		return;
+	}
+
+	$placement = vance_get_theme_mod( 'vance_pbk_placement', 'below_intro' );
+	if ( ! function_exists( 'vance_kb_page_placement_choices' )
+		|| ! array_key_exists( $placement, vance_kb_page_placement_choices() ) ) {
+		$placement = 'below_intro';
+	}
+	if ( $placement !== $slot ) {
+		return;
+	}
+
+	vance_render_prime_block( vance_prime_block_vals_for_prefix(
+		'vance_pbk_',
+		'vance-prime-block-knowledgebase'
+	) );
+}
+
 // ============================================================================
 // Registry — the two homepage instances become orderable sections. The
 // Categories instance is NOT registered: it's called directly from the archive
