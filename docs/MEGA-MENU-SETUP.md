@@ -100,12 +100,19 @@ panel is unaffected.
 
 | Pair | Canonical | Note |
 |---|---|---|
-| `/gastro-recipies/` · `/gastro-meal-planner/` | **`/gastro-recipies/`** | Byte-identical content on two URLs. Matches `page-gastro-recipies.php`. |
-| `/gastro-health-survey/` · `/healthcare-quiz/` | **`/gastro-health-survey/`** | Also identical. Matches the label on `/free-health-tools/`. |
+| `/gastro-recipies/` · `/gastro-meal-planner/` | **`/gastro-meal-planner/`** | Byte-identical content on two URLs. The planner (id 3293) has the template assigned, is newer, and carries all 18 internal links in the theme; `/gastro-recipies/` (id 767) carries none. |
+| `/gastro-health-survey/` · `/healthcare-quiz/` | **`/gastro-health-survey/`** | Not actually a duplicate — `/healthcare-quiz/` is a retired slug of the same page and already 301'd before this work. |
 
 Both templates declare a `Template Name:` header, so they are assigned in the
 page editor rather than bound to the slug — redirecting the loser is safe and
 will not change which template renders.
+
+> An earlier draft of this table named `/gastro-recipies/` as canonical, on the
+> reasoning that it "matches the template". That was wrong: the template FILE is
+> `page-gastro-recipies.php`, but the file name is a coincidence — the meal
+> planner is the page that actually has that template assigned, and every
+> internal link points at it. Recorded here because the wrong call would have
+> 301'd the live page onto the stale one.
 
 The other five "pairs" needed no decision: one side of each was simply blank.
 
@@ -130,34 +137,33 @@ THE HUB                                      [custom link, Disable link]
 ├─ Start here                                [custom link, Disable link]
 │  ├─ Get Started                            /get-started-today/
 │  ├─ How to Use the Hub                     /how-to-use-the-hub/
-│  ├─ User Guide                             /user-guide/
 │  └─ Create an Account                      /register/
 ├─ Free Health Tools                         /free-health-tools/
 │  ├─ Malnutrition Calculator                /malnutrition-calculator/
 │  ├─ Gastro Health Survey                   /gastro-health-survey/
-│  └─ Recipes & Meal Planner                 /gastro-recipies/
+│  └─ Recipes & Meal Planner                 /gastro-meal-planner/
+├─ Patient Downloads                         /user-guide/
+│  ├─ User Guide                             /user-guide/
+│  ├─ IBD Travel Guide                       [placeholder, Disable link]
+│  └─ Infographics                           [placeholder, Disable link]
 ├─ Your Account                              /dashboard/
 │  ├─ My Dashboard                           /dashboard/
 │  └─ My Notes                               /my-notes/
-└─ [widget] CTA: Ask VANCE-Ai
 │
 ├─ ROW 2 ─────────────────────────────────────────────────────────────
-├─ For Professionals                         /healthcare-professionals/
-│  ├─ HCP Hub                                /healthcare-professionals/
-│  ├─ Clinical Data Reviews                  /category/content-clinical-reviews/
-│  └─ Webinars & Courses                     /webinars-and-courses/
 ├─ Vance Medical                             /about-us/
 │  ├─ Who We Are                             /about-us/
 │  ├─ Our Heritage                           /our-heritage/
 │  └─ Contact Us                             /contact-us/
-└─ [widget] CTA: Register as a practitioner
+└─ [widget] CTA: Ask VANCE-Ai                (9 wide, renders as a banner)
 
 KNOWLEDGEBASE                                /knowledgebase/
 ├─ Browse the library                        /knowledgebase/
 │  ├─ All Articles                           /knowledgebase/
 │  ├─ Gastro Health Explained                /gastro-health-explained/
 │  ├─ Webinars & Courses                     /webinars-and-courses/
-│  └─ Recipes & Meal Planner                 /gastro-recipies/
+│  ├─ Recipes & Meal Planner                 /gastro-meal-planner/
+│  └─ View all gastro conditions             /gastro-health-explained/
 ├─ By content type                           [custom link, Disable link]
 │  ├─ Gastro Living Insights                 /category/content-gastro-living/
 │  ├─ Gastro Health News                     /category/content-healthcare-news/
@@ -193,14 +199,16 @@ For each of the three top-level items:
 
 | Panel | Grid (of 12) | Cells |
 |---|---|---|
-| THE HUB — row 1 | 3 · 3 · 3 · 3 | Start here · Free Health Tools · Your Account · **CTA widget** |
-| THE HUB — row 2 | 3 · 3 · 6 | For Professionals · Vance Medical · **CTA widget** |
+| THE HUB — row 1 | 3 · 3 · 3 · 3 | Start here · Free Health Tools · Patient Downloads · Your Account |
+| THE HUB — row 2 | 3 · 9 | Vance Medical · **CTA widget** |
 | KNOWLEDGEBASE | 3 · 3 · 6 | Browse the library · By content type · **Featured widget** |
 | CONDITIONS | 12 | **Tiles widget** |
 
-THE HUB carries two CTAs because it now serves two audiences — the second row is
-the only conversion path clinicians have left in the header. `nav-mega.css`
-draws a hairline divider between rows automatically.
+Both rows total 12. THE HUB carries one CTA: the clinician rail was removed on
+2026-08-28 with the For Professionals column, since the site is focusing on
+patients. A CTA spanning 8+ columns lays itself out horizontally as a banner
+rather than a tall rail — the widget reads its own span, so there is no setting
+to change.
 
 ---
 
@@ -232,7 +240,7 @@ Available icons: `sparkles, organ, pulse, drop, flask, clipboard, ribbon, book,
 quiz, calculator, leaf, shield, users, stethoscope, play, grid, note, mail, map,
 arrow`. An unrecognised name renders the tile with no icon rather than breaking.
 
-### THE HUB, row 1 → `Hub Nav: CTA Rail`
+### THE HUB → `Hub Nav: CTA Rail`
 
 | Field | Value |
 |---|---|
@@ -243,16 +251,21 @@ arrow`. An unrecognised name renders the tile with no icon rather than breaking.
 | Button URL | `/ask-ai/` |
 | Button icon | `sparkles` |
 
-### THE HUB, row 2 → `Hub Nav: CTA Rail`
+### Patient Downloads — placeholder rows
 
-| Field | Value |
-|---|---|
-| Eyebrow | `For clinicians` |
-| Headline | `Give your patients somewhere reliable to go` |
-| Supporting line | `Register a practitioner account to share tools, track referrals and access the clinical library in full.` |
-| Button label | `Create a practitioner account` |
-| Button URL | `/register/` |
-| Button icon | `shield` |
+Only the User Guide exists today. `IBD Travel Guide` and `Infographics` are
+placeholders: ordinary menu items with Max Mega Menu's per-item **Disable link**
+ticked, so they render as plain text with no `href` at all. `nav-mega.css` greys
+them and appends a "Soon" chip.
+
+They are deliberately **not** links to stub pages. That is exactly how this site
+accumulated the blank pages listed in §0, and a menu that advertises an empty
+page is worse than one that says "soon".
+
+To promote one as its asset lands, replace the `vh_soon(...)` call in
+`tools/build-mega-menu.php` with a `vh_link(..., array( 'path' => '<slug>' ))`
+and re-run the script — or, in the admin, point the item at the new page and
+untick **Disable link**.
 
 ### KNOWLEDGEBASE → `Hub Nav: Featured Articles`
 
