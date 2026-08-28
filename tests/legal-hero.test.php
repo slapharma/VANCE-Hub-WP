@@ -470,6 +470,25 @@ check( 'the Complianz cookie grid is allowed to break long names',
     preg_match( '#\.cookies-per-purpose > \*\s*\{[^}]*overflow-wrap: anywhere#s', $css ) === 1 );
 
 /*
+ * Complianz sets its type scale on an ID, so `.legal-wrap p` loses to it on
+ * specificity and the Cookie Policy was set smaller than its four siblings.
+ * The override has to STAY id-qualified to keep winning, and its size has to
+ * stay in step with `.legal-wrap p` -- a size changed in one place and not the
+ * other is invisible until the five documents are put side by side.
+ */
+preg_match( '#\.legal-wrap p \{[^}]*font-size: ([\d.]+)px#s', $css, $shared_p );
+preg_match(
+    '#(\.legal-wrap \#cmplz-document [a-z,\s\#a-z-]*?)\{[^}]*font-size: ([\d.]+)px#s',
+    $css, $cmplz_p
+);
+check( 'the Complianz type scale is overridden at all', isset( $cmplz_p[2] ) );
+check( 'the override is id-qualified, or it cannot outrank the plugin',
+    isset( $cmplz_p[1] ) && strpos( $cmplz_p[1], '#cmplz-document' ) !== false );
+check( 'and its body size is in step with .legal-wrap p',
+    isset( $shared_p[1], $cmplz_p[2] ) ? $cmplz_p[2] : 'missing',
+    isset( $shared_p[1] ) ? $shared_p[1] : 'missing' );
+
+/*
  * ORDER. `.legal-contact-box p`, `.legal-emergency-box p` and
  * `.legal-disclaimer-box p` all collide with `.legal-wrap p` at EQUAL
  * specificity (0,1,1), so source order alone decides the winner, and the box

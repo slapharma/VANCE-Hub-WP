@@ -105,6 +105,16 @@ MUTANTS = [
      ".legal-wrap .cookies-per-purpose > * {\n    overflow-wrap: anywhere;",
      ".legal-wrap .cookies-per-purpose > * {\n    overflow-wrap: break-word;"),
 
+    (RENDERER,
+     "the Complianz type override loses its id, so the plugin outranks it",
+     ".legal-wrap #cmplz-document p,\n.legal-wrap #cmplz-document li,\n.legal-wrap #cmplz-document td {",
+     ".legal-wrap p,\n.legal-wrap li,\n.legal-wrap td {"),
+
+    (RENDERER,
+     "the override drifts out of step with .legal-wrap p",
+     ".legal-wrap #cmplz-document td {\n    font-size: 15.5px;",
+     ".legal-wrap #cmplz-document td {\n    font-size: 14px;"),
+
     (TERMS,
      "a template stops printing the shared block early, so the box rules lose",
      "require_once get_template_directory() . '/inc/legal-hero.php';\nvance_legal_hero_styles();",

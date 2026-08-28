@@ -570,6 +570,25 @@ function vance_legal_hero_styles() {
     min-width: 0;
 }
 
+/* Complianz also sets its own type scale, and it sets it on an ID:
+   `#cmplz-document p, #cmplz-document li, #cmplz-document td` at 14px. That is
+   specificity (1,0,1) against `.legal-wrap p`'s (0,1,1), so the plugin won and
+   the Cookie Policy was set a point and a half smaller than the four documents
+   beside it -- the same mismatch as the width, one level down.
+
+   Matched at (1,1,1) rather than reached for with !important, and the values
+   are deliberately the same three `.legal-wrap p` sets a few rules above;
+   tests/legal-hero.test.php asserts the two stay in step, because a font-size
+   changed in one place and not the other is invisible until you put the five
+   documents side by side. */
+.legal-wrap #cmplz-document p,
+.legal-wrap #cmplz-document li,
+.legal-wrap #cmplz-document td {
+    font-size: 15.5px;
+    line-height: 1.85;
+    color: #4a5568;
+}
+
 /* --- Spacing ------------------------------------------------------------- */
 
 /* The four bespoke templates open their body with .legal-wrap, which carries
