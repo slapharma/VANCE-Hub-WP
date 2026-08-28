@@ -138,7 +138,7 @@ while ( have_posts() ) :
 						</button>
 					</div>
 
-					<div class="va-article-disclaimer" style="margin-top:40px;padding:20px 24px;background:#e4def4;border-left:4px solid #6B489E;font-size:14px;line-height:1.75;color:#475569;">
+					<div class="va-article-disclaimer" style="margin-top:40px;padding:20px 24px;background:#e4def4;border-left:4px solid #8e7dbe;font-size:14px;line-height:1.75;color:#475569;">
 						<strong style="color:var(--secondary-color);">For general information only.</strong> This recipe is for general information and is not a substitute for professional medical or dietary advice. Always talk to your GP, dietitian or healthcare team before making significant changes to your diet, especially if you are managing a gastrointestinal condition.
 					</div>
 				</div>
