@@ -61,7 +61,34 @@ if ( empty( $cats ) ) {
 }
 ?>
 <style>
-    .orange-icon { filter: brightness(0) saturate(100%) invert(35%) sepia(97%) saturate(2283%) hue-rotate(3deg) brightness(101%) contrast(106%); }
+    /* Category icons, painted #008080 to match the button border and label.
+     *
+     * A CSS mask rather than the filter chain this used to carry. The old rule
+     * was the usual brightness/sepia/saturate/hue-rotate stack that approximates
+     * a target colour from black -- it lands NEAR a colour, never exactly on
+     * one, and retuning it for teal would mean solving for six values and still
+     * being a few points out. Masking paints the glyph with a real
+     * background-color instead, so it is #008080 by construction.
+     *
+     * Safe here because every icon is an SVG (vance_get_category_icon_url())
+     * drawn on transparency: the mask keys off alpha, so it takes the shape and
+     * discards whatever colour the file itself carries.
+     *
+     * front-page.php also emits .orange-icon, but with an inline
+     * `filter: brightness(0) invert(1)` that overrides any class rule, so its
+     * icons are unaffected either way. */
+    .cat-mini-icon {
+        display: block;
+        width: 12px;
+        height: 12px;
+        background-color: #008080;
+        -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+                mask-position: center;
+        -webkit-mask-size: contain;
+                mask-size: contain;
+    }
 </style>
 <?php if ( $vance_subcat_parent > 0 ) : ?>
 <style>
@@ -127,8 +154,11 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 $text_size  = ( $vance_subcat_parent > 0 ) ? "13px" : "12px";
                 $text_style = "font-size: {$text_size}; font-weight: 600; color: #008080; margin: 0; line-height: 1.2; overflow: hidden; text-overflow: ellipsis;";
 
-                $icon_container_style = "width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: var(--radius-control, 6px);";
-                $icon_img_style = "width: 12px; height: 12px; object-fit: contain;";
+                // The chip was #f1f5f9 grey, which was the last off-palette
+                // element inside an otherwise all-teal button. A 10% tint of the
+                // same teal keeps the chip's grouping job without introducing a
+                // second colour.
+                $icon_container_style = "width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,128,128,0.10); border-radius: var(--radius-control, 6px);";
 
                 // The current category still has to be identifiable, so it keeps
                 // a fill -- but a tint of the same teal, and the same #008080
@@ -146,7 +176,8 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                         <?php $cat_icon = $icon ?: vance_get_category_icon_url($cat->name); ?>
                         <div style="<?php echo $icon_container_style; ?>">
                             <?php if ($cat_icon): ?>
-                                <img src="<?php echo esc_url($cat_icon); ?>" alt="" class="orange-icon" style="<?php echo $icon_img_style; ?>">
+                                <?php // Masked span, not an <img>: see .cat-mini-icon above. ?>
+                                <span class="cat-mini-icon" role="img" aria-hidden="true" style="-webkit-mask-image: url('<?php echo esc_url($cat_icon); ?>'); mask-image: url('<?php echo esc_url($cat_icon); ?>');"></span>
                             <?php else: ?>
                                 <div style="font-size: 12px;">📁</div>
                             <?php endif; ?>
