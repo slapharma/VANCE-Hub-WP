@@ -216,9 +216,31 @@ vh_link( $MENU_ID, $c, 'User Guide', array( 'path' => 'user-guide' ) );
 vh_soon( $MENU_ID, $c, 'IBD Travel Guide' );
 vh_soon( $MENU_ID, $c, 'Infographics' );
 
+/*
+ * Your Account — deep links into the dashboard's own tabs.
+ *
+ * Tab slugs are the ones page-dashboard.php actually routes on, taken from
+ * the feature registry in inc/dashboard-features.php and checked against the
+ * live site on 2026-08-28 (all enabled; only `documents` is off). Note
+ * `?tab=calculators` is a legacy alias the template rewrites to `tools`, so
+ * `tools` is the value to link.
+ *
+ * Custom links rather than post_type items: WordPress menu items point at a
+ * post ID and cannot carry a query string, so a page item for /dashboard/
+ * would drop the ?tab= entirely.
+ *
+ * Logged out, page-dashboard.php sends these to the themed /login/ overlay
+ * with redirect_to set to the SAME tab, so signing in lands on the tab that
+ * was clicked. My Notes now routes through the dashboard too — /my-notes/
+ * bounced logged-out visitors to the raw wp-login.php screen instead.
+ */
 $c = vh_col( $MENU_ID, $hub, 'Your Account', array( 'path' => 'dashboard' ), 3, 4 );
-vh_link( $MENU_ID, $c, 'My Dashboard', array( 'path' => 'dashboard' ) );
-vh_link( $MENU_ID, $c, 'My Notes',     array( 'path' => 'my-notes' ) );
+vh_link( $MENU_ID, $c, 'My Dashboard',     array( 'path' => 'dashboard' ) );
+vh_link( $MENU_ID, $c, 'My Tools',         array( 'url' => home_url( '/dashboard/?tab=tools' ) ) );
+vh_link( $MENU_ID, $c, 'My Recipes',       array( 'url' => home_url( '/dashboard/?tab=my-recipes' ) ) );
+vh_link( $MENU_ID, $c, 'My Ai Chats',      array( 'url' => home_url( '/dashboard/?tab=ai-chats' ) ) );
+vh_link( $MENU_ID, $c, 'My Reading List',  array( 'url' => home_url( '/dashboard/?tab=reading-list' ) ) );
+vh_link( $MENU_ID, $c, 'My Notes',         array( 'url' => home_url( '/dashboard/?tab=notes' ) ) );
 
 /*
  * The "For Professionals" column was removed on 2026-08-28: the site is
@@ -342,7 +364,7 @@ say( '--- VERIFY ---' );
  * what it attempted is not a verification.
  */
 $expected = array(
-	'THE HUB'           => array( 'Start here' => 3, 'Free Health Tools' => 3, 'Patient Downloads' => 3, 'Your Account' => 2, 'Vance Medical' => 2 ),
+	'THE HUB'           => array( 'Start here' => 3, 'Free Health Tools' => 3, 'Patient Downloads' => 3, 'Your Account' => 6, 'Vance Medical' => 2 ),
 	'KNOWLEDGEBASE'     => array( 'Browse the library' => 5, 'By content type' => 3 ),
 	'CONDITIONS'        => array(),
 );

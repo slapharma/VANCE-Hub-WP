@@ -148,7 +148,11 @@ THE HUB                                      [custom link, Disable link]
 │  └─ Infographics                           [placeholder, Disable link]
 ├─ Your Account                              /dashboard/
 │  ├─ My Dashboard                           /dashboard/
-│  └─ My Notes                               /my-notes/
+│  ├─ My Tools                               /dashboard/?tab=tools
+│  ├─ My Recipes                             /dashboard/?tab=my-recipes
+│  ├─ My Ai Chats                            /dashboard/?tab=ai-chats
+│  ├─ My Reading List                        /dashboard/?tab=reading-list
+│  └─ My Notes                               /dashboard/?tab=notes
 │
 ├─ ROW 2 ─────────────────────────────────────────────────────────────
 ├─ Vance Medical                             /about-us/
@@ -249,6 +253,36 @@ arrow`. An unrecognised name renders the tile with no icon rather than breaking.
 | Button label | `Start a chat` |
 | Button URL | `/ask-ai/` |
 | Button icon | `sparkles` |
+
+
+### Your Account — dashboard tab links
+
+These are **custom links**, not page items: a WordPress menu item points at a
+post ID and cannot carry a query string, so a page item for `/dashboard/` would
+drop the `?tab=`.
+
+Tab slugs come from the feature registry in `inc/dashboard-features.php`, not
+from guesswork. Checked live 2026-08-28 — all of the linked tabs are enabled;
+only `documents` is off. `?tab=calculators` is a legacy alias that
+`page-dashboard.php` rewrites to `tools`, so `tools` is the value to link.
+
+| Menu label | Tab slug | Dashboard's own label |
+|---|---|---|
+| My Tools | `tools` | My Tools |
+| My Recipes | `my-recipes` | My Recipes |
+| My Ai Chats | `ai-chats` | **My VANCE-Ai** |
+| My Reading List | `reading-list` | My Reading List |
+| My Notes | `notes` | My Notes |
+
+The "My Ai Chats" label differs from the dashboard's own "My VANCE-Ai". Either
+rename the menu item or change the label in Appearance → Customize → Member
+Dashboard so the two agree.
+
+**Logged out**, `page-dashboard.php` redirects to the themed `/login/` overlay
+with `redirect_to` set to the *same tab*, so signing in lands on the tab that
+was clicked. That gate previously hard-coded `/dashboard/`, discarding the tab;
+fixed 2026-08-28. My Notes routes through the dashboard for the same reason —
+`/my-notes/` sent logged-out visitors to the raw `wp-login.php` screen.
 
 ### Patient Downloads — placeholder rows
 

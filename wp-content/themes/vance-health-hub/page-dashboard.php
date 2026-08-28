@@ -12,7 +12,25 @@ $is_logged_in = is_user_logged_in();
 // rendered its own in-page "Login Hero" at its own URL with no redirect_to
 // anywhere, so a sign-in from here had no guaranteed way back to /dashboard/.
 if ( ! $is_logged_in ) {
-    wp_safe_redirect( add_query_arg( 'redirect_to', urlencode( home_url( '/dashboard/' ) ), home_url( '/login/' ) ) );
+    /*
+     * Carry ?tab= through the login round trip.
+     *
+     * This previously hard-coded home_url('/dashboard/') as the redirect_to
+     * target, which threw away the query string: a logged-out visitor who
+     * clicked "My Recipes" signed in and landed on the dashboard home with no
+     * clue why. Measured 2026-08-28 — every /dashboard/?tab=… request came
+     * back as redirect_to=…%2Fdashboard%2F with the tab gone.
+     *
+     * Only `tab` is carried, sanitised, and only ever appended to this site's
+     * own /dashboard/ URL — the destination is never built from user input, so
+     * there is nothing here to point at another host.
+     */
+    $vance_tab  = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+    $vance_dest = $vance_tab
+        ? add_query_arg( 'tab', $vance_tab, home_url( '/dashboard/' ) )
+        : home_url( '/dashboard/' );
+
+    wp_safe_redirect( add_query_arg( 'redirect_to', urlencode( $vance_dest ), home_url( '/login/' ) ) );
     exit;
 }
 
