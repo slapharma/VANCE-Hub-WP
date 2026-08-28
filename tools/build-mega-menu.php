@@ -168,7 +168,7 @@ vh_link( $MENU_ID, $c, 'Create an Account',  array( 'path' => 'register' ) );
 $c = vh_col( $MENU_ID, $hub, 'Free Health Tools', array( 'path' => 'free-health-tools' ), 3, 1 );
 vh_link( $MENU_ID, $c, 'Malnutrition Calculator', array( 'path' => 'malnutrition-calculator' ) );
 vh_link( $MENU_ID, $c, 'Gastro Health Survey',    array( 'path' => 'gastro-health-survey' ) );
-vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-recipies' ) );
+vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-meal-planner' ) );
 
 $c = vh_col( $MENU_ID, $hub, 'Your Account', array( 'path' => 'dashboard' ), 3, 2 );
 vh_link( $MENU_ID, $c, 'My Dashboard', array( 'path' => 'dashboard' ) );
@@ -194,7 +194,7 @@ $c = vh_col( $MENU_ID, $kb, 'Browse the library', array( 'path' => 'knowledgebas
 vh_link( $MENU_ID, $c, 'All Articles',            array( 'path' => 'knowledgebase' ) );
 vh_link( $MENU_ID, $c, 'Gastro Health Explained', array( 'path' => 'gastro-health-explained' ) );
 vh_link( $MENU_ID, $c, 'Webinars & Courses',      array( 'path' => 'webinars-and-courses' ) );
-vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-recipies' ) );
+vh_link( $MENU_ID, $c, 'Recipes & Meal Planner',  array( 'path' => 'gastro-meal-planner' ) );
 
 $c = vh_col( $MENU_ID, $kb, 'By content type', array( 'url' => '#' ), 3, 1, true );
 vh_link( $MENU_ID, $c, 'Gastro Living Insights', array( 'cat' => 'content-gastro-living' ) );

@@ -42,6 +42,37 @@ free feature set. There is no `megamenu-pro` on this server and none is needed.
 
 ---
 
+## Redirects (added 28 August 2026)
+
+Five 301s live in `vance_redirect_superseded_pages()` in `functions.php`,
+alongside the older `vance_redirect_legacy_quiz_slug()`:
+
+| From | To | Why |
+|---|---|---|
+| `/gastro-recipies/` | `/gastro-meal-planner/` | Identical tool, two URLs. The planner (id 3293) has the template assigned, is newer, and carries all 18 internal links; this one (id 767) carries none. |
+| `/meal-plan/` | `/gastro-meal-planner/` | Blank page |
+| `/take-our-survey/` | `/gastro-health-survey/` | Blank page |
+| `/take-a-quiz-2/` | `/gastro-health-survey/` | Blank page; the quiz is the survey |
+| `/clinical-reviews-2/` | `/category/content-clinical-reviews/` | Blank static twin of a live archive |
+
+`/healthcare-quiz/` already 301'd to `/gastro-health-survey/` before this work —
+it is a retired slug of the same page, not a duplicate.
+
+Two follow-ups were needed so nothing hops through a redirect:
+
+- Menu items 3462 and 3479 pointed at page 767; repointed to 3293. The build
+  script was updated to match, so a re-run stays canonical.
+- Two theme mods held stale URLs, one of them with a whole customizer-preview
+  session baked into the query string
+  (`vance_promo_button_link`, `vance_hero_slide3_btn1_link`). Both now point
+  straight at `/gastro-health-survey/`.
+
+Verified live: all five sources 301 to the right place, all three targets stay
+200, unrelated pages untouched, query strings preserved, and 0 of the 112 links
+on the homepage now hop.
+
+---
+
 ## 0. Before you start — what the audit found
 
 Every URL in the tree below was fetched from the live site on 2026-08-28 and
