@@ -1,0 +1,403 @@
+<?php
+/**
+ * Renders the five policy-document heroes outside WordPress and asserts on the
+ * real output.
+ *
+ * Same shape as hero-render.test.php: WP stubs, a controllable bag of theme
+ * mods, and assertions against the emitted HTML. Kept in its own file because
+ * inc/legal-hero.php is a separate renderer with no toggle, no Customizer
+ * registration and no shared config with inc/page-hero-spotlight.php — so it
+ * shares none of that suite's fixtures either.
+ *
+ * Every check here must be able to go red. `python mutate-legal.py` breaks the
+ * source on purpose and confirms it does.
+ */
+
+define( 'ABSPATH', true );
+
+$THEME = dirname( __DIR__ ) . '/wp-content/themes/vance-health-hub';
+
+/* ---- the mod bag the stubs read ------------------------------------- */
+$GLOBALS['MODS'] = array();
+function set_mods( array $m ) { $GLOBALS['MODS'] = $m; }
+
+/* ---- WordPress stubs ------------------------------------------------- */
+function vance_get_theme_mod( $key, $default = '' ) {
+    return array_key_exists( $key, $GLOBALS['MODS'] ) ? $GLOBALS['MODS'][ $key ] : $default;
+}
+function get_theme_mod( $key, $default = '' ) { return vance_get_theme_mod( $key, $default ); }
+function get_template_directory() { return $GLOBALS['THEME_DIR']; }
+function get_template_directory_uri() { return 'https://example.test/wp-content/themes/vance-health-hub'; }
+function home_url( $p = '/' ) { return 'https://example.test' . $p; }
+function get_page_by_path( $slug ) { return isset( $GLOBALS['PAGES'][ $slug ] ) ? $slug : null; }
+function get_permalink( $p ) { return 'https://example.test/' . $p . '/'; }
+function esc_attr( $t ) { return htmlspecialchars( (string) $t, ENT_QUOTES ); }
+function esc_html( $t ) { return htmlspecialchars( (string) $t, ENT_QUOTES ); }
+function esc_url( $t ) { return htmlspecialchars( (string) $t, ENT_QUOTES ); }
+function esc_html_e( $t, $d = '' ) { echo esc_html( $t ); }
+function esc_html__( $t, $d = '' ) { return esc_html( $t ); }
+function __( $t, $d = '' ) { return $t; }
+
+$GLOBALS['THEME_DIR'] = $THEME;
+// Every document has a real WP page, so links resolve by slug rather than by
+// the literal-path fallback. Section 5 removes them to exercise the fallback.
+$GLOBALS['PAGES'] = array(
+    'privacy-policy' => 1, 'cookie-policy-uk' => 1, 'terms-of-use' => 1,
+    'medical-disclaimer' => 1, 'accessibility' => 1,
+);
+
+require_once $THEME . '/inc/legal-hero.php';
+
+/* ---- tiny assertion runner ------------------------------------------ */
+$PASS = 0; $FAIL = 0;
+function check( $name, $got, $want = true ) {
+    global $PASS, $FAIL;
+    $ok = ( $want === true ) ? ( $got === true ) : ( $got === $want );
+    if ( $ok ) { $PASS++; echo "  ok   $name\n"; }
+    else {
+        $FAIL++;
+        echo "  FAIL $name\n";
+        echo "       expected: " . var_export( $want, true ) . "\n";
+        echo "       got     : " . var_export( $got, true ) . "\n";
+    }
+}
+function render( $doc, $overrides = array() ) {
+    // The stylesheet is printed once per request behind a static, so a suite
+    // that renders eleven heroes would only see it in the first. Each render
+    // therefore runs in its own process-visible reset: the static cannot be
+    // reached from here, so section 7 asserts on the FIRST render instead and
+    // every other section strips the block before matching.
+    ob_start();
+    vance_render_legal_hero( $doc, $overrides );
+    return ob_get_clean();
+}
+function body( $html ) {
+    // Everything outside the <style> block, so a class name that happens to
+    // appear in a CSS selector cannot be mistaken for emitted markup.
+    return preg_replace( '#<style\b.*?</style>#s', '', $html );
+}
+function tags_balanced( $html ) {
+    $void = array( 'br','img','input','hr','meta','link','path','circle','rect','source','stop','use' );
+    $stack = array();
+    preg_match_all( '#<(/?)([a-zA-Z][\w-]*)([^>]*?)(/?)>#', $html, $m, PREG_SET_ORDER );
+    foreach ( $m as $t ) {
+        $name = strtolower( $t[2] );
+        if ( in_array( $name, $void, true ) || $t[4] === '/' ) { continue; }
+        if ( $t[1] === '/' ) {
+            if ( ! $stack || array_pop( $stack ) !== $name ) { return "mismatch at </$name>"; }
+        } else { $stack[] = $name; }
+    }
+    return $stack ? 'unclosed: ' . implode( ',', $stack ) : true;
+}
+
+$DOCS = array_keys( vance_legal_hero_docs() );
+
+/* ===================================================================== */
+echo "\n=== 0. A PRISTINE site: nothing saved at all ===\n";
+/*
+ * The bug this exists for is the one that shipped the About hero empty:
+ * get_theme_mod() answers an unsaved read with the default the CALLER passes,
+ * so a '' default renders an empty hero on the live site while looking
+ * perfectly correct in the Customizer preview. This hero reads exactly one
+ * theme mod -- the contact email -- but the same rule holds for it.
+ */
+set_mods( array() );
+
+$first = render( 'privacy' );
+check( 'privacy: headline renders',   strpos( $first, 'Privacy Policy' ) !== false );
+check( 'privacy: eyebrow renders',    strpos( $first, '__eyebrow">Privacy<' ) !== false );
+check( 'privacy: intro renders',      strpos( $first, 'right to privacy' ) !== false );
+check( 'privacy: card email is the theme default, not empty',
+    strpos( $first, 'mailto:team@vancemedicalfoods.co.uk' ) !== false );
+check( 'privacy: no empty mailto: anywhere', strpos( $first, 'mailto:"' ) === false );
+
+foreach ( $DOCS as $doc ) {
+    $h = body( render( $doc ) );
+    $d = vance_legal_hero_docs()[ $doc ];
+    check( "$doc: headline is not empty", strpos( $h, '__title">' . esc_html( $d['title'] ) . '<' ) !== false );
+    check( "$doc: intro is not empty",    trim( $d['intro'] ) !== '' && strpos( $h, esc_html( $d['intro'] ) ) !== false );
+    check( "$doc: eyebrow is not empty",  strpos( $h, '__eyebrow">' . esc_html( $d['eyebrow'] ) . '<' ) !== false );
+}
+
+/* ===================================================================== */
+echo "\n=== 1. The copy is the copy the dark heroes carried ===\n";
+/*
+ * Switching hero design must not silently reword a legal document. Each
+ * headline below is asserted against the literal the template rendered before
+ * this hero existed. The three intros that were deliberately CHANGED are
+ * listed as changes, with the old text asserted GONE so the change stays
+ * deliberate rather than becoming a regression somebody re-introduces.
+ */
+$carried_titles = array(
+    'privacy'       => 'Privacy Policy',
+    'terms'         => 'Terms of Use',
+    'disclaimer'    => 'Medical Disclaimer',
+    'accessibility' => 'Accessibility Statement',
+    'cookies'       => 'Cookie Policy (UK)',
+);
+foreach ( $carried_titles as $doc => $title ) {
+    check( "$doc: headline is unchanged from the dark hero",
+        vance_legal_hero_docs()[ $doc ]['title'], $title );
+}
+
+check( 'privacy: intro is carried verbatim',
+    strpos( vance_legal_hero_docs()['privacy']['intro'], 'collect, use, and safeguard your information' ) !== false );
+check( 'disclaimer: intro is carried verbatim',
+    vance_legal_hero_docs()['disclaimer']['intro'],
+    'Please read this before using Vance Medical Hub, its articles, tools or VANCE-Ai.' );
+
+// The three deliberate changes.
+check( 'terms: the pre-rebrand "Gastro Health Hub" is gone',
+    stripos( vance_legal_hero_docs()['terms']['intro'], 'Gastro Health Hub' ) === false );
+check( 'terms: and the intro names Vance Medical Hub instead',
+    strpos( vance_legal_hero_docs()['terms']['intro'], 'Vance Medical Hub' ) !== false );
+check( 'accessibility: intro still opens with the sentence it carried',
+    strpos( vance_legal_hero_docs()['accessibility']['intro'], 'We want everyone to be able to use Vance Medical Hub.' ) === 0 );
+check( 'cookies: has an intro of its own (the generic hero had none)',
+    strlen( vance_legal_hero_docs()['cookies']['intro'] ) > 40 );
+
+/* ===================================================================== */
+echo "\n=== 2. The band: always the other four, never itself ===\n";
+foreach ( $DOCS as $doc ) {
+    $cells = vance_legal_hero_siblings( $doc );
+    check( "$doc: band carries exactly four cells", count( $cells ), 4 );
+
+    $self = vance_legal_hero_docs()[ $doc ];
+    $vals = array_column( $cells, 'value' );
+    check( "$doc: is not sold back to itself", in_array( $self['short'], $vals, true ), false );
+
+    $hrefs = array_column( $cells, 'href' );
+    check( "$doc: every cell has an href", count( array_filter( $hrefs ) ), 4 );
+    check( "$doc: its own URL is not in the band",
+        in_array( 'https://example.test/' . $self['slug'] . '/', $hrefs, true ), false );
+}
+
+// Four cells is what the 2x2 CSS depends on -- an odd count would put a
+// hairline down the right of the last row.
+check( 'the registry holds five documents, which is what makes the band four',
+    count( vance_legal_hero_docs() ), 5 );
+
+/* ===================================================================== */
+echo "\n=== 3. The markup the stylesheet is written against ===\n";
+$h = body( render( 'terms' ) );
+
+check( 'section carries the shared spotlight class',
+    strpos( $h, 'class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--legal' ) !== false );
+check( 'and the per-document modifier',
+    strpos( $h, 'vhh-hero-spotlight--terms"' ) !== false );
+check( 'the band carries the lines markup class',
+    strpos( $h, 'vhh-hero-spotlight__slot--lines' ) !== false );
+check( 'and the docs modifier the 2x2 rule targets',
+    strpos( $h, 'vhh-hero-spotlight__slot--docs' ) !== false );
+check( 'the band does NOT borrow the free-tools modifier',
+    strpos( $h, 'vhh-hero-spotlight__slot--tools' ) === false );
+check( 'a motif is emitted where the photograph would be',
+    strpos( $h, 'vhh-hero-spotlight__motif' ) !== false );
+check( 'and NO photograph is', strpos( $h, 'vhh-hero-spotlight__media' ) === false );
+check( 'no <img> at all — the motif is inline SVG', strpos( $h, '<img' ) === false );
+check( 'the card renders', strpos( $h, 'vhh-hero-spotlight__card"' ) !== false );
+check( 'tags balance', tags_balanced( $h ) );
+
+foreach ( $DOCS as $doc ) {
+    check( "$doc: tags balance", tags_balanced( body( render( $doc ) ) ) );
+}
+
+/* ===================================================================== */
+echo "\n=== 4. No humans, and no photography ===\n";
+/*
+ * The one hard constraint the client set. Asserted structurally rather than by
+ * eye: the renderer must emit no <img>, no background-image, and nothing from
+ * the theme's photograph directories.
+ */
+foreach ( $DOCS as $doc ) {
+    $h = render( $doc );
+    check( "$doc: emits no <img>",            strpos( $h, '<img' ) === false );
+    check( "$doc: emits no background-image", stripos( $h, 'background-image' ) === false );
+    check( "$doc: references no photo asset", stripos( $h, '/assets/img/' ) === false );
+}
+
+/* ===================================================================== */
+echo "\n=== 5. Links resolve by slug, and fall back to a path ===\n";
+$h = body( render( 'privacy' ) );
+check( 'a sibling link resolves through the WP page',
+    strpos( $h, 'https://example.test/terms-of-use/' ) !== false );
+
+// No WP pages at all: every cell must still carry a working href.
+$GLOBALS['PAGES'] = array();
+$h = body( render( 'privacy' ) );
+check( 'with no WP pages, the literal path is used',
+    strpos( $h, 'https://example.test/terms-of-use/' ) !== false );
+check( 'and no cell loses its href', substr_count( $h, '__line" href="' ), 4 );
+$GLOBALS['PAGES'] = array(
+    'privacy-policy' => 1, 'cookie-policy-uk' => 1, 'terms-of-use' => 1,
+    'medical-disclaimer' => 1, 'accessibility' => 1,
+);
+
+/* ===================================================================== */
+echo "\n=== 6. Overrides, the slug lookup, and unknown input ===\n";
+$h = body( render( 'cookies', array( 'title' => 'Cookie Policy (United Kingdom)' ) ) );
+check( 'an override title wins over the registry literal',
+    strpos( $h, 'Cookie Policy (United Kingdom)' ) !== false );
+check( 'and the literal is not ALSO rendered',
+    strpos( $h, '__title">Cookie Policy (UK)<' ) === false );
+
+$h = body( render( 'cookies', array( 'title' => '' ) ) );
+check( 'an EMPTY override falls back to the literal, not to a blank headline',
+    strpos( $h, '__title">Cookie Policy (UK)<' ) !== false );
+
+foreach ( vance_legal_hero_docs() as $key => $d ) {
+    check( "slug lookup: {$d['slug']} => $key", vance_legal_hero_doc_for_slug( $d['slug'] ), $key );
+}
+check( 'slug lookup: an unrelated page is not a document',
+    vance_legal_hero_doc_for_slug( 'about' ), '' );
+check( 'slug lookup: an empty slug is not a document',
+    vance_legal_hero_doc_for_slug( '' ), '' );
+
+ob_start(); vance_render_legal_hero( 'nope' ); $none = ob_get_clean();
+check( 'an unknown document renders nothing', trim( $none ), '' );
+
+/* ===================================================================== */
+echo "\n=== 7. The stylesheet ships, once, and backs what is emitted ===\n";
+/*
+ * $first is the FIRST render this process performed, so it is the one that
+ * carries the <style> block; every later render is expected not to repeat it.
+ */
+check( 'the first render carries the stylesheet',
+    strpos( $first, 'id="vhh-legal-hero-css"' ) !== false );
+check( 'a later render does not repeat it',
+    strpos( render( 'terms' ), 'id="vhh-legal-hero-css"' ) === false );
+
+preg_match( '#<style id="vhh-legal-hero-css">(.*?)</style>#s', $first, $m );
+$css = isset( $m[1] ) ? $m[1] : '';
+check( 'the stylesheet is not empty', strlen( $css ) > 400 );
+check( 'braces balance', substr_count( $css, '{' ), substr_count( $css, '}' ) );
+
+check( 'the motif has a rule',   strpos( $css, '.vhh-hero-spotlight__motif' ) !== false );
+check( 'the band has a 2x2 rule', strpos( $css, 'repeat(2, minmax(0, 1fr))' ) !== false );
+check( 'the 2x2 is scoped above the stacking breakpoint, or it never stacks',
+    preg_match( '#@media \(min-width: 901px\)\s*\{[^@]*?slot--docs#s', $css ) === 1 );
+check( 'the mobile rule restores the top padding main.css zeroes for the photo',
+    preg_match( '#@media \(max-width: 900px\)\s*\{\s*/\*.*?\*/\s*\.vhh-hero-spotlight--legal \{\s*padding: \d+px#s', $css ) === 1 );
+check( 'the card link is coloured',
+    strpos( $css, '.vhh-hero-spotlight__card-text a' ) !== false );
+
+/*
+ * Every class the renderer emits either has a rule in the block above, or one
+ * in main.css, or is a named structural hook. Anything that is none of those
+ * is a class doing nothing -- usually a typo, which is invisible in a browser
+ * because the element simply inherits.
+ *
+ * The hook list is the same one hero-render.test.php keeps, because this hero
+ * mirrors that hero's markup: they are the wrappers the shared stylesheet
+ * addresses through their parents rather than by name.
+ */
+$MAIN = file_get_contents( $THEME . '/assets/css/main.css' );
+$hooks = array(
+    'container',
+    'vhh-hero-spotlight--page',
+    'vhh-hero-spotlight__copy',
+    'vhh-hero-spotlight__slot-wrap',
+    'vhh-hero-spotlight__slot--lines',
+    'vhh-hero-spotlight__card-body',
+);
+// The per-document modifier is a hook for document-specific tweaks; none of
+// the five needs one yet, which is the point of them all looking alike.
+foreach ( $DOCS as $doc ) { $hooks[] = 'vhh-hero-spotlight--' . $doc; }
+
+$emitted = array();
+foreach ( $DOCS as $doc ) {
+    preg_match_all( '#class="([^"]*)"#', body( render( $doc ) ), $cm );
+    foreach ( $cm[1] as $attr ) {
+        foreach ( preg_split( '/\s+/', trim( $attr ) ) as $cls ) {
+            if ( $cls !== '' ) { $emitted[ $cls ] = true; }
+        }
+    }
+}
+$orphans = array();
+foreach ( array_keys( $emitted ) as $cls ) {
+    if ( in_array( $cls, $hooks, true ) ) { continue; }
+    if ( strpos( $css, '.' . $cls ) === false && strpos( $MAIN, '.' . $cls ) === false ) {
+        $orphans[] = $cls;
+    }
+}
+check( 'every emitted class has a rule (bar the named hooks): ' . implode( ',', $orphans ), $orphans, array() );
+
+/* ===================================================================== */
+echo "\n=== 8. The templates really render it ===\n";
+/*
+ * A renderer nothing calls is a renderer that ships dark, and grepping a
+ * template for the call cannot tell the difference between a live statement
+ * and a commented-out one -- a mutation that commented the call out passed a
+ * grep-based version of this section. So the templates are INCLUDED here,
+ * against enough of a WordPress to run, and the assertions are on what they
+ * actually emit.
+ */
+function render_template( $file, $slug = 'some-page', $title = 'Some Page' ) {
+    $GLOBALS['POST']  = array( 'slug' => $slug, 'title' => $title );
+    $GLOBALS['LOOP']  = 1;
+    ob_start();
+    include $GLOBALS['THEME_DIR'] . '/' . $file;
+    return ob_get_clean();
+}
+function get_header( $n = null ) { echo "<!--header-->\n"; }
+function get_footer( $n = null ) { echo "<!--footer-->\n"; }
+function have_posts() { return $GLOBALS['LOOP']-- > 0; }
+function the_post() {}
+function get_the_ID() { return 1; }
+function the_ID() { echo 1; }
+function get_post_field( $field, $id = 0 ) { return $GLOBALS['POST']['slug']; }
+function get_the_title( $id = 0 ) { return $GLOBALS['POST']['title']; }
+function the_title() { echo esc_html( $GLOBALS['POST']['title'] ); }
+function has_post_thumbnail() { return false; }
+function get_the_post_thumbnail_url( $id = 0, $s = '' ) { return ''; }
+function post_class() { echo 'class="page"'; }
+function the_content() { echo "<!--content-->\n"; }
+
+$templates = array(
+    'page-accessibility.php'      => 'accessibility',
+    'page-medical-disclaimer.php' => 'disclaimer',
+    'page-terms-of-use.php'       => 'terms',
+    'tpl-privacy-policy.php'      => 'privacy',
+);
+foreach ( $templates as $file => $doc ) {
+    $out = render_template( $file );
+    check( "$file: renders the spotlight hero for '$doc'",
+        strpos( $out, 'vhh-hero-spotlight--' . $doc . '"' ) !== false );
+    check( "$file: renders its own headline",
+        strpos( $out, '__title">' . esc_html( vance_legal_hero_docs()[ $doc ]['title'] ) . '<' ) !== false );
+    check( "$file: emits no dark legal-hero band",
+        strpos( $out, 'class="legal-hero"' ) === false );
+    check( "$file: emits no .legal-hero CSS rule either",
+        strpos( $out, '.legal-hero {' ) === false );
+    check( "$file: still emits the body wrapper the page content depends on",
+        strpos( $out, 'class="legal-wrap"' ) !== false );
+    check( "$file: and .legal-wrap keeps its styling",
+        strpos( $out, '.legal-wrap' ) !== false );
+}
+
+// page.php: the Cookie Policy takes the spotlight hero, everything else on the
+// generic template keeps the dark one.
+$out = render_template( 'page.php', 'cookie-policy-uk', 'Cookie Policy (UK)' );
+check( 'page.php: the Cookie Policy gets the spotlight hero',
+    strpos( $out, 'vhh-hero-spotlight--cookies"' ) !== false );
+check( 'page.php: and does NOT also get the generic dark hero',
+    strpos( $out, '<section class="hero"' ) === false );
+check( 'page.php: it still renders the page body',
+    strpos( $out, '<!--content-->' ) !== false );
+
+$out = render_template( 'page.php', 'cookie-policy-uk', 'Cookie Policy (United Kingdom)' );
+check( 'page.php: the LIVE title wins over the registry literal',
+    strpos( $out, 'Cookie Policy (United Kingdom)' ) !== false );
+
+$out = render_template( 'page.php', 'some-other-page', 'Some Other Page' );
+check( 'page.php: an ordinary page keeps the generic dark hero',
+    strpos( $out, '<section class="hero"' ) !== false );
+check( 'page.php: and gets no spotlight hero',
+    strpos( $out, 'vhh-hero-spotlight' ) === false );
+check( 'page.php: and still renders its title',
+    strpos( $out, 'Some Other Page' ) !== false );
+
+/* ===================================================================== */
+echo "\n----------------------------------------------------------\n";
+echo "  PASSED $PASS   FAILED $FAIL\n\n";
+exit( $FAIL > 0 ? 1 : 0 );

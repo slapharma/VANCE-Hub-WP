@@ -22,7 +22,11 @@ cd tests && php hero-customizer.test.php
 cd tests && node reveal.test.js
 ```
 
-All three exit non-zero on failure. As of 2026-08-28: 193 / 79 / 22 checks.
+```bash
+cd tests && php legal-hero.test.php
+```
+
+All four exit non-zero on failure. As of 2026-08-28: 193 / 79 / 22 / 137 checks.
 
 ## What each covers
 
@@ -31,12 +35,13 @@ All three exit non-zero on failure. As of 2026-08-28: 193 / 79 / 22 checks.
 | `hero-render.test.php` | `inc/page-hero-spotlight.php` — the Contact, About and three free-tool spotlight heroes: the design toggle, copy inheritance, all three utility bands, both card variants, per-page card icons, `tel:` normalisation, and the CSS in `assets/css/main.css` that backs the classes the renderer emits |
 | `hero-customizer.test.php` | The Customizer registration for those heroes — sections, panels, sanitizers, which section each toggle lands in, that two sections sharing a panel cannot share a title, and that the control list matches the renderer's field list exactly |
 | `reveal.test.js` | The `.gi-reveal` scroll animation in `page-gi-health.php` / `page-gi-condition.php`, extracted from the templates themselves, under every condition that used to leave content invisible |
+| `legal-hero.test.php` | `inc/legal-hero.php` — the five policy-document heroes: copy carried across from the dark heroes verbatim, the band of sibling documents, the no-photography constraint, slug resolution and its path fallback, the inline stylesheet, and the five templates **included and run** so a commented-out call cannot pass |
 
 ## Mutation runners — read this before trusting a green run
 
 A check that has never been observed failing has not been tested, only run.
-Both runners break the source on purpose, confirm the suite goes red, then
-restore it:
+All three runners break the source on purpose, confirm the suite goes red,
+then restore it:
 
 ```bash
 cd tests && python mutate-hero.py
@@ -44,6 +49,10 @@ cd tests && python mutate-hero.py
 
 ```bash
 cd tests && python mutate-defaults.py
+```
+
+```bash
+cd tests && python mutate-legal.py
 ```
 
 Every line must say `went RED`. Two failure modes to watch for:
@@ -54,8 +63,12 @@ Every line must say `went RED`. Two failure modes to watch for:
 - `SKIP (pattern not found)` — the mutant's search string has drifted from the
   source, so it is silently testing nothing. Repair the pattern.
 
-Both runners restore the file in a `finally:` block, including on exception.
+All three restore the file in a `finally:` block, including on exception.
 If one is interrupted, check `git diff` before doing anything else.
+
+`mutate-legal.py` also mutates two of the TEMPLATES, not just the renderer —
+that is what proved §8 of its suite had to include the templates rather than
+grep them. See the note at the end of this file.
 
 ## Adding a hero to the suite
 
@@ -79,3 +92,12 @@ WordPress rather than loudly here:
 
 - `style_section` — the existing Customizer section the design toggle goes in.
 - `classic_template` — the file holding the classic hero's own fallbacks.
+
+## A note on template-level checks
+
+`legal-hero.test.php` §8 **includes** each of the five policy templates against
+a dozen tiny WordPress stubs, rather than grepping them for the renderer call.
+That is not belt-and-braces: the grep version of the section passed a mutation
+that commented the call out, because `// vance_render_legal_hero( 'terms' );`
+still contains the string being searched for. Any future check that a template
+"calls" something should run the template, not read it.

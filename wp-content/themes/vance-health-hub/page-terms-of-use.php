@@ -8,13 +8,6 @@ get_header(); ?>
 <main id="main-content">
 
 <style>
-.legal-hero {
-    background: linear-gradient(135deg, rgba(10,25,41,0.92) 0%, rgba(0,80,80,0.88) 100%),
-                url('<?php echo get_template_directory_uri(); ?>/assets/img/news_hero.png') no-repeat center center;
-    background-size: cover;
-    padding: 100px 0 80px;
-    color: white;
-}
 .legal-wrap {
     max-width: 760px;
     margin: 0 auto;
@@ -135,20 +128,19 @@ get_header(); ?>
 }
 </style>
 
-<!-- HERO -->
-<section class="legal-hero">
-    <div class="container">
-        <div style="max-width: 700px;">
-            <span class="tag-label">Legal</span>
-            <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(32px, 5vw, 52px); font-weight: 900; color: white; margin: 16px 0 16px; line-height: 1.1;">
-                Terms of Use
-            </h1>
-            <p style="color: rgba(255,255,255,0.78); font-size: 18px; line-height: 1.6; max-width: 560px; margin: 0;">
-                Please read these terms carefully before using the Gastro Health Hub platform. By accessing our service, you agree to be bound by these terms.
-            </p>
-        </div>
-    </div>
-</section>
+<?php
+/*
+ * The policy-document hero. Replaces the dark `legal-hero` band that stood
+ * here until 2026-08-28; there is no toggle back to it, by request.
+ *
+ * Required in from the template rather than functions.php so this file stands
+ * on its own: all five policy pages load it the same way, and none of them
+ * depends on a bootstrap line in a file three other sessions are editing.
+ * require_once makes the repeat free.
+ */
+require_once get_template_directory() . '/inc/legal-hero.php';
+vance_render_legal_hero( 'terms' );
+?>
 
 <!-- CONTENT -->
 <div class="legal-wrap">

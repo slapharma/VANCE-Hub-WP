@@ -12,13 +12,6 @@ get_header(); ?>
 <main id="main-content">
 
 <style>
-.legal-hero {
-    background: linear-gradient(135deg, rgba(10,25,41,0.92) 0%, rgba(0,80,80,0.88) 100%),
-                url('<?php echo get_template_directory_uri(); ?>/assets/img/news_hero.png') no-repeat center center;
-    background-size: cover;
-    padding: 100px 0 80px;
-    color: white;
-}
 .legal-wrap { max-width: 760px; margin: 0 auto; padding: 64px 24px 100px; }
 .legal-wrap h2 {
     font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800;
@@ -45,19 +38,19 @@ get_header(); ?>
 .legal-contact-box p { margin: 0 0 8px; font-size: 15px; }
 </style>
 
-<section class="legal-hero">
-    <div class="container">
-        <div style="max-width: 700px;">
-            <span class="tag-label">Accessibility</span>
-            <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(32px, 5vw, 52px); font-weight: 900; color: white; margin: 16px 0 16px; line-height: 1.1;">
-                Accessibility Statement
-            </h1>
-            <p style="color: rgba(255,255,255,0.78); font-size: 18px; line-height: 1.6; max-width: 560px; margin: 0;">
-                We want everyone to be able to use Vance Medical Hub.
-            </p>
-        </div>
-    </div>
-</section>
+<?php
+/*
+ * The policy-document hero. Replaces the dark `legal-hero` band that stood
+ * here until 2026-08-28; there is no toggle back to it, by request.
+ *
+ * Required in from the template rather than functions.php so this file stands
+ * on its own: all five policy pages load it the same way, and none of them
+ * depends on a bootstrap line in a file three other sessions are editing.
+ * require_once makes the repeat free.
+ */
+require_once get_template_directory() . '/inc/legal-hero.php';
+vance_render_legal_hero( 'accessibility' );
+?>
 
 <div class="legal-wrap">
 

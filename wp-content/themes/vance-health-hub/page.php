@@ -3,31 +3,49 @@
     <?php
     while ( have_posts() ) :
         the_post();
-        
-        // Hero Settings
-        $title_color = vance_get_theme_mod('vance_hero_title_color', '#ffffff');
-        $title_size = vance_get_theme_mod('vance_hero_title_size', 52);
-        $mask_enabled = vance_get_theme_mod('vance_hero_mask_toggle', true);
-        $mask_opacity = vance_get_theme_mod('vance_hero_mask_opacity', 0.5); 
 
-        $hero_bg = '';
-        if ( has_post_thumbnail() ) {
-            $hero_bg = get_the_post_thumbnail_url( get_the_ID(), 'full' );
-        } else {
-            $hero_bg = vance_get_theme_mod('vance_homepage_hero_image') ?: get_template_directory_uri() . '/assets/img/news_hero.png';
-        }
-        
-        $overlay_css = '';
-        if ( $mask_enabled ) {
-            $overlay_css = "background-image: linear-gradient(rgba(10, 25, 41, {$mask_opacity}), rgba(20, 40, 70, {$mask_opacity})), url('" . esc_url($hero_bg) . "');";
-        } else {
-            $overlay_css = "background-image: url('" . esc_url($hero_bg) . "');";
-        }
-        
-        // Common background properties
-        $bg_props = "background-position: center center; background-size: cover; background-repeat: no-repeat;";
+        /*
+         * The policy documents get the spotlight hero from inc/legal-hero.php
+         * rather than the generic dark one below.
+         *
+         * Only the Cookie Policy actually lands here — the other four have
+         * templates of their own — but the test is on the slug rather than on
+         * that one page, so a document that loses its template still gets its
+         * own hero instead of silently falling back to the navy band.
+         */
+        require_once get_template_directory() . '/inc/legal-hero.php';
+        $vance_legal_doc = vance_legal_hero_doc_for_slug( get_post_field( 'post_name', get_the_ID() ) );
+
+        if ( $vance_legal_doc ) :
+            // The live title wins over the literal in the registry: this page's
+            // content is plugin-generated and an admin may well retitle it.
+            vance_render_legal_hero( $vance_legal_doc, array( 'title' => get_the_title() ) );
+        else :
+
+            // Hero Settings
+            $title_color = vance_get_theme_mod('vance_hero_title_color', '#ffffff');
+            $title_size = vance_get_theme_mod('vance_hero_title_size', 52);
+            $mask_enabled = vance_get_theme_mod('vance_hero_mask_toggle', true);
+            $mask_opacity = vance_get_theme_mod('vance_hero_mask_opacity', 0.5);
+
+            $hero_bg = '';
+            if ( has_post_thumbnail() ) {
+                $hero_bg = get_the_post_thumbnail_url( get_the_ID(), 'full' );
+            } else {
+                $hero_bg = vance_get_theme_mod('vance_homepage_hero_image') ?: get_template_directory_uri() . '/assets/img/news_hero.png';
+            }
+
+            $overlay_css = '';
+            if ( $mask_enabled ) {
+                $overlay_css = "background-image: linear-gradient(rgba(10, 25, 41, {$mask_opacity}), rgba(20, 40, 70, {$mask_opacity})), url('" . esc_url($hero_bg) . "');";
+            } else {
+                $overlay_css = "background-image: url('" . esc_url($hero_bg) . "');";
+            }
+
+            // Common background properties
+            $bg_props = "background-position: center center; background-size: cover; background-repeat: no-repeat;";
     ?>
-    
+
     <!-- Hero Section -->
     <section class="hero" style="padding: 95px 0 140px; <?php echo $overlay_css . ' ' . $bg_props; ?> position: relative; overflow: hidden; display: flex; align-items: center;">
         <div class="container" style="position:relative;z-index:1;">
@@ -36,6 +54,8 @@
             </div>
         </div>
     </section>
+
+    <?php endif; ?>
 
     <?php
     // No inner category nav here either: it is a category-archive component and
