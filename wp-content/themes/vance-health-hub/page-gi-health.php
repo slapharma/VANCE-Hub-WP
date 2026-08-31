@@ -22,16 +22,14 @@ $tmpl = get_template_directory_uri();
 /* Customizer helper shorthand */
 $cm = fn( string $key, string $fb = '' ) => vance_get_theme_mod( $key, $fb );
 
-/* ── Hero ── */
-$hero_eyebrow   = $cm( 'vance_gi_hub_hero_eyebrow', 'GI Health' );
-$hero_heading   = $cm( 'vance_gi_hub_hero_heading', 'Gastro Conditions Explained' );
-$hero_lede      = $cm( 'vance_gi_hub_hero_lede', 'Expert reviewed information. Written in plain language to help you understand, prepare and manage.' );
-$hero_btn1_txt  = $cm( 'vance_gi_hub_hero_btn1_text', 'Explore conditions' );
-$hero_btn1_url  = $cm( 'vance_gi_hub_hero_btn1_url', '#conditions' );
-$hero_btn2_txt  = $cm( 'vance_gi_hub_hero_btn2_text', 'My Dashboard' );
-$hero_btn2_url  = $cm( 'vance_gi_hub_hero_btn2_url', home_url( '/dashboard/' ) );
-$hero_bg        = $cm( 'vance_gi_hub_hero_bg_image', '' );
-$hero_overlay   = absint( $cm( 'vance_gi_hub_hero_bg_overlay', '70' ) );
+/* ── Hero ──
+   Resolved inside vance_render_gi_hub_hero() (inc/gi-hero.php), not here. The
+   eight $hero_* locals this block used to declare were read by the dark band
+   that the spotlight hero replaced; their DEFAULTS now live in
+   vance_gi_hero_hub_defaults(), which inc/customizer-gi-health.php also reads
+   for its controls, so the renderer and the Customizer cannot disagree about
+   what an unsaved setting says. That disagreement is a real bug this theme has
+   had before — see tests/README.md on the toggle default. */
 
 /* ── Grid ── */
 $grid_heading   = $cm( 'vance_gi_hub_grid_heading', 'Learn more about common GI conditions' );
@@ -64,25 +62,23 @@ $conditions = vance_gi_condition_cards();
 
   <!-- ===== Hero ===== -->
   <?php
-  $ov   = max( 0, min( 100, absint( $hero_overlay ) ) );
-  $ov1  = round( $ov / 100, 2 );
-  $ov2  = min( 1, $ov1 + 0.10 );
-  if ( $hero_bg ) {
-      $hero_bg_css = "linear-gradient(rgba(10,25,41,{$ov1}),rgba(0,50,50,{$ov2})),url('" . esc_url( $hero_bg ) . "')";
-  } else {
-      $hero_bg_css = 'linear-gradient(135deg,#003d3d 0%,#006666 45%,#008080 100%)';
-  }
+  /*
+   * The spotlight hero, from inc/gi-hero.php — the same section the homepage,
+   * the page heroes and the five policy documents render, and now shared with
+   * the seven condition pages so the whole GI section reads as one set.
+   *
+   * It replaces a 420px dark band that put a 70% navy veil over a photograph
+   * and set white type on it. Every value that band read is still read: the
+   * eyebrow, heading, lede and both buttons come from the same Customizer
+   * settings, and vance_gi_hub_hero_bg_image now supplies the photograph that
+   * dissolves into the right edge instead of the backdrop it hid behind.
+   *
+   * The renderer reads those settings itself, so this template no longer
+   * resolves any of them — the $hero_* locals that used to sit at the top of
+   * the file have gone with the markup that used them.
+   */
+  vance_render_gi_hub_hero();
   ?>
-  <section class="hero gi-hub-hero" style="height:420px;min-height:0;display:flex;align-items:center;padding:0;position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background-image:<?php echo $hero_bg_css; ?>;background-position:center center;background-size:cover;background-repeat:no-repeat;z-index:1;"></div>
-    <div class="container" style="position:relative;z-index:2;width:100%;">
-      <div class="hero-content" style="max-width:800px;">
-        <span class="eyebrow" style="color:#aedbdb;text-transform:uppercase;letter-spacing:1px;font-weight:600;font-size:14px;display:block;margin-bottom:10px;"><?php echo esc_html( $hero_eyebrow ); ?></span>
-        <h1 class="entry-title" style="font-size:clamp(32px,5vw,56px);color:#ffffff;font-weight:700;margin:0 0 16px;line-height:1.1;"><?php echo wp_kses_post( $hero_heading ); ?></h1>
-        <p style="color:rgba(255,255,255,0.88);font-size:clamp(15px,2vw,18px);line-height:1.6;margin:0 0 28px;max-width:60ch;"><?php echo esc_html( $hero_lede ); ?></p>
-      </div>
-    </div>
-  </section>
 
   <!-- ===== "You're not alone" — stats card ===== -->
   <section class="section-padding" style="padding-bottom:0" id="understanding">

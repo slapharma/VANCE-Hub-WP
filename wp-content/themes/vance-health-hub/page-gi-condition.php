@@ -86,15 +86,24 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
       $cond_hero_bg = 'linear-gradient(135deg,#003d3d 0%,#006666 45%,#008080 100%)';
   }
   ?>
-  <?php if ( $is_redesigned ) : ?>
-  <section class="gi-cp-hero">
-    <p class="gi-cp-breadcrumb"><a href="<?php echo esc_url( $hub_url ); ?>"><?php echo esc_html( $hub_label ); ?></a> &nbsp;&rarr;&nbsp; <?php echo wp_kses_post( $cond_title ); ?></p>
-    <h1><?php echo wp_kses_post( $cond_title ); ?></h1>
-    <?php if ( $cond_lede ) : ?>
-    <p class="gi-cp-subtitle"><?php echo esc_html( $cond_lede ); ?></p>
-    <?php endif; ?>
-  </section>
-  <?php else : ?>
+  <?php
+  /*
+   * The spotlight hero, from inc/gi-hero.php. It replaces BOTH heroes this
+   * template used to carry: the flat teal `.gi-cp-hero` gradient with centred
+   * text that all seven conditions ran, and the dark `.gi-cond-hero` band
+   * below, which no page in the set has rendered since the v2 redesign.
+   *
+   * Returns false for a slug it does not know, so the classic band is still
+   * there as the fallback for any other page put on this template rather than
+   * being deleted out from under it.
+   *
+   * The renderer reads {$cm_sec}_title and {$cm_sec}_lede itself, so the
+   * admin-saved copy resolved above still wins; the locals stay because the
+   * body sections below use $cond_title.
+   */
+  $vance_gi_hero_done = vance_render_gi_hero( $slug );
+  ?>
+  <?php if ( ! $vance_gi_hero_done ) : ?>
   <section class="hero gi-cond-hero" style="height:350px;min-height:0;display:flex;align-items:center;padding:0;position:relative;overflow:hidden;">
     <div style="position:absolute;inset:0;background-image:<?php echo $cond_hero_bg; ?>;background-position:center center;background-size:cover;background-repeat:no-repeat;z-index:1;"></div>
     <div class="container" style="position:relative;z-index:2;width:100%;">
@@ -199,15 +208,35 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         'colorectal-cancer'        => [ 'what-is-crc' => 'What is it?', 'symptoms' => 'Symptoms', 'risk-factors' => 'Risk factors', 'screening' => 'Screening', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'prevention' => 'Prevention' ],
         'diverticular-disease'     => [ 'what-is-dd' => 'What is it?', 'terms' => 'Three terms', 'symptoms' => 'Symptoms', 'causes' => 'Causes', 'diagnosis' => 'Diagnosis', 'treatment' => 'Treatment', 'living' => 'Living with it' ],
     ];
-    $cp_explore = [
-        'inflammatory-bowel-disease' => [ [ 'crohns-disease', "Crohn's Disease" ], [ 'ulcerative-colitis', 'Ulcerative Colitis' ], [ 'microscopic-colitis', 'Microscopic Colitis' ] ],
-        'crohns-disease'           => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'ulcerative-colitis', 'Ulcerative Colitis' ], [ 'microscopic-colitis', 'Microscopic Colitis' ] ],
-        'ulcerative-colitis'       => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'crohns-disease', "Crohn's Disease" ], [ 'microscopic-colitis', 'Microscopic Colitis' ] ],
-        'microscopic-colitis'      => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'ulcerative-colitis', 'Ulcerative Colitis' ], [ 'crohns-disease', "Crohn's Disease" ] ],
-        'irritable-bowel-syndrome' => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'microscopic-colitis', 'Microscopic Colitis' ], [ 'colorectal-cancer', 'Colorectal Cancer' ] ],
-        'colorectal-cancer'        => [ [ 'inflammatory-bowel-disease', 'IBD Overview' ], [ 'diverticular-disease', 'Diverticular Disease' ], [ 'irritable-bowel-syndrome', 'IBS' ] ],
-        'diverticular-disease'     => [ [ 'colorectal-cancer', 'Colorectal Cancer' ], [ 'irritable-bowel-syndrome', 'IBS' ], [ 'inflammatory-bowel-disease', 'IBD Overview' ] ],
+    /* Which three conditions this block offers is no longer decided here. It
+       comes from vance_gi_hero_related_slugs() (inc/gi-hero.php), which is the
+       same list the hero band at the top of THIS page renders. They were two
+       hand-maintained maps that had already drifted: a visitor on the IBS page
+       was offered IBD, microscopic colitis and colorectal cancer down here and
+       a different trio up there. One of them had to become the source, and the
+       hero's is the one the client signed off.
+
+       Three pages change what they offer as a result — microscopic colitis,
+       IBS and colorectal cancer. The other four listed the same three
+       conditions in both places already.
+
+       Only the LABELS stay local. This block writes "IBD Overview" and "IBS",
+       which are right under a heading that says "Explore related conditions"
+       and would be too terse in the hero's band cells, where the kicker above
+       them is doing the disambiguating instead. */
+    $cp_explore_labels = [
+        'inflammatory-bowel-disease' => 'IBD Overview',
+        'ulcerative-colitis'         => 'Ulcerative Colitis',
+        'crohns-disease'             => "Crohn's Disease",
+        'microscopic-colitis'        => 'Microscopic Colitis',
+        'irritable-bowel-syndrome'   => 'IBS',
+        'colorectal-cancer'          => 'Colorectal Cancer',
+        'diverticular-disease'       => 'Diverticular Disease',
     ];
+    $cp_explore = [ $slug => [] ];
+    foreach ( vance_gi_hero_related_slugs( $slug ) as $cp_rel ) {
+        $cp_explore[ $slug ][] = [ $cp_rel, $cp_explore_labels[ $cp_rel ] ?? $cp_rel ];
+    }
     $cp_explore_copy = [
         'inflammatory-bowel-disease' => [ 'Explore the conditions in detail', 'Learn more about each type of IBD and how it is managed' ],
         'colorectal-cancer'          => [ 'Explore related conditions', 'Learn more about other GI conditions' ],

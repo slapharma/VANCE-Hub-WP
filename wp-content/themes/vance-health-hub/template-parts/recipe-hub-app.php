@@ -9,11 +9,13 @@
  * caller might set, so `get_template_part( 'template-parts/recipe-hub-app' )`
  * is the entire contract.
  *
- * Pass `$embedded = true` (set as a local before the include, WP's
- * get_template_part() doesn't accept args pre-5.5-style here since we
- * target the plain include path) when rendering inside the dashboard: adds
- * a class that drops the section padding/backgrounds that make sense on a
- * full page but not inside a dashboard card.
+ * Pass `array( 'vance_rh_embedded' => true )` as get_template_part()'s third
+ * argument when rendering inside the dashboard: adds a class that drops the
+ * section padding/backgrounds that make sense on a full page but not inside a
+ * dashboard card. Setting a local before the call does NOT work — WP loads the
+ * part in load_template()'s own scope, so the caller's locals are invisible
+ * here and the flag silently reads as false, which is what it did until
+ * 2026-08-31. $args (WP 5.5+) is the only channel that reaches this file.
  *
  * CSS: assets/css/recipe-hub.css. JS + config: assets/js/recipe-planner.js,
  * enqueued by vance_health_hub_scripts() (functions.php) whenever this
@@ -26,7 +28,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$vance_rh_embedded = ! empty( $vance_rh_embedded );
+// load_template() extracts $args into this scope, so a caller passing
+// array( 'vance_rh_embedded' => true ) arrives as the local below; the $args
+// lookup is the belt-and-braces path if extract() is ever skipped.
+$vance_rh_embedded = ! empty( $vance_rh_embedded )
+	|| ( isset( $args['vance_rh_embedded'] ) && $args['vance_rh_embedded'] );
 
 $vance_cat_filter = isset( $_GET['cat'] ) ? sanitize_key( wp_unslash( $_GET['cat'] ) ) : '';
 $vance_recipes    = vance_recipe_planner_data();

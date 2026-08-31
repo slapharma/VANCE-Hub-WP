@@ -2317,8 +2317,9 @@ get_header();
                             <h3 class="card-title">Browse Recipes &amp; Build a Plan</h3>
                         </div>
                         <?php
-                        $vance_rh_embedded = true;
-                        get_template_part( 'template-parts/recipe-hub-app' );
+                        // Via $args, not a local: the part is loaded in
+                        // load_template()'s scope and cannot see our locals.
+                        get_template_part( 'template-parts/recipe-hub-app', null, array( 'vance_rh_embedded' => true ) );
                         ?>
                     </div>
                 <?php break;

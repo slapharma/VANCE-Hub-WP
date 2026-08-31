@@ -45,6 +45,13 @@ require_once get_template_directory() . '/inc/promo-block.php';
 require_once get_template_directory() . '/inc/prime-block.php';
 // Gastro Conditions — homepage tile grid for the GI condition pages.
 require_once get_template_directory() . '/inc/gastro-conditions.php';
+// Gastro Indications heroes — the spotlight hero shared by the Gastro Health
+// Explained lobby and its seven condition pages. Loaded here rather than from
+// the two templates (the way the policy heroes are) because
+// inc/customizer-gi-health.php reads vance_gi_hero_hub_defaults() for its
+// control defaults, and it registers on every admin request, not just on the
+// two pages that render the hero.
+require_once get_template_directory() . '/inc/gi-hero.php';
 // Hero carousel — resolves hero slides and renders either the single static
 // hero (default) or a carousel once a second slide is enabled.
 require_once get_template_directory() . '/inc/hero-carousel.php';
