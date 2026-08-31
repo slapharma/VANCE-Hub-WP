@@ -236,15 +236,48 @@ section, which the hero's first button points at and which nothing carried.
 still renders a heading and a link to the Knowledgebase, which is the bug it
 was written to fix in the first place.
 
-**Images.** The theme's photograph library is thin and every light-enough
-asset is already spoken for, which is why two of the three new heroes take the
-motif rather than borrowing a condition page's photo a third time. Free Health
-Tools uses `gi-health/ulcerative-colitis.jpg`, and the Gastro Health Survey
-still uses `gi-health/ibs.jpg`. Both are borrowed and both would be better as
-dedicated assets — every one of the eleven has a `vance_{page}_hero_spot_image`
-control, so replacing them is an upload, not a commit. **Canva's Connect API
-cannot generate images** (it creates, autofills and exports designs); the
-OpenArt connector can, or an export from Canva can be uploaded by hand.
+**Images — `assets/img/heroes/` is new, and is where hero photographs live now.**
+The theme's existing library is thin: every light-enough asset was already
+spoken for by the page it was bought for, so the first pass at these three
+heroes borrowed a condition page's photo twice and used the motif for the rest.
+Four photographs were then generated for the purpose (OpenRouter,
+`google/gemini-3-pro-image`, ~$0.14 each; **Canva's Connect API cannot generate
+images** — it creates, autofills and exports designs, and has no text-to-image
+endpoint). `tests/gen-heroes.py` carries the prompts and, in its docstring, the reason
+for every line of them; `tests/process-heroes.py` does the crop.
+
+The composition brief is not cosmetic and any replacement has to meet it, or
+the hero looks broken rather than merely different:
+
+- **1400×876 exactly.** The renderer prints those as the `<img>` width/height so
+  the box is reserved before decode. A file of another shape makes that a lie
+  the browser corrects after layout — the very shift the attribute prevents.
+  `hero-render.test.php` §5f asserts the dimensions of the generated pair.
+- **Subject right of centre.** The media box is only the right ~52% of the band.
+- **Left third bright and empty.** That edge is dissolved into the mint by two
+  gradients; anything dark or busy there reads as a smear, which is what §6.4
+  has always warned about.
+- **Focal point high.** `object-position` is `46% 14%`, so faces near the bottom
+  edge get cropped away.
+- Cool and desaturated. Warm casts fight `#ECF5F5`.
+
+Where each one is wired matters, because the two are not the same mechanism:
+
+- **Free Health Tools and the Gastro Health Survey** name theirs in the config
+  (`$img_hero . 'free-tools.jpg'` / `'survey.jpg'`), replacing the borrowed
+  `ulcerative-colitis.jpg` and `ibs.jpg`. Those two pages were always meant to
+  carry a photograph, so the photograph is the code default.
+- **The Knowledgebase and the 404 keep `'motif' => true` and `'image' => ''` in
+  code**, and their photographs are set as *theme mods*
+  (`vance_kblobby_hero_spot_image`, `vance_e404_hero_spot_image`). That is on
+  purpose: the motif stays what a fresh install renders and what the tests
+  cover, and clearing Photograph in the Customizer brings it straight back.
+  Making the photograph the default there would have left the motif, its CSS
+  and its coverage as dead code.
+
+⚠ The 404's may be a photograph but it is deliberately **not of people**. A
+stranger smiling beside "we can't find that page" is the failure the policy
+pages went abstract to avoid; an empty sunlit doorway is a way through.
 
 tests: **260 / 136 / 22 / 182**, 23 + 17 mutants all red, none by crashing.
 One mutant had to be split: `"if ( $c['slot'] === 'search' ) {"` matches the

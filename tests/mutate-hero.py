@@ -108,6 +108,16 @@ MUTANTS = [
  ("the 404 band stops resolving its links",
   "'href'  => vance_page_hero_spotlight_page_url( $c[3], $c[4] ),",
   "'href'  => '',"),
+
+ # A filename typo is the likeliest way a hero photograph breaks, and it
+ # breaks silently -- the renderer prints whatever string it is given.
+ ("a hero photograph is misnamed",
+  "$img_hero . 'free-tools.jpg'", "$img_hero . 'free-tools-v2.jpg'"),
+
+ # ...and the pages that deliberately have none must keep declaring the
+ # motif, or they render an empty <img> instead.
+ ("a motif page loses its motif flag",
+  "'motif'        => true,", "'motif'        => false,"),
 ]
 
 try:

@@ -30,7 +30,7 @@ cd tests && php legal-hero.test.php
 cd tests && php gi-hero.test.php
 ```
 
-All five exit non-zero on failure. As of 2026-08-31: 260 / 136 / 22 / 182 / 251 checks.
+All five exit non-zero on failure. As of 2026-08-31: 283 / 136 / 22 / 182 / 251 checks.
 
 ## What each covers
 
@@ -41,6 +41,23 @@ All five exit non-zero on failure. As of 2026-08-31: 260 / 136 / 22 / 182 / 251 
 | `reveal.test.js` | The `.gi-reveal` scroll animation in `page-gi-health.php` / `page-gi-condition.php`, extracted from the templates themselves, under every condition that used to leave content invisible |
 | `gi-hero.test.php` | `inc/gi-hero.php` — the Gastro Health Explained lobby and the seven condition heroes: the four-cell band and its never-itself guard, the lobby's seven chips on two fixed rows, purple's two jobs and the teal CTA override, photograph resolution and the focal-point whitelist, the opt-in review date, and **both templates included and run** so a commented-out call cannot pass. Section -1 lifts `vance_gi_conditions()` and `vance_gi_condition_cards()` out of `functions.php` and evaluates them, so the suite tests the real registry rather than a copy of it that could rot |
 | `legal-hero.test.php` | `inc/legal-hero.php` — the five policy-document heroes: copy carried across from the dark heroes verbatim, the band of sibling documents, the no-photography constraint, slug resolution and its path fallback, the inline stylesheet, and the five templates **included and run** so a commented-out call cannot pass |
+
+## Not harnesses — the hero photographs
+
+`gen-heroes.py` and `process-heroes.py` are one-shot generators, not tests. They
+made the four images in `assets/img/heroes/` (OpenRouter, `google/gemini-3-pro-image`,
+about $0.14 each) and cropped them to the 1400×876 box the renderer declares.
+
+They live here, not in `LOCAL/`, because the prompts ARE the spec: a replacement
+photograph has to be composed the same way or the hero looks broken — subject
+right of centre, left third bright and empty because that edge is dissolved,
+focal point high because `object-position` is `46% 14%`. The docstring in
+`gen-heroes.py` gives the reason for each line. `hero-render.test.php` §5f is the
+part that can fail: it asserts every photograph the config names is on disk, and
+that the two generated ones really are 1400×876.
+
+`gen-heroes.py` needs `OPENROUTER_API_KEY` in the environment and spends real
+credit. It writes into `tests/generated/`, which is not committed.
 
 ## Mutation runners — read this before trusting a green run
 

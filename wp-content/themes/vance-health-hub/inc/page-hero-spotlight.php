@@ -51,6 +51,12 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 function vance_page_hero_spotlight_config( $page ) {
 	$img    = get_template_directory_uri() . '/assets/img/about/';
 	$img_gi = get_template_directory_uri() . '/assets/img/gi-health/';
+	// Photographs made FOR this hero, 2026-08-31: 1400x876, composed for the
+	// dissolve -- subject right of centre, left third blown out, focal point
+	// high in the frame because object-position is 46% 14%. Every other image
+	// here is borrowed from a page that had it for its own reasons, which is
+	// why they all have to be looked at before they are moved.
+	$img_hero = get_template_directory_uri() . '/assets/img/heroes/';
 
 	// The User Guide's downloadable PDF. page-user-guide.php defines VUG_PDF_FILE,
 	// but only while that template is rendering -- this function also runs during
@@ -179,13 +185,12 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'Self-Assessment',
 			'legacy_title_default' => 'Gastro Health Survey',
 			'legacy_desc_default'  => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.',
-			// Currently also the IBS condition page's photograph. It is the
-			// best-lit asset in the theme for a pale band — hazy water down
-			// the whole left edge — and it carries nothing IBS-specific, but
-			// a photograph of its own would be better; the Customizer has a
-			// control for it.
-			'image'        => $img_gi . 'ibs.jpg',
-			'image_alt'    => __( 'A man leaning on a harbour railing beside his dog, looking out over the water', 'vance-health-hub' ),
+			// Was gi-health/ibs.jpg -- also the IBS condition page's photograph,
+			// taken because it was the best-lit asset available rather than the
+			// right one. This one was made for the page: answering something
+			// privately and unhurriedly, which is what the survey asks of you.
+			'image'        => $img_hero . 'survey.jpg',
+			'image_alt'    => __( 'A man sitting by a window at home, answering something on his phone', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Start the survey', 'vance-health-hub' ),
 			// The quiz form itself, which is the first thing below the hero.
 			'btn1_link'    => '#health-quiz-form',
@@ -415,8 +420,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'Free Tools',
 			'legacy_title_default' => 'Tools &amp; <span class="highlight">Resources</span>',
 			'legacy_desc_default'  => 'Clinical calculators built on peer-reviewed evidence, free to use, no signup required. Save your results and build a meal plan by registering for a free account.',
-			'image'        => $img_gi . 'ulcerative-colitis.jpg',
-			'image_alt'    => __( 'Two women walking and talking together in bright sunlight', 'vance-health-hub' ),
+			'image'        => $img_hero . 'free-tools.jpg',
+			'image_alt'    => __( 'A woman at a bright kitchen table looking up from a tablet, a notebook and a glass of water beside her', 'vance-health-hub' ),
 			'btn1_text'    => __( 'See the three tools', 'vance-health-hub' ),
 			// The grid of tool cards, the first thing below the intro.
 			'btn1_link'    => '#tools-grid',
@@ -457,11 +462,16 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'Knowledgebase',
 			'legacy_title_default' => 'The whole <span class="highlight">evidence library</span>, one door',
 			'legacy_desc_default'  => 'Clinical reviews, gastro living guides and health news - every collection in the Vance Medical Hub, grouped so you can go straight to the one you need.',
-			// No photograph, by the same reasoning the five policy documents
-			// settled on: a library of articles has nothing to picture, and a
-			// stock clinician beside 'pick a collection' says less than nothing.
-			// Uploading one in the Customizer overrides the motif -- see 'motif'
-			// in vance_render_page_hero_spotlight().
+			// No photograph IN CODE, by the same reasoning the five policy
+			// documents settled on: a library of articles has nothing to picture,
+			// and a stock clinician beside 'pick a collection' says less than
+			// nothing.
+			//
+			// The live site nonetheless shows a photograph, set as a theme mod on
+			// 2026-08-31: assets/img/heroes/knowledgebase.jpg, made for this hero.
+			// That is deliberately the override path rather than a new default --
+			// clearing Photograph in the Customizer brings the motif straight
+			// back, and the motif stays the thing a fresh install renders.
 			'motif'        => true,
 			'image'        => '',
 			'image_alt'    => '',
@@ -517,6 +527,12 @@ function vance_page_hero_spotlight_config( $page ) {
 			'btn1_fallback_path' => '/knowledgebase/',
 			'btn2_text'    => __( 'Back to the homepage', 'vance-health-hub' ),
 			'btn2_link'    => '/',
+			// As on the Knowledgebase: the motif is the code default and the live
+			// site overrides it with assets/img/heroes/not-found.jpg, an empty
+			// sunlit doorway. A photograph of PEOPLE is the one thing this page
+			// must not have -- a stranger smiling beside "we cannot find that
+			// page" is the reason the policy pages went abstract in the first
+			// place. An architectural way-through is not that.
 			'slot'         => 'start',
 			'slot_label'   => __( 'Or go straight to one of these', 'vance-health-hub' ),
 			'card'         => 'text',

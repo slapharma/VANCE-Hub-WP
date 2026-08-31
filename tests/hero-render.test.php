@@ -578,6 +578,42 @@ check( 'a missing page still yields a link',
        strpos( $e5, 'href="https://example.test/ask-ai/"' ) !== false );
 $GLOBALS['PAGES'] = $saved_pages;
 
+echo "\n=== 5f. Every photograph the config names is really on disk ===\n";
+
+// A filename typo renders a broken <img> on a live hero and nothing else
+// in this suite would notice: the renderer happily prints any string, and
+// section 8 only checks CSS classes. The stub's get_template_directory_uri()
+// is a known prefix, so the URL maps straight back to a path.
+$uri_prefix = get_template_directory_uri();
+$seen_image = 0;
+foreach ( vance_page_hero_spotlight_pages() as $pg ) {
+    $conf = vance_page_hero_spotlight_config( $pg );
+    // The motif pages name no photograph in code, on purpose.
+    if ( $conf['image'] === '' ) {
+        check( "$pg: names no photograph, and declares the motif instead",
+               ! empty( $conf['motif'] ) );
+        continue;
+    }
+    check( "$pg: photograph is a theme URL",
+           strpos( $conf['image'], $uri_prefix . '/' ) === 0 );
+    $rel  = substr( $conf['image'], strlen( $uri_prefix ) );
+    check( "$pg: " . basename( $rel ) . " exists in the theme",
+           file_exists( $THEME . $rel ) );
+    $seen_image++;
+}
+// ...and the loop must actually have looked at something. Without this a
+// config where every page had lost its image would pass in silence.
+check( 'the loop checked at least eight photographs', $seen_image >= 8 );
+
+// Both new photographs are 1400x876, which is what the renderer declares as
+// the <img> width/height. A file of another shape makes that attribute a
+// lie the browser corrects after layout -- the exact shift it exists to stop.
+foreach ( array( 'heroes/free-tools.jpg', 'heroes/survey.jpg' ) as $rel ) {
+    $size = @getimagesize( $THEME . '/assets/img/' . $rel );
+    check( "$rel is 1400x876, as the <img> attributes claim",
+           $size ? array( $size[0], $size[1] ) : false, array( 1400, 876 ) );
+}
+
 echo "\n=== 6. Colours reach the style attribute, and the dissolve maths is right ===\n";
 set_mods( array(
     'vance_about_hero_style'          => 'spotlight',

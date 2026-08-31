@@ -54,3 +54,4 @@ node_modules/
 dist/
 .cache/
 .deploy_key
+tests/generated/
