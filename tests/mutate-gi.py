@@ -237,12 +237,25 @@ def run_suite():
     return p.returncode
 
 
+# This repo is core.autocrlf=true: LF in the object store, CRLF in the working
+# copy. So a fresh clone hands you CRLF source, and every multi-line needle
+# below -- which is most of them -- would fail to match and report SKIP. A
+# mutant that silently tests nothing is the failure this whole runner exists to
+# prevent, so matching happens on LF text and the file's own convention is
+# restored on write. Files are put back byte-identical either way.
+_CRLF = {}
+
+
 def read(path):
     with io.open(path, encoding='utf-8', newline='') as fh:
-        return fh.read()
+        text = fh.read()
+    _CRLF[path] = '\r\n' in text
+    return text.replace('\r\n', '\n')
 
 
 def write(path, text):
+    if _CRLF.get(path):
+        text = text.replace('\n', '\r\n')
     with io.open(path, 'w', encoding='utf-8', newline='') as fh:
         fh.write(text)
 
