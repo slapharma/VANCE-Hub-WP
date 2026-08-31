@@ -66,9 +66,10 @@ body {
    side list, and the featured cell stretches to match. The Knowledge Base
    category rows keep the plain .bento-grid-news (fixed 2-row featured + 2). */
 .bento-grid-news.bento-grid-news--grow {
-    /* Image column widened further (66%/34%, up from 60%/40%) so the
-       widen reads clearly instead of disappearing as a few extra px. */
-    grid-template-columns: 2fr 1fr;
+    /* Featured image column narrowed by 20% of its own width (66.7% -> 53.3%),
+       widening the article list by the same amount. 8fr/7fr is exactly
+       53.33%/46.67%. */
+    grid-template-columns: 8fr 7fr;
     grid-template-rows: auto;
     align-items: stretch;
     /* Small breathing-room gap — flush (0px) read as the image and list
@@ -131,20 +132,32 @@ body {
     flex: 1;
     min-width: 0;
 }
-/* Postage-stamp thumbnail pinned to the right edge of each row. */
+/* Thumbnail pinned to the right edge of each row. 64px is the ceiling: it sets
+   the row's minimum height, and five rows at 64px come to 424px — the last size
+   that still matches the featured cell's 460px max-height. */
 .latest-list-thumb {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     object-fit: cover;
     flex-shrink: 0;
 }
 .latest-list-cat {
-    font-size: 9px;
+    /* Filled chip: the per-post hero-overlay colour is set inline as the
+       BACKGROUND, the label itself is white. align-self stops the chip
+       stretching to the full row width as a flex-column child. */
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 3px 8px;
+    /* Square, deliberately — a hard 0 rather than a radius token, matching the
+       square article tiles these chips sit on. Do not "restore" the token. */
+    border-radius: 0;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--primary-color); /* fallback; per-post hero-overlay colour set inline */
-    line-height: 1.2;
+    color: #ffffff;
+    background: var(--primary-color); /* fallback; per-post colour set inline */
+    line-height: 1.3;
 }
 .latest-list-title {
     margin: 0;

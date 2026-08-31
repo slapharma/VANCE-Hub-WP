@@ -457,7 +457,12 @@ function vance_render_prime_block( array $vals ) {
 			font-size: 11px;
 			text-transform: uppercase;
 			font-weight: 700;
-			border-radius: var(--radius-control, 6px);
+			/* Square, deliberately — a hard 0 rather than a radius token. These
+			   chips sit on the article tiles, which are the one square exception
+			   in the radius scale (see the "Article cards stay square" block at
+			   the end of main.css), so a rounded chip on a square card read as a
+			   mismatch. Do not "restore" var(--radius-control) here. */
+			border-radius: 0;
 			display: inline-block;
 			margin-bottom: 12px;
 		}
@@ -468,6 +473,12 @@ function vance_render_prime_block( array $vals ) {
 			gap: 24px;
 		}
 		<?php echo $sel; ?> .bento-grid-news.bento-grid-news--grow {
+			/* Featured image column narrowed by 20% of its own width (66.7% -> 53.3%),
+			   handing the difference to the article list so the five rows get room
+			   for the wider category chip and longer titles. 8fr/7fr is exactly
+			   53.33%/46.67%. Overrides the 2fr/1fr on the base .bento-grid-news
+			   above; below 768px main.css collapses both to a single column. */
+			grid-template-columns: 8fr 7fr;
 			grid-template-rows: auto;
 			align-items: stretch;
 			/* Small gap rather than flush: the shared border below frames the
@@ -513,20 +524,40 @@ function vance_render_prime_block( array $vals ) {
 			flex: 1;
 			min-width: 0;
 		}
-		/* Postage-stamp thumbnail pinned to the right edge of each row. */
+		/* Thumbnail pinned to the right edge of each row.
+		   64px is the CEILING, not a taste call: the thumb sets the row's minimum
+		   height (64 + 20px padding = 84px), so five rows come to 424px — the last
+		   size that still matches the featured cell, which is capped at
+		   max-height: 460px above. At 72px the list runs to 464px, the featured
+		   image stops at 460px and the two columns stop lining up. Raise that cap
+		   first if this ever needs to go bigger. */
 		<?php echo $sel; ?> .latest-list-thumb {
-			width: 48px;
-			height: 48px;
+			width: 64px;
+			height: 64px;
 			object-fit: cover;
 			flex-shrink: 0;
 		}
 		<?php echo $sel; ?> .latest-list-cat {
-			font-size: 9px;
+			/* Filled chip, not bare text: the per-post overlay colour is set inline
+			   as the BACKGROUND and the label itself is white. align-self keeps it
+			   hugging its own text — as a flex-column child it would otherwise
+			   stretch the full row width. */
+			align-self: flex-start;
+			max-width: 100%;
+			padding: 3px 8px;
+			/* Square, deliberately — a hard 0 rather than a radius token. These
+			   chips sit on the article tiles, which are the one square exception
+			   in the radius scale (see the "Article cards stay square" block at
+			   the end of main.css), so a rounded chip on a square card read as a
+			   mismatch. Do not "restore" var(--radius-control) here. */
+			border-radius: 0;
+			font-size: 11px;
 			font-weight: 700;
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
-			color: var(--primary-color, #008080); /* per-post overlay colour set inline */
-			line-height: 1.2;
+			color: #ffffff;
+			background: var(--primary-color, #008080); /* per-post overlay colour set inline */
+			line-height: 1.3;
 		}
 		<?php echo $sel; ?> .latest-list-title {
 			margin: 0;
@@ -703,7 +734,7 @@ function vance_render_prime_block( array $vals ) {
 							<?php foreach ( array_slice( $latest_posts, 1 ) as $p ) : ?>
 							<a href="<?php echo esc_url( get_permalink( $p->ID ) ); ?>" class="latest-list-item" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
 								<div class="latest-list-text">
-									<span class="latest-list-cat" style="color: <?php echo esc_attr( vance_post_eyebrow_color( $p->ID ) ); ?>;"><?php
+									<span class="latest-list-cat" style="background: <?php echo esc_attr( vance_post_eyebrow_color( $p->ID ) ); ?>; color: #ffffff;"><?php
 										// Label with the MAIN (top-level) parent category, matching the eyebrow colour source.
 										$main_cat = get_term( vance_post_overlay_main_category_id( $p->ID ), 'category' );
 										echo ( $main_cat && ! is_wp_error( $main_cat ) ) ? esc_html( $main_cat->name ) : 'Latest';
@@ -715,7 +746,7 @@ function vance_render_prime_block( array $vals ) {
 								// controls only the postage-stamp thumbnails on the list rows.
 								$list_thumb = $latest_show_thumbs ? get_the_post_thumbnail_url( $p->ID, 'thumbnail' ) : '';
 								if ( $list_thumb ) : ?>
-								<img class="latest-list-thumb" src="<?php echo esc_url( $list_thumb ); ?>" alt="" loading="lazy" width="48" height="48">
+								<img class="latest-list-thumb" src="<?php echo esc_url( $list_thumb ); ?>" alt="" loading="lazy" width="64" height="64">
 								<?php endif; ?>
 							</a>
 							<?php endforeach; ?>
