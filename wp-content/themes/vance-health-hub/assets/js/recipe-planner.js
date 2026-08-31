@@ -591,6 +591,20 @@
 
 	// --- Init ------------------------------------------------------------
 
+	// The dashboard renders this app inside .dash-card, whose hover lift is a
+	// CSS transform (page-dashboard.php: `transform: translateY(-2px)`). A
+	// transformed ancestor becomes the containing block for its position:fixed
+	// descendants, so while the card is hovered — which it always is, the
+	// pointer having just clicked a button inside it — the overlays are
+	// positioned against the card instead of the viewport: the dialog lands
+	// wherever the card happens to be scrolled to, and the scrim covers only
+	// the card rather than the page. Re-parenting them to <body> puts them
+	// outside any transformed ancestor, on this host page or any other. Their
+	// styles are keyed off their own classes, so nothing else changes.
+	[ picker, saveModal, toast ].forEach(function (el) {
+		if (el && el.parentNode !== document.body) { document.body.appendChild(el); }
+	});
+
 	renderPlanner();
 	if (CFG.preloadPlan) { saveState(); } // Persist the loaded-for-editing plan as the working copy.
 	if (CFG.addSlug) {
