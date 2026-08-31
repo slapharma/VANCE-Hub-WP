@@ -17,11 +17,16 @@ DST = os.path.join(os.path.dirname(HERE), "wp-content", "themes",
                    "vance-health-hub", "assets", "img", "heroes")
 os.makedirs(DST, exist_ok=True)
 
-NAMES = ("free-tools", "survey", "knowledgebase", "not-found")
+# Whatever gen-heroes.py left behind, rather than a list to keep in step with
+# it. The model returns PNG or JPEG depending on the run, so both are collected
+# and the extension is dropped -- the theme only ever holds .jpg.
+NAMES = sorted({os.path.splitext(f)[0] for f in os.listdir(SRC)
+                if f.lower().endswith((".png", ".jpg", ".jpeg"))})
+assert NAMES, "nothing in %s -- run gen-heroes.py first" % SRC
 
 for name in NAMES:
     src = None
-    for ext in ("png", "jpg"):
+    for ext in ("png", "jpg", "jpeg"):
         p = os.path.join(SRC, "%s.%s" % (name, ext))
         if os.path.exists(p):
             src = p

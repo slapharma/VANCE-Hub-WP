@@ -49,13 +49,22 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  * @return array<string, mixed>|null Null for an unknown page.
  */
 function vance_page_hero_spotlight_config( $page ) {
-	$img    = get_template_directory_uri() . '/assets/img/about/';
-	$img_gi = get_template_directory_uri() . '/assets/img/gi-health/';
-	// Photographs made FOR this hero, 2026-08-31: 1400x876, composed for the
-	// dissolve -- subject right of centre, left third blown out, focal point
-	// high in the frame because object-position is 46% 14%. Every other image
-	// here is borrowed from a page that had it for its own reasons, which is
-	// why they all have to be looked at before they are moved.
+	// Every photograph below was made FOR this hero and lives in one directory
+	// of its own. Nothing here is borrowed any more: until 2026-08-31 these came
+	// out of assets/img/about/ and assets/img/gi-health/, bought for pages that
+	// wanted them for their own reasons, and two of them were a condition page's
+	// picture doing double duty -- Ask AI had Crohn's, the User Guide had IBD.
+	//
+	// The brief they were cut to, which any replacement has to meet:
+	//   1400x876 exactly, because the renderer prints those as the <img>'s
+	//     width/height and a different shape makes that a lie the browser
+	//     corrects after layout -- the shift the attribute exists to stop;
+	//   subject right of centre, because the media box is only the right ~52%;
+	//   left third bright and empty, because that edge is dissolved into the
+	//     band by two gradients and anything dark there reads as a smear;
+	//   focal point high, because object-position is 46% 14%.
+	// tests/gen-heroes.py holds the prompts and the reasoning; hero-render's
+	// section 5f asserts the files exist and are the right shape.
 	$img_hero = get_template_directory_uri() . '/assets/img/heroes/';
 
 	// The User Guide's downloadable PDF. page-user-guide.php defines VUG_PDF_FILE,
@@ -104,8 +113,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			// A separate image key, NOT vance_contact_hero_img. The classic
 			// default (hcp_hero.png) was chosen to sit under a 78% navy veil;
 			// dropped onto a pale band with no veil it reads as a dark smear.
-			'image'        => $img . 'community-support.jpg',
-			'image_alt'    => __( 'A support group sitting in conversation in a bright room', 'vance-health-hub' ),
+			'image'        => $img_hero . 'contact.jpg',
+			'image_alt'    => __( 'A woman at a desk in a bright office, looking up from her keyboard mid-reply', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Send us a message', 'vance-health-hub' ),
 			'btn1_link'    => '#contact-form',
 			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
@@ -137,8 +146,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			// Likewise not vance_about_hero_img: its saved default,
 			// diverse-patients-clinic.jpg, is a low-resolution watermarked
 			// stock frame that only survives because the navy veil hides it.
-			'image'        => $img . 'research-lab.jpg',
-			'image_alt'    => __( 'Two scientists reviewing results together in a laboratory', 'vance-health-hub' ),
+			'image'        => $img_hero . 'about.jpg',
+			'image_alt'    => __( 'Two scientists at a laboratory bench, one holding a flask up to the light', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Read our story', 'vance-health-hub' ),
 			'btn1_link'    => '#our-story',
 			// #mission is an anchor this page already renders. Our Heritage is
@@ -225,8 +234,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'Meal Planning',
 			'legacy_title_default' => 'Gastro Recipes & Meal Planner',
 			'legacy_desc_default'  => 'EPA-rich, gut-friendly recipes with full nutrition data. Browse and build a weekly plan freely, saving plans takes two clicks to create your free account.',
-			'image'        => $img . 'wellness-kitchen.jpg',
-			'image_alt'    => __( 'A woman slicing vegetables at a kitchen counter laid out with fresh produce', 'vance-health-hub' ),
+			'image'        => $img_hero . 'recipes.jpg',
+			'image_alt'    => __( 'Hands slicing vegetables on a pale kitchen worktop laid out with salmon, spinach and lemon', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Browse the recipes', 'vance-health-hub' ),
 			'btn1_link'    => '#recipes',
 			'btn2_text'    => __( 'Build a weekly plan', 'vance-health-hub' ),
@@ -253,8 +262,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'IBD Screening',
 			'legacy_title_default' => 'IBD Malnutrition Calculator',
 			'legacy_desc_default'  => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.',
-			'image'        => $img . 'digital-health-tech.jpg',
-			'image_alt'    => __( 'Two clinicians reviewing a patient record together on a tablet', 'vance-health-hub' ),
+			'image'        => $img_hero . 'malnutrition.jpg',
+			'image_alt'    => __( 'A dietitian sitting beside an older patient, going through a printed sheet with him', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Start the screening', 'vance-health-hub' ),
 			// inc/tool-page-shell.php puts this id on the card the tool sits in.
 			'btn1_link'    => '#tool',
@@ -307,8 +316,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'Information Assistant',
 			'legacy_title_default' => 'VANCE-Ai',
 			'legacy_desc_default'  => 'Ask anything about IBD, clinical nutrition and gastrointestinal health. Every answer is drawn from articles published on the Vance Medical Hub, with links to the sources used.',
-			'image'        => $img_gi . 'crohns.jpg',
-			'image_alt'    => __( 'A man at a kitchen table reading a letter, one hand resting at his chin', 'vance-health-hub' ),
+			'image'        => $img_hero . 'askai.jpg',
+			'image_alt'    => __( 'A man on a sofa with a laptop on his knees, typing a question', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Ask a question', 'vance-health-hub' ),
 			// The chat mount point, which is the first thing below the hero.
 			'btn1_link'    => '#vance-askai-inline',
@@ -349,8 +358,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			// because the saved one still pointed at #pillars long after the
 			// label became "Join Now!". Pinned here for the same reason.
 			'btn1_link'    => '/login/?tab=signup',
-			'image'        => $img . 'pharma-manufacturing.jpg',
-			'image_alt'    => __( 'Two scientists in white coats examining samples together in a bright laboratory', 'vance-health-hub' ),
+			'image'        => $img_hero . 'evidence.jpg',
+			'image_alt'    => __( 'Two colleagues at a table of printed research papers, one pointing out a figure', 'vance-health-hub' ),
 			'btn2_text'    => __( 'See the four sources', 'vance-health-hub' ),
 			'btn2_link'    => '#pillars',
 			'slot'         => 'pillars',
@@ -374,8 +383,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'User Guide',
 			'legacy_title_default' => 'Get the most out of <span class="highlight">Vance Medical Hub</span>',
 			'legacy_desc_default'  => 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.',
-			'image'        => $img_gi . 'ibd.jpg',
-			'image_alt'    => __( 'Four people around a cafe table looking at a laptop together', 'vance-health-hub' ),
+			'image'        => $img_hero . 'userguide.jpg',
+			'image_alt'    => __( 'A younger woman leaning in to show an older woman something on a laptop at a kitchen table', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Start with your journey', 'vance-health-hub' ),
 			'btn1_link'    => '#your-journey',
 			// The classic hero's own PDF button. It survives the switch because

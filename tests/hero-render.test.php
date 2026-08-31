@@ -605,14 +605,29 @@ foreach ( vance_page_hero_spotlight_pages() as $pg ) {
 // config where every page had lost its image would pass in silence.
 check( 'the loop checked at least eight photographs', $seen_image >= 8 );
 
-// Both new photographs are 1400x876, which is what the renderer declares as
-// the <img> width/height. A file of another shape makes that attribute a
-// lie the browser corrects after layout -- the exact shift it exists to stop.
-foreach ( array( 'heroes/free-tools.jpg', 'heroes/survey.jpg' ) as $rel ) {
-    $size = @getimagesize( $THEME . '/assets/img/' . $rel );
-    check( "$rel is 1400x876, as the <img> attributes claim",
+// Everything in assets/img/heroes/ was made for this hero and must be 1400x876,
+// which is what the renderer declares as the <img> width/height. A file of
+// another shape makes that attribute a lie the browser corrects after layout --
+// the exact shift it exists to stop. (The older borrowed photographs elsewhere
+// in assets/img/ are all different shapes and are NOT held to this; the point of
+// the heroes/ directory is that everything in it was cut to the box.)
+$made_for_this = array();
+foreach ( vance_page_hero_spotlight_pages() as $pg ) {
+    $conf = vance_page_hero_spotlight_config( $pg );
+    if ( strpos( $conf['image'], '/assets/img/heroes/' ) !== false ) {
+        $made_for_this[ $pg ] = substr( $conf['image'], strlen( $uri_prefix ) );
+    }
+}
+foreach ( $made_for_this as $pg => $rel ) {
+    $size = @getimagesize( $THEME . $rel );
+    check( "$pg: " . basename( $rel ) . " is 1400x876, as the <img> attributes claim",
            $size ? array( $size[0], $size[1] ) : false, array( 1400, 876 ) );
 }
+// An exact count, not >=: this is the assertion that fails if a page quietly
+// goes back to borrowing an image bought for another page. Nine of the eleven --
+// the Knowledgebase and the 404 name none in code, they take the motif and are
+// overridden by a theme mod on the live site.
+check( 'nine heroes carry a photograph made for them', count( $made_for_this ), 9 );
 
 echo "\n=== 6. Colours reach the style attribute, and the dissolve maths is right ===\n";
 set_mods( array(
