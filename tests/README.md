@@ -35,7 +35,7 @@ cd tests && php category-hero.test.php
 ```
 
 All six exit non-zero on failure. As of 2026-08-31:
-291 / 136 / 22 / 182 / 255 / 79 checks.
+291 / 136 / 22 / 182 / 255 / 87 checks.
 
 Four of them have a mutation runner beside them — `mutate-hero.py`,
 `mutate-legal.py`, `mutate-gi.py`, `mutate-category.py`. Run the runner, not
@@ -187,39 +187,52 @@ that commented the call out, because `// vance_render_legal_hero( 'terms' );`
 still contains the string being searched for. Any future check that a template
 "calls" something should run the template, not read it.
 
-## The three category photographs are NOT generated yet
+## The three category photographs
 
-`gen-heroes.py` carries three more prompts — `cat-clinical-reviews`,
-`cat-gastro-living`, `cat-healthcare-news` — and `process-heroes.py` routes
-anything named `cat-*` into `assets/img/heroes/categories/<slug>.jpg`, which is
-where `inc/category-hero.php` looks. **None of the three files exists.** The run
-on 2026-08-31 returned `HTTP 402 Payment Required`: the OpenRouter account is
-out of credit.
+Made 2026-08-31 on the same pipeline as the other eleven (OpenRouter,
+`google/gemini-3-pro-image`, about $0.14 each), cropped to 1400x876 and living
+in `assets/img/heroes/categories/`. `process-heroes.py` routes anything named
+`cat-*` there; the registry in `inc/category-hero.php` names them by slug.
 
-Nothing is broken by their absence. Every category renders the geometric motif
-instead, exactly as the Knowledgebase lobby, the 404 and the five policy
-documents already do, and `category-hero.test.php` §4 branches on
-`file_exists` so it asserts whichever path is live. Top the account up and run:
+`cat-healthcare-news` took two attempts. The first prompt asked for three
+colleagues round a meeting table and got textbook corporate stock -- the one
+thing `SHARED` explicitly rules out -- and it said "business", not "health". It
+was rewritten to a single clinician in a hospital corridor with the documentary
+constraints named rather than assumed. `gen-heroes.py` holds the second prompt
+and the reasoning for the change.
 
-The key goes in `LOCAL/openrouter.key` &mdash; a single line, no quotes.
-`LOCAL/` is gitignored and is not inside the theme, so a key there can be
-neither committed nor deployed. `gen-heroes.py` prefers that file over
-`OPENROUTER_API_KEY` and never prints the value.
+**Alt text is written from the finished photograph, never from the prompt.**
+Two of these three shipped alt describing a different picture entirely, because
+the descriptions were written before the images existed: `gastro-living.jpg` is
+a man lacing a walking boot and was announced to screen readers as "two people
+talking over coffee at a bright kitchen table". Confidently describing the
+wrong photograph is worse than describing none, and nothing on the page looks
+different when it happens.
+
+Section 8 now asserts that any registry entry with a file on disk carries real
+alt text, and that the file is really 1400x876. Neither check can tell whether
+the words match the picture. Look at the image.
+
+The nine categories with no posts have no photograph and render the motif
+instead, exactly as the Knowledgebase, the 404 and the five policy documents
+do. A section with nothing in it does not need a photograph of somebody
+enjoying it.
+
+## process-heroes.py takes name arguments now, and you should use them
+
+`./generated` accumulates: it is gitignored scratch holding every frame ever
+produced, including whatever an interrupted or mistaken run left there. Running
+`process-heroes.py` bare reprocesses all of it, which republishes all of it --
+so a stray regeneration of an existing hero silently replaces a shipped
+photograph, and the diff is a binary that announces nothing.
+
+On 2026-08-31 an accidental argument-less `gen-heroes.py` put four fresh
+variants of already-shipped heroes into `./generated`. A bare process run would
+have swapped all four on the live site. Name what you mean:
 
 ```bash
-python gen-heroes.py cat-clinical-reviews cat-gastro-living cat-healthcare-news
+python process-heroes.py cat-clinical-reviews cat-gastro-living cat-healthcare-news
 ```
-
-```bash
-python process-heroes.py
-```
-
-The heroes pick the files up on the next request — the `src` carries a
-`filemtime` cache-buster — and §4 starts asserting the `<img>` branch, the
-1400×876 intrinsic box and the focal point instead of the motif.
-
-The nine categories with no posts in them are deliberately NOT in that list. A
-section with nothing in it does not need a photograph of somebody enjoying it.
 
 ## A second note on template-level checks
 

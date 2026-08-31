@@ -55,3 +55,7 @@ dist/
 .cache/
 .deploy_key
 tests/generated/
+
+# Python bytecode from running the tests/ helpers
+__pycache__/
+*.pyc

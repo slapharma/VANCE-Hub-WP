@@ -6,7 +6,7 @@ and cannot shift the headline as it decodes. Anything else there is a lie the
 browser corrects after layout, which is the shift the attribute exists to
 prevent -- so the files are cut to exactly that.
 """
-import io, os
+import io, os, sys
 from PIL import Image
 
 W, H = 1400, 876
@@ -23,6 +23,31 @@ os.makedirs(DST, exist_ok=True)
 NAMES = sorted({os.path.splitext(f)[0] for f in os.listdir(SRC)
                 if f.lower().endswith((".png", ".jpg", ".jpeg"))})
 assert NAMES, "nothing in %s -- run gen-heroes.py first" % SRC
+
+# Take the same name arguments gen-heroes.py takes, so the two can be run as a
+# pair over one subset.
+#
+# This is a SAFETY control, not a convenience. ./generated accumulates: it is
+# gitignored scratch that holds every frame ever produced, including whatever
+# an interrupted or mistaken run left there. Processing all of it publishes all
+# of it, so a stray regeneration of an existing hero silently replaces a
+# shipped photograph with a different one -- and the diff is a binary, so
+# nothing about the change announces itself. On 2026-08-31 an accidental run of
+# gen-heroes.py with no arguments put four fresh variants of already-shipped
+# heroes in there; without this filter the next process run would have swapped
+# all four on the live site.
+#
+# No arguments still means "everything", which is what the original eleven were
+# made with. Name them when you mean a subset.
+if sys.argv[1:]:
+    wanted = set(sys.argv[1:])
+    missing = sorted(wanted - set(NAMES))
+    if missing:
+        sys.exit("not in %s: %s" % (SRC, ", ".join(missing)))
+    NAMES = [n for n in NAMES if n in wanted]
+
+print("processing %d of %d frame(s) in %s"
+      % (len(NAMES), len(os.listdir(SRC)), SRC))
 
 for name in NAMES:
     src = None

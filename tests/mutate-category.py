@@ -154,6 +154,11 @@ MUTANTS = [
 
     # ---- photographs ----------------------------------------------------
     (RENDERER,
+     "a photograph's alt text is emptied, so a real picture is announced as decorative",
+     "'alt'     => __( 'A man sitting in an armchair by a bright window, lacing a walking boot, his coat over the chair beside him', 'vance-health-hub' ),",
+     "'alt'     => '',"),
+
+    (RENDERER,
      "the file_exists guard goes, so a section with no photograph emits a 404 <img>",
      "\tif ( ! file_exists( $file ) ) { return null; }",
      "",),

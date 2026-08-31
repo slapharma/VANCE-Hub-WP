@@ -37,11 +37,19 @@ def _load_key():
     here = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(os.path.dirname(here), "LOCAL", "openrouter.key")
     if os.path.exists(path):
-        with io.open(path, encoding="utf-8") as fh:
-            key = fh.read().strip()
+        # utf-8-sig, NOT utf-8. Windows PowerShell 5.1 writes a BOM for every
+        # -Encoding utf8, so the obvious way to create this file leaves U+FEFF
+        # on the front of the key. Plain utf-8 keeps it, the BOM travels into
+        # the Authorization header, and httplib dies encoding latin-1 -- an
+        # error that names a codec and says nothing about a key. utf-8-sig
+        # strips a BOM when there is one and is identical when there is not.
+        with io.open(path, encoding="utf-8-sig") as fh:
+            key = fh.read()
+        # Quotes too: pasting from a shell that wanted them is a fair mistake.
+        key = key.strip().strip("'\"").strip()
         if key:
             return key
-    return (os.environ.get("OPENROUTER_API_KEY") or "").strip()
+    return (os.environ.get("OPENROUTER_API_KEY") or "").strip().lstrip("﻿")
 
 
 KEY = _load_key()
@@ -215,14 +223,24 @@ PROMPTS.update({
         "nothing clinical in the room. A large window on the left of the frame "
         "floods that edge with clean daylight. " + SHARED
     ),
-    # Healthcare News. Movement and immediacy, and the only one of the three
-    # with more than one person -- caught mid-sentence rather than posed.
+    # Healthcare News. Keeping up, in the place the news is actually about.
+    #
+    # The first attempt was three colleagues round a meeting table, and it came
+    # back as textbook corporate stock -- crisp shirts, a man mid-gesture, an
+    # open-plan office -- which is the one thing SHARED explicitly rules out,
+    # and it said "business", not "health". Rewritten to put a single person in
+    # a clinical setting and to name the documentary constraints rather than
+    # assume them. This is the only hero on the site set in a hospital; About
+    # is a laboratory and nothing else is clinical at all.
     "cat-healthcare-news": (
-        "Three colleagues standing at the end of a long table in a bright "
-        "open-plan office, mid-conversation, one gesturing while the others "
-        "listen, printed pages and coffee cups on the table between them. "
-        "Caught in the middle of a sentence rather than posed. A glass wall on "
-        "the left of the frame washes that edge almost white. " + SHARED
+        "A doctor in a plain shirt and lanyard pausing in a bright hospital "
+        "corridor, looking down at a phone in one hand, reading something just "
+        "arrived. Unposed and caught in passing, one shoulder against the wall, "
+        "the corridor receding out of focus behind. Candid reportage, available "
+        "light, slight grain, NOT polished corporate stock photography and not "
+        "a posed portrait. Tall windows along the left of the frame blow that "
+        "edge out to near white. No signage or lettering anywhere in shot. "
+        + SHARED
     ),
 })
 

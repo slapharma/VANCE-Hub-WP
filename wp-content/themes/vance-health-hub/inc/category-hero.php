@@ -110,7 +110,7 @@ function vance_category_hero_meta() {
 			'eyebrow' => __( 'The evidence', 'vance-health-hub' ),
 			'intro'   => __( 'Trial data and peer-reviewed papers read closely and written up in plain English — what was measured, in whom, and what the result does and does not show.', 'vance-health-hub' ),
 			'image'   => 'clinical-reviews.jpg',
-			'alt'     => __( 'A researcher at a bright desk comparing two printed papers side by side', 'vance-health-hub' ),
+			'alt'     => __( 'A woman at a desk in a bright office reading a printed research paper, pen in hand, a stack of journals beside her', 'vance-health-hub' ),
 			'focal'   => '52% 20%',
 			'card'    => array(
 				'icon'  => 'review',
@@ -123,7 +123,7 @@ function vance_category_hero_meta() {
 			'eyebrow' => __( 'Living with it', 'vance-health-hub' ),
 			'intro'   => __( 'Practical guidance for life with a gut condition — understanding a diagnosis, eating well around it, getting through tests and treatments, and finding support.', 'vance-health-hub' ),
 			'image'   => 'gastro-living.jpg',
-			'alt'     => __( 'Two people talking over coffee at a bright kitchen table', 'vance-health-hub' ),
+			'alt'     => __( 'A man sitting in an armchair by a bright window, lacing a walking boot, his coat over the chair beside him', 'vance-health-hub' ),
 			'focal'   => '54% 24%',
 			'card'    => array(
 				'icon'  => 'people',
@@ -136,7 +136,7 @@ function vance_category_hero_meta() {
 			'eyebrow' => __( 'What changed', 'vance-health-hub' ),
 			'intro'   => __( 'Developments in gastroenterology, nutrition science and health policy, reported as they happen and grouped by when they were published.', 'vance-health-hub' ),
 			'image'   => 'healthcare-news.jpg',
-			'alt'     => __( 'A woman reading the morning news on a tablet by a bright window', 'vance-health-hub' ),
+			'alt'     => __( 'A doctor with a lanyard pausing against the wall of a bright hospital corridor to read something on a phone', 'vance-health-hub' ),
 			'focal'   => '50% 18%',
 			'card'    => array(
 				'icon'  => 'signal',

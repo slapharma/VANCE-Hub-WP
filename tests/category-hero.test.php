@@ -373,35 +373,76 @@ section( '4. Photograph resolution' );
 /* ===================================================================== */
 
 /*
- * The registry names a file per top-level section. None is on disk yet — the
- * OpenRouter account that generates them was out of credit on 2026-08-31 — so
- * the live path today is the motif, and that is what these assert. When a
- * photograph lands, 4a flips to the __media branch and 4b starts asserting the
- * <img>; both are written so the file's presence decides, not a hard-coded
- * expectation, and 4h holds the shape contract either way.
+ * BOTH branches, always -- and that is the point of the shape below.
+ *
+ * This section used to key everything off "does clinical-reviews.jpg exist",
+ * so when the three photographs were generated on 2026-08-31 it silently
+ * stopped testing the motif path altogether. Two mutants that had gone red the
+ * day before went green: deleting the file_exists guard, and un-hiding the
+ * motif from screen readers. A suite that quietly narrows as the repo grows is
+ * worse than one that fails.
+ *
+ * So each branch is asserted against a section chosen for it at runtime:
+ *   photo  -- any registry entry whose file IS on disk;
+ *   motif  -- any registry entry whose file is NOT.
+ * If either set is empty the check fails and says so, rather than skipping.
  */
-$photo_on_disk = file_exists( $THEME . '/assets/img/heroes/categories/clinical-reviews.jpg' );
+$with_file = null;
+$without_file = null;
+foreach ( vance_category_hero_meta() as $slug => $m ) {
+	$exists = file_exists( $THEME . '/assets/img/heroes/categories/' . $m['image'] );
+	if ( $exists && $with_file === null )     { $with_file = array( $slug, $m ); }
+	if ( ! $exists && $without_file === null ) { $without_file = array( $slug, $m ); }
+}
 
-$h = render( 17 );
-if ( $photo_on_disk ) {
-	check( '4a  a section with its photograph on disk renders the <img> branch',
+// Two throwaway terms, one pointed at each, so neither branch depends on which
+// real category happens to have a picture this week.
+$GLOBALS['TERMS'][910] = new WP_Term( 910, 'Photo Branch', $with_file    ? $with_file[0]    : 'x-none', 0 );
+$GLOBALS['TERMS'][911] = new WP_Term( 911, 'Motif Branch', $without_file ? $without_file[0] : 'y-none', 0 );
+set_posts( $DEFAULT_POSTS + array(
+	910 => array( 'total' => 5, 'time' => 1756598400 ),
+	911 => array( 'total' => 5, 'time' => 1756598400 ),
+) );
+
+check( '4a  at least one section has its photograph on disk to test the <img> branch',
+	$with_file !== null );
+
+if ( $with_file ) {
+	$h = body( render( 910 ) );
+	check( '4b  a section whose photograph is on disk renders the <img> branch',
 		strpos( $h, '__media' ) !== false && strpos( $h, '__motif' ) === false );
-	check( '4b  ...with the intrinsic box the file is cut to, so it cannot shift the headline',
+
+	check( '4c  ...with the intrinsic box the file is cut to, so it cannot shift the headline',
 		strpos( $h, 'width="1400" height="876"' ) !== false );
-	check( '4c  ...at the registry focal point',
-		strpos( $h, 'object-position: 52% 20%' ) !== false );
-} else {
-	check( '4a  a section with no photograph on disk falls back to the motif, not a broken <img>',
+
+	check( '4d  ...at the registry focal point, and cache-busted by mtime',
+		strpos( $h, 'object-position: ' . $with_file[1]['focal'] ) !== false
+		&& strpos( $h, '.jpg?v=' ) !== false );
+
+	check( '4e  ...and describes the picture rather than shipping an empty alt',
+		strpos( $h, 'alt="' . esc_attr( $with_file[1]['alt'] ) . '"' ) !== false );
+}
+
+check( '4f  at least one section has no photograph, to test the motif branch',
+	$without_file !== null );
+
+if ( $without_file ) {
+	$h = body( render( 911 ) );
+	check( '4g  a section whose photograph is missing falls back to the motif, not a 404 <img>',
 		strpos( $h, '__motif' ) !== false && strpos( $h, '<img' ) === false );
-	check( '4b  the motif is hidden from assistive technology',
+
+	check( '4h  the motif is hidden from assistive technology',
 		strpos( $h, '__motif" aria-hidden="true"' ) !== false );
-	check( '4c  and the section is flagged so the CSS can give it its top padding back',
+
+	check( '4i  and the section is flagged so the CSS can give it its top padding back',
 		strpos( $h, ' has-motif"' ) !== false );
 }
 
+set_posts( $DEFAULT_POSTS );
+
 // An admin upload takes over from both.
 $h = render( 17, array( 'vance_cat_photo_17' => 'https://cdn.test/mine.jpg' ) );
-check( '4d  the per-category Photograph control wins over everything',
+check( '4j  the per-category Photograph control wins over everything',
 	strpos( $h, 'src="https://cdn.test/mine.jpg"' ) !== false );
 
 check( '4e  ...and carries empty alt, because the registry description is about a different picture',
@@ -414,7 +455,7 @@ $h = render( 87, array( 'vance_cat_photo_75' => 'https://cdn.test/living.jpg' ) 
 check( '4f  a sub-category inherits the parent\'s photograph',
 	strpos( $h, 'https://cdn.test/living.jpg' ) !== false );
 
-check( '4g  ...unless it has one of its own',
+check( '4m  ...unless it has one of its own',
 	strpos( render( 87, array(
 		'vance_cat_photo_75' => 'https://cdn.test/living.jpg',
 		'vance_cat_photo_87' => 'https://cdn.test/food.jpg',
@@ -422,7 +463,7 @@ check( '4g  ...unless it has one of its own',
 
 // The legacy dark-band image must NOT leak onto the pale band.
 $h = render( 17, array( 'vance_cat_hero_17' => 'https://cdn.test/dark-navy-veiled.png' ) );
-check( '4h  the legacy dark-band Hero Image is never used by this hero',
+check( '4n  the legacy dark-band Hero Image is never used by this hero',
 	strpos( $h, 'dark-navy-veiled' ) === false );
 
 
@@ -545,6 +586,39 @@ $images = array();
 foreach ( $meta as $m ) { $images[] = $m['image']; }
 check( '8f  no two sections declare the same photograph',
 	count( $images ) === count( array_unique( $images ) ) );
+
+/*
+ * Alt text, and the shape of the file it describes.
+ *
+ * Both of these shipped wrong once. Two of the three photographs arrived with
+ * alt text written BEFORE the prompts were, so `gastro-living.jpg` -- a man
+ * lacing a boot by a window -- was announced to a screen reader as "two people
+ * talking over coffee at a bright kitchen table". Confidently describing the
+ * wrong picture is worse than describing none, and nothing renders differently
+ * when it happens.
+ *
+ * The suite cannot see what is IN a photograph, so it asserts the two things
+ * it can: that an entry with a real file on disk has real alt text, and that
+ * the file is the 1400x876 the renderer prints as width/height -- any other
+ * shape makes that attribute a lie the browser corrects after layout, which is
+ * the exact shift the attribute exists to prevent.
+ */
+$no_alt = array();
+$bad_shape = array();
+foreach ( $meta as $slug => $m ) {
+	$file = $THEME . '/assets/img/heroes/categories/' . $m['image'];
+	if ( ! file_exists( $file ) ) { continue; }   // motif sections: nothing to describe
+	if ( empty( $m['alt'] ) || strlen( trim( $m['alt'] ) ) < 20 ) { $no_alt[] = $slug; }
+	$size = getimagesize( $file );
+	if ( ! $size || $size[0] !== 1400 || $size[1] !== 876 ) {
+		$bad_shape[] = $slug . ' (' . ( $size ? $size[0] . 'x' . $size[1] : 'unreadable' ) . ')';
+	}
+}
+check( '8h2 every section WITH a photograph on disk describes it: ' . implode( ', ', $no_alt ),
+	$no_alt === array() );
+
+check( '8h3 ...and that file is really 1400x876: ' . implode( ', ', $bad_shape ),
+	$bad_shape === array() );
 
 $bad_focal = array();
 foreach ( $meta as $slug => $m ) {
