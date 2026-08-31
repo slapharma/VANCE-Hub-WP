@@ -1019,6 +1019,21 @@ $kb_hub_url = function_exists( 'vance_gi_hub_url' ) ? vance_gi_hub_url() : '';
 
 <main id="main-content" class="kb-lobby">
 
+	<?php
+	/*
+	 * HERO. Two designs, chosen by Appearance -> Customize -> Page -
+	 * Knowledgebase -> Hero Section -> "Knowledgebase hero design". Defaults
+	 * to 'classic', so deploying this changes nothing until an admin flips it.
+	 * The spotlight renderer reads this page's own tag/title/description keys,
+	 * and its band is the same site search this hero carries, so nothing is
+	 * lost in the switch. See inc/page-hero-spotlight.php.
+	 */
+	if ( function_exists( 'vance_page_hero_spotlight_active' )
+		&& vance_page_hero_spotlight_active( 'kblobby' ) ) :
+		vance_render_page_hero_spotlight( 'kblobby' );
+	else :
+	?>
+
 	<!-- HERO -->
 	<section class="hero kb-lobby-hero" style="padding: 72px 0 96px; min-height: 320px; display: flex; align-items: center; background: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $kb_hero_overlay ); ?>), rgba(10,25,41,<?php echo esc_attr( $kb_hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $kb_hero_bg ); ?>') no-repeat center center; background-size: cover;">
 		<div class="container">
@@ -1043,6 +1058,8 @@ $kb_hub_url = function_exists( 'vance_gi_hub_url' ) ? vance_gi_hub_url() : '';
 			</div>
 		</div>
 	</section>
+
+	<?php endif; ?>
 
 
 	<?php
@@ -1124,7 +1141,9 @@ $kb_hub_url = function_exists( 'vance_gi_hub_url' ) ? vance_gi_hub_url() : '';
 	?>
 
 	<!-- BLOCKS -->
-	<section class="kb-lobby-blocks">
+	<?php /* id="collections": the spotlight hero's first button points at it,
+	         and it is a sensible skip target from anywhere else too. */ ?>
+	<section id="collections" class="kb-lobby-blocks">
 		<div class="container">
 			<?php if ( empty( $kb_blocks ) ) : ?>
 

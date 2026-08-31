@@ -19,7 +19,7 @@ Three heroes exist today:
 | Design | Renderer | Used by |
 |---|---|---|
 | Spotlight (light, mint band) | [inc/hero-spotlight.php](wp-content/themes/vance-health-hub/inc/hero-spotlight.php) | homepage |
-| Spotlight, page variant | [inc/page-hero-spotlight.php](wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php) | eight pages: `/contact-us/`, `/about/`, the three free tools (`/gastro-health-survey/`, `/gastro-meal-planner/`, `/malnutrition-calculator/`), `/ask-ai/`, `/get-started-today/`, `/user-guide/` |
+| Spotlight, page variant | [inc/page-hero-spotlight.php](wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php) | eleven pages: `/contact-us/`, `/about/`, the three free tools (`/gastro-health-survey/`, `/gastro-meal-planner/`, `/malnutrition-calculator/`), `/ask-ai/`, `/get-started-today/`, `/user-guide/`, `/free-health-tools/`, `/knowledgebase/`, and the 404 |
 | Classic dark navy | `.hero` in `assets/css/main.css`, plus per-template bespoke ones | everything else |
 
 **Read `inc/page-hero-spotlight.php` end to end before writing anything.** It is the
@@ -164,6 +164,105 @@ of the three spotlight heroes rendered.
 
 Design reference (mockups, as-built): https://claude.ai/code/artifact/45add81d-a122-45c1-8497-8ac4c2635d9c
 
+### Update, 2026-08-31 — the two shelves, the 404, and two live bugs
+
+**Unlike every previous round, this one changes the live site**: the client
+asked for the three toggles to be switched on, and the 404 has no toggle at
+all. Current state is in the table at the end of this section.
+
+Three more config entries — `tools` (`/free-health-tools/`), `kblobby`
+(`/knowledgebase/`) and `e404`. Four new mechanisms, each earning its keep:
+
+- **`legacy_btn2` / `legacy_btn2_link`** — button 2's label AND link inherited
+  from the classic hero, the way `legacy_btn1` does on Get Started Today.
+  Free Health Tools needs both: an admin has relabelled that CTA **"Join
+  Now!"** in the Customizer, so a spotlight button carrying the code default
+  would have silently renamed the page's only call to action.
+- **`always`** — no toggle, always on. The 404 has never had a hero, so there
+  is no classic design to switch back to and a control offering "Classic"
+  would offer something that does not exist. Same call §4.2's policy heroes
+  took. It also means the 404 config declares no `style_section` and no
+  `classic_template`, and both suites assert those absences.
+- **`motif`** — render the policy pages' geometric motif when the Photograph
+  setting is empty. The rule this session used, and the one worth keeping:
+  **a photograph where the page is about people doing something, the motif
+  where it is about a body of material or a state of the site.** So the
+  Knowledgebase (a library) and the 404 (a state) get the motif; Free Health
+  Tools gets a photograph. It is a default and not a ceiling — uploading an
+  image in the Customizer switches the renderer to the photograph branch with
+  no code change, which is how a Canva or stock asset gets in later.
+- **copy without a classic hero** — when a config declares no `legacy_tag`,
+  its three `legacy_*_default` values ARE the copy. Only the 404 does this.
+
+Two new bands:
+
+- **`search`** on the Knowledgebase. Its classic hero already carried a search
+  field, so dropping it would have been a straight loss — and the homepage
+  hero puts a search field in exactly this slot, so the markup and the CSS are
+  reused wholesale and **no new stylesheet rules were needed for it at all**.
+  The band's prompt becomes a real `<label for>` on this page only.
+- **`start`** on the 404: four destinations, two-by-two, the `lines` markup
+  with the same chevron the tools and docs bands add. The Knowledgebase is
+  deliberately NOT one of the four — it is button 1.
+
+**The start page is `/knowledgebase/`, not the homepage.** It is the one door
+that leads to every other: collections, conditions, the free tools, the newest
+articles and a search field are all on it. The homepage sells the Hub; the
+lobby indexes it. Every 404 link resolves by slug, because a recovery link
+that is one rename from a second 404 is worse than no link.
+
+**Two live bugs found on the way, both invisible until now:**
+
+1. `vance_page_hero_spotlight_tools()` resolved its "browse all free tools"
+   cell to **`/tools-resources/`, which 404s**. The shelf's real slug is
+   `free-health-tools`; only `page-tools-resources.php`'s docblock says
+   otherwise. Nobody had seen it because no tool page had the spotlight hero
+   switched on. Fixed, and `tests/hero-render.test.php` no longer lists
+   `tools-resources` in its stub page table — while it did, the suite was
+   proving a link that could not work.
+2. `$notes` in `vance_page_hero_spotlight_customize()` had entries for five of
+   the eight pages. **Ask AI, Get Started Today and the User Guide shipped on
+   2026-08-28 reading an undefined index**, so three sections and three
+   controls went out with a null description. Fixed for all eleven, and the
+   customizer suite now asserts every description is non-empty. The same
+   commit clears the `$c['btn1_text']` notice Get Started Today raised on
+   every render.
+
+Also here: `page-knowledgebase.php` gains `id="collections"` on its blocks
+section, which the hero's first button points at and which nothing carried.
+
+**404.php keeps a fallback.** If `inc/page-hero-spotlight.php` is ever absent
+— a half-finished deploy is exactly when a 404 gets served — the template
+still renders a heading and a link to the Knowledgebase, which is the bug it
+was written to fix in the first place.
+
+**Images.** The theme's photograph library is thin and every light-enough
+asset is already spoken for, which is why two of the three new heroes take the
+motif rather than borrowing a condition page's photo a third time. Free Health
+Tools uses `gi-health/ulcerative-colitis.jpg`, and the Gastro Health Survey
+still uses `gi-health/ibs.jpg`. Both are borrowed and both would be better as
+dedicated assets — every one of the eleven has a `vance_{page}_hero_spot_image`
+control, so replacing them is an upload, not a commit. **Canva's Connect API
+cannot generate images** (it creates, autofills and exports designs); the
+OpenArt connector can, or an export from Canva can be uploaded by hand.
+
+tests: **260 / 136 / 22 / 182**, 23 + 17 mutants all red, none by crashing.
+One mutant had to be split: `"if ( $c['slot'] === 'search' ) {"` matches the
+**Customizer field** before it matches the markup branch, so the mutant read
+as covering the band and covered the placeholder control instead. And the
+obvious markup mutant (`$slot_markup = 'search'` → never set) fatals with a
+TypeError — it feeds the string `'search'` to the cell loop — so it is red
+with zero failing assertions. The realistic version, dropping the markup
+branch while `$slot_markup` still says `search`, produces 5 real FAILs.
+
+| Page | Toggle | State after this round |
+|---|---|---|
+| Free Health Tools | `vance_tools_hero_style` | **spotlight** |
+| Knowledgebase | `vance_kblobby_hero_style` | **spotlight** |
+| Gastro Health Survey | `vance_hquiz_hero_style` | **spotlight** — built 2026-08-28, switched on now |
+| 404 | — | **spotlight, no toggle** |
+| Meal planner, Malnutrition calculator, Ask AI, Get Started, User Guide | … | still classic |
+
 ---
 
 ## 3. The pattern to follow
@@ -269,6 +368,11 @@ page-gi-condition.php          page-tools-resources.php            template-part
 page-gi-health.php
 ```
 
+⚠ Of those, `page-tools-resources.php` and `page-knowledgebase.php` were
+converted on 2026-08-31 and both are **live on spotlight**. Their `.hero`
+blocks are still in the templates behind the toggle, so they still appear in
+the list above; they are not remaining work. Eleven remain.
+
 ⚠ This list said sixteen and named `page-healthcare-quiz.php`. **That was wrong** —
 that template has never carried `.hero`; its hero is the bespoke `quiz-hero` styled
 inline, which is why it is listed in §4.2 as well. It is now converted. Fifteen
@@ -285,8 +389,8 @@ opt-outs.
 | `page-patients.php` | `vance_pat_hero_*` | Has an overlay slider registered by the shared `$hero_overlay_pages` loop |
 | `page-healthcare-professionals.php` | `vance_hcp_hero_*` | Same |
 | `page-education.php` | `vance_edu_hero_*` | |
-| `page-tools-resources.php` | `vance_tools_hero_*` | |
-| `page-knowledgebase.php` | `vance_kblobby_hero_*` | Separate from the `kb-mini-hero` in `front-page.php` |
+| ~~`page-tools-resources.php`~~ | `vance_tools_hero_*` | **DONE 2026-08-31** — `vance_tools_hero_style`, live at `/free-health-tools/`. Inherits button 2 as well as the copy |
+| ~~`page-knowledgebase.php`~~ | `vance_kblobby_hero_*` | **DONE 2026-08-31** — `vance_kblobby_hero_style`, live. Band is the search field. Separate from the `kb-mini-hero` in `front-page.php` |
 | ~~`page-turn-evidence-into-action.php`~~ | `vance_evidence_hero_*` | **DONE** — `vance_evidence_hero_style`. Lives at `/get-started-today/`; `/turn-evidence-into-action/` 404s |
 | ~~`page-user-guide.php`~~ | `vance_userguide_hero_*` | **DONE** — `vance_userguide_hero_style` |
 | `page-gi-health.php`, `page-gi-condition.php` | — | Also carry the `.gi-reveal` animation, see §7 |
@@ -315,7 +419,16 @@ if it is converted, its band should almost certainly be the same `tools` variant
 `vance_page_hero_spotlight_tools()` will need a fourth entry and a decision about
 whether Ask AI belongs in the other three pages' bands too.
 
-### 4.3 Post types
+### 4.3 The 404 — done
+
+`404.php` carried no hero at all, only a centred block of text. It now renders
+the spotlight hero with **no toggle** (`'always' => true`), a motif, and a band
+of four suggested destinations. There is nothing left to convert there.
+
+`search.php` is the closest remaining sibling and should probably take the
+same `search` band the Knowledgebase now uses.
+
+### 4.4 Post types
 
 - **`single.php`** — the `oped-hero`, styled in `assets/css/oped-template.css` and
   `main.css`. This is the article hero every post uses; it carries per-post category

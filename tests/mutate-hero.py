@@ -11,9 +11,11 @@ MUTANTS = [
  ("badge visibility switch ignored",
   "if ( $c['slot'] === 'badges' && ! vance_get_theme_mod( 'vance_about_badges_show', true ) ) {",
   "if ( false ) {"),
- ("eyebrow stops reading the classic key",
-  "$vals['eyebrow'] = vance_get_theme_mod( $c['legacy_tag'],   $c['legacy_tag_default'] );",
-  "$vals['eyebrow'] = '';"),
+ # The three copy fields are resolved in one loop now, so this mutant covers
+ # eyebrow, headline and intro at once.
+ ("the copy stops reading the classic keys",
+  ": vance_get_theme_mod( $c[ 'legacy_' . $key ], $c[ 'legacy_' . $key . '_default' ] );",
+  ": '';"),
  ("About card reverts to the text variant",
   "if ( $c['card'] === 'stat' ) :", "if ( false ) :"),
  ("a tool page lists itself in its own band",
@@ -42,8 +44,70 @@ MUTANTS = [
  # mutant is the realistic version of the same slip (a slot listed under the
  # wrong markup) and it produces real FAILs.
  ("the tools band is mis-listed as a badges band",
-  "array( 'badges', 'pillars' ), true ) ? 'badges' : 'lines';",
-  "array( 'badges', 'pillars', 'tools' ), true ) ? 'badges' : 'lines';"),
+  "} elseif ( in_array( $c['slot'], array( 'badges', 'pillars' ), true ) ) {",
+  "} elseif ( in_array( $c['slot'], array( 'badges', 'pillars', 'tools' ), true ) ) {"),
+
+ # ---- the two shelves and the 404 ------------------------------------
+
+ # The 404 has no toggle, so if 'always' stops being honoured it silently
+ # falls back to the shared default -- which is 'classic', a design it does
+ # not have. The page would render nothing at all.
+ ("the 404 stops being always-on",
+  "if ( ! empty( $c['always'] ) ) {", "if ( false ) {"),
+
+ # /tools-resources/ 404s on the live site. This is the bug that was sitting
+ # in the tools band unseen, because no tool page had the hero switched on.
+ ("the shelf cell points at the dead path again",
+  "vance_page_hero_spotlight_page_url( 'free-health-tools', '/free-health-tools/' )",
+  "vance_page_hero_spotlight_page_url( 'tools-resources', '/tools-resources/' )"),
+
+ ("button 2 stops inheriting the classic label",
+  "$vals['btn2_text'] = vance_get_theme_mod( $c['legacy_btn2'], $c['legacy_btn2_default'] );",
+  "$vals['btn2_text'] = 'Create Free Account';"),
+
+ ("button 2 stops inheriting the classic link",
+  "$vals['btn2_link'] = vance_get_theme_mod( $c['legacy_btn2_link'], $c['legacy_btn2_link_default'] );",
+  "$vals['btn2_link'] = '/login/?tab=signup';"),
+
+ # The motif is a default, not a ceiling: an uploaded photograph must win,
+ # or the Photograph control on those two pages is decoration.
+ ("an uploaded photograph no longer beats the motif",
+  "if ( $s['image'] === '' && ! empty( $c['motif'] ) ) :",
+  "if ( ! empty( $c['motif'] ) ) :"),
+
+ # The first `$c['slot'] === 'search'` in the file is this one -- the field,
+ # not the markup. Without the second line of the pattern this mutant reads
+ # as covering the band and covers the placeholder control instead.
+ ("the search band loses its placeholder field",
+  "if ( $c['slot'] === 'search' ) {" + chr(10) + chr(9)*2 + "$d['search_placeholder']",
+  "if ( false ) {" + chr(10) + chr(9)*2 + "$d['search_placeholder']"),
+
+ # NB not "$slot_markup = 'search'" -> "if ( false )": that feeds the string
+ # 'search' to the lines markup and fatals with a TypeError, so the suite
+ # exits non-zero without a single failing assertion -- red for the wrong
+ # reason, and no evidence of coverage. This is the realistic version of the
+ # same slip: the markup branch is dropped while $slot_markup still says
+ # 'search', so the band falls through to the badges markup and renders a
+ # tick beside the word 'search'. Ugly, silent, and 2 real FAILs.
+ ("the search band renders as badges, not a form",
+  "<?php if ( $slot_markup === 'search' ) : ?>" + chr(10) +
+  chr(9)*5 + "<?php /* The homepage hero's own search markup",
+  "<?php if ( false ) : ?>" + chr(10) +
+  chr(9)*5 + "<?php /* The homepage hero's own search markup"),
+
+ # A <span> looks identical and is not a label: the prompt stops being a
+ # click target for the field under it.
+ ("the search prompt goes back to a bare span",
+  "<?php if ( $slot_markup === 'search' ) : ?>" + chr(10) +
+  chr(9)*5 + "<label class=" + chr(34) + "vhh-hero-spotlight__slot-label" + chr(34),
+  "<?php if ( false ) : ?>" + chr(10) +
+  chr(9)*5 + "<label class=" + chr(34) + "vhh-hero-spotlight__slot-label" + chr(34)),
+
+ # The 404 band resolves every cell by slug so a renamed page keeps its
+ # link. Losing that turns four links into four plain <div>s.
+ ("the 404 band stops resolving its links",
+  "'href'  => vance_page_hero_spotlight_page_url( $c[3], $c[4] ),",
+  "'href'  => '',"),
 ]
 
 try:

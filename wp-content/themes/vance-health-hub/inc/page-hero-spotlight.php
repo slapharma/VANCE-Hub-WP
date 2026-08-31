@@ -386,6 +386,144 @@ function vance_page_hero_spotlight_config( $page ) {
 			'card_title'   => __( 'Tuned to your condition, once you join', 'vance-health-hub' ),
 			'card_text'    => __( 'The research, tools and AI answers you see are filtered to the condition you tell us about, so the Hub stops being a generic health website.', 'vance-health-hub' ),
 		),
+
+		/*
+		 * ---- The two shelves, and the 404 --------------------------------
+		 *
+		 * Free Health Tools and the Knowledgebase are the site's two shelves:
+		 * pages whose whole job is to hand a visitor on to something else. So
+		 * the band carries the handing-on, not facts about the shelf itself.
+		 *
+		 * The 404 is the one page here with no classic hero to switch back to
+		 * and no Customizer copy of its own -- see 'always' below and the copy
+		 * branch in vance_page_hero_spotlight_values().
+		 */
+		'tools' => array(
+			'name'         => __( 'Free Health Tools', 'vance-health-hub' ),
+			'short_name'   => __( 'Free tools', 'vance-health-hub' ),
+			'panel'        => 'vance_tools_panel',
+			'section'      => 'vance_tools_hero_spotlight',
+			// Two OTHER spotlight sections already live in this panel, one per
+			// tool. hero-customizer.test.php fails if any two share a title.
+			'section_title'    => __( 'Shelf Hero — Spotlight', 'vance-health-hub' ),
+			'style_section'    => 'vance_tools_hero',
+			'classic_template' => 'page-tools-resources.php',
+			'priority'     => 9,
+			'legacy_tag'   => 'vance_tools_hero_tag',
+			'legacy_title' => 'vance_tools_hero_title',
+			'legacy_desc'  => 'vance_tools_hero_desc',
+			'legacy_tag_default'   => 'Free Tools',
+			'legacy_title_default' => 'Tools &amp; <span class="highlight">Resources</span>',
+			'legacy_desc_default'  => 'Clinical calculators built on peer-reviewed evidence, free to use, no signup required. Save your results and build a meal plan by registering for a free account.',
+			'image'        => $img_gi . 'ulcerative-colitis.jpg',
+			'image_alt'    => __( 'Two women walking and talking together in bright sunlight', 'vance-health-hub' ),
+			'btn1_text'    => __( 'See the three tools', 'vance-health-hub' ),
+			// The grid of tool cards, the first thing below the intro.
+			'btn1_link'    => '#tools-grid',
+			// Button 2 is the account CTA, and its LABEL and its LINK are both
+			// inherited -- the same mechanism, and the same reason, as button 1
+			// on Get Started Today. An admin has relabelled this one 'Join Now!'
+			// in the Customizer, so a spotlight button carrying the code default
+			// would silently rename the page's only CTA the day it switched.
+			'legacy_btn2'              => 'vance_tools_hero_btn2_text',
+			'legacy_btn2_default'      => 'Create Free Account',
+			'legacy_btn2_link'         => 'vance_tools_hero_btn2_link',
+			'legacy_btn2_link_default' => '/login/?tab=signup',
+			'slot'         => 'tools',
+			// The band lists all three tools and no 'browse all' cell: this page
+			// IS the shelf, so nothing is dropped and nothing is sold back to
+			// itself. vance_page_hero_spotlight_tools() reaches that on its own,
+			// because it adds the shelf cell only when it has dropped something.
+			'slot_label'   => __( 'Go straight to one', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'grid',
+			'card_title'   => __( 'All three are free, with no account', 'vance-health-hub' ),
+			'card_text'    => __( 'Nothing here sits behind a signup. An account only adds somewhere to keep the results and pick them up again later.', 'vance-health-hub' ),
+		),
+		'kblobby' => array(
+			'name'         => __( 'Knowledgebase', 'vance-health-hub' ),
+			'short_name'   => __( 'Knowledgebase', 'vance-health-hub' ),
+			'panel'        => 'vance_kblobby_panel',
+			'section'      => 'vance_kblobby_hero_spotlight',
+			'style_section'    => 'vance_kblobby_hero',
+			'classic_template' => 'page-knowledgebase.php',
+			'priority'     => 9,
+			'legacy_tag'   => 'vance_kblobby_hero_tag',
+			'legacy_title' => 'vance_kblobby_hero_title',
+			'legacy_desc'  => 'vance_kblobby_hero_desc',
+			// The TEMPLATE's fallbacks, not customizer-pages.php's: that file
+			// registers a description mentioning 'courses' which only the
+			// Customizer preview ever sees.
+			'legacy_tag_default'   => 'Knowledgebase',
+			'legacy_title_default' => 'The whole <span class="highlight">evidence library</span>, one door',
+			'legacy_desc_default'  => 'Clinical reviews, gastro living guides and health news - every collection in the Vance Medical Hub, grouped so you can go straight to the one you need.',
+			// No photograph, by the same reasoning the five policy documents
+			// settled on: a library of articles has nothing to picture, and a
+			// stock clinician beside 'pick a collection' says less than nothing.
+			// Uploading one in the Customizer overrides the motif -- see 'motif'
+			// in vance_render_page_hero_spotlight().
+			'motif'        => true,
+			'image'        => '',
+			'image_alt'    => '',
+			'btn1_text'    => __( 'Pick a collection', 'vance-health-hub' ),
+			'btn1_link'    => '#collections',
+			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
+			'btn2_link'    => '',
+			'btn2_fallback_slug' => 'ask-ai',
+			'btn2_fallback_path' => '/ask-ai/',
+			// The one page whose CLASSIC hero already carried a search field, so
+			// dropping it would be a straight loss. The band is therefore the
+			// search -- exactly what the homepage hero puts in the same slot,
+			// markup and stylesheet reused rather than restated.
+			'slot'         => 'search',
+			'slot_label'   => __( 'What would you like to know?', 'vance-health-hub' ),
+			'search_placeholder' => __( 'Search the whole knowledgebase...', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'book',
+			'card_title'   => __( 'Every collection is clinically reviewed', 'vance-health-hub' ),
+			'card_text'    => __( 'Nothing reaches a shelf here until a clinician has read it, and every article names the evidence it rests on.', 'vance-health-hub' ),
+		),
+		'e404' => array(
+			'name'         => __( 'Page Not Found (404)', 'vance-health-hub' ),
+			'short_name'   => __( 'Not found', 'vance-health-hub' ),
+			'panel'        => 'vance_e404_panel',
+			'section'      => 'vance_e404_hero_spotlight',
+			'priority'     => 9,
+			// NO TOGGLE. Every other page here switches between two designs; the
+			// 404 has never had a hero at all, so there is nothing to switch back
+			// to and a control offering 'Classic' would offer a design that does
+			// not exist. Same call the five policy documents took, for the same
+			// reason. Consequences: no style_section and no classic_template are
+			// declared, and vance_page_hero_spotlight_active('e404') is always
+			// true -- so this hero ships live rather than waiting for an admin.
+			'always'       => true,
+			// ...and therefore no legacy_* keys either: with no classic hero
+			// there is no copy to inherit. The three *_default values below are
+			// used as literals -- see vance_page_hero_spotlight_values().
+			'legacy_tag_default'   => __( '404 error', 'vance-health-hub' ),
+			'legacy_title_default' => __( 'We can&rsquo;t find that page', 'vance-health-hub' ),
+			'legacy_desc_default'  => __( 'The address may have changed, or the page may have been retired. Nothing is lost — everything the Hub publishes is reachable from the Knowledgebase.', 'vance-health-hub' ),
+			'motif'        => true,
+			'image'        => '',
+			'image_alt'    => '',
+			// THE START PAGE. The Knowledgebase lobby is the one door on this
+			// site that leads to every other: the collections, the conditions,
+			// the free tools, the newest articles and a search field are all on
+			// it. The homepage is the second button rather than the first
+			// because it sells the Hub; the lobby indexes it.
+			'btn1_text'    => __( 'Start at the Knowledgebase', 'vance-health-hub' ),
+			'btn1_link'    => '',
+			'btn1_fallback_slug' => 'knowledgebase',
+			'btn1_fallback_path' => '/knowledgebase/',
+			'btn2_text'    => __( 'Back to the homepage', 'vance-health-hub' ),
+			'btn2_link'    => '/',
+			'slot'         => 'start',
+			'slot_label'   => __( 'Or go straight to one of these', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'chat',
+			'card_title'   => __( 'Followed a link from somewhere?', 'vance-health-hub' ),
+			'card_text'    => __( 'Tell us where it was and we will fix it. There is a search box at the top of every page as well.', 'vance-health-hub' ),
+		),
 	);
 
 	return isset( $conf[ $page ] ) ? $conf[ $page ] : null;
@@ -401,7 +539,8 @@ function vance_page_hero_spotlight_config( $page ) {
  * @return string[]
  */
 function vance_page_hero_spotlight_pages() {
-	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition', 'askai', 'evidence', 'userguide' );
+	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition', 'askai',
+		'evidence', 'userguide', 'tools', 'kblobby', 'e404' );
 }
 
 /**
@@ -440,9 +579,18 @@ function vance_page_hero_spotlight_default_style() {
  * @return bool
  */
 function vance_page_hero_spotlight_active( $page ) {
-	if ( ! vance_page_hero_spotlight_config( $page ) ) {
+	$c = vance_page_hero_spotlight_config( $page );
+	if ( ! $c ) {
 		return false;
 	}
+
+	// A page whose config declares 'always' has no classic hero to switch
+	// back to, so it registers no toggle and reads none. Only the 404 is in
+	// that position today; everything else stays opt-in.
+	if ( ! empty( $c['always'] ) ) {
+		return true;
+	}
+
 	$style = vance_get_theme_mod(
 		'vance_' . $page . '_hero_style',
 		vance_page_hero_spotlight_default_style()
@@ -486,13 +634,17 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 		'bg_to'           => $home['bg_to'],
 		'title_color'     => $home['title_color'],
 		'intro_color'     => $home['intro_color'],
-		'btn1_text'       => $c['btn1_text'],
+		// ?? '' on the two labels because a page that inherits a button from
+		// its classic hero declares no literal for it -- and the entry is
+		// unset again a few lines down anyway. Reading it raised a PHP notice
+		// on every Get Started Today render.
+		'btn1_text'       => isset( $c['btn1_text'] ) ? $c['btn1_text'] : '',
 		'btn1_link'       => $c['btn1_link'],
 		'btn1_bg_color'   => $home['btn1_bg_color'],
 		'btn1_text_color' => $home['btn1_text_color'],
 		'btn1_hover_bg'   => $home['btn1_hover_bg'],
-		'btn2_text'       => $c['btn2_text'],
-		'btn2_link'       => $c['btn2_link'],
+		'btn2_text'       => isset( $c['btn2_text'] ) ? $c['btn2_text'] : '',
+		'btn2_link'       => isset( $c['btn2_link'] ) ? $c['btn2_link'] : '',
 		'show_slot'       => true,
 		'slot_label'      => $c['slot_label'],
 		'show_card'       => true,
@@ -512,6 +664,24 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 	// drifted apart in the first place.
 	if ( ! empty( $c['legacy_btn1'] ) ) {
 		unset( $d['btn1_text'] );
+	}
+
+	// Same again for button 2, which Free Health Tools needs for BOTH halves:
+	// an admin relabelled that CTA 'Join Now!' and repointed it, and neither
+	// edit should be undone by a change of hero design. Declaring the pair
+	// drops both controls, so there is still exactly one place to type each.
+	if ( ! empty( $c['legacy_btn2'] ) ) {
+		unset( $d['btn2_text'] );
+	}
+	if ( ! empty( $c['legacy_btn2_link'] ) ) {
+		unset( $d['btn2_link'] );
+	}
+
+	// The search band is the only one with anything to type into it, so it is
+	// the only one that adds a field. Every other band is filled from settings
+	// the page already has.
+	if ( $c['slot'] === 'search' ) {
+		$d['search_placeholder'] = $c['search_placeholder'];
 	}
 
 	return $d;
@@ -541,21 +711,39 @@ function vance_page_hero_spotlight_values( $page ) {
 	// The defaults matter as much as the keys: an unsaved setting returns
 	// whatever default is passed here, so passing '' would render an empty
 	// hero on every site that has not edited these fields.
-	$vals['eyebrow'] = vance_get_theme_mod( $c['legacy_tag'],   $c['legacy_tag_default'] );
-	$vals['title']   = vance_get_theme_mod( $c['legacy_title'], $c['legacy_title_default'] );
-	$vals['intro']   = vance_get_theme_mod( $c['legacy_desc'],  $c['legacy_desc_default'] );
+	//
+	// A page with no legacy_tag has no classic hero and therefore no copy
+	// settings to inherit — the 404, and only the 404. Its three *_default
+	// values are then the copy itself, which is the same call inc/legal-hero.php
+	// made for the five policy documents: nothing has become less editable
+	// than it was, because there was never a control for it.
+	foreach ( array( 'eyebrow' => 'tag', 'title' => 'title', 'intro' => 'desc' ) as $field => $key ) {
+		$vals[ $field ] = empty( $c[ 'legacy_' . $key ] )
+			? $c[ 'legacy_' . $key . '_default' ]
+			: vance_get_theme_mod( $c[ 'legacy_' . $key ], $c[ 'legacy_' . $key . '_default' ] );
+	}
 
 	if ( ! empty( $c['legacy_btn1'] ) ) {
 		$vals['btn1_text'] = vance_get_theme_mod( $c['legacy_btn1'], $c['legacy_btn1_default'] );
 	}
+	if ( ! empty( $c['legacy_btn2'] ) ) {
+		$vals['btn2_text'] = vance_get_theme_mod( $c['legacy_btn2'], $c['legacy_btn2_default'] );
+	}
+	if ( ! empty( $c['legacy_btn2_link'] ) ) {
+		$vals['btn2_link'] = vance_get_theme_mod( $c['legacy_btn2_link'], $c['legacy_btn2_link_default'] );
+	}
 
-	// Only reached when an admin has deliberately cleared button 2's link,
-	// and only on the pages whose config names a page to fall back to.
-	if ( ! $vals['btn2_link'] && ! empty( $c['btn2_fallback_slug'] ) ) {
-		$vals['btn2_link'] = vance_page_hero_spotlight_page_url(
-			$c['btn2_fallback_slug'],
-			$c['btn2_fallback_path']
-		);
+	// Resolve either button's link by SLUG when the config names one, so the
+	// CTA follows the page wherever it is moved to. For button 2 this is only
+	// reached when an admin has deliberately cleared the link; button 1 uses
+	// it on the 404, whose whole job is to point at a page that still exists.
+	foreach ( array( 'btn1', 'btn2' ) as $b ) {
+		if ( ! $vals[ $b . '_link' ] && ! empty( $c[ $b . '_fallback_slug' ] ) ) {
+			$vals[ $b . '_link' ] = vance_page_hero_spotlight_page_url(
+				$c[ $b . '_fallback_slug' ],
+				$c[ $b . '_fallback_path' ]
+			);
+		}
 	}
 
 	return $vals;
@@ -755,11 +943,115 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'key'   => 'grid',
 			'label' => __( 'More', 'vance-health-hub' ),
 			'value' => __( 'Browse all free tools', 'vance-health-hub' ),
-			'href'  => vance_page_hero_spotlight_page_url( 'tools-resources', '/tools-resources/' ),
+			// The shelf's slug is free-health-tools, NOT tools-resources — that is
+			// only what page-tools-resources.php's docblock suggests, and
+			// /tools-resources/ 404s on the live site. Nobody had seen this cell,
+			// because no tool page had the spotlight hero switched on yet.
+			'href'  => vance_page_hero_spotlight_page_url( 'free-health-tools', '/free-health-tools/' ),
 		);
 	}
 
 	return $cells;
+}
+
+/**
+ * The four places worth starting from, for the 404's utility band.
+ *
+ * The only band on the site written as literals rather than read from
+ * settings, for the reason given at 'always' in the config: the 404 has no
+ * Customizer copy of its own, so reading three of these four from theme mods
+ * and typing the fourth would be worse than typing all four — an admin would
+ * have no way of telling which cells they could change.
+ *
+ * The Knowledgebase is deliberately NOT here. It is button 1, the start page,
+ * and a cell repeating it would spend a quarter of the band on a link that is
+ * already the largest thing on the screen.
+ *
+ * @return array<int, array{key: string, label: string, value: string, href: string}>
+ */
+function vance_page_hero_spotlight_start() {
+	$cells = array(
+		array( 'grid', __( 'Free tools', 'vance-health-hub' ),
+			__( 'Free Health Tools', 'vance-health-hub' ), 'free-health-tools', '/free-health-tools/' ),
+		array( 'chat', __( 'Ask a question', 'vance-health-hub' ),
+			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/' ),
+		array( 'clipboard', __( 'Self-assessment', 'vance-health-hub' ),
+			__( 'Gastro Health Survey', 'vance-health-hub' ), 'gastro-health-survey', '/gastro-health-survey/' ),
+		array( 'mail', __( 'Still stuck', 'vance-health-hub' ),
+			__( 'Contact us', 'vance-health-hub' ), 'contact-us', '/contact-us/' ),
+	);
+
+	$out = array();
+	foreach ( $cells as $c ) {
+		$out[] = array(
+			'key'   => $c[0],
+			'label' => $c[1],
+			'value' => $c[2],
+			// By slug, so a renamed page keeps its cell rather than sending a
+			// visitor who is already lost to a second 404.
+			'href'  => vance_page_hero_spotlight_page_url( $c[3], $c[4] ),
+		);
+	}
+
+	return $out;
+}
+
+/**
+ * The geometric motif that stands in for the photograph.
+ *
+ * Used by the pages whose config sets 'motif' and whose photograph setting is
+ * empty — the Knowledgebase lobby and the 404. Both are pages about a body of
+ * material or a state of the site rather than about people, and a stock
+ * clinician beside either says less than nothing. Uploading an image in the
+ * Customizer takes over, so this is a default and not a ceiling.
+ *
+ * inc/legal-hero.php carries its own copy of the same motif on purpose: it is
+ * loaded only by the policy templates, is covered by its own suite and its own
+ * mutation runner, and a policy page should not stop rendering because a page
+ * hero was refactored. If the two are ever merged, merge the CSS with them —
+ * that file declares `.vhh-hero-spotlight__motif` inline as well.
+ *
+ * @return string SVG markup. Static — no dynamic values, nothing to escape.
+ */
+function vance_page_hero_spotlight_motif() {
+	// A 7x4 dot field, built rather than typed out so the spacing is one
+	// number instead of twenty-eight coordinates to keep in step.
+	$dots = '';
+	for ( $row = 0; $row < 4; $row++ ) {
+		for ( $col = 0; $col < 7; $col++ ) {
+			$dots .= sprintf(
+				'<circle cx="%d" cy="%d" r="2.1"/>',
+				392 + ( $col * 30 ),
+				322 + ( $row * 30 )
+			);
+		}
+	}
+
+	// Gradient ids are prefixed because a page may carry other inline SVG, and
+	// an id collision repaints whichever one lost. They differ from the legal
+	// hero's for the same reason, even though the two never render together.
+	return '<svg viewBox="0 0 640 520" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false">'
+		. '<defs>'
+		. '<radialGradient id="vhhPageBloom" cx="70%" cy="26%" r="64%">'
+		. '<stop offset="0%" stop-color="#AFD6D4" stop-opacity="0.60"/>'
+		. '<stop offset="52%" stop-color="#CBE4E2" stop-opacity="0.26"/>'
+		. '<stop offset="100%" stop-color="#CBE4E2" stop-opacity="0"/>'
+		. '</radialGradient>'
+		. '<linearGradient id="vhhPageArc" x1="0" y1="1" x2="1" y2="0">'
+		. '<stop offset="0%" stop-color="#04504E" stop-opacity="0.03"/>'
+		. '<stop offset="48%" stop-color="#04504E" stop-opacity="0.30"/>'
+		. '<stop offset="100%" stop-color="#04504E" stop-opacity="0.07"/>'
+		. '</linearGradient>'
+		. '</defs>'
+		. '<rect width="640" height="520" fill="url(#vhhPageBloom)"/>'
+		. '<g fill="none" stroke="url(#vhhPageArc)">'
+		. '<circle cx="486" cy="150" r="118" stroke-width="1.5"/>'
+		. '<circle cx="486" cy="150" r="188" stroke-width="1.2"/>'
+		. '<circle cx="486" cy="150" r="262" stroke-width="1"/>'
+		. '<circle cx="486" cy="150" r="342" stroke-width="0.9"/>'
+		. '</g>'
+		. '<g fill="#04504E" opacity="0.13" stroke="none">' . $dots . '</g>'
+		. '</svg>';
 }
 
 /**
@@ -848,6 +1140,14 @@ function vance_render_page_hero_spotlight( $page ) {
 		case 'pillars':
 			$slot_items = vance_page_hero_spotlight_pillars();
 			break;
+		case 'start':
+			$slot_items = vance_page_hero_spotlight_start();
+			break;
+		case 'search':
+			// Not a list of cells at all — the band is a form. Non-empty so the
+			// shared `$show_slot` test below reads it as present.
+			$slot_items = array( 'search' );
+			break;
 		default:
 			// Defaults copied from page-about.php's own $badge_defaults, for the
 			// same reason as the hero copy above: '' here empties the band on any
@@ -866,7 +1166,13 @@ function vance_render_page_hero_spotlight( $page ) {
 	// Every slot is one of those two with a modifier on top, which is what
 	// keeps the cell treatment, the dividers and the responsive stack in a
 	// single place.
-	$slot_markup = in_array( $c['slot'], array( 'badges', 'pillars' ), true ) ? 'badges' : 'lines';
+	if ( $c['slot'] === 'search' ) {
+		$slot_markup = 'search';
+	} elseif ( in_array( $c['slot'], array( 'badges', 'pillars' ), true ) ) {
+		$slot_markup = 'badges';
+	} else {
+		$slot_markup = 'lines';
+	}
 	$slot_class  = 'vhh-hero-spotlight__slot--' . $slot_markup;
 	if ( $c['slot'] !== $slot_markup ) {
 		$slot_class .= ' vhh-hero-spotlight__slot--' . $c['slot'];
@@ -879,6 +1185,15 @@ function vance_render_page_hero_spotlight( $page ) {
 	?>
 	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--<?php echo esc_attr( $page ); ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
 
+		<?php if ( $s['image'] === '' && ! empty( $c['motif'] ) ) : ?>
+		<?php /* No photograph, and the config says none is wanted — see
+		         vance_page_hero_spotlight_motif(). An admin who uploads one in
+		         the Customizer gets the photograph branch instead, with no code
+		         change: that is the whole point of the empty default. */ ?>
+		<div class="vhh-hero-spotlight__motif" aria-hidden="true"><?php
+			echo vance_page_hero_spotlight_motif(); // phpcs:ignore WordPress.Security.EscapeOutput — static markup
+		?></div>
+		<?php else : ?>
 		<div class="vhh-hero-spotlight__media">
 			<?php /* Above the fold and the page's LCP candidate — eager, high
 			         priority, and with intrinsic dimensions so it reserves its
@@ -888,6 +1203,7 @@ function vance_render_page_hero_spotlight( $page ) {
 			     width="1400" height="876"
 			     decoding="async" fetchpriority="high">
 		</div>
+		<?php endif; ?>
 
 		<div class="container vhh-hero-spotlight__inner">
 			<div class="vhh-hero-spotlight__copy">
@@ -922,10 +1238,36 @@ function vance_render_page_hero_spotlight( $page ) {
 				<?php if ( $show_slot ) : ?>
 				<div class="vhh-hero-spotlight__slot-wrap">
 					<?php if ( $s['slot_label'] !== '' ) : ?>
+					<?php /* A real <label for> when the band below is a search field, a
+					         plain <span> when it is a row of cells there is nothing to
+					         label. Same class either way, so the type comes from the one
+					         rule in main.css that also sets the homepage's. */ ?>
+					<?php if ( $slot_markup === 'search' ) : ?>
+					<label class="vhh-hero-spotlight__slot-label" for="vhh-page-hero-search"><?php echo esc_html( $s['slot_label'] ); ?></label>
+					<?php else : ?>
 					<span class="vhh-hero-spotlight__slot-label"><?php echo esc_html( $s['slot_label'] ); ?></span>
 					<?php endif; ?>
+					<?php endif; ?>
 
-					<?php if ( $slot_markup === 'lines' ) : ?>
+					<?php if ( $slot_markup === 'search' ) : ?>
+					<?php /* The homepage hero's own search markup and classes, so the
+					         white card, the field, the button and the focus ring all come
+					         from the one block in main.css. The id differs from the
+					         homepage's because the label's `for` has to point at exactly
+					         one field, and nothing stops a future page carrying both. */ ?>
+					<form role="search" method="get" class="vhh-hero-spotlight__search-form" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+						<input type="search"
+						       id="vhh-page-hero-search"
+						       class="vhh-hero-spotlight__search-field"
+						       name="s"
+						       value="<?php echo esc_attr( get_search_query() ); ?>"
+						       placeholder="<?php echo esc_attr( $s['search_placeholder'] ); ?>"
+						       autocomplete="off">
+						<button type="submit" class="vhh-hero-spotlight__search-submit" aria-label="<?php esc_attr_e( 'Search the Hub', 'vance-health-hub' ); ?>">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+						</button>
+					</form>
+					<?php elseif ( $slot_markup === 'lines' ) : ?>
 					<div class="vhh-hero-spotlight__slot <?php echo esc_attr( $slot_class ); ?>">
 						<?php foreach ( $slot_items as $line ) :
 							$tag = $line['href'] ? 'a' : 'div';
@@ -1025,6 +1367,7 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		'btn2_link'       => array( 'type' => 'text',     'label' => 'Button 2, Link' ),
 		'show_slot'       => array( 'type' => 'checkbox', 'label' => 'Show the white band' ),
 		'slot_label'      => array( 'type' => 'text',     'label' => 'White band — Prompt' ),
+		'search_placeholder' => array( 'type' => 'text',  'label' => 'White band — Search field placeholder' ),
 		'show_card'       => array( 'type' => 'checkbox', 'label' => 'Show the floating card' ),
 		'card_title'      => array( 'type' => 'text',     'label' => 'Card — Heading' ),
 		'card_text'       => array( 'type' => 'textarea', 'label' => 'Card — Body' ),
@@ -1054,6 +1397,43 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		'hquiz'        => $tool_note,
 		'recipes'      => $tool_note,
 		'malnutrition' => $tool_note,
+		// Ask AI, Get Started Today and the User Guide shipped on 2026-08-28
+		// with no entry here at all, so all three read an undefined index and
+		// registered their controls with a null description. Their bands are
+		// the tools band, so they take the tool wording for the last line.
+		'askai'     => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, motif or photograph, two buttons, and the three free tools in a white band. Classic is the dark hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while this page&rsquo;s hero design is set to Spotlight. The badge, title and subtitle are shared with the classic hero &mdash; edit them where you always have, and they follow whichever design is switched on.',
+			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings. Nothing to type here beyond the prompt.',
+		),
+		'evidence'  => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and the four evidence pillars in a white band. Classic is the dark navy hero configured by the rest of this panel.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Get Started hero design&rdquo; (in the Hero Section) is set to Spotlight. The eyebrow, headline, description and the first button&rsquo;s label are all shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
+			'slot_label' => 'Sits above the white band. The band itself is filled from Pillar 1&ndash;4 in this panel, so renaming a pillar renames it here too.',
+		),
+		'userguide' => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three free tools in a white band. The PDF download stays as the second button. Classic is the dark navy hero configured by the rest of this panel.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;User Guide hero design&rdquo; (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
+			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings.',
+		),
+		'tools'     => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three tools listed in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Free tools hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title, description AND the account button&rsquo;s label and link are all shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on.',
+			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings. Nothing to type here beyond the prompt.',
+		),
+		'kblobby'   => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif, two buttons and the knowledgebase search field in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Knowledgebase hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
+			'slot_label' => 'The label above the search field. The field itself searches the whole site, exactly as the dark hero&rsquo;s did.',
+		),
+		'e404'      => array(
+			// There is no toggle on this page, so the first line is never shown.
+			// It is here because every other page has one and $notes is read by
+			// key; an entry short of a key is what broke the last three.
+			'toggle'     => '',
+			'section'    => 'The hero on the &ldquo;page not found&rdquo; screen. It has no classic alternative and no toggle &mdash; this is the only design the 404 has. Its wording is set in inc/page-hero-spotlight.php rather than here, because the 404 has never had Customizer copy; colours, buttons, the card and the photograph are all editable below. Leave Photograph empty to keep the teal motif.',
+			'slot_label' => 'Sits above the white band. The band itself lists Free Health Tools, VANCE-Ai, the Gastro Health Survey and Contact us, all resolved by page slug so a renamed page keeps its link.',
+		),
 	);
 
 	foreach ( vance_page_hero_spotlight_pages() as $page ) {
@@ -1063,7 +1443,11 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		$defaults = vance_page_hero_spotlight_field_defaults( $page );
 
 		// -- The toggle, in the page's existing Hero Section so it sits with
-		//    the classic hero it switches away from.
+		//    the classic hero it switches away from. A page whose config says
+		//    'always' has no classic hero, so it gets no control: offering
+		//    'Classic' there would offer a design that does not exist, and
+		//    vance_page_hero_spotlight_active() never reads the mod anyway.
+		if ( empty( $c['always'] ) ) :
 		$style_id = 'vance_' . $page . '_hero_style';
 		$wp_customize->add_setting( $style_id, array(
 			'default'           => vance_page_hero_spotlight_default_style(),
@@ -1086,6 +1470,7 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 				'spotlight' => __( 'Spotlight — light, action-led', 'vance-health-hub' ),
 			),
 		) );
+		endif;
 
 		// -- The spotlight's own section.
 		// Three of these sit in the same panel as each other, so two of them

@@ -38,10 +38,14 @@ function vance_gi_hub_url() { return 'https://example.test/gastro-health-explain
 function sanitize_hex_color( $c ) { return $c; }
 
 $GLOBALS['THEME_DIR'] = $THEME;
+// The shelf's slug is free-health-tools. 'tools-resources' is NOT here on
+// purpose: that path 404s on the live site, and while this table carried it
+// the suite proved a link that could not work.
 $GLOBALS['PAGES'] = array(
     'ask-ai' => 1, 'knowledgebase' => 1,
     'gastro-health-survey' => 1, 'gastro-meal-planner' => 1,
-    'malnutrition-calculator' => 1, 'tools-resources' => 1,
+    'malnutrition-calculator' => 1, 'free-health-tools' => 1,
+    'contact-us' => 1,
 );
 
 require_once $THEME . '/inc/hero-spotlight.php';
@@ -156,10 +160,37 @@ check( "userguide: eyebrow is not empty",  strpos( $p8, "User Guide" ) !== false
 check( "userguide: headline is not empty", strpos( $p8, "Get the most out of" ) !== false );
 check( "userguide: intro is not empty",    strpos( $p8, "credible source you turn to" ) !== false );
 
+// The two shelves. Free Health Tools reads a FOURTH key family
+// (vance_tools_hero_*) and is the first page to inherit button 2 as well,
+// so its pristine render is the only place a '' default there would show.
+set_mods( array( "vance_tools_hero_style" => "spotlight" ) );
+$p9 = render( "tools" );
+check( "free tools: eyebrow is not empty",  strpos( $p9, "Free Tools" ) !== false );
+check( "free tools: headline is not empty", strpos( $p9, "Resources" ) !== false );
+check( "free tools: intro is not empty",    strpos( $p9, "peer-reviewed evidence" ) !== false );
+check( "free tools: button 2 is not empty", strpos( $p9, "Create Free Account" ) !== false );
+check( "free tools: button 2 has a link",   strpos( $p9, "/login/?tab=signup" ) !== false );
+
+set_mods( array( "vance_kblobby_hero_style" => "spotlight" ) );
+$p10 = render( "kblobby" );
+check( "knowledgebase: eyebrow is not empty",  strpos( $p10, "Knowledgebase" ) !== false );
+check( "knowledgebase: headline is not empty", strpos( $p10, "evidence library" ) !== false );
+check( "knowledgebase: intro is not empty",    strpos( $p10, "every collection in the Vance Medical Hub" ) !== false );
+check( "knowledgebase: the search field has a placeholder",
+       strpos( $p10, "Search the whole knowledgebase" ) !== false );
+
+// The 404 has no toggle and no saved copy at all -- literally nothing set.
+set_mods( array() );
+$p11 = render( "e404" );
+check( "404: eyebrow is not empty",  strpos( $p11, "404 error" ) !== false );
+check( "404: headline is not empty", strpos( $p11, "find that page" ) !== false );
+check( "404: intro is not empty",    strpos( $p11, "may have changed" ) !== false );
+
 // Nothing may render as an empty element on a pristine site.
 foreach ( array( "contact" => $p1, "about" => $p2,
                  "hquiz" => $p3, "recipes" => $p4, "malnutrition" => $p5,
-                 "askai" => $p6, "evidence" => $p7, "userguide" => $p8 ) as $pg => $html ) {
+                 "askai" => $p6, "evidence" => $p7, "userguide" => $p8,
+                 "tools" => $p9, "kblobby" => $p10, "e404" => $p11 ) as $pg => $html ) {
     check( "$pg: no empty headline",  preg_match( '/__title"><\/h1>/', $html ), 0 );
     check( "$pg: no empty eyebrow",   preg_match( '/__eyebrow"><\/span>/', $html ), 0 );
 }
@@ -175,6 +206,15 @@ $unescape = function ( $src ) { return str_replace( array( '\\\'', '\\\\' ), arr
 // this loop covers any page added there without being edited again.
 foreach ( vance_page_hero_spotlight_pages() as $pg ) {
     $conf = vance_page_hero_spotlight_config( $pg );
+    // A page with no legacy_tag has no classic hero, so there is no template
+    // holding a second copy of its words and nothing here to hold together.
+    // Its copy is asserted in section 0 instead, and section 5e proves the
+    // config -- not a theme mod -- is where it comes from.
+    if ( empty( $conf["legacy_tag"] ) ) {
+        check( "$pg: declares no classic_template, and needs none",
+               isset( $conf["classic_template"] ), false );
+        continue;
+    }
     $file = $THEME . "/" . $conf["classic_template"];
     if ( ! file_exists( $file ) ) {
         check( "$pg: classic_template " . $conf["classic_template"] . " exists", false );
@@ -306,7 +346,7 @@ check( 'does NOT list itself in the band',
 check( 'links resolve to real permalinks',
        strpos( $m, 'href="https://example.test/gastro-meal-planner/"' ) !== false );
 check( 'and ends with the whole shelf',
-       strpos( $m, 'href="https://example.test/tools-resources/"' ) !== false );
+       strpos( $m, 'href="https://example.test/free-health-tools/"' ) !== false );
 check( 'primary CTA targets the tool card', strpos( $m, 'href="#tool"' ) !== false );
 check( 'ghost CTA resolves to Ask AI',      strpos( $m, 'https://example.test/ask-ai/' ) !== false );
 check( 'card is the text variant',          strpos( $m, 'card-title' ) !== false );
@@ -336,7 +376,7 @@ check( 'a cleared tool is dropped from the band',
 check( 'the surviving cells still render',
        strpos( $r3, 'Gastro Health Survey' ) !== false );
 check( 'the shelf cell is always there',
-       strpos( $r3, 'href="https://example.test/tools-resources/"' ) !== false );
+       strpos( $r3, 'href="https://example.test/free-health-tools/"' ) !== false );
 
 // The card icon is per-page, not one hard-wired speech bubble.
 foreach ( array( 'hquiz' => 'M8.8 11.6h6.4', 'recipes' => 'M3.4 11.4h17.2',
@@ -358,7 +398,7 @@ check( 'askai lists all three tools',
     && strpos( $ai, 'Meal Planner' ) !== false
     && strpos( $ai, 'IBD Malnutrition Calculator' ) !== false );
 check( 'askai has NO "browse all" cell (that would be a fourth)',
-       strpos( $ai, 'href="https://example.test/tools-resources/"' ), false );
+       strpos( $ai, 'href="https://example.test/free-health-tools/"' ), false );
 check( 'every band is exactly three cells',
        substr_count( $ai, 'vhh-hero-spotlight__line-ico' ), 3 );
 set_mods( array( 'vance_malnutrition_hero_style' => 'spotlight' ) );
@@ -368,7 +408,7 @@ check( 'including on a tool page, where one is the shelf',
 set_mods( array( 'vance_askai_hero_style' => 'spotlight', 'vance_tool_recipes_name' => '' ) );
 $ai2 = render( 'askai' );
 check( 'a cleared tool brings the shelf cell back',
-       strpos( $ai2, 'href="https://example.test/tools-resources/"' ) !== false );
+       strpos( $ai2, 'href="https://example.test/free-health-tools/"' ) !== false );
 check( 'and the band is still three cells',
        substr_count( $ai2, 'vhh-hero-spotlight__line-ico' ), 3 );
 
@@ -418,6 +458,125 @@ $ug_src = file_get_contents( $THEME . "/page-user-guide.php" );
 $ug_pdf = basename( vance_page_hero_spotlight_config( 'userguide' )['btn2_link'] );
 check( "the PDF fallback ($ug_pdf) matches VUG_PDF_FILE in the template",
        preg_match( "/define\(\s*'VUG_PDF_FILE',\s*'" . preg_quote( $ug_pdf, '/' ) . "'/", $ug_src ), 1 );
+
+echo "\n=== 5d. The two shelves ===\n";
+
+// Free Health Tools IS the shelf, so its band lists all three tools and no
+// 'browse all' cell -- selling the page back to itself. That falls out of
+// vance_page_hero_spotlight_tools() rather than being special-cased, so this
+// is where the falling-out is checked.
+set_mods( array( 'vance_tools_hero_style' => 'spotlight' ) );
+$tp = render( 'tools' );
+check( 'markup is balanced', tags_balanced( $tp ) );
+check( 'the shelf lists all three tools',
+       strpos( $tp, 'Gastro Health Survey' ) !== false
+    && strpos( $tp, 'Meal Planner' ) !== false
+    && strpos( $tp, 'IBD Malnutrition Calculator' ) !== false );
+check( 'and does NOT link to itself',
+       strpos( $tp, 'href="https://example.test/free-health-tools/"' ), false );
+check( 'still exactly three cells',
+       substr_count( $tp, 'vhh-hero-spotlight__line-ico' ), 3 );
+check( 'primary CTA targets the card grid', strpos( $tp, 'href="#tools-grid"' ) !== false );
+
+// Button 2's LABEL and LINK are both inherited here, which no other page
+// does. An admin has relabelled this CTA 'Join Now!' and repointed it on the
+// live site, so a spotlight button carrying the code default would rename
+// and re-aim the page's only call to action the day the design switched.
+set_mods( array( 'vance_tools_hero_style' => 'spotlight',
+                 'vance_tools_hero_btn2_text' => 'Join Now!',
+                 'vance_tools_hero_btn2_link' => '/register/' ) );
+$tp2 = render( 'tools' );
+check( 'a relabelled account button follows the switch', strpos( $tp2, 'Join Now!' ) !== false );
+check( 'and so does its link',                           strpos( $tp2, 'href="/register/"' ) !== false );
+check( 'the code default is gone',   strpos( $tp2, 'Create Free Account' ) === false );
+$td = vance_page_hero_spotlight_field_defaults( 'tools' );
+check( 'free tools declares NO btn2_text of its own', array_key_exists( 'btn2_text', $td ), false );
+check( 'nor a btn2_link',                             array_key_exists( 'btn2_link', $td ), false );
+$cd2 = vance_page_hero_spotlight_field_defaults( 'contact' );
+check( 'every other page still declares both',
+       array_key_exists( 'btn2_text', $cd2 ) && array_key_exists( 'btn2_link', $cd2 ) );
+
+// The Knowledgebase lobby: a search field where every other page has cells,
+// and a motif where every other page has a photograph.
+set_mods( array( 'vance_kblobby_hero_style' => 'spotlight' ) );
+$kb = render( 'kblobby' );
+check( 'markup is balanced', tags_balanced( $kb ) );
+check( 'the band is a real search form',
+       strpos( $kb, 'class="vhh-hero-spotlight__search-form"' ) !== false );
+check( 'the field submits to the site search',
+       strpos( $kb, 'name="s"' ) !== false && strpos( $kb, 'action="https://example.test/"' ) !== false );
+check( 'the prompt is a real <label for>, not a bare span',
+       strpos( $kb, '<label class="vhh-hero-spotlight__slot-label" for="vhh-page-hero-search">' ) !== false );
+check( 'and it points at the field that exists',
+       strpos( $kb, 'id="vhh-page-hero-search"' ) !== false );
+check( 'no cell markup leaks in',   strpos( $kb, '__slot--lines' ) === false );
+check( 'a motif stands in for the photograph',
+       strpos( $kb, 'vhh-hero-spotlight__motif' ) !== false );
+check( 'and there is no <img> at all', strpos( $kb, '<img' ) === false );
+
+// ...but the motif is a DEFAULT, not a ceiling. Uploading a photograph in
+// the Customizer has to take over, or the control is a lie.
+set_mods( array( 'vance_kblobby_hero_style' => 'spotlight',
+                 'vance_kblobby_hero_spot_image' => 'https://example.test/x.jpg' ) );
+$kb2 = render( 'kblobby' );
+check( 'an uploaded photograph replaces the motif',
+       strpos( $kb2, 'src="https://example.test/x.jpg"' ) !== false );
+check( 'and the motif is gone', strpos( $kb2, '__motif' ) === false );
+
+echo "\n=== 5e. The 404 ===\n";
+
+// It is the one page here with no second design, so it must be on with
+// nothing saved -- and must STAY on when somebody saves 'classic' into the
+// key every other page reads.
+set_mods( array() );
+check( '404 is on with nothing saved', vance_page_hero_spotlight_active( 'e404' ) );
+set_mods( array( 'vance_e404_hero_style' => 'classic' ) );
+check( 'and cannot be switched off by a stray theme mod',
+       vance_page_hero_spotlight_active( 'e404' ) );
+check( 'while every other page still respects its toggle',
+       vance_page_hero_spotlight_active( 'contact' ), false );
+
+// Its copy comes from the config, not from a theme mod -- so writing the
+// key another page would read must NOT move it.
+set_mods( array( 'vance_e404_hero_tag' => 'HIJACKED', 'vance_e404_hero_title' => 'HIJACKED' ) );
+$er = render( 'e404' );
+check( 'copy is not read from theme mods', strpos( $er, 'HIJACKED' ) === false );
+check( 'the config copy is what renders',  strpos( $er, '404 error' ) !== false );
+
+set_mods( array() );
+$e4 = render( 'e404' );
+check( 'markup is balanced', tags_balanced( $e4 ) );
+check( 'a motif stands in for the photograph',
+       strpos( $e4, 'vhh-hero-spotlight__motif' ) !== false );
+check( 'the band is the start variant',
+       strpos( $e4, 'vhh-hero-spotlight__slot--start' ) !== false );
+check( 'four suggested destinations, not three',
+       substr_count( $e4, 'vhh-hero-spotlight__line-ico' ), 4 );
+check( 'every one of them is a link',
+       substr_count( $e4, '<a class="vhh-hero-spotlight__line"' ), 4 );
+
+// The start page. Button 1 resolves BY SLUG: a 404 whose recovery link is a
+// hard-coded path is one rename away from sending a lost visitor to a
+// second 404.
+check( 'the start page is the Knowledgebase',
+       strpos( $e4, 'href="https://example.test/knowledgebase/"' ) !== false );
+check( 'the homepage is the second button, not the first',
+       strpos( $e4, 'href="/"' ) !== false );
+check( 'the Knowledgebase is not ALSO a band cell',
+       substr_count( $e4, 'https://example.test/knowledgebase/' ), 1 );
+foreach ( array( 'free-health-tools', 'ask-ai', 'gastro-health-survey', 'contact-us' ) as $slug ) {
+    check( "the band offers /$slug/",
+           strpos( $e4, 'href="https://example.test/' . $slug . '/"' ) !== false );
+}
+
+// ...and when a page has been renamed away, the cell falls back to a path
+// rather than rendering href-less.
+$saved_pages = $GLOBALS['PAGES'];
+unset( $GLOBALS['PAGES']['ask-ai'] );
+$e5 = render( 'e404' );
+check( 'a missing page still yields a link',
+       strpos( $e5, 'href="https://example.test/ask-ai/"' ) !== false );
+$GLOBALS['PAGES'] = $saved_pages;
 
 echo "\n=== 6. Colours reach the style attribute, and the dissolve maths is right ===\n";
 set_mods( array(

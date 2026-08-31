@@ -15,6 +15,21 @@ get_header(); ?>
 
 <main id="main-content">
 
+    <?php
+    /*
+     * HERO. Two designs, chosen by Appearance -> Customize -> Page - Tools &
+     * Resources -> Hero Section -> "Free tools hero design". Defaults to
+     * 'classic', so deploying this changes nothing until an admin flips it.
+     * The spotlight renderer reads this page's OWN tag/title/description
+     * keys, and the account button's label and link too, so switching design
+     * cannot silently reword the page. See inc/page-hero-spotlight.php.
+     */
+    if ( function_exists( 'vance_page_hero_spotlight_active' )
+        && vance_page_hero_spotlight_active( 'tools' ) ) :
+        vance_render_page_hero_spotlight( 'tools' );
+    else :
+    ?>
+
     <!-- HERO (patients-hero style: full-height with description + CTA buttons) -->
     <?php
     $hero_bg        = vance_get_theme_mod( 'vance_tools_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
@@ -40,6 +55,8 @@ get_header(); ?>
             </div>
         </div>
     </section>
+
+    <?php endif; ?>
 
     <!-- INTRO -->
     <?php

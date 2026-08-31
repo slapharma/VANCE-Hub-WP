@@ -91,13 +91,31 @@ $expected_sections = array(
     'askai'        => 'vance_askai_settings',
     'evidence'     => 'vance_evidence_hero',
     'userguide'    => 'vance_userguide_hero',
+    'tools'        => 'vance_tools_hero',
+    'kblobby'      => 'vance_kblobby_hero',
+    // 'e404' is absent on purpose -- see the loop.
 );
 foreach ( vance_page_hero_spotlight_pages() as $p ) {
+    $c = vance_page_hero_spotlight_config( $p );
+
+    // A page whose config says 'always' has no classic hero to switch back
+    // to, so it must register NO toggle -- a control offering 'Classic'
+    // would offer a design that does not exist, and an admin choosing it
+    // would see nothing happen.
+    if ( ! empty( $c['always'] ) ) {
+        check( "$p registers no toggle",
+               isset( $m->settings[ 'vance_' . $p . '_hero_style' ] ), false );
+        check( "$p declares no style_section either",
+               isset( $c['style_section'] ), false );
+        check( "$p spotlight section still hangs off " . $c['panel'],
+               $m->sections[ $c['section'] ]['panel'], $c['panel'] );
+        continue;
+    }
+
     check( "$p toggle registered", isset( $m->settings[ 'vance_' . $p . '_hero_style' ] ) );
     check( "$p toggle defaults to classic", $m->settings[ 'vance_' . $p . '_hero_style' ]['default'], 'classic' );
     check( "$p toggle sits in $expected_sections[$p]",
            $m->controls[ 'vance_' . $p . '_hero_style' ]['section'], $expected_sections[ $p ] );
-    $c = vance_page_hero_spotlight_config( $p );
     check( "$p spotlight section hangs off " . $c['panel'],
            $m->sections[ $c['section'] ]['panel'], $c['panel'] );
 }
@@ -139,6 +157,32 @@ foreach ( vance_page_hero_spotlight_pages() as $p ) {
 }
 
 echo "\n=== The image control is the separate key, not the classic hero's ===\n";
+// Every page gets one, including the two that render a motif by default:
+// leaving Photograph empty is what keeps the motif, and filling it is how
+// a designer replaces it without touching code.
+foreach ( vance_page_hero_spotlight_pages() as $p ) {
+    check( "$p has a Photograph control",
+           isset( $m->controls[ 'vance_' . $p . '_hero_spot_image' ] ) );
+}
+// ...and only the search band adds a field of its own.
+check( 'the knowledgebase has a placeholder control',
+       isset( $m->controls['vance_kblobby_hero_spot_search_placeholder'] ) );
+check( 'no other page does',
+       isset( $m->controls['vance_contact_hero_spot_search_placeholder'] ), false );
+
+// Every description the registration reads must exist, or the control goes
+// out with a null description -- which is how askai, evidence and userguide
+// shipped on 2026-08-28 without anyone noticing.
+foreach ( vance_page_hero_spotlight_pages() as $p ) {
+    $c   = vance_page_hero_spotlight_config( $p );
+    $sec = $m->sections[ $c['section'] ];
+    check( "$p section carries a description",
+           isset( $sec['description'] ) && $sec['description'] !== '' );
+    check( "$p band prompt carries a description",
+           isset( $m->controls[ 'vance_' . $p . '_hero_spot_slot_label' ]['description'] )
+        && $m->controls[ 'vance_' . $p . '_hero_spot_slot_label' ]['description'] !== '' );
+}
+
 check( 'contact image control exists', isset( $m->controls['vance_contact_hero_spot_image'] ) );
 check( 'and is an image control',      $m->controls['vance_contact_hero_spot_image']['__type'], 'image' );
 check( 'the classic image key is untouched', isset( $m->settings['vance_contact_hero_img'] ), false );

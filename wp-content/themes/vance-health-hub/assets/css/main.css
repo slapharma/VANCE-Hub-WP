@@ -4746,6 +4746,145 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 }
 
 
+/* --- The motif that stands in for the photograph ------------------------- */
+
+/* Two page heroes have no photograph: the Knowledgebase lobby and the 404.
+   Neither is a page about people -- one is a body of material, the other is a
+   state of the site -- and the five policy documents already settled what to do
+   about that (inc/legal-hero.php). The motif is the same one, drawn by
+   vance_page_hero_spotlight_motif().
+
+   It is a DEFAULT, not a ceiling: both pages keep their Photograph control, and
+   uploading one switches the renderer to the __media branch.
+
+   inc/legal-hero.php declares this class inline as well, with identical values.
+   That file is loaded only by the policy templates and is covered by its own
+   suite, so it is left self-contained on purpose; if the two are ever merged,
+   delete the inline copy at the same time. */
+
+.vhh-hero-spotlight__motif {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 54%;
+    /* Same stacking treatment as __media: behind the copy, inert to the
+       pointer, and inside the section's `isolation: isolate` so the negative
+       index cannot escape behind the page background. */
+    z-index: -1;
+    pointer-events: none;
+}
+
+.vhh-hero-spotlight__motif svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+
+/* --- The 404: four places worth starting from ---------------------------- */
+
+/* The `lines` markup unchanged -- icon tile, caption, value -- so the tile, the
+   type, the dividers and the mobile stack all come from the shared rules. Two
+   things are added, and they are the same two the tools band adds, written out
+   rather than borrowed: __slot--tools belongs to the free-tools family, which
+   is still being extended, and the 404 should not change shape because a tool
+   page did. */
+
+.vhh-hero-spotlight__slot--start .vhh-hero-spotlight__line-v {
+    /* The lines band sets `overflow-wrap: anywhere` so one unbreakable email
+       address cannot widen the grid. Page names are ordinary words and that
+       rule would break them mid-word. */
+    overflow-wrap: normal;
+}
+
+/* Every cell here is a link, so the affordance has to read as one before
+   anybody hovers -- and on this page more than any other, because the visitor
+   arrived by following one that did not work. */
+.vhh-hero-spotlight__slot--start .vhh-hero-spotlight__line::after {
+    content: "";
+    flex: 0 0 auto;
+    margin-left: auto;
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(45deg);
+    color: var(--vhh-hs-title, #04504E);
+    opacity: 0.45;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.vhh-hero-spotlight__slot--start a.vhh-hero-spotlight__line:hover::after,
+.vhh-hero-spotlight__slot--start a.vhh-hero-spotlight__line:focus-visible::after {
+    opacity: 1;
+    transform: rotate(45deg) translate(2px, -2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vhh-hero-spotlight__slot--start .vhh-hero-spotlight__line::after {
+        transition: none;
+    }
+}
+
+/* Four cells, always. Four equal columns inside the copy column measure under
+   170px each, which puts "Gastro Health Survey" on three lines, so this band
+   goes two-by-two -- the same answer the evidence pillars and the policy
+   documents reached.
+
+   Scoped to min-width 901px deliberately. The shared rule above collapses every
+   band to a single stack at max-width 900px, this block sits AFTER it in the
+   file, and both selectors are one class deep -- so an unscoped
+   grid-template-columns here would win at every width and the band would never
+   stack on a phone. */
+@media (min-width: 901px) {
+    .vhh-hero-spotlight__slot--start {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* The shared rule rules off the right of every cell but the last, which is
+       right for one row and wrong for a 2x2 -- it leaves a hairline floating
+       down the right of cell 3. Draw the grid's interior lines instead. */
+    .vhh-hero-spotlight__slot--start .vhh-hero-spotlight__line {
+        border-right: 0;
+        border-bottom: 1px solid #DCE9E8;
+    }
+
+    .vhh-hero-spotlight__slot--start .vhh-hero-spotlight__line:nth-child(odd) {
+        border-right: 1px solid #DCE9E8;
+    }
+
+    .vhh-hero-spotlight__slot--start .vhh-hero-spotlight__line:nth-last-child(-n + 2) {
+        border-bottom: 0;
+    }
+}
+
+
+/* --- The motif pages on a phone ------------------------------------------ */
+
+@media (max-width: 900px) {
+    /* The shared rule zeroes this hero's TOP padding at this width, because
+       that is where the photograph drops back into flow and provides the
+       spacing itself. A motif is absolutely positioned at every width and never
+       drops, so without this the headline jams against the site header. */
+    .vhh-hero-spotlight--kblobby,
+    .vhh-hero-spotlight--e404 {
+        padding: 40px 0 44px;
+    }
+
+    /* Full width and further back: on one column the motif sits behind the copy
+       rather than beside it. At this alpha the headline still measures over
+       6:1 against the lightest point of the bloom. */
+    .vhh-hero-spotlight--kblobby .vhh-hero-spotlight__motif,
+    .vhh-hero-spotlight--e404 .vhh-hero-spotlight__motif {
+        width: 100%;
+        opacity: 0.55;
+    }
+}
+
+
+
 /* ==========================================================================
    Article cards stay square
    ==========================================================================

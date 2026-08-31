@@ -2,12 +2,11 @@ import pathlib, subprocess
 SRC = pathlib.Path(__file__).resolve().parent.parent / "wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php"
 ORIG = SRC.read_text(encoding="utf-8")
 MUTANTS = [
+ # All three copy fields resolve in one loop now, so one mutant covers the
+ # eyebrow, the headline and the intro on every page at once.
  ("the original bug: '' default for the copy",
-  "$vals['eyebrow'] = vance_get_theme_mod( $c['legacy_tag'],   $c['legacy_tag_default'] );",
-  "$vals['eyebrow'] = vance_get_theme_mod( $c['legacy_tag'], '' );"),
- ("the original bug: '' default for the title",
-  "$vals['title']   = vance_get_theme_mod( $c['legacy_title'], $c['legacy_title_default'] );",
-  "$vals['title']   = vance_get_theme_mod( $c['legacy_title'], '' );"),
+  ": vance_get_theme_mod( $c[ 'legacy_' . $key ], $c[ 'legacy_' . $key . '_default' ] );",
+  ": vance_get_theme_mod( $c[ 'legacy_' . $key ], '' );"),
  ("the original bug: '' default for the badges",
   "vance_get_theme_mod( 'vance_about_badge1_label', 'Pharma-Grade Quality' )",
   "vance_get_theme_mod( 'vance_about_badge1_label', '' )"),
@@ -36,6 +35,29 @@ MUTANTS = [
   "'legacy_tag_default'   => 'Beta Feature v1.0',"),
  ("the User Guide PDF filename drifts from the template's constant",
   "'Vance-Health-Hub-User-Guide.pdf' );", "'Vance-Health-Hub-User-Guide-v2.pdf' );"),
+
+ # ---- the two shelves and the 404 ------------------------------------
+
+ ("the original bug: '' default for the inherited account label",
+  "'legacy_btn2_default'      => 'Create Free Account',",
+  "'legacy_btn2_default'      => '',"),
+ ("the original bug: '' default for the inherited account link",
+  "'legacy_btn2_link_default' => '/login/?tab=signup',",
+  "'legacy_btn2_link_default' => '',"),
+ ("the SHELF default reworded away from its template",
+  "'legacy_tag_default'   => 'Free Tools',",
+  "'legacy_tag_default'   => 'Free Health Tools',"),
+ ("the KNOWLEDGEBASE default reworded away from its template",
+  "'legacy_tag_default'   => 'Knowledgebase',",
+  "'legacy_tag_default'   => 'Knowledge Base',"),
+ # The 404 has no template to hold its words against, so section 0 is the
+ # only thing standing between it and an empty headline.
+ ("the 404's own headline emptied",
+  "'legacy_title_default' => __( 'We can&rsquo;t find that page', 'vance-health-hub' ),",
+  "'legacy_title_default' => '',"),
+ ("the 404's search-band placeholder emptied",
+  "'search_placeholder' => __( 'Search the whole knowledgebase...', 'vance-health-hub' ),",
+  "'search_placeholder' => '',"),
 ]
 try:
     for name, find, repl in MUTANTS:

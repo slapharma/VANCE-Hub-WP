@@ -1453,6 +1453,24 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_search_empty_cat_count", array( "default" => 6, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_search_empty_cat_count", array( "label" => "How many category links", "section" => "vance_search_empty", "type" => "number", "input_attrs" => array( "min" => 1, "max" => 12, "step" => 1 ) ) );
 
+    // ============================================================
+    // NOT FOUND (404) PANEL
+    // ============================================================
+    // The 404 has no settings of its own and never has -- 404.php hard-coded
+    // its words. This panel exists so the spotlight hero registered below has
+    // somewhere to put its section: a section whose panel does not exist is
+    // dropped by WordPress without a warning, which is exactly the silent
+    // failure the hero rollout handover warns about.
+    //
+    // It is deliberately empty apart from that section. The 404's copy stays
+    // in inc/page-hero-spotlight.php; what an admin gets here is the
+    // photograph, the colours, the buttons and the card.
+    $wp_customize->add_panel( "vance_e404_panel", array(
+        "title"       => __( "Page - Not Found (404)", "vance-health-hub" ),
+        "description" => __( "The screen a visitor sees when a link is dead or an address is mistyped.", "vance-health-hub" ),
+        "priority"    => 50,
+    ) );
+
     /* ---- Contact / About "Spotlight" heroes ----
        Registered here rather than in the file that renders them because their
        sections hang off the Contact and About panels, which are built above.
