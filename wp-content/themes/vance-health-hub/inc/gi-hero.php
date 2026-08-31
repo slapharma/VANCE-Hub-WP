@@ -362,15 +362,37 @@ function vance_gi_hero_photo( $slug = '' ) {
 	$dir  = get_template_directory();
 
 	if ( $slug === '' ) {
-		// The lobby. It is the one page in the set whose subject is all seven,
-		// so it gets the one picture in the library that is about the gut
-		// rather than about a person — and, just as importantly, one that no
-		// other template uses. It was previously borrowing gi-health/ibd.jpg,
-		// which is the IBD card's own photograph two screens further down this
-		// very page.
-		$rel   = '/assets/img/about/gut-health-wellness.jpg';
-		$alt   = __( 'Whole foods arranged around a chalk drawing of the digestive tract', 'vance-health-hub' );
-		$focal = vance_get_theme_mod( 'vance_gi_hub_hero_focal', '55% 45%' );
+		/*
+		 * The lobby's own picture, used by no other template. It was briefly
+		 * borrowing gi-health/ibd.jpg, which is the IBD card's own photograph
+		 * two screens further down this very page.
+		 *
+		 * THIS IMAGE IS GENERATED, NOT PHOTOGRAPHED. Chosen by the client on
+		 * 2026-08-31 over two Unsplash alternatives.
+		 *
+		 *   model  Kling 3 Omni (text2image), via OpenArt, 1168x880
+		 *   brief  two adults walking away from camera on a tree-lined path,
+		 *          mid-distance, soft overcast light, muted sage and blue-grey,
+		 *          subject weighted right, no faces
+		 *
+		 * Two things follow from that and neither is obvious from the file:
+		 *
+		 *  1. There is no photographer to credit and no licence to honour, but
+		 *     equally no provenance to point at. If the CAP review or the
+		 *     site's editorial standards ever require generated imagery to be
+		 *     disclosed to the reader, this is the image that needs the
+		 *     disclosure, and the hero has nowhere to put one today.
+		 *  2. Close inspection at 2x finds the usual generated-image faults —
+		 *     one man's arm fuses into his hip, the other's free hand has soft
+		 *     fingers, and a partial face appears in profile despite the brief
+		 *     asking for none. None of it is visible at the size this renders,
+		 *     where the figures stand ~200px tall in a ~619px box. Do NOT
+		 *     enlarge the media slot or move the focal point left without
+		 *     looking at those three places again.
+		 */
+		$rel   = '/assets/img/gi-health/lobby-walk.jpg';
+		$alt   = __( 'Two people walking side by side away from the camera along a tree-lined canal path', 'vance-health-hub' );
+		$focal = vance_get_theme_mod( 'vance_gi_hub_hero_focal', '55% 50%' );
 		$saved = vance_get_theme_mod( 'vance_gi_hub_hero_bg_image', '' );
 	} else {
 		$meta = vance_gi_hero_slug_meta( $slug );

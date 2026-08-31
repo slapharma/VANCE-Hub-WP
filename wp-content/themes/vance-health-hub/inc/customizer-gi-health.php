@@ -106,7 +106,7 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
         'section'     => $sec,
     ] ) );
 
-    $wp_customize->add_setting( 'vance_gi_hub_hero_focal', [ 'default' => '55% 45%', 'sanitize_callback' => 'vance_gi_sanitize_focal' ] );
+    $wp_customize->add_setting( 'vance_gi_hub_hero_focal', [ 'default' => '55% 50%', 'sanitize_callback' => 'vance_gi_sanitize_focal' ] );
     $wp_customize->add_control( 'vance_gi_hub_hero_focal', [
         'label'       => 'Photograph focal point',
         'description' => 'Two percentages, across then down — e.g. "55% 45%". The band crops the sides, so the first number is the one that matters: raise it to move the subject right, away from the fade.',

@@ -130,7 +130,7 @@ MUTANTS = [
     # ---- the photograph -------------------------------------------------
     (RENDERER,
      "the lobby goes back to borrowing the IBD card's own photograph",
-     "$rel   = '/assets/img/about/gut-health-wellness.jpg';",
+     "$rel   = '/assets/img/gi-health/lobby-walk.jpg';",
      "$rel   = '/assets/img/gi-health/ibd.jpg';"),
 
     (RENDERER,
@@ -191,6 +191,11 @@ MUTANTS = [
      "the primary button default is typed out again instead of read from the renderer",
      "$wp_customize->add_setting( 'vance_gi_hub_hero_btn1_text', [ 'default' => $hub['btn1_text'], 'sanitize_callback' => 'sanitize_text_field' ] );",
      "$wp_customize->add_setting( 'vance_gi_hub_hero_btn1_text', [ 'default' => 'Explore conditions', 'sanitize_callback' => 'sanitize_text_field' ] );"),
+
+    (RENDERER,
+     "the lobby's focal drifts from the one its Customizer control offers",
+     "$focal = vance_get_theme_mod( 'vance_gi_hub_hero_focal', '55% 50%' );",
+     "$focal = vance_get_theme_mod( 'vance_gi_hub_hero_focal', '30% 50%' );"),
 
     (CUSTOMIZER,
      "a focal default is typed out and disagrees with the registry",

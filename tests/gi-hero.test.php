@@ -361,9 +361,23 @@ check( 'crc: focal comes from the registry', strpos( $h, 'object-position: 60% 2
 check( 'crc: photo carries the card\'s alt text', strpos( $h, 'alt="Two men sitting' ) !== false );
 
 $hub = body( render_hub() );
-check( 'hub: uses the gut-health picture', strpos( $hub, 'about/gut-health-wellness.jpg' ) !== false );
+check( 'hub: uses its own picture', strpos( $hub, 'gi-health/lobby-walk.jpg' ) !== false );
+check( 'hub: lobby focal comes from the renderer', strpos( $hub, 'object-position: 55% 50%' ) !== false );
 // It must NOT borrow the IBD card's photograph, which is what it did before.
+// Matched on the exact filename: lobby-walk.jpg now lives in that same
+// directory, so a check for 'gi-health/' alone would pass on either.
 check( 'hub: does not borrow gi-health/ibd.jpg', strpos( $hub, 'gi-health/ibd.jpg' ) === false );
+// Nor any of the other six condition photographs.
+$borrowed = array();
+foreach ( vance_gi_condition_cards() as $c ) {
+    if ( strpos( $hub, '/' . $c['image'] ) !== false ) { $borrowed[] = $c['image']; }
+}
+check( 'hub: borrows none of the seven condition photos', $borrowed, array() );
+// The file has to actually exist. If it does not, vance_gi_hero_photo() returns
+// null, the media slot is silently dropped and the hero loses its photograph
+// with no error raised anywhere.
+check( 'hub: the picture file is really on disk',
+    file_exists( $GLOBALS['THEME_DIR'] . '/assets/img/gi-health/lobby-walk.jpg' ) );
 
 // An admin image wins, and takes an empty alt with it — the stock description
 // would be a lie about a different photograph.
@@ -643,6 +657,16 @@ foreach ( vance_gi_conditions() as $slug => $reg ) {
         isset( $wp->settings[ $sid ]['sanitize_callback'] ) ? $wp->settings[ $sid ]['sanitize_callback'] : '(missing)',
         'vance_gi_sanitize_focal' );
 }
+
+/* The lobby's focal necessarily lives in two files -- a literal default in the
+   renderer and one in the control -- so it is exactly the pair that drifts.
+   Asserted against what the hero actually RENDERS, not against a third
+   literal typed here, which would just be a fourth thing to keep in step. */
+set_mods( array() );
+preg_match( '#object-position: ([^;"]+)#', body( render_hub() ), $fm );
+check( 'customizer: the lobby focal default matches what the hero renders',
+    isset( $wp->settings['vance_gi_hub_hero_focal']['default'] ) ? $wp->settings['vance_gi_hub_hero_focal']['default'] : '(missing)',
+    isset( $fm[1] ) ? trim( $fm[1] ) : '(not rendered)' );
 
 check( 'customizer: the shared review-date setting exists',
     isset( $wp->settings['vance_gi_reviewed'] ) );
