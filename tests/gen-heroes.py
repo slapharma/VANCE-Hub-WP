@@ -80,6 +80,74 @@ PROMPTS = {
     ),
 }
 
+# The seven that were still borrowing an image bought for another page. They are
+# deliberately not seven variations of "a person with a device in a bright room":
+# two are object-led (a bench, a worktop) to break up the run, and the four that
+# do show a screen differ in setting, distance and who is looking at whom.
+PROMPTS.update({
+    # Contact Us. The card beside it promises "a real reply, within one business
+    # day", so the picture has to be a person who could send one -- not a call
+    # centre, and not a stock headset.
+    "contact": (
+        "A woman in her thirties at a desk in a small, bright office, turning "
+        "slightly towards the camera mid-thought while typing a reply, relaxed "
+        "and approachable. A plant and a mug on the desk, a pale wall behind. "
+        "A tall window at the left of the frame floods that edge with clean "
+        "light. " + SHARED
+    ),
+    # About Us. The card is the 30+ years stat and a flask; the page's claim is
+    # pharmaceutical rigour, so this one is glassware and a bench, not a screen.
+    "about": (
+        "Two scientists in a bright modern laboratory at a clean white bench, "
+        "one holding a glass flask up to the light while the other looks on, "
+        "both absorbed in the work. Pale equipment, shallow depth of field, "
+        "clinical but not cold. The left of the frame is a bright window wall, "
+        "almost white. " + SHARED
+    ),
+    # The meal planner. Object-led on purpose: the page is about food you would
+    # actually cook, so the food is the subject and the hands are incidental.
+    "recipes": (
+        "Overhead-ish three-quarter view of a pale kitchen worktop, a woman's "
+        "hands slicing courgette on a wooden board, fresh salmon fillets, spinach "
+        "and lemon laid out beside it, a small bowl of oats. Bright and clean, "
+        "no clutter. The left of the frame is empty sunlit worktop. " + SHARED
+    ),
+    # The malnutrition screener. One-to-one and warm -- a dietitian beside a
+    # patient, not a pair of clinicians talking over one.
+    "malnutrition": (
+        "A dietitian in a soft blue shirt sitting beside an older male patient at "
+        "a bright consulting room table, turned towards him, explaining something "
+        "on a printed sheet between them. Attentive and unhurried, no white coats, "
+        "no equipment on show. A wide window at the left of the frame is blown out "
+        "to near white. " + SHARED
+    ),
+    # VANCE-Ai. Someone asking a question of their own, at home, at their own
+    # pace -- the opposite of a consultation.
+    "askai": (
+        "A man in his late twenties sitting on a pale sofa with a laptop on his "
+        "knees, one hand on the trackpad, mid-question and looking at the screen "
+        "with mild curiosity rather than worry. A quiet living room, a bright "
+        "window filling the left of the frame. " + SHARED
+    ),
+    # Get Started Today. Evidence being handled rather than made: printed papers,
+    # charts, two people comparing them. Distinct from About's laboratory.
+    "evidence": (
+        "Two colleagues at a large bright table covered with printed research "
+        "papers and charts, one pointing at a figure on a page while the other "
+        "follows, a laptop open and out of focus to one side. Serious, "
+        "collaborative, an institutional meeting room with a glass wall on the "
+        "left of the frame that washes that edge white. " + SHARED
+    ),
+    # The User Guide. Being shown how something fits together -- side by side and
+    # domestic, not clinical.
+    "userguide": (
+        "A young woman sitting beside an older woman at a kitchen table, leaning "
+        "in to point at something on a laptop screen they are both looking at, "
+        "the older woman nodding. Warm and ordinary, a bright kitchen window at "
+        "the left of the frame. " + SHARED
+    ),
+})
+
 
 def generate(name, prompt):
     body = json.dumps({
