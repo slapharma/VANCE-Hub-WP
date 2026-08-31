@@ -40,6 +40,14 @@
 .vance-rh-autofill:hover { background: var(--primary-color); color: #fff; }
 .vance-rh-autofill:disabled { opacity: 0.6; cursor: default; }
 
+/* "Clear plan" — destructive, so it stays quiet (neutral border, no fill) until
+   hovered and sits furthest from the primary save button. Same metrics as the
+   autofill button so the three read as one row. */
+.vance-rh-clear { background: #fff; color: #B42318; border: 1px solid #e2e8f0; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: var(--radius-control); cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease; }
+.vance-rh-clear:hover { background: #FEF3F2; border-color: #FDA29B; }
+.vance-rh-clear:focus-visible { outline: 3px solid #FDA29B; outline-offset: 2px; }
+.vance-rh-clear:disabled { opacity: 0.6; cursor: default; }
+
 /* Save dialog — reuses the picker's overlay/panel/head language. */
 .vance-rh-savemodal { display: none; position: fixed; inset: 0; z-index: 100021; align-items: center; justify-content: center; padding: 20px; background: rgba(10,25,41,0.72); border-radius: var(--radius-surface); }
 .vance-rh-savemodal.is-open { display: flex; }
@@ -50,10 +58,15 @@
 .vance-rh-saveopt-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .vance-rh-saveopt-text strong { font-family: 'Outfit', sans-serif; font-size: 14.5px; font-weight: 700; color: #0f172a; }
 .vance-rh-saveopt-text span { font-size: 12.5px; color: #64748b; line-height: 1.5; }
-.vance-rh-saveopt .vance-rh-save { flex: none; align-self: center; padding: 10px 18px; }
+.vance-rh-saveopt .vance-rh-save,
+.vance-rh-saveopt .vance-rh-clear { flex: none; align-self: center; padding: 10px 18px; }
+/* The clear row is the destructive one in the dialog — tinted so it reads apart
+   from the two save options above it without shouting. */
+.vance-rh-saveopt--danger { border-color: #FDA29B; background: #FFFBFA; }
 @media (max-width: 560px) {
 	.vance-rh-saveopt { flex-direction: column; align-items: stretch; }
-	.vance-rh-saveopt .vance-rh-save { align-self: stretch; }
+	.vance-rh-saveopt .vance-rh-save,
+	.vance-rh-saveopt .vance-rh-clear { align-self: stretch; }
 }
 
 .vance-rh-days { display: flex; flex-direction: column; gap: 14px; }

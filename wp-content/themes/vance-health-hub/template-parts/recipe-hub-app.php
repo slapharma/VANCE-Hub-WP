@@ -86,6 +86,7 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 					<span><b id="vance-rh-total-meals">0</b> <?php esc_html_e( 'meals', 'vance-health-hub' ); ?></span>
 					<span><b id="vance-rh-total-kcal">0</b> kcal</span>
 				</div>
+				<button type="button" class="vance-rh-clear" id="vance-rh-clear"><?php esc_html_e( 'Clear meal plan', 'vance-health-hub' ); ?></button>
 				<button type="button" class="vance-rh-autofill" id="vance-rh-autofill"><?php esc_html_e( 'Let Vance Create Your Plan', 'vance-health-hub' ); ?></button>
 				<button type="button" class="vance-rh-save" id="vance-rh-save"><?php esc_html_e( 'Save this meal plan', 'vance-health-hub' ); ?></button>
 			</div>
@@ -161,6 +162,15 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 					<input type="text" id="vance-rh-save-newname" class="vance-rh-plan-name" style="width:100%;margin-top:10px;" aria-label="<?php esc_attr_e( 'Name for the new plan', 'vance-health-hub' ); ?>" placeholder="<?php esc_attr_e( 'Name this plan', 'vance-health-hub' ); ?>" maxlength="120">
 				</div>
 				<button type="button" class="vance-rh-save" id="vance-rh-save-new"><?php esc_html_e( 'Save new', 'vance-health-hub' ); ?></button>
+			</div>
+			<?php /* Start-over option. Local only: it empties the week in the browser,
+			         it never touches a plan already saved to the dashboard. */ ?>
+			<div class="vance-rh-saveopt vance-rh-saveopt--danger">
+				<div class="vance-rh-saveopt-text">
+					<strong><?php esc_html_e( 'Clear meal plan', 'vance-health-hub' ); ?></strong>
+					<span><?php esc_html_e( 'Empties every meal from the week below so you can start again. Plans already saved to your dashboard are not affected.', 'vance-health-hub' ); ?></span>
+				</div>
+				<button type="button" class="vance-rh-clear" id="vance-rh-clear-modal"><?php esc_html_e( 'Clear', 'vance-health-hub' ); ?></button>
 			</div>
 		</div>
 	</div>

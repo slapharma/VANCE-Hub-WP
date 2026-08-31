@@ -61,6 +61,8 @@
 	var armedText      = document.getElementById('vance-rh-armed-text');
 	var armedCancel    = document.getElementById('vance-rh-armed-cancel');
 	var autofillBtn    = document.getElementById('vance-rh-autofill');
+	var clearBtn       = document.getElementById('vance-rh-clear');
+	var clearModalBtn  = document.getElementById('vance-rh-clear-modal');
 	var saveModal      = document.getElementById('vance-rh-savemodal');
 	var saveModalClose = document.getElementById('vance-rh-savemodal-close');
 	var saveOptCurrent = document.getElementById('vance-rh-saveopt-current');
@@ -230,6 +232,57 @@
 			try { autofillPlan(); } finally { autofillBtn.disabled = false; }
 			var planner = document.getElementById('planner');
 			if (planner) { planner.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+		});
+	}
+
+	// --- "Clear meal plan" ---------------------------------------------------
+
+	function plannedMealCount() {
+		var n = 0;
+		state.days.forEach(function (dayState) {
+			SLOT_KEYS.forEach(function (slot) { if (dayState.meals[slot]) { n++; } });
+		});
+		return n;
+	}
+
+	/**
+	 * Empty the whole week and forget the stored working copy.
+	 *
+	 * Local only: a plan already saved to the dashboard lives in user meta and
+	 * is untouched until the user saves over it, so this can't destroy anything
+	 * server-side. The plan name is deliberately kept — clearing the meals is
+	 * "start this week again", not "throw the whole plan away", and a user who
+	 * opened a saved plan to edit it still needs its name to update it.
+	 *
+	 * @return {boolean} true if the week was actually cleared.
+	 */
+	function clearPlan() {
+		var count = plannedMealCount();
+		if (!count) {
+			showToast('Your plan is already empty.', 3000);
+			return false;
+		}
+		var msg = 'Clear all ' + count + ' meal' + (count === 1 ? '' : 's') + ' from this week?' +
+			'\n\nPlans you have already saved to your dashboard are not affected.';
+		if (!window.confirm(msg)) { return false; }
+
+		state.days = emptyDays();
+		disarm();
+		saveState();
+		renderPlanner();
+		showToast('Meal plan cleared — your week is empty again.', 3500);
+		return true;
+	}
+
+	// No scroll-into-view here (unlike autofill): this button sits in the
+	// planner head already, and the emptied week is right below it.
+	if (clearBtn) { clearBtn.addEventListener('click', clearPlan); }
+
+	// Same action from inside the save dialog. Only step out of the dialog when
+	// the week was really cleared — a cancelled confirm leaves it open.
+	if (clearModalBtn) {
+		clearModalBtn.addEventListener('click', function () {
+			if (clearPlan()) { closeSaveModal(); }
 		});
 	}
 
