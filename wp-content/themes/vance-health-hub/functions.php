@@ -62,6 +62,9 @@ require_once get_template_directory() . '/inc/hero-carousel.php';
 // withdrawn URL lands somewhere useful instead of 404ing. Loaded early because
 // it hooks template_redirect at priority 1.
 require_once get_template_directory() . '/inc/retired-redirects.php';
+// Noindex for tag and author archives. AIOSEO has the setting and stores it,
+// but never applies it on 4.9.9 — the file explains the plugin bug in full.
+require_once get_template_directory() . '/inc/seo-archive-robots.php';
 require_once get_template_directory() . '/inc/hero-spotlight.php';
 // The same spotlight hero carried across to Contact, About and the three
 // free-tool pages (Gastro Health Survey, meal planner, malnutrition
