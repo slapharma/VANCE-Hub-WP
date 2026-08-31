@@ -65,6 +65,9 @@ require_once get_template_directory() . '/inc/retired-redirects.php';
 // Noindex for tag and author archives. AIOSEO has the setting and stores it,
 // but never applies it on 4.9.9 — the file explains the plugin bug in full.
 require_once get_template_directory() . '/inc/seo-archive-robots.php';
+// MedicalWebPage + MedicalCondition schema on the seven condition pages, added
+// to AIOSEO's own graph rather than as a second JSON-LD block.
+require_once get_template_directory() . '/inc/medical-schema.php';
 require_once get_template_directory() . '/inc/hero-spotlight.php';
 // The same spotlight hero carried across to Contact, About and the three
 // free-tool pages (Gastro Health Survey, meal planner, malnutrition
