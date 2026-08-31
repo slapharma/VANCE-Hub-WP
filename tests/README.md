@@ -30,7 +30,17 @@ cd tests && php legal-hero.test.php
 cd tests && php gi-hero.test.php
 ```
 
-All five exit non-zero on failure. As of 2026-08-31: 291 / 136 / 22 / 182 / 251 checks.
+```bash
+cd tests && php category-hero.test.php
+```
+
+All six exit non-zero on failure. As of 2026-08-31:
+291 / 136 / 22 / 182 / 255 / 79 checks.
+
+Four of them have a mutation runner beside them — `mutate-hero.py`,
+`mutate-legal.py`, `mutate-gi.py`, `mutate-category.py`. Run the runner, not
+just the suite: a green suite proves the checks execute, and only a red
+mutant proves they can fail. Every line must read `went RED`.
 
 ## What each covers
 
@@ -40,6 +50,7 @@ All five exit non-zero on failure. As of 2026-08-31: 291 / 136 / 22 / 182 / 251 
 | `hero-customizer.test.php` | The Customizer registration for those heroes — sections, panels, sanitizers, which section each toggle lands in, that two sections sharing a panel cannot share a title, and that the control list matches the renderer's field list exactly |
 | `reveal.test.js` | The `.gi-reveal` scroll animation in `page-gi-health.php` / `page-gi-condition.php`, extracted from the templates themselves, under every condition that used to leave content invisible |
 | `gi-hero.test.php` | `inc/gi-hero.php` — the Gastro Health Explained lobby and the seven condition heroes: the four-cell band and its never-itself guard, the lobby's seven chips on two fixed rows, purple's two jobs and the teal CTA override, photograph resolution and the focal-point whitelist, the opt-in review date, and **both templates included and run** so a commented-out call cannot pass. Section -1 lifts `vance_gi_conditions()` and `vance_gi_condition_cards()` out of `functions.php` and evaluates them, so the suite tests the real registry rather than a copy of it that could rot |
+| `category-hero.test.php` | `inc/category-hero.php` — the category-archive heroes: the live facts band and the cells it drops rather than showing a zero, sub-category inheritance (photograph, card and family eyebrow from the parent) and the breadcrumb, term-name decoding, photograph resolution and its motif fallback, both title-override keys, and the three archive templates read as **source** — see the caveat below |
 | `legal-hero.test.php` | `inc/legal-hero.php` — the five policy-document heroes: copy carried across from the dark heroes verbatim, the band of sibling documents, the no-photography constraint, slug resolution and its path fallback, the inline stylesheet, and the five templates **included and run** so a commented-out call cannot pass |
 
 ## Not harnesses — the hero photographs
@@ -175,3 +186,46 @@ That is not belt-and-braces: the grep version of the section passed a mutation
 that commented the call out, because `// vance_render_legal_hero( 'terms' );`
 still contains the string being searched for. Any future check that a template
 "calls" something should run the template, not read it.
+
+## The three category photographs are NOT generated yet
+
+`gen-heroes.py` carries three more prompts — `cat-clinical-reviews`,
+`cat-gastro-living`, `cat-healthcare-news` — and `process-heroes.py` routes
+anything named `cat-*` into `assets/img/heroes/categories/<slug>.jpg`, which is
+where `inc/category-hero.php` looks. **None of the three files exists.** The run
+on 2026-08-31 returned `HTTP 402 Payment Required`: the OpenRouter account is
+out of credit.
+
+Nothing is broken by their absence. Every category renders the geometric motif
+instead, exactly as the Knowledgebase lobby, the 404 and the five policy
+documents already do, and `category-hero.test.php` §4 branches on
+`file_exists` so it asserts whichever path is live. Top the account up and run:
+
+```bash
+python gen-heroes.py cat-clinical-reviews cat-gastro-living cat-healthcare-news
+```
+
+```bash
+python process-heroes.py
+```
+
+The heroes pick the files up on the next request — the `src` carries a
+`filemtime` cache-buster — and §4 starts asserting the `<img>` branch, the
+1400×876 intrinsic box and the focal point instead of the motif.
+
+The nine categories with no posts in them are deliberately NOT in that list. A
+section with nothing in it does not need a photograph of somebody enjoying it.
+
+## A second note on template-level checks
+
+`category-hero.test.php` §9 does exactly what the note above says not to do: it
+reads the three archive templates rather than running them. That is a known
+weaker check, not an oversight. `archive.php` and its two siblings need a live
+`WP_Query`, `get_header()` and a post loop, none of which the stub layer here
+provides, so including them is not a small addition — it is a second harness.
+
+What §9 does buy, and `mutate-category.py` proves: it strips comments before
+searching, so `// vance_render_category_hero();` fails it, which is the exact
+mutation that defeated the naive grep in `legal-hero.test.php`. What it cannot
+prove is that the call is *reached* at runtime. Only loading a real category
+page proves that, which is why the deploy checklist ends there.

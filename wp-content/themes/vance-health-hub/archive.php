@@ -47,7 +47,23 @@ if ( is_category() ) {
 ?>
 
 <main>
-    <!-- Hero Section -->
+    <?php
+    /*
+     * Category archives render the light spotlight hero — the same
+     * .vhh-hero-spotlight section as the homepage, the page heroes, the eight
+     * GI pages and the five policy documents. See inc/category-hero.php.
+     *
+     * It returns false for anything that is not a category term, so tag,
+     * author, date and post-type archives fall straight through to the dark
+     * 350px band below, which is still the only hero they have. Everything in
+     * that block from here to </section> runs ONLY for those.
+     */
+    $vance_arch_hero_done = function_exists( 'vance_render_category_hero' )
+        ? vance_render_category_hero()
+        : false;
+
+    if ( ! $vance_arch_hero_done ) :
+    ?>
     <!-- Hero Section -->
     <?php
     $hero_bg = get_template_directory_uri() . '/assets/img/news_hero.png'; // Default
@@ -171,6 +187,7 @@ if ( is_category() ) {
             </div>
         </div>
     </section>
+    <?php endif; // ! $vance_arch_hero_done ?>
 
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
 

@@ -219,75 +219,33 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
 }
 
 /* -------------------------------------------------------------------------
- * HERO — mirrors archive.php so these category pages stay visually consistent.
+ * HERO
+ * ----------------------------------------------------------------------
+ * The light spotlight hero, shared with archive.php and
+ * category-content-healthcare-news.php through one renderer. Forty lines of
+ * overlay-gradient arithmetic used to live here as a third copy of the dark
+ * band; every one of the settings it read is still honoured, by
+ * inc/category-hero.php.
+ *
+ * This template only ever renders for a category term, so the renderer cannot
+ * return false here — but it is called the same way as in archive.php so the
+ * two cannot drift.
  * ---------------------------------------------------------------------- */
-$vance_cat            = get_queried_object();
-$hero_bg             = get_template_directory_uri() . '/assets/img/research_hero.png';
-$category_tagline    = '';
 
-if ( $vance_cat instanceof WP_Term ) {
-    // Hero image + tagline are chosen from the section name. A leaf sub-category
-    // is tested on its PARENT's name so every child of a section inherits that
-    // section's treatment, rather than "Food & Nutrition" or "Tests &
-    // Treatments" falling through to the clinical default on its own page.
-    $cat_name = $vance_cat->name;
-    if ( $vance_cat->parent ) {
-        $vance_hero_parent = get_term( $vance_cat->parent, 'category' );
-        if ( $vance_hero_parent instanceof WP_Term ) {
-            $cat_name = $vance_hero_parent->name;
-        }
-    }
-    if ( stripos( $cat_name, 'gastro' ) !== false || stripos( $cat_name, 'living' ) !== false || stripos( $cat_name, 'patient' ) !== false ) {
-        $hero_bg          = get_template_directory_uri() . '/assets/img/news_hero.png';
-        $category_tagline = 'Living Well, Every Day';
-    } else {
-        $hero_bg          = get_template_directory_uri() . '/assets/img/research_hero.png';
-        $category_tagline = 'Evidence-Based Excellence';
-    }
-
-    // Per-category Customizer overrides (shared with archive.php).
-    $specific_hero    = vance_get_theme_mod( "vance_cat_hero_{$vance_cat->term_id}" );
-    $specific_tagline = vance_get_theme_mod( "vance_cat_tagline_{$vance_cat->term_id}" );
-    if ( $specific_hero ) {
-        $hero_bg = $specific_hero;
-    }
-    if ( $specific_tagline ) {
-        $category_tagline = $specific_tagline;
-    }
-}
-
-$title_color  = vance_get_theme_mod( 'vance_hero_title_color', '#ffffff' );
-$mask_enabled = vance_get_theme_mod( 'vance_hero_mask_toggle', true );
-$mask_opacity = vance_get_theme_mod( 'vance_hero_mask_opacity', 0.5 );
-
-if ( $mask_enabled ) {
-    $overlay_css = "background-image: linear-gradient(rgba(10, 25, 41, {$mask_opacity}), rgba(20, 40, 70, {$mask_opacity})), url('" . esc_url( $hero_bg ) . "');";
-} else {
-    $overlay_css = "background-image: url('" . esc_url( $hero_bg ) . "');";
-}
-$bg_props = 'background-position: center center; background-size: cover; background-repeat: no-repeat;';
-
-// Title (respect the existing override setting used by archive.php).
-$display_title = get_the_archive_title();
-if ( $vance_cat instanceof WP_Term ) {
-    $override = vance_get_theme_mod( "vance_cat_hero_title_override_{$vance_cat->term_id}" );
-    if ( $override ) {
-        $display_title = $override;
-    }
-}
+/*
+ * NOT hero state, despite having arrived with it: $vance_cat is what the
+ * grouping further down reads to find this category's child terms, and every
+ * post buckets into "ungrouped" without it. It outlived the hero block it was
+ * declared in, so it is declared on its own now.
+ */
+$vance_cat = get_queried_object();
 ?>
 <main>
-    <section class="hero" style="height: 350px; min-height: 0; display: flex; align-items: center; padding: 0; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; <?php echo $overlay_css . ' ' . $bg_props; ?> z-index: 1;"></div>
-        <div class="container" style="position: relative; z-index: 2; width: 100%;">
-            <div class="hero-content" style="max-width: 800px;">
-                <?php if ( $category_tagline ) : ?>
-                    <span class="eyebrow" style="<?php echo esc_attr( vance_category_tagline_style() ); ?>"><?php echo esc_html( $category_tagline ); ?></span>
-                <?php endif; ?>
-                <h1 class="entry-title" style="font-size: 56px; color: <?php echo esc_attr( $title_color ); ?>; font-weight: 700; margin: 0; line-height: 1.1;"><?php echo wp_kses_post( $display_title ); ?></h1>
-            </div>
-        </div>
-    </section>
+    <?php
+    if ( function_exists( 'vance_render_category_hero' ) ) {
+        vance_render_category_hero();
+    }
+    ?>
 
     <?php
     // "Sub-category nav cards" — the glass jump buttons that link to the

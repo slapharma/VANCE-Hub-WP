@@ -210,6 +210,13 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 - Header logo ~25% larger than stock (225px desktop)
 - `/ask-ai/` page heading reads "Ask AI" and chat sends/receives (REST route + API key)
 - `/turn-evidence-into-action/` renders the four evidence pillars
+- Every **category archive** shows the light spotlight hero (`inc/category-hero.php`):
+  eyebrow pill, teal headline, and a white band of live facts — Articles / Topics /
+  Last added. The numbers are computed per request, so a wrong one means the query
+  changed, not that a value went stale. Check a top-level section
+  (`/category/content-gastro-living/`) AND a sub-category
+  (`/category/food-nutrition/`): the sub-category must show a breadcrumb, inherit the
+  parent's photograph, and NOT repeat the parent's name in the pill.
 - `/gastro-health-explained/` and all seven condition pages show the light spotlight hero
   (`inc/gi-hero.php`): purple eyebrow, teal CTA, and the lobby's seven condition chips on
   **two** rows. Three rows means the copy column narrowed — check, don't "fix" the split.

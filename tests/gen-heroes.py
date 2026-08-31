@@ -149,6 +149,51 @@ PROMPTS.update({
 })
 
 
+# The category-archive heroes (inc/category-hero.php). Keyed "cat-<slug>" so
+# process-heroes.py can route them into assets/img/heroes/categories/ while
+# everything else keeps landing flat in assets/img/heroes/.
+#
+# Only the three sections that carry content today. The other nine categories
+# render the geometric motif, which is the same thing the Knowledgebase, the
+# 404 and the five policy documents do -- a section with no articles in it does
+# not need a photograph of somebody enjoying it.
+#
+# The three are deliberately NOT three variations of "a person in a bright room
+# with a screen": that run already exists across the page heroes. One reads on
+# paper, one is domestic and object-led, one is a room of people mid-movement.
+PROMPTS.update({
+    # Clinical Reviews. Evidence being READ rather than produced -- so paper and
+    # a pen, not a laboratory (that is About's picture) and not two people
+    # comparing charts (that is Get Started Today's).
+    "cat-clinical-reviews": (
+        "A woman in her forties at a desk in a bright university office, holding "
+        "a printed research paper in one hand and a pen in the other, mid-"
+        "annotation, reading closely and unhurried. A short stack of journals to "
+        "one side of the desk. A tall window at the left of the frame is blown "
+        "out to near white. " + SHARED
+    ),
+    # Gastro Living. The section is about ordinary life continuing, so the
+    # picture is somebody on their way out of the door -- not a consultation,
+    # not a kitchen (the meal planner already has the kitchen).
+    "cat-gastro-living": (
+        "A man in his fifties sitting on the edge of an armchair in a bright "
+        "front room, lacing a walking boot, a coat over the back of the chair "
+        "beside him, about to head out for the day. Capable and ordinary, "
+        "nothing clinical in the room. A large window on the left of the frame "
+        "floods that edge with clean daylight. " + SHARED
+    ),
+    # Healthcare News. Movement and immediacy, and the only one of the three
+    # with more than one person -- caught mid-sentence rather than posed.
+    "cat-healthcare-news": (
+        "Three colleagues standing at the end of a long table in a bright "
+        "open-plan office, mid-conversation, one gesturing while the others "
+        "listen, printed pages and coffee cups on the table between them. "
+        "Caught in the middle of a sentence rather than posed. A glass wall on "
+        "the left of the frame washes that edge almost white. " + SHARED
+    ),
+})
+
+
 def generate(name, prompt):
     body = json.dumps({
         "model": MODEL,

@@ -71,6 +71,12 @@ require_once get_template_directory() . '/inc/hero-spotlight.php';
 // — so this must load AFTER hero-spotlight.php. All five default to their
 // classic dark hero; one `vance_{page}_hero_style` each switches them over.
 require_once get_template_directory() . '/inc/page-hero-spotlight.php';
+// The same spotlight hero carried across to the category archives — the last
+// set on the site still rendering the old 350px dark band. Loaded here rather
+// than from the three archive templates because the Customizer's Category
+// Heroes section registers a Photograph control per category and needs the
+// registry available on every admin request, not just on an archive.
+require_once get_template_directory() . '/inc/category-hero.php';
 // Primary-menu mega panels — the stylesheet and the three widgets that fill a
 // Max Mega Menu grid cell (icon tiles, CTA rail, live featured articles).
 // Panel structure itself is admin-side; see docs/MEGA-MENU-SETUP.md (repo root).
@@ -6516,14 +6522,39 @@ function vance_customize_register( $wp_customize ) {
     ) );
 
     foreach ( $categories as $cat ) {
-        // Hero Image
+        // Photograph — the LIGHT hero (inc/category-hero.php), which is what
+        // every category archive renders. A separate key from the Hero Image
+        // below on purpose: those images were chosen to sit under a 78% navy
+        // veil, and on a pale mint band with no veil they read as a dark
+        // smear. Same reasoning that gave Contact a second image key in
+        // inc/page-hero-spotlight.php.
+        //
+        // Leave it empty and a top-level category uses its own photograph from
+        // assets/img/heroes/categories/, or the teal motif if it has none; a
+        // SUB-category inherits whatever its parent is showing, so setting one
+        // picture on Gastro Living re-skins all five of its sub-sections.
+        $wp_customize->add_setting( "vance_cat_photo_{$cat->term_id}", array(
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_cat_photo_{$cat->term_id}", array(
+            'label'       => sprintf( __( '%s: Photograph', 'vance-health-hub' ), $cat->name ),
+            'description' => __( 'Landscape, 1400&times;876, subject right of centre with a bright and empty left third &mdash; that edge dissolves into the band. Leave empty to inherit.', 'vance-health-hub' ),
+            'section'     => 'vance_category_heroes',
+        ) ) );
+
+        // Hero Image — the legacy DARK band. Category archives no longer
+        // render it (see inc/category-hero.php); it is still read by the
+        // non-category branches of archive.php, and the setting is kept so no
+        // site loses a saved value.
         $wp_customize->add_setting( "vance_cat_hero_{$cat->term_id}", array(
             'default'           => '',
             'sanitize_callback' => 'esc_url_raw',
         ) );
         $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_cat_hero_{$cat->term_id}", array(
-            'label'   => sprintf( __( '%s: Hero Image', 'vance-health-hub' ), $cat->name ),
-            'section' => 'vance_category_heroes',
+            'label'       => sprintf( __( '%s: Hero Image (legacy dark band)', 'vance-health-hub' ), $cat->name ),
+            'description' => __( 'Kept for tag and post-type archives. Category pages use Photograph above.', 'vance-health-hub' ),
+            'section'     => 'vance_category_heroes',
         ) ) );
 
         // Tagline

@@ -30,52 +30,18 @@ $vhn_cat       = get_queried_object();
 $vhn_grid_cols = ( $vhn_cat instanceof WP_Term ) ? vance_get_cat_grid_cols( $vhn_cat->term_id ) : '3';
 
 /* -----------------------------------------------------------------------
- * Hero — same visual treatment archive.php gives this category by name.
+ * Hero — the light spotlight hero, through the one renderer archive.php and
+ * template-parts/subcategory-grouped-archive.php also call. This template
+ * used to carry its own third copy of the dark band's overlay arithmetic;
+ * every setting that copy read is still honoured, by inc/category-hero.php.
  * -------------------------------------------------------------------- */
-$vhn_hero_bg  = get_template_directory_uri() . '/assets/img/news_hero.png';
-$vhn_tagline  = 'Stay Ahead of the Curve';
-if ( $vhn_cat instanceof WP_Term ) {
-    $vhn_specific_hero    = vance_get_theme_mod( "vance_cat_hero_{$vhn_cat->term_id}" );
-    $vhn_specific_tagline = vance_get_theme_mod( "vance_cat_tagline_{$vhn_cat->term_id}" );
-    if ( $vhn_specific_hero ) {
-        $vhn_hero_bg = $vhn_specific_hero;
-    }
-    if ( $vhn_specific_tagline ) {
-        $vhn_tagline = $vhn_specific_tagline;
-    }
-}
-
-$vhn_title_color  = vance_get_theme_mod( 'vance_hero_title_color', '#ffffff' );
-$vhn_mask_enabled = vance_get_theme_mod( 'vance_hero_mask_toggle', true );
-$vhn_mask_opacity = vance_get_theme_mod( 'vance_hero_mask_opacity', 0.5 );
-
-if ( $vhn_mask_enabled ) {
-    $vhn_overlay_css = "background-image: linear-gradient(rgba(10, 25, 41, {$vhn_mask_opacity}), rgba(20, 40, 70, {$vhn_mask_opacity})), url('" . esc_url( $vhn_hero_bg ) . "');";
-} else {
-    $vhn_overlay_css = "background-image: url('" . esc_url( $vhn_hero_bg ) . "');";
-}
-$vhn_bg_props = 'background-position: center center; background-size: cover; background-repeat: no-repeat;';
-
-$vhn_display_title = get_the_archive_title();
-if ( $vhn_cat instanceof WP_Term ) {
-    $vhn_override = vance_get_theme_mod( "vance_cat_hero_title_override_{$vhn_cat->term_id}" );
-    if ( $vhn_override ) {
-        $vhn_display_title = $vhn_override;
-    }
-}
 ?>
 <main>
-    <section class="hero" style="height: 350px; min-height: 0; display: flex; align-items: center; padding: 0; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; <?php echo $vhn_overlay_css . ' ' . $vhn_bg_props; ?> z-index: 1;"></div>
-        <div class="container" style="position: relative; z-index: 2; width: 100%;">
-            <div class="hero-content" style="max-width: 800px;">
-                <?php if ( $vhn_tagline ) : ?>
-                    <span class="eyebrow" style="<?php echo esc_attr( vance_category_tagline_style() ); ?>"><?php echo esc_html( $vhn_tagline ); ?></span>
-                <?php endif; ?>
-                <h1 class="entry-title" style="font-size: 56px; color: <?php echo esc_attr( $vhn_title_color ); ?>; font-weight: 700; margin: 0; line-height: 1.1;"><?php echo wp_kses_post( $vhn_display_title ); ?></h1>
-            </div>
-        </div>
-    </section>
+    <?php
+    if ( function_exists( 'vance_render_category_hero' ) ) {
+        vance_render_category_hero();
+    }
+    ?>
 
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
 

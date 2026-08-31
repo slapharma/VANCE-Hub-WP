@@ -52,7 +52,17 @@ for name in NAMES:
 
     im = im.resize((W, H), Image.LANCZOS)
 
-    out = os.path.join(DST, name + ".jpg")
+    # "cat-<slug>" belongs to the category archives and lives one directory
+    # down; everything else lands flat in assets/img/heroes/. The prefix is
+    # dropped on the way, so the file is named by the category slug alone --
+    # which is the name inc/category-hero.php's registry declares.
+    if name.startswith("cat-"):
+        out_dir = os.path.join(DST, "categories")
+        os.makedirs(out_dir, exist_ok=True)
+        out = os.path.join(out_dir, name[4:] + ".jpg")
+    else:
+        out = os.path.join(DST, name + ".jpg")
     im.save(out, "JPEG", quality=84, optimize=True, progressive=True)
-    print("%-14s %s -> %d x %d, %d KB"
-          % (name, os.path.basename(src), W, H, os.path.getsize(out) // 1024))
+    print("%-22s %s -> %d x %d, %d KB  %s"
+          % (name, os.path.basename(src), W, H, os.path.getsize(out) // 1024,
+             os.path.relpath(out, DST)))
