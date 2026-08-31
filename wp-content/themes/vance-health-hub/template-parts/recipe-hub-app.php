@@ -87,9 +87,12 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 					<span><b id="vance-rh-total-meals">0</b> <?php esc_html_e( 'meals', 'vance-health-hub' ); ?></span>
 					<span><b id="vance-rh-total-kcal">0</b> kcal</span>
 				</div>
-				<button type="button" class="vance-rh-clear" id="vance-rh-clear"><?php esc_html_e( 'Clear meal plan', 'vance-health-hub' ); ?></button>
-				<button type="button" class="vance-rh-autofill" id="vance-rh-autofill"><?php esc_html_e( 'Let Vance Create Your Plan', 'vance-health-hub' ); ?></button>
-				<button type="button" class="vance-rh-save" id="vance-rh-save"><?php esc_html_e( 'Save this meal plan', 'vance-health-hub' ); ?></button>
+				<?php // Own wrapper so the three wrap as one block — see recipe-hub.css. ?>
+				<div class="vance-rh-planner-buttons">
+					<button type="button" class="vance-rh-clear" id="vance-rh-clear"><?php esc_html_e( 'Clear meal plan', 'vance-health-hub' ); ?></button>
+					<button type="button" class="vance-rh-autofill" id="vance-rh-autofill"><?php esc_html_e( 'Let Vance Create Your Plan', 'vance-health-hub' ); ?></button>
+					<button type="button" class="vance-rh-save" id="vance-rh-save"><?php esc_html_e( 'Save this meal plan', 'vance-health-hub' ); ?></button>
+				</div>
 			</div>
 		</div>
 

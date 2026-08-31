@@ -51,14 +51,20 @@
 /* Planner head actions — the totals plus the three buttons, one row on desktop.
    Was an inline style; it needs the media query below, so it lives here now. */
 .vance-rh-planner-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+/* The three buttons wrap as one block rather than individually: a head too
+   narrow for the whole row then puts all three together on their own line,
+   instead of packing "Clear" up beside the totals and orphaning "Save"
+   underneath. Three buttons only just fit beside the totals at 768px, so this
+   is what stops the tablet layout from turning on a few pixels of slack. */
+.vance-rh-planner-buttons { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 @media (max-width: 767.98px) {
-	/* Below the tablet breakpoint the four items stop fitting on one line, and
-	   greedy wrapping strands them at odd widths — "Clear" pinned beside the
-	   totals with "Save" alone on the next row. Stack them instead: one
-	   full-width item per line, in the same order, at the 44px tap height
-	   mobile-base.css already gives every button. */
-	.vance-rh-planner-actions { align-items: stretch; gap: 12px; }
-	.vance-rh-planner-actions > * { flex: 1 0 100%; }
+	/* Narrower than tablet there is no room for a row at all: stack instead,
+	   one full-width button per line, in the same order, at the 44px tap
+	   height mobile-base.css already gives every button. */
+	.vance-rh-planner-actions,
+	.vance-rh-planner-buttons { align-items: stretch; gap: 12px; }
+	.vance-rh-planner-actions > *,
+	.vance-rh-planner-buttons > * { flex: 1 0 100%; }
 }
 
 /* Save dialog — reuses the picker's overlay/panel/head language. */
