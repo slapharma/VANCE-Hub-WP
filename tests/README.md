@@ -30,7 +30,7 @@ cd tests && php legal-hero.test.php
 cd tests && php gi-hero.test.php
 ```
 
-All five exit non-zero on failure. As of 2026-08-31: 283 / 136 / 22 / 182 / 251 checks.
+All five exit non-zero on failure. As of 2026-08-31: 291 / 136 / 22 / 182 / 251 checks.
 
 ## What each covers
 
@@ -45,19 +45,34 @@ All five exit non-zero on failure. As of 2026-08-31: 283 / 136 / 22 / 182 / 251 
 ## Not harnesses — the hero photographs
 
 `gen-heroes.py` and `process-heroes.py` are one-shot generators, not tests. They
-made the four images in `assets/img/heroes/` (OpenRouter, `google/gemini-3-pro-image`,
-about $0.14 each) and cropped them to the 1400×876 box the renderer declares.
+made the eleven images in `assets/img/heroes/` (OpenRouter,
+`google/gemini-3-pro-image`, about $0.14 each) and cropped them to the 1400×876
+box the renderer declares. `process-heroes.py` takes whatever `gen-heroes.py`
+left in `tests/generated/` rather than a list to keep in step with it.
 
 They live here, not in `LOCAL/`, because the prompts ARE the spec: a replacement
 photograph has to be composed the same way or the hero looks broken — subject
 right of centre, left third bright and empty because that edge is dissolved,
 focal point high because `object-position` is `46% 14%`. The docstring in
 `gen-heroes.py` gives the reason for each line. `hero-render.test.php` §5f is the
-part that can fail: it asserts every photograph the config names is on disk, and
-that the two generated ones really are 1400×876.
+part that can fail: it asserts every photograph the config names is on disk and
+is really 1400×876, and that the count is **exactly nine** — that last one is
+what fails if a page quietly goes back to borrowing an image bought for another
+page. (Nine, not eleven: the Knowledgebase and the 404 name none in code. They
+declare the motif and are overridden by a theme mod on the live site.)
 
 `gen-heroes.py` needs `OPENROUTER_API_KEY` in the environment and spends real
 credit. It writes into `tests/generated/`, which is not committed.
+
+⚠ **Which OpenRouter key matters.** There are two on this project and they are on
+different accounts. The one that has usually been in the environment is a
+personal dev key with a **$5 lifetime cap**, and it is exhausted — it fails with
+a bare `HTTP 402` that reads like the account is empty when it is not. The one
+with budget is the account behind the site's own `vance_askai_api_key` setting,
+which is also what powers VANCE-Ai in production, so check that account's balance
+before spending it on pictures. `GET https://openrouter.ai/api/v1/key` tells you
+the cap and what is left on whichever key you are holding; `/api/v1/credits`
+tells you the account total.
 
 ## Mutation runners — read this before trusting a green run
 

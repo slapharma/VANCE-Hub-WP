@@ -130,35 +130,52 @@ included. Verified 2026-08-28.
 
 ## Deploy workflow
 
-Run this **only** from `wp-content/themes/vance-health-hub/`. The leading guard
-aborts if you're not there — a wrong working directory makes `tar . ` package the
-whole repo root *into* the live theme dir, which on 2026-06-24 publicly leaked
-`.deploy_key`, the handover docs, and the compliance `.docx` files. (CI in
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml) pins `working-directory`
-and is safe; this guard protects the manual path.)
+**Use `git archive`, not `tar` on the working tree.** Run it from anywhere in the
+repo; there is no working directory to get wrong.
 
 ```bash
-# Abort unless the current dir really is the theme dir.
-if [ ! -f style.css ] || ! grep -q 'Theme Name' style.css || [ ! -f functions.php ]; then
-  echo 'ABORT: run this from wp-content/themes/vance-health-hub/'; exit 1
-fi
-TSTAMP=$(date +%Y-%m-%d-%H%M) && \
-tar czf - \
-  --exclude='./.git' --exclude='./.claude' \
-  --exclude='./*.bak' --exclude='./*.bak-*' --exclude='./*.bak2' \
-  --exclude='./vance_rebrand.py' --exclude='./vance_color_swap.py' --exclude='./vance_ai_rename.py' \
-  --exclude='./front-page-original.php' --exclude='./inc/dashboard-functions-backup.txt' \
-  --exclude='./screenshot.png' --exclude='./Documents - Shortcut.lnk' \
-  --exclude='./check.py' --exclude='./debug_quote.py' \
-  . | \
+git archive --format=tar HEAD:wp-content/themes/vance-health-hub | gzip -n | \
 ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 \
   "set -e; \
    THEME=~/domains/vancehealthhub.co.uk/public_html/wp-content/themes/vance-health-hub; \
-   cd \"\$THEME\" && \
-   tar czf \"\$THEME/../vance-health-hub-pre-deploy-${TSTAMP}.tar.gz\" . && \
-   tar xzf - && \
+   cd \"\$THEME\"; \
+   tar --warning=no-file-changed -czf \"\$THEME/../vance-health-hub-pre-deploy-\$(date +%Y-%m-%d-%H%M).tar.gz\" . || true; \
+   tar xzf -; \
    echo 'DEPLOY_OK'"
 ```
+
+Three reasons this replaced the old `tar`-the-working-tree command, all of them
+things that actually went wrong:
+
+1. **The repo lives inside a Google Drive folder.** Drive touches files while tar
+   is reading them, so `tar` prints `file changed as we read it` and exits 1. On
+   2026-08-31 that killed one deploy at the pipe and, on the retry, made the
+   server-side backup return non-zero so `set -e` aborted before the extract. The
+   `|| true` and `--warning=no-file-changed` above are for the backup step only —
+   a warning while snapshotting must not stop the deploy.
+2. **`git archive` reads the object store, not the disk**, so nothing can perturb
+   it mid-stream, and it ships the **committed** tree — exactly what CI ships. The
+   old command shipped the working tree, so the two paths could disagree.
+3. **It cannot leak untracked files.** The 2026-06-24 incident — a deploy run
+   from the repo root that published `.deploy_key`, the handover docs and the
+   compliance `.docx` files over HTTPS — is impossible here, because untracked
+   files are not in the archive at all. The directory guard and the long
+   `--exclude` list existed to prevent that and are no longer needed.
+
+⚠ It ships **HEAD**, so commit first. `git status --porcelain wp-content/themes/vance-health-hub`
+should be empty before you run it, or you will deploy something other than what
+you are looking at.
+
+⚠ **`DEPLOY_OK` not printing does not mean the deploy failed**, and printing does
+not prove the right bytes arrived. Verify by content:
+
+```bash
+cd wp-content/themes/vance-health-hub && md5sum inc/page-hero-spotlight.php assets/css/main.css
+```
+
+then the same on the server. Files this repo wrote with LF will differ from the
+CRLF `git archive` produces — compare with `tr -d '\r'` before calling it a
+mismatch.
 
 After deploy: purge Hostinger cache (hPanel → Cache Manager → Purge All), LiteSpeed plugin cache if installed, and bump the `wp_enqueue_style` version string in `functions.php` if CSS changed.
 

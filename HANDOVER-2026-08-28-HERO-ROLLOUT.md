@@ -240,7 +240,7 @@ was written to fix in the first place.
 The theme's existing library is thin: every light-enough asset was already
 spoken for by the page it was bought for, so the first pass at these three
 heroes borrowed a condition page's photo twice and used the motif for the rest.
-Four photographs were then generated for the purpose (OpenRouter,
+Eleven photographs were then generated for the purpose (OpenRouter,
 `google/gemini-3-pro-image`, ~$0.14 each; **Canva's Connect API cannot generate
 images** — it creates, autofills and exports designs, and has no text-to-image
 endpoint). `tests/gen-heroes.py` carries the prompts and, in its docstring, the reason
@@ -263,10 +263,12 @@ the hero looks broken rather than merely different:
 
 Where each one is wired matters, because the two are not the same mechanism:
 
-- **Free Health Tools and the Gastro Health Survey** name theirs in the config
-  (`$img_hero . 'free-tools.jpg'` / `'survey.jpg'`), replacing the borrowed
-  `ulcerative-colitis.jpg` and `ibs.jpg`. Those two pages were always meant to
-  carry a photograph, so the photograph is the code default.
+- **Nine of the eleven name theirs in the config** (`$img_hero . '<page>.jpg'`).
+  `$img` and `$img_gi`, the two helpers that pointed at `assets/img/about/` and
+  `assets/img/gi-health/`, are gone with the last of their call sites — nothing
+  in this file borrows any more. Two of the images they replaced were a
+  condition page's picture doing double duty: **Ask AI had Crohn's, the User
+  Guide had IBD**, and the Gastro Health Survey had the IBS one.
 - **The Knowledgebase and the 404 keep `'motif' => true` and `'image' => ''` in
   code**, and their photographs are set as *theme mods*
   (`vance_kblobby_hero_spot_image`, `vance_e404_hero_spot_image`). That is on
@@ -279,7 +281,25 @@ Where each one is wired matters, because the two are not the same mechanism:
 stranger smiling beside "we can't find that page" is the failure the policy
 pages went abstract to avoid; an empty sunlit doorway is a way through.
 
-tests: **260 / 136 / 22 / 182**, 23 + 17 mutants all red, none by crashing.
+**The set is meant to read as one shoot**, so the eleven are deliberately not
+eleven takes on "a person with a device in a bright room". Two are object-led
+(About is glassware at a bench; the meal planner is a worktop with the food as
+the subject and the cook incidental), one has no people at all (the 404), and
+the rest vary by setting, distance and who is looking at whom. If you add a
+twelfth, look at the other eleven together first — the risk is not that one is
+bad, it is that two are the same.
+
+⚠ **The GI health hub has its own hero** (`inc/gi-hero.php`), which is a
+different renderer and is not one of the eleven. It got its own picture the
+same day in a parallel session; do not assume this file governs it.
+
+⚠ **The homepage is not in this set either.** `inc/hero-spotlight.php` uses
+`hero-couple.webp`, which already has an alpha feather baked into its left edge
+(`LOCAL/hero_couple_feather.py`) and so was already made for this hero. The
+page-variant CSS only *finishes* that fade; a replacement without the baked
+feather can show a seam.
+
+tests: **291 / 136 / 22 / 182**, 25 + 17 mutants all red, none by crashing.
 One mutant had to be split: `"if ( $c['slot'] === 'search' ) {"` matches the
 **Customizer field** before it matches the markup branch, so the mutant read
 as covering the band and covered the placeholder control instead. And the
