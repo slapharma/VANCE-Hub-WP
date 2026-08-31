@@ -81,7 +81,8 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 				<h2 class="vance-rh-h2" style="margin-bottom:6px;"><?php esc_html_e( 'Your Weekly Plan', 'vance-health-hub' ); ?></h2>
 				<input type="text" class="vance-rh-plan-name" id="vance-rh-plan-name" placeholder="<?php esc_attr_e( 'Name this plan (optional)', 'vance-health-hub' ); ?>">
 			</div>
-			<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+			<?php // Layout in recipe-hub.css — it needs a media query, which an inline style can't carry. ?>
+			<div class="vance-rh-planner-actions">
 				<div class="vance-rh-totals">
 					<span><b id="vance-rh-total-meals">0</b> <?php esc_html_e( 'meals', 'vance-health-hub' ); ?></span>
 					<span><b id="vance-rh-total-kcal">0</b> kcal</span>

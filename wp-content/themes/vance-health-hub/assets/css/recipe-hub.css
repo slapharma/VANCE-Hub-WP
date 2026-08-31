@@ -48,6 +48,19 @@
 .vance-rh-clear:focus-visible { outline: 3px solid #FDA29B; outline-offset: 2px; }
 .vance-rh-clear:disabled { opacity: 0.6; cursor: default; }
 
+/* Planner head actions — the totals plus the three buttons, one row on desktop.
+   Was an inline style; it needs the media query below, so it lives here now. */
+.vance-rh-planner-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+@media (max-width: 767.98px) {
+	/* Below the tablet breakpoint the four items stop fitting on one line, and
+	   greedy wrapping strands them at odd widths — "Clear" pinned beside the
+	   totals with "Save" alone on the next row. Stack them instead: one
+	   full-width item per line, in the same order, at the 44px tap height
+	   mobile-base.css already gives every button. */
+	.vance-rh-planner-actions { align-items: stretch; gap: 12px; }
+	.vance-rh-planner-actions > * { flex: 1 0 100%; }
+}
+
 /* Save dialog — reuses the picker's overlay/panel/head language. */
 .vance-rh-savemodal { display: none; position: fixed; inset: 0; z-index: 100021; align-items: center; justify-content: center; padding: 20px; background: rgba(10,25,41,0.72); border-radius: var(--radius-surface); }
 .vance-rh-savemodal.is-open { display: flex; }
