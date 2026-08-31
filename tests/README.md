@@ -201,6 +201,11 @@ instead, exactly as the Knowledgebase lobby, the 404 and the five policy
 documents already do, and `category-hero.test.php` §4 branches on
 `file_exists` so it asserts whichever path is live. Top the account up and run:
 
+The key goes in `LOCAL/openrouter.key` &mdash; a single line, no quotes.
+`LOCAL/` is gitignored and is not inside the theme, so a key there can be
+neither committed nor deployed. `gen-heroes.py` prefers that file over
+`OPENROUTER_API_KEY` and never prints the value.
+
 ```bash
 python gen-heroes.py cat-clinical-reviews cat-gastro-living cat-healthcare-news
 ```

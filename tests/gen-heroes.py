@@ -16,9 +16,42 @@ Usage:  python gen_heroes.py [key ...]      (no args = all four)
 """
 import base64, io, json, os, sys, urllib.request
 
-KEY = os.environ.get("OPENROUTER_API_KEY")
+def _load_key():
+    """The OpenRouter key, from a gitignored file in preference to the env.
+
+    LOCAL/openrouter.key is the supported place to put it. Two reasons it beats
+    an environment variable here:
+
+      1. LOCAL/ is gitignored (see .gitignore line 3) and is not in the theme,
+         so the key cannot be committed and cannot be deployed. The 2026-06-24
+         incident -- a private SSH key published over HTTPS by a deploy run
+         from the wrong directory -- is what that rule exists for.
+      2. A key exported into the shell is visible to anything that dumps the
+         environment, including an assistant session started from that shell.
+         Nothing here ever prints the value; it goes straight into the
+         Authorization header.
+
+    Rotate by overwriting the file. Whitespace and a trailing newline are
+    stripped, so it can be written with a plain redirect.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(os.path.dirname(here), "LOCAL", "openrouter.key")
+    if os.path.exists(path):
+        with io.open(path, encoding="utf-8") as fh:
+            key = fh.read().strip()
+        if key:
+            return key
+    return (os.environ.get("OPENROUTER_API_KEY") or "").strip()
+
+
+KEY = _load_key()
 if not KEY:
-    sys.exit("OPENROUTER_API_KEY is not set")
+    sys.exit(
+        "No OpenRouter key.\n"
+        "  Put one in LOCAL/openrouter.key (gitignored), or set "
+        "OPENROUTER_API_KEY.\n"
+        "  Keys: https://openrouter.ai/settings/keys"
+    )
 
 MODEL = "google/gemini-3-pro-image"
 OUT = os.path.dirname(os.path.abspath(__file__)) + os.sep + "generated"
