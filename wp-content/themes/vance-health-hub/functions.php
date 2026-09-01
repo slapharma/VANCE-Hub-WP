@@ -68,6 +68,9 @@ require_once get_template_directory() . '/inc/seo-archive-robots.php';
 // The 635 DOIs already written into articles were printed as plain text and
 // never resolved. Linked at display time, so nothing rewrites post_content.
 require_once get_template_directory() . '/inc/citation-links.php';
+// reviewedBy on articles, in the schema and above the copy. Ships empty on
+// purpose: no post has a reviewer, so nothing is claimed until one is named.
+require_once get_template_directory() . '/inc/medical-review.php';
 // MedicalWebPage + MedicalCondition schema on the seven condition pages, added
 // to AIOSEO's own graph rather than as a second JSON-LD block.
 require_once get_template_directory() . '/inc/medical-schema.php';

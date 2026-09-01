@@ -4886,6 +4886,46 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 
 
 /* ==========================================================================
+   Medical review line
+   ==========================================================================
+   Sits between the article title and the first paragraph, and only renders
+   when a clinician has actually been recorded against the post — see
+   inc/medical-review.php. Quiet on purpose: this is a provenance note, not a
+   badge, so it reads as a fact about the article rather than a trust seal.
+   ========================================================================== */
+
+.va-medical-review {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 6px;
+    margin: 0 0 24px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--color-primary, #008080);
+    border-radius: 0 var(--radius-control, 6px) var(--radius-control, 6px) 0;
+    background: rgba(0, 128, 128, 0.06);
+    font-size: 14px;
+    line-height: 1.5;
+    color: #33484f;
+}
+
+.va-medical-review .va-review-label {
+    font-weight: 600;
+    color: var(--color-primary, #008080);
+}
+
+.va-medical-review a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.va-medical-review .va-review-date {
+    color: #63757c;
+}
+
+
+/* ==========================================================================
    Article cards stay square
    ==========================================================================
    The one deliberate exception to the radius scale. Every tile below is a

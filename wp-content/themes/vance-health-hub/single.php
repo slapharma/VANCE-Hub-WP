@@ -234,6 +234,13 @@ while ( have_posts() ) :
                         // so this is a <div> styled to match that H1's typography.
                         ?>
                         <div class="va-article-title"><?php the_title(); ?></div>
+                        <?php
+                        // Prints nothing unless a clinician has been recorded
+                        // against this post — see inc/medical-review.php.
+                        if ( function_exists( 'vance_render_medical_review_line' ) ) {
+                            vance_render_medical_review_line();
+                        }
+                        ?>
                         <?php the_content(); ?>
                     </div>
 

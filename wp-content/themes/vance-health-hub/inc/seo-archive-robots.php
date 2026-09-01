@@ -54,8 +54,11 @@
  *   - Tag archives duplicate the titles of the seven condition hub pages and
  *     receive more internal links than the pages themselves, so Google is being
  *     pointed at the archive instead of the page written for the query.
- *   - The author archive lists every post under one generic "Team Vance"
- *     account, duplicating the post listing with nothing added.
+ *   - The author archive was noindexed while it listed every post under one
+ *     empty "Team Vance" account, duplicating the post listing with nothing
+ *     added. It is now gated on the author having a biography, because on
+ *     health content the author page is where authorship is evidenced and
+ *     Google has to be able to reach it.
  *   - Eleven pages were scaffolded during the site build and never written,
  *     and all eleven sat in the XML sitemap. Measured two ways on 2026-09-01
  *     and agreeing: post_content is empty in the database, and the rendered
@@ -183,8 +186,28 @@ function vance_noindex_thin_archives( $attributes ) {
 		return $attributes;
 	}
 
-	if ( is_tag() || is_author() ) {
+	if ( is_tag() ) {
 		$attributes['noindex'] = 'noindex';
+	}
+
+	/*
+	 * The author archive is gated on the author having a biography, on the
+	 * same self-healing principle as the pages and terms above. It was
+	 * unconditionally noindexed while every post was filed under an empty
+	 * "Team Vance" account, because an archive that repeats the post listing
+	 * and says nothing about who wrote it is worth nothing to a reader.
+	 *
+	 * Once there is a real bio the calculation reverses: on health content the
+	 * author page is where authorship is evidenced, and Google has to be able
+	 * to reach it.
+	 */
+	if ( is_author() ) {
+		$author = get_queried_object();
+		$bio    = ( $author instanceof WP_User ) ? trim( wp_strip_all_tags( (string) $author->description ) ) : '';
+
+		if ( '' === $bio ) {
+			$attributes['noindex'] = 'noindex';
+		}
 	}
 
 	return $attributes;
