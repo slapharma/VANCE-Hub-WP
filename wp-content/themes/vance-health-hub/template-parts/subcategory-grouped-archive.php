@@ -165,7 +165,7 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
                                 <h4 class="va-fl-title"><?php the_title(); ?></h4>
                             </div>
                             <?php if ( $vance_li_thumb ) : ?>
-                                <img class="va-fl-thumb" src="<?php echo esc_url( $vance_li_thumb ); ?>" alt="" loading="lazy">
+                                <img class="va-fl-thumb" src="<?php echo esc_url( $vance_li_thumb ); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt(  ) ); ?>" loading="lazy">
                             <?php endif; ?>
                         </a>
                     <?php endforeach; wp_reset_postdata(); ?>

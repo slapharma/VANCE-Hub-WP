@@ -722,7 +722,7 @@ function vance_render_prime_block( array $vals ) {
 					<div class="bento-grid-news bento-grid-news--grow">
 						<?php $p = $latest_posts[0]; ?>
 						<a href="<?php echo esc_url( get_permalink( $p->ID ) ); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
-							<img src="<?php echo esc_url( get_the_post_thumbnail_url( $p->ID, 'large' ) ?: 'https://via.placeholder.com/800x600' ); ?>" alt="">
+							<img src="<?php echo esc_url( get_the_post_thumbnail_url( $p->ID, 'large' ) ?: 'https://via.placeholder.com/800x600' ); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $p->ID ) ); ?>">
 							<div class="bento-content-overlay">
 								<span class="tag" style="background: var(--primary-color);">Featured</span>
 								<h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo esc_html( get_the_title( $p->ID ) ); ?></h3>
@@ -746,7 +746,7 @@ function vance_render_prime_block( array $vals ) {
 								// controls only the postage-stamp thumbnails on the list rows.
 								$list_thumb = $latest_show_thumbs ? get_the_post_thumbnail_url( $p->ID, 'thumbnail' ) : '';
 								if ( $list_thumb ) : ?>
-								<img class="latest-list-thumb" src="<?php echo esc_url( $list_thumb ); ?>" alt="" loading="lazy" width="64" height="64">
+								<img class="latest-list-thumb" src="<?php echo esc_url( $list_thumb ); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $p->ID ) ); ?>" loading="lazy" width="64" height="64">
 								<?php endif; ?>
 							</a>
 							<?php endforeach; ?>

@@ -1172,7 +1172,7 @@ body {
                     <div class="bento-grid-news">
                         <?php $p = $posts_array[0]; ?>
                         <a href="<?php echo get_permalink($p->ID); ?>" class="bento-cell-featured" data-vhh-post-id="<?php echo (int) $p->ID; ?>">
-                            <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="">
+                            <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'large') ?: 'https://via.placeholder.com/800x600'; ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $p->ID ) ); ?>">
                             <div class="bento-content-overlay">
                                 <span class="tag" style="background:<?php echo $color; ?>">Featured</span>
                                 <h3 style="font-size: 28px; color: white; margin-bottom: 12px;"><?php echo esc_html(vance_card_title($p->ID)); ?></h3>
@@ -1229,7 +1229,7 @@ body {
                             ?>
                             <?php if (has_post_thumbnail($p->ID)): ?>
                                 <div style="position: relative; overflow: hidden; height: 180px; background: #f1f5f9;">
-                                    <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $p->ID ) ); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                     <?php echo vance_card_eyebrow_html($p->ID); ?>
                                 </div>
                             <?php endif; ?>
