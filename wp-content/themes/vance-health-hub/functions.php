@@ -68,6 +68,9 @@ require_once get_template_directory() . '/inc/seo-archive-robots.php';
 // Drops the " - Vance Health Hub" suffix from titles, which was pushing 150 of
 // them past the length Google will show. Front page keeps its brand-first title.
 require_once get_template_directory() . '/inc/seo-title.php';
+// Drops the admin icon font for logged-out visitors and takes the Google
+// sign-in client off the critical path. Loaded late: it dequeues other handles.
+require_once get_template_directory() . '/inc/frontend-assets.php';
 // The 635 DOIs already written into articles were printed as plain text and
 // never resolved. Linked at display time, so nothing rewrites post_content.
 require_once get_template_directory() . '/inc/citation-links.php';
