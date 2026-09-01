@@ -2,11 +2,23 @@
 /**
  * Keep thin and unwritten URLs out of the index.
  *
- * Sitemap removal comes free with the noindex — AIOSEO drops noindexed URLs
- * from the sitemap on its own — so do NOT reach for aioseo_sitemap_exclude_posts
- * or _exclude_terms to do it explicitly. Those were tried on 2026-09-01 and
- * reverted. AIOSEO's excludedObjectIds() checks has_filter() before its early
- * return, so merely registering a callback pushes it into
+ * This file only sets the meta tag. Sitemap removal is a separate job, and the
+ * filter here does not do it: AIOSEO's sitemap query reads the stored
+ * robots_noindex / robots_default columns in wp_aioseo_posts, and knows nothing
+ * about a runtime filter. The eleven pages were taken out of the sitemap by
+ * writing that stored value through the plugin's own Post model instead. Both
+ * halves are needed — the stored value because AIOSEO may not honour it in the
+ * served tag, the filter because it is the half that definitely works.
+ *
+ * There is no equivalent for terms: AIOSEO free ships no Term model, and its
+ * sitemap query filters on the post table only. The undescribed recipe term
+ * archives are therefore noindexed but still listed. Google fetches them once
+ * and drops them, which is untidy rather than harmful.
+ *
+ * Do NOT reach for aioseo_sitemap_exclude_posts or _exclude_terms to tidy that
+ * up. Those were tried on 2026-09-01 and reverted. AIOSEO's excludedObjectIds()
+ * checks has_filter() before its early return, so merely registering a callback
+ * pushes it into
  *
  *     aioseo()->options->sitemap->{$type}->advancedSettings->{$option}
  *
