@@ -126,6 +126,53 @@ Verified live 2026-08-28. The page is bound and published, but at slug
 `customizer-pages.php` registers ~110 `vance_evidence_*` settings, the full hero set
 included. Verified 2026-08-28.
 
+### Editorial: 66 wrong citations in the patient guides
+Found 2026-09-01 by resolving all 635 DOIs on the site. **23 do not exist** and
+**43 resolve to a different paper than the citation names** — right journal, right
+year, wrong article, with the stated year matching the real paper in 40 of the 43.
+That is not a typo pattern: a mistyped DOI 404s, it does not land on a plausible
+neighbour. 37 of 100 guides affected; all 22 clinical abstract posts are clean.
+
+Clean before 24 July 2026 (1 bad in 88 refs), 12.4% after (65 in 525), with
+references per article rising 4.2 → 6.6 at the same point. Every article on the
+site arrives through an automated Markdown pipeline (`_wpcom_is_markdown` on all
+149 posts) and 78 of 100 guides have never been edited since publishing.
+
+Each one needs the real source found and substituted, or the claim removed. This
+also sits under a **"Clinician Approved"** badge and a "peer-reviewed clinical
+evidence base" claim on `/about-us/` — a CAP/ASA exposure, not just an SEO one.
+
+---
+
+## Citation checking
+
+`inc/citation-check.php` resolves every DOI in a post against CrossRef about
+30 seconds after publish and writes the verdict to a **Citations** column on the
+Posts list and a table in the editor sidebar. It flags, it never blocks — a
+network call between the publishing pipeline and a successful save would turn a
+CrossRef outage into a content outage.
+
+```bash
+ssh -i ~/.ssh/hostinger_sla -p 65002 u767439438@82.29.185.3 "cd ~/domains/vancehealthhub.co.uk/public_html && wp vance citations --quiet-ok"
+```
+
+`--post=<id>` for one article, `--refresh` to ignore the 30-day cache. **Exits
+non-zero when anything is wrong**, so it can gate a deploy.
+
+Three things to know before changing it:
+
+1. **The paper's title may legitimately be in the post title rather than the
+   reference line.** The clinical abstract posts summarise one paper and put its
+   title in the heading. Dropping that allowance turns 43 real mismatches into 48
+   reported ones — it was the false positive in the first pass of the audit.
+2. **Cache asymmetry is deliberate.** A hit caches 30 days because registered
+   metadata never changes; a 404 caches only 3, because a DOI can be registered
+   after an article quotes it; a transport failure is not cached at all, or one
+   CrossRef wobble reads as a bad citation for a month.
+3. **`inc/citation-links.php` is a separate concern** — it makes the DOIs
+   clickable at display time. The checker reuses its punctuation helper, so it is
+   required first in `functions.php`. Neither rewrites `post_content`.
+
 ---
 
 ## Deploy workflow
