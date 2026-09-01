@@ -48,6 +48,23 @@ function vance_retired_redirects() {
 		 * that page said.
 		 */
 		'our-heritage' => array( 'slug' => 'about-us', 'path' => '/about-us/' ),
+
+		/*
+		 * Deleted 2026-09-01 as a duplicate. Two articles covered the same
+		 * Guts UK "Let's Talk Guts" campaign, running the same 13–19 July
+		 * dates, published a day apart: this one and the one it now points at.
+		 * They were competing with each other for the same story, and the
+		 * related-post widget was giving both the same 15 inbound links.
+		 *
+		 * The surviving article is the destination rather than the other way
+		 * round because that is the one that was kept; this one is trashed,
+		 * not deleted outright, so its text is recoverable from the WP trash
+		 * if the wrong one turns out to have been kept.
+		 */
+		'new-uk-campaign-launches-to-break-the-silence-around-digestive-symptoms' => array(
+			'slug' => 'guts-uk-launches-week-long-campaign-to-break-digestive-health-taboo',
+			'path' => '/guts-uk-launches-week-long-campaign-to-break-digestive-health-taboo/',
+		),
 	);
 }
 
@@ -88,8 +105,13 @@ function vance_retired_redirect() {
 	// path is a last resort for a site where that page has been renamed or
 	// removed -- it will chain through WordPress's own canonical redirect, which
 	// is still better than a 404.
+	// Posts as well as pages: a retired URL can be replaced by either, and
+	// get_page_by_path() looks only at pages unless told otherwise. Without
+	// this a post destination silently falls through to the literal path
+	// below, which happens to be right today only because permalinks are
+	// /%postname%/ — it would break the day that setting changes.
 	$dest   = $map[ $slug ];
-	$page   = get_page_by_path( $dest['slug'] );
+	$page   = get_page_by_path( $dest['slug'], OBJECT, array( 'page', 'post' ) );
 	$target = $page ? get_permalink( $page ) : home_url( $dest['path'] );
 
 	// A row whose destination is its own slug would loop the browser.
