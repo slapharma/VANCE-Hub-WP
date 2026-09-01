@@ -68,6 +68,9 @@ require_once get_template_directory() . '/inc/seo-archive-robots.php';
 // The 635 DOIs already written into articles were printed as plain text and
 // never resolved. Linked at display time, so nothing rewrites post_content.
 require_once get_template_directory() . '/inc/citation-links.php';
+// Resolves every DOI against CrossRef on publish and reports in the editor.
+// Loaded after citation-links.php, whose punctuation helper it reuses.
+require_once get_template_directory() . '/inc/citation-check.php';
 // reviewedBy on articles, in the schema and above the copy. Ships empty on
 // purpose: no post has a reviewer, so nothing is claimed until one is named.
 require_once get_template_directory() . '/inc/medical-review.php';
