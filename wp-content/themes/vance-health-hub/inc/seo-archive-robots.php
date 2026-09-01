@@ -1,6 +1,19 @@
 <?php
 /**
- * Keep thin and unwritten URLs out of the index, and out of the sitemap.
+ * Keep thin and unwritten URLs out of the index.
+ *
+ * Sitemap removal comes free with the noindex — AIOSEO drops noindexed URLs
+ * from the sitemap on its own — so do NOT reach for aioseo_sitemap_exclude_posts
+ * or _exclude_terms to do it explicitly. Those were tried on 2026-09-01 and
+ * reverted. AIOSEO's excludedObjectIds() checks has_filter() before its early
+ * return, so merely registering a callback pushes it into
+ *
+ *     aioseo()->options->sitemap->{$type}->advancedSettings->{$option}
+ *
+ * where the same broken options object described above resolves to null. That
+ * throws a TypeError out of array_merge(), and the visible result was that
+ * vance_recipe-sitemap.xml — the 19 actual recipes, nothing to do with this
+ * change — vanished from the sitemap index and started returning 404.
  *
  * AIOSEO already stores some of these settings — Search Appearance → Taxonomies
  * → Tags, and → Archives → Author are both set to noindex in the database — but
@@ -188,78 +201,3 @@ function vance_noindex_unwritten_urls( $attributes ) {
 	return $attributes;
 }
 add_filter( 'aioseo_robots_meta', 'vance_noindex_unwritten_urls' );
-
-/**
- * Drop unwritten pages, and anything already 301'd away, from the sitemap.
- *
- * A noindex page that is still submitted asks Google to fetch a URL in order to
- * be told to ignore it, so the two have to move together.
- *
- * Registering this filter at all is what keeps AIOSEO's excludedObjectIds()
- * from returning early on an empty exclusion list — it checks has_filter()
- * before bailing — so the callback runs even though nothing is excluded in the
- * plugin's own settings.
- *
- * @param int[]  $ids  Post IDs AIOSEO will exclude.
- * @param string $type Sitemap type.
- * @return int[]
- */
-function vance_sitemap_exclude_unwritten_pages( $ids, $type ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-	$ids = is_array( $ids ) ? $ids : array();
-
-	foreach ( vance_placeholder_pages() as $slug ) {
-		$page = get_page_by_path( $slug );
-		if ( $page && vance_page_is_placeholder( $page ) ) {
-			$ids[] = (int) $page->ID;
-		}
-	}
-
-	/*
-	 * Retired URLs 301 from template_redirect, but the posts behind them can
-	 * still be published — the Guts UK duplicate was left in publish state when
-	 * it was retired on 2026-09-01, which is exactly how a redirecting URL ends
-	 * up submitted for indexing. Reading the redirect map here means retiring a
-	 * URL removes it from the sitemap in the same edit, whatever its post
-	 * status.
-	 */
-	if ( function_exists( 'vance_retired_redirects' ) ) {
-		foreach ( array_keys( vance_retired_redirects() ) as $slug ) {
-			$retired = get_page_by_path( $slug, OBJECT, array( 'page', 'post' ) );
-			if ( $retired ) {
-				$ids[] = (int) $retired->ID;
-			}
-		}
-	}
-
-	return array_values( array_unique( array_map( 'intval', $ids ) ) );
-}
-add_filter( 'aioseo_sitemap_exclude_posts', 'vance_sitemap_exclude_unwritten_pages', 10, 2 );
-
-/**
- * Drop undescribed recipe term archives from the sitemap.
- *
- * @param int[]  $ids  Term IDs AIOSEO will exclude.
- * @param string $type Sitemap type.
- * @return int[]
- */
-function vance_sitemap_exclude_undescribed_terms( $ids, $type ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-	$ids = is_array( $ids ) ? $ids : array();
-
-	$terms = get_terms(
-		array(
-			'taxonomy'   => vance_recipe_taxonomies(),
-			'hide_empty' => false,
-		)
-	);
-
-	if ( is_array( $terms ) ) {
-		foreach ( $terms as $term ) {
-			if ( vance_term_is_undescribed( $term ) ) {
-				$ids[] = (int) $term->term_id;
-			}
-		}
-	}
-
-	return array_values( array_unique( array_map( 'intval', $ids ) ) );
-}
-add_filter( 'aioseo_sitemap_exclude_terms', 'vance_sitemap_exclude_undescribed_terms', 10, 2 );
