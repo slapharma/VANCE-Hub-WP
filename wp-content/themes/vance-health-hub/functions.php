@@ -65,6 +65,9 @@ require_once get_template_directory() . '/inc/retired-redirects.php';
 // Noindex for tag and author archives. AIOSEO has the setting and stores it,
 // but never applies it on 4.9.9 — the file explains the plugin bug in full.
 require_once get_template_directory() . '/inc/seo-archive-robots.php';
+// The 635 DOIs already written into articles were printed as plain text and
+// never resolved. Linked at display time, so nothing rewrites post_content.
+require_once get_template_directory() . '/inc/citation-links.php';
 // MedicalWebPage + MedicalCondition schema on the seven condition pages, added
 // to AIOSEO's own graph rather than as a second JSON-LD block.
 require_once get_template_directory() . '/inc/medical-schema.php';
