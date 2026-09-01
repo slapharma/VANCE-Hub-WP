@@ -85,25 +85,33 @@ PHP files use `var(--radius-*, Npx)` with a literal fallback because several ren
 
 ---
 
-## CRITICAL outstanding work — do these first
+## Settled — do NOT re-investigate these
 
-### Security: exposed OpenRouter API key
-`inc/dashboard-functions.php:682-684` contains a split-string OpenRouter API key (committed to public GitHub, deployed live). The split doesn't hide it. Action:
-1. Revoke at https://openrouter.ai/keys
-2. Generate replacement
-3. Swap to `vance_get_theme_mod('vance_askai_api_key', '')` (the customizer setting already exists in `functions.php`)
-4. Add guard for unset key
-5. Enter new key via WP admin → Appearance → Customize → Ask AI Configuration
+Three items sat under a "CRITICAL outstanding work" heading for months after they
+had been fixed. Checked on 2026-09-01 and all three are done:
 
-See [REBRAND-HANDOVER.md §6.1](REBRAND-HANDOVER.md) for full steps.
+- **Exposed OpenRouter API key** — gone. No hard-coded key anywhere in
+  `wp-content/`; `inc/askai-functions.php:1010` reads
+  `vance_get_theme_mod( 'vance_askai_api_key', '' )`, which is exactly what the
+  old note prescribed. The one grep hit left is a `placeholder=` attribute on an
+  admin form.
+- **`siteurl` / `home` on `http://`** — both are `https://vancehealthhub.co.uk`.
+- **Legacy domains in the database** — no published content contains
+  `slahealth.co.uk`, `gastrohealthhub.com` or `vancemedical.co.uk`. A search for
+  `sla-health-hub` returns 281 rows, but every one is a `customize_changeset`
+  post — Customizer autosave records holding the old theme_mod namespace. They
+  are inert. Two option rows (`cmplz_options`, `acf_site_health`) still mention
+  the old domains; low impact, worth a look when someone is next in Complianz.
 
-### Security: exposed SSH deploy key — rotate ASAP
+### Security: exposed SSH deploy key — rotation UNCONFIRMED
 On 2026-06-24 a misdirected manual deploy (run from the repo root) left the whole
 repo root sitting in the live, web-served theme dir, exposing a **private SSH key**
 (`.deploy_key`) plus the handover docs and compliance `.docx` files publicly over
-HTTPS. The stray files were removed from the server and the deploy command was
-hardened with a directory guard (see Deploy workflow), but the key must be treated
-as compromised:
+HTTPS. The stray files were removed and the deploy command was replaced with
+`git archive` (see Deploy workflow), which cannot ship untracked files at all.
+
+**Whether the key was ever rotated is not recorded anywhere, and cannot be told
+from the repo.** Confirm before assuming it was:
 1. Generate a new keypair locally.
 2. On the Hostinger server, replace the old public key in `~/.ssh/authorized_keys`; remove the leaked one.
 3. Update the `HOSTINGER_SSH_KEY` GitHub Actions secret with the new private key.
@@ -111,11 +119,6 @@ as compromised:
 5. Confirm both the manual deploy and the GitHub Actions deploy still authenticate.
 
 `.deploy_key` is gitignored, so it was never in the GitHub repo — the website was the only leak vector.
-
-### DB cleanup (requires wp-cli on server)
-- `siteurl` and `home` are `http://` — should be `https://` (§6.2)
-- Body text, post meta, customizer serialised values still contain `slahealth.co.uk` / `vancemedical.co.uk` — run targeted `wp search-replace` per (§6.3)
-- `_sla_*` meta keys — **do NOT** search-replace these
 
 ### ~~WP admin: bind the Turn Evidence page template~~ — DONE
 Verified live 2026-08-28. The page is bound and published, but at slug
@@ -126,21 +129,115 @@ Verified live 2026-08-28. The page is bound and published, but at slug
 `customizer-pages.php` registers ~110 `vance_evidence_*` settings, the full hero set
 included. Verified 2026-08-28.
 
-### Editorial: 66 wrong citations in the patient guides
-Found 2026-09-01 by resolving all 635 DOIs on the site. **23 do not exist** and
-**43 resolve to a different paper than the citation names** — right journal, right
-year, wrong article, with the stated year matching the real paper in 40 of the 43.
-That is not a typo pattern: a mistyped DOI 404s, it does not land on a plausible
-neighbour. 37 of 100 guides affected; all 22 clinical abstract posts are clean.
+### ~~Editorial: 66 wrong citations in the patient guides~~ — RESOLVED 2026-09-01
+Found by resolving all 635 DOIs on the site: 23 did not exist and 43 resolved to a
+different paper than the citation named — right journal, right year, wrong article,
+with the stated year matching the real paper in 40 of the 43. Not a typo pattern; a
+mistyped DOI 404s rather than landing on a plausible neighbour. Clean before 24 July
+2026 (1 bad in 88 refs), 12.4% after (65 in 525), with references per article rising
+4.2 → 6.6 at the same point.
 
-Clean before 24 July 2026 (1 bad in 88 refs), 12.4% after (65 in 525), with
-references per article rising 4.2 → 6.6 at the same point. Every article on the
-site arrives through an automated Markdown pipeline (`_wpcom_is_markdown` on all
-149 posts) and 78 of 100 guides have never been edited since publishing.
+**26 were repaired** — re-queried against CrossRef on their own reference text and
+accepted only where title, first author and year all agreed, with every replacement
+confirmed to resolve before it was written. **40 could not be traced to a real paper
+and were removed whole**, each article keeping four to eight references.
+`wp vance citations` now reports 595 of 595 correct.
 
-Each one needs the real source found and substituted, or the claim removed. This
-also sits under a **"Clinician Approved"** badge and a "peer-reviewed clinical
-evidence base" claim on `/about-us/` — a CAP/ASA exposure, not just an SEO one.
+**What is still open:** removing a reference does not repair the sentence it was
+supporting. Around 25 articles now carry claims with nothing behind them. That is an
+editorial job, and it is the largest piece of unfinished work on the site.
+
+**If you ever bulk-substitute DOIs again:** replace the specific occurrence, not
+every match. Doing a `str_replace` over `post_content` broke a correct citation in
+*10 of the Best Foods for a Happy, Healthy Gut*, which cited two papers from the
+same journal where the identifier being corrected was legitimately attached to the
+second one. The checker caught it on the next run.
+
+---
+
+## Outstanding work — as at 2026-09-01
+
+Ordered by what costs most to leave alone.
+
+1. **No named medical reviewer.** `inc/medical-review.php` ships the whole
+   mechanism — an editor box, a visible line, `reviewedBy` and `lastReviewed` on
+   the schema — and sets it on nothing, on purpose. Meanwhile `/about-us/` badges
+   the site **"Clinician Approved"** and claims a "peer-reviewed clinical evidence
+   base". That claim is not currently evidenced, which is a CAP/ASA exposure and
+   not only an SEO one. One real clinician with a real qualification turns it on,
+   one article at a time.
+2. **Claims left unsourced.** See the citation item above: ~25 articles carry
+   assertions whose reference was removed.
+3. **Site Kit was never fully authorised.** Search Console and GA4 are both
+   configured — property IDs present, gtag firing, data collecting since June —
+   but the OAuth grant is missing the read scopes, so `get_data()` returns
+   `missing_required_scopes` and nothing reaches WordPress. Nobody has been seeing
+   this data in the dashboard they would naturally look at. Re-grant in Site Kit.
+   Until then there is no measured basis for prioritising anything.
+4. **Eleven scaffolded pages are still empty.** Noindexed and out of the sitemap
+   (see `inc/seo-archive-robots.php`), so they do no harm, but they are still
+   published and blank. Two are the same page twice: `/contribute/` against
+   `/contribute-to-the-hub/`, `/podcast-guest/` against
+   `/become-a-podcast-guest-on-the-hub/`. Write one of each and retire the other
+   through `vance_retired_redirects()`.
+5. **87 titles still run past 60 characters**, down from 150. The 16 worst — the
+   clinical abstracts, up to 182 characters — have hand-written SEO titles, and
+   dropping the site-name suffix fixed 45 more. The rest need writing individually.
+6. **Google Tag Manager is 170 KB**, now the single largest asset on the site.
+7. **No PageSpeed API key**, so there is no Core Web Vitals baseline. The keyless
+   quota is shared and exhausted.
+8. **No keyword or backlink source.** Nothing competitive can be done without one.
+9. **15 recipe taxonomy archives are noindexed but still in the sitemap.** AIOSEO
+   free ships no Term model and its sitemap query joins the post table only, so
+   there is no supported way to exclude a term. Google fetches each once and drops
+   it. Do not try to fix this with `aioseo_sitemap_exclude_terms` — see below.
+
+---
+
+## AIOSEO on this install — three traps
+
+The plugin works, but its own options object misbehaves here, and two of its
+filters do not have the shape you would expect. All three cost a live incident
+before being written down.
+
+1. **Its options object cannot be trusted for reads or writes.** Nested paths
+   return `null` for values that demonstrably exist — that is why
+   `inc/seo-archive-robots.php` exists at all, and why the title suffix is stripped
+   in `inc/seo-title.php` rather than by setting the title format. The per-content-
+   type formats are not even in the stored option; the plugin builds that structure
+   at runtime. **Prefer a filter to a setting, every time.**
+2. **`aioseo_schema_output` passes the whole `@graph`, not one node.** Treating the
+   argument as a single node is a silent no-op: a list has no `@type` key, the guard
+   returns early, and the property never reaches the page while every unit test that
+   hands the function one node passes. `inc/medical-schema.php` has it right and is
+   the file to copy.
+3. **Never register `aioseo_sitemap_exclude_posts` / `_exclude_terms`.**
+   `excludedObjectIds()` checks `has_filter()` before its early return, so merely
+   registering a callback pushes it into
+   `aioseo()->options->sitemap->{$type}->advancedSettings->{$option}` — which is
+   null here. `array_merge()` throws, sitemap generation dies partway, and
+   `vance_recipe-sitemap.xml` disappears. To keep a post out of the sitemap, write
+   the stored `robots_noindex` / `robots_default` columns through the plugin's own
+   `Post` model; the sitemap query reads those directly.
+
+---
+
+## Icons: Dashicons is not loaded for visitors
+
+`inc/frontend-assets.php` dequeues Dashicons for logged-out users — 34.7 KB of
+admin icon font that no public page used. Logged-in users keep it for the admin bar.
+
+**If a glyph turns into a tofu box, this is why.** Max Mega Menu draws its dropdown
+arrow and mobile close button as private-use-area characters from that font, and
+nothing in the markup says so — there is no `dashicons` class anywhere, only a
+`font-family` on a pseudo-element. A crawl for `class="dashicons"` finds nothing and
+proves nothing. Both are now drawn from borders and a Latin-1 character instead (see
+"Mega menu arrows" in `main.css`).
+
+MegaMenu's icon picker also uses Dashicons, so assigning an icon to a menu item in
+its settings will produce a tofu box. To check for others, read the computed
+`font-family` of every `::before` and `::after` on a rendered page — markup
+inspection cannot see this class of dependency.
 
 ---
 
@@ -255,8 +352,10 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 ## Smoke tests after any deploy
 - Front page loads with teal primary (`#008080`)
 - Header logo ~25% larger than stock (225px desktop)
-- `/ask-ai/` page heading reads "Ask AI" and chat sends/receives (REST route + API key)
-- `/turn-evidence-into-action/` renders the four evidence pillars
+- `/ask-ai/` heading reads **"VANCE Ai"** (not "Ask AI" — that wording is stale) and
+  chat sends/receives (REST route `wp-json/vance-health/v1` + customizer API key)
+- `/get-started-today/` renders the evidence pillars (NOT `/turn-evidence-into-action/`,
+  which 404s)
 - Every **category archive** shows the light spotlight hero (`inc/category-hero.php`):
   eyebrow pill, teal headline, and a white band of live facts — Articles / Topics /
   Last added. The numbers are computed per request, so a wrong one means the query
@@ -269,8 +368,22 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   **two** rows. Three rows means the copy column narrowed — check, don't "fix" the split.
 - Dashboard → Profile edit saves (AJAX nonce + `_sla_*` meta round-trip)
 - Malnutrition calculator completes (postMessage contract)
-- Footer links go to `https://gastrohealthhub.com/...`
 - WP Customizer opens and saves cleanly
+- **Menu arrows render as chevrons**, not tofu boxes — Dashicons is dequeued for
+  visitors and the arrows are drawn in CSS. Three visible indicators on desktop.
+- **Article DOIs are links.** `wp vance citations` should report 595 ok and exit 0.
+- **Articles show their condition chips** under the copy (`va-article-conditions`)
+  and carry `about` → `MedicalCondition` in the schema. 143 of 149 do; six general
+  pieces deliberately show nothing.
+- **Every image has a real alt.** The homepage should report 27 images, 27
+  described, none empty. If card thumbnails come back empty, a template is
+  discarding `_wp_attachment_image_alt` again — see `inc/thumbnail-alt.php`.
+- **`og:image` is present on every page**, falling back to
+  `assets/img/og-default.jpg` where AIOSEO has none.
+
+A quick way to run most of this: fetch every URL in the sitemap and assert on
+content, not status codes. All 217 returned 200 with zero PHP notices on
+2026-09-01.
 
 ---
 
@@ -292,6 +405,29 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 │       └── vhh-annotations/  ← highlight/comment companion plugin (see Plugin deploy)
 └── LOCAL/                    ← gitignored, one-shot transformer scripts
 ```
+
+### The SEO includes, and which problem each one solves
+
+All are required from `functions.php` and all exist because a setting either did
+not work or did not exist. Load order matters where noted.
+
+| File | Does |
+|---|---|
+| `inc/seo-archive-robots.php` | Noindexes tag and author archives, the eleven unwritten pages, and undescribed recipe terms. Self-healing: write the page or the term description and it indexes again. Author archive is gated on the author having a bio. |
+| `inc/seo-title.php` | Strips the ` - Vance Health Hub` suffix from titles. Front page keeps its brand-first title. |
+| `inc/citation-links.php` | Makes the 635 DOIs clickable at display time. Nothing rewrites `post_content`. |
+| `inc/citation-check.php` | Resolves every DOI against CrossRef on publish; `wp vance citations`. **Requires citation-links.php first** — reuses its punctuation helper. |
+| `inc/medical-review.php` | `reviewedBy` + a visible review line. Ships empty on purpose. |
+| `inc/article-conditions.php` | `about` → `MedicalCondition` and the condition chips under an article. **Requires medical-schema.php first** — reuses its registry and `#medicalcondition` @id. |
+| `inc/social-image.php` | Default `og:image` / `twitter:image`, and `og:site_name` as a name rather than name-plus-tagline. |
+| `inc/frontend-assets.php` | Dequeues Dashicons for visitors; defers the Google sign-in client to first interaction or idle. |
+| `inc/thumbnail-alt.php` | `vance_thumbnail_alt()` — the featured image's alt, for the card templates that build their own `<img>` from a thumbnail URL. |
+
+Two conventions worth keeping. **Everything is display-time**: none of these
+rewrite stored content, so backing any of them out is deleting a `require` line.
+And **everything degrades to the previous behaviour** rather than inventing data —
+an image with no alt still renders `alt=""`, a post with no reviewer renders
+nothing, an article with no confident condition match gets no chip.
 
 ## Local-only helpers (in `LOCAL/`, gitignored)
 - `vance_rebrand.py` — text rebrand transformer (round 1)
