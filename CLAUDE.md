@@ -168,12 +168,24 @@ Ordered by what costs most to leave alone.
    one article at a time.
 2. **Claims left unsourced.** See the citation item above: ~25 articles carry
    assertions whose reference was removed.
-3. **Site Kit was never fully authorised.** Search Console and GA4 are both
-   configured — property IDs present, gtag firing, data collecting since June —
-   but the OAuth grant is missing the read scopes, so `get_data()` returns
-   `missing_required_scopes` and nothing reaches WordPress. Nobody has been seeing
-   this data in the dashboard they would naturally look at. Re-grant in Site Kit.
-   Until then there is no measured basis for prioritising anything.
+3. **Search Console and GA4 are connected and returning data.** Do not re-diagnose
+   this. A `missing_required_scopes` error from `get_data()` almost certainly means
+   the caller built the module before `wp_set_current_user()` — Site Kit binds the
+   OAuth client to the current user at construction, so a module built as user 0 has
+   no token no matter what is stored. Set the user first, then construct:
+
+   ```php
+   wp_set_current_user( 1 );                       // module ownerID
+   $ctx     = new \Google\Site_Kit\Context( WP_PLUGIN_DIR . '/google-site-kit/google-site-kit.php' );
+   $modules = new \Google\Site_Kit\Core\Modules\Modules( $ctx );
+   $modules->get_module( 'search-console' )->get_data( 'searchanalytics', $args );
+   ```
+
+   Baseline on 2026-09-01, trailing 90 days: **6 clicks, 668 impressions**, 150
+   queries and 70 pages with any impressions at all. Almost everything sits between
+   position 40 and 90. Three queries are inside the top 20, all of them variants of
+   the one clinical abstract that ranks — "the global burden of inflammatory bowel
+   disease" at position 7. That page is the site's only click.
 4. **Eleven scaffolded pages are still empty.** Noindexed and out of the sitemap
    (see `inc/seo-archive-robots.php`), so they do no harm, but they are still
    published and blank. Two are the same page twice: `/contribute/` against
