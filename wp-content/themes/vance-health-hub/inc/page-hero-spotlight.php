@@ -194,7 +194,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_tag_default'   => 'Self-Assessment',
 			'legacy_title_default' => 'Gastro Health Survey',
 			'legacy_desc_default'  => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.',
-			// Was gi-health/ibs.jpg -- also the IBS condition page's photograph,
+			// Was gi-health/ibs.webp -- also the IBS condition page's photograph,
 			// taken because it was the best-lit asset available rather than the
 			// right one. This one was made for the page: answering something
 			// privately and unhurriedly, which is what the survey asks of you.

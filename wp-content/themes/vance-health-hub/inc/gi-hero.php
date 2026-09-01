@@ -364,7 +364,7 @@ function vance_gi_hero_photo( $slug = '' ) {
 	if ( $slug === '' ) {
 		/*
 		 * The lobby's own picture, used by no other template. It was briefly
-		 * borrowing gi-health/ibd.jpg, which is the IBD card's own photograph
+		 * borrowing gi-health/ibd.webp, which is the IBD card's own photograph
 		 * two screens further down this very page.
 		 *
 		 * THIS IMAGE IS GENERATED, NOT PHOTOGRAPHED. Chosen by the client on
@@ -390,7 +390,7 @@ function vance_gi_hero_photo( $slug = '' ) {
 		 *     enlarge the media slot or move the focal point left without
 		 *     looking at those three places again.
 		 */
-		$rel   = '/assets/img/gi-health/lobby-walk.jpg';
+		$rel   = '/assets/img/gi-health/lobby-walk.webp';
 		$alt   = __( 'Two people walking side by side away from the camera along a tree-lined canal path', 'vance-health-hub' );
 		$focal = vance_get_theme_mod( 'vance_gi_hub_hero_focal', '55% 50%' );
 		$saved = vance_get_theme_mod( 'vance_gi_hub_hero_bg_image', '' );

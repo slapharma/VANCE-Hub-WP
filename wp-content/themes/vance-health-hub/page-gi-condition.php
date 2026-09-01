@@ -288,11 +288,11 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
           <p>Where each type affects the gut:</p>
           <div class="gi-cp-grid">
             <div class="gi-cp-tile is-centered">
-              <img class="gi-cp-tile-img" src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd-crohns.jpg' ); ?>" loading="lazy" alt="Diagram of the digestive tract showing patchy areas of inflammation in Crohn's disease">
+              <img class="gi-cp-tile-img" src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd-crohns.webp' ); ?>" loading="lazy" alt="Diagram of the digestive tract showing patchy areas of inflammation in Crohn's disease">
               <h4>Crohn's Disease</h4><p>Can affect any part of the gut, from mouth to anus, in patches. Most often the end of the small intestine.</p>
             </div>
             <div class="gi-cp-tile is-centered">
-              <img class="gi-cp-tile-img" src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd-uc.jpg' ); ?>" loading="lazy" alt="Diagram of the digestive tract showing continuous inflammation of the large bowel in ulcerative colitis">
+              <img class="gi-cp-tile-img" src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/types-ibd-uc.webp' ); ?>" loading="lazy" alt="Diagram of the digestive tract showing continuous inflammation of the large bowel in ulcerative colitis">
               <h4>Ulcerative Colitis</h4><p>Affects only the large bowel (colon) and rectum, causing inflammation and ulcers in the lining.</p>
             </div>
           </div>
@@ -305,7 +305,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Symptoms vary by type and by which part of the gut is affected. Common ones include:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing common IBD symptoms on a body silhouette"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-ibd.webp' ); ?>" loading="lazy" alt="Illustration showing common IBD symptoms on a body silhouette"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Persistent diarrhoea, sometimes with blood or mucus</li>
@@ -325,7 +325,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>The exact cause isn't fully understood, but IBD is thought to develop from a combination of factors:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/causes-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing the four main factors contributing to IBD"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/causes-ibd.webp' ); ?>" loading="lazy" alt="Illustration showing the four main factors contributing to IBD"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile"><h4>Genetics &amp; family history</h4><p>IBD is more common if a close relative has it</p></div>
@@ -343,7 +343,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Your doctor may use several tests to diagnose IBD:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing IBD diagnostic tools including blood tests, stool tests, colonoscopy and MRI"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-ibd.webp' ); ?>" loading="lazy" alt="Illustration showing IBD diagnostic tools including blood tests, stool tests, colonoscopy and MRI"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-steps">
                 <div class="gi-cp-step"><div class="gi-cp-step-num">1</div><div class="gi-cp-step-text">Blood tests to check for inflammation and anaemia</div></div>
@@ -361,7 +361,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Treatment has two goals: <strong>settling a flare</strong>, then <strong>maintaining remission</strong>. The right approach depends on the type, location and severity of the condition.</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-ibd.jpg' ); ?>" loading="lazy" alt="Illustration showing IBD treatment approaches including medication, biologics, diet and wellbeing support"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-ibd.webp' ); ?>" loading="lazy" alt="Illustration showing IBD treatment approaches including medication, biologics, diet and wellbeing support"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile"><h4>Anti-inflammatory medicines</h4><p>To calm the gut lining, for example aminosalicylates such as mesalazine</p></div>
@@ -409,7 +409,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Crohn's can affect any part of the digestive tract. Here's how it typically distributes at diagnosis:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/location-crohns.jpg' ); ?>" loading="lazy" alt="Diagram showing where Crohn's commonly occurs"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/location-crohns.webp' ); ?>" loading="lazy" alt="Diagram showing where Crohn's commonly occurs"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-big">~30%</div><h4>Terminal ileum only</h4><p>End of the small intestine</p></div>
@@ -426,7 +426,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Symptoms can vary depending on which part of the gut is affected:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-crohns.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Crohn's symptoms"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-crohns.webp' ); ?>" loading="lazy" alt="Body silhouette showing common Crohn's symptoms"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Tummy pain and cramping, often in the lower right side</li>
@@ -459,7 +459,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Your doctor may use several tests to diagnose Crohn's and understand which parts of the gut are affected:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing Crohn's diagnostic tools"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-crohns.webp' ); ?>" loading="lazy" alt="Illustration showing Crohn's diagnostic tools"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-steps">
                 <div class="gi-cp-step"><div class="gi-cp-step-num">1</div><div class="gi-cp-step-text">Blood and stool tests, including <strong>faecal calprotectin</strong></div></div>
@@ -477,7 +477,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Treatment can bring on and maintain <strong>remission</strong> and help prevent complications.</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing Crohn's treatment approaches"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crohns.webp' ); ?>" loading="lazy" alt="Illustration showing Crohn's treatment approaches"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile"><h4>Steroids or liquid nutrition therapy</h4><p>To settle a flare (e.g. prednisolone or budesonide, or exclusive enteral nutrition)</p></div>
@@ -494,7 +494,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>With modern treatment and regular specialist review, most people with Crohn's manage their symptoms well:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-crohns.jpg' ); ?>" loading="lazy" alt="Illustration showing a person living well with Crohn's"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-crohns.webp' ); ?>" loading="lazy" alt="Illustration showing a person living well with Crohn's"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-tips is-cols-1">
                 <div class="gi-cp-tip"><div class="gi-cp-tip-icon">🍎</div><p><strong>Good nutrition</strong>, eating well supports healing and energy levels</p></div>
@@ -538,7 +538,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>UC always starts in the rectum. How far it spreads up the colon varies between individuals:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/extent-uc.jpg' ); ?>" loading="lazy" alt="Three diagrams showing proctitis, left-sided colitis, and pancolitis"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/extent-uc.webp' ); ?>" loading="lazy" alt="Three diagrams showing proctitis, left-sided colitis, and pancolitis"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile is-centered"><h4>Proctitis</h4><p>Inflammation limited to the rectum only</p></div>
@@ -555,7 +555,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Symptoms can vary depending on how much of the colon is affected and how active the inflammation is:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-uc.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common UC symptoms"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-uc.webp' ); ?>" loading="lazy" alt="Body silhouette showing common UC symptoms"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Diarrhoea, often containing blood or mucus</li>
@@ -588,7 +588,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Your doctor may use several tests to diagnose UC and understand how much of the colon is affected:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing UC diagnostic tools"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-uc.webp' ); ?>" loading="lazy" alt="Illustration showing UC diagnostic tools"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-steps">
                 <div class="gi-cp-step"><div class="gi-cp-step-num">1</div><div class="gi-cp-step-text">Blood tests for inflammation and anaemia</div></div>
@@ -605,7 +605,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>The aim is to bring <strong>flares</strong> under control, then keep the bowel healed and in <strong>remission</strong>.</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing UC treatment approaches"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-uc.webp' ); ?>" loading="lazy" alt="Illustration showing UC treatment approaches"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile"><h4>Aminosalicylates / 5-ASAs</h4><p>Often the first-line treatment (e.g. mesalazine or sulfasalazine), taken by mouth or as an enema/suppository</p></div>
@@ -623,7 +623,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Many people with UC lead full, active lives. Here are some things that can help keep things stable:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-uc.jpg' ); ?>" loading="lazy" alt="Illustration showing a person living well with UC"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-uc.webp' ); ?>" loading="lazy" alt="Illustration showing a person living well with UC"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-tips is-cols-1">
                 <div class="gi-cp-tip"><div class="gi-cp-tip-icon">💊</div><p><strong>Take maintenance treatment as prescribed</strong>, even when you feel well</p></div>
@@ -657,7 +657,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🔬</div><h2>What is Microscopic Colitis?</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image is-portrait"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/what-is-mc.jpg' ); ?>" loading="lazy" alt="Diagram of the digestive tract in microscopic colitis, with the colon looking normal and inflammation only visible under a magnifying glass"></div>
+            <div class="gi-cp-row-image is-portrait"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/what-is-mc.webp' ); ?>" loading="lazy" alt="Diagram of the digestive tract in microscopic colitis, with the colon looking normal and inflammation only visible under a magnifying glass"></div>
             <div class="gi-cp-row-text">
               <p>Microscopic colitis is a type of inflammatory bowel disease affecting the large bowel. Its defining feature is that the colon usually looks <strong>completely normal</strong> during a colonoscopy. The inflammation only shows up when a small tissue sample (a biopsy) is examined under a microscope.</p>
               <p>Because the bowel looks normal, it is often mistaken for irritable bowel syndrome. It is a common and treatable cause of ongoing watery diarrhoea, particularly in older adults.</p>
@@ -672,7 +672,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>There are two main subtypes of microscopic colitis. The two subtypes cause similar symptoms and are generally treated in the same way.</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/subtypes-mc.jpg' ); ?>" loading="lazy" alt="Diagram showing the two subtypes of microscopic colitis"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/subtypes-mc.webp' ); ?>" loading="lazy" alt="Diagram showing the two subtypes of microscopic colitis"></div>
             <div class="gi-cp-row-text">
               <table class="gi-compare-table">
                 <thead><tr><th>Subtype</th><th>What's different under the microscope</th></tr></thead>
@@ -691,7 +691,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>The main symptom is chronic watery diarrhoea that is not bloody:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-mc.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Microscopic Colitis symptoms"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-mc.webp' ); ?>" loading="lazy" alt="Body silhouette showing common Microscopic Colitis symptoms"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Chronic watery diarrhoea that is not bloody</li>
@@ -722,7 +722,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Diagnosis relies on a colonoscopy <strong>with biopsies</strong>. Even when the bowel looks normal, the laboratory findings confirm the type. Blood and stool tests help rule out other causes such as coeliac disease or infection.</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-mc.jpg' ); ?>" loading="lazy" alt="Illustration showing the diagnostic process for Microscopic Colitis"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/diagnosis-mc.webp' ); ?>" loading="lazy" alt="Illustration showing the diagnostic process for Microscopic Colitis"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-warning"><p><strong>Why it can be missed:</strong> A normal-looking colonoscopy can be falsely reassuring. In anyone with persistent watery diarrhoea, taking biopsies is the key step that confirms the diagnosis.</p></div>
             </div>
@@ -735,7 +735,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Symptoms often settle with treatment, though they can come back and may need a further course:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-mc.jpg' ); ?>" loading="lazy" alt="Illustration showing Microscopic Colitis treatment approaches"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-mc.webp' ); ?>" loading="lazy" alt="Illustration showing Microscopic Colitis treatment approaches"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile"><h4>Budesonide</h4><p>A targeted steroid, usually the first-line treatment and works well for most people</p></div>
@@ -769,7 +769,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🧠</div><h2>What is Irritable Bowel Syndrome?</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/gutbrain-ibs.jpg' ); ?>" loading="lazy" alt="Gut-brain axis illustration"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/gutbrain-ibs.webp' ); ?>" loading="lazy" alt="Gut-brain axis illustration"></div>
             <div class="gi-cp-row-text">
               <p>Irritable bowel syndrome (IBS) is one of the most common digestive conditions. It is a <strong>functional</strong> disorder, which means the gut doesn't work as it should even though it looks normal and isn't damaged. This is what sets it apart from inflammatory bowel disease.</p>
               <p>IBS is closely linked to how the gut and the brain communicate; this is often referred to as the <strong>gut-brain axis</strong>. It can be uncomfortable and disruptive, but it does not damage the bowel or raise the risk of bowel cancer.</p>
@@ -784,7 +784,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>IBS is grouped by the main change in bowel habit, which helps guide treatment:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/subtypes-ibs.jpg' ); ?>" loading="lazy" alt="Three IBS subtypes illustration"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/subtypes-ibs.webp' ); ?>" loading="lazy" alt="Three IBS subtypes illustration"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-3">
                 <div class="gi-cp-tile is-centered"><div class="gi-cp-tile-eyebrow">Diarrhoea-predominant</div><h4>IBS-D</h4><p>Loose or frequent stools are the main problem</p></div>
@@ -801,7 +801,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-ibs.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common IBS symptoms"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-ibs.webp' ); ?>" loading="lazy" alt="Body silhouette showing common IBS symptoms"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Abdominal pain or cramping, often relieved by passing a stool</li>
@@ -849,7 +849,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>IBS cannot be cured, but symptoms can usually be well controlled with a combination of approaches tailored to the individual:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-ibs.jpg' ); ?>" loading="lazy" alt="Illustration showing IBS treatment approaches"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-ibs.webp' ); ?>" loading="lazy" alt="Illustration showing IBS treatment approaches"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid is-cols-1">
                 <div class="gi-cp-tile"><h4>Diet and lifestyle</h4><p>Regular meals, adjusting fibre, and limiting caffeine and alcohol; a dietitian-supervised low-FODMAP diet helps many people</p></div>
@@ -866,7 +866,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🌱</div><h2>Living with IBS</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-ibs.jpg' ); ?>" loading="lazy" alt="Illustration showing positive daily life with IBS management"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-ibs.webp' ); ?>" loading="lazy" alt="Illustration showing positive daily life with IBS management"></div>
             <div class="gi-cp-row-text">
               <p>Identifying your personal triggers, often with a food and symptom diary, managing stress, staying active and keeping a regular routine can all make a big difference.</p>
               <p>IBS tends to come and go, but most people find a management plan that lets them get on with daily life.</p>
@@ -907,7 +907,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-crc.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Colorectal Cancer symptoms"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-crc.webp' ); ?>" loading="lazy" alt="Body silhouette showing common Colorectal Cancer symptoms"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Bleeding from the back passage, or blood in the stool</li>
@@ -940,7 +940,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Screening looks for early signs of cancer in people who have no symptoms. This is the <strong>single most effective way</strong> to catch bowel cancer early.</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/screening-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing the bowel cancer screening process"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/screening-crc.webp' ); ?>" loading="lazy" alt="Illustration showing the bowel cancer screening process"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-step-cards">
                 <div class="gi-cp-step-card"><div class="gi-cp-step-num">1</div><h4>Kit arrives by post</h4><p>An NHS bowel screening kit is posted to eligible adults within the screening age range</p></div>
@@ -966,7 +966,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>Treatment depends on where the cancer is, its stage and a person's general health. The main options, often used in combination, are:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing Colorectal Cancer treatment options"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-crc.webp' ); ?>" loading="lazy" alt="Illustration showing Colorectal Cancer treatment options"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-grid">
                 <div class="gi-cp-tile"><h4>Surgery</h4><p>To remove the affected part of the bowel, the most common treatment</p></div>
@@ -984,7 +984,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-card">
           <p>You can lower your risk with healthy lifestyle choices:</p>
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/prevention-crc.jpg' ); ?>" loading="lazy" alt="Illustration showing bowel cancer prevention through healthy lifestyle"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/prevention-crc.webp' ); ?>" loading="lazy" alt="Illustration showing bowel cancer prevention through healthy lifestyle"></div>
             <div class="gi-cp-row-text">
               <ul class="gi-cp-list">
                 <li>Eating plenty of fibre, fruit and vegetables</li>
@@ -1030,7 +1030,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">📋</div><h2>Three terms explained</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/terms-dd.jpg' ); ?>" loading="lazy" alt="Illustration showing the three stages: diverticulosis, diverticular disease, diverticulitis"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/terms-dd.webp' ); ?>" loading="lazy" alt="Illustration showing the three stages: diverticulosis, diverticular disease, diverticulitis"></div>
             <div class="gi-cp-row-text">
               <table class="gi-compare-table">
                 <thead><tr><th>Term</th><th>What it means</th></tr></thead>
@@ -1049,7 +1049,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">⚠️</div><h2>Symptoms</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-dd.jpg' ); ?>" loading="lazy" alt="Body silhouette showing common Diverticular Disease symptoms"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/symptoms-dd.webp' ); ?>" loading="lazy" alt="Body silhouette showing common Diverticular Disease symptoms"></div>
             <div class="gi-cp-row-text">
               <h3>Diverticular disease</h3>
               <ul class="gi-cp-list">
@@ -1104,7 +1104,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">💊</div><h2>Treatment &amp; management</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-dd.jpg' ); ?>" loading="lazy" alt="Illustration showing Diverticular Disease treatment approaches"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/treatment-dd.webp' ); ?>" loading="lazy" alt="Illustration showing Diverticular Disease treatment approaches"></div>
             <div class="gi-cp-row-text">
               <div class="gi-cp-split">
                 <div class="gi-cp-split-col">
@@ -1134,7 +1134,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
         <div class="gi-cp-section-head"><div class="gi-cp-section-icon">🌱</div><h2>Living with it &amp; prevention</h2></div>
         <div class="gi-cp-card">
           <div class="gi-cp-row">
-            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-dd.jpg' ); ?>" loading="lazy" alt="Illustration showing positive lifestyle for managing Diverticular Disease"></div>
+            <div class="gi-cp-row-image"><img src="<?php echo esc_url( $tmpl . '/assets/img/gi-health/conditions/living-dd.webp' ); ?>" loading="lazy" alt="Illustration showing positive lifestyle for managing Diverticular Disease"></div>
             <div class="gi-cp-row-text">
               <p>Most people with diverticular disease manage well with simple changes:</p>
               <ul class="gi-cp-list">
