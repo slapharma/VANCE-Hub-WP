@@ -4926,6 +4926,68 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 
 
 /* ==========================================================================
+   Mega menu arrows, drawn rather than typed
+   ==========================================================================
+   Max Mega Menu draws its dropdown arrow and its mobile close button as
+   characters from the Dashicons font -- a private-use-area glyph on
+   span.mega-indicator::after and .mega-close::before. Nothing in the markup
+   says so: there is no dashicons class to find, only a font-family on a
+   pseudo-element.
+
+   That matters because inc/frontend-assets.php stops serving Dashicons to
+   logged-out visitors, 34.7 KB of admin icon font on every page. When it was
+   first dequeued the ten menu arrows and the close button turned into tofu
+   boxes -- a crawl for `class="dashicons"` had found nothing, so the
+   dependency was invisible to the check that was supposed to catch exactly
+   this.
+
+   Restoring the font for two glyphs would be a poor trade. These are a chevron
+   and a multiplication sign, so they are drawn from borders and a Latin-1
+   character instead: no webfont, nothing to fail to load, and they inherit
+   currentColor so the existing hover and open states still apply.
+
+   !important throughout, because the plugin generates its rules behind two ID
+   selectors and matching that would mean hard-coding
+   #mega-menu-wrap-primary-menu, which changes with the menu location. The
+   generated rules carry no !important of their own, so this wins wherever it
+   lands in the cascade.
+   ========================================================================== */
+
+.mega-menu .mega-indicator::after,
+span.mega-indicator::after {
+    content: "" !important;
+    font-family: inherit !important;
+    display: inline-block !important;
+    width: 0.42em !important;
+    height: 0.42em !important;
+    border: 0 !important;
+    border-right: 2px solid currentColor !important;
+    border-bottom: 2px solid currentColor !important;
+    transform: rotate(45deg);
+    transform-origin: center;
+    position: relative;
+    top: -0.16em;
+    vertical-align: middle !important;
+    transition: transform 0.18s ease;
+}
+
+/* Open state: the same chevron, pointed the other way. */
+.mega-menu li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after,
+li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
+    transform: rotate(-135deg);
+    top: 0.08em;
+}
+
+.mega-menu .mega-close::before,
+.mega-close::before {
+    content: "\00d7" !important;
+    font-family: inherit !important;
+    font-size: 1.6em;
+    line-height: 1;
+}
+
+
+/* ==========================================================================
    Conditions covered by an article
    ==========================================================================
    Sits directly under the article body and links to the condition pillar
