@@ -242,6 +242,14 @@ while ( have_posts() ) :
                         }
                         ?>
                         <?php the_content(); ?>
+                        <?php
+                        // Links to the condition pillar page(s) this article is
+                        // about. Silent when no condition was confidently
+                        // identified — see inc/article-conditions.php.
+                        if ( function_exists( 'vance_render_article_conditions' ) ) {
+                            vance_render_article_conditions();
+                        }
+                        ?>
                     </div>
 
                     <!-- Large Infographic Section -->

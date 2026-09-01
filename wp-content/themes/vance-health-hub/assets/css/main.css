@@ -4926,6 +4926,65 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 
 
 /* ==========================================================================
+   Conditions covered by an article
+   ==========================================================================
+   Sits directly under the article body and links to the condition pillar
+   page(s) the piece is about — see inc/article-conditions.php. Prints nothing
+   for a general article, so an empty row never appears.
+
+   Chips take --radius-control, which is what the token scale gives chips; they
+   are controls that happen to be links, and they should read the same as the
+   condition chips on the Gastro Health Explained lobby.
+   ========================================================================== */
+
+.va-article-conditions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin: 32px 0 8px;
+    padding: 16px 18px;
+    border: 1px solid #dde5e5;
+    border-radius: var(--radius-surface, 14px);
+    background: #f7fafa;
+}
+
+.va-conditions-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #63757c;
+}
+
+.va-article-conditions .va-condition-link {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid var(--color-primary, #008080);
+    border-radius: var(--radius-control, 6px);
+    background: #fff;
+    color: var(--color-primary, #008080);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.va-article-conditions .va-condition-link:hover,
+.va-article-conditions .va-condition-link:focus {
+    background: var(--color-primary, #008080);
+    color: #fff;
+}
+
+.va-conditions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+
+/* ==========================================================================
    Article cards stay square
    ==========================================================================
    The one deliberate exception to the radius scale. Every tile below is a

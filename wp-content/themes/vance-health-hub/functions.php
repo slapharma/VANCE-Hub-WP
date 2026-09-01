@@ -77,6 +77,10 @@ require_once get_template_directory() . '/inc/medical-review.php';
 // MedicalWebPage + MedicalCondition schema on the seven condition pages, added
 // to AIOSEO's own graph rather than as a second JSON-LD block.
 require_once get_template_directory() . '/inc/medical-schema.php';
+// Ties each article to the condition pages it is about — `about` in the schema
+// and a link under the copy. Loaded after medical-schema.php, whose condition
+// registry and #medicalcondition @id it reuses.
+require_once get_template_directory() . '/inc/article-conditions.php';
 // NewsArticle for the news posts, Article for the guides and clinical reviews,
 // AboutPage / ContactPage for the two pages that are more than a WebPage.
 require_once get_template_directory() . '/inc/article-schema-types.php';
