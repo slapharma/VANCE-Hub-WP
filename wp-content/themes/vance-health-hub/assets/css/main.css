@@ -4963,10 +4963,10 @@ span.mega-indicator::after {
     border: 0 !important;
     border-right: 2px solid currentColor !important;
     border-bottom: 2px solid currentColor !important;
-    transform: rotate(45deg);
-    transform-origin: center;
-    position: relative;
-    top: -0.16em;
+    transform: rotate(45deg) !important;
+    transform-origin: center !important;
+    position: relative !important;
+    top: -0.16em !important;
     vertical-align: middle !important;
     transition: transform 0.18s ease;
 }
@@ -4974,8 +4974,8 @@ span.mega-indicator::after {
 /* Open state: the same chevron, pointed the other way. */
 .mega-menu li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after,
 li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
-    transform: rotate(-135deg);
-    top: 0.08em;
+    transform: rotate(-135deg) !important;
+    top: 0.08em !important;
 }
 
 .mega-menu .mega-close::before,
