@@ -1328,10 +1328,27 @@ function vance_render_page_hero_spotlight( $page ) {
 	if ( $c['slot'] === 'badges' && ! vance_get_theme_mod( 'vance_about_badges_show', true ) ) {
 		$show_slot = false;
 	}
-	?>
-	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--<?php echo esc_attr( $page ); ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
 
-		<?php if ( $s['image'] === '' && ! empty( $c['motif'] ) ) : ?>
+	// Whether THIS render is drawing the motif rather than a photograph, which
+	// the phone stylesheet has to know: a photograph drops back into flow below
+	// 900px and provides the hero's top spacing itself, a motif is absolutely
+	// positioned at every width and never drops, so a motif hero that keeps the
+	// shared zeroed padding jams its headline against the site header.
+	//
+	// Emitted as a class rather than left to a hand-kept list of page
+	// modifiers. That list said kblobby and e404, and adding Education as a
+	// third motif page did exactly what you would expect -- it rendered flush
+	// under the header on a phone, because nobody remembers a selector list in
+	// another file. This is a property of the render, so the render states it.
+	//
+	// Note it is `--has-motif`, not `--motif`: `__motif` is already the element
+	// class on the div below, and two classes one character apart would be
+	// read wrong eventually.
+	$has_motif = ( $s['image'] === '' && ! empty( $c['motif'] ) );
+	?>
+	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--<?php echo esc_attr( $page ); ?><?php echo $has_motif ? ' vhh-hero-spotlight--has-motif' : ''; ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
+
+		<?php if ( $has_motif ) : ?>
 		<?php /* No photograph, and the config says none is wanted — see
 		         vance_page_hero_spotlight_motif(). An admin who uploads one in
 		         the Customizer gets the photograph branch instead, with no code

@@ -4916,16 +4916,21 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
        that is where the photograph drops back into flow and provides the
        spacing itself. A motif is absolutely positioned at every width and never
        drops, so without this the headline jams against the site header. */
-    .vhh-hero-spotlight--kblobby,
-    .vhh-hero-spotlight--e404 {
+    /* Keyed off --has-motif, which the renderer emits whenever THIS render is
+       drawing the motif. It used to name kblobby and e404 one by one, and
+       Education became a third motif page and shipped flush under the site
+       header on a phone, because a page list in a stylesheet is a thing
+       somebody has to remember. It is also strictly more correct: a page whose
+       config declares the motif but whose admin has uploaded a photograph gets
+       the photograph's spacing now, where the page list gave it the motif's. */
+    .vhh-hero-spotlight--has-motif {
         padding: 40px 0 44px;
     }
 
     /* Full width and further back: on one column the motif sits behind the copy
        rather than beside it. At this alpha the headline still measures over
        6:1 against the lightest point of the bloom. */
-    .vhh-hero-spotlight--kblobby .vhh-hero-spotlight__motif,
-    .vhh-hero-spotlight--e404 .vhh-hero-spotlight__motif {
+    .vhh-hero-spotlight--has-motif .vhh-hero-spotlight__motif {
         width: 100%;
         opacity: 0.55;
     }

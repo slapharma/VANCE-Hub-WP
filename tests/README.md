@@ -35,7 +35,7 @@ cd tests && php category-hero.test.php
 ```
 
 All six exit non-zero on failure. As of 2026-09-01:
-319 / 147 / 22 / 182 / 255 / 87 checks.
+337 / 147 / 22 / 182 / 255 / 87 checks.
 
 ⚠ `gi-hero.test.php` is **red on 4 checks** as of 2026-09-01, all in its
 section 6 (the photograph): `crohns: photograph renders`, `crc: uses its own
@@ -76,8 +76,10 @@ focal point high because `object-position` is `46% 14%`. The docstring in
 part that can fail: it asserts every photograph the config names is on disk and
 is really 1400×876, and that the count is **exactly nine** — that last one is
 what fails if a page quietly goes back to borrowing an image bought for another
-page. (Nine, not eleven: the Knowledgebase and the 404 name none in code. They
-declare the motif and are overridden by a theme mod on the live site.)
+page. (Nine, not twelve: the Knowledgebase, the 404 and Education name none in
+code. All three declare the motif. The first two are overridden by a theme mod
+on the live site; Education is not, because there are no courses to photograph
+until a track launches.)
 
 `gen-heroes.py` needs `OPENROUTER_API_KEY` in the environment and spends real
 credit. It writes into `tests/generated/`, which is not committed.

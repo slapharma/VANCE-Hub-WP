@@ -675,6 +675,55 @@ set_mods( array( 'vance_education_hero_style' => 'spotlight',
 check( 'the intro reads vance_edu_hero_desc',
        strpos( render( 'education' ), 'EDITED IN THE CUSTOMIZER' ) !== false );
 
+echo "\n=== 5h. The motif hint the phone stylesheet keys off ===\n";
+
+// This section exists because of a live bug. The phone rule that stops a motif
+// hero jamming its headline under the site header used to name --kblobby and
+// --e404 one at a time; Education shipped as a third motif page and rendered
+// flush, because nothing anywhere connected "declares a motif" to "is in that
+// selector list". The renderer now says so itself, and this holds the two ends
+// together.
+$motif_pages = array();
+foreach ( vance_page_hero_spotlight_pages() as $pg ) {
+    $conf = vance_page_hero_spotlight_config( $pg );
+    set_mods( array( 'vance_' . $pg . '_hero_style' => 'spotlight',
+                     'vance_contact_email' => 'a@b.co', 'vance_about_badge1_label' => 'One' ) );
+    $html    = render( $pg );
+    $drawn   = strpos( $html, 'vhh-hero-spotlight__motif' ) !== false;
+    $flagged = strpos( $html, 'vhh-hero-spotlight--has-motif' ) !== false;
+    check( "$pg: the --has-motif flag agrees with what was drawn", $flagged, $drawn );
+    if ( $drawn ) { $motif_pages[] = $pg; }
+}
+// ...and the loop must have SEEN a motif page and a photograph page, or the
+// assertion above is satisfied by everything being false.
+check( 'at least two pages draw the motif', count( $motif_pages ) >= 2 );
+check( 'and most pages do not', count( $motif_pages ) < count( vance_page_hero_spotlight_pages() ) );
+
+// An uploaded photograph must clear the flag too -- that is the case the old
+// page list got wrong even for the pages it named.
+set_mods( array( 'vance_kblobby_hero_style' => 'spotlight',
+                 'vance_kblobby_hero_spot_image' => 'https://example.test/x.jpg' ) );
+$kb_photo = render( 'kblobby' );
+check( 'an uploaded photograph clears the motif flag',
+       strpos( $kb_photo, 'vhh-hero-spotlight--has-motif' ), false );
+
+// The phone rule must key off the flag, not off a list of page modifiers.
+// Line endings differ between what this repo writes (LF) and what a checkout
+// produces (CRLF), so normalise before matching rather than anchoring on \n.
+$css_now = str_replace( "\r\n", "\n", file_get_contents( $THEME . '/assets/css/main.css' ) );
+$mstart  = strpos( $css_now, '--- The motif pages on a phone' );
+// To the end of the enclosing media query: the first closing brace sitting in
+// column 0 after the block starts.
+$mend    = ( $mstart !== false ) ? strpos( $css_now, "\n}\n", $mstart ) : false;
+$motif_block = ( $mstart !== false && $mend !== false )
+    ? substr( $css_now, $mstart, $mend - $mstart )
+    : '';
+check( 'the phone block exists', $motif_block !== '' );
+check( 'and keys off --has-motif',
+       strpos( $motif_block, '.vhh-hero-spotlight--has-motif' ) !== false );
+check( 'and names no page modifier of its own',
+       preg_match( '/\.vhh-hero-spotlight--(?!has-motif|page)[a-z0-9]+/', $motif_block ), 0 );
+
 echo "\n=== 5f. Every photograph the config names is really on disk ===\n";
 
 // A filename typo renders a broken <img> on a live hero and nothing else

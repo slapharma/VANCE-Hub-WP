@@ -82,11 +82,14 @@ MUTANTS = [
   "$vals['btn2_link'] = vance_get_theme_mod( $c['legacy_btn2_link'], $c['legacy_btn2_link_default'] );",
   "$vals['btn2_link'] = '/login/?tab=signup';"),
 
- # The motif is a default, not a ceiling: an uploaded photograph must win,
- # or the Photograph control on those two pages is decoration.
- ("an uploaded photograph no longer beats the motif",
-  "if ( $s['image'] === '' && ! empty( $c['motif'] ) ) :",
-  "if ( ! empty( $c['motif'] ) ) :"),
+ # NB the old "an uploaded photograph no longer beats the motif" mutant lived
+ # here and patched `if ( $s['image'] === '' && ! empty( $c['motif'] ) ) :`.
+ # That test moved into the $has_motif assignment when the phone stylesheet
+ # started keying off a rendered flag, so the mutant stopped matching and
+ # printed SKIP -- a check quietly not running, which is worse than a red one.
+ # It is now folded into "the motif flag reads the config, not the render" at
+ # the bottom of this list, which breaks the same behaviour and fails the same
+ # two assertions.
 
  # The first `$c['slot'] === 'search'` in the file is this one -- the field,
  # not the markup. Without the second line of the pattern this mutant reads
@@ -201,6 +204,29 @@ MUTANTS = [
  ("the learn band's CSS block is dropped",
   "vhh-hero-spotlight__slot--learn", "vhh-hero-spotlight__slot--DROPPED-learn",
   "assets/css/main.css", "all"),
+
+ # ---- the motif flag --------------------------------------------------
+
+ # THE BUG THIS SECTION EXISTS FOR, reproduced exactly: the phone rule goes
+ # back to naming motif pages one at a time, Education is not one of the
+ # names, and its headline ships flush under the site header on a phone.
+ # Caught on the live site by measuring, not by any check -- hence 5h.
+ ("the phone rule goes back to a hand-kept page list",
+  ".vhh-hero-spotlight--has-motif {", ".vhh-hero-spotlight--kblobby,\n    .vhh-hero-spotlight--e404 {",
+  "assets/css/main.css"),
+
+ # The renderer stops emitting the flag at all, so the phone rule matches
+ # nothing and every motif hero jams.
+ ("the renderer stops emitting --has-motif",
+  "$has_motif ? ' vhh-hero-spotlight--has-motif' : ''", "''"),
+
+ # ...and the flag must track what was actually DRAWN. Pinned true, a
+ # photograph page gets the motif's phone padding; pinned to the config, an
+ # uploaded photograph on a motif page does too -- which is the case the old
+ # page list got wrong even for the pages it named.
+ ("the motif flag reads the config, not the render",
+  "$has_motif = ( $s['image'] === '' && ! empty( $c['motif'] ) );",
+  "$has_motif = ! empty( $c['motif'] );"),
 ]
 
 def run():
