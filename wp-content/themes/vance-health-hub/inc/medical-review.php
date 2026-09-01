@@ -112,24 +112,21 @@ function vance_render_medical_review_line() {
  * a second JSON-LD block, so there is one description of the page and the two
  * cannot drift apart.
  *
- * @param array $graph One graph node on its way to output.
+ * aioseo_schema_output passes the whole @graph — a list of nodes — not one node
+ * at a time. The first version of this function took the argument for a single
+ * node, which made it a silent no-op on the live site while a unit test that
+ * handed it one node passed happily. Iterate the list.
+ *
+ * @param array $graph The assembled @graph array.
  * @return array
  */
 function vance_medical_review_schema( $graph ) {
-	if ( ! is_array( $graph ) || ! isset( $graph['@type'] ) ) {
-		return $graph;
-	}
-
-	$types = (array) $graph['@type'];
-	if ( ! array_intersect( $types, array( 'Article', 'NewsArticle', 'BlogPosting', 'MedicalWebPage' ) ) ) {
-		return $graph;
-	}
-
-	if ( ! is_singular( 'post' ) ) {
+	if ( ! is_array( $graph ) || ! is_singular( 'post' ) ) {
 		return $graph;
 	}
 
 	$reviewer = vance_article_reviewer( get_the_ID() );
+
 	if ( null === $reviewer ) {
 		return $graph;
 	}
@@ -146,11 +143,23 @@ function vance_medical_review_schema( $graph ) {
 		$person['url'] = $reviewer['url'];
 	}
 
-	$graph['reviewedBy'] = $person;
+	$time      = $reviewer['date'] ? strtotime( $reviewer['date'] ) : false;
+	$reviewed  = $time ? gmdate( 'Y-m-d', $time ) : '';
 
-	$time = $reviewer['date'] ? strtotime( $reviewer['date'] ) : false;
-	if ( $time ) {
-		$graph['lastReviewed'] = gmdate( 'Y-m-d', $time );
+	foreach ( $graph as $i => $node ) {
+		if ( ! is_array( $node ) || ! isset( $node['@type'] ) ) {
+			continue;
+		}
+
+		if ( ! array_intersect( (array) $node['@type'], array( 'Article', 'NewsArticle', 'BlogPosting', 'MedicalWebPage' ) ) ) {
+			continue;
+		}
+
+		$graph[ $i ]['reviewedBy'] = $person;
+
+		if ( $reviewed ) {
+			$graph[ $i ]['lastReviewed'] = $reviewed;
+		}
 	}
 
 	return $graph;

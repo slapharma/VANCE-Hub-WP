@@ -197,37 +197,28 @@ function vance_condition_page( $slug ) {
 }
 
 /**
- * Add `about` to the article node in AIOSEO's graph.
+ * The MedicalCondition nodes for a post, ready to drop into `about`.
  *
- * The MedicalCondition is written out in full rather than as a bare @id
- * reference. The canonical node lives on the condition page, and sharing its
- * @id is what ties the two together — but a reference whose target is defined
- * on a different URL leaves a dangling node in this page's graph, so the name
- * and url travel with it.
+ * Each is written out in full rather than as a bare @id reference. The
+ * canonical node lives on the condition page, and sharing its @id is what ties
+ * the two together — but a reference whose target is defined on a different URL
+ * leaves a dangling node in this page's graph, so name and url travel with it.
  *
- * @param array $graph One graph node on its way to output.
- * @return array
+ * @param int $post_id Post ID.
+ * @return array<int,array<string,string>>
  */
-function vance_article_about_schema( $graph ) {
-	if ( ! is_array( $graph ) || ! isset( $graph['@type'] ) || ! is_singular( 'post' ) ) {
-		return $graph;
-	}
-
-	if ( ! array_intersect( (array) $graph['@type'], array( 'Article', 'NewsArticle', 'BlogPosting' ) ) ) {
-		return $graph;
-	}
-
+function vance_article_about_nodes( $post_id ) {
+	$data  = vance_gi_condition_medical();
 	$about = array();
 
-	foreach ( vance_article_conditions( get_the_ID() ) as $slug ) {
+	foreach ( vance_article_conditions( $post_id ) as $slug ) {
 		$page = vance_condition_page( $slug );
 
 		if ( ! $page ) {
 			continue;
 		}
 
-		$url  = get_permalink( $page );
-		$data = vance_gi_condition_medical();
+		$url = get_permalink( $page );
 
 		$about[] = array(
 			'@type' => 'MedicalCondition',
@@ -237,8 +228,39 @@ function vance_article_about_schema( $graph ) {
 		);
 	}
 
-	if ( $about ) {
-		$graph['about'] = $about;
+	return $about;
+}
+
+/**
+ * Add `about` to the article node in AIOSEO's graph.
+ *
+ * aioseo_schema_output passes the whole @graph — a list of nodes — not one node
+ * at a time. Treating the argument as a single node is silently a no-op: the
+ * list has no '@type' key, the guard returns early, and the page ships without
+ * the property while every unit test that hands the function one node passes.
+ *
+ * @param array $graph The assembled @graph array.
+ * @return array
+ */
+function vance_article_about_schema( $graph ) {
+	if ( ! is_array( $graph ) || ! is_singular( 'post' ) ) {
+		return $graph;
+	}
+
+	$about = vance_article_about_nodes( get_the_ID() );
+
+	if ( ! $about ) {
+		return $graph;
+	}
+
+	foreach ( $graph as $i => $node ) {
+		if ( ! is_array( $node ) || ! isset( $node['@type'] ) ) {
+			continue;
+		}
+
+		if ( array_intersect( (array) $node['@type'], array( 'Article', 'NewsArticle', 'BlogPosting' ) ) ) {
+			$graph[ $i ]['about'] = $about;
+		}
 	}
 
 	return $graph;
