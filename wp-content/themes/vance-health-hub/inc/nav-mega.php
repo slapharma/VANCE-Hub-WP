@@ -498,11 +498,31 @@ class VHH_Nav_Featured_Widget extends WP_Widget {
 		foreach ( $posts as $post ) {
 			$cats  = get_the_category( $post->ID );
 			$chip  = ! empty( $cats ) ? $cats[0]->name : '';
+			/*
+			 * No 'alt' override here on purpose.
+			 *
+			 * This used to pass alt="" and the reasoning was sound: the image
+			 * sits inside a link that already carries the category chip, the
+			 * headline and the date, and an image whose alt repeats the link
+			 * text makes a screen reader say the same thing twice.
+			 *
+			 * It is wrong for these images, though, because their alt does not
+			 * repeat the headline. Every one of the 166 featured images on the
+			 * site carries a real description of the photograph — "A lit
+			 * cigarette resting on the edge of a glass ashtray", "Ready meal
+			 * trays moving along a production line" — written when the image
+			 * was uploaded. Those complement the headline rather than duplicate
+			 * it, and throwing them away made 23 images per page nameless.
+			 *
+			 * Leaving the argument out lets get_the_post_thumbnail() read
+			 * _wp_attachment_image_alt, which is where that text already lives.
+			 * An image uploaded without alt still renders alt="", so this
+			 * degrades to the old behaviour rather than inventing anything.
+			 */
 			$thumb = get_the_post_thumbnail(
 				$post->ID,
 				'medium',
 				array(
-					'alt'     => '',
 					'loading' => 'lazy',
 				)
 			);
