@@ -34,15 +34,38 @@ cd tests && php gi-hero.test.php
 cd tests && php category-hero.test.php
 ```
 
-All six exit non-zero on failure. As of 2026-09-01:
-337 / 147 / 22 / 182 / 255 / 87 checks.
+All six exit non-zero on failure, and all six are green. As of 2026-09-01:
+337 / 147 / 22 / 182 / 260 / 87 checks.
 
-⚠ `gi-hero.test.php` is **red on 4 checks** as of 2026-09-01, all in its
-section 6 (the photograph): `crohns: photograph renders`, `crc: uses its own
-theme asset`, `crc: asset is cache-busted on mtime`, `hub: uses its own
-picture`. Confirmed present at `c493591` in a clean worktree, so it predates
-the Education hero work and is not a regression from it. Nobody has looked at
-it yet.
+### Never write an image filename in a test — the WebP lesson
+
+`gi-hero.test.php` sat red on four checks from 04882ed ("WebP for the condition
+photography") until 2026-09-01. The suite hard-coded `.jpg`; the images became
+`.webp` and nobody updated it. The four reds were the harmless half.
+
+The other half is the one to remember. Three checks assert the **absence** of a
+filename, and a string the renderer can no longer emit is absent no matter how
+broken the code is — so they went green and unfailable, in silence:
+
+| check | why it could not fail |
+|---|---|
+| `hub: does not borrow gi-health/ibd.jpg` | the lobby borrowing `ibd.webp` would have passed |
+| `crc: theme asset is dropped` | the admin override could break entirely and pass |
+| `hub: the picture file is really on disk` | the JPEGs stayed in the repo as the rollback, so it checked a file the renderer no longer used |
+
+`mutate-gi.py` did not catch it either: its `lobby-walk.jpg` mutant had drifted
+into `SKIP (pattern not found)` in the same commit — the most important mutant
+in the file, silently not running, guarding checks that had themselves stopped
+working.
+
+So: **filenames come from the source of truth, never from a literal here.**
+Conditions read `vance_gi_condition_cards()`; the lobby's is parsed back out of
+the `$rel` literal in `gi-hero.php`. Both are guarded with a "did the lookup
+return anything at all" check, because an empty string makes every `strpos()`
+below it match. Mutant patterns stop at the dot (`.../lobby-walk.`) so they
+survive the next format change. And `every condition photograph the registry
+names is on disk` now covers all seven, which is the check that would have
+caught a conversion that missed a file.
 
 Four of them have a mutation runner beside them — `mutate-hero.py`,
 `mutate-legal.py`, `mutate-gi.py`, `mutate-category.py`. Run the runner, not

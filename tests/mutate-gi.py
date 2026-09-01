@@ -128,10 +128,33 @@ MUTANTS = [
      "    white-space: nowrap;"),
 
     # ---- the photograph -------------------------------------------------
+    # Deliberately stops at the dot and names no extension. As
+    # "...lobby-walk.jpg" this mutant SKIPped from 04882ed (the WebP
+    # conversion) until 2026-09-01 -- the single most important mutant in this
+    # file, silently not running, while the checks it guards had themselves
+    # gone unfailable for the same reason. Matching the stem survives the next
+    # format change too.
     (RENDERER,
      "the lobby goes back to borrowing the IBD card's own photograph",
-     "$rel   = '/assets/img/gi-health/lobby-walk.jpg';",
-     "$rel   = '/assets/img/gi-health/ibd.jpg';"),
+     "'/assets/img/gi-health/lobby-walk.",
+     "'/assets/img/gi-health/ibd."),
+
+    # The rot that started all of this: an image the registry names but which
+    # is not on disk. vance_gi_hero_photo() returns null, the media slot is
+    # dropped, and the page renders a hero with no photograph and no error.
+    (FUNCTIONS,
+     "a condition photograph is named but not on disk",
+     "'image' => 'colorectal-cancer.webp',",
+     "'image' => 'colorectal-cancer-v2.webp',"),
+
+    # There was no mutant for the override branch itself, only for the alt text
+    # it returns. Added when 'crc: theme asset is dropped' turned out to have
+    # been unfailable since the WebP conversion -- it is the check this breaks,
+    # so it needs something that can break it.
+    (RENDERER,
+     "an admin-chosen photograph is ignored and the theme asset renders anyway",
+     "if ( $saved !== '' ) {",
+     "if ( false ) {"),
 
     (RENDERER,
      "an admin-supplied photo keeps the stock alt text, describing another picture",

@@ -161,6 +161,25 @@ function tags_balanced( $html ) {
 /** The seven, in registry order. */
 $SLUGS = array_keys( vance_gi_hero_meta() );
 
+/**
+ * A condition's photograph filename, read from vance_gi_condition_cards() in
+ * functions.php.
+ *
+ * NEVER write one of these filenames as a literal in this file, extension
+ * included. Section 6 has the full story: this suite hard-coded '.jpg', the
+ * images were converted to WebP, and three checks went silently unfailable
+ * because they assert the ABSENCE of a string the renderer could no longer
+ * emit under any circumstances.
+ */
+$card_image = function ( $slug ) {
+    foreach ( vance_gi_condition_cards() as $c ) {
+        if ( $c['slug'] === $slug ) { return $c['image']; }
+    }
+    return '';
+};
+$CROHNS_IMG = $card_image( 'crohns-disease' );
+check( 'the registry names a photograph for crohns-disease', $CROHNS_IMG !== '' );
+
 /* ===================================================================== */
 echo "\n=== 0. A PRISTINE site: nothing saved at all ===\n";
 /*
@@ -184,7 +203,7 @@ check( 'crohns: eyebrow renders',    strpos( $first, '__eyebrow">Inflammatory bo
 check( 'crohns: intro renders',      strpos( $first, 'from mouth to anus' ) !== false );
 check( 'crohns: card title renders', strpos( $first, 'checked by a clinician' ) !== false );
 check( 'crohns: band label renders', strpos( $first, 'Others in this set' ) !== false );
-check( 'crohns: photograph renders', strpos( $first, 'gi-health/crohns.jpg' ) !== false );
+check( 'crohns: photograph renders', strpos( $first, 'gi-health/' . $CROHNS_IMG ) !== false );
 
 foreach ( $SLUGS as $s ) {
     $h = body( render_cond( $s ) );
@@ -354,37 +373,88 @@ check( 'css: chip rows wrap',
 echo "\n=== 6. The photograph ===\n";
 set_mods( array() );
 
+/*
+ * NOTHING BELOW MAY NAME A FILE EXTENSION.
+ *
+ * This section hard-coded '.jpg' until 2026-09-01, and commit 04882ed
+ * ("WebP for the condition photography") converted all 43 images under
+ * assets/img/gi-health without touching it. Four checks went red -- which is
+ * the good outcome -- but three others went QUIETLY UNFAILABLE, because they
+ * assert the ABSENCE of a string, and a string the renderer can no longer emit
+ * is absent no matter how broken the code is:
+ *
+ *   'crc: theme asset is dropped'            strpos(..., '...jpg') === false
+ *   'hub: does not borrow gi-health/ibd.jpg' strpos(..., 'ibd.jpg') === false
+ *
+ * The JPEGs are still in the repo as the source and the rollback, so the
+ * on-disk check kept passing too, against a file the renderer had stopped
+ * using. So the filenames are now read from the two sources of truth --
+ * vance_gi_condition_cards() in functions.php for the conditions, and the
+ * $rel literal in inc/gi-hero.php for the lobby -- and a format change is
+ * carried automatically instead of rotting this file.
+ */
+$crc_img = $card_image( 'colorectal-cancer' );
+// Guard: an empty filename would make every strpos() below match anything, so
+// the whole section would pass while testing nothing.
+check( 'crc: the registry names a photograph at all', $crc_img !== '' );
+
 $h = body( render_cond( 'colorectal-cancer' ) );
-check( 'crc: uses its own theme asset', strpos( $h, 'gi-health/colorectal-cancer.jpg' ) !== false );
-check( 'crc: asset is cache-busted on mtime', (bool) preg_match( '#colorectal-cancer\.jpg\?v=\d+#', $h ) );
+check( 'crc: uses its own theme asset', strpos( $h, 'gi-health/' . $crc_img ) !== false );
+check( 'crc: asset is cache-busted on mtime',
+    (bool) preg_match( '#' . preg_quote( $crc_img, '#' ) . '\?v=\d+#', $h ) );
 check( 'crc: focal comes from the registry', strpos( $h, 'object-position: 60% 26%' ) !== false );
 check( 'crc: photo carries the card\'s alt text', strpos( $h, 'alt="Two men sitting' ) !== false );
 
+// The lobby's picture is a literal inside gi-hero.php rather than a registry
+// entry, so read it back out of the source. Anchored on the $rel assignment,
+// NOT on the first 'gi-health/' in the file -- the docblock above it mentions
+// ibd.webp by name, which is the photograph the lobby must not use.
+$gi_src = file_get_contents( $GLOBALS['THEME_DIR'] . '/inc/gi-hero.php' );
+preg_match( "#\\\$rel\s*=\s*'/assets/img/gi-health/([^']+)'#", $gi_src, $lm );
+$lobby_img = isset( $lm[1] ) ? $lm[1] : '';
+check( 'hub: the lobby names a picture in gi-hero.php', $lobby_img !== '' );
+
 $hub = body( render_hub() );
-check( 'hub: uses its own picture', strpos( $hub, 'gi-health/lobby-walk.jpg' ) !== false );
+check( 'hub: uses its own picture', strpos( $hub, 'gi-health/' . $lobby_img ) !== false );
 check( 'hub: lobby focal comes from the renderer', strpos( $hub, 'object-position: 55% 50%' ) !== false );
 // It must NOT borrow the IBD card's photograph, which is what it did before.
-// Matched on the exact filename: lobby-walk.jpg now lives in that same
-// directory, so a check for 'gi-health/' alone would pass on either.
-check( 'hub: does not borrow gi-health/ibd.jpg', strpos( $hub, 'gi-health/ibd.jpg' ) === false );
+// Read from the registry so this compares two different files rather than one
+// file against a spelling of it -- and so it keeps working after a format
+// change, which is exactly what it failed to do last time.
+$ibd_img = $card_image( 'inflammatory-bowel-disease' );
+check( 'hub: the registry still has an IBD card to compare against', $ibd_img !== '' );
+check( "hub: does not borrow gi-health/$ibd_img", strpos( $hub, 'gi-health/' . $ibd_img ) === false );
 // Nor any of the other six condition photographs.
 $borrowed = array();
 foreach ( vance_gi_condition_cards() as $c ) {
     if ( strpos( $hub, '/' . $c['image'] ) !== false ) { $borrowed[] = $c['image']; }
 }
 check( 'hub: borrows none of the seven condition photos', $borrowed, array() );
-// The file has to actually exist. If it does not, vance_gi_hero_photo() returns
-// null, the media slot is silently dropped and the hero loses its photograph
-// with no error raised anywhere.
+
+// Every file the code references has to actually exist. If one does not,
+// vance_gi_hero_photo() returns null, the media slot is silently dropped and
+// that hero loses its photograph with no error raised anywhere. This is the
+// check that catches a format conversion which missed a file -- it covers all
+// seven conditions now, not just the lobby.
+$missing = array();
+foreach ( vance_gi_condition_cards() as $c ) {
+    if ( ! file_exists( $GLOBALS['THEME_DIR'] . '/assets/img/gi-health/' . $c['image'] ) ) {
+        $missing[] = $c['image'];
+    }
+}
+check( 'every condition photograph the registry names is on disk', $missing, array() );
 check( 'hub: the picture file is really on disk',
-    file_exists( $GLOBALS['THEME_DIR'] . '/assets/img/gi-health/lobby-walk.jpg' ) );
+    file_exists( $GLOBALS['THEME_DIR'] . '/assets/img/gi-health/' . $lobby_img ) );
 
 // An admin image wins, and takes an empty alt with it — the stock description
 // would be a lie about a different photograph.
 set_mods( array( 'vance_gi_cond_crc_image' => 'https://cdn.test/mine.jpg' ) );
 $h = body( render_cond( 'colorectal-cancer' ) );
 check( 'crc: admin image wins',            strpos( $h, 'https://cdn.test/mine.jpg' ) !== false );
-check( 'crc: theme asset is dropped',      strpos( $h, 'colorectal-cancer.jpg' ) === false );
+// From the registry, not a literal. As '...colorectal-cancer.jpg' this was an
+// absence check for a string the renderer had stopped emitting at all, so it
+// could not have failed however badly the admin override was broken.
+check( 'crc: theme asset is dropped',      strpos( $h, $crc_img ) === false );
 check( 'crc: admin image has empty alt',   strpos( $h, 'alt=""' ) !== false );
 
 // An admin focal wins over the registry's.

@@ -1,7 +1,6 @@
-import pathlib, subprocess, sys, shutil
+import io, pathlib, subprocess, sys, shutil
 THEME = pathlib.Path(__file__).resolve().parent.parent / "wp-content/themes/vance-health-hub"
 SRC = THEME / "inc/page-hero-spotlight.php"
-ORIG = SRC.read_text(encoding="utf-8")
 
 # Most mutants live in the renderer, so a 3-tuple still means "patch SRC".
 # A few have to reach the template that CALLS it or the stylesheet that backs
@@ -13,7 +12,46 @@ TARGETS = {
     "page-education.php": THEME / "page-education.php",
     "assets/css/main.css": THEME / "assets/css/main.css",
 }
-ORIGINALS = {k: p.read_text(encoding="utf-8") for k, p in TARGETS.items()}
+
+# Line endings, handled the way mutate-gi.py already handled them. Both halves
+# are needed and each one alone is a bug:
+#
+#   Path.read_text()/write_text() translate. Reading folds CRLF to \n, writing
+#   expands \n to os.linesep, so on Windows an LF file silently comes back
+#   CRLF. That is how an ad-hoc probe script rewrote all 985 lines of
+#   inc/gi-hero.php on 2026-09-01, and its "restored: True" check missed it
+#   because that check also read in text mode -- it compared the two files
+#   AFTER the very translation it existed to catch.
+#
+#   But reading with newline='' ALONE is also wrong here: several mutants below
+#   embed a bare \n to match across lines, and against CRLF text they match
+#   nothing and report SKIP. Four of them did exactly that on the first attempt
+#   at this fix. A mutant that silently tests nothing is the failure this
+#   runner exists to prevent.
+#
+# So: match on LF in memory, remember each file's own convention, restore it on
+# write. Bytes are preserved either way, and the check at the end compares
+# bytes so a regression here cannot pass unnoticed.
+_CRLF = {}
+
+def read(p):
+    with io.open(str(p), encoding="utf-8", newline="") as fh:
+        text = fh.read()
+    _CRLF[str(p)] = "\r\n" in text
+    return text.replace("\r\n", "\n")
+
+def write(p, s):
+    if _CRLF.get(str(p)):
+        s = s.replace("\n", "\r\n")
+    with io.open(str(p), "w", encoding="utf-8", newline="") as fh:
+        fh.write(s)
+
+def raw(p):
+    with io.open(str(p), "rb") as fh:
+        return fh.read()
+
+ORIGINALS = {k: read(p) for k, p in TARGETS.items()}
+ORIGINAL_BYTES = {k: raw(p) for k, p in TARGETS.items()}
 
 MUTANTS = [
  ("toggle default flipped to spotlight",
@@ -246,15 +284,16 @@ try:
         path, orig = TARGETS[which], ORIGINALS[which]
         if find not in orig:
             print("SKIP (pattern not found): %s" % name); continue
-        path.write_text(orig.replace(find, repl, count), encoding="utf-8")
+        write(path, orig.replace(find, repl, count))
         code, fails = run()
-        path.write_text(orig, encoding="utf-8")   # restore before the next mutant
+        write(path, orig)                          # restore before the next mutant
         status = "went RED" if code != 0 else "*** STAYED GREEN ***"
         print("%-42s %s (%d failing)" % (name, status, len(fails)))
         for f in fails[:3]:
             print("      %s" % f)
 finally:
     for which, path in TARGETS.items():
-        path.write_text(ORIGINALS[which], encoding="utf-8")
-    ok = all(p.read_text(encoding="utf-8") == ORIGINALS[k] for k, p in TARGETS.items())
+        write(path, ORIGINALS[which])
+    # Compared as BYTES, so a line-ending flip is a failure and not invisible.
+    ok = all(raw(p) == ORIGINAL_BYTES[k] for k, p in TARGETS.items())
     print("\nsource restored:", ok)
