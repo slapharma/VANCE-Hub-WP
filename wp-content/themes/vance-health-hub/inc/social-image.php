@@ -71,6 +71,37 @@ function vance_og_image_fallback( $meta ) {
 add_filter( 'aioseo_facebook_tags', 'vance_og_image_fallback' );
 
 /**
+ * og:site_name is the name of the site, not a description of it.
+ *
+ * AIOSEO's default format for this tag is "#site_title #separator_sa #tagline",
+ * which produced "Vance Health Hub - Curated clinical research, latest news…".
+ * Lengthening the tagline to a proper 158-character meta description on
+ * 2026-09-01 pushed it to 177 characters, which is what made an existing
+ * oddity obvious: every share card was being told the site is called that
+ * whole sentence.
+ *
+ * The description already travels in og:description. This tag just needs the
+ * name.
+ *
+ * @param array $meta Facebook/Open Graph tags, keyed by property.
+ * @return array
+ */
+function vance_og_site_name( $meta ) {
+	if ( ! is_array( $meta ) ) {
+		return $meta;
+	}
+
+	$name = trim( wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) );
+
+	if ( '' !== $name ) {
+		$meta['og:site_name'] = $name;
+	}
+
+	return $meta;
+}
+add_filter( 'aioseo_facebook_tags', 'vance_og_site_name' );
+
+/**
  * Same for the Twitter/X card, which was carrying title and description with
  * no image and so rendering as a summary rather than a large card.
  *
