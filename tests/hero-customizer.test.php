@@ -91,6 +91,7 @@ $expected_sections = array(
     'askai'        => 'vance_askai_settings',
     'evidence'     => 'vance_evidence_hero',
     'userguide'    => 'vance_userguide_hero',
+    'education'    => 'vance_edu_hero',
     'tools'        => 'vance_tools_hero',
     'kblobby'      => 'vance_kblobby_hero',
     // 'e404' is absent on purpose -- see the loop.

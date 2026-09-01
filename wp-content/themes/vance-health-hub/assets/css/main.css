@@ -4861,6 +4861,54 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
 }
 
 
+/* --- Education & Courses: what the Hub teaches with today ----------------- */
+
+/* Three cells in one row, so nothing here touches the grid -- the shared rule
+   already lays that out and stacks it on a phone. Only the two additions any
+   band of all-links needs.
+
+   Written out rather than added to __slot--tools's selector list, for the same
+   reason __slot--start was: that modifier belongs to the free-tools family,
+   which is still being extended, and this band should not change shape because
+   a tool page did. Third copy of the same two rules, and deliberately so. */
+
+.vhh-hero-spotlight__slot--learn .vhh-hero-spotlight__line-v {
+    /* The lines band sets `overflow-wrap: anywhere` so one unbreakable email
+       address cannot widen the grid. "Free Health Tools" is ordinary words and
+       that rule would break them mid-word. */
+    overflow-wrap: normal;
+}
+
+/* Every cell here is a link, so the affordance has to read as one before
+   anybody hovers. Two borders rather than an arrow glyph: an empty
+   pseudo-element is not announced, and the cell's own words say where it goes. */
+.vhh-hero-spotlight__slot--learn .vhh-hero-spotlight__line::after {
+    content: "";
+    flex: 0 0 auto;
+    margin-left: auto;
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(45deg);
+    color: var(--vhh-hs-title, #04504E);
+    opacity: 0.45;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.vhh-hero-spotlight__slot--learn a.vhh-hero-spotlight__line:hover::after,
+.vhh-hero-spotlight__slot--learn a.vhh-hero-spotlight__line:focus-visible::after {
+    opacity: 1;
+    transform: rotate(45deg) translate(2px, -2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vhh-hero-spotlight__slot--learn .vhh-hero-spotlight__line::after {
+        transition: none;
+    }
+}
+
+
 /* --- The motif pages on a phone ------------------------------------------ */
 
 @media (max-width: 900px) {

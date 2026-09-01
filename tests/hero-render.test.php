@@ -160,6 +160,16 @@ check( "userguide: eyebrow is not empty",  strpos( $p8, "User Guide" ) !== false
 check( "userguide: headline is not empty", strpos( $p8, "Get the most out of" ) !== false );
 check( "userguide: intro is not empty",    strpos( $p8, "credible source you turn to" ) !== false );
 
+// Education. Its description is the one on this site whose only other copy is
+// the Customizer registration rather than the classic template -- the classic
+// hero renders no description at all -- so a pristine render is the only place
+// a lost default would be visible.
+set_mods( array( "vance_education_hero_style" => "spotlight" ) );
+$p12 = render( "education" );
+check( "education: eyebrow is not empty",  strpos( $p12, "Elevate Your Expertise" ) !== false );
+check( "education: headline is not empty", strpos( $p12, "Education &amp; Courses" ) !== false );
+check( "education: intro is not empty",    strpos( $p12, "CPD-accredited modules for practitioners" ) !== false );
+
 // The two shelves. Free Health Tools reads a FOURTH key family
 // (vance_tools_hero_*) and is the first page to inherit button 2 as well,
 // so its pristine render is the only place a '' default there would show.
@@ -190,6 +200,7 @@ check( "404: intro is not empty",    strpos( $p11, "may have changed" ) !== fals
 foreach ( array( "contact" => $p1, "about" => $p2,
                  "hquiz" => $p3, "recipes" => $p4, "malnutrition" => $p5,
                  "askai" => $p6, "evidence" => $p7, "userguide" => $p8,
+                 "education" => $p12,
                  "tools" => $p9, "kblobby" => $p10, "e404" => $p11 ) as $pg => $html ) {
     check( "$pg: no empty headline",  preg_match( '/__title"><\/h1>/', $html ), 0 );
     check( "$pg: no empty eyebrow",   preg_match( '/__eyebrow"><\/span>/', $html ), 0 );
@@ -222,9 +233,36 @@ foreach ( vance_page_hero_spotlight_pages() as $pg ) {
     }
     $src = $unescape( file_get_contents( $file ) );
     foreach ( array( "legacy_tag_default", "legacy_title_default", "legacy_desc_default" ) as $field ) {
-        check( "$pg/$field appears verbatim in " . $conf["classic_template"],
-               strpos( $src, $conf[ $field ] ) !== false );
+        // Almost always the classic template: it passes the fallback to
+        // get_theme_mod(), so its literal is what an unsaved site renders and
+        // is the second copy this check exists to pin down.
+        //
+        // Education is the exception, and declares which file holds its
+        // description instead. Its classic hero renders no description at all
+        // -- vance_edu_hero_desc has been registered, defaulted and doing
+        // nothing in customizer-pages.php since the page was built -- so the
+        // registration is the only other copy of that string, and the template
+        // is the wrong place to look. An unconditional search of both files
+        // would have been one line, but it would also let a genuinely mislaid
+        // default pass on any of the other eleven pages.
+        $where = ( $field === "legacy_desc_default" && ! empty( $conf["legacy_desc_file"] ) )
+            ? $conf["legacy_desc_file"]
+            : $conf["classic_template"];
+        $hay = ( $where === $conf["classic_template"] )
+            ? $src
+            : $unescape( (string) @file_get_contents( $THEME . "/" . $where ) );
+        check( "$pg/$field appears verbatim in " . $where,
+               strpos( $hay, $conf[ $field ] ) !== false );
     }
+}
+
+// ...and legacy_desc_file must never point at a file that is not there, or the
+// check above degrades into searching an empty string and passing nothing.
+foreach ( vance_page_hero_spotlight_pages() as $pg ) {
+    $conf = vance_page_hero_spotlight_config( $pg );
+    if ( empty( $conf["legacy_desc_file"] ) ) { continue; }
+    check( "$pg: legacy_desc_file " . $conf["legacy_desc_file"] . " exists",
+           file_exists( $THEME . "/" . $conf["legacy_desc_file"] ) );
 }
 
 echo "\n=== 1. The toggle actually gates both pages ===\n";
@@ -577,6 +615,65 @@ $e5 = render( 'e404' );
 check( 'a missing page still yields a link',
        strpos( $e5, 'href="https://example.test/ask-ai/"' ) !== false );
 $GLOBALS['PAGES'] = $saved_pages;
+
+echo "\n=== 5g. Education & Courses ===\n";
+
+set_mods( array( 'vance_education_hero_style' => 'spotlight' ) );
+$ed = render( 'education' );
+check( 'markup is balanced', tags_balanced( $ed ) );
+
+// No courses exist yet, so there is nothing to photograph and the config
+// names no image. Same call the Knowledgebase and the 404 made.
+check( 'a motif stands in for the photograph',
+       strpos( $ed, 'vhh-hero-spotlight__motif' ) !== false );
+check( 'and no <img> was emitted alongside it',
+       strpos( $ed, 'vhh-hero-spotlight__media' ) === false );
+
+check( 'the band is the learn variant',
+       strpos( $ed, 'vhh-hero-spotlight__slot--learn' ) !== false );
+check( 'three destinations',
+       substr_count( $ed, 'vhh-hero-spotlight__line-ico' ), 3 );
+check( 'every one of them is a link',
+       substr_count( $ed, '<a class="vhh-hero-spotlight__line"' ), 3 );
+foreach ( array( 'knowledgebase', 'ask-ai', 'free-health-tools' ) as $slug ) {
+    check( "the band offers /$slug/",
+           strpos( $ed, 'href="https://example.test/' . $slug . '/"' ) !== false );
+}
+
+// Both buttons are in-page anchors, and both targets are rendered by
+// page-education.php unconditionally -- a CTA pointing at an id that is not
+// on the page scrolls nowhere and reports nothing.
+check( 'button 1 scrolls to the waitlist', strpos( $ed, 'href="#waitlist"' ) !== false );
+check( 'button 2 scrolls to the tracks',   strpos( $ed, 'href="#tracks"' ) !== false );
+$edu_tpl = file_get_contents( $THEME . '/page-education.php' );
+check( 'and the template really renders #waitlist', strpos( $edu_tpl, 'id="waitlist"' ) !== false );
+check( 'and the template really renders #tracks',   strpos( $edu_tpl, 'id="tracks"' ) !== false );
+
+// The template must actually CALL the renderer, and behind the toggle. A
+// commented-out call would leave every check above passing against a hero
+// that never reaches a visitor -- and a plain substring search does NOT
+// notice that, because `// vance_render_page_hero_spotlight( 'education' );`
+// still contains the string. So strip comments first. (gi-hero and legal-hero
+// include and run their templates instead, which is stronger; this one carries
+// a `get_header()` and a page-wide waitlist script that would need stubbing
+// for a call site of three lines. The mutation runner has a commented-out
+// mutant for exactly this and it must read `went RED`.)
+$edu_live = preg_replace( '#/\*.*?\*/#s', '', $edu_tpl );           // block comments
+$edu_live = preg_replace( '#(^|[^:])//.*$#m', '$1', $edu_live );    // line comments, sparing https://
+check( 'page-education.php calls the spotlight renderer',
+       strpos( $edu_live, "vance_render_page_hero_spotlight( 'education' )" ) !== false );
+check( '...gated on the toggle',
+       strpos( $edu_live, "vance_page_hero_spotlight_active( 'education' )" ) !== false );
+check( '...and the classic hero is still there to fall back to',
+       strpos( $edu_tpl, 'class="hero edu-hero"' ) !== false );
+
+// The description is the point of the exercise: vance_edu_hero_desc has been
+// registered and rendered nowhere since the page was built. If this stops
+// being read, the control goes back to doing nothing and nothing else notices.
+set_mods( array( 'vance_education_hero_style' => 'spotlight',
+                 'vance_edu_hero_desc' => 'EDITED IN THE CUSTOMIZER' ) );
+check( 'the intro reads vance_edu_hero_desc',
+       strpos( render( 'education' ), 'EDITED IN THE CUSTOMIZER' ) !== false );
 
 echo "\n=== 5f. Every photograph the config names is really on disk ===\n";
 

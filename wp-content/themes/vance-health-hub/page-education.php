@@ -14,15 +14,6 @@
  */
 get_header();
 
-// ── Hero (compact 350px banner, archive-style) ─────────────────────────────
-$hero_bg      = vance_get_theme_mod( 'vance_edu_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
-$hero_tag     = vance_get_theme_mod( 'vance_edu_hero_tag',   'Elevate Your Expertise' );
-$hero_title   = vance_get_theme_mod( 'vance_edu_hero_title', 'Education &amp; Courses' );
-$hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_edu_hero_overlay', 75 ) ) ) ) / 100;
-$hero_overlay_bottom  = min( 1, $hero_overlay + 0.10 );
-$hero_eyebrow_color   = vance_get_theme_mod( 'vance_edu_hero_eyebrow_color', '#008080' );
-$hero_title_color     = vance_get_theme_mod( 'vance_edu_hero_title_color', '#ffffff' );
-
 // ── Tracks ─────────────────────────────────────────────────────────────────
 $tracks_bg          = vance_get_theme_mod( 'vance_edu_tracks_bg',          'var(--accent-color)' );
 $tracks_title_color = vance_get_theme_mod( 'vance_edu_tracks_title_color', '' );
@@ -52,7 +43,32 @@ $track_icons = array(
 
 <main id="main-content">
 
-    <!-- HERO -->
+    <?php
+    /*
+     * HERO. Two designs, chosen by Appearance -> Customize -> Page - Education
+     * -> Hero Section -> "Education hero design". Defaults to 'classic', so
+     * deploying this changes nothing until an admin flips it.
+     *
+     * The spotlight renderer reads this page's OWN tag and title keys, so
+     * switching design cannot silently reword the page. It also renders
+     * vance_edu_hero_desc, which the classic hero below has never read —
+     * that control has been registered and doing nothing since the page was
+     * built. See inc/page-hero-spotlight.php.
+     */
+    if ( function_exists( 'vance_page_hero_spotlight_active' )
+        && vance_page_hero_spotlight_active( 'education' ) ) :
+        vance_render_page_hero_spotlight( 'education' );
+    else :
+
+    // ── Hero (compact 350px banner, archive-style) ─────────────────────────
+    $hero_bg      = vance_get_theme_mod( 'vance_edu_hero_bg', get_template_directory_uri() . '/assets/img/education_hero.png' );
+    $hero_tag     = vance_get_theme_mod( 'vance_edu_hero_tag',   'Elevate Your Expertise' );
+    $hero_title   = vance_get_theme_mod( 'vance_edu_hero_title', 'Education &amp; Courses' );
+    $hero_overlay = max( 0, min( 100, absint( vance_get_theme_mod( 'vance_edu_hero_overlay', 75 ) ) ) ) / 100;
+    $hero_overlay_bottom  = min( 1, $hero_overlay + 0.10 );
+    $hero_eyebrow_color   = vance_get_theme_mod( 'vance_edu_hero_eyebrow_color', '#008080' );
+    $hero_title_color     = vance_get_theme_mod( 'vance_edu_hero_title_color', '#ffffff' );
+    ?>
     <section class="hero edu-hero" style="height: 350px; min-height: 0; display: flex; align-items: center; padding: 0; position: relative; overflow: hidden;">
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(10,25,41,<?php echo esc_attr( $hero_overlay ); ?>), rgba(20,40,70,<?php echo esc_attr( $hero_overlay_bottom ); ?>)), url('<?php echo esc_url( $hero_bg ); ?>'); background-position: center center; background-size: cover; background-repeat: no-repeat; z-index: 1;"></div>
         <div class="container" style="position: relative; z-index: 2; width: 100%;">
@@ -62,6 +78,7 @@ $track_icons = array(
             </div>
         </div>
     </section>
+    <?php endif; // spotlight / classic hero ?>
 
     <!-- INTRO — cloned from page-tools-resources.php, same shape + 64px padding -->
     <?php

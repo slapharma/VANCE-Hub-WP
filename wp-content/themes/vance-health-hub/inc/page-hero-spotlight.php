@@ -402,6 +402,79 @@ function vance_page_hero_spotlight_config( $page ) {
 		),
 
 		/*
+		 * ---- Education & Courses -----------------------------------------
+		 *
+		 * The one page here that is selling something that does not exist
+		 * yet. Everything below follows from that.
+		 *
+		 * The MOTIF, not a photograph: there are no courses to photograph,
+		 * and the alternative is a stock frame of somebody smiling at a
+		 * laptop -- which is precisely the borrowed-generic-image problem the
+		 * heroes/ directory was created to end. The classic hero's own
+		 * background is no help either; like every other one on this site it
+		 * was picked to sit under a dark veil. When a track actually launches
+		 * and there is something real to show, Photograph in the Customizer
+		 * takes over with no code change.
+		 *
+		 * The BAND is what the Hub teaches with today -- see
+		 * vance_page_hero_spotlight_learn(). A visitor who came here for a
+		 * course and finds a waitlist should not leave empty-handed, and the
+		 * Knowledgebase is 149 clinically-reviewed articles that exist now.
+		 *
+		 * The DESCRIPTION is the one piece of new wiring. vance_edu_hero_desc
+		 * has been registered, defaulted and sanitized in customizer-pages.php
+		 * since the page was built, and page-education.php has never rendered
+		 * it -- a control that has silently done nothing for months. The
+		 * spotlight hero gives it somewhere to land. That is also why this is
+		 * the only page here with legacy_desc_file: section 0b of
+		 * tests/hero-render.test.php holds each default against the file that
+		 * carries the classic hero's copy of it, and for this one field that
+		 * file is the Customizer registration rather than the template.
+		 */
+		'education' => array(
+			'name'         => __( 'Education & Courses', 'vance-health-hub' ),
+			'short_name'   => __( 'Education', 'vance-health-hub' ),
+			'panel'        => 'vance_edu_panel',
+			'section'      => 'vance_edu_hero_spotlight',
+			'style_section'    => 'vance_edu_hero',
+			'classic_template' => 'page-education.php',
+			'priority'     => 9,
+			'legacy_tag'   => 'vance_edu_hero_tag',
+			'legacy_title' => 'vance_edu_hero_title',
+			'legacy_desc'  => 'vance_edu_hero_desc',
+			// The TEMPLATE's fallbacks for the first two, which are what the
+			// live page renders today -- customizer-pages.php registers a
+			// different tag ('Education') and title ('Courses are Coming
+			// Soon') that only the Customizer preview has ever shown.
+			'legacy_tag_default'   => 'Elevate Your Expertise',
+			'legacy_title_default' => 'Education &amp; Courses',
+			// ...and for the third, the registration IS the only copy, because
+			// the template never reads it. See legacy_desc_file below.
+			'legacy_desc_default'  => 'We\'re building self-paced courses for patients and CPD-accredited modules for practitioners. Join the waitlist to be the first to know when enrolment opens.',
+			'legacy_desc_file'     => 'customizer-pages.php',
+			'motif'        => true,
+			'image'        => '',
+			'image_alt'    => '',
+			// Both anchors are rendered by page-education.php unconditionally,
+			// and the waitlist form below #waitlist posts to admin-ajax and
+			// works today -- it is not gated on the Mailchimp endpoint being
+			// configured. Verified against the live page before being pinned.
+			'btn1_text'    => __( 'Join the waitlist', 'vance-health-hub' ),
+			'btn1_link'    => '#waitlist',
+			'btn2_text'    => __( 'See the two tracks', 'vance-health-hub' ),
+			'btn2_link'    => '#tracks',
+			'slot'         => 'learn',
+			'slot_label'   => __( 'While the courses are in build, start here', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'book',
+			'card_title'   => __( 'Two tracks, one waitlist', 'vance-health-hub' ),
+			// Deliberately does NOT say "tell us which track you want": only
+			// the modal opened from a track card carries a TRACK field, and the
+			// form this hero's first button scrolls to does not.
+			'card_text'    => __( 'Self-paced modules for living with IBD, and CPD-accredited deep dives for clinicians. Joining once covers both — one email per track, when that track opens.', 'vance-health-hub' ),
+		),
+
+		/*
 		 * ---- The two shelves, and the 404 --------------------------------
 		 *
 		 * Free Health Tools and the Knowledgebase are the site's two shelves:
@@ -565,7 +638,7 @@ function vance_page_hero_spotlight_config( $page ) {
  */
 function vance_page_hero_spotlight_pages() {
 	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition', 'askai',
-		'evidence', 'userguide', 'tools', 'kblobby', 'e404' );
+		'evidence', 'userguide', 'education', 'tools', 'kblobby', 'e404' );
 }
 
 /**
@@ -1022,6 +1095,51 @@ function vance_page_hero_spotlight_start() {
 }
 
 /**
+ * What the Hub teaches with today, for Education & Courses' utility band.
+ *
+ * The courses are a waitlist. Somebody who searched for a gastro course and
+ * landed on "coming soon" has, at that moment, nothing to do — so the band
+ * carries the three things they came for that already exist: the article
+ * library, the assistant that answers from it, and the free tools.
+ *
+ * Literals rather than theme mods, for the reason vance_page_hero_spotlight_start()
+ * gives: these are page NAMES, and the one setting that holds a page name here
+ * — Ask AI's H1 — is a headline an admin may reword at any time without
+ * meaning to rename the page. vance_page_hero_spotlight_tools() reads its
+ * names from settings because there the setting IS the tool's name, kept in
+ * one place across four heroes; nothing like that is true of these three.
+ *
+ * Every href resolves by slug so a renamed page keeps its cell.
+ *
+ * @return array<int, array{key: string, label: string, value: string, href: string}>
+ */
+function vance_page_hero_spotlight_learn() {
+	$cells = array(
+		// First, and deliberately: 149 clinically-reviewed articles is the
+		// education that exists on this site today. The other two are ways of
+		// using it.
+		array( 'book', __( 'Read up', 'vance-health-hub' ),
+			__( 'Knowledgebase', 'vance-health-hub' ), 'knowledgebase', '/knowledgebase/' ),
+		array( 'chat', __( 'Ask a question', 'vance-health-hub' ),
+			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/' ),
+		array( 'grid', __( 'Use them free', 'vance-health-hub' ),
+			__( 'Free Health Tools', 'vance-health-hub' ), 'free-health-tools', '/free-health-tools/' ),
+	);
+
+	$out = array();
+	foreach ( $cells as $c ) {
+		$out[] = array(
+			'key'   => $c[0],
+			'label' => $c[1],
+			'value' => $c[2],
+			'href'  => vance_page_hero_spotlight_page_url( $c[3], $c[4] ),
+		);
+	}
+
+	return $out;
+}
+
+/**
  * The geometric motif that stands in for the photograph.
  *
  * Used by the pages whose config sets 'motif' and whose photograph setting is
@@ -1167,6 +1285,9 @@ function vance_render_page_hero_spotlight( $page ) {
 			break;
 		case 'start':
 			$slot_items = vance_page_hero_spotlight_start();
+			break;
+		case 'learn':
+			$slot_items = vance_page_hero_spotlight_learn();
 			break;
 		case 'search':
 			// Not a list of cells at all — the band is a form. Non-empty so the
@@ -1445,6 +1566,11 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three tools listed in a white band. Classic is the dark navy hero configured by the rest of this section.',
 			'section'    => 'The light hero for this page. Only rendered while &ldquo;Free tools hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title, description AND the account button&rsquo;s label and link are all shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings. Nothing to type here beyond the prompt.',
+		),
+		'education' => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif, two buttons, and the Knowledgebase, VANCE-Ai and the free tools in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Education hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on. Note that Description has no effect on the classic hero, which renders only the tag and the title. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
+			'slot_label' => 'Sits above the white band. The band itself points at the Knowledgebase, VANCE-Ai and Free Health Tools &mdash; the things a visitor can use today while the courses are still in build &mdash; all resolved by page slug. Nothing to type here beyond the prompt.',
 		),
 		'kblobby'   => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif, two buttons and the knowledgebase search field in a white band. Classic is the dark navy hero configured by the rest of this section.',

@@ -1,6 +1,19 @@
 import pathlib, subprocess, sys, shutil
-SRC = pathlib.Path(__file__).resolve().parent.parent / "wp-content/themes/vance-health-hub/inc/page-hero-spotlight.php"
+THEME = pathlib.Path(__file__).resolve().parent.parent / "wp-content/themes/vance-health-hub"
+SRC = THEME / "inc/page-hero-spotlight.php"
 ORIG = SRC.read_text(encoding="utf-8")
+
+# Most mutants live in the renderer, so a 3-tuple still means "patch SRC".
+# A few have to reach the template that CALLS it or the stylesheet that backs
+# it -- a hero the template never invokes, or a class with no rule behind it,
+# are both silent failures the renderer alone cannot show. Those carry a
+# fourth element naming the file, theme-relative.
+TARGETS = {
+    None: SRC,
+    "page-education.php": THEME / "page-education.php",
+    "assets/css/main.css": THEME / "assets/css/main.css",
+}
+ORIGINALS = {k: p.read_text(encoding="utf-8") for k, p in TARGETS.items()}
 
 MUTANTS = [
  ("toggle default flipped to spotlight",
@@ -118,19 +131,104 @@ MUTANTS = [
  # motif, or they render an empty <img> instead.
  ("a motif page loses its motif flag",
   "'motif'        => true,", "'motif'        => false,"),
+
+ # ---- Education & Courses --------------------------------------------
+
+ # The whole reason this page's hero was worth building: vance_edu_hero_desc
+ # has been registered, defaulted and sanitized since the page was made and
+ # rendered NOWHERE. If the spotlight hero stops reading it, the control
+ # quietly goes back to doing nothing.
+ ("education stops reading vance_edu_hero_desc",
+  "'legacy_desc'  => 'vance_edu_hero_desc',", "'legacy_desc'  => '',"),
+
+ # ...and that default's only other copy is the Customizer registration, so
+ # section 0b has to be pointed at the right file. Reword one side and the
+ # two designs say different things.
+ ("the education description default is reworded",
+  "'legacy_desc_default'  => 'We" + chr(92) + "'re building self-paced courses",
+  "'legacy_desc_default'  => 'We are building self-paced courses"),
+
+ # A legacy_desc_file naming a file that is not there makes 0b search an
+ # empty string, which passes nothing and reports nothing.
+ ("legacy_desc_file points at a file that is not there",
+  "'legacy_desc_file'     => 'customizer-pages.php',",
+  "'legacy_desc_file'     => 'customizer-pages-v2.php',"),
+
+ # The band is what a visitor who came for a course and found a waitlist
+ # gets instead. An empty one leaves them with nothing.
+ ("the learn band comes back empty",
+  "$slot_items = vance_page_hero_spotlight_learn();", "$slot_items = array();"),
+
+ # ...and its cells resolve by slug for the same reason the 404's do. A typo'd
+ # slug is the realistic way that breaks, and it breaks silently -- the cell
+ # still renders, still looks like a link, and lands on a 404.
+ #
+ # NB not "clear $GLOBALS['PAGES']": the whole point of the path fallback is
+ # that it produces the SAME url the slug does, so that mutant is a no-op by
+ # design and stayed green. It proved the fallback works, not the check.
+ ("a learn band slug is typo'd",
+  "'knowledgebase', '/knowledgebase/' ),\n\t\tarray( 'chat'",
+  "'knowledgebase-v2', '/knowledgebase-v2/' ),\n\t\tarray( 'chat'"),
+
+ # A CTA pointing at an id the page does not render scrolls nowhere and
+ # says nothing about it.
+ ("education's first button points at a dead anchor",
+  "'btn1_link'    => '#waitlist',", "'btn1_link'    => '#join-the-waitlist',"),
+
+ # The template is where a hero actually reaches a visitor. A commented-out
+ # call leaves every renderer assertion passing against a dead page.
+ ("page-education.php stops calling the renderer",
+  "vance_render_page_hero_spotlight( 'education' );",
+  "// vance_render_page_hero_spotlight( 'education' );", "page-education.php"),
+
+ ("the classic education hero is deleted rather than kept",
+  'class="hero edu-hero"', 'class="hero edu-hero-gone"', "page-education.php"),
+
+ # A modifier class with no rule behind it is dead markup: the band would
+ # render with the lines treatment and no link affordance at all.
+ #
+ # Two earlier attempts at this mutant were wrong, and both are worth keeping
+ # written down:
+ #   - renaming ONE of the four .slot--learn selectors left three behind, and
+ #     section 8 asks `strpos( $css, "." . $cls )`, so it stayed green;
+ #   - renaming the slot KEY ('learn' -> 'learn-band') dropped the switch
+ #     through to the badges data while $slot_markup still said 'lines', which
+ #     feeds plain strings to the lines markup and FATALS. Non-zero exit, zero
+ #     failing assertions -- red for the wrong reason and no evidence at all.
+ #     Same trap the search-band mutants above document.
+ # So: rename every selector, and to a name the check's prefix search cannot
+ # accidentally still match (--learn-DROPPED would; --DROPPED-learn does not).
+ ("the learn band's CSS block is dropped",
+  "vhh-hero-spotlight__slot--learn", "vhh-hero-spotlight__slot--DROPPED-learn",
+  "assets/css/main.css", "all"),
 ]
 
+def run():
+    r = subprocess.run(["php", "hero-render.test.php"], capture_output=True, text=True)
+    fails = [l.strip() for l in r.stdout.splitlines() if l.strip().startswith("FAIL")]
+    return r.returncode, fails
+
 try:
-    for name, find, repl in MUTANTS:
-        if find not in ORIG:
+    for mutant in MUTANTS:
+        name, find, repl = mutant[0], mutant[1], mutant[2]
+        which = mutant[3] if len(mutant) > 3 else None
+        # Default is one occurrence -- a mutant should be the smallest edit
+        # that expresses the slip. "all" is for the case where one occurrence
+        # is not enough to change what the suite can see: four CSS selectors
+        # backing one class, where three survivors keep the check green.
+        count = -1 if (len(mutant) > 4 and mutant[4] == "all") else 1
+        path, orig = TARGETS[which], ORIGINALS[which]
+        if find not in orig:
             print("SKIP (pattern not found): %s" % name); continue
-        SRC.write_text(ORIG.replace(find, repl, 1), encoding="utf-8")
-        r = subprocess.run([sys.executable and "php", "hero-render.test.php"], capture_output=True, text=True)
-        fails = [l.strip() for l in r.stdout.splitlines() if l.strip().startswith("FAIL")]
-        status = "went RED" if r.returncode != 0 else "*** STAYED GREEN ***"
+        path.write_text(orig.replace(find, repl, count), encoding="utf-8")
+        code, fails = run()
+        path.write_text(orig, encoding="utf-8")   # restore before the next mutant
+        status = "went RED" if code != 0 else "*** STAYED GREEN ***"
         print("%-42s %s (%d failing)" % (name, status, len(fails)))
         for f in fails[:3]:
             print("      %s" % f)
 finally:
-    SRC.write_text(ORIG, encoding="utf-8")
-    print("\nsource restored:", SRC.read_text(encoding='utf-8') == ORIG)
+    for which, path in TARGETS.items():
+        path.write_text(ORIGINALS[which], encoding="utf-8")
+    ok = all(p.read_text(encoding="utf-8") == ORIGINALS[k] for k, p in TARGETS.items())
+    print("\nsource restored:", ok)

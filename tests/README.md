@@ -34,8 +34,15 @@ cd tests && php gi-hero.test.php
 cd tests && php category-hero.test.php
 ```
 
-All six exit non-zero on failure. As of 2026-08-31:
-291 / 136 / 22 / 182 / 255 / 87 checks.
+All six exit non-zero on failure. As of 2026-09-01:
+319 / 147 / 22 / 182 / 255 / 87 checks.
+
+⚠ `gi-hero.test.php` is **red on 4 checks** as of 2026-09-01, all in its
+section 6 (the photograph): `crohns: photograph renders`, `crc: uses its own
+theme asset`, `crc: asset is cache-busted on mtime`, `hub: uses its own
+picture`. Confirmed present at `c493591` in a clean worktree, so it predates
+the Education hero work and is not a regression from it. Nobody has looked at
+it yet.
 
 Four of them have a mutation runner beside them — `mutate-hero.py`,
 `mutate-legal.py`, `mutate-gi.py`, `mutate-category.py`. Run the runner, not
@@ -46,7 +53,7 @@ mutant proves they can fail. Every line must read `went RED`.
 
 | File | Covers |
 |---|---|
-| `hero-render.test.php` | `inc/page-hero-spotlight.php` — all eleven spotlight page heroes: the design toggle, copy inheritance, all three utility bands, both card variants, per-page card icons, `tel:` normalisation, and the CSS in `assets/css/main.css` that backs the classes the renderer emits |
+| `hero-render.test.php` | `inc/page-hero-spotlight.php` — all twelve spotlight page heroes: the design toggle, copy inheritance, every utility band, both card variants, per-page card icons, `tel:` normalisation, and the CSS in `assets/css/main.css` that backs the classes the renderer emits |
 | `hero-customizer.test.php` | The Customizer registration for those heroes — sections, panels, sanitizers, which section each toggle lands in, that two sections sharing a panel cannot share a title, and that the control list matches the renderer's field list exactly |
 | `reveal.test.js` | The `.gi-reveal` scroll animation in `page-gi-health.php` / `page-gi-condition.php`, extracted from the templates themselves, under every condition that used to leave content invisible |
 | `gi-hero.test.php` | `inc/gi-hero.php` — the Gastro Health Explained lobby and the seven condition heroes: the four-cell band and its never-itself guard, the lobby's seven chips on two fixed rows, purple's two jobs and the teal CTA override, photograph resolution and the focal-point whitelist, the opt-in review date, and **both templates included and run** so a commented-out call cannot pass. Section -1 lifts `vance_gi_conditions()` and `vance_gi_condition_cards()` out of `functions.php` and evaluates them, so the suite tests the real registry rather than a copy of it that could rot |
