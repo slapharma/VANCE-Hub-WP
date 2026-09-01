@@ -35,7 +35,7 @@ cd tests && php category-hero.test.php
 ```
 
 All six exit non-zero on failure, and all six are green. As of 2026-09-01:
-337 / 147 / 22 / 182 / 260 / 87 checks.
+341 / 147 / 22 / 182 / 260 / 87 checks.
 
 ### Never write an image filename in a test — the WebP lesson
 
@@ -86,10 +86,24 @@ mutant proves they can fail. Every line must read `went RED`.
 ## Not harnesses — the hero photographs
 
 `gen-heroes.py` and `process-heroes.py` are one-shot generators, not tests. They
-made the eleven images in `assets/img/heroes/` (OpenRouter,
-`google/gemini-3-pro-image`, about $0.14 each) and cropped them to the 1400×876
-box the renderer declares. `process-heroes.py` takes whatever `gen-heroes.py`
-left in `tests/generated/` rather than a list to keep in step with it.
+made the twelve images in `assets/img/heroes/` (OpenRouter,
+`google/gemini-3-pro-image`, about $0.14 each — `education.jpg` cost $0.139228
+on 2026-09-01) and cropped them to the 1400×876 box the renderer declares.
+`process-heroes.py` takes whatever `gen-heroes.py` left in `tests/generated/`
+rather than a list to keep in step with it.
+
+**Pass the name you mean to both of them.** `gen-heroes.py` with no arguments
+regenerates every prompt in the registry against a paid API; `process-heroes.py`
+with no arguments publishes every frame sitting in `tests/generated/`, which is
+gitignored scratch that accumulates — it holds 17 files today, including stale
+variants of already-shipped heroes.
+
+**Look at the frame before you ship it.** Generated images fail in specific
+places: hands and fingers, limbs fusing into torsos, faces appearing where the
+brief asked for none, and invented lettering wherever a page or screen is in
+shot. `lobby-walk.webp` has all three of the first kind and is only usable
+because the figures render ~200px tall. Crop and enlarge the hands and the face
+before accepting a frame; `education.jpg` was checked that way.
 
 They live here, not in `LOCAL/`, because the prompts ARE the spec: a replacement
 photograph has to be composed the same way or the hero looks broken — subject
@@ -97,12 +111,15 @@ right of centre, left third bright and empty because that edge is dissolved,
 focal point high because `object-position` is `46% 14%`. The docstring in
 `gen-heroes.py` gives the reason for each line. `hero-render.test.php` §5f is the
 part that can fail: it asserts every photograph the config names is on disk and
-is really 1400×876, and that the count is **exactly nine** — that last one is
-what fails if a page quietly goes back to borrowing an image bought for another
-page. (Nine, not twelve: the Knowledgebase, the 404 and Education name none in
-code. All three declare the motif. The first two are overridden by a theme mod
-on the live site; Education is not, because there are no courses to photograph
-until a track launches.)
+is really 1400×876, and that the count is **exactly ten** — ten, not twelve,
+because the Knowledgebase and the 404 name none in code: they declare the motif
+and are overridden by a theme mod on the live site. Education was a third of
+those until it was given a photograph on 2026-09-01.
+
+That count does **not** catch a page borrowing another page's photograph — the
+total stays ten and every file still exists. §5g's per-page check is what
+catches that, and `mutate-hero.py` has a mutant for it. Until 2026-08-31 Ask AI
+wore Crohn's and the User Guide wore IBD, so it is not a hypothetical.
 
 `gen-heroes.py` needs `OPENROUTER_API_KEY` in the environment and spends real
 credit. It writes into `tests/generated/`, which is not committed.

@@ -622,12 +622,20 @@ set_mods( array( 'vance_education_hero_style' => 'spotlight' ) );
 $ed = render( 'education' );
 check( 'markup is balanced', tags_balanced( $ed ) );
 
-// No courses exist yet, so there is nothing to photograph and the config
-// names no image. Same call the Knowledgebase and the 404 made.
-check( 'a motif stands in for the photograph',
-       strpos( $ed, 'vhh-hero-spotlight__motif' ) !== false );
-check( 'and no <img> was emitted alongside it',
-       strpos( $ed, 'vhh-hero-spotlight__media' ) === false );
+// This hero shipped with the motif on 2026-09-01 and was given a photograph of
+// its own later the same day. Both assertions are kept the right way round
+// rather than deleted: the failure that matters here is the page silently
+// falling BACK to the motif, which is what happens if the file goes missing --
+// vance_gi_hero_photo()'s sibling logic returns the motif branch and nothing
+// raises an error. Section 5f proves the file is on disk and 1400x876.
+check( 'a photograph is rendered, not the motif',
+       strpos( $ed, 'vhh-hero-spotlight__media' ) !== false );
+check( 'and the motif is gone',
+       strpos( $ed, 'vhh-hero-spotlight__motif' ), false );
+check( 'it is the photograph made for this page',
+       strpos( $ed, '/assets/img/heroes/education.jpg' ) !== false );
+check( 'and it carries real alt text',
+       (bool) preg_match( '#/assets/img/heroes/education\.jpg"\s+alt="[^"]{20,}"#', $ed ) );
 
 check( 'the band is the learn variant',
        strpos( $ed, 'vhh-hero-spotlight__slot--learn' ) !== false );
@@ -770,10 +778,11 @@ foreach ( $made_for_this as $pg => $rel ) {
            $size ? array( $size[0], $size[1] ) : false, array( 1400, 876 ) );
 }
 // An exact count, not >=: this is the assertion that fails if a page quietly
-// goes back to borrowing an image bought for another page. Nine of the eleven --
+// goes back to borrowing an image bought for another page. Ten of the twelve --
 // the Knowledgebase and the 404 name none in code, they take the motif and are
-// overridden by a theme mod on the live site.
-check( 'nine heroes carry a photograph made for them', count( $made_for_this ), 9 );
+// overridden by a theme mod on the live site. Education was a third of those
+// until 2026-09-01, when it was given a photograph of its own.
+check( 'ten heroes carry a photograph made for them', count( $made_for_this ), 10 );
 
 echo "\n=== 6. Colours reach the style attribute, and the dissolve maths is right ===\n";
 set_mods( array(

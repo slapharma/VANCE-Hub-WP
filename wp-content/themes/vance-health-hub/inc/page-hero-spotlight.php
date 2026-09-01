@@ -407,14 +407,22 @@ function vance_page_hero_spotlight_config( $page ) {
 		 * The one page here that is selling something that does not exist
 		 * yet. Everything below follows from that.
 		 *
-		 * The MOTIF, not a photograph: there are no courses to photograph,
-		 * and the alternative is a stock frame of somebody smiling at a
-		 * laptop -- which is precisely the borrowed-generic-image problem the
-		 * heroes/ directory was created to end. The classic hero's own
-		 * background is no help either; like every other one on this site it
-		 * was picked to sit under a dark veil. When a track actually launches
-		 * and there is something real to show, Photograph in the Customizer
-		 * takes over with no code change.
+		 * The PHOTOGRAPH was made for this page on 2026-09-01 and replaced the
+		 * motif this hero first shipped with. The motif was right while there
+		 * was nothing to picture, and the objection was always to a STOCK
+		 * frame -- somebody smiling at a laptop, the borrowed-generic-image
+		 * problem the heroes/ directory exists to end -- rather than to a
+		 * photograph as such. So the brief answers that directly: it does not
+		 * show a course, because there is no cohort, classroom or platform to
+		 * show. It shows the act the page is asking for, which is sitting down
+		 * and working through something at your own pace. Paper and a pen
+		 * rather than a screen, which is also what separates this page from
+		 * the Knowledgebase. tests/gen-heroes.py holds the prompt, the
+		 * reasoning, and the checks the frame was inspected against.
+		 *
+		 * The classic hero's own background is still no help, for the usual
+		 * reason: like every other one on this site it was picked to sit under
+		 * a dark veil and reads as a smear on a pale band.
 		 *
 		 * The BAND is what the Hub teaches with today -- see
 		 * vance_page_hero_spotlight_learn(). A visitor who came here for a
@@ -452,9 +460,13 @@ function vance_page_hero_spotlight_config( $page ) {
 			// the template never reads it. See legacy_desc_file below.
 			'legacy_desc_default'  => 'We\'re building self-paced courses for patients and CPD-accredited modules for practitioners. Join the waitlist to be the first to know when enrolment opens.',
 			'legacy_desc_file'     => 'customizer-pages.php',
-			'motif'        => true,
-			'image'        => '',
-			'image_alt'    => '',
+			// No 'motif' key any more: it is not a fallback that sits behind
+			// the photograph, it is the OTHER branch of the renderer, and
+			// leaving it declared would bring the dot field back the moment an
+			// admin cleared Photograph. The two motif pages left are the
+			// Knowledgebase and the 404.
+			'image'        => $img_hero . 'education.jpg',
+			'image_alt'    => __( 'A woman at a desk by a window, pausing over an open notebook with a pen in her hand', 'vance-health-hub' ),
 			// Both anchors are rendered by page-education.php unconditionally,
 			// and the waitlist form below #waitlist posts to admin-ajax and
 			// works today -- it is not gated on the Mailchimp endpoint being
@@ -1585,8 +1597,8 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings. Nothing to type here beyond the prompt.',
 		),
 		'education' => array(
-			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif, two buttons, and the Knowledgebase, VANCE-Ai and the free tools in a white band. Classic is the dark navy hero configured by the rest of this section.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;Education hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on. Note that Description has no effect on the classic hero, which renders only the tag and the title. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the Knowledgebase, VANCE-Ai and the free tools in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Education hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on. Note that Description has no effect on the classic hero, which renders only the tag and the title. The supplied photograph was shot for this hero; a replacement wants the same shape and a bright, uncluttered left-hand side, because that edge is dissolved into the band.',
 			'slot_label' => 'Sits above the white band. The band itself points at the Knowledgebase, VANCE-Ai and Free Health Tools &mdash; the things a visitor can use today while the courses are still in build &mdash; all resolved by page slug. Nothing to type here beyond the prompt.',
 		),
 		'kblobby'   => array(

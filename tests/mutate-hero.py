@@ -168,6 +168,14 @@ MUTANTS = [
  ("a hero photograph is misnamed",
   "$img_hero . 'free-tools.jpg'", "$img_hero . 'free-tools-v2.jpg'"),
 
+ # The other way a photograph goes wrong, and the one this whole directory was
+ # created to stop: a page quietly borrowing an image bought for another page.
+ # 5f's exact count does NOT catch it -- the total is still ten and every file
+ # still exists -- so it is 5g's per-page check that has to, and this proves it
+ # does. Until 2026-08-31 Ask AI wore Crohn's and the User Guide wore IBD.
+ ("a page goes back to borrowing another page's photograph",
+  "$img_hero . 'education.jpg'", "$img_hero . 'userguide.jpg'"),
+
  # ...and the pages that deliberately have none must keep declaring the
  # motif, or they render an empty <img> instead.
  ("a motif page loses its motif flag",

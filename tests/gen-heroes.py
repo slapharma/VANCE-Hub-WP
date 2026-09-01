@@ -244,6 +244,35 @@ PROMPTS.update({
     ),
 })
 
+# Education & Courses. The page sells self-paced patient modules and CPD
+# practitioner modules that do not exist yet, so the picture cannot show a
+# course -- there is no classroom, no cohort and no platform to photograph.
+# What it can show is the ACT the page is asking for: sitting down and working
+# through something at your own pace.
+#
+# Deliberately NOT another person-with-a-screen. Six of the eleven already are,
+# and a laptop would also make this the third bright-room-with-a-device in a
+# row. Paper and a pen say "studying" where a screen says "browsing", which is
+# the exact distinction between this page and the Knowledgebase.
+#
+# The notebook is the one risk: SHARED forbids text, and an open notebook is
+# the most likely place for the model to invent lettering anyway, so the page
+# is named as turned away from camera. Check that before shipping the frame --
+# the run that produced cat-healthcare-news needed a second pass for exactly
+# this kind of instruction being assumed rather than stated.
+PROMPTS.update({
+    "education": (
+        "A woman in her thirties sitting at a pale wooden desk beside a large "
+        "window, pen in hand, pausing mid-thought over an open notebook, a "
+        "closed laptop pushed to one side. The unhurried concentration of "
+        "somebody working through something at their own pace in their own "
+        "time. The notebook's open page is angled away from the camera so no "
+        "writing is legible. A plain pale wall and the bright window fill the "
+        "left of the frame almost to white. No screen is visible anywhere in "
+        "shot. " + SHARED
+    ),
+})
+
 
 def generate(name, prompt):
     body = json.dumps({
