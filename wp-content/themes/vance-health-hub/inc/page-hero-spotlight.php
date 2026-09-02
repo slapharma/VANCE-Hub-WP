@@ -487,6 +487,55 @@ function vance_page_hero_spotlight_config( $page ) {
 		),
 
 		/*
+		 * ---- Patient Downloads ---------------------------------------------
+		 *
+		 * The handout series has no Customizer setting per-PDF — the ten titles
+		 * live as a literal array in page-patient-downloads.php, same call as
+		 * vance_page_hero_spotlight_start() took for the 404's four cells. The
+		 * band lists the two handouts actually shipped today and drops either
+		 * one whose file goes missing, same file_exists() guard the template
+		 * itself uses for vpd_pdf_meta() — see vance_page_hero_spotlight_downloads().
+		 *
+		 * No photograph yet (tests/gen-heroes.py has not been run for this
+		 * page), so 'motif' is set exactly as it is for the Knowledgebase and
+		 * the 404: the dot field renders until an admin uploads one.
+		 */
+		'patientdownloads' => array(
+			'name'         => __( 'Patient Downloads', 'vance-health-hub' ),
+			'short_name'   => __( 'Downloads', 'vance-health-hub' ),
+			'panel'        => 'vance_patientdownloads_panel',
+			'section'      => 'vance_patientdownloads_hero_spotlight',
+			'style_section'    => 'vance_patientdownloads_hero',
+			'classic_template' => 'page-patient-downloads.php',
+			'priority'     => 9,
+			'legacy_tag'   => 'vance_patientdownloads_hero_tag',
+			'legacy_title' => 'vance_patientdownloads_hero_title',
+			'legacy_desc'  => 'vance_patientdownloads_hero_desc',
+			// The TEMPLATE's own fallbacks, copied verbatim — same reason as
+			// every other entry here: an unsaved read has to match what
+			// page-patient-downloads.php already renders.
+			'legacy_tag_default'   => 'Patient Downloads',
+			'legacy_title_default' => 'Printable guides for your <span class="highlight">next appointment</span>',
+			'legacy_desc_default'  => 'Free, evidence-backed PDF handouts you can save to your phone or print — built for the moments a screen isn\'t the easiest way to have the conversation.',
+			'motif'        => true,
+			'image'        => '',
+			'image_alt'    => '',
+			'btn1_text'    => __( 'Browse the handouts', 'vance-health-hub' ),
+			// The card grid, the first thing below the hero.
+			'btn1_link'    => '#downloads-grid',
+			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
+			'btn2_link'    => '',
+			'btn2_fallback_slug' => 'ask-ai',
+			'btn2_fallback_path' => '/ask-ai/',
+			'slot'         => 'downloads',
+			'slot_label'   => __( 'Available to download now', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'clipboard',
+			'card_title'   => __( 'Built for the moments a screen isn\'t easiest', 'vance-health-hub' ),
+			'card_text'    => __( 'Every handout is evidence-backed, free, and yours to keep — no account needed to download.', 'vance-health-hub' ),
+		),
+
+		/*
 		 * ---- The two shelves, and the 404 --------------------------------
 		 *
 		 * Free Health Tools and the Knowledgebase are the site's two shelves:
@@ -650,7 +699,7 @@ function vance_page_hero_spotlight_config( $page ) {
  */
 function vance_page_hero_spotlight_pages() {
 	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition', 'askai',
-		'evidence', 'userguide', 'education', 'tools', 'kblobby', 'e404' );
+		'evidence', 'userguide', 'patientdownloads', 'education', 'tools', 'kblobby', 'e404' );
 }
 
 /**
@@ -1152,6 +1201,61 @@ function vance_page_hero_spotlight_learn() {
 }
 
 /**
+ * The handouts actually shipped today, for Patient Downloads' utility band.
+ *
+ * Literal, not read from Customizer settings — same call
+ * vance_page_hero_spotlight_start() took for the 404, for the same reason:
+ * page-patient-downloads.php's ten handouts are a literal array with no
+ * per-title setting of their own. Only 'file' + 'pages' being set means a
+ * handout has actually shipped; the file_exists() guard mirrors the one the
+ * template already runs in vpd_pdf_meta(), so a handout pulled from the server
+ * drops out of the band instead of linking to a 404.
+ *
+ * A third cell always points back at the grid itself, the same "shelf" cell
+ * vance_page_hero_spotlight_tools() adds when something is left off the band.
+ *
+ * @return array<int, array{key: string, label: string, value: string, href: string}>
+ */
+function vance_page_hero_spotlight_downloads() {
+	$handouts = array(
+		array(
+			'icon'  => 'clipboard',
+			'tag'   => 'Appointment Prep',
+			'title' => 'Preparing for Your Doctor Appointment',
+			'file'  => 'Vance-Health-Hub-Appointment-Preparation.pdf',
+		),
+		array(
+			'icon'  => 'book',
+			'tag'   => 'Travel',
+			'title' => 'Your IBD Travel Checklist',
+			'file'  => 'Vance-Health-Hub-IBD-Travel-Checklist.pdf',
+		),
+	);
+
+	$cells = array();
+	foreach ( $handouts as $h ) {
+		if ( ! file_exists( get_template_directory() . '/assets/downloads/' . $h['file'] ) ) {
+			continue;
+		}
+		$cells[] = array(
+			'key'   => $h['icon'],
+			'label' => $h['tag'],
+			'value' => $h['title'],
+			'href'  => get_template_directory_uri() . '/assets/downloads/' . $h['file'],
+		);
+	}
+
+	$cells[] = array(
+		'key'   => 'grid',
+		'label' => __( 'More', 'vance-health-hub' ),
+		'value' => __( 'See all the handouts', 'vance-health-hub' ),
+		'href'  => '#downloads-grid',
+	);
+
+	return $cells;
+}
+
+/**
  * The geometric motif that stands in for the photograph.
  *
  * Used by the pages whose config sets 'motif' and whose photograph setting is
@@ -1300,6 +1404,9 @@ function vance_render_page_hero_spotlight( $page ) {
 			break;
 		case 'learn':
 			$slot_items = vance_page_hero_spotlight_learn();
+			break;
+		case 'downloads':
+			$slot_items = vance_page_hero_spotlight_downloads();
 			break;
 		case 'search':
 			// Not a list of cells at all — the band is a form. Non-empty so the
@@ -1590,6 +1697,11 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three free tools in a white band. The PDF download stays as the second button. Classic is the dark navy hero configured by the rest of this panel.',
 			'section'    => 'The light hero for this page. Only rendered while &ldquo;User Guide hero design&rdquo; (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings.',
+		),
+		'patientdownloads' => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, motif or photograph, two buttons, and the shipped handouts in a white band. Classic is the dark hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while this page&rsquo;s hero design is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them where you always have, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
+			'slot_label' => 'Sits above the white band. The band itself lists the handouts that have actually shipped (read from the template, not a setting) and ends with a link back to the card grid. Nothing to type here beyond the prompt.',
 		),
 		'tools'     => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three tools listed in a white band. Classic is the dark navy hero configured by the rest of this section.',
