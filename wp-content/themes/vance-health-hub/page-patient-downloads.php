@@ -85,11 +85,11 @@ $vpd_downloads = array(
 	),
 	array(
 		'slug'  => 'ibd-symptom-checker',
-		'title' => 'Is It a Flare — or Something Else? Your IBD Symptom Checker',
+		'title' => 'Is It a Flare — or Something Else?',
 		'tag'   => 'Self-Triage',
-		'desc'  => 'A guide to telling a flare apart from something that needs a different kind of attention.',
-		'file'  => '',
-		'pages' => 0,
+		'desc'  => 'The tests that tell a flare apart from an infection or IBS, plus the red flags that mean get help now, not later.',
+		'file'  => 'Vance-Health-Hub-IBD-Symptom-Checker.pdf',
+		'pages' => 3,
 	),
 	array(
 		'slug'  => 'ibd-flare-survival-guide',
