@@ -127,3 +127,29 @@ function vance_google_signin_loader() {
 	<?php
 }
 add_action( 'wp_footer', 'vance_google_signin_loader', 5 );
+
+/**
+ * 3. Lazy-loaded card thumbnails on category archives
+ *
+ * archive.php and template-parts/subcategory-grouped-archive.php mark card
+ * images past the first few with data-bg instead of an inline
+ * background-image (audit P5: a grouped archive with pagination off — see
+ * inc/functions.php's vance_grouped_archive_no_pagination() — measured at
+ * 41,000px and 4.96 MB, every thumbnail loading eagerly). CSS
+ * background-image has no native loading="lazy", so this small script swaps
+ * data-bg into the real background-image via IntersectionObserver as each
+ * card nears the viewport. Only enqueued where those templates render.
+ */
+function vance_enqueue_lazy_card_images() {
+	if ( ! is_category() && ! is_tag() && ! is_tax() ) {
+		return;
+	}
+	wp_enqueue_script(
+		'vance-lazy-card-images',
+		get_template_directory_uri() . '/assets/js/lazy-card-images.js',
+		array(),
+		@filemtime( get_template_directory() . '/assets/js/lazy-card-images.js' ) ?: '1',
+		true
+	);
+}
+add_action( 'wp_enqueue_scripts', 'vance_enqueue_lazy_card_images' );

@@ -1659,7 +1659,22 @@
 		if (guestModal && guestModal.style.display === 'flex') { return true; }
 		var regOverlay = document.getElementById('vance-reg-overlay');
 		if (regOverlay && regOverlay.classList.contains('is-open')) { return true; }
+		// The Complianz cookie banner renders server-side with .cmplz-hidden
+		// already on it and JS removes that class to reveal it — so an intro
+		// popup timed on a fixed delay could fire on top of it, eating every
+		// click on the banner underneath the same way the modals above do.
+		var cookieBanner = document.querySelector('.cmplz-cookiebanner');
+		if (cookieBanner && !cookieBanner.classList.contains('cmplz-hidden')) { return true; }
 		return false;
+	}
+
+	/**
+	 * True once the reader has made a cookie choice (or there was never a
+	 * banner to answer — a returning visitor with consent already stored).
+	 */
+	function consentIsResolved() {
+		var cookieBanner = document.querySelector('.cmplz-cookiebanner');
+		return !cookieBanner || cookieBanner.classList.contains('cmplz-hidden');
 	}
 
 	function initArticleIntro() {
@@ -1670,20 +1685,48 @@
 			return;
 		}
 
-		window.setTimeout(function () {
-			// Don't interrupt someone who has already started chatting.
-			if (document.body.classList.contains('vance-askai-open')) {
+		var fired = false;
+
+		function fireAfterDelay() {
+			window.setTimeout(function () {
+				// Don't interrupt someone who has already started chatting.
+				if (document.body.classList.contains('vance-askai-open')) {
+					return;
+				}
+				// Don't interrupt someone mid-quiz, mid-form, mid-signup, or
+				// still facing the cookie banner — see otherModalIsOpen()
+				// above. Skipping here (rather than showing over them) leaves
+				// markIntroSeen() uncalled, so the intro is still free to show
+				// on a later qualifying pageview.
+				if (otherModalIsOpen()) {
+					return;
+				}
+				fired = true;
+				showIntro();
+			}, 1400);
+		}
+
+		// Wait for consent to be resolved (banner answered, or none shown for
+		// a returning visitor) before starting the delay at all.
+		function onScroll() {
+			window.removeEventListener('scroll', onScroll);
+			if (consentIsResolved()) {
+				fireAfterDelay();
 				return;
 			}
-			// Don't interrupt someone mid-quiz, mid-form, or mid-signup — see
-			// otherModalIsOpen() above. Skipping here (rather than showing over
-			// them) leaves markIntroSeen() uncalled, so the intro is still free
-			// to show on a later qualifying pageview.
-			if (otherModalIsOpen()) {
-				return;
-			}
-			showIntro();
-		}, 1400);
+			var consentPoll = window.setInterval(function () {
+				if (fired) {
+					window.clearInterval(consentPoll);
+					return;
+				}
+				if (consentIsResolved()) {
+					window.clearInterval(consentPoll);
+					fireAfterDelay();
+				}
+			}, 300);
+		}
+
+		window.addEventListener('scroll', onScroll, { passive: true, once: true });
 	}
 
 	/**

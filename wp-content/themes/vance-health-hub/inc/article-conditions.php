@@ -315,3 +315,166 @@ function vance_render_article_conditions() {
 		implode( '', $links ) // Each link escaped above.
 	);
 }
+
+/**
+ * Print a single contextual link back to this article's category archive.
+ *
+ * Audit finding cluster-F1: four whole clusters (79 articles — Diet &
+ * Nutrition, Living with IBD, Clinical Research & News, Symptoms & Tests) had
+ * a 0% spoke-to-hub link rate — not one article in any of them linked back to
+ * its own category archive in-body. Rather than hand-edit 79 posts (and drift
+ * again the next time one is added), this prints the link from the template
+ * for every article, driven by whichever category WordPress already
+ * considers primary (get_the_category()'s own ordering — the same one
+ * single.php's $type_label uses at the top of the template).
+ *
+ * @return void
+ */
+function vance_render_article_category_link() {
+	if ( ! is_singular( 'post' ) ) {
+		return;
+	}
+
+	$categories = get_the_category();
+	if ( empty( $categories ) ) {
+		return;
+	}
+
+	$category = $categories[0];
+	$url      = get_category_link( $category );
+	if ( is_wp_error( $url ) ) {
+		return;
+	}
+
+	printf(
+		'<p class="va-category-backlink"><a href="%1$s">%2$s</a></p>',
+		esc_url( $url ),
+		esc_html(
+			sprintf(
+				/* translators: %s: category name */
+				__( 'More from %s', 'vance-health-hub' ),
+				$category->name
+			)
+		)
+	);
+}
+
+/**
+ * Map of condition slug => published post IDs about it, cached in a
+ * transient rather than recomputed on every article view.
+ *
+ * vance_article_conditions() scans each post's title/tags/body with regex; do
+ * that for the whole 149-post catalogue on every single pageview and it's 149
+ * extra get_post() calls plus regex scans per request. Building the map once
+ * and invalidating it on save keeps the per-pageview cost to one lookup.
+ *
+ * @return array<string,int[]>
+ */
+function vance_condition_article_map() {
+	$map = get_transient( 'vance_condition_article_map' );
+	if ( is_array( $map ) ) {
+		return $map;
+	}
+
+	$map = array();
+	$ids = get_posts(
+		array(
+			'post_type'      => 'post',
+			'post_status'    => 'publish',
+			'fields'         => 'ids',
+			'posts_per_page' => -1,
+			'no_found_rows'  => true,
+		)
+	);
+
+	foreach ( $ids as $id ) {
+		foreach ( vance_article_conditions( $id ) as $slug ) {
+			$map[ $slug ][] = $id;
+		}
+	}
+
+	set_transient( 'vance_condition_article_map', $map, DAY_IN_SECONDS );
+
+	return $map;
+}
+
+/**
+ * Clear the cached condition map whenever a post is written, so a newly
+ * published or re-tagged article shows up in siblings' related blocks
+ * without waiting out the day-long cache.
+ *
+ * @param int $post_id Post ID.
+ */
+function vance_clear_condition_article_map( $post_id ) {
+	if ( 'post' === get_post_type( $post_id ) ) {
+		delete_transient( 'vance_condition_article_map' );
+	}
+}
+add_action( 'save_post', 'vance_clear_condition_article_map' );
+
+/**
+ * Print up to 3 other articles that share this one's primary condition.
+ *
+ * Audit finding cluster-F4: sibling linking between articles on the same
+ * condition ran as low as 0.14 links per spoke on Crohn's Disease. Silent
+ * when the article has no confidently-identified condition (general pieces)
+ * or no siblings yet.
+ *
+ * @return void
+ */
+function vance_render_related_articles() {
+	if ( ! is_singular( 'post' ) ) {
+		return;
+	}
+
+	$slugs = vance_article_conditions( get_the_ID() );
+	if ( ! $slugs ) {
+		return;
+	}
+
+	$map        = vance_condition_article_map();
+	$candidates = isset( $map[ $slugs[0] ] ) ? $map[ $slugs[0] ] : array();
+	$candidates = array_values( array_diff( $candidates, array( get_the_ID() ) ) );
+
+	if ( ! $candidates ) {
+		return;
+	}
+
+	$related = new WP_Query(
+		array(
+			'post_type'           => 'post',
+			'post_status'         => 'publish',
+			'post__in'            => $candidates,
+			'posts_per_page'      => 3,
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+		)
+	);
+
+	if ( ! $related->have_posts() ) {
+		wp_reset_postdata();
+		return;
+	}
+
+	$data = vance_gi_condition_medical();
+	$name = isset( $data[ $slugs[0] ]['name'] ) ? $data[ $slugs[0] ]['name'] : '';
+
+	echo '<aside class="va-related-articles" aria-label="' . esc_attr__( 'Related articles', 'vance-health-hub' ) . '">';
+	echo '<h2 class="va-related-articles__title">' . esc_html( $name ? sprintf( __( 'More on %s', 'vance-health-hub' ), $name ) : __( 'Related articles', 'vance-health-hub' ) ) . '</h2>';
+	echo '<ul class="va-related-articles__list">';
+
+	while ( $related->have_posts() ) {
+		$related->the_post();
+		printf(
+			'<li class="va-related-articles__item"><a href="%1$s">%2$s</a></li>',
+			esc_url( get_permalink() ),
+			esc_html( get_the_title() )
+		);
+	}
+
+	echo '</ul></aside>';
+
+	wp_reset_postdata();
+}

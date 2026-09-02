@@ -3,10 +3,14 @@
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <?php // Phase 4 (mobile performance): open TLS connections to font + image CDNs early. ?>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <?php // Phase 4 (mobile performance): open TLS connections to image CDN early. ?>
     <link rel="dns-prefetch" href="//i0.wp.com">
+    <?php // Inter + Outfit are self-hosted now (audit P3) — no more third-party
+          // font origin to preconnect to. Preload the two variable-font files
+          // directly instead, so text using them doesn't wait on fonts.css to
+          // parse before the browser discovers it needs them. ?>
+    <link rel="preload" as="font" type="font/woff2" href="<?php echo esc_url( get_template_directory_uri() . '/assets/fonts/inter-var.woff2' ); ?>" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="<?php echo esc_url( get_template_directory_uri() . '/assets/fonts/outfit-var.woff2' ); ?>" crossorigin>
     <meta name="theme-color" content="#0A1929" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#008080" media="(prefers-color-scheme: dark)">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,7 +32,14 @@
         <div class="container header-content">
             <div class="logo-area">
                 <a href="<?php echo esc_url( home_url( '/' ) ); ?>">
-                    <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo.png" alt="Vance Medical" class="site-logo">
+                    <?php /* logo.png (1024x576) stays the large source used for the
+                             Organization schema logo and social share images — see
+                             inc/organization-schema.php. This header display never
+                             renders past ~390px wide (audit P4: the .logo-area crop
+                             actually shows it nearer 219px), so it gets its own
+                             440x248 (2x) export instead of shipping the full asset
+                             on every page load. */ ?>
+                    <img src="<?php echo get_template_directory_uri(); ?>/assets/img/logo-header.png" width="440" height="248" alt="Vance Medical" class="site-logo">
                 </a>
             </div>
 

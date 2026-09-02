@@ -805,10 +805,20 @@ function vance_gi_hero_card() {
  */
 function vance_gi_hero_media( $photo ) {
 	if ( ! $photo ) { return; }
+	// srcset only for the stock lobby photo (audit P4: 78.4 KB wasted shipping
+	// the full 1168px generated image to a mobile slot). The seven condition
+	// photos and any admin-uploaded override have no pre-generated width
+	// variants, so those still render at their one native size.
+	$is_default_lobby_photo = ( false !== strpos( $photo['src'], '/assets/img/gi-health/lobby-walk.webp' ) );
 	?>
 	<div class="vhh-hero-spotlight__media">
 		<img src="<?php echo esc_url( $photo['src'] ); ?>"
+		     <?php if ( $is_default_lobby_photo ) : ?>
+		     srcset="<?php echo esc_url( get_template_directory_uri() . '/assets/img/gi-health/lobby-walk-480w.webp' ); ?> 480w, <?php echo esc_url( get_template_directory_uri() . '/assets/img/gi-health/lobby-walk-768w.webp' ); ?> 768w, <?php echo esc_url( $photo['src'] ); ?> 1168w"
+		     sizes="(max-width: 767px) 100vw, 619px"
+		     <?php endif; ?>
 		     alt="<?php echo esc_attr( $photo['alt'] ); ?>"
+		     fetchpriority="high" loading="eager"
 		     style="object-position: <?php echo esc_attr( $photo['focal'] ); ?>;">
 	</div>
 	<?php

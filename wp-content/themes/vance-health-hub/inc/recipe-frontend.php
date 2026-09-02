@@ -335,11 +335,23 @@ function vance_recipe_json_ld( $post_id ) {
 		);
 	}
 
+	$permalink = get_permalink( $post_id );
+
 	$data = array(
-		'@context'          => 'https://schema.org/',
-		'@type'             => 'Recipe',
-		'name'              => $name,
-		'url'               => get_permalink( $post_id ),
+		'@context'         => 'https://schema.org/',
+		'@type'            => 'Recipe',
+		// Ties this floating block into the page's own @graph (audit S3):
+		// without these two, Google has no way to know the Recipe and the
+		// WebPage AIOSEO already builds for this URL are the same page.
+		'@id'              => $permalink . '#recipe',
+		'mainEntityOfPage' => array( '@id' => $permalink . '#webpage' ),
+		'name'             => $name,
+		'url'              => $permalink,
+		// The Organization @id AIOSEO's own graph already defines — consistent
+		// with the site's "Team Vance" byline rather than inventing a named
+		// recipe developer.
+		'author'           => array( '@id' => trailingslashit( home_url() ) . '#organization' ),
+		'datePublished'    => get_the_date( DATE_W3C, $post_id ),
 	);
 
 	$excerpt = get_the_excerpt( $post_id );
@@ -364,7 +376,10 @@ function vance_recipe_json_ld( $post_id ) {
 
 	$servings = get_post_meta( $post_id, '_vance_recipe_servings', true );
 	if ( '' !== $servings ) {
-		$data['recipeYield'] = (string) (int) $servings;
+		$servings = (int) $servings;
+		// Bare "1" reads as ambiguous to a rich-result parser (one what?) —
+		// spell out the unit, same as Google's own Recipe examples.
+		$data['recipeYield'] = $servings . ' ' . _n( 'serving', 'servings', $servings, 'vance-health-hub' );
 	}
 
 	$kcal = get_post_meta( $post_id, '_vance_recipe_kcal', true );

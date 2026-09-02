@@ -1457,6 +1457,16 @@
    ========================================================================= */
 
 @media (max-width: 767.98px) {
+	/* The intro card's height was capped only against the viewport
+	   (100dvh - 48px), so on a phone tall enough for the stacked illustration
+	   banner plus the full copy column, it hit that cap and read as a
+	   full-screen takeover rather than a modal (audit: SXO). Capping it well
+	   under the viewport keeps the dimmed background visibly framing it on
+	   every phone size; content that doesn't fit still scrolls internally via
+	   the overflow-y:auto already on .vance-askai-intro. */
+	.vance-askai-intro-overlay { padding: 20px 16px; }
+	.vance-askai-intro { max-height: min(600px, calc(100dvh - 40px)); }
+
 	/* Stack the intro popup: illustration banner on top, copy + CTA below. */
 	.vance-askai-intro__grid { grid-template-columns: 1fr; }
 	.vance-askai-intro__media {

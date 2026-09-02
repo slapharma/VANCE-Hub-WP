@@ -41,9 +41,25 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
         // first bento/asymmetric item becomes the feature tile).
         $item_class = 'va-sub-item va-sub-item--' . esc_attr( $layout ) . ' va-sub-item--' . ( ( (int) $index === 0 ) ? 'lead' : 'std' );
 
+        // A page-wide count, not per-group: these groups stack down a page the
+        // audit measured at 41,000px on Clinical Reviews/Gastro Living (which
+        // show every sub-category with pagination off), and every card here
+        // was loading its thumbnail eagerly via inline background-image, which
+        // has no native lazy-loading. Only the first few cards on the whole
+        // page are actually above the fold; everything after ships as a
+        // data-bg attribute that assets/js/lazy-card-images.js swaps in via
+        // IntersectionObserver as it nears the viewport.
+        static $vance_global_card_i = 0;
+        $vance_eager = ( $vance_global_card_i < 4 );
+        $vance_global_card_i++;
+        $vance_bg_attr = $vance_eager
+            ? "background-image: url('" . esc_url( $thumb ) . "');"
+            : '';
+        $vance_data_bg = $vance_eager ? '' : ' data-bg="' . esc_url( $thumb ) . '"';
+
         if ( 'posters' === $layout ) : ?>
             <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' va-poster-card' ); ?>>
-                <a class="va-poster-link" href="<?php the_permalink(); ?>" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>" style="background-image: url('<?php echo esc_url( $thumb ); ?>');">
+                <a class="va-poster-link" href="<?php the_permalink(); ?>" data-vhh-post-id="<?php echo (int) get_the_ID(); ?>"<?php echo $vance_data_bg; // phpcs:ignore WordPress.Security.EscapeOutput — built with esc_url above ?> style="<?php echo esc_attr( $vance_bg_attr ); ?>">
                     <span class="va-poster-shade" aria-hidden="true"></span>
                     <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                     <div class="va-poster-body">
@@ -54,7 +70,7 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
             </article>
         <?php else : ?>
             <article id="post-<?php the_ID(); ?>" <?php post_class( $item_class . ' news-card' ); ?> data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
-                <div class="card-image" style="background-image: url('<?php echo esc_url( $thumb ); ?>'); background-color: #e2e8f0; position: relative;">
+                <div class="card-image"<?php echo $vance_data_bg; // phpcs:ignore WordPress.Security.EscapeOutput — built with esc_url above ?> style="<?php echo esc_attr( $vance_bg_attr ); ?> background-color: #e2e8f0; position: relative;">
                     <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                 </div>
                 <div class="card-content">

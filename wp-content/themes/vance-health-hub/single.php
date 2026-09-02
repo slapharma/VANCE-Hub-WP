@@ -249,6 +249,18 @@ while ( have_posts() ) :
                         if ( function_exists( 'vance_render_article_conditions' ) ) {
                             vance_render_article_conditions();
                         }
+                        // Single contextual link back to this article's own
+                        // category archive — see inc/article-conditions.php
+                        // (audit cluster F1: four whole clusters, 79 articles,
+                        // had zero of these).
+                        if ( function_exists( 'vance_render_article_category_link' ) ) {
+                            vance_render_article_category_link();
+                        }
+                        // Up to 3 sibling articles sharing this one's primary
+                        // condition (audit cluster F4).
+                        if ( function_exists( 'vance_render_related_articles' ) ) {
+                            vance_render_related_articles();
+                        }
                         ?>
                     </div>
 

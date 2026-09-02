@@ -190,6 +190,12 @@ function vance_noindex_thin_archives( $attributes ) {
 		$attributes['noindex'] = 'noindex';
 	}
 
+	// Date archives (/2026/09/, /2026/) duplicate the post listing with no
+	// query of their own worth ranking for.
+	if ( is_date() ) {
+		$attributes['noindex'] = 'noindex';
+	}
+
 	/*
 	 * The author archive is gated on the author having a biography, on the
 	 * same self-healing principle as the pages and terms above. It was

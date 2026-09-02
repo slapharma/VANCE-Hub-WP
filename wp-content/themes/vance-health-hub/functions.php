@@ -89,6 +89,12 @@ require_once get_template_directory() . '/inc/medical-review.php';
 // MedicalWebPage + MedicalCondition schema on the seven condition pages, added
 // to AIOSEO's own graph rather than as a second JSON-LD block.
 require_once get_template_directory() . '/inc/medical-schema.php';
+// logo + sameAs on the sitewide Organization node — required for Article rich
+// result eligibility, missing sitewide before this.
+require_once get_template_directory() . '/inc/organization-schema.php';
+// Front page's BreadcrumbList otherwise describes whichever post is first in
+// the "Latest Content" loop, not the homepage itself.
+require_once get_template_directory() . '/inc/homepage-breadcrumb.php';
 // Ties each article to the condition pages it is about — `about` in the schema
 // and a link under the copy. Loaded after medical-schema.php, whose condition
 // registry and #medicalcondition @id it reuses.
@@ -1110,9 +1116,12 @@ function vance_track_post_view() {
 add_action( 'wp', 'vance_track_post_view' );
 
 function vance_health_hub_scripts() {
-    // Enqueue Google Fonts
-    wp_enqueue_style( 'vance-google-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap', array(), null );
-    
+    // Self-hosted Inter + Outfit (audit P3) — replaces the fonts.googleapis.com
+    // stylesheet, an ~845ms render-blocking round trip to a third party on
+    // every page. See assets/css/fonts.css for why two files cover all five
+    // weights this site uses.
+    wp_enqueue_style( 'vance-fonts', get_template_directory_uri() . '/assets/css/fonts.css', array(), @filemtime( get_template_directory() . '/assets/css/fonts.css' ) ?: '1' );
+
     // Enqueue Main Styles
     // We will copy the prototype CSS to a file named 'main.css' in the theme folder
     // Version bumped to force browser/edge cache-miss after Vance Medical rebrand (teal palette + larger logo).

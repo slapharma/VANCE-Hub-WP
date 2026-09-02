@@ -203,7 +203,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_section( "vance_about_trust", array( "title" => "Trust Badges & Stats", "panel" => "vance_about_panel" ) );
     $wp_customize->add_setting( "vance_about_badges_show", array( "default" => true, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_about_badges_show", array( "label" => "Show Trust Badges (in hero)", "section" => "vance_about_trust", "type" => "checkbox" ) );
-    $badge_defaults = array( 1 => "Pharma-Grade Quality", 2 => "Clinician Approved", 3 => "Evidence-Based" );
+    $badge_defaults = array( 1 => "Rigorously Developed", 2 => "Citation-Backed Content", 3 => "Evidence-Based" );
     for ( $i = 1; $i <= 3; $i++ ) {
         $wp_customize->add_setting( "vance_about_badge{$i}_label", array( "default" => $badge_defaults[$i], "sanitize_callback" => "sanitize_text_field" ) );
         $wp_customize->add_control( "vance_about_badge{$i}_label", array( "label" => "Badge $i Label", "section" => "vance_about_trust", "type" => "text" ) );
@@ -213,7 +213,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $trust_stat_defaults = array(
         1 => array( "30+",      "Years of Pharmaceutical Experience" ),
         2 => array( "12+",      "Countries with Regulatory Approval" ),
-        3 => array( "100%",     "Pharma-Grade Standards Compliance" ),
+        3 => array( "100%",     "Regulatory Standards Compliance" ),
         4 => array( "10,000+",  "Patients Supported Globally" ),
     );
     for ( $i = 1; $i <= 4; $i++ ) {
@@ -272,9 +272,9 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_about_mission_desc",  array( "label" => "Description", "section" => "vance_about_mission", "type" => "textarea" ) );
 
     $val_defaults = array(
-        1 => array( "Evidence-Based",  "Every product and piece of content meets the highest scientific and regulatory standards, rooted in peer-reviewed clinical research." ),
+        1 => array( "Evidence-Based",  "Every product and piece of content meets the highest scientific and regulatory standards, rooted in cited clinical research." ),
         2 => array( "Patient-First",   "We design every solution around real-world challenges patients face, not just clinical endpoints, because lived experience matters." ),
-        3 => array( "Pharma-Grade",    "Our medical food products are developed with the same rigour applied to licensed medicines, a quality benchmark no ordinary supplement can match." ),
+        3 => array( "Rigorously Developed",    "Our medical food products are developed with the same rigour applied to licensed medicines, a quality benchmark no ordinary supplement can match." ),
         4 => array( "Global Reach",    "With a regulatory footprint spanning multiple continents, Vance Medical delivers consistent, trusted solutions wherever patients and clinicians need them." ),
     );
     for ( $i = 1; $i <= 4; $i++ ) {
@@ -377,7 +377,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_about_plat_desc",  array( "label" => "Description", "section" => "vance_about_platform", "type" => "textarea" ) );
 
     $plat_defaults = array(
-        1 => array( "Clinical Content Hub",    "Peer-reviewed research and patient education curated by gastroenterologists and dietitians." ),
+        1 => array( "Clinical Content Hub",    "Clinical research and patient education curated by gastroenterologists and dietitians." ),
         2 => array( "VANCE-Ai",      "Specialised AI trained on clinical gastroenterology to answer your health questions safely." ),
         3 => array( "Patient Dashboard",       "Track health records, manage your Gastro tools, and connect with your care pathway." ),
         4 => array( "HCP Professional Portal", "Dedicated space for healthcare practitioners to access protocols and collaborate." ),

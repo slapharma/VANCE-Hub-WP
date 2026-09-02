@@ -192,7 +192,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $ov     = max(0, min(100, absint(vance_get_theme_mod('vance_about_hero_overlay', 78)))) / 100;
         $ov_bot = min(1, $ov + 0.15);
 
-        $badge_defaults = array(1 => 'Pharma-Grade Quality', 2 => 'Clinician Approved', 3 => 'Evidence-Based');
+        $badge_defaults = array(1 => 'Rigorously Developed', 2 => 'Citation-Backed Content', 3 => 'Evidence-Based');
     ?>
     <?php $hero_light = vance_about_is_light_color($hero_bg_color); ?>
     <section class="vabout-hero<?php echo $hero_light ? ' is-light' : ''; ?>" style="<?php echo $hero_bg_color ? 'background:' . esc_attr($hero_bg_color) . ';' : ''; ?>">
@@ -229,7 +229,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     if (vance_get_theme_mod('vance_about_stats_show', true)) :
         $stat_defaults = array(
             1 => array('30+',      'Years of Pharmaceutical Experience', 'flask'),
-            2 => array('100%',     'Pharma-Grade Standards Compliance',   'shield'),
+            2 => array('100%',     'Regulatory Standards Compliance',   'shield'),
             3 => array('100,000+', 'Patients Supported Globally',         'users'),
         );
     ?>
@@ -272,7 +272,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
             'sub'   => 'Our Story',
             'desc'  => "For over three decades, our team has been at the forefront of gastrointestinal medicine, developing specialised treatments to the highest regulatory standards.\n\nThat deep clinical experience revealed a consistent gap: medicines alone often fall short for chronic gastro conditions. Patients need evidence-based nutritional support alongside standard medical intervention.\n\nVance Medical was founded to bridge that gap, combining pharmaceutical rigour with nutritional science to deliver medical food products and education to both patients and practitioners.",
             'btn_lbl' => '',
-            'checks'  => array('Developed under pharmaceutical regulatory frameworks', 'Peer-reviewed clinical evidence base', 'Trusted by gastroenterologists worldwide'),
+            'checks'  => array('Developed under pharmaceutical regulatory frameworks', 'Backed by cited clinical research', 'Trusted by gastroenterologists worldwide'),
         ),
         2 => array(
             'show'  => false,
@@ -296,7 +296,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $btn_lbl = get_theme_mod($prefix . '_btn_lbl', $pd['btn_lbl']);
         $btn_url = get_theme_mod($prefix . '_btn_url', '#');
         $layout  = get_theme_mod($prefix . '_layout', 'img-left');
-        $badge   = get_theme_mod($prefix . '_img_badge', $p === 1 ? 'Pharma-Grade Production' : '');
+        $badge   = get_theme_mod($prefix . '_img_badge', $p === 1 ? 'Quality-Controlled Production' : '');
         $styles  = vance_get_style_string($prefix);
         $checks  = array_filter(array(
             get_theme_mod($prefix . '_check1', $pd['checks'][0]),
@@ -357,9 +357,9 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $styles        = vance_get_style_string('vance_about_mission');
 
         $val_defaults = array(
-            1 => array('Evidence-Based', 'Every product and piece of content meets the highest scientific and regulatory standards, rooted in peer-reviewed clinical research.', 'microscope'),
+            1 => array('Evidence-Based', 'Every product and piece of content meets the highest scientific and regulatory standards, rooted in cited clinical research.', 'microscope'),
             2 => array('Patient-First',  'We design every solution around real-world challenges patients face, not just clinical endpoints, because lived experience matters.', 'heart'),
-            3 => array('Pharma-Grade',   'Our medical food products are developed with the same rigour applied to licensed medicines, a quality benchmark no ordinary supplement can match.', 'award'),
+            3 => array('Rigorously Developed',   'Our medical food products are developed with the same rigour applied to licensed medicines, a quality benchmark no ordinary supplement can match.', 'award'),
             4 => array('Global Reach',   'With a regulatory footprint spanning multiple continents, we deliver consistent, trusted solutions wherever patients and clinicians need them.', 'globe'),
         );
     ?>
@@ -496,7 +496,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
         $styles     = vance_get_style_string('vance_about_platform');
 
         $plat_defaults = array(
-            1 => array('Clinical Content Hub', 'Peer-reviewed research and patient education curated by gastroenterologists and dietitians.', 'book',      home_url('/gastro-health-explained/')),
+            1 => array('Clinical Content Hub', 'Clinical research and patient education curated by gastroenterologists and dietitians.', 'book',      home_url('/gastro-health-explained/')),
             2 => array('VANCE-Ai',             'Specialised AI trained on clinical gastroenterology to answer your health questions safely.', 'sparkles', home_url('/ask-ai/')),
             3 => array('My Dashboard',         'Track health records, manage your Gastro tools, and connect with your care pathway.', 'dashboard',       home_url('/dashboard/')),
             4 => array('Health Calculators',   'Evidence-based clinical calculators for malnutrition screening, BMI, and disease scoring.', 'calculator',  home_url('/free-health-tools/')),

@@ -217,15 +217,29 @@ if ( is_category() ) {
 
             <div class="portal-grid">
                 <?php
+                // Grouped archives (Clinical Reviews / Gastro Living) show every
+                // post with pagination off — audit P5 measured one at 41,000px
+                // and 4.96 MB. Every card's thumbnail loaded eagerly via inline
+                // background-image, which has no native lazy-loading. The first
+                // row stays eager (it's on screen immediately); everything after
+                // ships as a data-bg attribute that assets/js/lazy-card-images.js
+                // swaps in via IntersectionObserver as it nears the viewport.
+                $vhh_card_index = 0;
                 while ( have_posts() ) :
                     the_post();
+                    $vhh_card_index++;
                     ?>
                     <?php
                         $vance_read_time = vance_get_read_time(get_the_ID());
                         $vance_view_count = vance_get_view_count(get_the_ID());
+                        $vhh_thumb_url = get_the_post_thumbnail_url();
                     ?>
                     <article id="post-<?php the_ID(); ?>" <?php post_class('news-card'); ?> data-vhh-post-id="<?php echo (int) get_the_ID(); ?>">
-                        <div class="card-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>'); background-color: #e2e8f0; position: relative;">
+                        <?php if ( $vhh_card_index <= 4 ) : ?>
+                        <div class="card-image" style="background-image: url('<?php echo esc_url( $vhh_thumb_url ); ?>'); background-color: #e2e8f0; position: relative;">
+                        <?php else : ?>
+                        <div class="card-image" data-bg="<?php echo esc_url( $vhh_thumb_url ); ?>" style="background-color: #e2e8f0; position: relative;">
+                        <?php endif; ?>
                             <?php echo vance_card_eyebrow_html( get_the_ID(), true ); ?>
                         </div>
 

@@ -33,6 +33,45 @@ function vance_enqueue_single_template_styles() {
 add_action( 'wp_enqueue_scripts', 'vance_enqueue_single_template_styles' );
 
 /**
+ * Preload the article hero image on singular posts.
+ *
+ * single.php paints the hero as a CSS background-image, so the browser cannot
+ * discover it until oped-template.css has downloaded and been parsed — the
+ * hero is almost always the LCP element on an article, so that delay is the
+ * page's LCP delay. Preloading here lets the browser start the fetch from the
+ * head, in parallel with CSS, without restructuring the hero markup itself.
+ *
+ * Mirrors the $hero_bg resolution in single.php exactly — has_post_thumbnail()
+ * first, then the per-post-type default — so the preloaded URL always matches
+ * what the hero actually renders.
+ */
+function vance_preload_single_hero_image() {
+    if ( ! is_singular( 'post' ) && ! is_singular( 'research' ) && ! is_singular( 'news' ) ) {
+        return;
+    }
+
+    if ( has_post_thumbnail() ) {
+        $hero_bg = get_the_post_thumbnail_url( get_the_ID(), 'full' );
+    } else {
+        $post_type = get_post_type();
+        if ( 'research' === $post_type ) {
+            $hero_bg = get_template_directory_uri() . '/assets/img/research_hero.png';
+        } elseif ( 'news' === $post_type ) {
+            $hero_bg = get_template_directory_uri() . '/assets/img/news_hero.png';
+        } else {
+            $hero_bg = get_template_directory_uri() . '/assets/img/opinion_hero.png';
+        }
+    }
+
+    if ( ! $hero_bg ) {
+        return;
+    }
+
+    printf( '<link rel="preload" as="image" href="%s" fetchpriority="high" />' . "\n", esc_url( $hero_bg ) );
+}
+add_action( 'wp_head', 'vance_preload_single_hero_image', 1 );
+
+/**
  * Register Digital Assets Meta Boxes
  */
 function vance_register_digital_assets_meta_boxes() {

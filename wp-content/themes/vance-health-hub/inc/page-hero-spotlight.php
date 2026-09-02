@@ -1311,8 +1311,8 @@ function vance_render_page_hero_spotlight( $page ) {
 			// same reason as the hero copy above: '' here empties the band on any
 			// site that has never edited the badges.
 			$slot_items = array_values( array_filter( array(
-				vance_get_theme_mod( 'vance_about_badge1_label', 'Pharma-Grade Quality' ),
-				vance_get_theme_mod( 'vance_about_badge2_label', 'Clinician Approved' ),
+				vance_get_theme_mod( 'vance_about_badge1_label', 'Rigorously Developed' ),
+				vance_get_theme_mod( 'vance_about_badge2_label', 'Citation-Backed Content' ),
 				vance_get_theme_mod( 'vance_about_badge3_label', 'Evidence-Based' ),
 			) ) );
 	}

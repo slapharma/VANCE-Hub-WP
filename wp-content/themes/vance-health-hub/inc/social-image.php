@@ -51,6 +51,8 @@ function vance_default_social_image() {
  * @return array
  */
 function vance_og_image_fallback( $meta ) {
+	vance_aioseo_facebook_tags_fired( true );
+
 	if ( ! is_array( $meta ) ) {
 		return $meta;
 	}
@@ -69,6 +71,53 @@ function vance_og_image_fallback( $meta ) {
 	return $meta;
 }
 add_filter( 'aioseo_facebook_tags', 'vance_og_image_fallback' );
+
+/**
+ * Track whether AIOSEO called its own Facebook-tags filter this request.
+ *
+ * Confirmed 2026-09 (audit T3): `aioseo_facebook_tags` never fires on category
+ * or other taxonomy archives, so `vance_og_image_fallback()` above never runs
+ * there and every archive ships with no og:image. This flag is how the
+ * `wp_head` fallback below knows AIOSEO left the page untouched, without
+ * needing to inspect output that has already been printed.
+ *
+ * @param bool|null $set Pass true to record that the filter fired.
+ * @return bool
+ */
+function vance_aioseo_facebook_tags_fired( $set = null ) {
+	static $fired = false;
+	if ( true === $set ) {
+		$fired = true;
+	}
+	return $fired;
+}
+
+/**
+ * Print a fallback og:image directly on archive pages AIOSEO's social filter
+ * never reaches. Self-healing: if a future AIOSEO release fires
+ * aioseo_facebook_tags on taxonomy archives, $fired flips true and this stays
+ * silent.
+ */
+function vance_og_image_archive_fallback() {
+	if ( ! is_category() && ! is_tax() ) {
+		return;
+	}
+
+	if ( vance_aioseo_facebook_tags_fired() ) {
+		return;
+	}
+
+	$image = vance_default_social_image();
+
+	printf(
+		'<meta property="og:image" content="%1$s" /><meta property="og:image:width" content="%2$d" /><meta property="og:image:height" content="%3$d" /><meta property="og:image:alt" content="%4$s" />' . "\n",
+		esc_url( $image['url'] ),
+		(int) $image['width'],
+		(int) $image['height'],
+		esc_attr( $image['alt'] )
+	);
+}
+add_action( 'wp_head', 'vance_og_image_archive_fallback', 30 );
 
 /**
  * og:site_name is the name of the site, not a description of it.

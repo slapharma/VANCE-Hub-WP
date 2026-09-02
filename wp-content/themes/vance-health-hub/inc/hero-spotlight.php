@@ -203,7 +203,20 @@ function vance_render_hero_spotlight() {
 			<?php /* Above the fold and the page's LCP candidate — eager, high priority,
 			         and with intrinsic dimensions so it reserves its box and cannot
 			         shift the headline as it decodes. */ ?>
+			<?php
+			/*
+			 * srcset only for the stock default photo (audit P4: 58.7 KB
+			 * wasted shipping the full 1400px asset to a 412px mobile slot).
+			 * An admin-uploaded image has no pre-generated width variants, so
+			 * it renders at its one native size same as before.
+			 */
+			$is_default_hero_photo = ( false !== strpos( $s['image'], '/assets/img/hero-couple.webp' ) );
+			?>
 			<img src="<?php echo esc_url( $s['image'] ); ?>"
+			     <?php if ( $is_default_hero_photo ) : ?>
+			     srcset="<?php echo esc_url( get_template_directory_uri() . '/assets/img/hero-couple-480w.webp' ); ?> 480w, <?php echo esc_url( get_template_directory_uri() . '/assets/img/hero-couple-768w.webp' ); ?> 768w, <?php echo esc_url( $s['image'] ); ?> 1400w"
+			     sizes="(max-width: 767px) 100vw, 1400px"
+			     <?php endif; ?>
 			     alt="<?php echo esc_attr( $s['image_alt'] ); ?>"
 			     width="1400" height="876"
 			     decoding="async" fetchpriority="high">
