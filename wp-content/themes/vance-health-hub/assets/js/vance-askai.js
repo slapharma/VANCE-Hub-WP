@@ -1660,21 +1660,27 @@
 		var regOverlay = document.getElementById('vance-reg-overlay');
 		if (regOverlay && regOverlay.classList.contains('is-open')) { return true; }
 		// The Complianz cookie banner renders server-side with .cmplz-hidden
-		// already on it and JS removes that class to reveal it — so an intro
-		// popup timed on a fixed delay could fire on top of it, eating every
-		// click on the banner underneath the same way the modals above do.
+		// already on it; JS reveals it by adding .cmplz-show (not simply
+		// removing .cmplz-hidden — live DOM inspection on 2026-09-02 found the
+		// dismiss transition actually goes cmplz-show -> cmplz-dismissed, and
+		// .cmplz-hidden is never touched again once the banner has been shown
+		// once). Checking for the ABSENCE of .cmplz-hidden as "banner open" was
+		// wrong: after a real accept/deny the banner still lacks .cmplz-hidden
+		// forever, which made this permanently true and blocked the intro
+		// popup for every visitor. Check for .cmplz-show instead.
 		var cookieBanner = document.querySelector('.cmplz-cookiebanner');
-		if (cookieBanner && !cookieBanner.classList.contains('cmplz-hidden')) { return true; }
+		if (cookieBanner && cookieBanner.classList.contains('cmplz-show')) { return true; }
 		return false;
 	}
 
 	/**
 	 * True once the reader has made a cookie choice (or there was never a
-	 * banner to answer — a returning visitor with consent already stored).
+	 * banner to answer — a returning visitor with consent already stored,
+	 * where Complianz never adds .cmplz-show at all).
 	 */
 	function consentIsResolved() {
 		var cookieBanner = document.querySelector('.cmplz-cookiebanner');
-		return !cookieBanner || cookieBanner.classList.contains('cmplz-hidden');
+		return !cookieBanner || !cookieBanner.classList.contains('cmplz-show');
 	}
 
 	function initArticleIntro() {
