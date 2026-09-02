@@ -1146,6 +1146,26 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_userguide_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_userguide_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
     // ============================================================
+    // PATIENT DOWNLOADS HUB (page-patient-downloads.php) — same three-mod
+    // hero pattern as User Guide / Tools & Resources above.
+    // ============================================================
+    $wp_customize->add_panel( "vance_patientdownloads_panel", array(
+        "title"    => __( "Page - Patient Downloads", "vance-health-hub" ),
+        "priority" => 48,
+    ) );
+    $wp_customize->add_section( "vance_patientdownloads_hero", array( "title" => "Hero Section", "panel" => "vance_patientdownloads_panel" ) );
+    $wp_customize->add_setting( "vance_patientdownloads_hero_tag",   array( "default" => "Patient Downloads", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_patientdownloads_hero_tag",   array( "label" => "Tag Label", "section" => "vance_patientdownloads_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_patientdownloads_hero_title", array( "default" => 'Printable guides for your <span class="highlight">next appointment</span>', "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_patientdownloads_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_patientdownloads_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_patientdownloads_hero_desc",  array( "default" => "Free, evidence-backed PDF handouts you can save to your phone or print — built for the moments a screen isn't the easiest way to have the conversation.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_patientdownloads_hero_desc",  array( "label" => "Description", "section" => "vance_patientdownloads_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_patientdownloads_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_patientdownloads_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_patientdownloads_hero" ) ) );
+    $wp_customize->add_setting( "vance_patientdownloads_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_patientdownloads_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_patientdownloads_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+
+    // ============================================================
     // KNOWLEDGEBASE LOBBY (page-knowledgebase.php)
     // The block buttons themselves are NOT edited here — they mirror the
     // children of the KNOWLEDGEBASE item in Appearance -> Menus, so the
