@@ -149,6 +149,10 @@ function vance_article_conditions( $post_id ) {
 		}
 	}
 
+	// Title or tag named it outright — the confident tier, before the fuzzy
+	// body-dominance fallback below runs. Cached for vance_article_conditions_confident().
+	vance_article_conditions_confident_cache( $post_id, array_keys( $picks ) );
+
 	// Nothing named it outright — fall back to a clearly dominant subject.
 	if ( ! $picks && $body_hits ) {
 		arsort( $body_hits );
@@ -177,6 +181,52 @@ function vance_article_conditions( $post_id ) {
 	$memo[ $post_id ] = array_keys( $picks );
 
 	return $memo[ $post_id ];
+}
+
+/**
+ * Shared cache for the "confident" (title/tag-named) tier of condition
+ * matches, set by vance_article_conditions() before it runs its fuzzy
+ * body-dominance fallback. A plain function-static can't be shared between
+ * two functions, hence this small accessor.
+ *
+ * @param int        $post_id Post ID.
+ * @param array|null $set     Pass an array to store it; omit to read.
+ * @return array|null
+ */
+function vance_article_conditions_confident_cache( $post_id, $set = null ) {
+	static $cache = array();
+
+	if ( null !== $set ) {
+		$cache[ $post_id ] = $set;
+	}
+
+	return isset( $cache[ $post_id ] ) ? $cache[ $post_id ] : null;
+}
+
+/**
+ * The conditions an article is confidently about — named in the title or by
+ * a tag, not merely inferred from which condition is mentioned most in the
+ * body.
+ *
+ * Added 2026-09-02 after QA found the fuzzy body-dominance fallback in
+ * vance_article_conditions() misfiring on general wellness posts that
+ * reference a condition several times as background context without being
+ * about it — e.g. a "morning routines for gut health" piece that mentions
+ * IBD 8 times in passing cleared the fallback's "5+ mentions, 2x the
+ * runner-up" bar and got tagged as an IBD article. That single small pill
+ * link was a low-key existing risk; vance_render_related_articles() below
+ * turns the same signal into a whole "Related articles" box recommending 3
+ * other posts, which makes a wrong assignment far more visible and worth
+ * being conservative about. The pill link and the `about` schema property
+ * still use the looser vance_article_conditions() unchanged.
+ *
+ * @param int $post_id Post ID.
+ * @return string[] Condition page slugs, possibly empty.
+ */
+function vance_article_conditions_confident( $post_id ) {
+	vance_article_conditions( $post_id ); // Populates the confident cache as a side effect.
+	$confident = vance_article_conditions_confident_cache( (int) $post_id );
+	return $confident ?? array();
 }
 
 /**
@@ -388,7 +438,11 @@ function vance_condition_article_map() {
 	);
 
 	foreach ( $ids as $id ) {
-		foreach ( vance_article_conditions( $id ) as $slug ) {
+		// Confident tier only (title/tag-named) — see
+		// vance_article_conditions_confident()'s docblock for why: a sibling
+		// suggested here should genuinely be about the shared condition, not
+		// merely mention it in passing.
+		foreach ( vance_article_conditions_confident( $id ) as $slug ) {
 			$map[ $slug ][] = $id;
 		}
 	}
@@ -427,7 +481,7 @@ function vance_render_related_articles() {
 		return;
 	}
 
-	$slugs = vance_article_conditions( get_the_ID() );
+	$slugs = vance_article_conditions_confident( get_the_ID() );
 	if ( ! $slugs ) {
 		return;
 	}
