@@ -3657,11 +3657,11 @@ body.home .hero {
    Both columns already get their own border from .vance-glass (applied to
    .vance-cat-promo__inner and to .vance-promo-tool-card below) — that is
    what makes them read as two separate containers rather than one card with
-   a divider. The 75px is spacing between them, not inside either one. */
+   a divider. The 25px is spacing between them, not inside either one. */
 .vance-promo-columns {
     display: grid;
     grid-template-columns: 67fr 33fr;
-    gap: 75px;
+    gap: 25px;
     align-items: stretch;
 }
 .vance-promo-columns__main { min-width: 0; }
@@ -3694,9 +3694,9 @@ body.home .hero {
 .vance-promo-tool-card__cta { margin-top: 8px; }
 
 @media (max-width: 767.98px) {
-    /* 75px only makes sense side-by-side — stacked, it would be a wall of
-       empty space between two full-width cards, so it collapses with the
-       column change rather than surviving as top/bottom margin. */
+    /* The gap is horizontal spacing meant for side-by-side columns — stacked,
+       it collapses with the column change rather than surviving as vertical
+       margin between two full-width cards. */
     .vance-promo-columns { grid-template-columns: 1fr; gap: 24px; }
     .vance-promo-tool-card { padding: 28px 24px; }
 }
