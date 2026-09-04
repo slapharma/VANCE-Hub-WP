@@ -169,6 +169,25 @@ $vance_dt_status_labels = array(
 			?>
 		</p>
 
+		<div class="vance-discount-folder-actions">
+			<button type="button" class="vance-discount-apply-btn" id="vance-discount-view-matches" aria-expanded="false" aria-controls="vance-discount-folder-matches">
+				<?php esc_html_e( 'View matching discounts', 'vance-health-hub' ); ?>
+				(<span id="vance-discount-match-count"><?php echo esc_html( count( $vance_dt_match['likely'] ) ); ?></span>)
+			</button>
+		</div>
+
+		<div class="vance-discount-folder-matches" id="vance-discount-folder-matches" hidden>
+			<?php if ( $vance_dt_match['likely'] ) : ?>
+				<div class="vance-discount-grid">
+					<?php foreach ( $vance_dt_match['likely'] as $vance_dt_match_row ) : ?>
+						<?php echo vance_render_discount_card( $vance_dt_match_row ); // phpcs:ignore WordPress.Security.EscapeOutput — vance_render_discount_card() escapes on output. ?>
+					<?php endforeach; ?>
+				</div>
+			<?php else : ?>
+				<p class="vance-discount-folder-matches-empty"><?php esc_html_e( 'Tick a few boxes below and matching schemes will show up here.', 'vance-health-hub' ); ?></p>
+			<?php endif; ?>
+		</div>
+
 		<?php foreach ( $vance_dt_groups as $vance_dt_group ) : ?>
 			<?php if ( empty( $vance_dt_group['signals'] ) ) { continue; } ?>
 			<fieldset class="vance-discount-folder-group">

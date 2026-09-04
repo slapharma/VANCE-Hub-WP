@@ -123,6 +123,22 @@ function vance_dashboard_save_access_folder() {
 
 	$match = function_exists( 'vance_discount_match' ) ? vance_discount_match( get_current_user_id() ) : array( 'likely' => array() );
 
-	wp_send_json_success( array( 'likely_count' => count( $match['likely'] ) ) );
+	// Full card markup, not just the count, so the folder's "View matching
+	// discounts" panel (template-parts/dashboard/discounts.php) can refresh
+	// in place after every toggle rather than only reflecting whatever
+	// matched at the last full page load.
+	$cards = '';
+	if ( function_exists( 'vance_render_discount_card' ) ) {
+		foreach ( $match['likely'] as $row ) {
+			$cards .= vance_render_discount_card( $row );
+		}
+	}
+
+	wp_send_json_success(
+		array(
+			'likely_count' => count( $match['likely'] ),
+			'likely_cards' => $cards,
+		)
+	);
 }
 add_action( 'wp_ajax_vance_save_access_folder', 'vance_dashboard_save_access_folder' );

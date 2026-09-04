@@ -150,6 +150,11 @@
 
 .vance-discount-folder-status { font-size: 13px; color: #10B981; margin: 14px 0 0; min-height: 18px; }
 
+.vance-discount-folder-actions { margin: 0 0 20px; }
+.vance-discount-folder-matches { margin: 0 0 24px; padding: 16px; background: #F8FAFC; border-radius: var(--radius-surface); }
+.vance-discount-folder-matches-empty { font-size: 13px; color: #64748b; margin: 0; }
+.vance-discount-folder-matches .vance-discount-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
 /* ---- Empty state --------------------------------------------------------- */
 
 .vance-discount-empty { display: none; text-align: center; padding: 60px 20px; color: #475569; }

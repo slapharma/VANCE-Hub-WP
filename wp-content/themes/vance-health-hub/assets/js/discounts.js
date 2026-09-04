@@ -118,6 +118,21 @@
 	// The whole folder is sent on every toggle (inc/discount-dashboard.php's
 	// vance_save_access_folder expects the full current state, not a diff —
 	// see that file's header for why), so one function drives every trigger.
+	// The matches panel is prone to going stale the moment a member ticks
+	// another box (it was rendered from whatever the folder held at page
+	// load), so every save response carries fresh card markup and this
+	// swaps it in — updated whether the panel is open or not, so it's
+	// current the next time someone opens it.
+	function vanceRenderFolderMatches($root, cardsHtml) {
+		var $panel = $root.find('#vance-discount-folder-matches');
+		if (!$panel.length) { return; }
+		if (cardsHtml) {
+			$panel.html('<div class="vance-discount-grid">' + cardsHtml + '</div>');
+		} else {
+			$panel.html('<p class="vance-discount-folder-matches-empty">Tick a few boxes below and matching schemes will show up here.</p>');
+		}
+	}
+
 	function vanceSaveDiscountFolder($root) {
 		var state = vanceDiscountFolderState($root);
 		var $status = $('#vance-discount-folder-status');
@@ -128,13 +143,28 @@
 			signals: state.signals,
 			region: state.region
 		}).done(function (res) {
-			$status.text((res && res.success)
-				? 'Saved, likely eligible for ' + res.data.likely_count + ' schemes.'
-				: 'Could not save, try again.');
+			if (res && res.success) {
+				$status.text('Saved, likely eligible for ' + res.data.likely_count + ' schemes.');
+				$root.find('#vance-discount-match-count').text(res.data.likely_count);
+				vanceRenderFolderMatches($root, res.data.likely_cards);
+			} else {
+				$status.text('Could not save, try again.');
+			}
 		}).fail(function () {
 			$status.text('Could not save, try again.');
 		});
 	}
+
+	$(document).on('click', '#vance-discount-view-matches', function () {
+		var $btn = $(this);
+		var $panel = $btn.closest('.vance-discount-dashboard').find('#vance-discount-folder-matches');
+		var open = $panel.prop('hidden');
+		$panel.prop('hidden', !open);
+		$btn.attr('aria-expanded', open ? 'true' : 'false');
+		if (open) {
+			$panel.get(0).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		}
+	});
 
 	// Ticked-count line updates instantly from the DOM — no need to wait on
 	// the save round trip just to tell a member how many boxes they've ticked.
