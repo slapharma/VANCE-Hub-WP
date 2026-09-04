@@ -120,8 +120,8 @@ $vpd_downloads = array(
 		'title' => 'The IBD Trigger Tracker',
 		'tag'   => 'Self-Monitoring',
 		'desc'  => 'A structured way to find out what could be making your symptoms worse.',
-		'file'  => '',
-		'pages' => 0,
+		'file'  => 'Vance-Health-Hub-IBD-Trigger-Tracker.pdf',
+		'pages' => 2,
 	),
 	array(
 		'slug'  => 'ibd-fatigue',
