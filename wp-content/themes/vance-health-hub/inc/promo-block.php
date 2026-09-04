@@ -89,36 +89,30 @@ function vance_promo_tool_urls() {
  * Registry for the promo block's optional featured-tool sidebar.
  *
  * Same three slugs as vance_promo_tool_choices() (minus the custom-URL
- * option — the sidebar always promotes a real tool). Name/description/icon
- * are copied from the tools-resources page (page-tools-resources.php $tools)
- * so the same tool looks like the same tool everywhere on the site, not a
- * second, slightly different card.
+ * option — the sidebar always promotes a real tool). Name/description are
+ * copied from the tools-resources page (page-tools-resources.php $tools) so
+ * the same tool reads the same way everywhere on the site.
+ *
+ * No icon and no "Free Tool" eyebrow here on purpose — removed 2026-09-04 in
+ * favour of a plain card the editor colours themselves via the sidebar
+ * background colour control ($key('side_tool_bg_color')).
  */
 function vance_promo_free_tools() {
 	return array(
 		'healthcare-quiz'         => array(
-			'name'   => __( 'Gastro Health Survey', 'vance-health-hub' ),
-			'tag'    => __( 'Free Tool', 'vance-health-hub' ),
-			'desc'   => __( 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors.', 'vance-health-hub' ),
-			'cta'    => __( 'Take the survey', 'vance-health-hub' ),
-			'colors' => array( '#78bfbf', '#aedbdb', '#008080' ),
-			'icon'   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>',
+			'name' => __( 'Gastro Health Survey', 'vance-health-hub' ),
+			'desc' => __( 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors.', 'vance-health-hub' ),
+			'cta'  => __( 'Take the survey', 'vance-health-hub' ),
 		),
 		'ibd-recipes'             => array(
-			'name'   => __( 'Recipes & Meal Planner', 'vance-health-hub' ),
-			'tag'    => __( 'Free Tool', 'vance-health-hub' ),
-			'desc'   => __( 'Browse gut-friendly recipes with full nutrition data and build a weekly meal plan.', 'vance-health-hub' ),
-			'cta'    => __( 'Browse recipes', 'vance-health-hub' ),
-			'colors' => array( '#def4f4', '#aedbdb', '#008080' ),
-			'icon'   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />',
+			'name' => __( 'Recipes & Meal Planner', 'vance-health-hub' ),
+			'desc' => __( 'Browse gut-friendly recipes with full nutrition data and build a weekly meal plan.', 'vance-health-hub' ),
+			'cta'  => __( 'Browse recipes', 'vance-health-hub' ),
 		),
 		'malnutrition-calculator' => array(
-			'name'   => __( 'Malnutrition Screener', 'vance-health-hub' ),
-			'tag'    => __( 'Free Tool', 'vance-health-hub' ),
-			'desc'   => __( 'An 11-step malnutrition risk screener for IBD patients, combining MUST, IBD-NST and GLIM criteria.', 'vance-health-hub' ),
-			'cta'    => __( 'Check your score', 'vance-health-hub' ),
-			'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
-			'icon'   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
+			'name' => __( 'Malnutrition Screener', 'vance-health-hub' ),
+			'desc' => __( 'An 11-step malnutrition risk screener for IBD patients, combining MUST, IBD-NST and GLIM criteria.', 'vance-health-hub' ),
+			'cta'  => __( 'Check your score', 'vance-health-hub' ),
 		),
 	);
 }
@@ -260,6 +254,7 @@ function vance_promo_block_vals( $key, array $defaults = array() ) {
 		// un-configured block keeps rendering as a single column.
 		'side_tool_show' => (bool) vance_get_theme_mod( $key( 'side_tool_show' ), false ),
 		'side_tool'       => (string) vance_get_theme_mod( $key( 'side_tool' ), 'healthcare-quiz' ),
+		'side_tool_bg'    => (string) vance_get_theme_mod( $key( 'side_tool_bg_color' ), '' ),
 		// Styling. Blank/off for the category instances, which never had any of
 		// these, so they emit exactly the markup they emitted before the merge.
 		'band_bg'      => trim( (string) vance_get_theme_mod( $key( 'bg_color' ), $d( 'bg_color', '' ) ) ),
@@ -389,11 +384,7 @@ function vance_render_promo_block( array $vals ) {
                 </div>
             </div>
             <?php if ( $sidebar ) : ?>
-                <aside class="vance-promo-tool-card vance-glass vance-glass--interactive vance-promo-columns__aside" aria-label="<?php echo esc_attr( sprintf( __( 'Featured free tool: %s', 'vance-health-hub' ), $sidebar['name'] ) ); ?>">
-                    <div class="vance-promo-tool-card__icon" style="background: linear-gradient(135deg, <?php echo esc_attr( $sidebar['colors'][0] ); ?>, <?php echo esc_attr( $sidebar['colors'][1] ); ?>);">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="<?php echo esc_attr( $sidebar['colors'][2] ); ?>"><?php echo $sidebar['icon']; // phpcs:ignore ?></svg>
-                    </div>
-                    <span class="vance-promo-tool-card__eyebrow"><?php echo esc_html( $sidebar['tag'] ); ?></span>
+                <aside class="vance-promo-tool-card vance-glass vance-glass--interactive vance-promo-columns__aside" aria-label="<?php echo esc_attr( sprintf( __( 'Featured free tool: %s', 'vance-health-hub' ), $sidebar['name'] ) ); ?>"<?php echo $vals['side_tool_bg'] ? ' style="background-color:' . esc_attr( $vals['side_tool_bg'] ) . ';"' : ''; ?>>
                     <h3 class="vance-promo-tool-card__title"><?php echo esc_html( $sidebar['name'] ); ?></h3>
                     <p class="vance-promo-tool-card__desc"><?php echo esc_html( $sidebar['desc'] ); ?></p>
                     <a class="vance-btn-inverted vance-promo-tool-card__cta" href="<?php echo esc_url( $sidebar['url'] ); ?>" data-vance-tool-open="<?php echo esc_attr( $sidebar['slug'] ); ?>"><?php echo esc_html( $sidebar['cta'] ); ?></a>

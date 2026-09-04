@@ -533,6 +533,13 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
         'choices'     => vance_promo_free_tool_choices(),
     ) );
 
+    $wp_customize->add_setting( $key( 'side_tool_bg_color' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
+    $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $key( 'side_tool_bg_color' ), array(
+        'label'       => $p . __( 'Sidebar: background colour', 'vance-health-hub' ),
+        'description' => __( 'Fills the sidebar card. Blank keeps the frosted glass look that matches the card on the left.', 'vance-health-hub' ),
+        'section'     => $section_id,
+    ) ) );
+
     // -- Styling ----------------------------------------------------------
     // All blank/off by default, which is what keeps a category promo -- which
     // never had any of these -- rendering exactly as it did before the merge.
