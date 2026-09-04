@@ -79,7 +79,7 @@ $vance_dt_status_labels = array(
 					?>
 					<div class="vance-discount-card vance-discount-card--compact">
 						<div class="vance-discount-card__top">
-							<?php echo vance_discount_tier_badge( $vance_dt_row['tier'] ); ?>
+							<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $vance_dt_row ) ); ?>
 							<select class="vance-discount-status-select" data-post-id="<?php echo esc_attr( $vance_dt_row['id'] ); ?>">
 								<?php foreach ( $vance_dt_status_labels as $slug => $label ) : ?>
 									<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $vance_dt_status, $slug ); ?>><?php echo esc_html( $label ); ?></option>

@@ -57,6 +57,31 @@ function vance_discount_tier_badge( $tier ) {
 }
 
 /**
+ * A scheme's tier, downgraded from 1 to 2 when frameable is false — the
+ * fallback plan §10 step 6 asks for. A cross-origin iframe's own
+ * X-Frame-Options/frame-ancestors block is not observable from the parent
+ * page at all (same-origin policy hides it, and X-Frame-Options fires no JS
+ * event whatsoever), so there is no reliable *client-side* runtime detection
+ * to fall back on — `frameable` is kept fresh by the periodic
+ * `wp vance discounts check` re-probe (inc/discount-check.php) instead, and a
+ * tier-1 scheme whose provider adds a framing header degrades to the working
+ * tier-2 popup automatically on the next check run, no code change needed.
+ *
+ * Both the tier badge and the Apply button read this rather than the raw
+ * `tier` meta, so the two can never show a scheme as "Apply on the hub" while
+ * behaving like a popup underneath — confirmed live 2026-09-04: before this
+ * helper existed, flipping one scheme's frameable to false correctly changed
+ * its button but left its badge still reading "Apply on the hub".
+ *
+ * @param array $row One row from vance_discount_directory_data().
+ * @return int 1, 2 or 3.
+ */
+function vance_discount_effective_tier( $row ) {
+	$tier = (int) $row['tier'];
+	return ( 1 === $tier && empty( $row['frameable'] ) ) ? 2 : $tier;
+}
+
+/**
  * Resolve one scheme's Apply button: label, href, and any data-* the click
  * behaviour needs. Copies plan §7's per-tier table; the tier-3 labels are the
  * general case per apply_type rather than the bespoke per-scheme copy
@@ -68,21 +93,11 @@ function vance_discount_tier_badge( $tier ) {
  * @return array{label:string,href:string,attrs:string}
  */
 function vance_discount_apply_action( $row ) {
-	$tier    = (int) $row['tier'];
-	$apply   = $row['apply_url'];
+	$tier     = vance_discount_effective_tier( $row );
+	$apply    = $row['apply_url'];
 	$fallback = $row['official_url'];
 
-	// Tier 1 also requires frameable=true, kept fresh by the periodic
-	// `wp vance discounts check` re-probe (inc/discount-check.php) — this is
-	// the actual fallback plan §10 step 6 asks for. A cross-origin iframe's
-	// own X-Frame-Options/frame-ancestors block is not observable from the
-	// parent page at all (same-origin policy hides it, and X-Frame-Options
-	// fires no JS event whatsoever), so there is no reliable *client-side*
-	// runtime detection to fall back on — the server-side recheck is the one
-	// that actually works, and a tier-1 scheme whose provider adds a framing
-	// header degrades to the tier-2 popup automatically on the next check run
-	// without any code change here.
-	if ( 1 === $tier && $apply && ! empty( $row['frameable'] ) ) {
+	if ( 1 === $tier && $apply ) {
 		return array(
 			'label' => __( 'Apply on the hub', 'vance-health-hub' ),
 			'href'  => $apply,
@@ -90,8 +105,6 @@ function vance_discount_apply_action( $row ) {
 		);
 	}
 
-	// Reached by tier 2, and by tier 1 whose frameable check above was false
-	// (the fallback) — both get the identical popup treatment.
 	if ( in_array( $tier, array( 1, 2 ), true ) && $apply ) {
 		/* translators: %s: provider name */
 		$label = $row['provider']
@@ -229,7 +242,7 @@ function vance_render_discount_card( $post_id_or_row ) {
 		data-region="<?php echo esc_attr( implode( ' ', $row['regions'] ) ); ?>"
 		data-search="<?php echo esc_attr( strtolower( $row['title'] . ' ' . $row['provider'] ) ); ?>">
 		<div class="vance-discount-card__top">
-			<?php echo vance_discount_tier_badge( $row['tier'] ); ?>
+			<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $row ) ); ?>
 			<?php if ( $region_note ) : ?>
 				<span class="vance-discount-card-region"><?php echo esc_html( $region_note ); ?></span>
 			<?php endif; ?>

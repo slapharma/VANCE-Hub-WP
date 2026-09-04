@@ -45,7 +45,7 @@ while ( have_posts() ) :
 				<p style="color:rgba(255,255,255,0.85);font-size:15px;font-weight:600;margin:0 0 18px;"><?php echo esc_html( $row['provider'] ); ?></p>
 			<?php endif; ?>
 			<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
-				<?php echo vance_discount_tier_badge( $row['tier'] ); ?>
+				<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $row ) ); ?>
 				<?php if ( $row['region_names'] && ! in_array( 'UK', $row['region_names'], true ) ) : ?>
 					<span style="color:rgba(255,255,255,0.8);font-size:13px;"><?php echo esc_html( implode( ', ', $row['region_names'] ) ); ?> <?php esc_html_e( 'only', 'vance-health-hub' ); ?></span>
 				<?php endif; ?>
