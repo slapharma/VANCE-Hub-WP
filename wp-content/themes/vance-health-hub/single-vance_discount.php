@@ -42,13 +42,19 @@ while ( have_posts() ) :
 	<?php
 	/*
 	 * Spotlight-styled hero, sized like a regular article's (single.php's
-	 * `.oped-hero`, height:300px) rather than the full page-hero-spotlight
-	 * treatment (photo + card + facts band, ~450-500px) — this page has
-	 * borrowing the mint band + eyebrow pill + teal headline at article
-	 * height keeps a single scheme page reading as content, not as a
-	 * landing page. A per-scheme image (vance_discount_hero_image()) sits
-	 * in a small fixed box beside the text, since most of these are
-	 * provider logos rather than photography.
+	 * `.oped-hero`, 300px tall) rather than the full page-hero-spotlight
+	 * treatment (photo + card + facts band, ~450-500px) — borrowing the
+	 * mint band + eyebrow pill + teal headline at article height keeps a
+	 * single scheme page reading as content, not as a landing page. A
+	 * per-scheme image (vance_discount_hero_image()) sits in a small fixed
+	 * box beside the text, since most of these are provider logos rather
+	 * than photography.
+	 *
+	 * min-height, not height: below ~600-650px the text/logo-box row and the
+	 * logo box itself both wrap (flex-wrap), needing more than 300px — a
+	 * fixed height clipped the wrapped content instead of growing for it
+	 * (found live 2026-09-04 at 375px: the title and the logo box were both
+	 * cut off). Unaffected above that width, where content already fits.
 	 *
 	 * Uses the real .vhh-hero-spotlight__eyebrow/__title classes from
 	 * assets/css/main.css rather than reinventing the eyebrow pill and the
@@ -58,7 +64,7 @@ while ( have_posts() ) :
 	 * this file's existing convention, not main.css's shared block.
 	 */
 	?>
-	<section style="height:300px;min-height:0;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);">
+	<section style="min-height:300px;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);">
 		<?php if ( $hero_image ) : ?>
 			<?php // Decorative teal dot-field (vance_discount_hero_dots(), inc/discount-frontend.php)
 			// along the hero's own right edge — 20% of the SECTION's full width, not
