@@ -112,8 +112,8 @@ $vpd_downloads = array(
 		'title' => 'The 7-Day Gut-Friendly Meal Plan',
 		'tag'   => 'Meal Planning',
 		'desc'  => 'A full week of gut-friendly meals for Crohn’s and colitis, ready to follow or adapt.',
-		'file'  => '',
-		'pages' => 0,
+		'file'  => 'Vance-Health-Hub-7-Day-Meal-Plan.pdf',
+		'pages' => 3,
 	),
 	array(
 		'slug'  => 'ibd-trigger-tracker',
