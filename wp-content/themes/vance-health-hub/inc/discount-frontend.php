@@ -310,12 +310,15 @@ function vance_render_discount_card( $post_id_or_row ) {
 		data-cat="<?php echo esc_attr( $row['category'] ? $row['category']['slug'] : '' ); ?>"
 		data-region="<?php echo esc_attr( implode( ' ', $row['regions'] ) ); ?>"
 		data-search="<?php echo esc_attr( strtolower( $row['title'] . ' ' . $row['provider'] ) ); ?>">
-		<div class="vance-discount-card__top">
-			<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $row ) ); ?>
-			<?php if ( $region_note ) : ?>
+		<?php // Tier badge deliberately not shown here (removed 2026-09-04 —
+		// lobby cards keep it off; the single page and the dashboard's saved
+		// list still show it via their own vance_discount_tier_badge() calls,
+		// unaffected since neither goes through this function). ?>
+		<?php if ( $region_note ) : ?>
+			<div class="vance-discount-card__top vance-discount-card__top--region-only">
 				<span class="vance-discount-card-region"><?php echo esc_html( $region_note ); ?></span>
-			<?php endif; ?>
-		</div>
+			</div>
+		<?php endif; ?>
 		<?php if ( $row['provider'] ) : ?>
 			<span class="vance-discount-card__provider"><?php echo esc_html( $row['provider'] ); ?></span>
 		<?php endif; ?>
