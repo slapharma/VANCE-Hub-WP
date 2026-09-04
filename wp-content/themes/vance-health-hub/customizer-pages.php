@@ -1137,7 +1137,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_userguide_hero_tag",   array( "label" => "Tag Label", "section" => "vance_userguide_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_userguide_hero_title", array( "default" => 'Get the most out of <span class="highlight">Vance Medical Hub</span>', "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_userguide_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_userguide_hero", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_userguide_hero_desc",  array( "default" => "Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_userguide_hero_desc",  array( "default" => "Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey: evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_userguide_hero_desc",  array( "label" => "Description", "section" => "vance_userguide_hero", "type" => "textarea" ) );
     // Same bg image + overlay pair as the Tools & Resources hero (vance_tools_hero_bg/overlay).
     $wp_customize->add_setting( "vance_userguide_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
@@ -1158,7 +1158,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_patientdownloads_hero_tag",   array( "label" => "Tag Label", "section" => "vance_patientdownloads_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_patientdownloads_hero_title", array( "default" => 'Printable guides for your <span class="highlight">next appointment</span>', "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_patientdownloads_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_patientdownloads_hero", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_patientdownloads_hero_desc",  array( "default" => "Free, evidence-backed PDF handouts you can save to your phone or print — built for the moments a screen isn't the easiest way to have the conversation.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_patientdownloads_hero_desc",  array( "default" => "Free, evidence-backed PDF handouts you can save to your phone or print, built for the moments a screen isn't the easiest way to have the conversation.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_patientdownloads_hero_desc",  array( "label" => "Description", "section" => "vance_patientdownloads_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_patientdownloads_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_patientdownloads_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_patientdownloads_hero" ) ) );
@@ -1181,7 +1181,7 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_discounts_hero_tag",   array( "label" => "Tag Label", "section" => "vance_discounts_hero", "type" => "text" ) );
     $wp_customize->add_setting( "vance_discounts_hero_title", array( "default" => 'Discounts and freebies for <span class="highlight">life with IBD</span>', "sanitize_callback" => "wp_kses_post" ) );
     $wp_customize->add_control( "vance_discounts_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_discounts_hero", "type" => "textarea" ) );
-    $wp_customize->add_setting( "vance_discounts_hero_desc",  array( "default" => "Every UK scheme worth knowing about — toilet access, days out, travel, tax and benefits — checked against the provider's own page, not copied from a leaflet.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_setting( "vance_discounts_hero_desc",  array( "default" => "Every UK scheme worth knowing about (toilet access, days out, travel, tax and benefits), checked against the provider's own page, not copied from a leaflet.", "sanitize_callback" => "sanitize_textarea_field" ) );
     $wp_customize->add_control( "vance_discounts_hero_desc",  array( "label" => "Description", "section" => "vance_discounts_hero", "type" => "textarea" ) );
     $wp_customize->add_setting( "vance_discounts_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_discounts_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_discounts_hero" ) ) );
@@ -1200,7 +1200,7 @@ function vance_pages_customize_register( $wp_customize ) {
     ) );
 
     if ( post_type_exists( 'vance_discount' ) ) {
-        $vance_discount_choices = array( 0 => __( '— Let the page decide —', 'vance-health-hub' ) );
+        $vance_discount_choices = array( 0 => __( 'Let the page decide', 'vance-health-hub' ) );
         foreach ( get_posts( array( 'post_type' => 'vance_discount', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) ) as $vd_post ) {
             $vance_discount_choices[ $vd_post->ID ] = get_the_title( $vd_post );
         }

@@ -54,8 +54,8 @@ if ( isset($_GET['print_note']) && is_user_logged_in() ) {
                 .header { border-bottom: 2px solid #008080; padding-bottom: 20px; margin-bottom: 40px; }
                 .logo-area { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
                 .logo { font-size: 24px; font-weight: 800; color: #0A1929; }
-                .badge { background: #008080; color: white; padding: 4px 12px; border-radius: var(--radius-control, 6px); font-size: 12px; font-weight: 700; }
-                .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #64748B; background: #F8FAFC; padding: 15px; border-radius: var(--radius-surface, 14px); }
+                .badge { background: #008080; color: white; padding: 4px 12px; border-radius: var(--radius-control, 10px); font-size: 12px; font-weight: 700; }
+                .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #64748B; background: #F8FAFC; padding: 15px; border-radius: var(--radius-surface, 24px); }
                 h1 { font-size: 28px; margin: 0 0 20px 0; color: #0F172A; }
                 .content { font-size: 14px; white-space: pre-wrap; }
             </style>
@@ -174,7 +174,7 @@ get_header();
 .dash-nav { padding: 20px 12px; flex: 1; }
 .nav-section { margin-bottom: 24px; }
 .nav-label { font-size: 11px; font-weight: <?php echo $nav_label_weight; ?>; color: <?php echo $theme_sidebar_text; ?>; text-transform: uppercase; margin: 0 0 8px 12px; letter-spacing: 0.5px; opacity: 0.7; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: <?php echo $theme_sidebar_text; ?>; text-decoration: none; border-radius: var(--radius-control, 6px); font-size: 14px; font-weight: <?php echo $nav_item_weight; ?>; transition: all 0.2s; margin-bottom: 2px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: <?php echo $theme_sidebar_text; ?>; text-decoration: none; border-radius: var(--radius-control, 10px); font-size: 14px; font-weight: <?php echo $nav_item_weight; ?>; transition: all 0.2s; margin-bottom: 2px; }
 .nav-item:hover { background: <?php echo $nav_hover_bg; ?>; color: var(--dash-primary); }
 .nav-item.active { background: <?php echo $nav_active_bg; ?>; color: <?php echo $nav_active_color; ?>; }
 
@@ -202,7 +202,7 @@ get_header();
     .dash-crumbs .dash-crumb-root--link { display: none; }
 }
 .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-.profile-avatar { width: 32px; height: 32px; border-radius: var(--radius-control, 6px); object-fit: cover; border: 1px solid #E2E8F0; }
+.profile-avatar { width: 32px; height: 32px; border-radius: var(--radius-control, 10px); object-fit: cover; border: 1px solid #E2E8F0; }
 
 /* My Profile: platform-icon row under the avatar photo.
    2026-08-11: previously a negative top margin (-8px) pulled this row up
@@ -268,7 +268,7 @@ get_header();
 .vance-input-icon-wrap input,
 .vance-input-icon-wrap textarea {
     width: 100%; box-sizing: border-box; font-family: inherit;
-    padding: 10px 10px 10px 36px; border: 1px solid #E2E8F0; border-radius: var(--radius-field, 10px);
+    padding: 10px 10px 10px 36px; border: 1px solid #E2E8F0; border-radius: var(--radius-field, 16px);
 }
 .vance-input-icon-wrap textarea { resize: none; }
 .vance-field-save-row .vance-input-icon-wrap input {
@@ -326,11 +326,11 @@ get_header();
 .card-wide { grid-column: 1 / -1; }
 @media (min-width: 1100px) { .card-wide { grid-column: span 2; } }
 
-.dash-card { background: white; border-radius: var(--radius-surface, 14px); padding: 24px; border: 1px solid #E2E8F0; transition: all 0.2s; display: flex; flex-direction: column; }
+.dash-card { background: white; border-radius: var(--radius-surface, 24px); padding: 24px; border: 1px solid #E2E8F0; transition: all 0.2s; display: flex; flex-direction: column; }
 .dash-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .card-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px; margin: 0; }
-.card-icon { width: 36px; height: 36px; background: #F8FAFC; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--dash-primary); }
+.card-icon { width: 36px; height: 36px; background: #F8FAFC; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--dash-primary); }
 .card-link { font-size: 13px; font-weight: 600; color: #008080; text-decoration: none; cursor: pointer; border: none; background: none; }
 
 /* List Items */
@@ -349,7 +349,7 @@ get_header();
 .rl-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .rl-btn {
     font-family: inherit; font-size: 13px; font-weight: 500; line-height: 1.2;
-    padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: var(--radius-control, 6px);
+    padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: var(--radius-control, 10px);
     background: #FFFFFF; color: #475569; cursor: pointer; text-decoration: none;
     display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
 }
@@ -401,7 +401,7 @@ get_header();
 .vn-pick__item span { display: block; font-size: 11px; color: #94A3B8; margin-top: 2px; }
 .vn-pick__empty { padding: 14px; font-size: 13px; color: #64748B; }
 .vn-pick__new { padding: 12px 14px; border-top: 1px solid #2f4f6f; background: #F8FAFC; display: flex; gap: 8px; }
-.vn-pick__new input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #E2E8F0; border-radius: var(--radius-field, 10px); font-family: inherit; font-size: 13px; }
+.vn-pick__new input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #E2E8F0; border-radius: var(--radius-field, 16px); font-family: inherit; font-size: 13px; }
 .vn-pick__new input:focus { outline: none; border-color: var(--dash-primary); }
 .vn-pick__new button { border: none; background: var(--dash-primary); color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; cursor: pointer; }
 .vn-pick__status { padding: 10px 14px; font-size: 12.5px; color: #64748B; border-top: 1px solid #2f4f6f; }
@@ -410,7 +410,7 @@ get_header();
 .vn-pick.is-busy { opacity: 0.6; pointer-events: none; }
 
 /* Small round icon button sitting under each VANCE-Ai answer. */
-.vn-save-answer { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 10px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #64748B; font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; border-radius: var(--radius-surface, 14px); }
+.vn-save-answer { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 10px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #64748B; font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; border-radius: var(--radius-surface, 24px); }
 .vn-save-answer:hover { border-color: var(--dash-primary); color: var(--dash-primary); }
 .vn-save-answer svg { width: 13px; height: 13px; }
 
@@ -500,7 +500,7 @@ get_header();
                     </div>
                     <img src="<?php echo esc_url($profile_img); ?>" class="profile-avatar">
                 </div>
-                <a href="<?php echo wp_logout_url(home_url()); ?>" title="Log Out" aria-label="Log Out" style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #E2E8F0; border-radius:var(--radius-control, 6px); color:#64748B; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.background='#F1F5F9'; this.style.color='#EF4444';" onmouseout="this.style.background=''; this.style.color='#64748B';">
+                <a href="<?php echo wp_logout_url(home_url()); ?>" title="Log Out" aria-label="Log Out" style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #E2E8F0; border-radius:var(--radius-control, 10px); color:#64748B; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.background='#F1F5F9'; this.style.color='#EF4444';" onmouseout="this.style.background=''; this.style.color='#64748B';">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 </a>
             </div>
@@ -526,10 +526,10 @@ get_header();
                     </p>
                 </div>
                 <?php if($current_tab === 'notes'): ?>
-                    <a href="/my-notes/?new=1" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:var(--radius-control, 6px); font-weight:600; font-size:14px;">+ New Note</a>
+                    <a href="/my-notes/?new=1" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:var(--radius-control, 10px); font-weight:600; font-size:14px;">+ New Note</a>
                 <?php elseif($current_tab === 'ai-chats'): ?>
                     <?php // Opens the shared VANCE-Ai modal on a fresh conversation rather than navigating away. ?>
-                    <button type="button" data-vance-askai-open="new" class="btn-primary" style="display:inline-flex; align-items:center; background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; min-height:44px; border-radius:var(--radius-control, 6px); font-weight:600; font-size:14px; font-family:inherit; cursor:pointer;">+ New Chat</button>
+                    <button type="button" data-vance-askai-open="new" class="btn-primary" style="display:inline-flex; align-items:center; background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; min-height:44px; border-radius:var(--radius-control, 10px); font-weight:600; font-size:14px; font-family:inherit; cursor:pointer;">+ New Chat</button>
                 <?php endif; ?>
             </div>
 
@@ -552,7 +552,7 @@ get_header();
                     ?>
                     <style>
                         .dash-grid-v2 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
-                        .d-card { background: white; border-radius: var(--radius-surface, 14px); padding: 24px; border: 1px solid #E2E8F0; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
+                        .d-card { background: white; border-radius: var(--radius-surface, 24px); padding: 24px; border: 1px solid #E2E8F0; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
                         .d-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
                         .d-col-4 { grid-column: span 4; }
                         .d-col-6 { grid-column: span 6; }
@@ -564,9 +564,9 @@ get_header();
 
                         .d-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
                         .d-card-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 10px; }
-                        .d-icon-box { width: 32px; height: 32px; border-radius: var(--radius-control, 6px); background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+                        .d-icon-box { width: 32px; height: 32px; border-radius: var(--radius-control, 10px); background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 16px; }
                         
-                        .msg-empty-state { text-align: center; padding: 32px 0; color: #94A3B8; font-size: 14px; background: #F8FAFC; border-radius: var(--radius-surface, 14px); border: 1px dashed #E2E8F0; }
+                        .msg-empty-state { text-align: center; padding: 32px 0; color: #94A3B8; font-size: 14px; background: #F8FAFC; border-radius: var(--radius-surface, 24px); border: 1px dashed #E2E8F0; }
                     </style>
 
                     <?php // Cards follow their tab's toggle. The 12-column grid
@@ -605,7 +605,7 @@ get_header();
                         <div class="d-card d-col-4">
                             <div class="d-card-header">
                                 <div class="d-card-title"><span class="d-icon-box">💬</span> <?php echo esc_html($dash_label("messages")); ?></div>
-                                <span style="font-size:12px; font-weight:700; padding:4px 10px; border-radius:var(--radius-control, 6px);
+                                <span style="font-size:12px; font-weight:700; padding:4px 10px; border-radius:var(--radius-control, 10px);
                                     <?php echo $vance_unread_count > 0
                                         ? 'background:#008080; color:white;'
                                         : 'background:#F1F5F9; color:#64748B;'; ?>">
@@ -784,8 +784,8 @@ get_header();
                                 <!-- Left Col: Avatar & Media -->
                                 <div>
                                     <div style="position: relative; width: 120px; height: 120px; margin-bottom: 20px;">
-                                        <img src="<?php echo esc_url($profile_img); ?>" id="profile-preview" style="width: 100%; height: 100%; border-radius: var(--radius-control, 6px); object-fit: cover; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                        <button type="button" onclick="triggerAvatarUpload()" style="position: absolute; bottom: 0; right: 0; background: white; border: 1px solid #E2E8F0; width: 32px; height: 32px; border-radius: var(--radius-control, 6px); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📸</button>
+                                        <img src="<?php echo esc_url($profile_img); ?>" id="profile-preview" style="width: 100%; height: 100%; border-radius: var(--radius-control, 10px); object-fit: cover; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                        <button type="button" onclick="triggerAvatarUpload()" style="position: absolute; bottom: 0; right: 0; background: white; border: 1px solid #E2E8F0; width: 32px; height: 32px; border-radius: var(--radius-control, 10px); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📸</button>
                                         <input type="file" id="avatar-input" style="display: none;" accept="image/*" onchange="uploadAvatar(this)">
                                     </div>
 
@@ -982,7 +982,7 @@ get_header();
                                     </div>
 
                                     <div style="display: flex; justify-content: flex-end;">
-                                        <button type="submit" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:12px 32px; border-radius:var(--radius-control, 6px); font-weight:600; cursor:pointer;">Update Profile</button>
+                                        <button type="submit" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:12px 32px; border-radius:var(--radius-control, 10px); font-weight:600; cursor:pointer;">Update Profile</button>
                                     </div>
                                 </div>
                             </div>
@@ -1000,8 +1000,8 @@ get_header();
                         <h3 style="margin:0 0 8px 0; font-size:16px; color:#0F172A;">Invite friends</h3>
                         <p style="color:#64748B; font-size:13px; margin:0 0 16px 0;">Share your personal link — anyone who joins the Hub through it counts toward your invites below.</p>
                         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <input type="text" readonly id="ref-link-input" value="<?php echo esc_attr( $ref_link ); ?>" style="flex:1; min-width:240px; padding:10px; border:1px solid #E2E8F0; border-radius:var(--radius-field, 10px); font-size:13px; background:#F8FAFC; color:#0F172A;">
-                            <button type="button" class="ref-copy" data-url="<?php echo esc_attr( $ref_link ); ?>" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; border-radius:var(--radius-control, 6px); font-weight:600; cursor:pointer;">Copy link</button>
+                            <input type="text" readonly id="ref-link-input" value="<?php echo esc_attr( $ref_link ); ?>" style="flex:1; min-width:240px; padding:10px; border:1px solid #E2E8F0; border-radius:var(--radius-field, 16px); font-size:13px; background:#F8FAFC; color:#0F172A;">
+                            <button type="button" class="ref-copy" data-url="<?php echo esc_attr( $ref_link ); ?>" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; border-radius:var(--radius-control, 10px); font-weight:600; cursor:pointer;">Copy link</button>
                         </div>
                         <p style="margin:16px 0 0 0; font-size:13px; color:#0F172A;"><strong><?php echo esc_html( $ref_count ); ?></strong> <?php echo 1 === $ref_count ? 'person has' : 'people have'; ?> joined using your link.</p>
                     </div>
@@ -1060,7 +1060,7 @@ get_header();
                             <?php if(empty($quiz_results)): ?>
                                 <div style="text-align:center; padding:40px;">
                                     <p style="color:#64748B; margin-bottom:20px;">You haven't completed your health profile responses yet.</p>
-                                    <button onclick="openQuizModal()" class="btn-primary" style="display:inline-block; background:#008080; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 6px); font-weight:600; cursor:pointer;">Start Discovery Quiz</button>
+                                    <button onclick="openQuizModal()" class="btn-primary" style="display:inline-block; background:#008080; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 10px); font-weight:600; cursor:pointer;">Start Discovery Quiz</button>
                                 </div>
                             <?php else: ?>
                                 <div class="dash-list">
@@ -1166,8 +1166,8 @@ get_header();
                                     // changed in the modal after page load would have
                                     // been written back from this page's old copy.)
                                     ?>
-                                    <textarea id="dash-additional-details" name="additional_details" rows="5" placeholder="Anything else you would like to keep a record of — symptoms, observations, how you have been feeling…" style="width:100%; padding:14px; border:1px solid #E2E8F0; border-radius:var(--radius-field, 10px); font-size:14px; background:#F8FAFC; margin-bottom:12px; resize:vertical;"><?php echo esc_textarea($profile['additional_details']); ?></textarea>
-                                    <button type="submit" style="width:100%; padding:10px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:var(--radius-control, 6px); font-weight:700; color:#475569; cursor:pointer; transition:all 0.2s;">Save notes</button>
+                                    <textarea id="dash-additional-details" name="additional_details" rows="5" placeholder="Anything else you would like to keep a record of — symptoms, observations, how you have been feeling…" style="width:100%; padding:14px; border:1px solid #E2E8F0; border-radius:var(--radius-field, 16px); font-size:14px; background:#F8FAFC; margin-bottom:12px; resize:vertical;"><?php echo esc_textarea($profile['additional_details']); ?></textarea>
+                                    <button type="submit" style="width:100%; padding:10px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:var(--radius-control, 10px); font-weight:700; color:#475569; cursor:pointer; transition:all 0.2s;">Save notes</button>
                                     <p id="dashboard-additional-details-msg" role="status" aria-live="polite" style="display:none; margin:10px 0 0; font-size:13px; line-height:1.5;"></p>
                                 </form>
                             </div>
@@ -1296,7 +1296,7 @@ get_header();
                             color:#008080;
                             background:rgba(255,255,255,0.55);
                             -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
-                            border:1px solid rgba(0,128,128,0.35); border-radius:var(--radius-surface, 14px) !important;
+                            border:1px solid rgba(0,128,128,0.35); border-radius:var(--radius-surface, 24px) !important;
                             cursor:pointer; transition:background-color .2s, color .2s, transform .15s;
                         }
                         .vance-mc-view:hover { background:#008080; color:white; transform:translateY(-1px); }
@@ -1311,12 +1311,12 @@ get_header();
                             width:40px; height:40px; display:flex; align-items:center; justify-content:center;
                             font-size:24px; line-height:1; color:#0A1929;
                             background:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.6);
-                            border-radius:var(--radius-control, 6px) !important; cursor:pointer;
+                            border-radius:var(--radius-control, 10px) !important; cursor:pointer;
                             transition:background-color .2s, transform .15s;
                         }
                         .vance-mc-close:hover { background:rgba(255,255,255,0.85); }
-                        .vance-mc-bar-track { height:8px; background:rgba(10,25,41,0.08); width:100%; border-radius:var(--radius-control, 6px); overflow:hidden; }
-                        .vance-mc-bar-fill  { height:8px; background:linear-gradient(90deg,#00a3a3,#008080); border-radius:var(--radius-control, 6px); transition:width .5s ease; }
+                        .vance-mc-bar-track { height:8px; background:rgba(10,25,41,0.08); width:100%; border-radius:var(--radius-control, 10px); overflow:hidden; }
+                        .vance-mc-bar-fill  { height:8px; background:linear-gradient(90deg,#00a3a3,#008080); border-radius:var(--radius-control, 10px); transition:width .5s ease; }
                         @keyframes vanceMcPop { from { opacity:0; transform:translateY(24px) scale(.98); } to { opacity:1; transform:none; } }
                         #vance-mc-modal-panel { animation:vanceMcPop .38s cubic-bezier(.2,.8,.2,1); }
                         @media (prefers-reduced-motion: reduce) {
@@ -1370,10 +1370,10 @@ get_header();
                             var html = '';
 
                             // Headline score + risk band (frosted, rounded).
-                            html += '<div style="text-align:center; padding:28px 24px; background:' + esc(d.riskColor) + '14; border:1px solid ' + esc(d.riskColor) + '33; border-radius:var(--radius-surface, 14px); margin-bottom:24px; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);">' +
+                            html += '<div style="text-align:center; padding:28px 24px; background:' + esc(d.riskColor) + '14; border:1px solid ' + esc(d.riskColor) + '33; border-radius:var(--radius-surface, 24px); margin-bottom:24px; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);">' +
                                     '<div style="font-family:\'Outfit\',sans-serif; font-size:52px; font-weight:800; line-height:1; color:#0F172A;">' + esc(d.score) +
                                     '<span style="font-size:20px; color:#64748B; font-weight:700;">/' + esc(d.maxScore) + '</span></div>' +
-                                    '<div style="margin-top:12px; display:inline-block; font-size:13px; font-weight:700; padding:6px 18px; border-radius:var(--radius-control, 6px); color:' + esc(d.riskColor) + '; background:' + esc(d.riskColor) + '1A; border:1px solid ' + esc(d.riskColor) + '55;">' + esc(d.riskLabel) + '</div>' +
+                                    '<div style="margin-top:12px; display:inline-block; font-size:13px; font-weight:700; padding:6px 18px; border-radius:var(--radius-control, 10px); color:' + esc(d.riskColor) + '; background:' + esc(d.riskColor) + '1A; border:1px solid ' + esc(d.riskColor) + '55;">' + esc(d.riskLabel) + '</div>' +
                                     '</div>';
 
                             // Key values.
@@ -1514,9 +1514,9 @@ get_header();
                                 .vance-mp-title { font-family:'Outfit',sans-serif; font-size:16px; font-weight:700; color:#0F172A; }
                                 .vance-mp-meta { font-size:12px; color:#64748B; }
                                 .vance-mp-panel-inner { padding:0 20px 20px; }
-                                .vance-mp-img { width:100%; max-height:220px; object-fit:cover; border-radius:var(--radius-surface, 14px) !important; margin-bottom:16px; }
+                                .vance-mp-img { width:100%; max-height:220px; object-fit:cover; border-radius:var(--radius-surface, 24px) !important; margin-bottom:16px; }
                                 .vance-mp-days { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
-                                .vance-mp-daychip { font-size:12px; color:#475569; background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.16); padding:6px 12px; border-radius:var(--radius-control, 6px); }
+                                .vance-mp-daychip { font-size:12px; color:#475569; background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.16); padding:6px 12px; border-radius:var(--radius-control, 10px); }
                                 .vance-mp-daychip strong { color:#0F172A; }
                                 .vance-mp-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
                                 /* Actions sit in the card head, pushed right, so they stay usable
@@ -1737,7 +1737,7 @@ get_header();
                                     <h3 id="modal-meal-plan-title" style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">Meal plan</h3>
                                     <p id="modal-meal-plan-date" style="margin:4px 0 0 0; font-size:12px; color:#64748B;"></p>
                                 </div>
-                                <button onclick="closeMealPlanModal()" aria-label="Close" style="font-size:24px; border:1px solid rgba(255,255,255,0.6); background:rgba(255,255,255,0.5); cursor:pointer; color:#0A1929; line-height:1; width:40px; height:40px; border-radius:var(--radius-control, 6px); display:flex; align-items:center; justify-content:center;">&times;</button>
+                                <button onclick="closeMealPlanModal()" aria-label="Close" style="font-size:24px; border:1px solid rgba(255,255,255,0.6); background:rgba(255,255,255,0.5); cursor:pointer; color:#0A1929; line-height:1; width:40px; height:40px; border-radius:var(--radius-control, 10px); display:flex; align-items:center; justify-content:center;">&times;</button>
                             </div>
                             <!-- minmax(320px) not 220px: each meal row carries a 72px thumbnail
                                  and a Full recipe button, so narrower columns wrap badly. -->
@@ -1844,7 +1844,7 @@ get_header();
                             }).join('');
 
                             var imgHtml = plan.image
-                                ? '<img src="' + esc(plan.image) + '" alt="" style="grid-column:1/-1; width:100%; max-height:260px; object-fit:cover; border-radius:var(--radius-surface, 14px);">'
+                                ? '<img src="' + esc(plan.image) + '" alt="" style="grid-column:1/-1; width:100%; max-height:260px; object-fit:cover; border-radius:var(--radius-surface, 24px);">'
                                 : '';
                             document.getElementById('modal-meal-plan-content').innerHTML =
                                 imgHtml + statsHtml +
@@ -2378,13 +2378,13 @@ get_header();
                     <style>
                         .my-tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
                         .my-tools-grid .tool-card {
-                            display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-surface, 14px);
+                            display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-surface, 24px);
                             box-shadow: 0 4px 16px rgba(10,25,41,0.06); border-top: 4px solid #008080;
                             text-decoration: none; color: inherit; transition: transform 0.18s, box-shadow 0.18s;
                         }
                         .my-tools-grid .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,25,41,0.10); }
                         .my-tools-grid .tool-card__head { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
-                        .my-tools-grid .tool-card__icon { flex-shrink: 0; width: 56px; height: 56px; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; }
+                        .my-tools-grid .tool-card__icon { flex-shrink: 0; width: 56px; height: 56px; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; }
                         .my-tools-grid .tool-card__tag  { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #008080; margin-bottom: 4px; }
                         .my-tools-grid .tool-card__title{ font-size: 19px; color: #0F172A; margin: 0; line-height: 1.3; }
                         .my-tools-grid .tool-card__desc { color: #64748B; font-size: 14px; margin: 0 0 20px 0; line-height: 1.6; flex: 1; }
@@ -2414,7 +2414,7 @@ get_header();
                 case 'reading-list': ?>
                     <div class="dash-card">
                          <?php if(empty($bookmarks)): ?>
-                            <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 14px);">
+                            <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 24px);">
                                 <p style="color:#64748B;">Your reading list is currently empty.</p>
                                 <a href="/" style="color:<?php echo $theme_primary; ?>; font-weight:600;">Browse Articles</a>
                             </div>
@@ -2428,7 +2428,7 @@ get_header();
                                 ?>
                                 <div class="list-item" style="padding:16px 0;">
                                     <div style="display:flex; gap:16px; align-items:center; flex:1;">
-                                        <div style="width:64px; height:64px; background:#F1F5F9; border-radius:var(--radius-control, 6px); overflow:hidden; flex-shrink:0;">
+                                        <div style="width:64px; height:64px; background:#F1F5F9; border-radius:var(--radius-control, 10px); overflow:hidden; flex-shrink:0;">
                                             <?php echo get_the_post_thumbnail(get_the_ID(), 'medium', array('style'=>'width:100%;height:100%;object-fit:cover;')); ?>
                                         </div>
                                         <div>
@@ -2603,10 +2603,10 @@ get_header();
 
                 case 'courses': ?>
                      <div class="dash-card">
-                        <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 14px);">
+                        <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 24px);">
                             <h3 style="color:#0F172A; margin:0 0 10px 0;">No active courses</h3>
                             <p style="color:#64748B; margin-bottom:20px;">Subscribe to professional medical courses to see them here.</p>
-                            <button class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 6px); cursor:pointer; font-weight:600;">Browse Catalog</button>
+                            <button class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 10px); cursor:pointer; font-weight:600;">Browse Catalog</button>
                         </div>
                     </div>
                 <?php break;
@@ -2630,7 +2630,7 @@ get_header();
                         <?php endif; ?>
 
                         <?php if(empty($searches_safe)): ?>
-                             <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 14px);">
+                             <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 24px);">
                                 <p style="color:#64748B; margin:0 0 16px;">You haven't saved any searches yet.</p>
                                 <?php if ($has_filters_modal): ?>
                                     <button type="button" class="rl-btn rl-btn--primary" data-vance-tw-open="vance-tw-modal-new-search">Start a new search</button>
@@ -2672,9 +2672,9 @@ get_header();
                          <?php 
                          $my_notes = get_user_meta($current_user->ID, '_sla_user_notes', true) ?: array();
                          if(empty($my_notes)): ?>
-                             <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 14px);">
+                             <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 24px);">
                                 <p style="color:#64748B; margin-bottom:16px;">You don't have any notes yet.</p>
-                                <a href="/my-notes/?new=1" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:var(--radius-control, 6px); font-weight:600;">Create First Note</a>
+                                <a href="/my-notes/?new=1" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; text-decoration:none; padding:10px 20px; border-radius:var(--radius-control, 10px); font-weight:600;">Create First Note</a>
                             </div>
                          <?php else: ?>
                             <div class="dash-list">
@@ -2729,7 +2729,7 @@ get_header();
                                     display:flex; align-items:center; justify-content:center;
                                     font-size:26px; line-height:1; color:#475569; cursor:pointer;
                                     background:rgba(255,255,255,0.6); border:1px solid rgba(0,128,128,0.18);
-                                    border-radius:var(--radius-control, 6px); transition:background .2s ease, color .2s ease;
+                                    border-radius:var(--radius-control, 10px); transition:background .2s ease, color .2s ease;
                                 }
                                 .vance-note-close:hover { background:#008080; color:#fff; }
                                 .vance-note-close:focus-visible { outline:3px solid var(--primary-pale, #B2D8D8); outline-offset:2px; }
@@ -2833,10 +2833,10 @@ get_header();
                          $ai_chats = get_user_meta($current_user->ID, '_sla_saved_chats', true);
                          if (!is_array($ai_chats)) $ai_chats = array();
                          if(empty($ai_chats)): ?>
-                             <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 14px);">
+                             <div style="text-align:center; padding:48px; background:#F8FAFC; border:1px dashed #E2E8F0; border-radius:var(--radius-surface, 24px);">
                                 <p style="color:#64748B; margin-bottom:16px;">No VANCE-Ai conversations yet. Anything you ask is saved here automatically.</p>
                                 <?php // Opens the shared VANCE-Ai modal in place rather than navigating away. ?>
-                                <button type="button" data-vance-askai-open="new" class="btn-primary" style="display:inline-flex; align-items:center; background:<?php echo $theme_primary; ?>; color:white; border:none; text-decoration:none; padding:10px 20px; min-height:44px; border-radius:var(--radius-control, 6px); font-weight:600; font-family:inherit; font-size:inherit; cursor:pointer;">Start New Ai Chat</button>
+                                <button type="button" data-vance-askai-open="new" class="btn-primary" style="display:inline-flex; align-items:center; background:<?php echo $theme_primary; ?>; color:white; border:none; text-decoration:none; padding:10px 20px; min-height:44px; border-radius:var(--radius-control, 10px); font-weight:600; font-family:inherit; font-size:inherit; cursor:pointer;">Start New Ai Chat</button>
                             </div>
                          <?php else: ?>
                              <div class="dash-list">
@@ -2902,7 +2902,7 @@ get_header();
 
                     <!-- Chat Viewer Modal -->
                     <div id="chat-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10001; align-items:center; justify-content:center; padding:20px;">
-                        <div style="background:white; width:100%; max-width:800px; max-height:90vh; border-radius:var(--radius-surface, 14px); display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+                        <div style="background:white; width:100%; max-width:800px; max-height:90vh; border-radius:var(--radius-surface, 24px); display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
                             <div style="padding:24px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:white;">
                                 <div>
                                     <h3 id="modal-chat-title" style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">VANCE-Ai Transcript</h3>
@@ -2915,7 +2915,7 @@ get_header();
                             </div>
                             <div style="padding:20px; border-top:1px solid #E2E8F0; background:white; display:flex; justify-content:space-between; align-items:center; gap:12px;">
                                 <button type="button" id="chat-modal-to-note" class="rl-btn" data-vn-open>Add whole chat to a note</button>
-                                <button onclick="closeChatModal()" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 6px); cursor:pointer; font-weight:600;">Close</button>
+                                <button onclick="closeChatModal()" class="btn-primary" style="background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 24px; border-radius:var(--radius-control, 10px); cursor:pointer; font-weight:600;">Close</button>
                             </div>
                         </div>
                     </div>
@@ -3207,11 +3207,11 @@ get_header();
                             <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:5px;" for="msg-compose-subject">Subject</label>
                             <input type="text" id="msg-compose-subject" required minlength="3" maxlength="150"
                                    placeholder="What is your message about?"
-                                   style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; box-sizing:border-box; font-family:inherit; margin-bottom:14px; border-radius: var(--radius-field, 10px);">
+                                   style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; box-sizing:border-box; font-family:inherit; margin-bottom:14px; border-radius: var(--radius-field, 16px);">
                             <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:5px;" for="msg-compose-body">Message</label>
                             <textarea id="msg-compose-body" required minlength="10" maxlength="4000" rows="6"
                                       placeholder="Write your message… plain text, **bold**, *italic*, and URLs work."
-                                      style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; line-height:1.55; box-sizing:border-box; resize:vertical; font-family:inherit; border-radius: var(--radius-field, 10px);"></textarea>
+                                      style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; font-size:13.5px; line-height:1.55; box-sizing:border-box; resize:vertical; font-family:inherit; border-radius: var(--radius-field, 16px);"></textarea>
                             <p style="margin:10px 0 14px; font-size:11.5px; color:#94A3B8; line-height:1.5;">
                                 Your name and email address are shared with the Vance team so they can reply. Please do
                                 not include health information you would not want held on record — see our
@@ -3562,7 +3562,7 @@ get_header();
                             <div class="rl-reader__foot" style="flex-direction:column; align-items:stretch; gap:10px;">
                                 <div style="display:flex; gap:8px;">
                                     <input type="text" id="doc-ask-input" placeholder="Ask about this document…"
-                                           style="flex:1; min-width:0; padding:10px 12px; border:1px solid #CBD5E1; font-family:inherit; font-size:14px; border-radius: var(--radius-field, 10px);">
+                                           style="flex:1; min-width:0; padding:10px 12px; border:1px solid #CBD5E1; font-family:inherit; font-size:14px; border-radius: var(--radius-field, 16px);">
                                     <button type="button" class="rl-btn rl-btn--primary" id="doc-ask-send">Ask</button>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
@@ -4128,8 +4128,8 @@ get_header();
             let rawContent = chat.transcript;
             
             // Format legacy You: / AI: speakers into styled pills
-            rawContent = rawContent.replace(/<strong>You:<\/strong>|You:/gi, '<br><div style="background:#F1F5F9; color:#64748B; padding:4px 12px; border-radius:var(--radius-surface, 14px); display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">USER</div><br>');
-            rawContent = rawContent.replace(/<strong>AI:<\/strong>|AI:/gi, '<br><div style="background:#def4f4; color:#008080; border:1px solid #aedbdb; padding:4px 12px; border-radius:var(--radius-surface, 14px); display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">🤖 AI</div><br>');
+            rawContent = rawContent.replace(/<strong>You:<\/strong>|You:/gi, '<br><div style="background:#F1F5F9; color:#64748B; padding:4px 12px; border-radius:var(--radius-surface, 24px); display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">USER</div><br>');
+            rawContent = rawContent.replace(/<strong>AI:<\/strong>|AI:/gi, '<br><div style="background:#def4f4; color:#008080; border:1px solid #aedbdb; padding:4px 12px; border-radius:var(--radius-surface, 24px); display:inline-block; font-size:11px; font-weight:700; margin-bottom:8px; margin-top:20px; line-height:1;">🤖 AI</div><br>');
             
             // Remove lingering empty paragraphs if any
             rawContent = rawContent.replace(/<p>\s*<\/p>/gi, '');

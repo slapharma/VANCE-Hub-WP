@@ -160,7 +160,7 @@ add_filter( 'manage_vance_recipe_posts_columns', 'vance_recipe_admin_columns' );
 function vance_recipe_admin_column_content( $column, $post_id ) {
 	switch ( $column ) {
 		case 'vance_recipe_thumb':
-			echo get_the_post_thumbnail( $post_id, array( 48, 48 ), array( 'style' => 'border-radius:var(--radius-control, 6px);object-fit:cover;' ) );
+			echo get_the_post_thumbnail( $post_id, array( 48, 48 ), array( 'style' => 'border-radius:var(--radius-control, 10px);object-fit:cover;' ) );
 			break;
 
 		case 'vance_recipe_category':

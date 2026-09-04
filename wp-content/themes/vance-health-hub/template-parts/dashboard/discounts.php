@@ -65,7 +65,7 @@ $vance_dt_status_labels = array(
 		<h3><?php esc_html_e( 'Saved schemes', 'vance-health-hub' ); ?></h3>
 		<?php if ( empty( $vance_dt_saved ) ) : ?>
 			<div class="vance-discount-empty">
-				<p><?php esc_html_e( "You haven't saved any schemes yet — browse the directory to get started.", 'vance-health-hub' ); ?></p>
+				<p><?php esc_html_e( "You haven't saved any schemes yet. Browse the directory to get started.", 'vance-health-hub' ); ?></p>
 				<a href="<?php echo esc_url( home_url( '/ibd-discounts/' ) ); ?>"><?php esc_html_e( 'Browse the directory', 'vance-health-hub' ); ?></a>
 			</div>
 		<?php else : ?>
@@ -104,7 +104,7 @@ $vance_dt_status_labels = array(
 	<!-- Access Folder -->
 	<div class="vance-discount-surface vance-discount-folder">
 		<h3><?php esc_html_e( 'Access Folder', 'vance-health-hub' ); ?></h3>
-		<p class="vance-discount-folder-intro"><?php esc_html_e( 'Tick what you already hold. Nothing here is a document upload — just a checklist that tells you which schemes are worth a closer look.', 'vance-health-hub' ); ?></p>
+		<p class="vance-discount-folder-intro"><?php esc_html_e( 'Tick what you already hold. Nothing here is a document upload, just a checklist that tells you which schemes are worth a closer look.', 'vance-health-hub' ); ?></p>
 
 		<div class="vance-discount-folder-region">
 			<label for="vance-discount-folder-region"><?php esc_html_e( 'Region', 'vance-health-hub' ); ?></label>

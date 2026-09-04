@@ -25,7 +25,7 @@ vance_legal_hero_styles();
 <style>
 .legal-contact-box {
     background: linear-gradient(135deg, rgba(0,128,128,0.06), rgba(0,128,128,0.02));
-    border: 1px solid rgba(0,128,128,0.2); border-radius: var(--radius-surface, 14px); padding: 32px 36px; margin-top: 56px;
+    border: 1px solid rgba(0,128,128,0.2); border-radius: var(--radius-surface, 24px); padding: 32px 36px; margin-top: 56px;
 }
 .legal-contact-box h3 { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 18px; color: var(--secondary-color); margin: 0 0 12px; }
 .legal-contact-box p { margin: 0 0 8px; font-size: 15px; }

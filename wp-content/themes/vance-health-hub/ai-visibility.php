@@ -715,7 +715,7 @@ class AIV_System {
 .aiv-wrap { max-width: 960px; }
 .aiv-header {
     background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%);
-    color: #fff; padding: 24px 28px; border-radius: var(--radius-surface, 14px);
+    color: #fff; padding: 24px 28px; border-radius: var(--radius-surface, 24px);
     margin-bottom: 24px; display: flex; align-items: center; gap: 16px;
 }
 .aiv-header h1 { margin: 0; font-size: 22px; color: #fff; font-weight: 700; }
@@ -740,7 +740,7 @@ class AIV_System {
 /* Cards */
 .aiv-card {
     background: #fff; border: 1px solid #e5e7eb;
-    border-radius: var(--radius-surface, 14px); padding: 22px 24px; margin-bottom: 18px;
+    border-radius: var(--radius-surface, 24px); padding: 22px 24px; margin-bottom: 18px;
 }
 .aiv-card h3 {
     margin: 0 0 14px; font-size: 14px; color: #111827;
@@ -760,17 +760,17 @@ class AIV_System {
 /* Code / Key boxes */
 .aiv-key-box {
     font-family: monospace; font-size: 13px; background: #f3f4f6;
-    padding: 10px 14px; border-radius: var(--radius-surface, 14px); border: 1px solid #d1d5db;
+    padding: 10px 14px; border-radius: var(--radius-surface, 24px); border: 1px solid #d1d5db;
     word-break: break-all; max-width: 580px;
 }
 .aiv-endpoint-box {
     font-family: monospace; font-size: 12px; background: #1e1b4b;
-    color: #a5f3fc; padding: 12px 16px; border-radius: var(--radius-surface, 14px);
+    color: #a5f3fc; padding: 12px 16px; border-radius: var(--radius-surface, 24px);
     word-break: break-all; max-width: 580px;
 }
 .aiv-curl-box {
     background: #1e293b; color: #94a3b8; padding: 16px;
-    border-radius: var(--radius-surface, 14px); font-family: monospace; font-size: 12px;
+    border-radius: var(--radius-surface, 24px); font-family: monospace; font-size: 12px;
     overflow-x: auto; white-space: pre; line-height: 1.7; max-width: 680px;
 }
 .aiv-curl-box .hl { color: #38bdf8; }
@@ -797,7 +797,7 @@ class AIV_System {
 
 /* llms.txt preview */
 .aiv-llms-preview {
-    background: #0f172a; color: #e2e8f0; padding: 20px; border-radius: var(--radius-surface, 14px);
+    background: #0f172a; color: #e2e8f0; padding: 20px; border-radius: var(--radius-surface, 24px);
     font-family: monospace; font-size: 12px; white-space: pre-wrap;
     max-height: 400px; overflow-y: auto; line-height: 1.6;
 }
@@ -810,7 +810,7 @@ class AIV_System {
 }
 .aiv-stat {
     background: #f8fafc; border: 1px solid #e5e7eb;
-    border-radius: var(--radius-surface, 14px); padding: 16px; text-align: center;
+    border-radius: var(--radius-surface, 24px); padding: 16px; text-align: center;
 }
 .aiv-stat-value { font-size: 28px; font-weight: 700; color: #4c1d95; }
 .aiv-stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
@@ -832,7 +832,7 @@ class AIV_System {
     z-index: 100;
 }
 .aiv-notice {
-    padding: 10px 14px; border-radius: var(--radius-surface, 14px);
+    padding: 10px 14px; border-radius: var(--radius-surface, 24px);
     font-size: 13px; margin-bottom: 14px;
 }
 .aiv-notice-success {

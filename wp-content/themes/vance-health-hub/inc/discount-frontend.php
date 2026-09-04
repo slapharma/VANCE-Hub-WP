@@ -558,7 +558,7 @@ function vance_discount_vat_modal_markup() {
 		<div class="vance-vat-modal__panel" role="dialog" aria-modal="true" aria-labelledby="vance-vat-modal-title">
 			<button type="button" class="vance-vat-modal__close" id="vance-vat-modal-close" aria-label="<?php esc_attr_e( 'Close', 'vance-health-hub' ); ?>">&times;</button>
 			<h2 id="vance-vat-modal-title"><?php esc_html_e( 'Fill in your declaration', 'vance-health-hub' ); ?></h2>
-			<p class="vance-vat-modal__intro"><?php esc_html_e( "This fills in Part 2 of the form — the section you complete yourself. Part 1 is filled in by the shop at the till. You'll still need to sign the result by hand.", 'vance-health-hub' ); ?></p>
+			<p class="vance-vat-modal__intro"><?php esc_html_e( "This fills in Part 2 of the form: the section you complete yourself. Part 1 is filled in by the shop at the till. You'll still need to sign the result by hand.", 'vance-health-hub' ); ?></p>
 			<label class="vance-vat-modal__field">
 				<?php esc_html_e( 'Full name', 'vance-health-hub' ); ?>
 				<input type="text" id="vance-vat-name">

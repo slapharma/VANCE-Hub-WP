@@ -42,8 +42,8 @@
 	/* Aliases onto the site-wide scale in main.css rather than a second set of
 	   numbers. The literal fallbacks are what the Modal Kit used before the
 	   scale existed, and only apply if main.css is somehow absent. */
-	--mk-radius: var(--radius-field, 10px);
-	--mk-radius-lg: var(--radius-surface, 14px);
+	--mk-radius: var(--radius-field, 16px);
+	--mk-radius-lg: var(--radius-surface, 24px);
 }
 
 /* =========================================================================

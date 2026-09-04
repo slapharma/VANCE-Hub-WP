@@ -292,7 +292,7 @@ function vance_render_prime_block( array $vals ) {
 			padding: 0;
 			box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 			border: 1.5px solid #e2e8f0;
-			border-radius: var(--radius-surface, 14px);
+			border-radius: var(--radius-surface, 24px);
 			transition: all 0.3s ease;
 			overflow: hidden;
 			/* flex:1 inside the height:100% stack splits available column height
@@ -401,7 +401,7 @@ function vance_render_prime_block( array $vals ) {
 			   paints the background/gradient; `overflow: hidden` on the anchor
 			   alone would clip it, but then the pill variant's 1.5px border
 			   would be sliced square inside a rounded mask. */
-			border-radius: var(--radius-surface, 14px);
+			border-radius: var(--radius-surface, 24px);
 		}
 		<?php echo $sel; ?> .pwc-banner > div {
 			border-radius: inherit;
@@ -410,7 +410,7 @@ function vance_render_prime_block( array $vals ) {
 		/* Icon tile inside the image+text banner -- an icon tile on the scale,
 		   so --radius-control, matching the buttons and chips around it. */
 		<?php echo $sel; ?> .pwc-banner--image_text > div > div:first-child {
-			border-radius: var(--radius-control, 6px);
+			border-radius: var(--radius-control, 10px);
 		}
 		<?php echo $sel; ?> .pwc-banner:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,0.10); }
 		/* Image-led banner */
@@ -458,7 +458,7 @@ function vance_render_prime_block( array $vals ) {
 		<?php echo $sel; ?> .section-label h2 { margin: 0; font-family: 'Outfit', sans-serif; }
 		/* Never grow, never shrink: a bare `width` alone loses to the flex
 		   container's own sizing, which is how this became a full-width bar. */
-		<?php echo $sel; ?> .color-bar { flex: 0 0 6px; width: 6px; border-radius: var(--radius-control, 6px); }
+		<?php echo $sel; ?> .color-bar { flex: 0 0 6px; width: 6px; border-radius: var(--radius-control, 10px); }
 		<?php echo $sel; ?> .tag {
 			background: var(--primary-color, #008080);
 			color: #ffffff;
@@ -775,7 +775,7 @@ function vance_render_prime_block( array $vals ) {
 							<?php endforeach; ?>
 						</div>
 					<?php else : ?>
-						<div style="background: white; border-radius: var(--radius-surface, 14px); padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
+						<div style="background: white; border-radius: var(--radius-surface, 24px); padding: 40px; text-align: center; border: 1px solid #e2e8f0;">
 							<p style="color: #64748b; margin: 0;">No posts found for this selection.</p>
 						</div>
 					<?php endif; ?>

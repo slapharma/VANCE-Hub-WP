@@ -138,7 +138,7 @@ while ( have_posts() ) :
 			<div class="container" style="max-width:1100px;">
 				<div class="vance-discount-surface" style="max-width:700px;margin:0 auto;">
 					<h2 style="font-size:18px;margin:0 0 6px;color:#0f172a;"><?php esc_html_e( 'Find your water company', 'vance-health-hub' ); ?></h2>
-					<p style="font-size:13px;color:#475569;margin:0 0 16px;"><?php esc_html_e( 'WaterSure is applied for through whichever company bills your household, not centrally. Find yours below — every link goes straight to that company\'s own WaterSure (or identically-named) page.', 'vance-health-hub' ); ?></p>
+					<p style="font-size:13px;color:#475569;margin:0 0 16px;"><?php esc_html_e( 'WaterSure is applied for through whichever company bills your household, not centrally. Find yours below. Every link goes straight to that company\'s own WaterSure (or identically-named) page.', 'vance-health-hub' ); ?></p>
 					<input type="search" id="vance-watersure-filter" placeholder="<?php esc_attr_e( 'Search by company or area…', 'vance-health-hub' ); ?>" style="width:100%;padding:9px 14px;border:1px solid #e2e8f0;border-radius:var(--radius-field, 16px);font-size:14px;margin-bottom:16px;box-sizing:border-box;">
 					<ul id="vance-watersure-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;">
 						<?php foreach ( vance_watersure_suppliers() as $vance_ws_company ) : ?>
@@ -148,7 +148,7 @@ while ( have_posts() ) :
 							</li>
 						<?php endforeach; ?>
 					</ul>
-					<p id="vance-watersure-empty" style="display:none;text-align:center;color:#64748B;font-size:13px;padding:20px 0;"><?php esc_html_e( "No companies match that search — try a shorter word, or check Citizens Advice for who supplies your address.", 'vance-health-hub' ); ?></p>
+					<p id="vance-watersure-empty" style="display:none;text-align:center;color:#64748B;font-size:13px;padding:20px 0;"><?php esc_html_e( "No companies match that search: try a shorter word, or check Citizens Advice for who supplies your address.", 'vance-health-hub' ); ?></p>
 				</div>
 			</div>
 		</section>

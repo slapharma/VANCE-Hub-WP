@@ -108,7 +108,7 @@ function vance_category_hero_meta() {
 
 		'content-clinical-reviews' => array(
 			'eyebrow' => __( 'The evidence', 'vance-health-hub' ),
-			'intro'   => __( 'Trial data and peer-reviewed papers read closely and written up in plain English — what was measured, in whom, and what the result does and does not show.', 'vance-health-hub' ),
+			'intro'   => __( 'Trial data and peer-reviewed papers read closely and written up in plain English: what was measured, in whom, and what the result does and does not show.', 'vance-health-hub' ),
 			'image'   => 'clinical-reviews.jpg',
 			'alt'     => __( 'A woman at a desk in a bright office reading a printed research paper, pen in hand, a stack of journals beside her', 'vance-health-hub' ),
 			'focal'   => '52% 20%',
@@ -121,7 +121,7 @@ function vance_category_hero_meta() {
 
 		'content-gastro-living' => array(
 			'eyebrow' => __( 'Living with it', 'vance-health-hub' ),
-			'intro'   => __( 'Practical guidance for life with a gut condition — understanding a diagnosis, eating well around it, getting through tests and treatments, and finding support.', 'vance-health-hub' ),
+			'intro'   => __( 'Practical guidance for life with a gut condition: understanding a diagnosis, eating well around it, getting through tests and treatments, and finding support.', 'vance-health-hub' ),
 			'image'   => 'gastro-living.jpg',
 			'alt'     => __( 'A man sitting in an armchair by a bright window, lacing a walking boot, his coat over the chair beside him', 'vance-health-hub' ),
 			'focal'   => '54% 24%',
@@ -189,7 +189,7 @@ function vance_category_hero_meta() {
 			'card'    => array(
 				'icon'  => 'doc',
 				'title' => __( 'Longer, on purpose', 'vance-health-hub' ),
-				'text'  => __( 'These are full documents rather than article summaries — for the times when the detail is the point.', 'vance-health-hub' ),
+				'text'  => __( 'These are full documents rather than article summaries, for the times when the detail is the point.', 'vance-health-hub' ),
 			),
 		),
 
@@ -208,7 +208,7 @@ function vance_category_hero_meta() {
 
 		'content-infographic' => array(
 			'eyebrow' => __( 'At a glance', 'vance-health-hub' ),
-			'intro'   => __( 'Clinical information drawn out as a single picture — made to be read in seconds and understood on its own.', 'vance-health-hub' ),
+			'intro'   => __( 'Clinical information drawn out as a single picture, made to be read in seconds and understood on its own.', 'vance-health-hub' ),
 			'image'   => 'infographic.jpg',
 			'alt'     => '',
 			'focal'   => '52% 20%',
@@ -247,7 +247,7 @@ function vance_category_hero_meta() {
 
 		'gastro-recipes' => array(
 			'eyebrow' => __( 'Cooking', 'vance-health-hub' ),
-			'intro'   => __( 'Recipes built around real ingredients and a gut that needs some thought — each one listing what is in it and what it gives you.', 'vance-health-hub' ),
+			'intro'   => __( 'Recipes built around real ingredients and a gut that needs some thought, each one listing what is in it and what it gives you.', 'vance-health-hub' ),
 			'image'   => 'gastro-recipes.jpg',
 			'alt'     => '',
 			'focal'   => '52% 24%',

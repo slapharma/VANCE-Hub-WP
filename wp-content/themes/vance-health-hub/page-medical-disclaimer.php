@@ -24,7 +24,7 @@ vance_legal_hero_styles();
 <style>
 .legal-emergency-box {
     background: rgba(220,38,38,0.06); border-left: 4px solid #dc2626;
-    border-radius: 0 var(--radius-surface, 14px) var(--radius-surface, 14px) 0; padding: 18px 24px; margin: 8px 0 32px;
+    border-radius: 0 var(--radius-surface, 24px) var(--radius-surface, 24px) 0; padding: 18px 24px; margin: 8px 0 32px;
 }
 .legal-emergency-box p { margin: 0; font-size: 15px; color: #7f1d1d; font-weight: 600; line-height: 1.7; }
 </style>

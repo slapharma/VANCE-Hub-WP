@@ -570,7 +570,7 @@ function vance_legal_hero_styles() {
     font-size: 13px;
     font-weight: 700;
     padding: 6px 14px;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     border: 1px solid rgba(0,128,128,0.2);
     margin-bottom: 32px;
     letter-spacing: 0.3px;

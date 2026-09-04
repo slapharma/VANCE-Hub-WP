@@ -171,7 +171,7 @@ function vance_discount_render_details_box( $post ) {
 	vance_discount_meta_field( $post, 'vance_discount_what', __( 'What you get', 'vance-health-hub' ), 'textarea' );
 	vance_discount_meta_field( $post, 'vance_discount_who', __( 'Who qualifies', 'vance-health-hub' ), 'textarea' );
 	vance_discount_meta_field( $post, 'vance_discount_ibd_note', __( 'IBD note', 'vance-health-hub' ), 'textarea' );
-	vance_discount_meta_field( $post, 'vance_discount_upcoming', __( 'Upcoming change (dated — rendered as a banner)', 'vance-health-hub' ), 'textarea' );
+	vance_discount_meta_field( $post, 'vance_discount_upcoming', __( 'Upcoming change (dated, rendered as a banner)', 'vance-health-hub' ), 'textarea' );
 }
 
 function vance_discount_render_evidence_box( $post ) {

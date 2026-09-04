@@ -22,7 +22,7 @@ vance_legal_hero_styles();
 .legal-toc {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     padding: 28px 32px;
     margin-bottom: 48px;
 }
@@ -53,7 +53,7 @@ vance_legal_hero_styles();
 .legal-contact-box {
     background: linear-gradient(135deg, rgba(0,128,128,0.06), rgba(0,128,128,0.02));
     border: 1px solid rgba(0,128,128,0.2);
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     padding: 32px 36px;
     margin-top: 56px;
 }
@@ -101,7 +101,7 @@ vance_legal_hero_styles();
 .legal-right-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     padding: 18px 20px;
 }
 .legal-right-card strong {

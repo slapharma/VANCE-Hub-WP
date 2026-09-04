@@ -938,7 +938,7 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	border-radius: var(--radius-surface, 14px) !important; /* legacy !important; main.css no longer squares img */
+	border-radius: var(--radius-surface, 24px) !important; /* legacy !important; main.css no longer squares img */
 }
 
 /* Built-in "VANCE-Ai in use" illustration = a representative (not real) product
@@ -1723,7 +1723,7 @@ body.vance-askai-open { overflow: hidden; }
     margin: 4px 0 8px;
     padding: 16px;
     border: 1px solid rgba(0, 128, 128, 0.22);
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     background: rgba(0, 128, 128, 0.04);
     display: flex;
     flex-direction: column;
@@ -1740,7 +1740,7 @@ body.vance-askai-open { overflow: hidden; }
 .vance-askai__askchip {
     align-self: flex-start;
     padding: 3px 9px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: rgba(0, 128, 128, 0.12);
     color: #00696b;
     font-size: 10px;
@@ -1773,7 +1773,7 @@ body.vance-askai-open { overflow: hidden; }
     /* 10px/14px puts the single-line variant at 44px, the touch minimum. */
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: #fff;
     color: #0f172a;
     font: inherit;
@@ -1808,7 +1808,7 @@ body.vance-askai-open { overflow: hidden; }
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #cbd5e1;
-    border-radius: var(--radius-field, 10px);
+    border-radius: var(--radius-field, 16px);
     font: inherit;
     font-size: 13px;
     color: #0f172a;
@@ -1832,7 +1832,7 @@ body.vance-askai-open { overflow: hidden; }
     min-height: 44px;
     padding: 11px 20px;
     border: 0;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: #008080;
     color: #fff;
     font: inherit;

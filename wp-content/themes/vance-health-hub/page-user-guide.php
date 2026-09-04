@@ -411,7 +411,7 @@ $tools = array(
 				<div class="vug-dl-band__text">
 					<span class="vug-eyebrow vug-eyebrow--light"><?php esc_html_e( 'Take it with you', 'vance-health-hub' ); ?></span>
 					<h2><?php esc_html_e( 'The whole guide, as a PDF', 'vance-health-hub' ); ?></h2>
-					<p><?php esc_html_e( 'Everything on this page — every tool, every screenshot, plus a first-week plan and an appointment prep checklist — in one file you can keep on your phone or print for your next appointment.', 'vance-health-hub' ); ?></p>
+					<p><?php esc_html_e( 'Everything on this page (every tool, every screenshot, plus a first-week plan and an appointment prep checklist) in one file you can keep on your phone or print for your next appointment.', 'vance-health-hub' ); ?></p>
 				</div>
 				<div class="vug-dl-band__action">
 					<?php echo vug_download_btn( $pdf_url, 'onteal' ); ?>

@@ -40,7 +40,7 @@ function vance_default_social_image() {
 		'url'    => get_template_directory_uri() . '/assets/img/og-default.jpg',
 		'width'  => 1200,
 		'height' => 630,
-		'alt'    => __( 'Vance Health Hub — trusted information for living with a gastrointestinal condition', 'vance-health-hub' ),
+		'alt'    => __( 'Vance Health Hub: trusted information for living with a gastrointestinal condition', 'vance-health-hub' ),
 	);
 }
 

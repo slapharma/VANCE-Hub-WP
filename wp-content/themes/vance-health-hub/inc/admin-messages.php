@@ -599,7 +599,7 @@ function vance_render_admin_messages_page() {
                         <tr>
                             <td><strong><?php echo esc_html( $m->post_title ); ?></strong><br>
                                 <span style="color: #666; font-size: 12px;"><?php echo esc_html( wp_trim_words( $m->post_content, 18 ) ); ?></span></td>
-                            <td><span style="padding: 3px 9px; border-radius: var(--radius-control, 6px); font-size: 11px; font-weight: 600; background: <?php echo $sev === 'important' ? '#fff3cd; color: #856404' : ( $sev === 'announcement' ? '#0A1929; color: #fff' : '#def4f4; color: #008080' ); ?>;"><?php echo esc_html( ucfirst( $sev ) ); ?></span></td>
+                            <td><span style="padding: 3px 9px; border-radius: var(--radius-control, 10px); font-size: 11px; font-weight: 600; background: <?php echo $sev === 'important' ? '#fff3cd; color: #856404' : ( $sev === 'announcement' ? '#0A1929; color: #fff' : '#def4f4; color: #008080' ); ?>;"><?php echo esc_html( ucfirst( $sev ) ); ?></span></td>
                             <td><?php echo $aud_label; ?></td>
                             <td><?php echo esc_html( get_the_date( 'M j, Y g:i a', $m ) ); ?></td>
                             <td><?php
@@ -869,8 +869,8 @@ function vance_admin_messages_render( $post, $context = 'banner' ) {
     $p = $palette[ $sev ] ?? $palette['info'];
 
     $banner_extra = $context === 'banner'
-        ? 'margin: 0 0 18px; border-radius: var(--radius-surface, 14px);'
-        : 'margin: 0 0 14px; border-radius: var(--radius-surface, 14px);';
+        ? 'margin: 0 0 18px; border-radius: var(--radius-surface, 24px);'
+        : 'margin: 0 0 14px; border-radius: var(--radius-surface, 24px);';
 
     ob_start(); ?>
     <article class="vance-msg vance-msg--<?php echo esc_attr( $sev ); ?>" data-msg-id="<?php echo (int) $post->ID; ?>"
@@ -888,7 +888,7 @@ function vance_admin_messages_render( $post, $context = 'banner' ) {
         <div style="font-size: 14px; line-height: 1.6;"><?php echo $body; ?></div>
         <?php if ( $cta_label && $cta_url ) : ?>
             <p style="margin: 12px 0 0;">
-                <a href="<?php echo esc_url( $cta_url ); ?>" class="button" style="background: <?php echo esc_attr( $p['accent'] ); ?>; color: white; border: none; padding: 8px 18px; font-weight: 600; text-decoration: none; display: inline-block; border-radius: var(--radius-control, 6px);">
+                <a href="<?php echo esc_url( $cta_url ); ?>" class="button" style="background: <?php echo esc_attr( $p['accent'] ); ?>; color: white; border: none; padding: 8px 18px; font-weight: 600; text-decoration: none; display: inline-block; border-radius: var(--radius-control, 10px);">
                     <?php echo esc_html( $cta_label ); ?> →
                 </a>
             </p>
@@ -945,14 +945,14 @@ function vance_admin_messages_render_with_thread( $post, $current_user_id ) {
             <button type="button"
                     class="vance-msg-reply-toggle button"
                     data-msg-id="<?php echo (int) $post->ID; ?>"
-                    style="background: #008080; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 6px);">
+                    style="background: #008080; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 10px);">
                 Reply
             </button>
             <button type="button"
                     class="vance-msg-delete button"
                     data-msg-id="<?php echo (int) $post->ID; ?>"
                     data-nonce="<?php echo esc_attr( $delete_nonce ); ?>"
-                    style="background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 6px);">
+                    style="background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 10px);">
                 Delete from my inbox
             </button>
         </div>
@@ -961,10 +961,10 @@ function vance_admin_messages_render_with_thread( $post, $current_user_id ) {
               data-msg-id="<?php echo (int) $post->ID; ?>"
               data-nonce="<?php echo esc_attr( $reply_nonce ); ?>"
               style="display: none; margin-top: 12px; padding: 14px; background: white; border: 1px solid #e2e8f0;">
-            <textarea required minlength="3" maxlength="4000" placeholder="Write your reply… plain text, **bold**, *italic*, and URLs work." rows="4" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; font-size: 13px; line-height: 1.55; box-sizing: border-box; resize: vertical; font-family: inherit; border-radius: var(--radius-field, 10px);"></textarea>
+            <textarea required minlength="3" maxlength="4000" placeholder="Write your reply… plain text, **bold**, *italic*, and URLs work." rows="4" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; font-size: 13px; line-height: 1.55; box-sizing: border-box; resize: vertical; font-family: inherit; border-radius: var(--radius-field, 16px);"></textarea>
             <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <button type="submit" class="button" style="background: #008080; color: white; border: none; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: var(--radius-control, 6px);">Send reply</button>
-                <button type="button" class="vance-msg-reply-cancel button" style="background: transparent; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 6px);">Cancel</button>
+                <button type="submit" class="button" style="background: #008080; color: white; border: none; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: var(--radius-control, 10px);">Send reply</button>
+                <button type="button" class="vance-msg-reply-cancel button" style="background: transparent; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: var(--radius-control, 10px);">Cancel</button>
                 <span class="vance-msg-reply-status" style="margin-left: auto; align-self: center; font-size: 12px; color: #64748b;"></span>
             </div>
         </form>

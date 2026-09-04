@@ -220,7 +220,7 @@
 		renderPlanner();
 
 		if (!filled) {
-			showToast('Your week is already full — clear a slot to swap something in.', 4000);
+			showToast('Your week is already full, clear a slot to swap something in.', 4000);
 		} else {
 			showToast('Filled ' + filled + ' meal' + (filled === 1 ? '' : 's') + ' for you ✓ Swap anything you like.', 4500);
 		}
@@ -270,7 +270,7 @@
 		disarm();
 		saveState();
 		renderPlanner();
-		showToast('Meal plan cleared — your week is empty again.', 3500);
+		showToast('Meal plan cleared, your week is empty again.', 3500);
 		return true;
 	}
 
@@ -292,7 +292,7 @@
 		var recipe = recipesBySlug[slug];
 		if (!recipe) { return; }
 		armedSlug = slug;
-		if (armedText) { armedText.textContent = 'Adding "' + recipe.name + '" — click an empty slot below to place it.'; }
+		if (armedText) { armedText.textContent = 'Adding "' + recipe.name + '", click an empty slot below to place it.'; }
 		if (armedBar) { armedBar.classList.add('is-visible'); }
 		var planner = document.getElementById('planner');
 		if (planner) { planner.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -322,7 +322,7 @@
 
 	function openPicker(day, slot) {
 		pickerTarget = { day: day, slot: slot };
-		if (pickerTitle) { pickerTitle.textContent = 'Choose a recipe — ' + day + ', ' + slot.charAt(0).toUpperCase() + slot.slice(1); }
+		if (pickerTitle) { pickerTitle.textContent = 'Choose a recipe: ' + day + ', ' + slot.charAt(0).toUpperCase() + slot.slice(1); }
 		if (pickerSearch) { pickerSearch.value = ''; }
 		renderPickerList('');
 		if (picker) { picker.classList.add('is-open'); picker.setAttribute('aria-hidden', 'false'); }

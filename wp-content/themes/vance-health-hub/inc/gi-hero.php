@@ -133,7 +133,7 @@ function vance_gi_hero_meta() {
 			// condition of the digestive tract", which says nothing that the
 			// headline has not already said; this one names the two conditions
 			// underneath it, which is the whole job of an umbrella page.
-			'intro'   => __( 'The umbrella term for long-term conditions — mainly Crohn’s disease and ulcerative colitis — that inflame the digestive tract. There is no single cure, but with the right plan many people live in long, stable remission.', 'vance-health-hub' ),
+			'intro'   => __( 'The umbrella term for long-term conditions (mainly Crohn’s disease and ulcerative colitis) that inflame the digestive tract. There is no single cure, but with the right plan many people live in long, stable remission.', 'vance-health-hub' ),
 			'related' => array( 'ulcerative-colitis', 'crohns-disease', 'microscopic-colitis' ),
 			'focal'   => '50% 30%',
 		),
@@ -169,7 +169,7 @@ function vance_gi_hero_meta() {
 			'eyebrow' => __( 'Functional gut disorder', 'vance-health-hub' ),
 			'kicker'  => __( 'How the gut works', 'vance-health-hub' ),
 			'icon'    => 'wave',
-			'intro'   => __( 'A common, long-term disorder of how the gut works — pain, bloating and changes in bowel habit, without visible damage to the bowel itself.', 'vance-health-hub' ),
+			'intro'   => __( 'A common, long-term disorder of how the gut works: pain, bloating and changes in bowel habit, without visible damage to the bowel itself.', 'vance-health-hub' ),
 			'related' => array( 'microscopic-colitis', 'diverticular-disease', 'inflammatory-bowel-disease' ),
 			'focal'   => '60% 32%',
 		),
@@ -320,7 +320,7 @@ function vance_gi_hero_hub_defaults() {
 	return array(
 		'eyebrow'   => __( 'Gastro health', 'vance-health-hub' ),
 		'heading'   => __( 'Seven gut conditions, clearly explained', 'vance-health-hub' ),
-		'lede'      => __( 'Clinician-reviewed information on inflammatory bowel disease, IBS, colorectal cancer and more — written in plain language to help you understand a diagnosis, prepare for appointments and manage day to day.', 'vance-health-hub' ),
+		'lede'      => __( 'Clinician-reviewed information on inflammatory bowel disease, IBS, colorectal cancer and more, written in plain language to help you understand a diagnosis, prepare for appointments and manage day to day.', 'vance-health-hub' ),
 		'btn1_text' => __( 'Take the Gastro Health Survey', 'vance-health-hub' ),
 		'btn1_url'  => '/gastro-health-survey/',
 		'btn2_text' => __( 'My Dashboard', 'vance-health-hub' ),
@@ -630,7 +630,7 @@ function vance_gi_hero_styles() {
     align-items: center;
     justify-content: center;
     padding: 13px 14px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: <?php echo esc_attr( VANCE_GI_PURPLE_TINT ); ?>;
     border: 1px solid <?php echo esc_attr( VANCE_GI_PURPLE_LINE ); ?>;
     text-decoration: none;

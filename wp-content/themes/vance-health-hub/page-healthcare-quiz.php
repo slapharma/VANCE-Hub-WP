@@ -79,7 +79,7 @@ get_header();
     gap: 8px;
     background: rgba(255,255,255,0.10);
     padding: 6px 16px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     margin-bottom: 24px;
     border: 1px solid rgba(255,255,255,0.20);
     font-size: 12px;
@@ -106,7 +106,7 @@ get_header();
     max-width: 1000px;
     margin: -40px auto 0;
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     box-shadow: 0 20px 40px -10px rgba(0,0,0,0.10);
     overflow: hidden;
     position: relative;
@@ -175,7 +175,7 @@ get_header();
 .option-item {
     padding: 20px 24px;
     border: 2px solid #e2e8f0;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
@@ -211,7 +211,7 @@ get_header();
     width: 20px;
     height: 20px;
     border: 2px solid #cbd5e1;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -257,7 +257,7 @@ get_header();
 
 .btn-quiz {
     padding: 14px 32px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     font-weight: 700;
     font-family: 'Outfit', sans-serif;
     cursor: pointer;
@@ -296,7 +296,7 @@ get_header();
     width: 100%;
     padding: 16px 20px;
     border: 2px solid #e2e8f0;
-    border-radius: var(--radius-field, 10px);
+    border-radius: var(--radius-field, 16px);
     font-size: 16px;
     outline: none;
     transition: all 0.2s;
@@ -338,7 +338,7 @@ get_header();
 .register-cta {
     background: var(--navy-dark);
     padding: 40px;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     color: white;
 }
 

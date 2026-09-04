@@ -115,7 +115,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 
 .control-box {
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     padding: 24px;
     margin: -40px auto 40px;
     max-width: 1200px;
@@ -134,7 +134,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 
 .control-btn {
     padding: 10px 20px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -195,7 +195,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 .results-sort select {
     padding: 8px 12px;
     border: 1px solid #E2E8F0;
-    border-radius: var(--radius-field, 10px);
+    border-radius: var(--radius-field, 16px);
     background: white;
     color: #334155;
     font-size: 13px;
@@ -209,7 +209,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 
 .result-item {
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     padding: 24px;
     margin-bottom: 20px;
     border: 1px solid #E2E8F0;
@@ -226,7 +226,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 .result-thumbnail {
     width: 120px;
     height: 120px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: #F1F5F9;
     overflow: hidden;
     flex-shrink: 0;
@@ -285,7 +285,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
     background: #F1F5F9;
     color: #475569;
     padding: 4px 10px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     font-size: 11px;
     font-weight: 600;
 }
@@ -297,7 +297,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
 
 .action-btn {
     padding: 8px 16px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -322,7 +322,7 @@ $condition_labels = wp_list_pluck(vance_gi_conditions(), 'label');
     text-align: center;
     padding: 80px 20px;
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     border: 2px dashed #E2E8F0;
 }
 

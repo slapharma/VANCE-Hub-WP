@@ -64,7 +64,7 @@ $agent_data = array(
     gap: 8px;
     background: rgba(255,255,255,0.1);
     padding: 6px 16px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     margin-bottom: 24px;
     border: 1px solid rgba(255,255,255,0.2);
 }
@@ -99,7 +99,7 @@ $agent_data = array(
 
 .chat-main {
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
     border: 2px solid var(--primary-color);
     overflow: hidden;
@@ -124,7 +124,7 @@ $agent_data = array(
     width: 48px;
     height: 48px;
     background: var(--primary-color);
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -241,7 +241,7 @@ $askai_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
             </div>
         </main>
 
-        <div style="text-align: left; margin-top: 32px; color: #64748b; font-size: 13px; max-width: 800px; margin-left: auto; margin-right: auto; padding: 20px; background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div style="text-align: left; margin-top: 32px; color: #64748b; font-size: 13px; max-width: 800px; margin-left: auto; margin-right: auto; padding: 20px; background: white; border-radius: var(--radius-surface, 24px); border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <p style="margin: 0; line-height: 1.65;"><strong>How to use this tool.</strong> Vance AI gives general information about gastrointestinal health, IBD and clinical nutrition. It is an automated assistant: it can be wrong or out of date, it does not know your personal medical history, and it does not provide a diagnosis, prescription or treatment plan. It is not a substitute for advice from your own healthcare team and must not be used for urgent or emergency needs. If you feel unwell or think you may have a medical emergency, call 999 or NHS 111 now. Please do not enter information that identifies you, conversations may be processed by a third-party AI provider and stored to improve the service. By using this tool you accept that it is for general information only.</p>
         </div>
     </div>

@@ -117,7 +117,7 @@ $wrapper_style = ( $vance_subcat_parent > 0 )
                 // face (--font-main, Inter) from body, which is already what it
                 // renders in; restating it would just be a second place to keep
                 // in step.
-                $card_style = "display: flex; align-items: center; justify-content: center; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 6px); background: transparent; border: 1px solid #008080; transition: none;";
+                $card_style = "display: flex; align-items: center; justify-content: center; text-decoration: none; white-space: nowrap; overflow: hidden; width: 100%; border-radius: var(--radius-control, 10px); background: transparent; border: 1px solid #008080; transition: none;";
                 // Padding carries most of the height: two 10px lines are only ~25px,
                 // so the 24px of vertical padding was the larger half of the old 55px.
                 $card_style .= ( $vance_subcat_parent > 0 ) ? " padding: 10px 14px;" : " padding: 8px;";

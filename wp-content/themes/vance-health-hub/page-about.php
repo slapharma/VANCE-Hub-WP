@@ -630,9 +630,9 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     /* Aliases onto the site-wide scale in main.css rather than a second set of
        numbers. The literal fallbacks are this page's original geometry, kept
        only for the case where main.css has not loaded. */
-    --vab-r-sm:  var(--radius-control, 6px);
-    --vab-r-md:  var(--radius-field, 10px);
-    --vab-r-lg:  var(--radius-surface, 14px);
+    --vab-r-sm:  var(--radius-control, 10px);
+    --vab-r-md:  var(--radius-field, 16px);
+    --vab-r-lg:  var(--radius-surface, 24px);
     --vab-r-pill: var(--radius-pill, 999px);
 
     /* Elevation */
@@ -695,7 +695,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     /* The hero eyebrow drops off --radius-pill onto the control step so it
        matches .tag-label, the equivalent pill in the contact-us hero. The
        lighter .vabout-pill further down the page keeps its full round. */
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
 }
 
 /* ---------- Buttons ---------- */
@@ -827,8 +827,8 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
    then absorbs whatever slack a shorter (single-line) label leaves, so every
    bar lands on the same baseline across the row. */
 .vabout-stat-label { margin: 12px 0 20px; font-size: .88rem; font-weight: 500; color: var(--vab-muted); }
-.vabout-stat-bar { display: block; height: 4px; margin-top: auto; border-radius: var(--radius-control, 6px); background: var(--vab-line); overflow: hidden; }
-.vabout-stat-bar i { display: block; height: 100%; width: 0; border-radius: var(--radius-control, 6px); background: linear-gradient(90deg, var(--vab-teal), var(--vab-teal-soft)); transition: width 1.4s var(--vab-ease); }
+.vabout-stat-bar { display: block; height: 4px; margin-top: auto; border-radius: var(--radius-control, 10px); background: var(--vab-line); overflow: hidden; }
+.vabout-stat-bar i { display: block; height: 100%; width: 0; border-radius: var(--radius-control, 10px); background: linear-gradient(90deg, var(--vab-teal), var(--vab-teal-soft)); transition: width 1.4s var(--vab-ease); }
 .vabout-stat.is-visible .vabout-stat-bar i { width: 100%; }
 
 /* ============================ STORY ============================ */
@@ -963,7 +963,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 .vabout-feat-ico {
     display: flex; align-items: center; justify-content: center;
     flex: 0 0 44px; width: 44px; height: 44px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: linear-gradient(135deg, rgba(0,128,128,.16), rgba(0,128,128,.05));
     color: var(--vab-teal);
 }

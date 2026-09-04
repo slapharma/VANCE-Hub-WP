@@ -74,7 +74,7 @@ $vance_dc_regions = array(
 			<p class="vance-discount-empty-serverside">
 				<?php echo $vance_dc_cat_filter
 					? esc_html__( 'No schemes match that category.', 'vance-health-hub' )
-					: esc_html__( 'No schemes are published yet — check back soon.', 'vance-health-hub' ); ?>
+					: esc_html__( 'No schemes are published yet. Check back soon.', 'vance-health-hub' ); ?>
 			</p>
 		<?php endif; ?>
 	</div>

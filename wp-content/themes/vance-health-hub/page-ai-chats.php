@@ -310,7 +310,7 @@ get_header();
 .vance-ai-chats-page .banner-sub { color: var(--vac-ink-soft); font-size: 15px; max-width: 62ch; margin: 0 0 26px; }
 .vance-ai-chats-page .stat-row {
 	display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--vac-border);
-	border: 1px solid var(--vac-border); border-radius: var(--radius-surface, 14px); overflow: hidden;
+	border: 1px solid var(--vac-border); border-radius: var(--radius-surface, 24px); overflow: hidden;
 }
 .vance-ai-chats-page .stat { background: var(--vac-surface); padding: 14px 16px; }
 .vance-ai-chats-page .stat-num { font-family: var(--vac-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -321,13 +321,13 @@ get_header();
 }
 .vance-ai-chats-page .controls-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .vance-ai-chats-page .search-box {
-	flex: 1 1 220px; border: 1px solid var(--vac-border); background: var(--vac-surface); border-radius: var(--radius-field, 10px);
+	flex: 1 1 220px; border: 1px solid var(--vac-border); background: var(--vac-surface); border-radius: var(--radius-field, 16px);
 	padding: 9px 12px; font-size: 14px; color: var(--vac-ink); font-family: inherit;
 }
 .vance-ai-chats-page .search-box:focus { outline: 2px solid var(--vac-accent); outline-offset: -1px; }
 .vance-ai-chats-page .btn {
 	border: 1px solid var(--vac-border); background: var(--vac-surface); color: var(--vac-ink-soft); font-size: 13px;
-	padding: 8px 12px; border-radius: var(--radius-control, 6px); cursor: pointer; font-family: inherit;
+	padding: 8px 12px; border-radius: var(--radius-control, 10px); cursor: pointer; font-family: inherit;
 }
 .vance-ai-chats-page .btn:hover { color: var(--vac-ink); border-color: var(--vac-accent); }
 .vance-ai-chats-page .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
@@ -344,14 +344,14 @@ get_header();
 .vance-ai-chats-page .user-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .vance-ai-chats-page .user-id-badge {
 	font-family: var(--vac-mono); font-size: 12px; color: var(--vac-ink-faint); border: 1px solid var(--vac-border);
-	border-radius: var(--radius-control, 6px); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+	border-radius: var(--radius-control, 10px); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .vance-ai-chats-page .user-info h2 { font-size: 18px; margin: 0; font-weight: 650; }
 .vance-ai-chats-page .user-sub { font-family: var(--vac-mono); font-size: 12px; color: var(--vac-ink-faint); margin-top: 2px; }
 .vance-ai-chats-page .sep { opacity: 0.5; }
 .vance-ai-chats-page .user-count { margin-left: auto; font-size: 12px; color: var(--vac-ink-faint); white-space: nowrap; }
 .vance-ai-chats-page .chat-list { display: flex; flex-direction: column; gap: 10px; }
-.vance-ai-chats-page .chat-card { background: var(--vac-surface); border: 1px solid var(--vac-border); border-radius: var(--radius-surface, 14px); box-shadow: var(--vac-shadow); overflow: hidden; }
+.vance-ai-chats-page .chat-card { background: var(--vac-surface); border: 1px solid var(--vac-border); border-radius: var(--radius-surface, 24px); box-shadow: var(--vac-shadow); overflow: hidden; }
 .vance-ai-chats-page .chat-head {
 	width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: none; border: none;
 	cursor: pointer; text-align: left; font-family: inherit; color: inherit;
@@ -362,7 +362,7 @@ get_header();
 .vance-ai-chats-page .chat-meta { font-family: var(--vac-mono); font-size: 11.5px; color: var(--vac-ink-faint); }
 .vance-ai-chats-page .chat-meta .dot { margin: 0 2px; }
 .vance-ai-chats-page .chat-toggle { flex-shrink: 0; width: 18px; height: 18px; position: relative; }
-.vance-ai-chats-page .chat-toggle::before, .vance-ai-chats-page .chat-toggle::after { content: ""; position: absolute; background: var(--vac-ink-faint); border-radius: var(--radius-control, 6px); }
+.vance-ai-chats-page .chat-toggle::before, .vance-ai-chats-page .chat-toggle::after { content: ""; position: absolute; background: var(--vac-ink-faint); border-radius: var(--radius-control, 10px); }
 .vance-ai-chats-page .chat-toggle::before { width: 10px; height: 2px; top: 8px; left: 4px; }
 .vance-ai-chats-page .chat-toggle::after { width: 2px; height: 10px; top: 4px; left: 8px; transition: transform 0.15s ease; }
 .vance-ai-chats-page .chat-head[aria-expanded="true"] .chat-toggle::after { transform: rotate(90deg); }
@@ -373,7 +373,7 @@ get_header();
 .vance-ai-chats-page .msg-role { font-family: var(--vac-mono); font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
 .vance-ai-chats-page .msg-user .msg-role { color: var(--vac-accent-strong); }
 .vance-ai-chats-page .msg-assistant .msg-role { color: var(--vac-ink-faint); }
-.vance-ai-chats-page .msg-user .msg-body { background: var(--vac-user-bubble); border-radius: var(--radius-surface, 14px); padding: 10px 12px; }
+.vance-ai-chats-page .msg-user .msg-body { background: var(--vac-user-bubble); border-radius: var(--radius-surface, 24px); padding: 10px 12px; }
 .vance-ai-chats-page .msg-body { font-size: 14px; color: var(--vac-ink); }
 .vance-ai-chats-page .msg-body p { margin: 0 0 10px; }
 .vance-ai-chats-page .msg-body p:last-child { margin-bottom: 0; }
@@ -484,7 +484,7 @@ get_header();
 
 	<?php endif; ?>
 
-	<div class="footer-note"><?php esc_html_e( 'Live query against wp_usermeta._sla_saved_chats — refresh to see new conversations.', 'vance-health-hub' ); ?></div>
+	<div class="footer-note"><?php esc_html_e( 'Live query against wp_usermeta._sla_saved_chats. Refresh to see new conversations.', 'vance-health-hub' ); ?></div>
 </div>
 
 <script>

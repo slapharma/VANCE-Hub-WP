@@ -126,7 +126,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'card'         => 'text',
 			'card_icon'    => 'chat',
 			'card_title'   => __( 'A real reply, within one business day', 'vance-health-hub' ),
-			'card_text'    => __( 'Messages sent from this page reach the Vance Medical team directly — no ticket queue, no automated loop.', 'vance-health-hub' ),
+			'card_text'    => __( 'Messages sent from this page reach the Vance Medical team directly, no ticket queue, no automated loop.', 'vance-health-hub' ),
 		),
 		'about' => array(
 			'name'         => __( 'About Us', 'vance-health-hub' ),
@@ -184,7 +184,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'short_name'   => __( 'Survey', 'vance-health-hub' ),
 			'panel'        => 'vance_hquiz_panel',
 			'section'      => 'vance_hquiz_hero_spotlight',
-			'section_title'    => __( 'Hero — Spotlight', 'vance-health-hub' ),
+			'section_title'    => __( 'Hero: Spotlight', 'vance-health-hub' ),
 			'style_section'    => 'vance_hquiz_hero',
 			'classic_template' => 'page-healthcare-quiz.php',
 			'priority'     => 160,
@@ -212,14 +212,14 @@ function vance_page_hero_spotlight_config( $page ) {
 			'card'         => 'text',
 			'card_icon'    => 'clipboard',
 			'card_title'   => __( 'A summary you can hand to your clinician', 'vance-health-hub' ),
-			'card_text'    => __( 'Answer once and the survey returns a plain-language summary of what you reported — yours to keep, print or take to an appointment.', 'vance-health-hub' ),
+			'card_text'    => __( 'Answer once and the survey returns a plain-language summary of what you reported, yours to keep, print or take to an appointment.', 'vance-health-hub' ),
 		),
 		'recipes' => array(
 			'name'         => __( 'Gastro Recipes & Meal Planner', 'vance-health-hub' ),
 			'short_name'   => __( 'Meal planner', 'vance-health-hub' ),
 			'panel'        => 'vance_tools_panel',
 			'section'      => 'vance_tools_hero_recipes_spotlight',
-			'section_title'    => __( 'Recipes Hero — Spotlight', 'vance-health-hub' ),
+			'section_title'    => __( 'Recipes Hero: Spotlight', 'vance-health-hub' ),
 			'style_section'    => 'vance_tools_hero_recipes',
 			'classic_template' => 'page-gastro-recipies.php',
 			'priority'     => 160,
@@ -245,14 +245,14 @@ function vance_page_hero_spotlight_config( $page ) {
 			'card'         => 'text',
 			'card_icon'    => 'bowl',
 			'card_title'   => __( 'Every recipe carries its nutrition data', 'vance-health-hub' ),
-			'card_text'    => __( 'So a week of meals adds up to numbers — energy, protein, EPA — you can put in front of a dietitian rather than describe.', 'vance-health-hub' ),
+			'card_text'    => __( 'So a week of meals adds up to numbers (energy, protein, EPA) you can put in front of a dietitian rather than describe.', 'vance-health-hub' ),
 		),
 		'malnutrition' => array(
 			'name'         => __( 'Malnutrition Calculator', 'vance-health-hub' ),
 			'short_name'   => __( 'Calculator', 'vance-health-hub' ),
 			'panel'        => 'vance_tools_panel',
 			'section'      => 'vance_tools_hero_malnutrition_spotlight',
-			'section_title'    => __( 'Calculator Hero — Spotlight', 'vance-health-hub' ),
+			'section_title'    => __( 'Calculator Hero: Spotlight', 'vance-health-hub' ),
 			'style_section'    => 'vance_tools_hero_malnutrition',
 			'classic_template' => 'page-malnutrition-calculator.php',
 			'priority'     => 160,
@@ -303,7 +303,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			// this file runs at 20, so both panel and section exist by then.
 			'panel'        => 'vance_content_panel',
 			'section'      => 'vance_askai_hero_spotlight',
-			'section_title'    => __( 'VANCE-Ai Hero — Spotlight', 'vance-health-hub' ),
+			'section_title'    => __( 'VANCE-Ai Hero: Spotlight', 'vance-health-hub' ),
 			'style_section'    => 'vance_askai_settings',
 			'classic_template' => 'page-ask-ai.php',
 			'priority'     => 160,
@@ -382,7 +382,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_desc'  => 'vance_userguide_hero_desc',
 			'legacy_tag_default'   => 'User Guide',
 			'legacy_title_default' => 'Get the most out of <span class="highlight">Vance Medical Hub</span>',
-			'legacy_desc_default'  => 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey — evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.',
+			'legacy_desc_default'  => 'Vance Health Hub is built to be the credible source you turn to at every step of your healthcare journey: evidence-based research, clinically-grounded tools, and a private dashboard that keeps your data, notes and AI conversations in one place. This guide shows you how it all fits together.',
 			'image'        => $img_hero . 'userguide.jpg',
 			'image_alt'    => __( 'A younger woman leaning in to show an older woman something on a laptop at a kitchen table', 'vance-health-hub' ),
 			'btn1_text'    => __( 'Start with your journey', 'vance-health-hub' ),
@@ -483,7 +483,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			// Deliberately does NOT say "tell us which track you want": only
 			// the modal opened from a track card carries a TRACK field, and the
 			// form this hero's first button scrolls to does not.
-			'card_text'    => __( 'Self-paced modules for living with IBD, and CPD-accredited deep dives for clinicians. Joining once covers both — one email per track, when that track opens.', 'vance-health-hub' ),
+			'card_text'    => __( 'Self-paced modules for living with IBD, and CPD-accredited deep dives for clinicians. Joining once covers both: one email per track, when that track opens.', 'vance-health-hub' ),
 		),
 
 		/*
@@ -516,7 +516,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			// page-patient-downloads.php already renders.
 			'legacy_tag_default'   => 'Patient Downloads',
 			'legacy_title_default' => 'Printable guides for your <span class="highlight">next appointment</span>',
-			'legacy_desc_default'  => 'Free, evidence-backed PDF handouts you can save to your phone or print — built for the moments a screen isn\'t the easiest way to have the conversation.',
+			'legacy_desc_default'  => 'Free, evidence-backed PDF handouts you can save to your phone or print, built for the moments a screen isn\'t the easiest way to have the conversation.',
 			'motif'        => true,
 			'image'        => '',
 			'image_alt'    => '',
@@ -532,7 +532,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'card'         => 'text',
 			'card_icon'    => 'clipboard',
 			'card_title'   => __( 'Built for the moments a screen isn\'t easiest', 'vance-health-hub' ),
-			'card_text'    => __( 'Every handout is evidence-backed, free, and yours to keep — no account needed to download.', 'vance-health-hub' ),
+			'card_text'    => __( 'Every handout is evidence-backed, free, and yours to keep, no account needed to download.', 'vance-health-hub' ),
 		),
 
 		/*
@@ -568,7 +568,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_desc'  => 'vance_discounts_hero_desc',
 			'legacy_tag_default'   => 'Discounts & Freebies',
 			'legacy_title_default' => 'Discounts and freebies for <span class="highlight">life with IBD</span>',
-			'legacy_desc_default'  => 'Every UK scheme worth knowing about — toilet access, days out, travel, tax and benefits — checked against the provider\'s own page, not copied from a leaflet.',
+			'legacy_desc_default'  => 'Every UK scheme worth knowing about (toilet access, days out, travel, tax and benefits), checked against the provider\'s own page, not copied from a leaflet.',
 			'motif'        => true,
 			'image'        => '',
 			'image_alt'    => '',
@@ -604,7 +604,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'section'      => 'vance_tools_hero_spotlight',
 			// Two OTHER spotlight sections already live in this panel, one per
 			// tool. hero-customizer.test.php fails if any two share a title.
-			'section_title'    => __( 'Shelf Hero — Spotlight', 'vance-health-hub' ),
+			'section_title'    => __( 'Shelf Hero: Spotlight', 'vance-health-hub' ),
 			'style_section'    => 'vance_tools_hero',
 			'classic_template' => 'page-tools-resources.php',
 			'priority'     => 9,
@@ -706,7 +706,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			// used as literals -- see vance_page_hero_spotlight_values().
 			'legacy_tag_default'   => __( '404 error', 'vance-health-hub' ),
 			'legacy_title_default' => __( 'We can&rsquo;t find that page', 'vance-health-hub' ),
-			'legacy_desc_default'  => __( 'The address may have changed, or the page may have been retired. Nothing is lost — everything the Hub publishes is reachable from the Knowledgebase.', 'vance-health-hub' ),
+			'legacy_desc_default'  => __( 'The address may have changed, or the page may have been retired. Nothing is lost. Everything the Hub publishes is reachable from the Knowledgebase.', 'vance-health-hub' ),
 			'motif'        => true,
 			'image'        => '',
 			'image_alt'    => '',
@@ -1729,10 +1729,10 @@ function vance_render_page_hero_spotlight( $page ) {
 function vance_page_hero_spotlight_customize( $wp_customize ) {
 
 	$shared_fields = array(
-		'image'           => array( 'type' => 'image',    'label' => 'Photograph', 'description' => 'Separate from the classic hero\'s background image, which was picked to sit under a dark veil. This one is dissolved into a pale background, so it wants to be light and uncluttered down its left-hand side — roughly 1400&times;875.' ),
-		'image_alt'       => array( 'type' => 'text',     'label' => 'Photograph — alt text' ),
-		'bg_from'         => array( 'type' => 'color',    'label' => 'Background — Top' ),
-		'bg_to'           => array( 'type' => 'color',    'label' => 'Background — Bottom', 'description' => 'The photograph is dissolved into these two colours, so changing them keeps its edges seamless.' ),
+		'image'           => array( 'type' => 'image',    'label' => 'Photograph', 'description' => 'Separate from the classic hero\'s background image, which was picked to sit under a dark veil. This one is dissolved into a pale background, so it wants to be light and uncluttered down its left-hand side, roughly 1400&times;875.' ),
+		'image_alt'       => array( 'type' => 'text',     'label' => 'Photograph, alt text' ),
+		'bg_from'         => array( 'type' => 'color',    'label' => 'Background, Top' ),
+		'bg_to'           => array( 'type' => 'color',    'label' => 'Background, Bottom', 'description' => 'The photograph is dissolved into these two colours, so changing them keeps its edges seamless.' ),
 		'title_color'     => array( 'type' => 'color',    'label' => 'Headline Colour' ),
 		'intro_color'     => array( 'type' => 'color',    'label' => 'Body Text Colour' ),
 		'btn1_text'       => array( 'type' => 'text',     'label' => 'Button 1, Text' ),
@@ -1743,12 +1743,12 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		'btn2_text'       => array( 'type' => 'text',     'label' => 'Button 2, Text' ),
 		'btn2_link'       => array( 'type' => 'text',     'label' => 'Button 2, Link' ),
 		'show_slot'       => array( 'type' => 'checkbox', 'label' => 'Show the white band' ),
-		'slot_label'      => array( 'type' => 'text',     'label' => 'White band — Prompt' ),
-		'search_placeholder' => array( 'type' => 'text',  'label' => 'White band — Search field placeholder' ),
+		'slot_label'      => array( 'type' => 'text',     'label' => 'White band, Prompt' ),
+		'search_placeholder' => array( 'type' => 'text',  'label' => 'White band, Search field placeholder' ),
 		'show_card'       => array( 'type' => 'checkbox', 'label' => 'Show the floating card' ),
-		'card_title'      => array( 'type' => 'text',     'label' => 'Card — Heading' ),
-		'card_text'       => array( 'type' => 'textarea', 'label' => 'Card — Body' ),
-		'card_bg_color'   => array( 'type' => 'color',    'label' => 'Card — Background' ),
+		'card_title'      => array( 'type' => 'text',     'label' => 'Card, Heading' ),
+		'card_text'       => array( 'type' => 'textarea', 'label' => 'Card, Body' ),
+		'card_bg_color'   => array( 'type' => 'color',    'label' => 'Card, Background' ),
 	);
 
 	// Per-page wording for the two controls that need it. The three tool pages
@@ -1763,12 +1763,12 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 	$notes = array(
 		'contact' => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your email, phone and opening hours in a white band. Classic is the dark navy hero configured by the rest of this panel.',
-			'section'    => 'The light hero for this page. Only rendered while "Contact hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero — edit them in the Hero Section, and they follow whichever design is switched on.',
+			'section'    => 'The light hero for this page. Only rendered while "Contact hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero, edit them in the Hero Section, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself is filled from Email Address, Phone Number and Office Hours in the Contact Information section.',
 		),
 		'about' => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your trust badges in a white band. Classic is the dark navy hero configured by the rest of this panel.',
-			'section'    => 'The light hero for this page. Only rendered while "About hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero — edit them in the Hero Section, and they follow whichever design is switched on.',
+			'section'    => 'The light hero for this page. Only rendered while "About hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero, edit them in the Hero Section, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself is filled from Badge 1–3 in the Trust Badges &amp; Stats section, and the card shows Stat 1 from that same section.',
 		),
 		'hquiz'        => $tool_note,
@@ -1858,8 +1858,8 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'type'        => 'select',
 			'priority'    => 1,
 			'choices'     => array(
-				'classic'   => __( 'Classic — dark navy hero', 'vance-health-hub' ),
-				'spotlight' => __( 'Spotlight — light, action-led', 'vance-health-hub' ),
+				'classic'   => __( 'Classic: dark navy hero', 'vance-health-hub' ),
+				'spotlight' => __( 'Spotlight: light, action-led', 'vance-health-hub' ),
 			),
 		) );
 		endif;
@@ -1868,7 +1868,7 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		// Three of these sit in the same panel as each other, so two of them
 		// carry a title that says which tool they belong to.
 		$wp_customize->add_section( $c['section'], array(
-			'title'       => isset( $c['section_title'] ) ? $c['section_title'] : __( 'Hero — Spotlight', 'vance-health-hub' ),
+			'title'       => isset( $c['section_title'] ) ? $c['section_title'] : __( 'Hero: Spotlight', 'vance-health-hub' ),
 			'description' => $notes[ $page ]['section'],
 			'priority'    => $c['priority'],
 			'panel'       => $c['panel'],

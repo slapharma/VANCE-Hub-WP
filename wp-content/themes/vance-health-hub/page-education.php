@@ -94,7 +94,7 @@ $track_icons = array(
     <section class="edu-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: 64px 0;">
         <div class="container">
             <div class="text-center max-600 edu-intro-inner" style="margin: 0 auto 0;">
-                <span class="edu-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 6px);">
+                <span class="edu-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 10px);">
                     <?php echo esc_html( $intro_eyebrow ); ?>
                 </span>
                 <h2 class="edu-intro-title" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . ';' : 'color: var(--secondary-color);'; ?> margin: 0 0 12px;"><?php echo esc_html( $intro_title ); ?></h2>
@@ -112,7 +112,7 @@ $track_icons = array(
                     $t_desc  = vance_get_theme_mod( "vance_edu_track{$i}_desc",  $track_defaults[ $i ][1] );
                 ?>
                 <button type="button" class="edu-track-card" data-edu-waitlist-trigger data-edu-track="<?php echo esc_attr( $t_title ); ?>" style="display: flex; gap: 24px; padding: 36px; background: white; border: 1px solid transparent; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); align-items: flex-start; cursor: pointer; text-align: left; font: inherit; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s; width: 100%;">
-                    <div class="edu-track-icon" style="flex-shrink: 0; width: 64px; height: 64px; background: <?php echo esc_attr( $track_colors[ $i ][0] ); ?>; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center;">
+                    <div class="edu-track-icon" style="flex-shrink: 0; width: 64px; height: 64px; background: <?php echo esc_attr( $track_colors[ $i ][0] ); ?>; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center;">
                         <svg width="32" height="32" fill="none" stroke="<?php echo esc_attr( $track_colors[ $i ][1] ); ?>" viewBox="0 0 24 24"><?php echo $track_icons[ $i ]; ?></svg>
                     </div>
                     <div style="flex: 1;">
@@ -140,8 +140,8 @@ $track_icons = array(
 
             <?php if ( $wl_action ) : ?>
             <form class="edu-waitlist-form" action="<?php echo esc_url( $wl_action ); ?>" method="post" target="_blank" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
-                <input type="email" name="EMAIL" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px;">
-                <select name="ROLE" style="padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px; background: white;">
+                <input type="email" name="EMAIL" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-field, 16px); font-size: 16px;">
+                <select name="ROLE" style="padding: 14px 20px; border: none; border-radius: var(--radius-field, 16px); font-size: 16px; background: white;">
                     <option value="">I am a…</option>
                     <option value="patient">Patient</option>
                     <option value="caregiver">Caregiver / Family</option>
@@ -156,8 +156,8 @@ $track_icons = array(
             <?php else : ?>
             <form class="edu-waitlist-form" id="edu-waitlist-selfhosted-form" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
                 <?php wp_nonce_field( 'vance_edu_waitlist', 'edu_waitlist_nonce' ); ?>
-                <input type="email" name="EMAIL" id="edu-waitlist-email" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px;">
-                <select name="ROLE" id="edu-waitlist-role" style="padding: 14px 20px; border: none; border-radius: var(--radius-field, 10px); font-size: 16px; background: white;">
+                <input type="email" name="EMAIL" id="edu-waitlist-email" placeholder="Enter your email" required style="flex: 1; min-width: 240px; padding: 14px 20px; border: none; border-radius: var(--radius-field, 16px); font-size: 16px;">
+                <select name="ROLE" id="edu-waitlist-role" style="padding: 14px 20px; border: none; border-radius: var(--radius-field, 16px); font-size: 16px; background: white;">
                     <option value="">I am a…</option>
                     <option value="patient">Patient</option>
                     <option value="caregiver">Caregiver / Family</option>
@@ -219,17 +219,17 @@ $track_icons = array(
 <!-- WAITLIST POPUP — rendered once, opened by any [data-edu-waitlist-trigger] click -->
 <div class="edu-wl-modal" id="edu-wl-modal" role="dialog" aria-modal="true" aria-labelledby="edu-wl-title" style="display: none; position: fixed; inset: 0; background: rgba(10,25,41,0.78); backdrop-filter: blur(4px); z-index: 100050; align-items: center; justify-content: center; padding: 20px;">
     <div style="background: white; max-width: 460px; width: 100%; padding: 36px 32px; box-shadow: 0 30px 80px rgba(10,25,41,0.30); border-top: 4px solid <?php echo esc_attr( $wl_bg_from ); ?>; position: relative;">
-        <button type="button" id="edu-wl-close" aria-label="Close" style="position: absolute; top: 12px; right: 14px; background: transparent; border: none; font-size: 26px; color: #94a3b8; cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: var(--radius-control, 6px);">×</button>
+        <button type="button" id="edu-wl-close" aria-label="Close" style="position: absolute; top: 12px; right: 14px; background: transparent; border: none; font-size: 26px; color: #94a3b8; cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: var(--radius-control, 10px);">×</button>
         <h2 id="edu-wl-title" style="font-family: 'Outfit', sans-serif; font-size: 24px; color: var(--secondary-color); margin: 0 0 8px;"><?php echo esc_html( $wl_heading ); ?></h2>
         <p id="edu-wl-context" style="color: var(--text-light); font-size: 14px; margin: 0 0 18px; line-height: 1.6;"><?php echo esc_html( $wl_desc ); ?></p>
 
         <?php if ( $wl_action ) : ?>
         <form action="<?php echo esc_url( $wl_action ); ?>" method="post" target="_blank" autocomplete="on" novalidate>
             <label style="display: block; font-size: 12px; font-weight: 600; color: var(--secondary-color); margin: 14px 0 6px; letter-spacing: 0.3px; text-transform: uppercase;">Email</label>
-            <input type="email" name="EMAIL" required placeholder="you@example.com" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 10px);">
+            <input type="email" name="EMAIL" required placeholder="you@example.com" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 16px);">
 
             <label style="display: block; font-size: 12px; font-weight: 600; color: var(--secondary-color); margin: 14px 0 6px; letter-spacing: 0.3px; text-transform: uppercase;">I am a…</label>
-            <select name="ROLE" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 10px);">
+            <select name="ROLE" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 16px);">
                 <option value="">Select…</option>
                 <option value="patient">Patient</option>
                 <option value="caregiver">Caregiver / Family</option>
@@ -241,7 +241,7 @@ $track_icons = array(
                 <input type="text" name="b_<?php echo esc_attr( md5( $wl_action ) ); ?>" tabindex="-1" value="">
             </div>
 
-            <button type="submit" style="width: 100%; padding: 14px; margin-top: 20px; background: <?php echo esc_attr( $wl_bg_from ); ?>; color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.4px; text-transform: uppercase; border-radius: var(--radius-control, 6px);">
+            <button type="submit" style="width: 100%; padding: 14px; margin-top: 20px; background: <?php echo esc_attr( $wl_bg_from ); ?>; color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.4px; text-transform: uppercase; border-radius: var(--radius-control, 10px);">
                 <?php echo esc_html( $wl_button ); ?>
             </button>
             <p style="font-size: 11px; color: var(--text-light); margin: 12px 0 0; line-height: 1.55;">No spam. One launch email per track. <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>.</p>
@@ -250,10 +250,10 @@ $track_icons = array(
         <form id="edu-wl-modal-form" autocomplete="on">
             <?php wp_nonce_field( 'vance_edu_waitlist', 'edu_wl_modal_nonce' ); ?>
             <label style="display: block; font-size: 12px; font-weight: 600; color: var(--secondary-color); margin: 14px 0 6px; letter-spacing: 0.3px; text-transform: uppercase;">Email</label>
-            <input type="email" name="EMAIL" id="edu-wl-modal-email" required placeholder="you@example.com" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 10px);">
+            <input type="email" name="EMAIL" id="edu-wl-modal-email" required placeholder="you@example.com" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 16px);">
 
             <label style="display: block; font-size: 12px; font-weight: 600; color: var(--secondary-color); margin: 14px 0 6px; letter-spacing: 0.3px; text-transform: uppercase;">I am a…</label>
-            <select name="ROLE" id="edu-wl-modal-role" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 10px);">
+            <select name="ROLE" id="edu-wl-modal-role" style="width: 100%; padding: 12px 14px; border: 1px solid #E2E8F0; font-size: 15px; background: #fff; box-sizing: border-box; border-radius: var(--radius-field, 16px);">
                 <option value="">Select…</option>
                 <option value="patient">Patient</option>
                 <option value="caregiver">Caregiver / Family</option>
@@ -262,7 +262,7 @@ $track_icons = array(
             <div style="position: absolute; left: -5000px;" aria-hidden="true">
                 <input type="text" name="edu_wl_modal_hp" id="edu-wl-modal-hp" tabindex="-1" value="">
             </div>
-            <button type="submit" id="edu-wl-modal-submit" style="width: 100%; padding: 14px; margin-top: 20px; background: <?php echo esc_attr( $wl_bg_from ); ?>; color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.4px; text-transform: uppercase; border-radius: var(--radius-control, 6px);">
+            <button type="submit" id="edu-wl-modal-submit" style="width: 100%; padding: 14px; margin-top: 20px; background: <?php echo esc_attr( $wl_bg_from ); ?>; color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.4px; text-transform: uppercase; border-radius: var(--radius-control, 10px);">
                 <?php echo esc_html( $wl_button ); ?>
             </button>
             <p id="edu-wl-modal-status" style="font-size: 11px; color: var(--text-light); margin: 12px 0 0; line-height: 1.55;">No spam. One launch email per track. <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>.</p>

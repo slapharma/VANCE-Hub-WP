@@ -312,7 +312,7 @@
 			nutritionHtml +
 			'<table style="width:100%;border-collapse:collapse;margin-top:16px;"><tr>' +
 				'<td style="width:42%;vertical-align:top;padding-right:18px;">' +
-					'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:' + MUTE + ';margin-bottom:6px;">Ingredients' + (currentServings !== r.servings ? ' (scaled to ' + currentServings + ' servings — approximate)' : '') + '</div>' +
+					'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:' + MUTE + ';margin-bottom:6px;">Ingredients' + (currentServings !== r.servings ? ' (scaled to ' + currentServings + ' servings, approximate)' : '') + '</div>' +
 					ingredientsHtml +
 				'</td>' +
 				'<td style="vertical-align:top;">' +

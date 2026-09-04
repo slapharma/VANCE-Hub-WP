@@ -150,7 +150,7 @@ function vance_recipe_render_details_box( $post ) {
 	wp_nonce_field( 'vance_recipe_save_meta', 'vance_recipe_meta_nonce' );
 	vance_recipe_meta_field( $post, 'vance_recipe_servings', __( 'Servings', 'vance-health-hub' ), 'number', 'min="1" step="1"' );
 	vance_recipe_meta_field( $post, 'vance_recipe_prep_min', __( 'Prep (minutes)', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
-	vance_recipe_meta_field( $post, 'vance_recipe_cook_min', __( 'Cook (minutes) — leave blank if no-cook', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
+	vance_recipe_meta_field( $post, 'vance_recipe_cook_min', __( 'Cook (minutes), leave blank if no-cook', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
 
 	$legacy = get_post_meta( $post->ID, '_vance_recipe_legacy_slug', true );
 	if ( $legacy ) {
@@ -168,7 +168,7 @@ function vance_recipe_render_nutrition_box( $post ) {
 	vance_recipe_meta_field( $post, 'vance_recipe_carbs_g', __( 'Carbs (g)', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
 	vance_recipe_meta_field( $post, 'vance_recipe_fat_g', __( 'Fat (g)', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
 	vance_recipe_meta_field( $post, 'vance_recipe_fibre_g', __( 'Fibre (g)', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
-	vance_recipe_meta_field( $post, 'vance_recipe_epa_mg', __( 'EPA (mg) — optional', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
+	vance_recipe_meta_field( $post, 'vance_recipe_epa_mg', __( 'EPA (mg), optional', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
 }
 
 function vance_recipe_render_credit_box( $post ) {

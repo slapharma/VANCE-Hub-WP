@@ -77,18 +77,18 @@ while ( have_posts() ) :
 					?>
 
 					<?php if ( has_post_thumbnail() ) : ?>
-						<img src="<?php echo esc_url( get_the_post_thumbnail_url( $post_id, 'large' ) ); ?>" alt="<?php the_title_attribute(); ?>" style="width:100%;height:auto;max-height:420px;object-fit:cover;border-radius:var(--radius-surface, 14px);margin-bottom:36px;">
+						<img src="<?php echo esc_url( get_the_post_thumbnail_url( $post_id, 'large' ) ); ?>" alt="<?php the_title_attribute(); ?>" style="width:100%;height:auto;max-height:420px;object-fit:cover;border-radius:var(--radius-surface, 24px);margin-bottom:36px;">
 					<?php endif; ?>
 
 					<?php if ( $ingredients ) : ?>
 						<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
 							<h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0A1929;margin:0;">Ingredients</h2>
 							<?php if ( '' !== $servings && (int) $servings > 0 ) : ?>
-								<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:var(--radius-surface, 14px);padding:6px 8px;">
+								<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:var(--radius-surface, 24px);padding:6px 8px;">
 									<span style="font-size:13px;font-weight:600;color:#475569;">Servings</span>
-									<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
-									<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:var(--radius-control, 6px);padding:4px 2px;font-weight:700;">
-									<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
+									<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 10px);cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
+									<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:var(--radius-control, 10px);padding:4px 2px;font-weight:700;">
+									<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 10px);cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
 								</div>
 							<?php endif; ?>
 						</div>
@@ -127,13 +127,13 @@ while ( have_posts() ) :
 					<?php endif; ?>
 
 					<div style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px;">
-						<a id="vance-rs-addplan-trigger" href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);text-decoration:none;">
+						<a id="vance-rs-addplan-trigger" href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 10px);text-decoration:none;">
 							Add to meal plan
 						</a>
-						<a id="vance-rs-viewplan" href="<?php echo esc_url( home_url( '/gastro-meal-planner/#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);text-decoration:none;">
+						<a id="vance-rs-viewplan" href="<?php echo esc_url( home_url( '/gastro-meal-planner/#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 10px);border:1px solid var(--primary-color);text-decoration:none;">
 							View plan
 						</a>
-						<button type="button" id="vance-rs-pdf" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);cursor:pointer;">
+						<button type="button" id="vance-rs-pdf" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 10px);border:1px solid var(--primary-color);cursor:pointer;">
 							Download PDF
 						</button>
 					</div>
@@ -180,7 +180,7 @@ while ( have_posts() ) :
 							$related->the_post();
 							$thumb = get_the_post_thumbnail_url( get_the_ID(), 'medium' );
 							?>
-							<a href="<?php the_permalink(); ?>" style="text-decoration:none;display:flex;flex-direction:column;background:#fff;border-radius:var(--radius-surface, 14px);overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);border:1px solid #e2e8f0;">
+							<a href="<?php the_permalink(); ?>" style="text-decoration:none;display:flex;flex-direction:column;background:#fff;border-radius:var(--radius-surface, 24px);overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);border:1px solid #e2e8f0;">
 								<div style="height:160px;background-color:#cbd5e1;background-image:url('<?php echo esc_url( $thumb ); ?>');background-size:cover;background-position:center;"></div>
 								<div style="padding:18px;">
 									<h4 style="font-size:16px;font-weight:700;color:#0f172a;margin:0;line-height:1.4;"><?php the_title(); ?></h4>
@@ -201,17 +201,17 @@ while ( have_posts() ) :
 	<style>
 	.vance-rs-modal { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(10,25,41,0.72); }
 	.vance-rs-modal.is-open { display:flex; }
-	.vance-rs-modal-panel { background:#fff; border-radius:var(--radius-surface, 14px); width:100%; max-width:640px; max-height:80vh; overflow-y:auto; padding:22px; }
+	.vance-rs-modal-panel { background:#fff; border-radius:var(--radius-surface, 24px); width:100%; max-width:640px; max-height:80vh; overflow-y:auto; padding:22px; }
 	.vance-rs-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 	.vance-rs-modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:#64748b; }
 	.vance-rs-modal-grid { display:flex; flex-direction:column; gap:8px; }
 	.vance-rs-modal-day { display:flex; align-items:center; gap:10px; }
 	.vance-rs-modal-day > span { flex:none; width:36px; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; }
 	.vance-rs-modal-cells { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; flex:1; }
-	.vance-rs-modal-cell { border:1px solid #e2e8f0; background:#f8fafc; border-radius:var(--radius-control, 6px); padding:8px 4px; font-size:10.5px; color:#94a3b8; cursor:pointer; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+	.vance-rs-modal-cell { border:1px solid #e2e8f0; background:#f8fafc; border-radius:var(--radius-control, 10px); padding:8px 4px; font-size:10.5px; color:#94a3b8; cursor:pointer; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 	.vance-rs-modal-cell:hover { border-color:var(--primary-color); color:var(--primary-color); }
 	.vance-rs-modal-cell.is-filled { background:#EEF6F6; border-color:var(--primary-color); color:#0A1929; font-weight:600; }
-	.vance-rs-toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px); background:#0A1929; color:#fff; font-size:13.5px; padding:12px 22px; border-radius:var(--radius-field, 10px); z-index:100060; opacity:0; pointer-events:none; transition:opacity 200ms ease, transform 200ms ease; }
+	.vance-rs-toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px); background:#0A1929; color:#fff; font-size:13.5px; padding:12px 22px; border-radius:var(--radius-field, 16px); z-index:100060; opacity:0; pointer-events:none; transition:opacity 200ms ease, transform 200ms ease; }
 	.vance-rs-toast.is-visible { opacity:1; transform:translate(-50%,0); }
 	</style>
 

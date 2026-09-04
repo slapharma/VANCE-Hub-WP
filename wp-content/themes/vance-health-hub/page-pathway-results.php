@@ -39,7 +39,7 @@ $query = new WP_Query($args);
             <?php if (!empty($all_terms)) : ?>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px;">
                 <?php foreach($all_terms as $term) : ?>
-                    <span style="background: #008080; color: white; padding: 6px 14px; border-radius: var(--radius-control, 6px); font-size: 13px; font-weight: 600;"><?php echo esc_html($term); ?></span>
+                    <span style="background: #008080; color: white; padding: 6px 14px; border-radius: var(--radius-control, 10px); font-size: 13px; font-weight: 600;"><?php echo esc_html($term); ?></span>
                 <?php endforeach; ?>
                 <a href="<?php echo home_url('/#pathway-control-center'); ?>" style="color: #64748b; font-size: 13px; display: flex; align-items: center; margin-left: 10px; font-weight: 600;">Edit Filters</a>
             </div>
@@ -97,7 +97,7 @@ $query = new WP_Query($args);
             </div>
             
         <?php else : ?>
-            <div style="background: white; border-radius: var(--radius-surface, 14px); padding: 60px; text-align: center; border: 1px solid #e2e8f0;">
+            <div style="background: white; border-radius: var(--radius-surface, 24px); padding: 60px; text-align: center; border: 1px solid #e2e8f0;">
                 <img src="<?php echo get_template_directory_uri(); ?>/assets/img/icons/search.svg" style="width: 64px; margin-bottom: 24px; opacity: 0.2;">
                 <h2 style="font-size: 24px; color: #0A1929; margin-bottom: 12px;">No articles found matching your criteria.</h2>
                 <p style="color: #64748b; margin-bottom: 32px;">Try adjusting your filters in the Control Center.</p>

@@ -29,9 +29,9 @@
        The homepage spotlight hero is the reference for the whole site's corner
        language, and it already carries three steps:
 
-           CTA buttons ......  6px  ->  --radius-control
-           search field ..... 10px  ->  --radius-field
-           trust card ....... 14px  ->  --radius-surface
+           CTA buttons ...... 10px  ->  --radius-control
+           search field ..... 16px  ->  --radius-field
+           trust card ....... 24px  ->  --radius-surface
 
        Everything rounds. The single deliberate exception is the article card —
        post tiles stay square so an editorial grid reads as a wall of articles
@@ -41,9 +41,9 @@
        Thin elements need no special casing: CSS clamps a radius that exceeds
        half the box, so a 4px accent bar given --radius-control renders as a
        pill on its own. */
-    --radius-control: 6px;   /* buttons, icon tiles, chips, badges, avatars   */
-    --radius-field:   10px;  /* inputs, selects, search bars, dropdown menus  */
-    --radius-surface: 14px;  /* cards, panels, modals, banners, media boxes   */
+    --radius-control: 10px;  /* buttons, icon tiles, chips, badges, avatars   */
+    --radius-field:   16px;  /* inputs, selects, search bars, dropdown menus  */
+    --radius-surface: 24px;  /* cards, panels, modals, banners, media boxes   */
     --radius-pill:    999px; /* deliberately-round pills and toggles          */
     --radius-article: 0;     /* article cards — the one square exception      */
 
@@ -3019,7 +3019,7 @@ body.home .hero {
 }
 .va-poster-card {
     position: relative;
-    border-radius: var(--radius-md, 8px);
+    border-radius: var(--radius-md, 10px);
     overflow: hidden;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -4993,7 +4993,7 @@ a.vhh-hero-spotlight__line:hover .vhh-hero-spotlight__line-v {
     margin: 0 0 24px;
     padding: 10px 14px;
     border-left: 3px solid var(--color-primary, #008080);
-    border-radius: 0 var(--radius-control, 6px) var(--radius-control, 6px) 0;
+    border-radius: 0 var(--radius-control, 10px) var(--radius-control, 10px) 0;
     background: rgba(0, 128, 128, 0.06);
     font-size: 14px;
     line-height: 1.5;
@@ -5098,7 +5098,7 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
     margin: 32px 0 8px;
     padding: 16px 18px;
     border: 1px solid #dde5e5;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     background: #f7fafa;
 }
 
@@ -5114,7 +5114,7 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
     display: inline-block;
     padding: 6px 12px;
     border: 1px solid var(--color-primary, #008080);
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: #fff;
     color: var(--color-primary, #008080);
     font-size: 14px;
@@ -5156,7 +5156,7 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
     margin: 32px 0 8px;
     padding: 18px 20px;
     border: 1px solid #dde5e5;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     background: #f7fafa;
 }
 
@@ -5270,7 +5270,7 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
     min-height: 48px;
     padding: 10px 12px;
     border: 1px solid #008080;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: transparent;
     color: #008080;
     font-size: 12px;

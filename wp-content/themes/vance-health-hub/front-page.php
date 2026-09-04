@@ -50,7 +50,7 @@ body {
     font-family: 'Outfit', sans-serif;
 }
 
-.color-bar { width: 6px; height: 24px; border-radius: var(--radius-control, 6px); }
+.color-bar { width: 6px; height: 24px; border-radius: var(--radius-control, 10px); }
 
 /* BENTO GRID (News Style) */
 .bento-grid-news {
@@ -241,7 +241,7 @@ body {
     font-size: 11px;
     text-transform: uppercase;
     font-weight: 700;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     display: inline-block;
     margin-bottom: 12px;
 }
@@ -290,7 +290,7 @@ body {
 
 .review-card-wide {
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     overflow: hidden;
     border: 1px solid #e5e7eb;
     display: flex;
@@ -308,7 +308,7 @@ body {
 
 .review-card-standard {
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     overflow: hidden;
     border: 1px solid #e5e7eb;
     display: flex;
@@ -332,7 +332,7 @@ body {
 
 .opinion-card {
     background: white;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     padding: 32px;
     text-align: center;
     border: 1px solid #e5e7eb;
@@ -356,7 +356,7 @@ body {
 .author-avatar {
     width: 80px;
     height: 80px;
-    border-radius: var(--radius-control, 6px);
+    border-radius: var(--radius-control, 10px);
     background: #f8fafc;
     margin: 0 auto 20px;
     border: 4px solid #f8fafc;
@@ -565,11 +565,11 @@ body {
                 <?php foreach ($cards as $item): 
                     $cat = $item['cat'];
                 ?>
-                <a href="<?php echo esc_url(get_category_link($cat->term_id)); ?>" class="vance-category-card" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 12px; background: #0A1929; border-radius: var(--radius-surface, 14px); padding: 24px 12px; transition: all 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #1E293B; width: 100%; max-width: 160px;">
+                <a href="<?php echo esc_url(get_category_link($cat->term_id)); ?>" class="vance-category-card" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 12px; background: #0A1929; border-radius: var(--radius-surface, 24px); padding: 24px 12px; transition: all 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #1E293B; width: 100%; max-width: 160px;">
                     <?php 
                     $cat_icon = $item['icon'] ?: vance_get_category_icon_url($cat->name);
                     ?>
-                        <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: var(--radius-control, 6px);">
+                        <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: var(--radius-control, 10px);">
                             <?php if ($cat_icon): ?>
                                 <img src="<?php echo esc_url($cat_icon); ?>" alt="" class="orange-icon" style="width: 24px; height: 24px; object-fit: contain; filter: brightness(0) invert(1);">
                             <?php else: ?>
@@ -671,7 +671,7 @@ body {
                 <p style="color: <?php echo esc_attr($disc_subtitle_color); ?>; font-size: 15px; margin: 0; max-width: 680px; line-height: 1.6; <?php echo $disc_align === 'center' ? 'margin: 0 auto;' : ''; ?>"><?php echo esc_html($disc_sub); ?></p>
             </header>
 
-            <div class="discovery-panel" style="background: <?php echo esc_attr($panel_bg); ?>; border-radius: var(--radius-surface, 14px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08); overflow: hidden; backdrop-filter: blur(20px);">
+            <div class="discovery-panel" style="background: <?php echo esc_attr($panel_bg); ?>; border-radius: var(--radius-surface, 24px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08); overflow: hidden; backdrop-filter: blur(20px);">
 
                 <!-- EXPLORE CONTENT TAB -->
                 <div class="tab-content active" id="tab-explore">
@@ -683,7 +683,7 @@ body {
                             <!-- LEFT PANEL HEADER (matches right side) -->
                             <div class="panel-header-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 0 0 14px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, <?php echo esc_attr($border_color); ?>, #cc4400); border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, <?php echo esc_attr($border_color); ?>, #cc4400); border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
                                     </div>
                                     <div>
@@ -833,7 +833,7 @@ body {
             padding: 8px 16px;
             background: <?php echo esc_attr($disc_chip_off_bg); ?>;
             border: 1px solid <?php echo esc_attr($disc_chip_off_border); ?>;
-            border-radius: var(--radius-control, 6px);
+            border-radius: var(--radius-control, 10px);
             font-size: <?php echo $disc_item_label_size; ?>px;
             font-weight: 700;
             color: <?php echo esc_attr($disc_chip_off_text); ?>;
@@ -862,7 +862,7 @@ body {
             flex: 1; 
             padding: 11px 16px; 
             border: 1px solid rgba(255,255,255,0.25); 
-            border-radius: var(--radius-field, 10px); 
+            border-radius: var(--radius-field, 16px); 
             font-size: 14px; 
             outline: none; 
             background: rgba(255,255,255,0.92); 
@@ -879,7 +879,7 @@ body {
             background: linear-gradient(135deg, #008080, #FF8500); 
             color: white; 
             border: none; 
-            border-radius: var(--radius-control, 6px); 
+            border-radius: var(--radius-control, 10px); 
             font-family: 'Outfit', sans-serif; 
             font-size: 14px; 
             font-weight: 800; 
@@ -893,7 +893,7 @@ body {
         .btn-text { 
             background: transparent; 
             border: 1px solid #476f95; 
-            border-radius: var(--radius-control, 6px);
+            border-radius: var(--radius-control, 10px);
             padding: 10px 18px;
             font-size: 12px; 
             font-weight: 700; 
@@ -912,12 +912,12 @@ body {
         /* --- Right side AI panel --- */
         .chat-agent-bar { padding: 0 0 14px 0; background: transparent; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
         .agent-left { display: flex; align-items: center; gap: 12px; }
-        .agent-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #008080, #FF8500); border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; }
+        .agent-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #008080, #FF8500); border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; }
         .agent-avatar svg { width: 18px; height: 18px; stroke: white; fill: none; stroke-width: 2; }
         .agent-name { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
         .agent-status { font-size: 10px; color: #22C55E; font-weight: 700; display: flex; gap: 5px; align-items: center; }
         .status-dot { width: 6px; height: 6px; background: #22C55E; border-radius: var(--radius-pill, 999px); animation: pulse-dot 2s ease infinite; }
-        .save-btn { padding: 6px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-control, 6px); font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.6); cursor: pointer; display: flex; gap: 5px; align-items: center; transition: all 0.2s; }
+        .save-btn { padding: 6px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-control, 10px); font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.6); cursor: pointer; display: flex; gap: 5px; align-items: center; transition: all 0.2s; }
         .save-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: white; }
         .save-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
 
@@ -925,28 +925,28 @@ body {
         .msg { margin-bottom: 14px; display: flex; gap: 10px; }
         .msg.bot { flex-direction: row; }
         .msg.user { flex-direction: row-reverse; }
-        .msg-avatar { width: 26px; height: 26px; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .msg-avatar { width: 26px; height: 26px; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .msg.bot .msg-avatar { background: rgba(0,128,128,0.25); }
         .msg.bot .msg-avatar svg { width: 14px; height: 14px; stroke: #008080; fill: none; stroke-width: 2; }
         .msg.user .msg-avatar { background: rgba(255,255,255,0.1); }
         .msg.user .msg-avatar svg { width: 14px; height: 14px; stroke: rgba(255,255,255,0.7); fill: none; stroke-width: 2; }
-        .msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: var(--radius-surface, 14px); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+        .msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: var(--radius-surface, 24px); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
         .msg.bot .msg-bubble { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: <?php echo esc_attr($askai_text_color); ?>; }
         .msg.user .msg-bubble { background: rgba(0,128,128,0.3); border: 1px solid rgba(0,128,128,0.35); color: #ffffff; }
 
-        .mode-btn { padding: 6px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-control, 6px); font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .mode-btn { padding: 6px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-control, 10px); font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .mode-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .mode-btn.active { background: rgba(0,128,128,0.2); border-color: #008080; color: #FF8040; box-shadow: 0 0 0 1px rgba(0,128,128,0.3); }
 
         .chat-input-bar { padding: 14px 0 0 0; border-top: 1px solid rgba(255,255,255,0.07); background: transparent; display: flex; gap: 10px; }
-        .chat-input { flex: 1; padding: 10px 14px; border: 1px solid <?php echo esc_attr($askai_input_border); ?>; border-radius: var(--radius-field, 10px); font-size: 13px; outline: none; background: <?php echo esc_attr($askai_input_bg); ?>; color: <?php echo esc_attr($askai_input_color); ?>; transition: border-color 0.2s; }
+        .chat-input { flex: 1; padding: 10px 14px; border: 1px solid <?php echo esc_attr($askai_input_border); ?>; border-radius: var(--radius-field, 16px); font-size: 13px; outline: none; background: <?php echo esc_attr($askai_input_bg); ?>; color: <?php echo esc_attr($askai_input_color); ?>; transition: border-color 0.2s; }
         .chat-input::placeholder { color: rgba(255,255,255,0.3); }
         .chat-input:focus { border-color: rgba(0,128,128,0.5); }
-        .chat-send { padding: 10px 18px; background: linear-gradient(135deg, #008080, #FF8500); color: white; border: none; border-radius: var(--radius-control, 6px); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .chat-send { padding: 10px 18px; background: linear-gradient(135deg, #008080, #FF8500); color: white; border: none; border-radius: var(--radius-control, 10px); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
         .chat-send:hover { box-shadow: 0 4px 12px rgba(0,128,128,0.4); }
         
         .typing-indicator { display: flex; gap: 4px; padding: 5px 0; }
-        .typing-dot { width: 5px; height: 5px; background: rgba(255,255,255,0.3); border-radius: var(--radius-control, 6px); animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot { width: 5px; height: 5px; background: rgba(255,255,255,0.3); border-radius: var(--radius-control, 10px); animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
@@ -954,7 +954,7 @@ body {
         /* Scrollbar for chat */
         .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-track { background: transparent; }
-        .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: var(--radius-control, 6px); }
+        .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: var(--radius-control, 10px); }
 
         @media (max-width: 768px) {
             .explore-layout { flex-direction: column !important; }
@@ -1072,7 +1072,7 @@ body {
             <div class="container" style="width: 100%;">
                 <div class="kb-mini-hero__header" style="<?php echo $kb_header_block_style; ?>">
                     <?php if ($kb_show_eyebrow && trim($kb_eyebrow_text) !== '') : ?>
-                        <span class="kb-mini-hero__eyebrow" style="display: inline-block; padding: 6px 14px; margin-bottom: 18px; font-family: 'Inter', sans-serif; font-size: <?php echo (int) $kb_eyebrow_size; ?>px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: <?php echo esc_attr($kb_eyebrow_color); ?>; background: <?php echo esc_attr($kb_eyebrow_bg); ?>; border: 1px solid <?php echo esc_attr($kb_eyebrow_border); ?>; border-radius: var(--radius-control, 6px); line-height: 1;"><?php echo esc_html($kb_eyebrow_text); ?></span>
+                        <span class="kb-mini-hero__eyebrow" style="display: inline-block; padding: 6px 14px; margin-bottom: 18px; font-family: 'Inter', sans-serif; font-size: <?php echo (int) $kb_eyebrow_size; ?>px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: <?php echo esc_attr($kb_eyebrow_color); ?>; background: <?php echo esc_attr($kb_eyebrow_bg); ?>; border: 1px solid <?php echo esc_attr($kb_eyebrow_border); ?>; border-radius: var(--radius-control, 10px); line-height: 1;"><?php echo esc_html($kb_eyebrow_text); ?></span>
                     <?php endif; ?>
                     <h2 class="kb-mini-hero__title" style="font-family: 'Outfit', sans-serif; font-size: <?php echo (int) $kb_title_size; ?>px; font-weight: 800; line-height: 1.1; margin: 0 0 12px 0; color: <?php echo esc_attr($kb_title_color); ?>;"><?php echo esc_html($kb_title); ?></h2>
                     <p class="kb-mini-hero__subtitle" style="font-size: <?php echo (int) $kb_subtitle_size; ?>px; opacity: 0.85; max-width: 600px; margin: <?php echo esc_attr($kb_subtitle_margin); ?>; color: <?php echo esc_attr($kb_subtitle_color); ?>; line-height: 1.5;"><?php echo esc_html($kb_subtitle); ?></p>
@@ -1371,7 +1371,7 @@ body {
     ?>
     <style>
         .premium-subscribe-section .highlight { color: <?php echo esc_attr($prem_highlight); ?>; }
-        .premium-subscribe-section .premium-pill-check { background: rgba(255,255,255,0.10); width: 24px; height: 24px; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; color: <?php echo esc_attr($prem_pill_check); ?>; }
+        .premium-subscribe-section .premium-pill-check { background: rgba(255,255,255,0.10); width: 24px; height: 24px; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; color: <?php echo esc_attr($prem_pill_check); ?>; }
         .premium-subscribe-section .premium-pill { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: <?php echo esc_attr($prem_pill_text); ?>; }
         .premium-subscribe-section .premium-input::placeholder { color: rgba(255,255,255,0.55); }
     </style>
@@ -1396,14 +1396,14 @@ body {
                     <?php endif; ?>
                 </div>
             </div>
-            <div style="flex-shrink: 0; background: <?php echo esc_attr($prem_card_bg); ?>; padding: 40px; border-radius: var(--radius-surface, 14px); border: 1px solid <?php echo esc_attr($prem_card_border); ?>; max-width: 400px; width: 100%;">
+            <div style="flex-shrink: 0; background: <?php echo esc_attr($prem_card_bg); ?>; padding: 40px; border-radius: var(--radius-surface, 24px); border: 1px solid <?php echo esc_attr($prem_card_border); ?>; max-width: 400px; width: 100%;">
                 <h3 style="font-size: 24px; font-weight: 700; margin-bottom: <?php echo $prem_card_subhead ? '8' : '24'; ?>px; color: <?php echo esc_attr($prem_card_heading_color); ?>;"><?php echo esc_html($prem_card_heading); ?></h3>
                 <?php if ( $prem_card_subhead ) : ?>
                     <p style="color: <?php echo esc_attr($prem_card_subhead_color); ?>; font-size: 14px; margin-bottom: 24px;"><?php echo esc_html($prem_card_subhead); ?></p>
                 <?php endif; ?>
                 <form action="<?php echo esc_url($prem_form_action); ?>" method="get" style="display: flex; flex-direction: column; gap: 16px;">
-                    <input type="email" name="user_email" placeholder="<?php echo esc_attr($prem_input_ph); ?>" required class="premium-input" style="width: 100%; padding: 16px; border-radius: var(--radius-field, 10px); border: 1px solid rgba(255,255,255,0.2); background: <?php echo esc_attr($prem_input_bg); ?>; color: <?php echo esc_attr($prem_input_color); ?>; font-size: 16px;">
-                    <button type="submit" style="width: 100%; padding: 16px; border-radius: var(--radius-control, 6px); border: none; background: <?php echo esc_attr($prem_button_bg); ?>; color: <?php echo esc_attr($prem_button_color); ?>; font-weight: 700; font-size: 16px; cursor: pointer; transition: background 0.2s;"><?php echo esc_html($prem_button_label); ?></button>
+                    <input type="email" name="user_email" placeholder="<?php echo esc_attr($prem_input_ph); ?>" required class="premium-input" style="width: 100%; padding: 16px; border-radius: var(--radius-field, 16px); border: 1px solid rgba(255,255,255,0.2); background: <?php echo esc_attr($prem_input_bg); ?>; color: <?php echo esc_attr($prem_input_color); ?>; font-size: 16px;">
+                    <button type="submit" style="width: 100%; padding: 16px; border-radius: var(--radius-control, 10px); border: none; background: <?php echo esc_attr($prem_button_bg); ?>; color: <?php echo esc_attr($prem_button_color); ?>; font-weight: 700; font-size: 16px; cursor: pointer; transition: background 0.2s;"><?php echo esc_html($prem_button_label); ?></button>
                     <?php if ( $prem_card_footnote ) : ?>
                         <p style="text-align: center; font-size: 12px; color: #64748b; margin: 0;"><?php echo esc_html($prem_card_footnote); ?></p>
                     <?php endif; ?>

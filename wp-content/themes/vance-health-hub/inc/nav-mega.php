@@ -274,13 +274,13 @@ class VHH_Nav_Tiles_Widget extends WP_Widget {
 		</p>
 		<p>
 			<label for="<?php echo esc_attr( $this->get_field_id( 'tiles' ) ); ?>">
-				<?php esc_html_e( 'Tiles — one per line', 'vance-health-hub' ); ?>
+				<?php esc_html_e( 'Tiles: one per line', 'vance-health-hub' ); ?>
 			</label>
 			<textarea class="widefat" rows="9"
 				id="<?php echo esc_attr( $this->get_field_id( 'tiles' ) ); ?>"
 				name="<?php echo esc_attr( $this->get_field_name( 'tiles' ) ); ?>"><?php echo esc_textarea( $tiles ); ?></textarea>
 			<small>
-				<?php esc_html_e( 'Format: icon | Title | Description | /path/ — description may be left empty. Start a line with * to make it the wide feature tile.', 'vance-health-hub' ); ?>
+				<?php esc_html_e( 'Format: icon | Title | Description | /path/: description may be left empty. Start a line with * to make it the wide feature tile.', 'vance-health-hub' ); ?>
 				<br>
 				<?php
 				printf(

@@ -129,10 +129,10 @@
 			region: state.region
 		}).done(function (res) {
 			$status.text((res && res.success)
-				? 'Saved — likely eligible for ' + res.data.likely_count + ' schemes.'
-				: 'Could not save — try again.');
+				? 'Saved, likely eligible for ' + res.data.likely_count + ' schemes.'
+				: 'Could not save, try again.');
 		}).fail(function () {
-			$status.text('Could not save — try again.');
+			$status.text('Could not save, try again.');
 		});
 	}
 
@@ -192,7 +192,7 @@
 
 		$('#vance-vat-generate').on('click', function () {
 			if (typeof window.html2pdf === 'undefined') {
-				alert('PDF export is still loading — please try again in a moment.');
+				alert('PDF export is still loading, please try again in a moment.');
 				return;
 			}
 
@@ -203,8 +203,8 @@
 
 			var $el = $('<div>').css({ fontFamily: 'Arial, sans-serif', padding: '32px', color: '#0A1929' }).html(
 				'<h2 style="font-size:16px;margin:0 0 4px;">VAT reliefs for disabled people</h2>' +
-				'<p style="font-size:13px;color:#475569;margin:0 0 20px;">Eligibility declaration by a disabled person — Part 2, Customer\'s declaration</p>' +
-				'<p style="font-size:11px;color:#94A3B8;margin:0 0 24px;">Give this completed section to your supplier — they keep it with their VAT records. Part 1 (overleaf on the official form) is completed by the supplier, not you.</p>' +
+				'<p style="font-size:13px;color:#475569;margin:0 0 20px;">Eligibility declaration by a disabled person, Part 2, Customer\'s declaration</p>' +
+				'<p style="font-size:11px;color:#94A3B8;margin:0 0 24px;">Give this completed section to your supplier, they keep it with their VAT records. Part 1 (overleaf on the official form) is completed by the supplier, not you.</p>' +
 				'<p style="font-size:13px;line-height:1.7;"><strong>I (full name)</strong> ' + (vanceEscHtml(name) || '……………………………') + '</p>' +
 				'<p style="font-size:13px;line-height:1.7;"><strong>of (address)</strong><br>' + addressHtml + '</p>' +
 				'<p style="font-size:13px;line-height:1.7;margin-top:16px;"><strong>I declare that I have the following disability or chronic sickness:</strong><br>' + (vanceEscHtml(condition) || '……………………………') + '</p>' +
@@ -238,7 +238,7 @@
 				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
 			}).from($el[0]).save().then(cleanup, function () {
 				cleanup();
-				alert('Could not build the PDF — please try again.');
+				alert('Could not build the PDF, please try again.');
 			});
 		});
 	}

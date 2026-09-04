@@ -2168,7 +2168,7 @@ function vance_render_content_hub_dashboard() {
     );
     ?>
     <div class="wrap" style="max-width: 1200px; margin: 30px auto;">
-        <div style="background: white; border-radius: var(--radius-surface, 14px); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+        <div style="background: white; border-radius: var(--radius-surface, 24px); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1 style="font-size: 32px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;">CONTENT HUB STATION</h1>
@@ -2179,9 +2179,9 @@ function vance_render_content_hub_dashboard() {
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
             <?php foreach ($cpts as $slug => $data) : ?>
-            <div style="background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="background: white; border-radius: var(--radius-surface, 24px); border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
-                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <img src="<?php echo vance_get_category_icon_url($data['name']); ?>" style="width: 28px; height: 28px; object-fit: contain; filter: none !important;">
                     </div>
                     <div>
@@ -2191,8 +2191,8 @@ function vance_render_content_hub_dashboard() {
                 </div>
                 
                 <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: var(--radius-control, 6px);">View All</a>
-                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: var(--radius-control, 6px);">+ Add New</a>
+                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: var(--radius-control, 10px);">View All</a>
+                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: var(--radius-control, 10px);">+ Add New</a>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -2214,7 +2214,7 @@ function vance_render_media_hub_dashboard() {
     );
     ?>
     <div class="wrap" style="max-width: 1200px; margin: 30px auto;">
-        <div style="background: white; border-radius: var(--radius-surface, 14px); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+        <div style="background: white; border-radius: var(--radius-surface, 24px); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1 style="font-size: 32px; font-weight: 800; color: #0A1929; margin: 0 0 10px 0; font-family: 'Outfit', sans-serif;">MEDIA HUB STATION</h1>
@@ -2225,9 +2225,9 @@ function vance_render_media_hub_dashboard() {
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
             <?php foreach ($cpts as $slug => $data) : ?>
-            <div style="background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="background: white; border-radius: var(--radius-surface, 24px); border: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
-                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <img src="<?php echo vance_get_category_icon_url($data['name']); ?>" style="width: 28px; height: 28px; object-fit: contain; filter: none !important;">
                     </div>
                     <div>
@@ -2237,8 +2237,8 @@ function vance_render_media_hub_dashboard() {
                 </div>
                 
                 <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: var(--radius-control, 6px);">View All</a>
-                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: var(--radius-control, 6px);">+ Add New</a>
+                    <a href="<?php echo admin_url('edit.php?post_type=' . $slug); ?>" class="button" style="text-align: center; border-radius: var(--radius-control, 10px);">View All</a>
+                    <a href="<?php echo admin_url('post-new.php?post_type=' . $slug); ?>" class="button button-primary" style="text-align: center; background: #0A1929; border-color: #0A1929; border-radius: var(--radius-control, 10px);">+ Add New</a>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -2833,7 +2833,7 @@ add_action( 'login_init', 'vance_redirect_wp_login_to_themed_login' );
 function vance_auth_modal_shortcode( $atts ) {
     if ( is_user_logged_in() ) {
         $current_user = wp_get_current_user();
-        return '<div style="max-width:460px;margin:40px auto;padding:48px 40px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);box-shadow:0 10px 40px rgba(10,25,41,.08);text-align:center;font-family:var(--font-main, \'Inter\', sans-serif);">
+        return '<div style="max-width:460px;margin:40px auto;padding:48px 40px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);box-shadow:0 10px 40px rgba(10,25,41,.08);text-align:center;font-family:var(--font-main, \'Inter\', sans-serif);">
             <span style="display:flex;align-items:center;justify-content:center;width:72px;height:72px;margin:0 auto 24px;border-radius:50%;background:rgba(0,128,128,.10);color:var(--primary-color,#008080);">
                 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
             </span>
@@ -2887,7 +2887,7 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-overlay{position:fixed;inset:0;background:rgba(15,30,30,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px;animation:vanceFadeIn .2s ease-out}
     @keyframes vanceFadeIn{from{opacity:0}to{opacity:1}}
     @keyframes vancePopIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
-    .vance-auth-modal{background:#fff;border-radius:var(--radius-surface, 14px);padding:26px 28px 22px;max-width:420px;width:100%;box-shadow:0 24px 72px rgba(0,0,0,0.3);animation:vancePopIn .25s ease-out;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;position:relative;max-height:calc(100dvh - 24px);overflow-y:auto}
+    .vance-auth-modal{background:#fff;border-radius:var(--radius-surface, 24px);padding:26px 28px 22px;max-width:420px;width:100%;box-shadow:0 24px 72px rgba(0,0,0,0.3);animation:vancePopIn .25s ease-out;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;position:relative;max-height:calc(100dvh - 24px);overflow-y:auto}
     .vance-auth-close{position:absolute;top:10px;right:12px;background:transparent;border:none;font-size:26px;color:#94a3b8;cursor:pointer;line-height:1;padding:4px 8px;z-index:2}
     .vance-auth-close:hover{color:#1a1a1a}
     .vance-auth-header{text-align:center;margin-bottom:14px}
@@ -2897,18 +2897,18 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-divider{text-align:center;margin:10px 0;color:#999;position:relative;font-size:12px;text-transform:uppercase;letter-spacing:1px}
     .vance-auth-divider span{background:#fff;padding:0 12px;position:relative;z-index:1}
     .vance-auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#2f4f6f}
-    .vance-auth-tabs{display:flex;gap:4px;margin-bottom:14px;background:#f1f5f5;padding:4px;border-radius:var(--radius-surface, 14px)}
-    .vance-auth-tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;border-radius:var(--radius-control, 6px);font-weight:600;color:#666;transition:all .15s;font-size:14px}
+    .vance-auth-tabs{display:flex;gap:4px;margin-bottom:14px;background:#f1f5f5;padding:4px;border-radius:var(--radius-surface, 24px)}
+    .vance-auth-tab{flex:1;padding:10px 16px;border:none;background:transparent;cursor:pointer;border-radius:var(--radius-control, 10px);font-weight:600;color:#666;transition:all .15s;font-size:14px}
     .vance-auth-tab.active{background:#fff;color:#008080;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
-    .vance-auth-error{background:#fee;color:#a00;padding:10px 14px;border-radius:var(--radius-surface, 14px);font-size:13px;margin-bottom:14px;display:none;border:1px solid #fcc}
+    .vance-auth-error{background:#fee;color:#a00;padding:10px 14px;border-radius:var(--radius-surface, 24px);font-size:13px;margin-bottom:14px;display:none;border:1px solid #fcc}
     .vance-auth-error.active{display:block}
     .vance-auth-form{display:none}
     .vance-auth-form.active{display:block}
     .vance-auth-field{margin-bottom:10px}
     .vance-auth-field label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:4px}
-    .vance-auth-field input{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
+    .vance-auth-field input{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 16px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
     .vance-auth-field input:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
-    .vance-auth-field select{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
+    .vance-auth-field select{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 16px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
     .vance-auth-field select:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
     .vance-auth-consent{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#666;line-height:1.5;cursor:pointer;margin:0 0 8px;font-weight:400}
     .vance-auth-consent input{width:auto;margin-top:2px}
@@ -2916,7 +2916,7 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-forgot{text-align:right;margin:-6px 0 14px}
     .vance-auth-forgot a{color:#008080;text-decoration:none;font-size:13px}
     .vance-auth-forgot a:hover{text-decoration:underline}
-    .vance-auth-submit{width:100%;padding:13px;background:#008080;color:#fff;border:none;border-radius:var(--radius-control, 6px);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
+    .vance-auth-submit{width:100%;padding:13px;background:#008080;color:#fff;border:none;border-radius:var(--radius-control, 10px);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
     .vance-auth-submit:hover:not(:disabled){background:#006666}
     .vance-auth-submit:disabled{background:#aaa;cursor:not-allowed}
     .vance-auth-footer{text-align:center;margin-top:12px;font-size:12px;color:#888}
@@ -3602,20 +3602,20 @@ function vance_verify_email_shortcode() {
     $had_error       = isset( $_GET['verify_error'] ) && '1' === $_GET['verify_error'];
 
     if ( $is_verified_now ) {
-        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 14px);box-shadow:0 8px 32px rgba(0,128,128,0.08)">
+        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 24px);box-shadow:0 8px 32px rgba(0,128,128,0.08)">
             <div style="font-size:48px;margin-bottom:12px">&#10003;</div>
             <h1 style="margin:0 0 8px;color:#008080">Email verified</h1>
             <p style="color:#666;margin-bottom:24px">Your account is ready. Redirecting to your dashboard&hellip;</p>
-            <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:var(--radius-control, 6px);text-decoration:none;font-weight:600">Go to dashboard</a>
+            <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:var(--radius-control, 10px);text-decoration:none;font-weight:600">Go to dashboard</a>
             <script>setTimeout(function(){window.location.href=' . wp_json_encode( home_url( '/dashboard/' ) ) . ';},1500);</script>
         </div>';
     }
 
     if ( ! is_user_logged_in() ) {
-        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 14px);box-shadow:0 8px 32px rgba(0,0,0,0.08)">
+        return '<div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 24px);box-shadow:0 8px 32px rgba(0,0,0,0.08)">
             <h1 style="margin:0 0 8px;color:#1a1a1a">Verify your email</h1>
             <p style="color:#666;margin-bottom:24px">Please sign in to resend your verification email.</p>
-            <a href="' . esc_url( home_url( '/login/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:var(--radius-control, 6px);text-decoration:none;font-weight:600">Sign in</a>
+            <a href="' . esc_url( home_url( '/login/' ) ) . '" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border-radius:var(--radius-control, 10px);text-decoration:none;font-weight:600">Sign in</a>
         </div>';
     }
 
@@ -3624,12 +3624,12 @@ function vance_verify_email_shortcode() {
     $ajax_url    = admin_url( 'admin-ajax.php' );
 
     $error_html = $had_error
-        ? '<div style="background:#fee;color:#a00;padding:12px;border-radius:var(--radius-control, 6px);margin-bottom:16px;border:1px solid #fcc;font-size:14px">That verification link was invalid or has already been used. Request a new one below.</div>'
+        ? '<div style="background:#fee;color:#a00;padding:12px;border-radius:var(--radius-control, 10px);margin-bottom:16px;border:1px solid #fcc;font-size:14px">That verification link was invalid or has already been used. Request a new one below.</div>'
         : '';
 
     ob_start();
     ?>
-    <div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 14px);box-shadow:0 8px 32px rgba(0,0,0,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+    <div class="vance-verify-card" style="max-width:480px;margin:60px auto;padding:48px 32px;text-align:center;background:#fff;border-radius:var(--radius-surface, 24px);box-shadow:0 8px 32px rgba(0,0,0,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
         <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
         <h1 style="margin:0 0 8px;color:#1a1a1a;font-size:24px">Check your inbox</h1>
         <p style="color:#666;margin-bottom:24px;line-height:1.5">
@@ -3638,7 +3638,7 @@ function vance_verify_email_shortcode() {
         </p>
         <?php echo $error_html; // sanitized literal above ?>
         <div id="vance-resend-status" style="margin-bottom:14px;font-size:14px"></div>
-        <button id="vance-resend-btn" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border:none;border-radius:var(--radius-control, 6px);font-size:15px;font-weight:600;cursor:pointer">Resend verification email</button>
+        <button id="vance-resend-btn" style="display:inline-block;padding:12px 28px;background:#008080;color:#fff;border:none;border-radius:var(--radius-control, 10px);font-size:15px;font-weight:600;cursor:pointer">Resend verification email</button>
         <p style="margin-top:24px;font-size:13px;color:#999">
             Already verified? <a href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>" style="color:#008080">Go to dashboard</a> &middot;
             <a href="<?php echo esc_url( wp_logout_url( home_url() ) ); ?>" style="color:#008080">Sign out</a>
@@ -3960,7 +3960,7 @@ if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'Vance_Customize_
                 <input
                     type="color"
                     value="<?php echo esc_attr( $value ); ?>"
-                    style="width:46px; height:34px; padding:2px; border:1px solid #dcdcde; border-radius:var(--radius-field, 10px); background:#fff; cursor:pointer;"
+                    style="width:46px; height:34px; padding:2px; border:1px solid #dcdcde; border-radius:var(--radius-field, 16px); background:#fff; cursor:pointer;"
                     <?php $this->link(); ?>
                     oninput="var h=this.closest('.vance-color-field').querySelector('.vance-color-hex'); if(h){h.value=this.value.toUpperCase();}"
                 />
@@ -4396,8 +4396,8 @@ function vance_customize_register( $wp_customize ) {
         'section'     => 'vance_hero_settings',
         'type'        => 'select',
         'choices'     => array(
-            'spotlight' => __( 'Spotlight — light, search-led', 'vance-health-hub' ),
-            'carousel'  => __( 'Classic — dark hero / carousel', 'vance-health-hub' ),
+            'spotlight' => __( 'Spotlight: light, search-led', 'vance-health-hub' ),
+            'carousel'  => __( 'Classic: dark hero / carousel', 'vance-health-hub' ),
         ),
     ) );
 
@@ -4406,7 +4406,7 @@ function vance_customize_register( $wp_customize ) {
     // default comes from vance_hero_spotlight_field_defaults(), so the control
     // list and the renderer cannot drift apart.
     $wp_customize->add_section( 'vance_hero_spotlight_settings', array(
-        'title'       => __( 'Hero — Spotlight', 'vance-health-hub' ),
+        'title'       => __( 'Hero: Spotlight', 'vance-health-hub' ),
         'description' => __( 'The light, search-led homepage hero. Only rendered while "Homepage hero design" (in the Hero section) is set to Spotlight. Headline, intro and both buttons start out inheriting whatever the classic hero says; editing them here stores a Spotlight-only override and leaves the classic hero untouched.', 'vance-health-hub' ),
         'priority'    => 30.5,
         'panel'       => 'vance_homepage_panel',
@@ -5060,7 +5060,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Prime Block Home 1', 'vance-health-hub' ),
         'priority'    => 31.7,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'Featured tool cards beside a Latest Content list. Showing/hiding and position are controlled by Homepage → Section Order — add or remove "Prime Block Home 1" there.', 'vance-health-hub' ),
+        'description' => __( 'Featured tool cards beside a Latest Content list. Showing/hiding and position are controlled by Homepage → Section Order, add or remove "Prime Block Home 1" there.', 'vance-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -5247,7 +5247,7 @@ function vance_customize_register( $wp_customize ) {
     // Both use the clean vance_pb2_* / vance_pbc_* prefixes (Home 1 stays
     // pinned to the legacy vance_pwc_* / vance_hquiz_* / vance_askai_* keys so
     // its saved values survive), so one registration helper serves both.
-    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_home2_settings', 'vance_pb2_', __( 'Prime Block Home 2', 'vance-health-hub' ), 31.72, __( 'A second, independently-configured Prime Block. Showing/hiding and position are controlled by Homepage → Section Order — add or remove "Prime Block Home 2" there.', 'vance-health-hub' ) );
+    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_home2_settings', 'vance_pb2_', __( 'Prime Block Home 2', 'vance-health-hub' ), 31.72, __( 'A second, independently-configured Prime Block. Showing/hiding and position are controlled by Homepage → Section Order, add or remove "Prime Block Home 2" there.', 'vance-health-hub' ) );
 
     vance_register_prime_block_controls(
         $wp_customize,
@@ -5821,8 +5821,8 @@ function vance_customize_register( $wp_customize ) {
         'type'        => 'select',
         'priority'    => 1,
         'choices'     => array(
-            'grounded' => __( 'Grounded — hub content only (default)', 'vance-health-hub' ),
-            'open'     => __( 'Open — full AI knowledge with guardrails', 'vance-health-hub' ),
+            'grounded' => __( 'Grounded: hub content only (default)', 'vance-health-hub' ),
+            'open'     => __( 'Open: full AI knowledge with guardrails', 'vance-health-hub' ),
         ),
     ) );
 
@@ -7757,7 +7757,7 @@ function vance_category_tagline_style() {
 
     $is_pill = ( sanitize_hex_color( $bg ) || ( $bwidth > 0 && sanitize_hex_color( $bcolor ) ) );
     // inline-block so a background/border hugs the text; plain block otherwise.
-    $style .= $is_pill ? ' display: inline-block; padding: 5px 14px; border-radius: var(--radius-control, 6px);' : ' display: block;';
+    $style .= $is_pill ? ' display: inline-block; padding: 5px 14px; border-radius: var(--radius-control, 10px);' : ' display: block;';
 
     if ( sanitize_hex_color( $bg ) ) {
         $style .= ' background-color: ' . $bg . ';';
@@ -8103,7 +8103,7 @@ function vance_login_logo() {
             padding-bottom: 30px; 
         }
         body.login { background-color: #f8fafc; }
-        .login form { box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: var(--radius-surface, 14px); border: 1px solid #e2e8f0; }
+        .login form { box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: var(--radius-surface, 24px); border: 1px solid #e2e8f0; }
         .wp-core-ui .button-primary { background: #008080; border-color: #008080; }
     </style>
     <?php 
@@ -8180,14 +8180,14 @@ function vance_enhanced_login_styles() {
         
         .login form {
             background: white;
-            border-radius: var(--radius-surface, 14px);
+            border-radius: var(--radius-surface, 24px);
             padding: 32px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             border: none;
         }
         
         .login form .input {
-            border-radius: var(--radius-field, 10px);
+            border-radius: var(--radius-field, 16px);
             border: 2px solid #E2E8F0;
             padding: 8px 12px;
             font-size: 14px;
@@ -8201,7 +8201,7 @@ function vance_enhanced_login_styles() {
         .wp-core-ui .button-primary {
             background: #008080;
             border-color: #008080;
-            border-radius: var(--radius-control, 6px);
+            border-radius: var(--radius-control, 10px);
             padding: 8px 24px;
             font-weight: 700;
             text-transform: uppercase;
@@ -8235,14 +8235,14 @@ function vance_enhanced_login_styles() {
         .login .success {
             background: #def4f4;
             border-left: 4px solid #008080;
-            border-radius: var(--radius-surface, 14px);
+            border-radius: var(--radius-surface, 24px);
             padding: 12px 16px;
         }
         
         .login #login_error {
             background: #FEE2E2;
             border-left: 4px solid #EF4444;
-            border-radius: var(--radius-surface, 14px);
+            border-radius: var(--radius-surface, 24px);
             padding: 12px 16px;
         }
     </style>
@@ -8255,7 +8255,7 @@ add_action('login_enqueue_scripts', 'vance_enhanced_login_styles');
  */
 function vance_add_register_link_to_login() {
     echo '<p style="text-align: center; margin-top: 20px;">
-        <a href="' . home_url('/register/') . '" style="color: white; font-weight: 600; text-decoration: none; background: #008080; padding: 10px 24px; border-radius: var(--radius-control, 6px); display: inline-block; box-shadow: 0 4px 12px rgba(0,128,128, 0.3);">Create New Account</a>
+        <a href="' . home_url('/register/') . '" style="color: white; font-weight: 600; text-decoration: none; background: #008080; padding: 10px 24px; border-radius: var(--radius-control, 10px); display: inline-block; box-shadow: 0 4px 12px rgba(0,128,128, 0.3);">Create New Account</a>
     </p>';
 }
 add_action('login_footer', 'vance_add_register_link_to_login');
@@ -8644,7 +8644,7 @@ function vance_testimonials_shortcode( $atts ) {
         <div class="container">
             <?php if ( $heading ) : ?>
                 <div class="section-label" style="display: flex; align-items: center; gap: 12px; margin-bottom: 40px; border-bottom: 2px solid <?php echo esc_attr( $underline ); ?>; padding-bottom: 16px; justify-content: <?php echo esc_attr( $h_justify ); ?>; text-align: <?php echo esc_attr( $h_align ); ?>;">
-                    <div class="color-bar" style="background: <?php echo esc_attr( $accent ); ?>; width: 6px; height: <?php echo max( 16, $heading_size ); ?>px; border-radius: var(--radius-control, 6px);"></div>
+                    <div class="color-bar" style="background: <?php echo esc_attr( $accent ); ?>; width: 6px; height: <?php echo max( 16, $heading_size ); ?>px; border-radius: var(--radius-control, 10px);"></div>
                     <h2 style="margin: 0; font-size: <?php echo $heading_size; ?>px; font-weight: 800; color: <?php echo esc_attr( $heading_col ); ?>; font-family: 'Outfit', sans-serif; text-transform: uppercase;"><?php echo esc_html( $heading ); ?></h2>
                 </div>
             <?php endif; ?>
@@ -8662,7 +8662,7 @@ function vance_testimonials_shortcode( $atts ) {
                 <div class="vance-testimonials-viewport" style="overflow: hidden;">
                     <div class="vance-testimonials-track" style="display: flex; gap: 16px; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform;">
                         <?php foreach ( $items as $item ) : ?>
-                            <div class="vance-testimonial-card" style="flex: 0 0 auto; box-sizing: border-box; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-surface, 14px); padding: 24px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
+                            <div class="vance-testimonial-card" style="flex: 0 0 auto; box-sizing: border-box; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-surface, 24px); padding: 24px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
                                 <div style="position: absolute; top: 14px; right: 14px;">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="<?php echo esc_attr( $accent ); ?>" style="opacity: 0.1;">
                                         <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
@@ -8675,9 +8675,9 @@ function vance_testimonials_shortcode( $atts ) {
 
                                 <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid <?php echo esc_attr( $card_border ); ?>; padding-top: 14px; margin-top: auto;">
                                     <?php if ( ! empty( $item['image'] ) ) : ?>
-                                        <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 40px; height: 40px; border-radius: var(--radius-control, 6px); object-fit: cover; border: 2px solid <?php echo esc_attr( $sec_bg ); ?>; flex-shrink: 0;">
+                                        <img src="<?php echo esc_url( $item['image'] ); ?>" alt="<?php echo esc_attr( $item['name'] ); ?>" style="width: 40px; height: 40px; border-radius: var(--radius-control, 10px); object-fit: cover; border: 2px solid <?php echo esc_attr( $sec_bg ); ?>; flex-shrink: 0;">
                                     <?php else : ?>
-                                        <div style="width: 40px; height: 40px; border-radius: var(--radius-control, 6px); background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: 'Outfit', sans-serif; flex-shrink: 0;">
+                                        <div style="width: 40px; height: 40px; border-radius: var(--radius-control, 10px); background: <?php echo esc_attr( $avatar_bg ); ?>; color: <?php echo esc_attr( $avatar_col ); ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: 'Outfit', sans-serif; flex-shrink: 0;">
                                             <?php echo esc_html( strtoupper( substr( $item['name'], 0, 1 ) ) ); ?>
                                         </div>
                                     <?php endif; ?>
@@ -8695,10 +8695,10 @@ function vance_testimonials_shortcode( $atts ) {
 
                 <?php if ( $tcount > 1 ) : ?>
                     <div class="vance-testimonials-controls" aria-hidden="false" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                        <button type="button" class="vance-tslide-prev" aria-label="Previous testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-control, 6px); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
+                        <button type="button" class="vance-tslide-prev" aria-label="Previous testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-control, 10px); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
                         </button>
-                        <button type="button" class="vance-tslide-next" aria-label="Next testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-control, 6px); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
+                        <button type="button" class="vance-tslide-next" aria-label="Next testimonial" style="width: 44px; height: 44px; border: 1px solid <?php echo esc_attr( $card_border ); ?>; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-control, 10px); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: <?php echo esc_attr( $accent ); ?>; transition: opacity 0.2s, transform 0.2s;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </button>
                     </div>
@@ -8962,13 +8962,13 @@ function vance_quiz_modal_styles() {
     <style>
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-option-item {
-            display: flex; align-items: center; gap: 15px; padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: var(--radius-surface, 14px); cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 15px; padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: var(--radius-surface, 24px); cursor: pointer; transition: all 0.2s;
         }
         .modal-option-item:hover { border-color: #008080; background: #fffcf9; }
         .modal-option-item.selected { border-color: #008080; background: #def4f4; }
         .modal-option-item.selected .modal-option-radio { border-color: #008080 !important; background: #008080; box-shadow: inset 0 0 0 4px white; }
         .option-text { font-size: 15px; font-weight: 600; color: #334155; }
-        .modal-btn-save { background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 14px 24px; border-radius: var(--radius-control, 6px); font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .modal-btn-save { background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; padding: 14px 24px; border-radius: var(--radius-control, 10px); font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .modal-btn-save:hover { background: #f8fafc; color: #475569; }
     </style>
     <?php

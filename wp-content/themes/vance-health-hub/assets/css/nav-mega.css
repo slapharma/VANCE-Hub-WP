@@ -86,7 +86,7 @@
 		background: #fff;
 		border: 1px solid #e4eaea;
 		border-top: 0;
-		border-radius: 0 0 var(--radius-surface, 14px) var(--radius-surface, 14px);
+		border-radius: 0 0 var(--radius-surface, 24px) var(--radius-surface, 24px);
 		box-shadow: 0 24px 48px -18px rgba(10, 25, 41, .22);
 	}
 }
@@ -211,7 +211,7 @@
 		min-height: 54px;
 		padding: 8px 10px;
 		margin-left: -10px;
-		border-radius: var(--radius-control, 6px);
+		border-radius: var(--radius-control, 10px);
 		transition: background-color .16s ease, color .16s ease;
 	}
 
@@ -339,7 +339,7 @@
 	text-decoration: none;
 	background: #fff;
 	border: 1px solid #e4eaea;
-	border-radius: var(--radius-surface, 14px);
+	border-radius: var(--radius-surface, 24px);
 	/* Left padding is load-bearing: main.css zeroes padding on every
 	   .main-nav anchor, which pinned the icon flush to the tile edge until
 	   these rules were re-scoped above. */
@@ -365,7 +365,7 @@
 	height: 34px;
 	display: grid;
 	place-items: center;
-	border-radius: var(--radius-control, 6px);
+	border-radius: var(--radius-control, 10px);
 	background: var(--primary-wash, #def4f4);
 	color: var(--primary-hover, #006666);
 }
@@ -421,7 +421,7 @@
 	height: 100%;
 	background: var(--primary-wash, #def4f4);
 	border: 1px solid var(--primary-pale, #aedbdb);
-	border-radius: var(--radius-surface, 14px);
+	border-radius: var(--radius-surface, 24px);
 	padding: 20px;
 }
 
@@ -506,7 +506,7 @@
 	line-height: 1.2;
 	/* Extra left/right padding per the 2026-08-28 request. */
 	padding: 10px 24px;
-	border-radius: var(--radius-control, 6px);
+	border-radius: var(--radius-control, 10px);
 	transition: background-color .16s ease;
 }
 

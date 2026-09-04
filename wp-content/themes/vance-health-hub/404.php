@@ -64,7 +64,7 @@ $vance_404_hero = function_exists( 'vance_page_hero_spotlight_active' )
 			<p style="font-size: 17px; color: var(--text-light); max-width: 560px; margin: 0 auto 36px; line-height: 1.7;">
 				<?php esc_html_e( 'The address may have changed, or the page may have been retired. Everything the Hub publishes is reachable from the Knowledgebase.', 'vance-health-hub' ); ?>
 			</p>
-			<a href="<?php echo esc_url( home_url( '/knowledgebase/' ) ); ?>" class="btn btn-primary" style="display: inline-block; padding: 14px 32px; font-size: 15px; font-weight: 700; border-radius: var(--radius-control, 6px); text-decoration: none;"><?php esc_html_e( 'Start at the Knowledgebase', 'vance-health-hub' ); ?></a>
+			<a href="<?php echo esc_url( home_url( '/knowledgebase/' ) ); ?>" class="btn btn-primary" style="display: inline-block; padding: 14px 32px; font-size: 15px; font-weight: 700; border-radius: var(--radius-control, 10px); text-decoration: none;"><?php esc_html_e( 'Start at the Knowledgebase', 'vance-health-hub' ); ?></a>
 		</div>
 
 	<?php endif; ?>
