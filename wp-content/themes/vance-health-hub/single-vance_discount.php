@@ -99,9 +99,9 @@ while ( have_posts() ) :
 
 	<section style="padding:48px 0 60px;">
 		<div class="container" style="max-width:1100px;">
-			<div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;align-items:start;">
+			<div class="vance-discount-single-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;align-items:start;">
 
-				<div>
+				<div style="min-width:0;">
 					<?php if ( $row['value_summary'] ) : ?>
 						<p style="font-size:19px;font-weight:700;color:#0f172a;margin:0 0 6px;"><?php echo esc_html( $row['value_summary'] ); ?></p>
 					<?php endif; ?>

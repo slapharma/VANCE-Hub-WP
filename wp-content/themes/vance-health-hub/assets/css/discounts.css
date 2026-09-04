@@ -156,6 +156,15 @@
 	.vance-discount-controls__right { width: 100%; }
 }
 
+/* ---- Single scheme page: body + "Official information" aside collapses to
+   one column below tablet width, same breakpoint/pattern as .oped-layout in
+   main.css. Without this the fixed 300px aside column stays put and overlaps
+   the main column's text once the viewport gets narrower than the two
+   columns combined (found live 2026-09-04 at 375px). ------------------------ */
+@media (max-width: 767.98px) {
+	.vance-discount-single-grid { grid-template-columns: 1fr !important; }
+}
+
 /* ---- VAT declaration modal (plan §10 step 7) ---------------------------- */
 
 .vance-vat-modal { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; background: rgba(10,25,41,0.55); padding: 20px; }
