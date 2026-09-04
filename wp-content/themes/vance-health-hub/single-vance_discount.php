@@ -101,8 +101,23 @@ while ( have_posts() ) :
 				?>
 				<div style="flex:0 0 auto;position:relative;width:320px;height:220px;display:flex;align-items:center;justify-content:center;">
 					<div style="position:absolute;inset:0;overflow:hidden;border-radius:var(--radius-surface, 24px);" aria-hidden="true"><?php echo vance_page_hero_spotlight_motif(); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></div>
+					<?php
+					// SVGs get width/height:100% (scale UP to fill), not just
+					// max-width/max-height:100% (cap-only, never scale up) — a
+					// source file with a small native pixel size (e.g. the
+					// National Rail mark's 62x39) otherwise renders at that
+					// tiny native size and object-fit:contain does nothing,
+					// since there was never a bigger box for it to shrink from.
+					// Safe only for vector sources: raster files upscaled this
+					// way would blur, which is why Motability's old blurry
+					// favicon was replaced with a real asset instead of scaled.
+					$is_svg    = ( false !== strpos( $hero_image['url'], '.svg' ) );
+					$img_style = $is_svg
+						? 'width:100%;height:100%;object-fit:contain;'
+						: 'max-width:100%;max-height:100%;object-fit:contain;';
+					?>
 					<div style="position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
-						<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="max-width:100%;max-height:100%;object-fit:contain;">
+						<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="<?php echo esc_attr( $img_style ); ?>">
 					</div>
 				</div>
 			<?php endif; ?>

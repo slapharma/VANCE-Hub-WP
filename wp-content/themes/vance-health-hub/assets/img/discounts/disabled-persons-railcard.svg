@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="62" height="39">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -13 72 65">
+<!-- Upstream (Wikimedia Commons File:National_Rail_logo.svg) ships width="62"
+     height="39" with no viewBox at all. That renders fine through an <img>
+     sized by CSS (the browser scales the whole 62x39 canvas as one unit,
+     nothing is clipped), but it also means an <img> with no explicit
+     width/height and only max-width/max-height:100% in its style never
+     scales UP past that native 62x39 — max-width/max-height only cap a size
+     from above. This viewBox doesn't change that; see the template fix
+     (width:100%/height:100% for svg sources) for the actual reason this logo
+     used to render tiny. Kept anyway because an explicit viewBox is just
+     more correct — it decouples the coordinate system from the width/height
+     attributes, which is what let the diagonal path's y=-8.9..47.9 (bigger
+     than the old height="39") work at all. -->
 <g stroke="#ED1C24" fill="none">
 <path d="M1,-8.9 46,12.4 16,26.6 61,47.9" stroke-width="6"/>
 <path d="M0,12.4H62m0,14.2H0" stroke-width="6.4"/>
