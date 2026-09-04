@@ -111,6 +111,9 @@ require_once get_template_directory() . '/inc/hero-spotlight.php';
 // — so this must load AFTER hero-spotlight.php. All five default to their
 // classic dark hero; one `vance_{page}_hero_style` each switches them over.
 require_once get_template_directory() . '/inc/page-hero-spotlight.php';
+// The same spotlight hero's markup, reused directly (no Customizer config —
+// see the file's own docblock) for Patient Downloads companion posts.
+require_once get_template_directory() . '/inc/patient-download-hero.php';
 // The same spotlight hero carried across to the category archives — the last
 // set on the site still rendering the old 350px dark band. Loaded here rather
 // than from the three archive templates because the Customizer's Category

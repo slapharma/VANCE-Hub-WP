@@ -36,9 +36,18 @@ while ( have_posts() ) :
         $type_obj = get_post_type_object( $post_type );
         $type_label = $type_obj->labels->singular_name;
     }
+
+    // A Patient Downloads companion post gets the spotlight hero instead of
+    // the classic image-background one below — see inc/patient-download-hero.php.
+    // Presence of this meta key IS the signal; there is no separate toggle.
+    $vpd_pdf_file = get_post_meta( get_the_ID(), '_vpd_pdf_file', true );
+    $vpd_is_download_post = $vpd_pdf_file && file_exists( get_template_directory() . '/assets/downloads/' . $vpd_pdf_file );
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('oped-article'); ?> style="margin-top: 0;">
+    <?php if ( $vpd_is_download_post ) :
+        vance_render_patient_download_hero( get_the_ID() );
+    else : ?>
     <!-- Hero Section with Featured Image -->
     <!-- Hero Section with Featured Image -->
     <?php
@@ -83,6 +92,7 @@ while ( have_posts() ) :
             </div>
         </div>
     </section>
+    <?php endif; // $vpd_is_download_post ?>
 
     <?php
     // The inner category nav bar is deliberately NOT here. On an article it sat
@@ -272,6 +282,11 @@ while ( have_posts() ) :
                         ?>
                         <?php the_content(); ?>
                         <?php
+                        // Second, identical-style download CTA for a Patient
+                        // Downloads companion post — see inc/patient-download-hero.php.
+                        if ( $vpd_is_download_post ) {
+                            echo vance_patient_download_cta_button( get_template_directory_uri() . '/assets/downloads/' . $vpd_pdf_file ); // phpcs:ignore WordPress.Security.EscapeOutput — escapes internally.
+                        }
                         // Links to the condition pillar page(s) this article is
                         // about. Silent when no condition was confidently
                         // identified — see inc/article-conditions.php.

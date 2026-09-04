@@ -182,6 +182,11 @@ $vpd_downloads = array(
 					$is_live  = ! empty( $d['file'] ) && file_exists( get_template_directory() . '/assets/downloads/' . $d['file'] );
 					$pdf_url  = $is_live ? get_template_directory_uri() . '/assets/downloads/' . $d['file'] : '';
 					$meta     = $is_live ? vpd_pdf_meta( $d['file'], $d['pages'] ) : '';
+					// The companion post — see inc/patient-download-hero.php — shares
+					// this handout's own 'slug', a field this array has carried since
+					// the page was built but never read until now.
+					$post_obj  = $is_live ? get_page_by_path( $d['slug'], OBJECT, 'post' ) : null;
+					$post_link = ( $post_obj && $post_obj->post_status === 'publish' ) ? get_permalink( $post_obj ) : '';
 					?>
 				<div class="vpd-card<?php echo $is_live ? '' : ' vpd-card--soon'; ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid <?php echo $is_live ? '#008080' : '#CBD5E1'; ?>;">
 					<div class="vpd-card__head" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
@@ -190,11 +195,20 @@ $vpd_downloads = array(
 						<span class="vpd-card__soon" style="flex-shrink: 0; padding: 2px 9px; border-radius: var(--radius-pill, 999px); background: var(--accent-color, #F3F4F6); color: var(--text-light); font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;">Soon</span>
 						<?php endif; ?>
 					</div>
-					<h3 class="vpd-card__title" style="font-size: 18px; color: var(--secondary-color); margin: 0 0 10px; line-height: 1.35;"><?php echo wp_kses_post( $d['title'] ); ?></h3>
+					<h3 class="vpd-card__title" style="font-size: 18px; color: var(--secondary-color); margin: 0 0 10px; line-height: 1.35;">
+						<?php if ( $post_link ) : ?>
+						<a href="<?php echo esc_url( $post_link ); ?>" style="color: inherit; text-decoration: none;"><?php echo wp_kses_post( $d['title'] ); ?></a>
+						<?php else : ?>
+						<?php echo wp_kses_post( $d['title'] ); ?>
+						<?php endif; ?>
+					</h3>
 					<p class="vpd-card__desc" style="color: var(--text-light); font-size: 14px; margin: 0 0 20px 0; line-height: 1.6; flex: 1;"><?php echo esc_html( $d['desc'] ); ?></p>
 					<?php if ( $is_live ) : ?>
 						<?php echo vpd_download_btn( $pdf_url ); ?>
 						<span class="vpd-card__meta" style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-light);"><?php echo esc_html( $meta ); ?></span>
+						<?php if ( $post_link ) : ?>
+						<a href="<?php echo esc_url( $post_link ); ?>" class="vpd-card__readmore" style="display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--primary-color);">Read the summary &rarr;</a>
+						<?php endif; ?>
 					<?php else : ?>
 						<span class="btn vpd-card__btn vpd-card__btn--disabled" style="display: inline-flex; align-items: center; justify-content: center; background: var(--accent-color, #F3F4F6); color: var(--text-light); cursor: default;">Coming soon</span>
 					<?php endif; ?>
