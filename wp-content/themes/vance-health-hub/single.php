@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Template for displaying all single posts
  * 
@@ -104,16 +104,36 @@ while ( have_posts() ) :
     $va_is_saved  = ( $va_logged_in && function_exists( 'vance_is_bookmarked' ) ) ? vance_is_bookmarked() : false;
     $va_nonce     = wp_create_nonce( 'vance_dashboard_nonce' );
     $va_btn_attrs = 'data-post-id="' . esc_attr( get_the_ID() ) . '" data-nonce="' . esc_attr( $va_nonce ) . '" data-logged-in="' . ( $va_logged_in ? '1' : '0' ) . '"';
+
+    // Sub-categories: any category on this post that has a parent in the WP
+    // category hierarchy (i.e. it's a child term). The primary category
+    // already appears as the chip above, so we don't repeat it here.
+    $va_sub_categories = array();
+    $va_all_cats = get_the_category();
+    if ( ! empty( $va_all_cats ) ) {
+        foreach ( $va_all_cats as $va_c ) {
+            if ( ! empty( $va_c->parent ) ) {
+                $va_sub_categories[] = $va_c;
+            }
+        }
+    }
+    $va_post_tags = get_the_tags();
+    if ( ! is_array( $va_post_tags ) ) { $va_post_tags = array(); }
     ?>
     <style>
         .va-article-header { background:#fff; border-bottom:1px solid #2f4f6f; }
         .va-article-header .container { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-top:16px; padding-bottom:16px; }
         .va-article-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:14px; color:#64748b; }
-        .va-article-meta .va-cat { background:#8e7dbe; color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:var(--radius-control, 6px); }
+        .va-article-meta .va-cat { background:#8e7dbe; color:#fff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; border-radius:var(--radius-control, 10px); }
         .va-article-meta .va-sep { color:#cbd5e1; }
         .va-article-meta .va-author { display:inline-flex; align-items:center; gap:8px; color:#334155; font-weight:600; }
         .va-article-meta .va-author img { width:26px; height:26px; border-radius:50%; }
-        .vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:12px 20px; font-weight:700; font-size:15px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+        .va-article-meta .va-tt-chip { display:inline-block; padding:4px 10px; border-radius:var(--radius-control, 10px); font-size:12px; font-weight:600; text-decoration:none; line-height:1.4; transition:filter .15s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+        .va-article-meta .va-tt-chip--cat { color:#fff; }
+        .va-article-meta .va-tt-chip--cat:hover { filter:brightness(0.92); color:#fff; }
+        .va-article-meta .va-tt-chip--tag { background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; font-weight:500; }
+        .va-article-meta .va-tt-chip--tag:hover { background:var(--primary-color, #008080); color:#fff; border-color:var(--primary-color, #008080); }
+        .vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 10px); padding:12px 20px; font-weight:700; font-size:15px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
         .vance-save-btn.is-saved { background:#10B981; }
         .vance-save-btn:hover { filter:brightness(0.96); }
         .vance-save-btn:active { transform:scale(.97); }
@@ -147,6 +167,15 @@ while ( have_posts() ) :
                     <?php echo get_avatar( get_the_author_meta( 'ID' ), 26 ); ?>
                     <span><?php the_author(); ?></span>
                 </span>
+                <?php if ( ! empty( $va_sub_categories ) || ! empty( $va_post_tags ) ) : ?>
+                    <span class="va-sep" aria-hidden="true">·</span>
+                    <?php foreach ( $va_sub_categories as $va_sc ) : ?>
+                        <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>;"><?php echo esc_html( $va_sc->name ); ?></a>
+                    <?php endforeach; ?>
+                    <?php foreach ( $va_post_tags as $va_t ) : ?>
+                        <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag">#<?php echo esc_html( $va_t->name ); ?></a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
             <button class="vance-save-btn va-save-main<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
                 <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
@@ -365,97 +394,6 @@ while ( have_posts() ) :
 
                     <?php // Save button relocated to the article header bar at the top (all-screens redesign). ?>
 
-                    <!-- Author Info -->
-                    <div class="oped-sidebar-block" style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 16px;">
-                        <div style="flex-shrink: 0;">
-                            <?php echo get_avatar( get_the_author_meta('ID'), 44 ); ?>
-                        </div>
-                        <div>
-                            <div style="font-weight: 700; font-size: 14px; color: #1F2937;"><?php the_author(); ?></div>
-                            <div style="font-size: 13px; color: #6B7280; margin-top: 2px;"><?php echo get_the_date('F j, Y'); ?></div>
-                        </div>
-                    </div>
-
-                    <!-- Topics & Tags Sidebar Block -->
-                    <?php
-                    // Sub-categories: any category on this post that has a parent
-                    // in the WP category hierarchy (i.e. it's a child term). The
-                    // primary category already appears as the chip in the header
-                    // bar, so we don't repeat it here.
-                    $va_sub_categories = array();
-                    $va_all_cats = get_the_category();
-                    if ( ! empty( $va_all_cats ) ) {
-                        foreach ( $va_all_cats as $va_c ) {
-                            if ( ! empty( $va_c->parent ) ) {
-                                $va_sub_categories[] = $va_c;
-                            }
-                        }
-                    }
-                    $va_post_tags = get_the_tags();
-                    if ( ! is_array( $va_post_tags ) ) { $va_post_tags = array(); }
-
-                    if ( ! empty( $va_sub_categories ) || ! empty( $va_post_tags ) ) : ?>
-                        <div class="oped-sidebar-block oped-topics-tags">
-                            <h4>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
-                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                                </svg>
-                                Topics &amp; Tags
-                            </h4>
-                            <div class="oped-sidebar-content">
-                                <?php if ( ! empty( $va_sub_categories ) ) : ?>
-                                    <div class="va-tt-group" style="margin-bottom: 14px;">
-                                        <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Sub-categories</div>
-                                        <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
-                                            <?php foreach ( $va_sub_categories as $va_sc ) : ?>
-                                                <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>; color: #fff; border-radius: var(--radius-control, 6px); font-size: 12px; font-weight: 600; text-decoration: none; line-height: 1.4; transition: filter 0.15s ease;">
-                                                    <?php echo esc_html( $va_sc->name ); ?>
-                                                </a>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if ( ! empty( $va_post_tags ) ) : ?>
-                                    <div class="va-tt-group">
-                                        <div class="va-tt-label" style="font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Tags</div>
-                                        <div class="va-tt-chips" style="display: flex; flex-wrap: wrap; gap: 6px;">
-                                            <?php foreach ( $va_post_tags as $va_t ) : ?>
-                                                <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag" style="display: inline-block; padding: 4px 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: var(--radius-control, 6px); font-size: 12px; font-weight: 500; text-decoration: none; line-height: 1.4; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;">
-                                                    #<?php echo esc_html( $va_t->name ); ?>
-                                                </a>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <style>
-                            .oped-topics-tags .va-tt-chip--cat:hover { filter: brightness(0.92); color: #fff; }
-                            .oped-topics-tags .va-tt-chip--tag:hover { background: var(--primary-color, #008080); color: #fff; border-color: var(--primary-color, #008080); }
-                        </style>
-                    <?php endif; ?>
-
-                    <!-- Featured Discount -->
-                    <?php if ( function_exists( 'vance_render_featured_discount' ) ) :
-                        // A Customizer pick (plan §8's three-slot picker) wins over the
-                        // automatic by-topic pick; 0 means "let the page decide".
-                        $va_discount_pick = (int) vance_get_theme_mod( 'vance_discount_featured_sidebar', 0 );
-                        $va_discount_html = $va_discount_pick
-                            ? vance_render_featured_discount( 'pick', array( 'post_id' => $va_discount_pick ) )
-                            : vance_render_featured_discount( 'auto' );
-                        if ( $va_discount_html ) : ?>
-                            <div class="oped-sidebar-block oped-featured-discount">
-                                <?php echo $va_discount_html; // phpcs:ignore WordPress.Security.EscapeOutput — vance_render_featured_discount() escapes internally. ?>
-                            </div>
-                        <?php endif;
-                    endif;
-                    // A hook rather than a second sidebar block hand-typed here for the
-                    // next feature — see plan §5's note on this insertion point.
-                    do_action( 'vance_article_sidebar' );
-                    ?>
-
                      <!-- Attached Document -->
                     <?php if ( $attached_document ) : ?>
                         <div class="oped-sidebar-block oped-document-download">
@@ -472,13 +410,13 @@ while ( have_posts() ) :
                                 $doc_url = wp_get_attachment_url( $attached_document );
                                 $doc_filename = basename( get_attached_file( $attached_document ) );
                                 if ( $doc_url ) : ?>
-                                    <div class="download-placeholder-card" style="margin-bottom: 12px; height: 120px; background: #f3f4f6; border-radius: var(--radius-surface, 14px); display: flex; align-items: center; justify-content: center; border: 1px dashed #cbd5e1;">
+                                    <div class="download-placeholder-card" style="margin-bottom: 12px; height: 120px; background: #f3f4f6; border-radius: var(--radius-surface, 24px); display: flex; align-items: center; justify-content: center; border: 1px dashed #cbd5e1;">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                             <polyline points="14 2 14 8 20 8"></polyline>
                                         </svg>
                                     </div>
-                                    <a href="<?php echo esc_url( $doc_url ); ?>" target="_blank" class="download-button" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--primary-color); border-radius: var(--radius-control, 6px); text-decoration: none; color: white; font-weight: 500;">
+                                    <a href="<?php echo esc_url( $doc_url ); ?>" target="_blank" class="download-button" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--primary-color); border-radius: var(--radius-control, 10px); text-decoration: none; color: white; font-weight: 500;">
                                         <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?php echo esc_html( $doc_filename ); ?></span>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -506,7 +444,7 @@ while ( have_posts() ) :
                                     $link_url = $large_url ? esc_url( $large_url ) : '#';
                                 ?>
                                     <a href="<?php echo $link_url; ?>" class="infographic-popup-link" data-large-src="<?php echo $link_url; ?>">
-                                        <img src="<?php echo esc_url( $small_img[0] ); ?>" alt="Quick Infographic" style="width: 100%; border-radius: var(--radius-surface, 14px);">
+                                        <img src="<?php echo esc_url( $small_img[0] ); ?>" alt="Quick Infographic" style="width: 100%; border-radius: var(--radius-surface, 24px);">
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -668,6 +606,25 @@ while ( have_posts() ) :
                         </div>
                     </div>
                     <?php endif; ?>
+
+                    <!-- Featured Discount -->
+                    <?php if ( function_exists( 'vance_render_featured_discount' ) ) :
+                        // A Customizer pick (plan §8's three-slot picker) wins over the
+                        // automatic by-topic pick; 0 means "let the page decide".
+                        $va_discount_pick = (int) vance_get_theme_mod( 'vance_discount_featured_sidebar', 0 );
+                        $va_discount_html = $va_discount_pick
+                            ? vance_render_featured_discount( 'pick', array( 'post_id' => $va_discount_pick ) )
+                            : vance_render_featured_discount( 'auto' );
+                        if ( $va_discount_html ) : ?>
+                            <div class="oped-sidebar-block oped-featured-discount">
+                                <?php echo $va_discount_html; // phpcs:ignore WordPress.Security.EscapeOutput — vance_render_featured_discount() escapes internally. ?>
+                            </div>
+                        <?php endif;
+                    endif;
+                    // A hook rather than a second sidebar block hand-typed here for the
+                    // next feature — see plan §5's note on this insertion point.
+                    do_action( 'vance_article_sidebar' );
+                    ?>
 
                     <div class="oped-sidebar-block oped-related-articles">
                         <h4>Related Articles</h4>
