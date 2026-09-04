@@ -157,7 +157,16 @@ function vance_render_patient_download_hero( $post_id ) {
 		?></div>
 		<?php endif; ?>
 
-		<div class="container vhh-hero-spotlight__inner">
+		<?php
+		// width:100% is load-bearing: the section above is display:flex (for the
+		// 300px vertical centering), and a flex item with no explicit width
+		// shrinks to its content's natural size rather than filling the row, so
+		// .container's own max-width:1200px/margin:auto centering was capturing
+		// a ~864px shrink-wrapped box instead of the full width, and re-centering
+		// the whole hero noticeably right of where the article body below it
+		// starts.
+		?>
+		<div class="container vhh-hero-spotlight__inner" style="width: 100%;">
 			<div class="vhh-hero-spotlight__copy">
 
 				<span class="vhh-hero-spotlight__eyebrow" style="margin-bottom: 8px;"><?php echo esc_html( $eyebrow ); ?></span>
