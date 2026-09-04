@@ -310,6 +310,16 @@ function vance_render_discount_card( $post_id_or_row ) {
 		data-cat="<?php echo esc_attr( $row['category'] ? $row['category']['slug'] : '' ); ?>"
 		data-region="<?php echo esc_attr( implode( ' ', $row['regions'] ) ); ?>"
 		data-search="<?php echo esc_attr( strtolower( $row['title'] . ' ' . $row['provider'] ) ); ?>">
+		<?php // Stretched-link: the whole card is clickable through to the
+		// single scheme page, not just the title. An overlay <a> (styled
+		// position:absolute;inset:0 in discounts.css) rather than wrapping the
+		// card's own text in one big link, because the Apply button and Save
+		// button below are themselves links/buttons with their own destination
+		// (an external apply URL, an AJAX toggle) — nesting those inside
+		// another <a> is invalid HTML and would fire both on click. The
+		// overlay sits at a lower z-index than .vance-discount-card__actions,
+		// so Apply/Save stay independently clickable above it. ?>
+		<a href="<?php echo esc_url( $row['permalink'] ); ?>" class="vance-discount-card__cover-link" aria-label="<?php echo esc_attr( $row['title'] ); ?>"></a>
 		<?php // Tier badge deliberately not shown here (removed 2026-09-04 —
 		// lobby cards keep it off; the single page and the dashboard's saved
 		// list still show it via their own vance_discount_tier_badge() calls,
@@ -317,9 +327,7 @@ function vance_render_discount_card( $post_id_or_row ) {
 		<?php if ( $row['provider'] ) : ?>
 			<span class="vance-discount-card__provider"><?php echo esc_html( $row['provider'] ); ?></span>
 		<?php endif; ?>
-		<a href="<?php echo esc_url( $row['permalink'] ); ?>" class="vance-discount-card__title-link">
-			<h3 class="vance-discount-card__title"><?php echo esc_html( $row['title'] ); ?></h3>
-		</a>
+		<h3 class="vance-discount-card__title"><?php echo esc_html( $row['title'] ); ?></h3>
 		<?php if ( $row['value_summary'] ) : ?>
 			<p class="vance-discount-card__value"><?php echo esc_html( $row['value_summary'] ); ?></p>
 		<?php endif; ?>

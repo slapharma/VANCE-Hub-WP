@@ -32,6 +32,11 @@
 .vance-discount-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 
 .vance-discount-card { position: relative; background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 20px; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
+/* Stretched-link: the whole card navigates to the scheme page. Sits below
+   .vance-discount-card__actions in z-index so the Apply/Save controls,
+   which carry their own separate destinations, stay independently
+   clickable above it (see the PHP-side note in vance_render_discount_card()). */
+.vance-discount-card__cover-link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
 @media (prefers-reduced-motion: reduce) { .vance-discount-card { transition: none; } }
 .vance-discount-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -6px rgba(0,0,0,0.10); }
 
@@ -43,8 +48,7 @@
    tier badge that used to share a row with it was removed there) — now a
    plain line above the actions, not a flex row of its own. */
 .vance-discount-card-region { font-size: 11px; color: #94A3B8; margin: 0 0 8px; }
-.vance-discount-card__provider { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--primary-color); margin-bottom: 4px; }
-.vance-discount-card__title-link { text-decoration: none; }
+.vance-discount-card__provider { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: #5B3FA0; margin-bottom: 4px; }
 /* Clamped to a fixed number of lines (min-height reserves the space even for
    a one-line title/value) so cards stay the same height regardless of which
    scheme has the longest name — "Disabled Students' Allowances (DSA)" next
@@ -53,7 +57,7 @@
 .vance-discount-card__value { font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.4; min-height: calc(1.4em * 2); }
 .vance-discount-card__cost { font-size: 13px; color: #475569; margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
-.vance-discount-card__actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 8px; }
+.vance-discount-card__actions { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 8px; }
 
 /* Button text is always the bare verb ("Apply"); the channel/provider detail
    ("Opens DWP", "Call 0800 123 4567") sits below it, never inside the button
@@ -191,3 +195,12 @@
 .vance-vat-modal__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 8px; }
 .vance-vat-modal__actions a { font-size: 13px; color: var(--primary-color, #008080); text-decoration: none; font-weight: 600; }
 .vance-vat-modal__actions a:hover { text-decoration: underline; }
+
+/* ---- Lobby hero dot motif, purple (2026-09-04) -------------------------
+   The Hero Spotlight's dot-field SVG (inc/page-hero-spotlight.php) is teal
+   (#04504E) by default and shared across every page that falls back to it —
+   recoloured here, scoped to `--discounts`, rather than in that shared PHP
+   function, so no other page's motif is affected. The dots are presentation
+   attributes on the SVG (fill="#04504E"), which a class-scoped external rule
+   already outranks in specificity, so no !important is needed. */
+.vhh-hero-spotlight--discounts .vhh-hero-spotlight__motif svg g[fill="#04504E"] { fill: #5B3FA0; }
