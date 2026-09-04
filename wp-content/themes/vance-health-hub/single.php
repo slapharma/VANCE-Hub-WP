@@ -165,6 +165,13 @@ while ( have_posts() ) :
         @media (prefers-reduced-motion: reduce) { .va-sticky-save { transition:none; } }
     </style>
 
+    <?php
+    // Patient Downloads companion posts skip the whole meta bar (category
+    // chip, date, read time, author, sub-cats/tags) and Save Article, the
+    // same $vpd_is_download_post gate used throughout this template. With
+    // both gone there is nothing left in this section to render.
+    if ( ! $vpd_is_download_post ) :
+    ?>
     <section class="va-article-header">
         <div class="container">
             <div class="va-article-meta">
@@ -187,14 +194,13 @@ while ( have_posts() ) :
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
-            <?php if ( ! $vpd_is_download_post ) : ?>
             <button class="vance-save-btn va-save-main<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
                 <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
                 <span class="va-save-text"><?php echo $va_is_saved ? 'Saved' : 'Save Article'; ?></span>
             </button>
-            <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
 
     <?php
     // Patient Downloads companion posts skip Save Article entirely (the
