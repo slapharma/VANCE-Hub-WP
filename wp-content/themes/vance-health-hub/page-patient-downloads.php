@@ -96,8 +96,8 @@ $vpd_downloads = array(
 		'title' => 'The IBD Flare Survival Guide',
 		'tag'   => 'Flare Management',
 		'desc'  => 'What to do when symptoms get worse — practical steps for the first 48 hours.',
-		'file'  => '',
-		'pages' => 0,
+		'file'  => 'Vance-Health-Hub-IBD-Flare-Survival-Guide.pdf',
+		'pages' => 4,
 	),
 	array(
 		'slug'  => 'practical-food-guide',
