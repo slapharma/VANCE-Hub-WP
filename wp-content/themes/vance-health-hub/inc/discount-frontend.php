@@ -314,11 +314,6 @@ function vance_render_discount_card( $post_id_or_row ) {
 		// lobby cards keep it off; the single page and the dashboard's saved
 		// list still show it via their own vance_discount_tier_badge() calls,
 		// unaffected since neither goes through this function). ?>
-		<?php if ( $region_note ) : ?>
-			<div class="vance-discount-card__top vance-discount-card__top--region-only">
-				<span class="vance-discount-card-region"><?php echo esc_html( $region_note ); ?></span>
-			</div>
-		<?php endif; ?>
 		<?php if ( $row['provider'] ) : ?>
 			<span class="vance-discount-card__provider"><?php echo esc_html( $row['provider'] ); ?></span>
 		<?php endif; ?>
@@ -333,6 +328,11 @@ function vance_render_discount_card( $post_id_or_row ) {
 		<?php endif; ?>
 		<?php if ( $row['upcoming_change'] ) : ?>
 			<p class="vance-discount-card__upcoming"><?php echo esc_html( $row['upcoming_change'] ); ?></p>
+		<?php endif; ?>
+		<?php // Region note moved to the bottom of the card (2026-09-04) — with
+		// the tier badge gone, it no longer needs a top row of its own. ?>
+		<?php if ( $region_note ) : ?>
+			<p class="vance-discount-card-region"><?php echo esc_html( $region_note ); ?></p>
 		<?php endif; ?>
 		<div class="vance-discount-card__actions">
 			<?php echo vance_discount_render_apply_group( $action ); ?>

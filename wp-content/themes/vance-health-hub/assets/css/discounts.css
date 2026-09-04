@@ -28,9 +28,14 @@
 @media (prefers-reduced-motion: reduce) { .vance-discount-card { transition: none; } }
 .vance-discount-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -6px rgba(0,0,0,0.10); }
 
+/* Still used by the dashboard's compact saved-scheme card (tier badge +
+   status <select> row) even though the grid card no longer needs it here. */
 .vance-discount-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-.vance-discount-card__top--region-only { justify-content: flex-end; }
-.vance-discount-card-region { font-size: 11px; color: #94A3B8; white-space: nowrap; }
+
+/* Region note moved to the bottom of the grid card (2026-09-04, once the
+   tier badge that used to share a row with it was removed there) — now a
+   plain line above the actions, not a flex row of its own. */
+.vance-discount-card-region { font-size: 11px; color: #94A3B8; margin: 0 0 8px; }
 .vance-discount-card__provider { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--primary-color); margin-bottom: 4px; }
 .vance-discount-card__title-link { text-decoration: none; }
 /* Clamped to a fixed number of lines (min-height reserves the space even for

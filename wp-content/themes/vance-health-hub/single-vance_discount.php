@@ -56,7 +56,10 @@ while ( have_posts() ) :
 	 */
 	?>
 	<section style="height:300px;min-height:0;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);">
-		<div class="container" style="max-width:900px;">
+		<?php // max-width matches the body section's container below (not the
+		// former dark hero's 900px) so the hero and body text share one left
+		// edge — reported live 2026-09-04: the two visibly disagreed. ?>
+		<div class="container" style="max-width:1100px;">
 			<?php if ( $row['category'] ) : ?>
 				<span class="vhh-hero-spotlight__eyebrow"><?php echo esc_html( $row['category']['name'] ); ?></span>
 			<?php endif; ?>
