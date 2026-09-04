@@ -309,9 +309,27 @@ function vance_discount_hero_image( $slug ) {
 	// provider's own site (Motability's header background; Access Card's
 	// `--pal-1` CSS custom property) rather than guessed, so the logo reads
 	// the same way here as it does on the provider's own pages.
+	//
+	// The GOV.UK and NHS files are the same idea in reverse: the source
+	// og:image is a big solid-colour card with the logo tight in the middle,
+	// so it was cropped down to just the logo (2026-09-04) and needs its own
+	// background colour restored underneath — GOV.UK's brand blue and NHS's
+	// brand blue, both official values, not sampled from the (JPEG-ish)
+	// compressed source.
 	static $bg = array(
-		'motability-scheme'  => '#0052BD',
-		'nimbus-access-card' => '#3BA545',
+		'motability-scheme'                      => '#0052BD',
+		'nimbus-access-card'                     => '#3BA545',
+		'disabled-students-allowance'             => '#1D70B8',
+		'warm-home-discount'                      => '#1D70B8',
+		'disabled-facilities-grant'                => '#1D70B8',
+		'council-tax-disability-band-reduction'    => '#1D70B8',
+		'vehicle-tax-exemption'                    => '#1D70B8',
+		'vat-relief-disability'                    => '#1D70B8',
+		'prescription-prepayment-certificate'      => '#1D70B8',
+		'blue-badge'                               => '#1D70B8',
+		'disabled-bus-pass'                        => '#1D70B8',
+		'healthcare-travel-costs'                  => '#005EB8',
+		'nhs-low-income-scheme'                    => '#005EB8',
 	);
 
 	foreach ( array( 'svg', 'jpg', 'png' ) as $ext ) {
