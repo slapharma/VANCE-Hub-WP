@@ -58,8 +58,17 @@ while ( have_posts() ) :
 	<section style="height:300px;min-height:0;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);">
 		<?php // max-width matches the body section's container below (not the
 		// former dark hero's 900px) so the hero and body text share one left
-		// edge — reported live 2026-09-04: the two visibly disagreed. ?>
-		<div class="container" style="max-width:1100px;">
+		// edge — reported live 2026-09-04: the two visibly disagreed the first
+		// time too, despite an identical max-width. Root cause: this section
+		// is display:flex (for align-items:center's vertical centering), and
+		// .container's own sitewide `margin: 0 auto` is flexbox's auto-margin
+		// centering mechanism on a flex item — it shrank .container to its
+		// CONTENT width (740px) and centered that shrunk box, rather than
+		// letting it span the full 1100px the way a normal block does. The
+		// body section below isn't display:flex, so it never hit this.
+		// width:100% forces the flex item to fill the main axis, leaving no
+		// space for the auto-margins to redistribute. ?>
+		<div class="container" style="max-width:1100px;width:100%;">
 			<?php if ( $row['category'] ) : ?>
 				<?php // The correct action for a category pill: back to the
 				// directory, pre-filtered to this scheme's own category. ?>
