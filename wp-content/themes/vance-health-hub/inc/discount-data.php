@@ -317,8 +317,12 @@ function vance_discount_hero_image( $slug ) {
 	foreach ( array( 'svg', 'jpg', 'png' ) as $ext ) {
 		$path = get_stylesheet_directory() . "/assets/img/discounts/{$slug}.{$ext}";
 		if ( is_readable( $path ) ) {
+			// filemtime querystring so a swapped file (same slug, same
+			// extension — this has already happened twice) busts LiteSpeed's
+			// static-asset cache instead of serving the old bytes under an
+			// unchanged URL. Same convention as functions.php's CSS/JS enqueues.
 			return array(
-				'url' => get_stylesheet_directory_uri() . "/assets/img/discounts/{$slug}.{$ext}",
+				'url' => get_stylesheet_directory_uri() . "/assets/img/discounts/{$slug}.{$ext}?v=" . filemtime( $path ),
 				'alt' => $alt_text[ $slug ],
 				'bg'  => isset( $bg[ $slug ] ) ? $bg[ $slug ] : '#fff',
 			);
