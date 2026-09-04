@@ -90,7 +90,7 @@ while ( have_posts() ) :
 				</div>
 			</div>
 			<?php if ( $hero_image ) : ?>
-				<div style="flex:0 0 auto;width:275px;height:188px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+				<div style="flex:0 0 auto;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
 					<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="max-width:100%;max-height:100%;object-fit:contain;">
 				</div>
 			<?php endif; ?>

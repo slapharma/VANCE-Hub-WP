@@ -303,12 +303,24 @@ function vance_discount_hero_image( $slug ) {
 		return null;
 	}
 
+	// A handful of official marks are reversed (white-only) artwork meant to
+	// sit on the provider's own brand colour, not on a white card — Motability
+	// and the Access Card (Nimbus) both ship exactly that. Sampled from each
+	// provider's own site (Motability's header background; Access Card's
+	// `--pal-1` CSS custom property) rather than guessed, so the logo reads
+	// the same way here as it does on the provider's own pages.
+	static $bg = array(
+		'motability-scheme'  => '#0052BD',
+		'nimbus-access-card' => '#3BA545',
+	);
+
 	foreach ( array( 'svg', 'jpg', 'png' ) as $ext ) {
 		$path = get_stylesheet_directory() . "/assets/img/discounts/{$slug}.{$ext}";
 		if ( is_readable( $path ) ) {
 			return array(
 				'url' => get_stylesheet_directory_uri() . "/assets/img/discounts/{$slug}.{$ext}",
 				'alt' => $alt_text[ $slug ],
+				'bg'  => isset( $bg[ $slug ] ) ? $bg[ $slug ] : '#fff',
 			);
 		}
 	}
