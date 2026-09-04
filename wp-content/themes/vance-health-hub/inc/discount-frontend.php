@@ -653,14 +653,21 @@ function vance_discount_vat_modal_markup() {
 }
 
 /**
- * Small teal dot-field for behind the single-scheme hero's logo box — NOT
+ * Small teal dot-field for the single-scheme hero — NOT
  * vance_page_hero_spotlight_motif() (inc/page-hero-spotlight.php). That
  * motif's dots are one small cluster inside a 640x520 canvas built for a
- * full-width hero; shrunk into this hero's ~320x220 box the dots scale
- * down to under a pixel and vanish, leaving only its bolder concentric
- * arcs visible — found live 2026-09-04, the result read as "a circle", not
- * "dots". This draws a plain grid sized to the box instead, so the dots
- * are the thing actually visible.
+ * full-width hero; shrunk down for this page the dots scale down to under a
+ * pixel and vanish, leaving only its bolder concentric arcs visible — found
+ * live 2026-09-04, the result read as "a circle", not "dots". This draws a
+ * plain grid instead, sized to whatever box calls it, so the dots are the
+ * thing actually visible.
+ *
+ * `slice` (crop-to-fill, keeping dots circular) rather than `none`
+ * (stretch-to-fill, which ovals them) — the caller's box is a CSS
+ * percentage width against a fixed pixel height, so its real aspect ratio
+ * shifts with viewport width and will rarely match $width:$height exactly;
+ * the caller is expected to set `overflow:hidden` so the crop has somewhere
+ * to go.
  *
  * @param int $width
  * @param int $height
@@ -676,7 +683,7 @@ function vance_discount_hero_dots( $width = 320, $height = 220 ) {
 	}
 
 	return sprintf(
-		'<svg viewBox="0 0 %1$d %2$d" width="100%%" height="100%%" preserveAspectRatio="none" aria-hidden="true" focusable="false"><g fill="#04504E" opacity="0.16" stroke="none">%3$s</g></svg>',
+		'<svg viewBox="0 0 %1$d %2$d" width="100%%" height="100%%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><g fill="#04504E" opacity="0.16" stroke="none">%3$s</g></svg>',
 		(int) $width,
 		(int) $height,
 		$dots

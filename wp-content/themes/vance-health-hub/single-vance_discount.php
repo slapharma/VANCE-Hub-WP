@@ -59,6 +59,15 @@ while ( have_posts() ) :
 	 */
 	?>
 	<section style="height:300px;min-height:0;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);">
+		<?php if ( $hero_image ) : ?>
+			<?php // Decorative teal dot-field (vance_discount_hero_dots(), inc/discount-frontend.php)
+			// along the hero's own right edge — 20% of the SECTION's full width, not
+			// the 1100px container, so it bleeds to the actual edge of the browser
+			// like the rest of this hero's background. Sits behind .container in
+			// paint order simply by coming first in the markup; no z-index needed
+			// since neither element sets one. ?>
+			<div style="position:absolute;top:0;right:0;width:20%;height:100%;overflow:hidden;" aria-hidden="true"><?php echo vance_discount_hero_dots( 220, 300 ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></div>
+		<?php endif; ?>
 		<?php // max-width matches the body section's container below (not the
 		// former dark hero's 900px) so the hero and body text share one left
 		// edge — reported live 2026-09-04: the two visibly disagreed the first
@@ -91,31 +100,22 @@ while ( have_posts() ) :
 			</div>
 			<?php if ( $hero_image ) : ?>
 				<?php
-				/* A plain teal dot-field behind the logo box — vance_discount_hero_dots()
-				   (inc/discount-frontend.php), not the site's usual page-hero-spotlight
-				   motif: that one's dots are sized for a full-width hero and disappear
-				   at this box's small scale, leaving only its arcs visible. */
+				// SVGs get width/height:100% (scale UP to fill), not just
+				// max-width/max-height:100% (cap-only, never scale up) — a
+				// source file with a small native pixel size (e.g. the
+				// National Rail mark's 62x39) otherwise renders at that
+				// tiny native size and object-fit:contain does nothing,
+				// since there was never a bigger box for it to shrink from.
+				// Safe only for vector sources: raster files upscaled this
+				// way would blur, which is why Motability's old blurry
+				// favicon was replaced with a real asset instead of scaled.
+				$is_svg    = ( false !== strpos( $hero_image['url'], '.svg' ) );
+				$img_style = $is_svg
+					? 'width:100%;height:100%;object-fit:contain;'
+					: 'max-width:100%;max-height:100%;object-fit:contain;';
 				?>
-				<div style="flex:0 0 auto;position:relative;width:320px;height:220px;display:flex;align-items:center;justify-content:center;">
-					<div style="position:absolute;inset:0;overflow:hidden;border-radius:var(--radius-surface, 24px);" aria-hidden="true"><?php echo vance_discount_hero_dots( 320, 220 ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></div>
-					<?php
-					// SVGs get width/height:100% (scale UP to fill), not just
-					// max-width/max-height:100% (cap-only, never scale up) — a
-					// source file with a small native pixel size (e.g. the
-					// National Rail mark's 62x39) otherwise renders at that
-					// tiny native size and object-fit:contain does nothing,
-					// since there was never a bigger box for it to shrink from.
-					// Safe only for vector sources: raster files upscaled this
-					// way would blur, which is why Motability's old blurry
-					// favicon was replaced with a real asset instead of scaled.
-					$is_svg    = ( false !== strpos( $hero_image['url'], '.svg' ) );
-					$img_style = $is_svg
-						? 'width:100%;height:100%;object-fit:contain;'
-						: 'max-width:100%;max-height:100%;object-fit:contain;';
-					?>
-					<div style="position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
-						<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="<?php echo esc_attr( $img_style ); ?>">
-					</div>
+				<div style="flex:0 0 auto;position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
+					<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="<?php echo esc_attr( $img_style ); ?>">
 				</div>
 			<?php endif; ?>
 		</div>
