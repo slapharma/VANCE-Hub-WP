@@ -245,6 +245,80 @@ function vance_discount_counts() {
 }
 
 /**
+ * Per-scheme hero image, sourced once (2026-09-04) from each scheme's own
+ * `official_url` og:image where the source page had one, and from the
+ * relevant provider's own logo (fetched from the provider's own site or a
+ * Wikimedia Commons-hosted official mark) where it did not — never a stock
+ * photo unrelated to the scheme. Shared assets (the GOV.UK crest, the NHS
+ * default share image, one DWP logo) are deliberately reused across the
+ * several schemes those bodies administer rather than invented per-page.
+ *
+ * Files live at assets/img/discounts/{slug}.{ext} — a static, theme-committed
+ * lookup table rather than a DB-uploaded featured image, matching the
+ * "assets/img/heroes/" convention used for the Patient Downloads handouts.
+ * Returns null (never a broken path) when a scheme has no file, so the hero
+ * degrades to text-only exactly as it did before this existed.
+ *
+ * @param string $slug Scheme's post_name.
+ * @return array{url:string, alt:string}|null
+ */
+function vance_discount_hero_image( $slug ) {
+	static $alt_text = array(
+		'blue-light-card'                          => 'Blue Light Card',
+		'rhs-gardens-companion'                     => 'Visitors in an RHS garden',
+		'kew-gardens-companion'                     => 'Inside the Palm House at Kew Gardens',
+		'london-zoo-concession-carer'               => 'Visitors at ZSL London Zoo',
+		'madame-tussauds-carer-ticket'               => 'Madame Tussauds London',
+		'chessington-carer-ticket'                  => 'Chessington World of Adventures',
+		'english-heritage-companion'                => 'An English Heritage site',
+		'national-trust-essential-companion'        => 'National Trust visitors',
+		'ccuk-cant-wait-card'                       => "Crohn's & Colitis UK logo",
+		'ccuk-radar-key'                            => "Crohn's & Colitis UK logo",
+		'disabled-persons-railcard'                 => 'National Rail logo',
+		'cea-card'                                  => 'CEA Card logo',
+		'cadw-free-entry'                           => 'Cadw logo',
+		'nimbus-access-card'                        => 'Access Card (Nimbus) logo',
+		'merlin-companion-ticket'                   => 'Merlin Entertainments logo',
+		'pip'                                       => 'Department for Work and Pensions logo',
+		'attendance-allowance'                      => 'Department for Work and Pensions logo',
+		'uc-health-element'                         => 'Department for Work and Pensions logo',
+		'access-to-work'                            => 'Department for Work and Pensions logo',
+		'carers-allowance'                          => 'Department for Work and Pensions logo',
+		'priority-services-register'                => 'Ofgem logo',
+		'tfl-congestion-ulez-disability-exemption'  => 'Transport for London logo',
+		'motability-scheme'                         => 'Motability logo',
+		'watersure'                                 => 'Consumer Council for Water logo',
+		'disabled-students-allowance'               => 'GOV.UK',
+		'warm-home-discount'                        => 'GOV.UK',
+		'disabled-facilities-grant'                 => 'GOV.UK',
+		'council-tax-disability-band-reduction'     => 'GOV.UK',
+		'vehicle-tax-exemption'                     => 'GOV.UK',
+		'vat-relief-disability'                     => 'GOV.UK',
+		'prescription-prepayment-certificate'       => 'GOV.UK',
+		'blue-badge'                                => 'GOV.UK',
+		'disabled-bus-pass'                         => 'GOV.UK',
+		'healthcare-travel-costs'                   => 'NHS',
+		'nhs-low-income-scheme'                     => 'NHS',
+	);
+
+	if ( ! isset( $alt_text[ $slug ] ) ) {
+		return null;
+	}
+
+	foreach ( array( 'svg', 'jpg', 'png' ) as $ext ) {
+		$path = get_stylesheet_directory() . "/assets/img/discounts/{$slug}.{$ext}";
+		if ( is_readable( $path ) ) {
+			return array(
+				'url' => get_stylesheet_directory_uri() . "/assets/img/discounts/{$slug}.{$ext}",
+				'alt' => $alt_text[ $slug ],
+			);
+		}
+	}
+
+	return null;
+}
+
+/**
  * All distinct categories present in the data, in taxonomy term order (not
  * alphabetical) — plan §5 fixes the order: toilet-access, days-out, travel,
  * access-card, benefit, nhs, tax, work, household. Only categories that

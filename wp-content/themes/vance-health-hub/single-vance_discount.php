@@ -33,7 +33,8 @@ while ( have_posts() ) :
 		);
 	}
 
-	$action = vance_discount_apply_action( $row );
+	$action     = vance_discount_apply_action( $row );
+	$hero_image = vance_discount_hero_image( $row['slug'] );
 	?>
 
 	<main id="main-content">
@@ -43,9 +44,11 @@ while ( have_posts() ) :
 	 * Spotlight-styled hero, sized like a regular article's (single.php's
 	 * `.oped-hero`, height:300px) rather than the full page-hero-spotlight
 	 * treatment (photo + card + facts band, ~450-500px) — this page has
-	 * nowhere to put a per-scheme photograph, and borrowing the mint band +
-	 * eyebrow pill + teal headline at article height keeps a single scheme
-	 * page reading as content, not as a landing page.
+	 * borrowing the mint band + eyebrow pill + teal headline at article
+	 * height keeps a single scheme page reading as content, not as a
+	 * landing page. A per-scheme image (vance_discount_hero_image()) sits
+	 * in a small fixed box beside the text, since most of these are
+	 * provider logos rather than photography.
 	 *
 	 * Uses the real .vhh-hero-spotlight__eyebrow/__title classes from
 	 * assets/css/main.css rather than reinventing the eyebrow pill and the
@@ -68,22 +71,29 @@ while ( have_posts() ) :
 		// body section below isn't display:flex, so it never hit this.
 		// width:100% forces the flex item to fill the main axis, leaving no
 		// space for the auto-margins to redistribute. ?>
-		<div class="container" style="max-width:1100px;width:100%;">
-			<?php if ( $row['category'] ) : ?>
-				<?php // The correct action for a category pill: back to the
-				// directory, pre-filtered to this scheme's own category. ?>
-				<a class="vhh-hero-spotlight__eyebrow vance-discount-hero-eyebrow" href="<?php echo esc_url( add_query_arg( 'cat', $row['category']['slug'], home_url( '/ibd-discounts/' ) ) . '#discounts-grid' ); ?>"><?php echo esc_html( $row['category']['name'] ); ?></a>
-			<?php endif; ?>
-			<h1 class="vhh-hero-spotlight__title" style="font-size:clamp(26px,3.4vw,38px);max-width:700px;margin:0 0 8px;"><?php the_title(); ?></h1>
-			<?php if ( $row['provider'] ) : ?>
-				<p style="color:#3F4B4E;font-size:15px;font-weight:600;margin:0 0 14px;"><?php echo esc_html( $row['provider'] ); ?></p>
-			<?php endif; ?>
-			<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
-				<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $row ) ); ?>
-				<?php if ( $row['region_names'] && ! in_array( 'UK', $row['region_names'], true ) ) : ?>
-					<span style="color:#64748B;font-size:13px;"><?php echo esc_html( implode( ', ', $row['region_names'] ) ); ?> <?php esc_html_e( 'only', 'vance-health-hub' ); ?></span>
+		<div class="container" style="max-width:1100px;width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;">
+			<div style="flex:1;min-width:260px;">
+				<?php if ( $row['category'] ) : ?>
+					<?php // The correct action for a category pill: back to the
+					// directory, pre-filtered to this scheme's own category. ?>
+					<a class="vhh-hero-spotlight__eyebrow vance-discount-hero-eyebrow" href="<?php echo esc_url( add_query_arg( 'cat', $row['category']['slug'], home_url( '/ibd-discounts/' ) ) . '#discounts-grid' ); ?>"><?php echo esc_html( $row['category']['name'] ); ?></a>
 				<?php endif; ?>
+				<h1 class="vhh-hero-spotlight__title" style="font-size:clamp(26px,3.4vw,38px);max-width:700px;margin:0 0 8px;"><?php the_title(); ?></h1>
+				<?php if ( $row['provider'] ) : ?>
+					<p style="color:#3F4B4E;font-size:15px;font-weight:600;margin:0 0 14px;"><?php echo esc_html( $row['provider'] ); ?></p>
+				<?php endif; ?>
+				<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+					<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $row ) ); ?>
+					<?php if ( $row['region_names'] && ! in_array( 'UK', $row['region_names'], true ) ) : ?>
+						<span style="color:#64748B;font-size:13px;"><?php echo esc_html( implode( ', ', $row['region_names'] ) ); ?> <?php esc_html_e( 'only', 'vance-health-hub' ); ?></span>
+					<?php endif; ?>
+				</div>
 			</div>
+			<?php if ( $hero_image ) : ?>
+				<div style="flex:0 0 auto;width:220px;height:150px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
+					<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="max-width:100%;max-height:100%;object-fit:contain;">
+				</div>
+			<?php endif; ?>
 		</div>
 	</section>
 
