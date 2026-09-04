@@ -3680,15 +3680,15 @@ body.home .hero {
     /* The background-image itself (default dot graphic, or none when a
        background colour is chosen) is set inline per-instance — see
        vance_render_promo_block(). These three stay in CSS because they never
-       change per-instance. The -100px pushes the pattern further right/out of
+       change per-instance. The -125px pushes the pattern further right/out of
        the card than a plain "right" would, for the same reason as the padding
        above: less of it ends up under the text. */
     background-size: cover;
-    background-position: right -100px top;
+    background-position: right -125px top;
     background-repeat: no-repeat;
 }
 .vance-promo-tool-card__title {
-    font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 800;
+    font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 800;
     color: #0A1929; margin: 0; line-height: 1.25;
 }
 .vance-promo-tool-card__desc { font-size: 14px; line-height: 1.6; color: #475569; margin: 0; }
