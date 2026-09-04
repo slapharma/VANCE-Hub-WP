@@ -133,11 +133,16 @@ function vance_render_patient_download_hero( $post_id ) {
 	$image     = $has_image ? get_the_post_thumbnail_url( $post_id, 'full' ) : '';
 	$image_alt = $has_image ? get_post_meta( get_post_thumbnail_id( $post_id ), '_wp_attachment_image_alt', true ) : '';
 
-	$fade_from = vance_hex_to_rgb_triple( '#ECF5F5', '236, 245, 245' );
-	$fade_to   = vance_hex_to_rgb_triple( '#F6F9FA', '246, 249, 250' );
+	// Light purple palette, replacing the teal/mint every other spotlight hero
+	// on the site uses. #9B8BD0 (the dot image below is recoloured to the same
+	// value) is the LILAC accent guide_kit.py already defines for the PDF
+	// handouts themselves, so the web page and the PDF it links to share one
+	// accent rather than each inventing its own purple.
+	$fade_from = vance_hex_to_rgb_triple( '#F1EDFA', '241, 237, 250' );
+	$fade_to   = vance_hex_to_rgb_triple( '#FAF9FC', '250, 249, 252' );
 
 	$style = sprintf(
-		'--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA; --vhh-hs-from-rgb: %1$s; --vhh-hs-to-rgb: %2$s; --vhh-hs-title: #04504E; --vhh-hs-intro: #3F4B4E; --vhh-hs-cta-bg: #6B489E; --vhh-hs-cta-fg: #ffffff; --vhh-hs-cta-hover: #583B82; height: 300px; min-height: 0; padding: 0; display: flex; align-items: center;',
+		'--vhh-hs-from: #F1EDFA; --vhh-hs-to: #FAF9FC; --vhh-hs-from-rgb: %1$s; --vhh-hs-to-rgb: %2$s; --vhh-hs-title: #3D2A5C; --vhh-hs-intro: #4B4356; --vhh-hs-cta-bg: #6B489E; --vhh-hs-cta-fg: #ffffff; --vhh-hs-cta-hover: #583B82; height: 300px; min-height: 0; padding: 0; display: flex; align-items: center;',
 		esc_attr( $fade_from ),
 		esc_attr( $fade_to )
 	);
@@ -152,9 +157,20 @@ function vance_render_patient_download_hero( $post_id ) {
 			     decoding="async" fetchpriority="high">
 		</div>
 		<?php else : ?>
-		<div class="vhh-hero-spotlight__motif" aria-hidden="true"><?php
-			echo vance_page_hero_spotlight_motif(); // phpcs:ignore WordPress.Security.EscapeOutput — static markup
-		?></div>
+		<?php
+		// The site's usual dot-field motif (vance_page_hero_spotlight_motif())
+		// is teal to match the OTHER spotlight heroes; this one is purple, so it
+		// gets its own asset rather than fighting that function's hard-coded
+		// colour. object-position keeps the pattern's dense upper-left swirl in
+		// frame rather than the sparse fade at the bottom, which is what a
+		// naive centre crop of a 1080x1350 portrait image into a 300px-tall box
+		// would otherwise show.
+		?>
+		<div class="vhh-hero-spotlight__motif" aria-hidden="true">
+			<img src="<?php echo esc_url( get_template_directory_uri() . '/assets/img/heroes/patient-download-dots.png' ); ?>"
+			     alt="" width="1080" height="1350" decoding="async"
+			     style="width: 100%; height: 100%; object-fit: cover; object-position: 30% 15%; display: block;">
+		</div>
 		<?php endif; ?>
 
 		<?php
@@ -169,7 +185,13 @@ function vance_render_patient_download_hero( $post_id ) {
 		<div class="container vhh-hero-spotlight__inner" style="width: 100%;">
 			<div class="vhh-hero-spotlight__copy">
 
-				<span class="vhh-hero-spotlight__eyebrow" style="margin-bottom: 8px;"><?php echo esc_html( $eyebrow ); ?></span>
+				<?php
+				// Background/border here are hard-coded teal in main.css (only
+				// the text colour reads the --vhh-hs-title var), so the purple
+				// palette needs the same inline override the ghost CTA's border
+				// gets just below.
+				?>
+				<span class="vhh-hero-spotlight__eyebrow" style="margin-bottom: 8px; background: #EDE7F7; border-color: #9B87C4;"><?php echo esc_html( $eyebrow ); ?></span>
 
 				<h1 class="vhh-hero-spotlight__title" style="font-size: clamp(24px, 2.6vw, 32px); line-height: 1.15; max-width: 480px; margin: 0 0 10px;"><?php echo $title; // phpcs:ignore WordPress.Security.EscapeOutput — wp_kses_post above ?></h1>
 
@@ -182,7 +204,7 @@ function vance_render_patient_download_hero( $post_id ) {
 						<span><?php esc_html_e( 'Download the PDF', 'vance-health-hub' ); ?></span>
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 					</a>
-					<a class="vhh-hero-spotlight__cta vhh-hero-spotlight__cta--ghost" href="<?php echo esc_url( home_url( '/patient-downloads/' ) ); ?>" style="padding: 11px 20px; font-size: 14px;"><?php esc_html_e( 'Back to all handouts', 'vance-health-hub' ); ?></a>
+					<a class="vhh-hero-spotlight__cta vhh-hero-spotlight__cta--ghost" href="<?php echo esc_url( home_url( '/patient-downloads/' ) ); ?>" style="padding: 11px 20px; font-size: 14px; border-color: #9B87C4;"><?php esc_html_e( 'Back to all handouts', 'vance-health-hub' ); ?></a>
 				</div>
 			</div>
 		</div>
