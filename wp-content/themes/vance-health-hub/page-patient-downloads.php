@@ -113,8 +113,8 @@ $vpd_downloads = array(
 		'title' => 'The IBD Emergency Kit',
 		'tag'   => 'Preparedness',
 		'desc'  => 'What to keep at home, at work and on the go, so a flare doesn’t catch you unprepared.',
-		'file'  => '',
-		'pages' => 0,
+		'file'  => 'Vance-Health-Hub-IBD-Emergency-Kit.pdf',
+		'pages' => 2,
 	),
 	array(
 		'slug'  => 'ibd-partner-guide',
