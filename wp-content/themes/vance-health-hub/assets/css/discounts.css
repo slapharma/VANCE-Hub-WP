@@ -35,7 +35,14 @@
 .vance-discount-card__value { font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 4px; }
 .vance-discount-card__cost { font-size: 13px; color: #475569; margin: 0 0 8px; }
 .vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
-.vance-discount-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 8px; }
+.vance-discount-card__actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 8px; }
+
+/* Button text is always the bare verb ("Apply"); the channel/provider detail
+   ("Opens DWP", "Call 0800 123 4567") sits below it, never inside the button
+   — a provider name alone can run past 60 characters (found live 2026-09-04:
+   "Apply (opens Student Finance England (equivalent bodies in Wales/...")). */
+.vance-discount-apply-group { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; max-width: 100%; }
+.vance-discount-apply-note { display: block; font-size: 11px; color: #64748B; line-height: 1.3; max-width: 220px; }
 
 /* ---- Tier badge (UI spec §4) ------------------------------------------- */
 
@@ -72,6 +79,7 @@
 .vance-discount-featured__value { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0 0 6px; }
 .vance-discount-featured__verified { font-size: 11px; color: #94A3B8; margin: 0 0 14px; }
 .vance-discount-featured-cta { width: 100%; justify-content: center; }
+.vance-discount-featured-note { display: block; text-align: center; font-size: 11px; color: #64748B; margin-top: 4px; }
 
 /* ---- Dashboard tab (UI spec §6) ----------------------------------------- */
 
@@ -117,3 +125,17 @@
 	.vance-discount-search { flex-basis: 100%; }
 	.vance-discount-controls__right { width: 100%; }
 }
+
+/* ---- VAT declaration modal (plan §10 step 7) ---------------------------- */
+
+.vance-vat-modal { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; background: rgba(10,25,41,0.55); padding: 20px; }
+.vance-vat-modal[hidden] { display: none; }
+.vance-vat-modal__panel { background: #fff; border-radius: var(--radius-surface); padding: 28px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+.vance-vat-modal__panel h2 { font-size: 18px; margin: 0 0 10px; color: #0f172a; }
+.vance-vat-modal__intro { font-size: 13px; color: #475569; margin: 0 0 18px; line-height: 1.5; }
+.vance-vat-modal__close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border: none; background: #F1F5F9; border-radius: var(--radius-control); font-size: 20px; line-height: 1; color: #475569; cursor: pointer; }
+.vance-vat-modal__field { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 14px; }
+.vance-vat-modal__field input, .vance-vat-modal__field textarea { display: block; width: 100%; margin-top: 4px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; font-family: inherit; box-sizing: border-box; }
+.vance-vat-modal__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 8px; }
+.vance-vat-modal__actions a { font-size: 13px; color: var(--primary-color, #008080); text-decoration: none; font-weight: 600; }
+.vance-vat-modal__actions a:hover { text-decoration: underline; }

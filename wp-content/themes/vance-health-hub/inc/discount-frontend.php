@@ -82,15 +82,23 @@ function vance_discount_effective_tier( $row ) {
 }
 
 /**
- * Resolve one scheme's Apply button: label, href, and any data-* the click
- * behaviour needs. Copies plan §7's per-tier table; the tier-3 labels are the
- * general case per apply_type rather than the bespoke per-scheme copy
- * ("Call 0800 917 2222", the WaterSure supplier lookup) plan §7 describes —
- * those are plan §10 step 7 work and layer on top of this without changing
- * the shape returned here.
+ * Resolve one scheme's Apply button: label, an optional note rendered OUTSIDE
+ * the button (below it, not inside), href, and any data-* the click
+ * behaviour needs. The button text is always the bare verb — "Apply" for
+ * every actionable channel, "Learn more" / "Details coming soon" for the two
+ * non-actionable fallbacks — with the channel-specific detail ("Opens Student
+ * Finance England (equivalent bodies in Wales/Scotland/NI)", "Call 0800 917
+ * 2222") moved to `note`. Baking that detail INTO the button label is what
+ * produced unreadable, overflowing buttons on the live directory (found
+ * 2026-09-04) — some provider names alone run past 60 characters.
+ *
+ * Copies plan §7's per-tier table; the tier-3 notes are the general case per
+ * apply_type rather than the bespoke per-scheme copy ("Call 0800 917 2222",
+ * the WaterSure supplier lookup) plan §7 describes — those are plan §10 step
+ * 7 work and layer on top of this without changing the shape returned here.
  *
  * @param array $row One row from vance_discount_directory_data().
- * @return array{label:string,href:string,attrs:string}
+ * @return array{label:string,note:string,href:string,attrs:string}
  */
 function vance_discount_apply_action( $row ) {
 	$tier     = vance_discount_effective_tier( $row );
@@ -99,7 +107,8 @@ function vance_discount_apply_action( $row ) {
 
 	if ( 1 === $tier && $apply ) {
 		return array(
-			'label' => __( 'Apply on the hub', 'vance-health-hub' ),
+			'label' => __( 'Apply', 'vance-health-hub' ),
+			'note'  => '', // the tier badge already says "Apply on the hub".
 			'href'  => $apply,
 			'attrs' => 'data-vance-tool-open="discount-apply" data-apply-url="' . esc_attr( $apply ) . '" data-apply-title="' . esc_attr( $row['title'] ) . '"',
 		);
@@ -107,11 +116,12 @@ function vance_discount_apply_action( $row ) {
 
 	if ( in_array( $tier, array( 1, 2 ), true ) && $apply ) {
 		/* translators: %s: provider name */
-		$label = $row['provider']
-			? sprintf( __( 'Apply (opens %s)', 'vance-health-hub' ), $row['provider'] )
-			: __( 'Apply (opens provider)', 'vance-health-hub' );
+		$note = $row['provider']
+			? sprintf( __( 'Opens %s', 'vance-health-hub' ), $row['provider'] )
+			: __( 'Opens provider site', 'vance-health-hub' );
 		return array(
-			'label' => $label,
+			'label' => __( 'Apply', 'vance-health-hub' ),
+			'note'  => $note,
 			'href'  => $apply,
 			'attrs' => 'data-vance-discount-popup="1" target="_blank" rel="noopener"',
 		);
@@ -123,20 +133,37 @@ function vance_discount_apply_action( $row ) {
 	$type = $row['apply_type'];
 	$href = $apply ? $apply : $fallback;
 
+	// The one scheme with a bespoke tier-3 flow (plan §10 step 7): the
+	// declaration itself has no fillable form fields at all (confirmed by
+	// inspecting the PDF directly — no /AcroForm), and Part 1 is the
+	// SUPPLIER's section, not something a patient-facing tool should touch.
+	// What we can honestly help with is Part 2, the customer's own
+	// declaration — assets/js/discounts.js's VAT modal builds a filled
+	// replica of just that section as a fresh, downloadable PDF.
+	if ( 'vat-relief-disability' === $row['slug'] && $apply ) {
+		return array(
+			'label' => __( 'Apply', 'vance-health-hub' ),
+			'note'  => __( 'Fill in your declaration', 'vance-health-hub' ),
+			'href'  => $apply,
+			'attrs' => 'data-vance-vat-declaration="1"',
+		);
+	}
+
 	switch ( $type ) {
 		case 'phone':
 			// apply_contact is often a whole sentence ("0800 917 2222 (Mon-Fri
 			// 8am-5pm); online only in some postcodes; Scotland: mygov.scot/...")
 			// rather than a bare number — pull out just the number-shaped run
 			// (a UK number is 10-11 digits, optionally grouped with spaces) so
-			// the button label stays short and the tel: href isn't a garbage
+			// the note stays short and the tel: href isn't a garbage
 			// concatenation of every stray digit in the sentence (found live,
 			// 2026-09-04: PIP and Warm Home Discount both broke this way).
 			if ( preg_match( '/0[\d ]{9,13}\d/', (string) $row['apply_contact'], $pm ) ) {
 				$phone  = trim( preg_replace( '/\s+/', ' ', $pm[0] ) );
 				$digits = preg_replace( '/[^0-9+]/', '', $phone );
 				return array(
-					'label' => sprintf( /* translators: %s: phone number */ __( 'Call %s', 'vance-health-hub' ), $phone ),
+					'label' => __( 'Apply', 'vance-health-hub' ),
+					'note'  => sprintf( /* translators: %s: phone number */ __( 'Call %s', 'vance-health-hub' ), $phone ),
 					'href'  => 'tel:' . $digits,
 					'attrs' => '',
 				);
@@ -145,35 +172,37 @@ function vance_discount_apply_action( $row ) {
 
 		case 'pdf':
 			return array(
-				'label' => __( 'Download form', 'vance-health-hub' ),
+				'label' => __( 'Apply', 'vance-health-hub' ),
+				'note'  => __( 'Download form', 'vance-health-hub' ),
 				'href'  => $href,
 				'attrs' => $href ? 'target="_blank" rel="noopener"' : '',
 			);
 
 		case 'at-venue':
-			return array( 'label' => __( 'Show at the gate', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Show at the gate', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
 
 		case 'at-booking':
-			return array( 'label' => __( 'Select at booking', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Select at booking', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
 
 		case 'via-supplier':
-			return array( 'label' => __( 'Find your supplier', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Find your supplier', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
 
 		case 'via-council':
-			return array( 'label' => __( 'Apply via your council', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Apply via your council', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
 
 		case 'via-gp':
-			return array( 'label' => __( 'Ask your GP', 'vance-health-hub' ), 'href' => $href, 'attrs' => '' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Ask your GP', 'vance-health-hub' ), 'href' => $href, 'attrs' => '' );
 
 		case 'in-account':
-			return array( 'label' => __( 'Sign in to apply', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Sign in to apply', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
 
 		case 'post':
-			return array( 'label' => __( 'Apply by post', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
+			return array( 'label' => __( 'Apply', 'vance-health-hub' ), 'note' => __( 'Apply by post', 'vance-health-hub' ), 'href' => $href, 'attrs' => 'target="_blank" rel="noopener"' );
 	}
 
 	return array(
 		'label' => $href ? __( 'Learn more', 'vance-health-hub' ) : __( 'Details coming soon', 'vance-health-hub' ),
+		'note'  => '',
 		'href'  => $href,
 		'attrs' => $href ? 'target="_blank" rel="noopener"' : '',
 	);
@@ -212,6 +241,31 @@ function vance_discount_save_button( $post_id ) {
 		$is_saved ? '&#9733;' : '&#9734;',
 		$is_saved ? esc_html__( 'Saved', 'vance-health-hub' ) : esc_html__( 'Save', 'vance-health-hub' )
 	);
+}
+
+/**
+ * The Apply button + its note, as one block — every caller that shows an
+ * apply action (the grid card, the single template, the featured card) goes
+ * through this so the button-vs-note split can't drift between them.
+ *
+ * @param array $action From vance_discount_apply_action().
+ * @return string HTML.
+ */
+function vance_discount_render_apply_group( $action ) {
+	ob_start();
+	?>
+	<div class="vance-discount-apply-group">
+		<?php if ( $action['href'] ) : ?>
+			<a href="<?php echo esc_url( $action['href'] ); ?>" class="vance-discount-apply-btn" <?php echo $action['attrs']; // phpcs:ignore WordPress.Security.EscapeOutput — built from esc_attr()'d parts in vance_discount_apply_action() ?>><?php echo esc_html( $action['label'] ); ?></a>
+		<?php else : ?>
+			<span class="vance-discount-apply-btn is-disabled"><?php echo esc_html( $action['label'] ); ?></span>
+		<?php endif; ?>
+		<?php if ( ! empty( $action['note'] ) ) : ?>
+			<span class="vance-discount-apply-note"><?php echo esc_html( $action['note'] ); ?></span>
+		<?php endif; ?>
+	</div>
+	<?php
+	return ob_get_clean();
 }
 
 /**
@@ -263,11 +317,7 @@ function vance_render_discount_card( $post_id_or_row ) {
 			<p class="vance-discount-card__upcoming"><?php echo esc_html( $row['upcoming_change'] ); ?></p>
 		<?php endif; ?>
 		<div class="vance-discount-card__actions">
-			<?php if ( $action['href'] ) : ?>
-				<a href="<?php echo esc_url( $action['href'] ); ?>" class="vance-discount-apply-btn" <?php echo $action['attrs']; // phpcs:ignore WordPress.Security.EscapeOutput — built from esc_attr()'d parts above ?>><?php echo esc_html( $action['label'] ); ?></a>
-			<?php else : ?>
-				<span class="vance-discount-apply-btn is-disabled"><?php echo esc_html( $action['label'] ); ?></span>
-			<?php endif; ?>
+			<?php echo vance_discount_render_apply_group( $action ); ?>
 			<?php echo vance_discount_save_button( $row['id'] ); ?>
 		</div>
 	</div>
@@ -459,8 +509,58 @@ function vance_render_featured_discount( $mode = 'auto', $args = array() ) {
 		<?php endif; ?>
 		<?php if ( $action['href'] ) : ?>
 			<a href="<?php echo esc_url( $action['href'] ); ?>" class="vance-discount-apply-btn vance-discount-featured-cta" <?php echo $action['attrs']; // phpcs:ignore WordPress.Security.EscapeOutput — built from esc_attr()'d parts in vance_discount_apply_action() ?>><?php echo esc_html( $action['label'] ); ?></a>
+			<?php if ( ! empty( $action['note'] ) ) : ?>
+				<span class="vance-discount-apply-note vance-discount-featured-note"><?php echo esc_html( $action['note'] ); ?></span>
+			<?php endif; ?>
 		<?php endif; ?>
 	</div>
 	<?php
 	return ob_get_clean();
+}
+
+/* -------------------------------------------------------------------------
+ * VAT declaration pre-fill (plan §10 step 7).
+ *
+ * The HMRC PDF has no fillable fields (confirmed by inspecting the file — no
+ * /AcroForm marker), and its Part 1 is the SUPPLIER's section, filled in at
+ * the till, not something a patient-facing tool should generate. This modal
+ * only ever produces Part 2, the customer's own declaration, as a fresh PDF
+ * built client-side with html2pdf.js (same library/version the recipe
+ * meal-plan export already uses) — the member still signs it by hand and
+ * hands it to their supplier, exactly as the real form instructs.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Printed once in the footer, gated on the same page-context check as the
+ * discounts script/style enqueue (functions.php) — cheap enough to not need
+ * its own "is this scheme actually on the page" check.
+ *
+ * @return void
+ */
+function vance_discount_vat_modal_markup() {
+	?>
+	<div id="vance-vat-modal" class="vance-vat-modal" hidden>
+		<div class="vance-vat-modal__panel" role="dialog" aria-modal="true" aria-labelledby="vance-vat-modal-title">
+			<button type="button" class="vance-vat-modal__close" id="vance-vat-modal-close" aria-label="<?php esc_attr_e( 'Close', 'vance-health-hub' ); ?>">&times;</button>
+			<h2 id="vance-vat-modal-title"><?php esc_html_e( 'Fill in your declaration', 'vance-health-hub' ); ?></h2>
+			<p class="vance-vat-modal__intro"><?php esc_html_e( "This fills in Part 2 of the form — the section you complete yourself. Part 1 is filled in by the shop at the till. You'll still need to sign the result by hand.", 'vance-health-hub' ); ?></p>
+			<label class="vance-vat-modal__field">
+				<?php esc_html_e( 'Full name', 'vance-health-hub' ); ?>
+				<input type="text" id="vance-vat-name">
+			</label>
+			<label class="vance-vat-modal__field">
+				<?php esc_html_e( 'Address', 'vance-health-hub' ); ?>
+				<textarea id="vance-vat-address" rows="3" placeholder="<?php esc_attr_e( 'House number and street, town, postcode', 'vance-health-hub' ); ?>"></textarea>
+			</label>
+			<label class="vance-vat-modal__field">
+				<?php esc_html_e( 'Your disability or chronic sickness', 'vance-health-hub' ); ?>
+				<textarea id="vance-vat-condition" rows="2" placeholder="<?php esc_attr_e( "e.g. Crohn's disease", 'vance-health-hub' ); ?>"></textarea>
+			</label>
+			<div class="vance-vat-modal__actions">
+				<button type="button" class="vance-discount-apply-btn" id="vance-vat-generate"><?php esc_html_e( 'Generate my declaration', 'vance-health-hub' ); ?></button>
+				<a href="#" id="vance-vat-blank-link" target="_blank" rel="noopener"><?php esc_html_e( 'Or download the blank form', 'vance-health-hub' ); ?></a>
+			</div>
+		</div>
+	</div>
+	<?php
 }

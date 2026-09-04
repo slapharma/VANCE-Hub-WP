@@ -882,6 +882,32 @@
       "verified_on": "2026-09-03",
       "confidence": "high",
       "source": "research 2026-09-03"
+    },
+    {
+      "slug": "blue-light-card",
+      "title": "Blue Light Card",
+      "provider": "Blue Light Card",
+      "category": "work",
+      "region": "UK",
+      "ibd_specific": false,
+      "value_summary": "Discounts across 15,000+ retailers online and in-store — fashion, food, travel, entertainment and more",
+      "cost": "£4.99 for 2 years",
+      "what_you_get": "A discount card and app unlocking savings at thousands of online and high-street retailers, plus exclusive event and ticket access. Not a disability or health scheme — it's an employee-discount scheme, included here because a meaningful share of this site's readers work in the sectors it covers.",
+      "who_qualifies": "Current or retired (4+ years' service) staff and eligible volunteers in the NHS, emergency services (police, fire, ambulance), armed forces, social care, or education. Verification is by work email, employee ID or payslip — not gated on disability or health status at all.",
+      "ibd_note": "Not IBD-specific and not eligibility-gated by disability — added on request because many people managing IBD also work in the NHS or social care, and the card is one of the better-known general discount schemes for that workforce. Someone who doesn't work in an eligible sector will not qualify regardless of their health.",
+      "evidence_accepted": ["Work email address", "Employee ID card", "Recent payslip"],
+      "eligibility_signals": ["employed"],
+      "official_url": "https://www.bluelightcard.co.uk/en/eligible-professions",
+      "apply_url": "https://www.bluelightcard.co.uk/en/api/signup",
+      "apply_type": "online",
+      "frameable": false,
+      "integration_tier": 2,
+      "corrections": "Verified live 2026-09-04: eligible-professions page 200, sends no framing headers observed directly. The signup link 301-redirects to an Auth0-hosted signup flow (access.blcshine.io) which sends X-Frame-Options: SAMEORIGIN and sits behind a Cloudflare bot challenge (403 to non-browser fetches) — tier 2 (popup), not frameable.",
+      "upcoming_change": null,
+      "related_posts": [],
+      "verified_on": "2026-09-04",
+      "confidence": "high",
+      "source": "user request, verified 2026-09-04"
     }
   ]
 }

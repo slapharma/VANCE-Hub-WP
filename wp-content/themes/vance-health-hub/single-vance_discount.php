@@ -22,7 +22,7 @@ while ( have_posts() ) :
 		// Meta missing (e.g. viewed before the import ran) — degrade to a
 		// bare title rather than a fatal on undefined array keys.
 		$row = array(
-			'id' => $post_id, 'title' => get_the_title(), 'provider' => '', 'value_summary' => '',
+			'id' => $post_id, 'slug' => get_post_field( 'post_name', $post_id ), 'title' => get_the_title(), 'provider' => '', 'value_summary' => '',
 			'cost' => '', 'what_you_get' => '', 'who_qualifies' => '', 'ibd_note' => '', 'evidence' => array(),
 			'official_url' => '', 'apply_url' => '', 'apply_type' => '', 'apply_contact' => '', 'tier' => 3,
 			'upcoming_change' => '', 'verified_on' => '', 'category' => null, 'region_names' => array(),
@@ -96,12 +96,8 @@ while ( have_posts() ) :
 						</div>
 					<?php endif; ?>
 
-					<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;">
-						<?php if ( $action['href'] ) : ?>
-							<a href="<?php echo esc_url( $action['href'] ); ?>" class="vance-discount-apply-btn" <?php echo $action['attrs']; // phpcs:ignore WordPress.Security.EscapeOutput — built from esc_attr()'d parts in vance_discount_apply_action() ?>><?php echo esc_html( $action['label'] ); ?></a>
-						<?php else : ?>
-							<span class="vance-discount-apply-btn is-disabled"><?php echo esc_html( $action['label'] ); ?></span>
-						<?php endif; ?>
+					<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;margin-top:12px;">
+						<?php echo vance_discount_render_apply_group( $action ); ?>
 						<?php echo vance_discount_save_button( $row['id'] ); ?>
 					</div>
 				</div>

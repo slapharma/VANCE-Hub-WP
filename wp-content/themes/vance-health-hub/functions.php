@@ -1306,9 +1306,25 @@ function vance_health_hub_scripts() {
             true
         );
         wp_localize_script( 'vance-discounts', 'vanceDiscounts', array(
-            'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-            'loggedIn' => is_user_logged_in(),
+            'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+            'loggedIn'    => is_user_logged_in(),
+            'displayName' => is_user_logged_in() ? wp_get_current_user()->display_name : '',
         ) );
+
+        // VAT declaration pre-fill (plan §10 step 7) builds its PDF with
+        // html2pdf.js — same CDN build/version already used for the recipe
+        // meal-plan export, so the browser reuses one cached copy.
+        wp_enqueue_script(
+            'html2pdf',
+            'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+            array(),
+            '0.10.1',
+            true
+        );
+
+        if ( function_exists( 'vance_discount_vat_modal_markup' ) ) {
+            add_action( 'wp_footer', 'vance_discount_vat_modal_markup' );
+        }
     }
 
     // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the

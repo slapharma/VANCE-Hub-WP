@@ -51,6 +51,7 @@ function vance_discount_directory_data() {
 
 		$rows[] = array(
 			'id'              => $post->ID,
+			'slug'            => $post->post_name,
 			'title'           => get_the_title( $post ),
 			'permalink'       => get_permalink( $post ),
 			'provider'        => get_post_meta( $post->ID, '_vance_discount_provider', true ),
