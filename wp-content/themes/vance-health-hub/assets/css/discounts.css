@@ -1,0 +1,119 @@
+/*
+ * IBD Discounts & Freebies — directory grid, filter bar, tier badges, single
+ * template actions. Tokens and shapes are docs/DISCOUNTS_UI_SPEC.md's spec,
+ * lifted from assets/css/recipe-hub.css (chips, card, search) and
+ * single.php's inline `.vance-save-btn` (Save button) rather than inventing
+ * either — this file is only enqueued on the directory template and the
+ * single scheme page (functions.php), so the Save button's rules are
+ * repeated here rather than assumed available from single.php's own
+ * page-scoped <style> block.
+ */
+
+/* ---- Filter bar (recipe-hub.css:13-18, exact copy) -------------------- */
+
+.vance-discount-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.vance-discount-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.vance-discount-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
+.vance-discount-chip.is-active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+.vance-discount-controls__right { display: flex; flex-wrap: wrap; gap: 10px; }
+.vance-discount-region-select { padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; background: #fff; }
+.vance-discount-search { flex: 0 0 240px; max-width: 100%; padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; }
+
+/* ---- Grid + card -------------------------------------------------------- */
+
+.vance-discount-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+.vance-discount-card { position: relative; background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 20px; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
+@media (prefers-reduced-motion: reduce) { .vance-discount-card { transition: none; } }
+.vance-discount-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -6px rgba(0,0,0,0.10); }
+
+.vance-discount-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.vance-discount-card-region { font-size: 11px; color: #94A3B8; white-space: nowrap; }
+.vance-discount-card__provider { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--primary-color); margin-bottom: 4px; }
+.vance-discount-card__title-link { text-decoration: none; }
+.vance-discount-card__title { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.35; margin: 0 0 8px; }
+.vance-discount-card__value { font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 4px; }
+.vance-discount-card__cost { font-size: 13px; color: #475569; margin: 0 0 8px; }
+.vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
+.vance-discount-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 8px; }
+
+/* ---- Tier badge (UI spec §4) ------------------------------------------- */
+
+.vance-discount-tier-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: var(--radius-pill); padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px; }
+.vance-discount-tier-badge.is-tier-1 { background: #ECFDF5; color: #10B981; }
+.vance-discount-tier-badge.is-tier-2 { background: #FFFBEB; color: #B45309; }
+.vance-discount-tier-badge.is-tier-3 { background: #F1F5F9; color: #64748B; }
+
+/* ---- Apply button — same family as .vance-save-btn (UI spec §5) -------- */
+
+.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-color, #008080); color: #fff; border: none; border-radius: var(--radius-control, 10px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
+.vance-discount-apply-btn:hover { filter: brightness(0.96); color: #fff; }
+.vance-discount-apply-btn:active { transform: scale(.97); }
+.vance-discount-apply-btn.is-disabled { background: #E2E8F0; color: #94A3B8; cursor: default; }
+.vance-discount-apply-btn.is-loading { opacity: 0.7; pointer-events: none; }
+
+/* Save button — .vance-save-btn is defined again here (not inherited from
+   single.php's page-scoped inline styles) because this stylesheet loads on
+   pages single.php's <style> block never renders on. Rule-for-rule copy. */
+.vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 10px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+.vance-save-btn.is-saved { background:#10B981; }
+.vance-save-btn:hover { filter:brightness(0.96); }
+.vance-save-btn:active { transform:scale(.97); }
+.vance-save-btn .va-save-icon { font-size:16px; }
+
+/* ---- Featured card (UI spec §7) — sidebar/homepage/promo, singular, not
+   square (not an article card — CLAUDE.md's radius rule reserves square for
+   article cards only). --------------------------------------------------- */
+
+.vance-discount-featured { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); padding: 20px; }
+.vance-discount-featured__eyebrow { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--primary-color); margin-bottom: 8px; }
+.vance-discount-featured__title-link { text-decoration: none; }
+.vance-discount-featured__title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 8px; line-height: 1.35; }
+.vance-discount-featured__value { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0 0 6px; }
+.vance-discount-featured__verified { font-size: 11px; color: #94A3B8; margin: 0 0 14px; }
+.vance-discount-featured-cta { width: 100%; justify-content: center; }
+
+/* ---- Dashboard tab (UI spec §6) ----------------------------------------- */
+
+.vance-discount-dashboard { display: flex; flex-direction: column; gap: 20px; }
+.vance-discount-surface { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); padding: 20px; }
+.vance-discount-surface h3 { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 12px; }
+
+.vance-discount-eligibility-summary p { margin: 0; font-size: 15px; color: #0f172a; }
+.vance-discount-eligibility-summary strong { color: var(--primary-color); }
+
+.vance-discount-saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.vance-discount-card--compact { padding: 16px; }
+.vance-discount-card--compact .vance-discount-card__value { margin-bottom: 0; }
+.vance-discount-status-select { border: 1px solid #e2e8f0; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700; padding: 4px 10px; background: #fff; color: #475569; }
+
+.vance-discount-folder-intro { font-size: 13px; color: #475569; margin: 0 0 16px; }
+.vance-discount-folder-region { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.vance-discount-folder-region label { font-size: 13px; font-weight: 600; color: #334155; }
+.vance-discount-folder-region select { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; }
+
+.vance-discount-folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.vance-discount-folder-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 4px; border-bottom: 1px solid #e2e8f0; min-height: 44px; }
+.vance-discount-folder-row span { font-size: 14px; color: #334155; }
+
+.vance-discount-folder-toggle { position: relative; width: 40px; height: 22px; padding: 0; border: none; border-radius: var(--radius-pill); background: #cbd5e1; cursor: pointer; flex-shrink: 0; transition: background .2s ease; }
+.vance-discount-folder-toggle.is-on { background: var(--primary-color); }
+.vance-discount-folder-toggle__thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s ease; }
+.vance-discount-folder-toggle.is-on .vance-discount-folder-toggle__thumb { transform: translateX(18px); }
+@media (prefers-reduced-motion: reduce) { .vance-discount-folder-toggle, .vance-discount-folder-toggle__thumb { transition: none; } }
+
+.vance-discount-folder-status { font-size: 13px; color: #10B981; margin: 14px 0 0; min-height: 18px; }
+
+/* ---- Empty state --------------------------------------------------------- */
+
+.vance-discount-empty { display: none; text-align: center; padding: 60px 20px; color: #475569; }
+.vance-discount-empty p { margin: 0 0 12px; font-size: 15px; }
+.vance-discount-empty a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
+.vance-discount-empty-serverside { text-align: center; padding: 40px 20px; color: #475569; }
+
+/* ---- Responsive: keep the search field from forcing horizontal scroll --- */
+
+@media (max-width: 480px) {
+	.vance-discount-search { flex-basis: 100%; }
+	.vance-discount-controls__right { width: 100%; }
+}

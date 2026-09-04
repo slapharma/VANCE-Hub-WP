@@ -140,6 +140,14 @@ function vance_dashboard_features() {
 			'default'     => true,
 			'toggleable'  => true,
 		),
+		'discounts'      => array(
+			'label'       => 'My Discounts',
+			'icon'        => '🏷️',
+			'section'     => 'main',
+			'description' => 'Saved UK discount and freebie schemes, application status, and the Access Folder eligibility checklist.',
+			'default'     => true,
+			'toggleable'  => true,
+		),
 		'reading-list'   => array(
 			'label'       => 'My Reading List',
 			'icon'        => '📚',

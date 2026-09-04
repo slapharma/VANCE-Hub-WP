@@ -1166,6 +1166,65 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_patientdownloads_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_patientdownloads_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
     // ============================================================
+    // IBD DISCOUNTS & FREEBIES (page-ibd-discounts.php)
+    // Classic hero settings only — same pattern as Patient Downloads above.
+    // The Spotlight design and its own section are registered by
+    // vance_page_hero_spotlight_customize() from the 'discounts' entry in
+    // inc/page-hero-spotlight.php's config, further down this file.
+    // ============================================================
+    $wp_customize->add_panel( "vance_discounts_panel", array(
+        "title"    => __( "Page - IBD Discounts", "vance-health-hub" ),
+        "priority" => 49,
+    ) );
+    $wp_customize->add_section( "vance_discounts_hero", array( "title" => "Hero Section", "panel" => "vance_discounts_panel" ) );
+    $wp_customize->add_setting( "vance_discounts_hero_tag",   array( "default" => "Discounts & Freebies", "sanitize_callback" => "sanitize_text_field" ) );
+    $wp_customize->add_control( "vance_discounts_hero_tag",   array( "label" => "Tag Label", "section" => "vance_discounts_hero", "type" => "text" ) );
+    $wp_customize->add_setting( "vance_discounts_hero_title", array( "default" => 'Discounts and freebies for <span class="highlight">life with IBD</span>', "sanitize_callback" => "wp_kses_post" ) );
+    $wp_customize->add_control( "vance_discounts_hero_title", array( "label" => "Title (HTML allowed)", "section" => "vance_discounts_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_discounts_hero_desc",  array( "default" => "Every UK scheme worth knowing about — toilet access, days out, travel, tax and benefits — checked against the provider's own page, not copied from a leaflet.", "sanitize_callback" => "sanitize_textarea_field" ) );
+    $wp_customize->add_control( "vance_discounts_hero_desc",  array( "label" => "Description", "section" => "vance_discounts_hero", "type" => "textarea" ) );
+    $wp_customize->add_setting( "vance_discounts_hero_bg",    array( "default" => "", "sanitize_callback" => "esc_url_raw" ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, "vance_discounts_hero_bg", array( "label" => "Hero Background Image", "section" => "vance_discounts_hero" ) ) );
+    $wp_customize->add_setting( "vance_discounts_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
+    $wp_customize->add_control( "vance_discounts_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_discounts_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
+
+    // Featured Discounts — one dropdown per slot that can show a hand-picked
+    // scheme (vance_render_featured_discount('pick', ...), plan §8). "0"
+    // means "let the code decide" (auto/random per caller) — deliberately
+    // not blank, since an unset setting and a setting saved as "" are hard
+    // to tell apart by the time a caller reads it back.
+    $wp_customize->add_section( "vance_discounts_featured", array(
+        "title"       => __( "Featured Discounts", "vance-health-hub" ),
+        "panel"       => "vance_discounts_panel",
+        "description" => __( "Pin one scheme per slot. Leave on \"Let the page decide\" to use the automatic pick instead (by article topic on a sidebar, or the featured pool elsewhere).", "vance-health-hub" ),
+    ) );
+
+    if ( post_type_exists( 'vance_discount' ) ) {
+        $vance_discount_choices = array( 0 => __( '— Let the page decide —', 'vance-health-hub' ) );
+        foreach ( get_posts( array( 'post_type' => 'vance_discount', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) ) as $vd_post ) {
+            $vance_discount_choices[ $vd_post->ID ] = get_the_title( $vd_post );
+        }
+
+        $vance_discount_featured_slots = array(
+            'vance_discount_featured_homepage' => __( 'Homepage section', 'vance-health-hub' ),
+            'vance_discount_featured_sidebar'  => __( 'Article sidebar (default)', 'vance-health-hub' ),
+            'vance_discount_featured_promo'    => __( 'Promo / prime block', 'vance-health-hub' ),
+        );
+        foreach ( $vance_discount_featured_slots as $vd_id => $vd_label ) {
+            $wp_customize->add_setting( $vd_id, array(
+                'default'           => 0,
+                'sanitize_callback' => 'absint',
+            ) );
+            $wp_customize->add_control( $vd_id, array(
+                'label'   => $vd_label,
+                'section' => 'vance_discounts_featured',
+                'type'    => 'select',
+                'choices' => $vance_discount_choices,
+            ) );
+        }
+    }
+
+    // ============================================================
     // KNOWLEDGEBASE LOBBY (page-knowledgebase.php)
     // The block buttons themselves are NOT edited here — they mirror the
     // children of the KNOWLEDGEBASE item in Appearance -> Menus, so the

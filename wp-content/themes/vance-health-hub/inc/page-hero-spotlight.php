@@ -536,6 +536,57 @@ function vance_page_hero_spotlight_config( $page ) {
 		),
 
 		/*
+		 * ---- IBD Discounts & Freebies --------------------------------------
+		 *
+		 * A brand-new page (docs/DISCOUNTS_TOOL_PLAN.md), so unlike every other
+		 * entry above it has no live classic hero to have copied fallbacks
+		 * FROM — the legacy_*_default values below are written fresh rather
+		 * than lifted from an existing template, and page-ibd-discounts.php's
+		 * own classic-hero branch has to match them, the same direction of
+		 * dependency as every other page here, just run for the first time
+		 * instead of the usual second time.
+		 *
+		 * No photograph yet (tests/gen-heroes.py has not been run for this
+		 * page, same position Patient Downloads started from) — 'motif' true,
+		 * same as Patient Downloads/Knowledgebase/404.
+		 *
+		 * The band is the three live counts read straight off the CPT via
+		 * vance_page_hero_spotlight_discounts() above — not a literal array,
+		 * because a scheme count that can silently drift from the grid below
+		 * it is worse than no count at all.
+		 */
+		'discounts' => array(
+			'name'         => __( 'IBD Discounts & Freebies', 'vance-health-hub' ),
+			'short_name'   => __( 'Discounts', 'vance-health-hub' ),
+			'panel'        => 'vance_discounts_panel',
+			'section'      => 'vance_discounts_hero_spotlight',
+			'style_section'    => 'vance_discounts_hero',
+			'classic_template' => 'page-ibd-discounts.php',
+			'priority'     => 9,
+			'legacy_tag'   => 'vance_discounts_hero_tag',
+			'legacy_title' => 'vance_discounts_hero_title',
+			'legacy_desc'  => 'vance_discounts_hero_desc',
+			'legacy_tag_default'   => 'Discounts & Freebies',
+			'legacy_title_default' => 'Discounts and freebies for <span class="highlight">life with IBD</span>',
+			'legacy_desc_default'  => 'Every UK scheme worth knowing about — toilet access, days out, travel, tax and benefits — checked against the provider\'s own page, not copied from a leaflet.',
+			'motif'        => true,
+			'image'        => '',
+			'image_alt'    => '',
+			'btn1_text'    => __( 'Browse the directory', 'vance-health-hub' ),
+			'btn1_link'    => '#discounts-grid',
+			'btn2_text'    => __( 'Ask the Hub AI instead', 'vance-health-hub' ),
+			'btn2_link'    => '',
+			'btn2_fallback_slug' => 'ask-ai',
+			'btn2_fallback_path' => '/ask-ai/',
+			'slot'         => 'discounts',
+			'slot_label'   => __( 'The directory in three numbers', 'vance-health-hub' ),
+			'card'         => 'text',
+			'card_icon'    => 'clipboard',
+			'card_title'   => __( 'Checked against the live provider page', 'vance-health-hub' ),
+			'card_text'    => __( 'Every scheme carries the date it was last verified, so a stale entry is visible wherever it appears rather than trusted forever.', 'vance-health-hub' ),
+		),
+
+		/*
 		 * ---- The two shelves, and the 404 --------------------------------
 		 *
 		 * Free Health Tools and the Knowledgebase are the site's two shelves:
@@ -699,7 +750,7 @@ function vance_page_hero_spotlight_config( $page ) {
  */
 function vance_page_hero_spotlight_pages() {
 	return array( 'contact', 'about', 'hquiz', 'recipes', 'malnutrition', 'askai',
-		'evidence', 'userguide', 'patientdownloads', 'education', 'tools', 'kblobby', 'e404' );
+		'evidence', 'userguide', 'patientdownloads', 'discounts', 'education', 'tools', 'kblobby', 'e404' );
 }
 
 /**
@@ -1256,6 +1307,47 @@ function vance_page_hero_spotlight_downloads() {
 }
 
 /**
+ * Live scheme counts for IBD Discounts & Freebies' utility band. Reads
+ * inc/discount-data.php's vance_discount_counts() rather than a second
+ * literal array — the plan's explicit instruction for this slot — so the
+ * band can never disagree with the directory grid it sits above.
+ *
+ * Guarded by function_exists() the same way vance_page_hero_spotlight_field_defaults()
+ * guards its call into hero-spotlight.php: this file loads before
+ * discount-data.php in functions.php's require order, so at parse time the
+ * function doesn't exist yet, only by the time a page actually renders.
+ *
+ * @return array<int, array{key:string,label:string,value:string,href:string}>
+ */
+function vance_page_hero_spotlight_discounts() {
+	if ( ! function_exists( 'vance_discount_counts' ) ) {
+		return array();
+	}
+	$counts = vance_discount_counts();
+
+	return array(
+		array(
+			'key'   => 'clipboard',
+			'label' => __( 'Schemes', 'vance-health-hub' ),
+			'value' => (string) $counts['total'],
+			'href'  => '#discounts-grid',
+		),
+		array(
+			'key'   => 'check',
+			'label' => __( 'Free to apply', 'vance-health-hub' ),
+			'value' => (string) $counts['free'],
+			'href'  => '#discounts-grid',
+		),
+		array(
+			'key'   => 'grid',
+			'label' => __( 'Apply on the hub', 'vance-health-hub' ),
+			'value' => (string) $counts['tier1'],
+			'href'  => '#discounts-grid',
+		),
+	);
+}
+
+/**
  * The geometric motif that stands in for the photograph.
  *
  * Used by the pages whose config sets 'motif' and whose photograph setting is
@@ -1407,6 +1499,9 @@ function vance_render_page_hero_spotlight( $page ) {
 			break;
 		case 'downloads':
 			$slot_items = vance_page_hero_spotlight_downloads();
+			break;
+		case 'discounts':
+			$slot_items = vance_page_hero_spotlight_discounts();
 			break;
 		case 'search':
 			// Not a list of cells at all — the band is a form. Non-empty so the
@@ -1702,6 +1797,11 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'toggle'     => 'Spotlight is the light hero: mint band, motif or photograph, two buttons, and the shipped handouts in a white band. Classic is the dark hero configured by the rest of this section.',
 			'section'    => 'The light hero for this page. Only rendered while this page&rsquo;s hero design is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them where you always have, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
 			'slot_label' => 'Sits above the white band. The band itself lists the handouts that have actually shipped (read from the template, not a setting) and ends with a link back to the card grid. Nothing to type here beyond the prompt.',
+		),
+		'discounts' => array(
+			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif or photograph, two buttons, and the directory\'s three live counts in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Discounts hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif.',
+			'slot_label' => 'Sits above the white band. The band itself is the live scheme count, free-to-apply count and tier-1 (apply-on-the-hub) count, read straight from the published schemes &mdash; nothing to type here beyond the prompt.',
 		),
 		'tools'     => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three tools listed in a white band. Classic is the dark navy hero configured by the rest of this section.',

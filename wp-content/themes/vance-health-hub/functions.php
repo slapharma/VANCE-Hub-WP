@@ -1284,6 +1284,33 @@ function vance_health_hub_scripts() {
         wp_localize_script( 'vance-recipe-single', 'vanceRecipeSingle', vance_recipe_single_script_config( get_queried_object_id() ) );
     }
 
+    // IBD Discounts & Freebies. is_singular( 'post' ) covers the
+    // featured-discount sidebar block single.php renders on every article
+    // (plan §10 step 4) — its CSS classes (.vance-discount-featured) live in
+    // this stylesheet rather than a second copy in main.css. The dashboard
+    // condition mirrors $vance_on_dashboard_my_recipes above.
+    $vance_on_dashboard_discounts = is_page( 'dashboard' )
+        && isset( $_GET['tab'] ) && 'discounts' === $_GET['tab'];
+    if ( is_page_template( 'page-ibd-discounts.php' ) || is_singular( 'vance_discount' ) || is_singular( 'post' ) || $vance_on_dashboard_discounts ) {
+        wp_enqueue_style(
+            'vance-discounts',
+            get_template_directory_uri() . '/assets/css/discounts.css',
+            array( 'vance-main-style' ),
+            @filemtime( get_template_directory() . '/assets/css/discounts.css' ) ?: '1.0.0'
+        );
+        wp_enqueue_script(
+            'vance-discounts',
+            get_template_directory_uri() . '/assets/js/discounts.js',
+            array( 'jquery' ),
+            @filemtime( get_template_directory() . '/assets/js/discounts.js' ) ?: '1.0.0',
+            true
+        );
+        wp_localize_script( 'vance-discounts', 'vanceDiscounts', array(
+            'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+            'loggedIn' => is_user_logged_in(),
+        ) );
+    }
+
     // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the
     // highlight-to-ask pill needs to be live on every article.
     wp_enqueue_style(
@@ -3699,6 +3726,20 @@ require get_template_directory() . '/inc/recipe-cpt.php';
 require get_template_directory() . '/inc/recipe-admin.php';
 require get_template_directory() . '/inc/recipe-converter.php';
 require get_template_directory() . '/inc/recipe-frontend.php';
+
+/**
+ * IBD Discounts & Freebies CPT (docs/DISCOUNTS_TOOL_PLAN.md). CPT/taxonomy
+ * registration + `wp vance discounts import`, admin meta boxes, directory
+ * data + matcher + card rendering, dashboard AJAX, then the link/content
+ * checker — check loads last because it adds its own Posts-list column on
+ * top of the ones discount-cpt.php already registered.
+ */
+require get_template_directory() . '/inc/discount-cpt.php';
+require get_template_directory() . '/inc/discount-admin.php';
+require get_template_directory() . '/inc/discount-data.php';
+require get_template_directory() . '/inc/discount-frontend.php';
+require get_template_directory() . '/inc/discount-dashboard.php';
+require get_template_directory() . '/inc/discount-check.php';
 
 /**
  * Include Ask AI Functions

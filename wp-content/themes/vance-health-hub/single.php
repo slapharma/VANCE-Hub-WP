@@ -437,6 +437,25 @@ while ( have_posts() ) :
                         </style>
                     <?php endif; ?>
 
+                    <!-- Featured Discount -->
+                    <?php if ( function_exists( 'vance_render_featured_discount' ) ) :
+                        // A Customizer pick (plan §8's three-slot picker) wins over the
+                        // automatic by-topic pick; 0 means "let the page decide".
+                        $va_discount_pick = (int) vance_get_theme_mod( 'vance_discount_featured_sidebar', 0 );
+                        $va_discount_html = $va_discount_pick
+                            ? vance_render_featured_discount( 'pick', array( 'post_id' => $va_discount_pick ) )
+                            : vance_render_featured_discount( 'auto' );
+                        if ( $va_discount_html ) : ?>
+                            <div class="oped-sidebar-block oped-featured-discount">
+                                <?php echo $va_discount_html; // phpcs:ignore WordPress.Security.EscapeOutput — vance_render_featured_discount() escapes internally. ?>
+                            </div>
+                        <?php endif;
+                    endif;
+                    // A hook rather than a second sidebar block hand-typed here for the
+                    // next feature — see plan §5's note on this insertion point.
+                    do_action( 'vance_article_sidebar' );
+                    ?>
+
                      <!-- Attached Document -->
                     <?php if ( $attached_document ) : ?>
                         <div class="oped-sidebar-block oped-document-download">

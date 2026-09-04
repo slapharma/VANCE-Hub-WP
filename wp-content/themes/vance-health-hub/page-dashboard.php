@@ -517,6 +517,7 @@ get_header();
                             case 'home': echo $is_practitioner ? 'You have 3 patient updates pending review.' : "Hi {$first_name}, welcome back to your Gastro Health Hub."; break;
                             case 'health-profile': echo 'View your health discovery results and update your health profile details.'; break;
                             case 'my-recipes': echo 'Your saved meal plans, plus the recipe browser and weekly planner.'; break;
+                            case 'discounts': echo 'Saved schemes, application status, and your Access Folder.'; break;
                             case 'notes': echo 'Your private clinical and personal notes.'; break;
                             case 'ai-chats': echo 'History of your conversations with VANCE-Ai.'; break;
                             default: echo '';
@@ -711,10 +712,40 @@ get_header();
                             <a href="?tab=health-profile" class="card-link" style="color:white; font-weight:700;"><?php echo $has_health_profile ? 'Update Health Profile →' : 'Complete Health Profile →'; ?></a>
                         </div>
                         <?php endif; ?>
+
+                        <!-- 6. DISCOUNTS -->
+                        <?php if ($dash_on('discounts')): ?>
+                        <div class="d-card d-col-4">
+                            <div class="d-card-header">
+                                <div class="d-card-title"><span class="d-icon-box">🏷️</span> <?php echo esc_html($dash_label("discounts")); ?></div>
+                                <a href="?tab=discounts" class="card-link">All Discounts</a>
+                            </div>
+                            <?php
+                            $vance_dash_saved_discounts = get_user_meta( $current_user->ID, '_sla_saved_discounts', true );
+                            $vance_dash_saved_discounts = is_array( $vance_dash_saved_discounts ) ? $vance_dash_saved_discounts : array();
+                            $vance_dash_next_id = function_exists( 'vance_discount_next_best_action_id' )
+                                ? vance_discount_next_best_action_id( vance_discount_access_folder( $current_user->ID ) )
+                                : null;
+                            $vance_dash_next_row = $vance_dash_next_id ? vance_discount_get( $vance_dash_next_id ) : null;
+                            ?>
+                            <?php if ( empty( $vance_dash_saved_discounts ) && ! $vance_dash_next_row ) : ?>
+                                <div class="msg-empty-state">No discounts saved yet. <a href="/ibd-discounts/">Browse the directory</a>.</div>
+                            <?php else : ?>
+                                <p style="font-size:13px; color:#64748B; margin:0 0 10px;">
+                                    <strong><?php echo count( $vance_dash_saved_discounts ); ?></strong> saved scheme<?php echo 1 === count( $vance_dash_saved_discounts ) ? '' : 's'; ?>
+                                </p>
+                                <?php if ( $vance_dash_next_row ) : ?>
+                                    <a href="<?php echo esc_url( $vance_dash_next_row['permalink'] ); ?>" style="display:block; background:#F0FDFA; border-radius:var(--radius-control, 10px); padding:10px 12px; font-size:12px; color:#0F172A; text-decoration:none;">
+                                        <strong>Next unlock:</strong> <?php echo esc_html( $vance_dash_next_row['title'] ); ?>
+                                    </a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 <?php break;
 
-                case 'profile': 
+                case 'profile':
                     // Prepare data
                     $socials = array(
                         // 'website' removed 2026-08-11 along with its form field — it was
@@ -2323,6 +2354,15 @@ get_header();
                         ?>
                     </div>
                 <?php break;
+
+                case 'discounts':
+                    // Own file rather than inlined here — this switch's cases already
+                    // run to hundreds of lines each (my-recipes above is ~900), and
+                    // this dashboard file is already 300+ KB (plan §5's file table
+                    // note). $args, not a local: get_template_part() loads in
+                    // load_template()'s own scope and cannot see this file's locals.
+                    get_template_part( 'template-parts/dashboard/discounts' );
+                break;
 
                 case 'tools':
                     // Mirror the public /tools-resources/ card grid so logged-in users
