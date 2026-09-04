@@ -61,7 +61,9 @@ while ( have_posts() ) :
 		// edge — reported live 2026-09-04: the two visibly disagreed. ?>
 		<div class="container" style="max-width:1100px;">
 			<?php if ( $row['category'] ) : ?>
-				<span class="vhh-hero-spotlight__eyebrow"><?php echo esc_html( $row['category']['name'] ); ?></span>
+				<?php // The correct action for a category pill: back to the
+				// directory, pre-filtered to this scheme's own category. ?>
+				<a class="vhh-hero-spotlight__eyebrow vance-discount-hero-eyebrow" href="<?php echo esc_url( add_query_arg( 'cat', $row['category']['slug'], home_url( '/ibd-discounts/' ) ) . '#discounts-grid' ); ?>"><?php echo esc_html( $row['category']['name'] ); ?></a>
 			<?php endif; ?>
 			<h1 class="vhh-hero-spotlight__title" style="font-size:clamp(26px,3.4vw,38px);max-width:700px;margin:0 0 8px;"><?php the_title(); ?></h1>
 			<?php if ( $row['provider'] ) : ?>

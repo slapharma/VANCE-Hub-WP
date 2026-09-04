@@ -9,6 +9,13 @@
  * page-scoped <style> block.
  */
 
+/* ---- Single scheme hero eyebrow — now a link back to the filtered
+   directory, not just decorative text (2026-09-04). Hover feedback per the
+   site's touch/interaction rule: a link needs a visible state change, not
+   just a changed cursor. */
+.vance-discount-hero-eyebrow { text-decoration: none; transition: background-color .15s ease, border-color .15s ease; }
+.vance-discount-hero-eyebrow:hover, .vance-discount-hero-eyebrow:focus-visible { background: #C9E4E2; border-color: #04504E; }
+
 /* ---- Filter bar (recipe-hub.css:13-18, exact copy) -------------------- */
 
 .vance-discount-section { padding: 40px 0 60px; }
