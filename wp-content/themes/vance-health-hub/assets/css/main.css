@@ -3670,15 +3670,21 @@ body.home .hero {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 10px;
-    padding: 32px 28px;
+    gap: 15px;
+    /* Right padding is 100px deeper than the other three sides on purpose —
+       the dot graphic is anchored to the right edge (see background-position
+       below) and bleeds furthest into the card there, so the text column
+       needs the extra clearance to stay readable over it. */
+    padding: 32px 128px 32px 28px;
     min-width: 0;
     /* The background-image itself (default dot graphic, or none when a
        background colour is chosen) is set inline per-instance — see
        vance_render_promo_block(). These three stay in CSS because they never
-       change per-instance. */
+       change per-instance. The -100px pushes the pattern further right/out of
+       the card than a plain "right" would, for the same reason as the padding
+       above: less of it ends up under the text. */
     background-size: cover;
-    background-position: right top;
+    background-position: right -100px top;
     background-repeat: no-repeat;
 }
 .vance-promo-tool-card__title {
@@ -3686,7 +3692,6 @@ body.home .hero {
     color: #0A1929; margin: 0; line-height: 1.25;
 }
 .vance-promo-tool-card__desc { font-size: 14px; line-height: 1.6; color: #475569; margin: 0; }
-.vance-promo-tool-card__cta { margin-top: 8px; }
 
 @media (max-width: 767.98px) {
     /* The gap is horizontal spacing meant for side-by-side columns — stacked,
