@@ -281,3 +281,54 @@ function vance_discount_categories_in_use() {
 		$terms
 	);
 }
+
+/**
+ * The 20 water and sewerage retail companies serving household customers in
+ * England and Wales, each with a live, content-verified WaterSure (or
+ * identically-named branded equivalent, e.g. "Bill Cap" / "WaterSure Wales" /
+ * "WaterSure Plus") page — plan §10 step 7's "no API, ship a static list".
+ * WaterSure is administered per-household by whichever company serves that
+ * address, not centrally, so there is nothing to look up by postcode without
+ * a real address-lookup API; this lets a member pick by name/region instead.
+ *
+ * Every URL was fetched live and confirmed to name WaterSure (or the
+ * equivalent scheme) on 2026-09-04 — several of these sites 403 a
+ * non-browser fetch (Cloudflare/Akamai/Azure WAFs), which is why a handful
+ * were instead confirmed via a recent Wayback Machine snapshot plus the
+ * live page's own sitemap.xml; none were guessed from memory. Scotland and
+ * Northern Ireland run their own separate schemes and are out of scope here.
+ *
+ * Two corrections worth recording because they contradicted each other
+ * during research: (1) Bournemouth Water is NOT folded into South West
+ * Water's customer-facing site — it is still its own live domain with its
+ * own WaterSure page (bournemouthwater.co.uk/renew-watersure-tariff,
+ * confirmed 200 with real content 2026-09-04), despite Pennon Group owning
+ * both. (2) Hafren Dyfrdwy's public-facing brand is "HD Cymru" — the legal
+ * company name is unchanged, only the customer site's branding differs.
+ *
+ * @return array<int, array{name:string, regions:string, url:string}>
+ */
+function vance_watersure_suppliers() {
+	return array(
+		array( 'name' => 'Affinity Water', 'regions' => 'Herts, Beds, Bucks, Essex, Surrey, parts of NW London', 'url' => 'https://www.affinitywater.co.uk/watersure' ),
+		array( 'name' => 'Anglian Water', 'regions' => 'East of England — Cambs, Norfolk, Suffolk, Essex, Lincs, Beds, Northants', 'url' => 'https://www.anglianwater.co.uk/services/extra-support/tariff-options/watersure' ),
+		array( 'name' => 'Bournemouth Water', 'regions' => 'Poole, Bournemouth, parts of Dorset, Hampshire and Wiltshire', 'url' => 'https://www.bournemouthwater.co.uk/renew-watersure-tariff' ),
+		array( 'name' => 'Bristol Water', 'regions' => 'Bristol, North Somerset, South Gloucestershire', 'url' => 'https://www.bristolwater.co.uk/home/account-and-services/bills-and-payments/watersure-eligibility-checker' ),
+		array( 'name' => 'Cambridge Water', 'regions' => 'Cambridge and the surrounding area', 'url' => 'https://www.cambridge-water.co.uk/household/my-bills-and-payments/my-bill-explained/other-charges-and-tariffs/watersure/' ),
+		array( 'name' => 'Dŵr Cymru Welsh Water', 'regions' => 'Most of Wales, plus Herefordshire and border areas', 'url' => 'https://www.dwrcymru.com/en/help-with-your-bills/watersure-tariff' ),
+		array( 'name' => 'Essex & Suffolk Water', 'regions' => 'Essex, SE London boroughs, and the Suffolk/Norfolk coast', 'url' => 'https://www.eswater.co.uk/watersure' ),
+		array( 'name' => 'Hafren Dyfrdwy (HD Cymru)', 'regions' => 'Wrexham, Denbighshire, Flintshire, northern Powys', 'url' => 'https://www.hdcymru.co.uk/my-account/help-when-you-need-it/help-with-paying-your-bill/watersure-scheme/' ),
+		array( 'name' => 'Northumbrian Water', 'regions' => 'Tyneside, Wearside, Teesside, Northumberland, County Durham', 'url' => 'https://www.nwl.co.uk/watersure' ),
+		array( 'name' => 'Portsmouth Water', 'regions' => 'Portsmouth and south-east Hampshire', 'url' => 'https://www.portsmouthwater.co.uk/customer-services/help-with-my-bills/watersure-application/' ),
+		array( 'name' => 'SES Water', 'regions' => 'Surrey, Kent, Sussex, parts of south London', 'url' => 'https://www.seswater.co.uk/household/help-support/financial-support' ),
+		array( 'name' => 'Severn Trent Water', 'regions' => 'The Midlands — Birmingham, Notts, Derbyshire, Leicestershire, Staffordshire', 'url' => 'https://www.stwater.co.uk/help-and-contact/help-with-paying-your-bill/watersure-scheme/' ),
+		array( 'name' => 'South East Water', 'regions' => 'Kent, Sussex, Surrey, Hampshire, Berkshire', 'url' => 'https://www.southeastwater.co.uk/help/priority-services/help-paying-your-bill/' ),
+		array( 'name' => 'South Staffs Water', 'regions' => 'Walsall, Sandwell, Dudley, Cannock, Lichfield, Sutton Coldfield', 'url' => 'https://www.south-staffs-water.co.uk/household/my-bills-and-payments/my-bill-explained/other-charges-and-tariffs/watersure/' ),
+		array( 'name' => 'South West Water', 'regions' => 'Devon and Cornwall, plus parts of Dorset and Somerset', 'url' => 'https://www.southwestwater.co.uk/household/help-support/financial-support/renewing-your-watersure-tariff' ),
+		array( 'name' => 'Southern Water', 'regions' => 'Kent, Sussex, Hampshire, Isle of Wight', 'url' => 'https://www.southernwater.co.uk/help-and-support/what-if-i-cant-pay-my-bill/' ),
+		array( 'name' => 'Thames Water', 'regions' => 'London and the Thames Valley', 'url' => 'https://www.thameswater.co.uk/help/account-and-billing/financial-support/watersure' ),
+		array( 'name' => 'United Utilities', 'regions' => 'North West England — Cumbria, Lancashire, Greater Manchester, Merseyside, Cheshire', 'url' => 'https://www.unitedutilities.com/watersure' ),
+		array( 'name' => 'Wessex Water', 'regions' => 'Dorset, Somerset, Wiltshire, parts of Gloucestershire and Hampshire', 'url' => 'https://www.wessexwater.co.uk/bills-and-accounts/help-to-pay-your-bill/bill-cap-scheme-watersure' ),
+		array( 'name' => 'Yorkshire Water', 'regions' => 'West, South, North and East Riding of Yorkshire', 'url' => 'https://www.yorkshirewater.com/bill-account/help-paying-your-bill/' ),
+	);
+}

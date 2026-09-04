@@ -149,6 +149,21 @@ function vance_discount_apply_action( $row ) {
 		);
 	}
 
+	// WaterSure's other bespoke tier-3 flow (plan §10 step 7): the scheme is
+	// administered per-household by whichever of 20 water companies serves
+	// that address, not centrally, so there's no single "apply" URL to send
+	// anyone to. Routes to this scheme's own single page rather than the
+	// CCW/Citizens Advice official_url, where vance_watersure_suppliers()
+	// (inc/discount-data.php) is rendered as a pick-your-company list.
+	if ( 'watersure' === $row['slug'] ) {
+		return array(
+			'label' => __( 'Apply', 'vance-health-hub' ),
+			'note'  => __( 'Find your supplier', 'vance-health-hub' ),
+			'href'  => trailingslashit( $row['permalink'] ) . '#water-companies',
+			'attrs' => '',
+		);
+	}
+
 	switch ( $type ) {
 		case 'phone':
 			// apply_contact is often a whole sentence ("0800 917 2222 (Mon-Fri

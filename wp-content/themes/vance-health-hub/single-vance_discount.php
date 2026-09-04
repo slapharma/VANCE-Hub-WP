@@ -133,6 +133,45 @@ while ( have_posts() ) :
 		</div>
 	</section>
 
+	<?php if ( 'watersure' === $row['slug'] ) : ?>
+		<section id="water-companies" style="padding:0 0 60px;">
+			<div class="container" style="max-width:1100px;">
+				<div class="vance-discount-surface" style="max-width:700px;margin:0 auto;">
+					<h2 style="font-size:18px;margin:0 0 6px;color:#0f172a;"><?php esc_html_e( 'Find your water company', 'vance-health-hub' ); ?></h2>
+					<p style="font-size:13px;color:#475569;margin:0 0 16px;"><?php esc_html_e( 'WaterSure is applied for through whichever company bills your household, not centrally. Find yours below — every link goes straight to that company\'s own WaterSure (or identically-named) page.', 'vance-health-hub' ); ?></p>
+					<input type="search" id="vance-watersure-filter" placeholder="<?php esc_attr_e( 'Search by company or area…', 'vance-health-hub' ); ?>" style="width:100%;padding:9px 14px;border:1px solid #e2e8f0;border-radius:var(--radius-field, 16px);font-size:14px;margin-bottom:16px;box-sizing:border-box;">
+					<ul id="vance-watersure-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;">
+						<?php foreach ( vance_watersure_suppliers() as $vance_ws_company ) : ?>
+							<li class="vance-watersure-row" data-search="<?php echo esc_attr( strtolower( $vance_ws_company['name'] . ' ' . $vance_ws_company['regions'] ) ); ?>" style="padding:10px 0;border-bottom:1px solid #F1F5F9;">
+								<a href="<?php echo esc_url( $vance_ws_company['url'] ); ?>" target="_blank" rel="noopener" style="font-size:14px;font-weight:700;color:#0f172a;text-decoration:none;"><?php echo esc_html( $vance_ws_company['name'] ); ?></a>
+								<div style="font-size:12px;color:#64748B;margin-top:2px;"><?php echo esc_html( $vance_ws_company['regions'] ); ?></div>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+					<p id="vance-watersure-empty" style="display:none;text-align:center;color:#64748B;font-size:13px;padding:20px 0;"><?php esc_html_e( "No companies match that search — try a shorter word, or check Citizens Advice for who supplies your address.", 'vance-health-hub' ); ?></p>
+				</div>
+			</div>
+		</section>
+		<script>
+		(function () {
+			var input = document.getElementById('vance-watersure-filter');
+			var rows = document.querySelectorAll('.vance-watersure-row');
+			var empty = document.getElementById('vance-watersure-empty');
+			if (!input) { return; }
+			input.addEventListener('input', function () {
+				var term = input.value.toLowerCase().trim();
+				var visible = 0;
+				rows.forEach(function (row) {
+					var match = !term || row.getAttribute('data-search').indexOf(term) !== -1;
+					row.style.display = match ? '' : 'none';
+					if (match) { visible++; }
+				});
+				empty.style.display = visible ? 'none' : 'block';
+			});
+		})();
+		</script>
+	<?php endif; ?>
+
 	</main>
 
 <?php endwhile; ?>
