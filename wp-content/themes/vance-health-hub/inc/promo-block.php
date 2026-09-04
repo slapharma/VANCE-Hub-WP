@@ -64,6 +64,14 @@ function vance_promo_tool_choices() {
 		'ibd-recipes'             => __( 'Open: Recipes & Meal Planner', 'vance-health-hub' ),
 		'malnutrition-calculator' => __( 'Open: Malnutrition Screener', 'vance-health-hub' ),
 		'healthcare-quiz'         => __( 'Open: Gastro Health Survey', 'vance-health-hub' ),
+		// Discounts, like Recipes & Meal Planner, is a full standalone page,
+		// not a tool-modal.php entry (docs/DISCOUNTS_TOOL_PLAN.md's directory
+		// is deliberately never chromelessly loaded in an iframe) — the
+		// "opens in modal" file comment above is aspirational for this key,
+		// same as it already is for 'ibd-recipes': tool-modal.php's CFG.tools
+		// has no matching entry, so the click just falls through to the real
+		// href from vance_promo_tool_urls() below, a plain navigation.
+		'discounts'               => __( 'Open: IBD Discounts & Freebies', 'vance-health-hub' ),
 	);
 }
 
@@ -73,6 +81,7 @@ function vance_promo_tool_urls() {
 		'ibd-recipes'             => home_url( '/gastro-meal-planner/' ),
 		'malnutrition-calculator' => home_url( '/malnutrition-calculator/' ),
 		'healthcare-quiz'         => home_url( '/gastro-health-survey/' ),
+		'discounts'               => home_url( '/ibd-discounts/' ),
 	);
 }
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Template Name: Tools & Resources
  *
@@ -73,7 +73,7 @@ get_header(); ?>
     <section class="tools-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: 64px 0;">
         <div class="container">
             <div class="text-center max-600 tools-intro-inner" style="margin: 0 auto 0;">
-                <span class="tools-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 6px);">
+                <span class="tools-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 10px);">
                     <?php echo esc_html( $intro_eyebrow ); ?>
                 </span>
                 <h2 class="tools-intro-title" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . ';' : 'color: var(--secondary-color);'; ?> margin: 0 0 12px;"><?php echo esc_html( $intro_title ); ?></h2>
@@ -115,15 +115,31 @@ get_header(); ?>
             'colors'   => array( '#78bfbf', '#5fa3a3', '#ffffff' ),
             'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
         ),
+        array(
+            // Fourth tile — docs/DISCOUNTS_TOOL_PLAN.md §5/§10 step 8.
+            'slug'     => 'discounts',
+            'page_url' => '/ibd-discounts/',
+            'name'     => 'IBD Discounts & Freebies',
+            'tag'      => 'UK Schemes',
+            // Live count, not a typed-in number — see plan §10 step 8 / the
+            // hero band's same reasoning: a wrong number here means the query
+            // changed, not that a hardcoded value went stale.
+            'desc'     => sprintf(
+                '%d UK discount and freebie schemes for life with IBD — toilet access, days out, travel, tax and benefits — checked against the provider\'s own page.',
+                function_exists( 'vance_discount_counts' ) ? vance_discount_counts()['total'] : 0
+            ),
+            'colors'   => array( '#aedbdb', '#78bfbf', '#008080' ),
+            'icon'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.59 13.41L11 3.83A2 2 0 009.59 3.24L4 3a1 1 0 00-1 1l.24 5.59a2 2 0 00.59 1.41l9.58 9.59a2 2 0 002.83 0l4.35-4.35a2 2 0 000-2.83z"/><circle cx="8.5" cy="8.5" r="1.5"/>',
+        ),
     );
     ?>
     <section id="tools-grid" class="section-padding tools-grid-section" style="background: var(--accent-color);">
         <div class="container">
-            <div class="tools-card-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;">
+            <div class="tools-card-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;">
                 <?php foreach ( $tools as $tool ) : ?>
                 <a class="tool-card tool-card--<?php echo esc_attr( $tool['slug'] ); ?>" href="<?php echo esc_url( $tool['page_url'] ); ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid #008080; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;">
                     <div class="tool-card__head" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
-                        <div class="tool-card__icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $tool['colors'][0] ); ?>, <?php echo esc_attr( $tool['colors'][1] ); ?>); border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center;">
+                        <div class="tool-card__icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $tool['colors'][0] ); ?>, <?php echo esc_attr( $tool['colors'][1] ); ?>); border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center;">
                             <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $tool['colors'][2] ); ?>" viewBox="0 0 24 24"><?php echo $tool['icon']; ?></svg>
                         </div>
                         <div>
@@ -143,10 +159,14 @@ get_header(); ?>
 
     <style>
         .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,25,41,0.10) !important; }
-        /* Three tools per row on desktop (set inline); collapse straight to one
-           column below tablet width (a 2-col stage would orphan the 3rd card).
+        /* Four tools per row on desktop (set inline). A 2-col tablet stage now
+           divides evenly (it would have orphaned the 3rd card back when this
+           was three tiles) before collapsing to one column on phones.
            !important is needed to beat the inline grid-template-columns. */
         @media (max-width: 900px) {
+            .tools-card-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 560px) {
             .tools-card-grid { grid-template-columns: 1fr !important; }
         }
     </style>
