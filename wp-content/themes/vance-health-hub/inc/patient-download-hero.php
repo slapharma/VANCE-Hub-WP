@@ -91,11 +91,13 @@ function vance_patient_download_hero_siblings( $post_id ) {
  * The hero itself. Called from single.php in place of the classic oped-hero
  * when the post carries `_vpd_pdf_file`.
  *
- * Pinned to the SAME 300px band a regular article's oped-hero uses (see the
- * inline height/min-height/align-items on that section in single.php) rather
- * than the much taller landing-page proportions this markup renders at
- * everywhere else on the site (homepage, Contact, About). At 300px there is
- * only room for eyebrow + title + one line of intro + the download actions,
+ * Started as the SAME 300px band a regular article's oped-hero uses (see the
+ * inline height/min-height/align-items on that section in single.php), then
+ * given an extra 75px (375px total) once the meta bar below it was removed
+ * for these posts, rather than the much taller landing-page proportions this
+ * markup renders at everywhere else on the site (homepage, Contact, About).
+ * Even at 375px there is only room for eyebrow + title + one line of intro
+ * plus the download actions,
  * so the white "more free handouts" band and the floating reassurance card
  * that the full-height version carries are dropped here, not shrunk to fit;
  * the same sibling-handout links move to the sidebar instead, see
@@ -142,7 +144,7 @@ function vance_render_patient_download_hero( $post_id ) {
 	$fade_to   = vance_hex_to_rgb_triple( '#FAF9FC', '250, 249, 252' );
 
 	$style = sprintf(
-		'--vhh-hs-from: #F1EDFA; --vhh-hs-to: #FAF9FC; --vhh-hs-from-rgb: %1$s; --vhh-hs-to-rgb: %2$s; --vhh-hs-title: #3D2A5C; --vhh-hs-intro: #4B4356; --vhh-hs-cta-bg: #6B489E; --vhh-hs-cta-fg: #ffffff; --vhh-hs-cta-hover: #583B82; height: 300px; min-height: 0; padding: 0; display: flex; align-items: center;',
+		'--vhh-hs-from: #F1EDFA; --vhh-hs-to: #FAF9FC; --vhh-hs-from-rgb: %1$s; --vhh-hs-to-rgb: %2$s; --vhh-hs-title: #3D2A5C; --vhh-hs-intro: #4B4356; --vhh-hs-cta-bg: #6B489E; --vhh-hs-cta-fg: #ffffff; --vhh-hs-cta-hover: #583B82; height: 375px; min-height: 0; padding: 0; display: flex; align-items: center;',
 		esc_attr( $fade_from ),
 		esc_attr( $fade_to )
 	);
