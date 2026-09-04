@@ -245,13 +245,11 @@ function vance_discount_counts() {
 }
 
 /**
- * Per-scheme hero image, sourced once (2026-09-04) from each scheme's own
- * `official_url` og:image where the source page had one, and from the
- * relevant provider's own logo (fetched from the provider's own site or a
- * Wikimedia Commons-hosted official mark) where it did not — never a stock
- * photo unrelated to the scheme. Shared assets (the GOV.UK crest, the NHS
- * default share image, one DWP logo) are deliberately reused across the
- * several schemes those bodies administer rather than invented per-page.
+ * Per-scheme hero image, sourced once (2026-09-04) — always the provider's own
+ * logo, never a stock or site photo, fetched from the provider's own site or
+ * a Wikimedia Commons-hosted official mark. Shared assets (the GOV.UK crest,
+ * the NHS default share image, one DWP logo) are deliberately reused across
+ * the several schemes those bodies administer rather than invented per-page.
  *
  * Files live at assets/img/discounts/{slug}.{ext} — a static, theme-committed
  * lookup table rather than a DB-uploaded featured image, matching the
@@ -264,14 +262,14 @@ function vance_discount_counts() {
  */
 function vance_discount_hero_image( $slug ) {
 	static $alt_text = array(
-		'blue-light-card'                          => 'Blue Light Card',
-		'rhs-gardens-companion'                     => 'Visitors in an RHS garden',
-		'kew-gardens-companion'                     => 'Inside the Palm House at Kew Gardens',
-		'london-zoo-concession-carer'               => 'Visitors at ZSL London Zoo',
-		'madame-tussauds-carer-ticket'               => 'Madame Tussauds London',
-		'chessington-carer-ticket'                  => 'Chessington World of Adventures',
-		'english-heritage-companion'                => 'An English Heritage site',
-		'national-trust-essential-companion'        => 'National Trust visitors',
+		'blue-light-card'                          => 'Blue Light Card logo',
+		'rhs-gardens-companion'                     => 'Royal Horticultural Society logo',
+		'kew-gardens-companion'                     => 'Royal Botanic Gardens, Kew logo',
+		'london-zoo-concession-carer'               => 'ZSL logo',
+		'madame-tussauds-carer-ticket'               => 'Madame Tussauds London logo',
+		'chessington-carer-ticket'                  => 'Chessington World of Adventures logo',
+		'english-heritage-companion'                => 'English Heritage logo',
+		'national-trust-essential-companion'        => 'National Trust logo',
 		'ccuk-cant-wait-card'                       => "Crohn's & Colitis UK logo",
 		'ccuk-radar-key'                            => "Crohn's & Colitis UK logo",
 		'disabled-persons-railcard'                 => 'National Rail logo',
