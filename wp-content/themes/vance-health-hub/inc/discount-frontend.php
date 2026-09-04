@@ -72,15 +72,27 @@ function vance_discount_apply_action( $row ) {
 	$apply   = $row['apply_url'];
 	$fallback = $row['official_url'];
 
-	if ( 1 === $tier && $apply ) {
+	// Tier 1 also requires frameable=true, kept fresh by the periodic
+	// `wp vance discounts check` re-probe (inc/discount-check.php) — this is
+	// the actual fallback plan §10 step 6 asks for. A cross-origin iframe's
+	// own X-Frame-Options/frame-ancestors block is not observable from the
+	// parent page at all (same-origin policy hides it, and X-Frame-Options
+	// fires no JS event whatsoever), so there is no reliable *client-side*
+	// runtime detection to fall back on — the server-side recheck is the one
+	// that actually works, and a tier-1 scheme whose provider adds a framing
+	// header degrades to the tier-2 popup automatically on the next check run
+	// without any code change here.
+	if ( 1 === $tier && $apply && ! empty( $row['frameable'] ) ) {
 		return array(
 			'label' => __( 'Apply on the hub', 'vance-health-hub' ),
 			'href'  => $apply,
-			'attrs' => 'data-vance-discount-modal="1" data-apply-url="' . esc_attr( $apply ) . '"',
+			'attrs' => 'data-vance-tool-open="discount-apply" data-apply-url="' . esc_attr( $apply ) . '" data-apply-title="' . esc_attr( $row['title'] ) . '"',
 		);
 	}
 
-	if ( 2 === $tier && $apply ) {
+	// Reached by tier 2, and by tier 1 whose frameable check above was false
+	// (the fallback) — both get the identical popup treatment.
+	if ( in_array( $tier, array( 1, 2 ), true ) && $apply ) {
 		/* translators: %s: provider name */
 		$label = $row['provider']
 			? sprintf( __( 'Apply (opens %s)', 'vance-health-hub' ), $row['provider'] )

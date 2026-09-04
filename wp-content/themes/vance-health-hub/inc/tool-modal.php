@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Unified glass Tool Modal — opens the site's interactive tools in one frosted
  * overlay from ANYWHERE: the tools page, the dashboard, a promo block, the
@@ -50,6 +50,24 @@ $vance_tm_tools = array(
         'url'    => home_url( '/gastro-health-survey/' ),
         'inline' => true, // reuses openQuizModal()
     ),
+    // IBD Discounts & Freebies tier-1 apply (docs/DISCOUNTS_TOOL_PLAN.md §2/§10
+    // step 6). Unlike every other entry here, the URL is a third-party page
+    // decided per-scheme at click time — the card sets data-apply-url /
+    // data-apply-title on its own trigger (inc/discount-frontend.php's
+    // vance_discount_apply_action()), and 'dynamicUrl' below tells the JS to
+    // read those instead of this array's (empty) 'url'. 'originStrip' shows
+    // "you're on {host}" + a manual "open in a new tab" escape hatch, because
+    // this is the one tool here that frames a page we do not control. Keys
+    // are camelCase (unlike 'inline' above) because wp_json_encode() ships
+    // this array to JS verbatim — no snake_case-to-camelCase translation
+    // layer exists, so the PHP key has to already match what the script reads.
+    'discount-apply' => array(
+        'title'       => 'Apply',
+        'url'         => '',
+        'inline'      => false,
+        'dynamicUrl'  => true,
+        'originStrip' => true,
+    ),
 );
 
 // pathname -> slug map for the global <a> interceptor (lowercased, no trailing slash).
@@ -74,6 +92,15 @@ $vance_tm_paths = array(
             <div class="vance-tool-modal__bar-actions">
                 <button type="button" class="vance-tool-modal__close" data-vance-tool-close aria-label="Close tool">&times;</button>
             </div>
+        </div>
+        <?php // UI spec §8: a strip naming the third-party host, NOT the modal
+              // chrome's own colour — it has to read as "about the framed
+              // page", not as part of the hub's UI. Hidden by default; shown
+              // only for tools with 'origin_strip' => true (discount-apply). ?>
+        <div class="vance-tool-modal__origin" id="vance-tool-modal-origin" hidden>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4L10 14"/><path d="M18 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>
+            <span>You're on <strong id="vance-tool-modal-origin-host"></strong></span>
+            <a href="#" id="vance-tool-modal-origin-newtab" target="_blank" rel="noopener">Open in a new tab instead</a>
         </div>
         <div class="vance-tool-modal__body">
             <?php // No loading="lazy": src is only set when the modal opens, and deferring it then is the whole delay. ?>
@@ -140,7 +167,7 @@ $vance_tm_paths = array(
     background-image: none;
     background-color: #f8fafc;
     border: 0;
-    border-radius: var(--radius-surface, 14px);
+    border-radius: var(--radius-surface, 24px);
     box-shadow: 0 24px 60px rgba(10, 25, 41, 0.28);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -172,12 +199,26 @@ $vance_tm_paths = array(
     font-size: 26px; line-height: 1; color: #0A1929;
     background: rgba(255,255,255,0.6);
     border: 1px solid rgba(255,255,255,0.7);
-    border-radius: var(--radius-control, 6px) !important;
+    border-radius: var(--radius-control, 10px) !important;
     cursor: pointer;
     transition: background-color .2s ease;
 }
 .vance-tool-modal__close:hover { background: #fff; }
 .vance-tool-modal__close:focus-visible { outline: 3px solid var(--primary-pale); outline-offset: 2px; }
+.vance-tool-modal__origin {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    color: #475569;
+    background: #F1F5F9; /* deliberately not the modal chrome's colour — see markup comment */
+    border-bottom: 1px solid #E2E8F0;
+}
+.vance-tool-modal__origin strong { color: #0F172A; }
+.vance-tool-modal__origin a { margin-left: auto; color: var(--primary-color, #008080); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.vance-tool-modal__origin a:hover { text-decoration: underline; }
 .vance-tool-modal__body { position: relative; flex: 1 1 auto; min-height: 0; background: #fff; }
 .vance-tool-modal__body iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
 .vance-tool-modal__loading {
@@ -224,8 +265,15 @@ $vance_tm_paths = array(
     var iframe     = document.getElementById('vance-tool-modal-iframe');
     var loading    = modal.querySelector('.vance-tool-modal__loading');
     var closeBtn   = modal.querySelector('.vance-tool-modal__close');
+    var originEl     = document.getElementById('vance-tool-modal-origin');
+    var originHostEl = document.getElementById('vance-tool-modal-origin-host');
+    var originTabEl  = document.getElementById('vance-tool-modal-origin-newtab');
     var lastTrigger = null;
     var loadedSlug  = null;
+    // Tracked separately from loadedSlug — every discount-apply click shares
+    // one slug but a different URL, so the "already loaded, skip" check below
+    // has to compare URLs for a dynamic-url tool, not just the slug.
+    var loadedUrl   = null;
 
     function normalizeSlug(slug) {
         return slug ? String(slug).toLowerCase() : '';
@@ -254,11 +302,39 @@ $vance_tm_paths = array(
         }
 
         // Iframe tools.
-        titleEl.textContent = tool.title || 'Tool';
-        if (loadedSlug !== slug) {
+        var url = tool.url;
+        var title = tool.title || 'Tool';
+
+        if (tool.dynamicUrl) {
+            var applyUrl = trigger && trigger.getAttribute ? trigger.getAttribute('data-apply-url') : '';
+            if (!applyUrl) { return false; } // nothing to show — let the click fall through to the real <a href>
+            url = applyUrl;
+            var t = trigger.getAttribute('data-apply-title');
+            if (t) { title = t; }
+        }
+
+        titleEl.textContent = title;
+
+        if (originEl) {
+            if (tool.originStrip && url) {
+                var host = url;
+                try { host = new URL(url, window.location.href).host; } catch (e) { /* leave host as the raw url */ }
+                if (originHostEl) { originHostEl.textContent = host; }
+                if (originTabEl) { originTabEl.href = url; }
+                originEl.hidden = false;
+            } else {
+                originEl.hidden = true;
+            }
+        }
+
+        // A dynamic-url tool's slug never changes between clicks, so compare
+        // the resolved URL instead — otherwise a second scheme's apply page
+        // would never load because "discount-apply" already matched.
+        if (loadedSlug !== slug || loadedUrl !== url) {
             if (loading) { loading.classList.remove('is-hidden'); }
-            iframe.src = addEmbedParam(tool.url);
+            iframe.src = tool.dynamicUrl ? url : addEmbedParam(url);
             loadedSlug = slug;
+            loadedUrl  = url;
         }
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
@@ -304,7 +380,9 @@ $vance_tm_paths = array(
     function warmTool(slug) {
         slug = normalizeSlug(slug);
         var tool = CFG.tools[slug];
-        if (!tool || tool.inline || warmed[slug]) { return; }
+        // dynamicUrl tools have no URL to prefetch until the click supplies
+        // one (data-apply-url varies per card), so there's nothing to warm.
+        if (!tool || tool.inline || tool.dynamicUrl || warmed[slug]) { return; }
         warmed[slug] = true;
         try {
             var link = document.createElement('link');
