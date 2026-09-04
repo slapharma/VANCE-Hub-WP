@@ -478,6 +478,12 @@ class VHH_Nav_Featured_Widget extends WP_Widget {
 
 		if ( $cat > 0 ) {
 			$query_args['cat'] = $cat;
+		} else {
+			// Same exclusion as the homepage Prime Block (inc/prime-block.php) —
+			// Patient Downloads companion posts are PDF summaries, not editorial
+			// "latest" content, and this widget's own category filter is unset.
+			$vpd_cat = get_category_by_slug( 'patient-handouts' );
+			if ( $vpd_cat ) { $query_args['category__not_in'] = array( $vpd_cat->term_id ); }
 		}
 
 		$posts = get_posts( $query_args );

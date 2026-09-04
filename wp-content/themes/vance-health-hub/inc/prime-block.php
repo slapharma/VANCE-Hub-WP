@@ -158,7 +158,16 @@ function vance_render_prime_block( array $vals ) {
 		'orderby'     => 'date',
 		'order'       => 'DESC',
 	);
-	if ( $latest_cat > 0 ) { $args['category'] = $latest_cat; }
+	if ( $latest_cat > 0 ) {
+		$args['category'] = $latest_cat;
+	} else {
+		// Patient Downloads companion posts (inc/patient-download-hero.php) are
+		// PDF summaries, not editorial "latest content" — excluded from the
+		// unfiltered sitewide pull so they don't crowd out real articles here.
+		// Only applies when no category has been deliberately chosen above.
+		$vpd_cat = get_category_by_slug( 'patient-handouts' );
+		if ( $vpd_cat ) { $args['category__not_in'] = array( $vpd_cat->term_id ); }
+	}
 	$latest_posts = get_posts( $args );
 
 	// Every selector below is prefixed with this so two instances on one page
