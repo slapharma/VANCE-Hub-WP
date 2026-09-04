@@ -3671,11 +3671,11 @@ body.home .hero {
     align-items: flex-start;
     justify-content: center;
     gap: 15px;
-    /* Right padding is 100px deeper than the other three sides on purpose —
+    /* Right padding is 120px deeper than the other three sides on purpose —
        the dot graphic is anchored to the right edge (see background-position
        below) and bleeds furthest into the card there, so the text column
        needs the extra clearance to stay readable over it. */
-    padding: 32px 128px 32px 28px;
+    padding: 32px 148px 32px 28px;
     min-width: 0;
     /* The background-image itself (default dot graphic, or none when a
        background colour is chosen) is set inline per-instance — see
