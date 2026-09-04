@@ -104,8 +104,8 @@ $vpd_downloads = array(
 		'title' => 'The Practical Food Guide for Crohn’s & Colitis',
 		'tag'   => 'Food & Nutrition',
 		'desc'  => 'What to eat, what to watch, and how to tell the difference between a trigger and a coincidence.',
-		'file'  => '',
-		'pages' => 0,
+		'file'  => 'Vance-Health-Hub-Practical-Food-Guide.pdf',
+		'pages' => 4,
 	),
 	array(
 		'slug'  => '7-day-meal-plan',
