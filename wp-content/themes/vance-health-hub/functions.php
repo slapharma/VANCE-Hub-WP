@@ -511,6 +511,28 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
         'type'        => 'text',
     ) );
 
+    // -- Featured-tool sidebar ---------------------------------------------
+    // Off by default, so an existing promo keeps rendering as one column
+    // until an editor opts in. When on, the content above becomes the left
+    // column (67% width) and a fixed-format card promoting one free tool
+    // becomes the right column (33% width) — see vance_render_promo_block().
+    $wp_customize->add_setting( $key( 'side_tool_show' ), array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+    $wp_customize->add_control( $key( 'side_tool_show' ), array(
+        'label'       => $p . __( 'Add a featured-tool sidebar', 'vance-health-hub' ),
+        'description' => __( 'Splits the block into two columns: this content at 67% width, a card promoting one free tool at 33% width.', 'vance-health-hub' ),
+        'section'     => $section_id,
+        'type'        => 'checkbox',
+    ) );
+
+    $wp_customize->add_setting( $key( 'side_tool' ), array( 'default' => 'healthcare-quiz', 'sanitize_callback' => 'sanitize_key' ) );
+    $wp_customize->add_control( $key( 'side_tool' ), array(
+        'label'       => $p . __( 'Sidebar: which free tool to promote', 'vance-health-hub' ),
+        'description' => __( 'Only shown when "Add a featured-tool sidebar" above is ticked.', 'vance-health-hub' ),
+        'section'     => $section_id,
+        'type'        => 'select',
+        'choices'     => vance_promo_free_tool_choices(),
+    ) );
+
     // -- Styling ----------------------------------------------------------
     // All blank/off by default, which is what keeps a category promo -- which
     // never had any of these -- rendering exactly as it did before the merge.

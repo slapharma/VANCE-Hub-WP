@@ -3648,6 +3648,59 @@ body.home .hero {
     .vance-cat-promo .vance-glass--interactive:hover { transform: none; }
 }
 
+/* --- Promo block: featured-tool sidebar (inc/promo-block.php) -----------
+   Optional second column, turned on per-instance via "Add a featured-tool
+   sidebar" in the Customizer. The main promo keeps rendering its normal 5
+   layouts inside the left column (.vance-promo-columns__main); the sidebar
+   is always the same fixed card, so it does not inherit any of them.
+
+   Both columns already get their own border from .vance-glass (applied to
+   .vance-cat-promo__inner and to .vance-promo-tool-card below) — that is
+   what makes them read as two separate containers rather than one card with
+   a divider. The 75px is spacing between them, not inside either one. */
+.vance-promo-columns {
+    display: grid;
+    grid-template-columns: 67fr 33fr;
+    gap: 75px;
+    align-items: stretch;
+}
+.vance-promo-columns__main { min-width: 0; }
+.vance-promo-tool-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 32px 28px;
+    min-width: 0;
+}
+.vance-promo-tool-card__icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-control, 10px);
+    margin-bottom: 4px;
+}
+.vance-promo-tool-card__eyebrow {
+    font-size: 12px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--primary-color);
+}
+.vance-promo-tool-card__title {
+    font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 800;
+    color: #0A1929; margin: 0; line-height: 1.25;
+}
+.vance-promo-tool-card__desc { font-size: 14px; line-height: 1.6; color: #475569; margin: 0; }
+.vance-promo-tool-card__cta { margin-top: 8px; }
+
+@media (max-width: 767.98px) {
+    /* 75px only makes sense side-by-side — stacked, it would be a wall of
+       empty space between two full-width cards, so it collapses with the
+       column change rather than surviving as top/bottom margin. */
+    .vance-promo-columns { grid-template-columns: 1fr; gap: 24px; }
+    .vance-promo-tool-card { padding: 28px 24px; }
+}
+
 /* =====================================================================
    HEADER SEARCH (header.php .vance-header-search)
    Icon button in .header-actions, to the right of "My Dashboard". Clicking
