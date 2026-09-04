@@ -187,13 +187,22 @@ while ( have_posts() ) :
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+            <?php if ( ! $vpd_is_download_post ) : ?>
             <button class="vance-save-btn va-save-main<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
                 <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
                 <span class="va-save-text"><?php echo $va_is_saved ? 'Saved' : 'Save Article'; ?></span>
             </button>
+            <?php endif; ?>
         </div>
     </section>
 
+    <?php
+    // Patient Downloads companion posts skip Save Article entirely (the
+    // handout itself is the thing to keep, via the PDF download, not a
+    // bookmark), so the sticky bar that exists only to keep that button
+    // reachable while scrolled has nothing left to show either.
+    if ( ! $vpd_is_download_post ) :
+    ?>
     <div class="va-sticky-save" hidden>
         <div class="container">
             <span class="va-sticky-title"><?php echo esc_html( get_the_title() ); ?></span>
@@ -203,6 +212,7 @@ while ( have_posts() ) :
             </button>
         </div>
     </div>
+    <?php endif; ?>
 
     <script>
     jQuery(function($){
