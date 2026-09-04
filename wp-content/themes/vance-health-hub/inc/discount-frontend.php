@@ -100,10 +100,18 @@ function vance_discount_apply_action( $row ) {
 
 	switch ( $type ) {
 		case 'phone':
-			$digits = preg_replace( '/[^0-9+]/', '', (string) $row['apply_contact'] );
-			if ( $digits ) {
+			// apply_contact is often a whole sentence ("0800 917 2222 (Mon-Fri
+			// 8am-5pm); online only in some postcodes; Scotland: mygov.scot/...")
+			// rather than a bare number — pull out just the number-shaped run
+			// (a UK number is 10-11 digits, optionally grouped with spaces) so
+			// the button label stays short and the tel: href isn't a garbage
+			// concatenation of every stray digit in the sentence (found live,
+			// 2026-09-04: PIP and Warm Home Discount both broke this way).
+			if ( preg_match( '/0[\d ]{9,13}\d/', (string) $row['apply_contact'], $pm ) ) {
+				$phone  = trim( preg_replace( '/\s+/', ' ', $pm[0] ) );
+				$digits = preg_replace( '/[^0-9+]/', '', $phone );
 				return array(
-					'label' => sprintf( /* translators: %s: phone number */ __( 'Call %s', 'vance-health-hub' ), $row['apply_contact'] ),
+					'label' => sprintf( /* translators: %s: phone number */ __( 'Call %s', 'vance-health-hub' ), $phone ),
 					'href'  => 'tel:' . $digits,
 					'attrs' => '',
 				);
