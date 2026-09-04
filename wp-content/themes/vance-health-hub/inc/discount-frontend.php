@@ -651,3 +651,34 @@ function vance_discount_vat_modal_markup() {
 	</div>
 	<?php
 }
+
+/**
+ * Small teal dot-field for behind the single-scheme hero's logo box — NOT
+ * vance_page_hero_spotlight_motif() (inc/page-hero-spotlight.php). That
+ * motif's dots are one small cluster inside a 640x520 canvas built for a
+ * full-width hero; shrunk into this hero's ~320x220 box the dots scale
+ * down to under a pixel and vanish, leaving only its bolder concentric
+ * arcs visible — found live 2026-09-04, the result read as "a circle", not
+ * "dots". This draws a plain grid sized to the box instead, so the dots
+ * are the thing actually visible.
+ *
+ * @param int $width
+ * @param int $height
+ * @return string SVG markup. Static per call — no dynamic values, nothing to escape.
+ */
+function vance_discount_hero_dots( $width = 320, $height = 220 ) {
+	$spacing = 22;
+	$dots    = '';
+	for ( $y = 14; $y < $height; $y += $spacing ) {
+		for ( $x = 14; $x < $width; $x += $spacing ) {
+			$dots .= sprintf( '<circle cx="%d" cy="%d" r="2.6"/>', $x, $y );
+		}
+	}
+
+	return sprintf(
+		'<svg viewBox="0 0 %1$d %2$d" width="100%%" height="100%%" preserveAspectRatio="none" aria-hidden="true" focusable="false"><g fill="#04504E" opacity="0.16" stroke="none">%3$s</g></svg>',
+		(int) $width,
+		(int) $height,
+		$dots
+	);
+}

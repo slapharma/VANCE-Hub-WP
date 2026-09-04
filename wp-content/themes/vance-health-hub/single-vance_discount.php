@@ -91,16 +91,13 @@ while ( have_posts() ) :
 			</div>
 			<?php if ( $hero_image ) : ?>
 				<?php
-				/* The site's usual teal dot-field motif (vance_page_hero_spotlight_motif(),
-				   inc/page-hero-spotlight.php) sits behind the logo box rather than
-				   replacing it — this hero is a small fixed box, not the full
-				   photo-or-motif spotlight layout that function is normally paired
-				   with, so only its SVG output is reused here, absolutely positioned
-				   behind the box rather than via the shared __motif/--has-motif classes
-				   (which assume the motif IS the hero's media area). */
+				/* A plain teal dot-field behind the logo box — vance_discount_hero_dots()
+				   (inc/discount-frontend.php), not the site's usual page-hero-spotlight
+				   motif: that one's dots are sized for a full-width hero and disappear
+				   at this box's small scale, leaving only its arcs visible. */
 				?>
 				<div style="flex:0 0 auto;position:relative;width:320px;height:220px;display:flex;align-items:center;justify-content:center;">
-					<div style="position:absolute;inset:0;overflow:hidden;border-radius:var(--radius-surface, 24px);" aria-hidden="true"><?php echo vance_page_hero_spotlight_motif(); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></div>
+					<div style="position:absolute;inset:0;overflow:hidden;border-radius:var(--radius-surface, 24px);" aria-hidden="true"><?php echo vance_discount_hero_dots( 320, 220 ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></div>
 					<?php
 					// SVGs get width/height:100% (scale UP to fill), not just
 					// max-width/max-height:100% (cap-only, never scale up) — a
