@@ -452,7 +452,7 @@
       "evidence_accepted": ["Consultant or GP letter", "Medication list", "Diary of symptoms"],
       "eligibility_signals": ["ibd_diagnosis", "region_england", "region_wales", "region_ni"],
       "official_url": "https://www.gov.uk/pip/eligibility",
-      "apply_url": "https://apply-for-pip.dwp.gov.uk/eligibility",
+      "apply_url": "https://www.apply-for-pip.dwp.gov.uk/eligibility",
       "apply_type": "phone",
       "apply_contact": "0800 917 2222 (Mon-Fri 8am-5pm); online only in some postcodes; Scotland: mygov.scot/adult-disability-payment",
       "frameable": false,
