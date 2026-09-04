@@ -4,9 +4,9 @@
  *
  * Hub page for the patient handout PDF series (10 planned, see the ideas
  * doc in the Patient Downloads shared-drive folder). Card grid modeled on
- * page-tools-resources.php; the download-button/file-size-meta pattern is
- * the same one page-user-guide.php uses for its own single PDF, generalised
- * here to take a filename per card since this page renders several.
+ * page-tools-resources.php; the download-button pattern is the same one
+ * page-user-guide.php uses for its own single PDF, generalised here to take
+ * a filename per card since this page renders several.
  *
  * To activate: create a Page titled "Patient Downloads", slug
  * `patient-downloads`, and choose "Patient Downloads" as the template
@@ -18,29 +18,6 @@
  * Customizer panel: Appearance → Customize → Page - Patient Downloads.
  */
 get_header();
-
-/**
- * "23 pages · PDF · 5.7 MB" for a given handout file, or just "PDF" if the
- * file is missing — mirrors vug_pdf_meta() in page-user-guide.php, so a
- * failed deploy degrades to a plain label rather than a PHP warning.
- *
- * @param string $filename File name under /assets/downloads/.
- * @param int    $pages    Page count (the one fact the file can't tell us cheaply).
- * @return string
- */
-function vpd_pdf_meta( $filename, $pages ) {
-	$path = get_template_directory() . '/assets/downloads/' . $filename;
-	if ( ! $filename || ! file_exists( $path ) ) {
-		return 'PDF';
-	}
-	$mb = filesize( $path ) / 1000000;
-	return sprintf(
-		/* translators: 1: page count, 2: file size in MB */
-		__( '%1$d pages · PDF · %2$s MB', 'vance-health-hub' ),
-		$pages,
-		number_format_i18n( $mb, 1 )
-	);
-}
 
 /**
  * Same download-button markup as vug_download_btn() in page-user-guide.php
@@ -71,7 +48,7 @@ $vpd_downloads = array(
 		'slug'  => 'appointment-preparation',
 		'title' => 'Preparing for Your Doctor Appointment',
 		'tag'   => 'Appointment Prep',
-		'desc'  => 'A quick-reference checklist, your care team explained, and the questions worth asking, for GP, gastroenterology or dietetic appointments.',
+		'desc'  => 'A quick-reference checklist, your care team explained, and the questions worth asking.',
 		'file'  => 'Vance-Health-Hub-Appointment-Preparation.pdf',
 		'pages' => 4,
 	),
@@ -79,7 +56,7 @@ $vpd_downloads = array(
 		'slug'  => 'ibd-travel-checklist',
 		'title' => 'Your IBD Travel Checklist',
 		'tag'   => 'Travel',
-		'desc'  => 'Medication, letters, vaccines, insurance and toilet access sorted before you go, practical prep for flying and holidays with Crohn\'s or colitis.',
+		'desc'  => 'Medication, letters, vaccines and toilet access sorted before you fly or travel.',
 		'file'  => 'Vance-Health-Hub-IBD-Travel-Checklist.pdf',
 		'pages' => 4,
 	),
@@ -87,7 +64,7 @@ $vpd_downloads = array(
 		'slug'  => 'ibd-symptom-checker',
 		'title' => 'Is It a Flare, or Something Else?',
 		'tag'   => 'Self-Triage',
-		'desc'  => 'The tests that tell a flare apart from an infection or IBS, plus the red flags that mean get help now, not later.',
+		'desc'  => 'The tests and red flags that tell a flare apart from an infection or IBS.',
 		'file'  => 'Vance-Health-Hub-IBD-Symptom-Checker.pdf',
 		'pages' => 3,
 	),
@@ -95,7 +72,7 @@ $vpd_downloads = array(
 		'slug'  => 'ibd-flare-survival-guide',
 		'title' => 'The IBD Flare Survival Guide',
 		'tag'   => 'Flare Management',
-		'desc'  => 'What to do when symptoms get worse, practical steps for the first 48 hours.',
+		'desc'  => 'What to do in the first 48 hours when your symptoms suddenly get worse.',
 		'file'  => 'Vance-Health-Hub-IBD-Flare-Survival-Guide.pdf',
 		'pages' => 4,
 	),
@@ -103,7 +80,7 @@ $vpd_downloads = array(
 		'slug'  => 'practical-food-guide',
 		'title' => 'The Practical Food Guide for Crohn’s & Colitis',
 		'tag'   => 'Food & Nutrition',
-		'desc'  => 'What to eat, what to watch, and how to tell the difference between a trigger and a coincidence.',
+		'desc'  => 'What to eat, what to watch, and how to tell a trigger from a coincidence.',
 		'file'  => 'Vance-Health-Hub-Practical-Food-Guide.pdf',
 		'pages' => 4,
 	),
@@ -111,7 +88,7 @@ $vpd_downloads = array(
 		'slug'  => '7-day-meal-plan',
 		'title' => 'The 7-Day Gut-Friendly Meal Plan',
 		'tag'   => 'Meal Planning',
-		'desc'  => 'A full week of gut-friendly meals for Crohn’s and colitis, ready to follow or adapt.',
+		'desc'  => 'A full week of gut-friendly meals, ready to follow or adapt to your own taste.',
 		'file'  => 'Vance-Health-Hub-7-Day-Meal-Plan.pdf',
 		'pages' => 3,
 	),
@@ -119,7 +96,7 @@ $vpd_downloads = array(
 		'slug'  => 'ibd-trigger-tracker',
 		'title' => 'The IBD Trigger Tracker',
 		'tag'   => 'Self-Monitoring',
-		'desc'  => 'A structured way to find out what could be making your symptoms worse.',
+		'desc'  => 'A structured weekly log to find out what could be making your symptoms worse.',
 		'file'  => 'Vance-Health-Hub-IBD-Trigger-Tracker.pdf',
 		'pages' => 2,
 	),
@@ -127,7 +104,7 @@ $vpd_downloads = array(
 		'slug'  => 'ibd-fatigue',
 		'title' => 'IBD Fatigue: 15 Things That Can Help',
 		'tag'   => 'Fatigue',
-		'desc'  => 'Practical ideas for when you’re completely exhausted and rest alone isn’t fixing it.',
+		'desc'  => 'Fifteen practical ideas for when you are exhausted and rest alone is not helping.',
 		'file'  => 'Vance-Health-Hub-IBD-Fatigue.pdf',
 		'pages' => 3,
 	),
@@ -181,7 +158,6 @@ $vpd_downloads = array(
 				<?php foreach ( $vpd_downloads as $d ) :
 					$is_live  = ! empty( $d['file'] ) && file_exists( get_template_directory() . '/assets/downloads/' . $d['file'] );
 					$pdf_url  = $is_live ? get_template_directory_uri() . '/assets/downloads/' . $d['file'] : '';
-					$meta     = $is_live ? vpd_pdf_meta( $d['file'], $d['pages'] ) : '';
 					// The companion post — see inc/patient-download-hero.php — shares
 					// this handout's own 'slug', a field this array has carried since
 					// the page was built but never read until now.
@@ -205,7 +181,6 @@ $vpd_downloads = array(
 					<p class="vpd-card__desc" style="color: var(--text-light); font-size: 14px; margin: 0 0 20px 0; line-height: 1.6; flex: 1;"><?php echo esc_html( $d['desc'] ); ?></p>
 					<?php if ( $is_live ) : ?>
 						<?php echo vpd_download_btn( $pdf_url ); ?>
-						<span class="vpd-card__meta" style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-light);"><?php echo esc_html( $meta ); ?></span>
 						<?php if ( $post_link ) : ?>
 						<a href="<?php echo esc_url( $post_link ); ?>" class="vpd-card__readmore" style="display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--primary-color);">Read the summary &rarr;</a>
 						<?php endif; ?>
