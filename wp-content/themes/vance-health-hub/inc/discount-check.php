@@ -49,26 +49,92 @@ function vance_discount_lenient_hosts() {
 }
 
 /**
- * A short, distinctive substring this scheme's page ought to contain — a
- * price if the cost field has one, otherwise the provider's name. Proves the
- * fetch landed on the right page rather than a 200 soft-404 or a redirect
- * target unrelated to the scheme (see file header).
+ * Words too generic to prove anything about which page loaded — a provider
+ * field like "Your water company (statutory scheme)" or "Your local council"
+ * is a description, not a name, and checking for it verbatim on the CCW FAQ
+ * page is guaranteed to fail even though the page is exactly right. Found by
+ * running the checker against the live seed on 2026-09-04 and getting 17 of
+ * 34 false "check" verdicts — a single-string sentinel misidentified real,
+ * confirmed-correct pages as wrong far more often than it caught anything.
+ *
+ * @return array<string,true>
+ */
+function vance_discount_sentinel_stopwords() {
+	return array_fill_keys(
+		array( 'your', 'local', 'council', 'water', 'company', 'statutory', 'scheme', 'government', 'department', 'welsh' ),
+		true
+	);
+}
+
+/**
+ * Short, distinctive substrings this scheme's page ought to contain — plural,
+ * because any ONE of them appearing is enough to prove the fetch landed on
+ * the right page rather than a 200 soft-404 or an unrelated redirect target.
+ * A single sentinel (the original design) turned out to be too brittle: a
+ * generic provider phrase or a curly-vs-straight apostrophe difference
+ * ("Crohn's" vs "Crohn’s") sinks the whole check. Multiple independent
+ * candidates make one mismatched character harmless.
  *
  * @param int $post_id Scheme post ID.
- * @return string Lowercased sentinel, or '' if nothing usable was found.
+ * @return string[] Lowercased candidates, ASCII-apostrophe variants included.
  */
-function vance_discount_sentinel( $post_id ) {
+function vance_discount_sentinel_candidates( $post_id ) {
+	$candidates = array();
+
 	$cost = (string) get_post_meta( $post_id, '_vance_discount_cost', true );
 	if ( preg_match( '/£\s?[0-9][0-9,.]*/', $cost, $m ) ) {
-		return strtolower( preg_replace( '/\s+/', '', $m[0] ) );
+		$candidates[] = strtolower( preg_replace( '/\s+/', '', $m[0] ) );
 	}
 
+	$stop = vance_discount_sentinel_stopwords();
 	$provider = (string) get_post_meta( $post_id, '_vance_discount_provider', true );
-	// A provider name with a comma clause ("Royal Botanic Gardens, Kew") — take
-	// the first clause, it's the part actually likely to appear verbatim.
-	$provider = trim( strtok( $provider, ',' ) );
+	// A provider name with a comma or bracket clause ("Royal Botanic Gardens,
+	// Kew", "Chessington World of Adventures (Merlin)") — the parenthetical
+	// is almost always the least likely part to appear on the PROVIDER's own
+	// page (it names who they belong to, not who they are), so it's dropped
+	// rather than tried as its own candidate.
+	$provider = trim( preg_replace( '/\(.*$/', '', strtok( $provider, ',' ) ) );
 
-	return $provider ? strtolower( $provider ) : '';
+	foreach ( preg_split( '/\s+/', $provider ) as $word ) {
+		$clean = strtolower( trim( $word, ".,&'’" ) );
+		if ( strlen( $clean ) >= 5 && ! isset( $stop[ $clean ] ) ) {
+			$candidates[] = $clean;
+		}
+	}
+
+	// The scheme's own title is a last resort: distinctive enough on a page
+	// about that exact scheme, even when the provider field is a description
+	// rather than a name (WaterSure's is "Your water company (statutory
+	// scheme)" — no usable word survives the filter above).
+	$title = (string) get_the_title( $post_id );
+	foreach ( preg_split( '/\s+/', $title ) as $word ) {
+		$clean = strtolower( trim( $word, ".,&'’()" ) );
+		if ( strlen( $clean ) >= 5 && ! isset( $stop[ $clean ] ) ) {
+			$candidates[] = $clean;
+		}
+	}
+
+	return array_values( array_unique( $candidates ) );
+}
+
+/**
+ * True if the given HTML body contains ANY sentinel candidate. Apostrophe
+ * style (straight ' vs curly ’) is normalised on both sides so "Crohn's"
+ * matches "Crohn’s" — confirmed to be the actual cause of two false fails in
+ * the 2026-09-04 run (ccuk-radar-key, ccuk-cant-wait-card).
+ *
+ * @param string   $body       Fetched page HTML.
+ * @param string[] $candidates From vance_discount_sentinel_candidates().
+ * @return bool
+ */
+function vance_discount_sentinel_matches( $body, $candidates ) {
+	$body_norm = str_replace( array( '’', '‘' ), "'", strtolower( $body ) );
+	foreach ( $candidates as $candidate ) {
+		if ( false !== stripos( $body_norm, str_replace( array( '’', '‘' ), "'", $candidate ) ) ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -151,15 +217,15 @@ function vance_discount_fetch( $url, $fresh = false ) {
 function vance_check_discount_links( $post_id, $fresh = false ) {
 	$official_url = get_post_meta( $post_id, '_vance_discount_official_url', true );
 	$apply_url    = get_post_meta( $post_id, '_vance_discount_apply_url', true );
-	$sentinel     = vance_discount_sentinel( $post_id );
+	$candidates   = vance_discount_sentinel_candidates( $post_id );
 
 	$report = array( 'official' => null, 'apply' => null, 'sentinel_found' => null );
 
 	if ( $official_url ) {
 		$result                = vance_discount_fetch( $official_url, $fresh );
 		$report['official']    = array( 'url' => $official_url, 'status' => $result['status'], 'code' => $result['code'] );
-		if ( $result['ok'] && $sentinel && $result['body'] ) {
-			$report['sentinel_found'] = ( false !== stripos( $result['body'], $sentinel ) );
+		if ( $result['ok'] && $candidates && $result['body'] ) {
+			$report['sentinel_found'] = vance_discount_sentinel_matches( $result['body'], $candidates );
 		}
 	}
 
