@@ -2,11 +2,14 @@
 /**
  * Single Discount template — one scheme, full detail.
  *
- * Layout pattern (dark hero, two-column body) copied from
- * single-vance_recipe.php; card-building helpers (tier badge, apply-action
- * resolver, Save button) come from inc/discount-frontend.php so this file
- * and the directory grid can never disagree about what a scheme's apply
- * action or save state look like.
+ * Hero is spotlight-styled (mint band, eyebrow pill, teal headline — the
+ * real .vhh-hero-spotlight__eyebrow/__title classes from main.css) but sized
+ * like a regular article's hero (single.php's height:300px), not the full
+ * page-hero-spotlight treatment — see the comment above the hero markup.
+ * Two-column body layout copied from single-vance_recipe.php; card-building
+ * helpers (tier badge, apply-action resolver, Save button) come from
+ * inc/discount-frontend.php so this file and the directory grid can never
+ * disagree about what a scheme's apply action or save state look like.
  *
  * @package vance-health-hub
  */
@@ -35,19 +38,36 @@ while ( have_posts() ) :
 
 	<main id="main-content">
 
-	<section style="position:relative;background:linear-gradient(135deg, rgba(10,25,41,0.90) 0%, rgba(0,80,80,0.86) 100%); padding:110px 0 60px; color:#fff;">
+	<?php
+	/*
+	 * Spotlight-styled hero, sized like a regular article's (single.php's
+	 * `.oped-hero`, height:300px) rather than the full page-hero-spotlight
+	 * treatment (photo + card + facts band, ~450-500px) — this page has
+	 * nowhere to put a per-scheme photograph, and borrowing the mint band +
+	 * eyebrow pill + teal headline at article height keeps a single scheme
+	 * page reading as content, not as a landing page.
+	 *
+	 * Uses the real .vhh-hero-spotlight__eyebrow/__title classes from
+	 * assets/css/main.css rather than reinventing the eyebrow pill and the
+	 * teal headline colour, so this page can never drift from what "spotlight
+	 * style" looks like everywhere else on the site. Height and the two extra
+	 * rows (provider, tier/region) are this page's own — inline, matching
+	 * this file's existing convention, not main.css's shared block.
+	 */
+	?>
+	<section style="height:300px;min-height:0;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);">
 		<div class="container" style="max-width:900px;">
 			<?php if ( $row['category'] ) : ?>
-				<span style="display:inline-block;background:rgba(255,255,255,0.15);color:#fff;font-size:12px;font-weight:700;padding:5px 14px;border-radius:var(--radius-pill, 999px);letter-spacing:0.3px;text-transform:uppercase;margin-bottom:16px;"><?php echo esc_html( $row['category']['name'] ); ?></span>
+				<span class="vhh-hero-spotlight__eyebrow"><?php echo esc_html( $row['category']['name'] ); ?></span>
 			<?php endif; ?>
-			<h1 style="font-family:'Outfit',sans-serif;font-size:clamp(28px,4.2vw,44px);font-weight:900;color:#fff;margin:0 0 12px;line-height:1.15;"><?php the_title(); ?></h1>
+			<h1 class="vhh-hero-spotlight__title" style="font-size:clamp(26px,3.4vw,38px);max-width:700px;margin:0 0 8px;"><?php the_title(); ?></h1>
 			<?php if ( $row['provider'] ) : ?>
-				<p style="color:rgba(255,255,255,0.85);font-size:15px;font-weight:600;margin:0 0 18px;"><?php echo esc_html( $row['provider'] ); ?></p>
+				<p style="color:#3F4B4E;font-size:15px;font-weight:600;margin:0 0 14px;"><?php echo esc_html( $row['provider'] ); ?></p>
 			<?php endif; ?>
 			<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
 				<?php echo vance_discount_tier_badge( vance_discount_effective_tier( $row ) ); ?>
 				<?php if ( $row['region_names'] && ! in_array( 'UK', $row['region_names'], true ) ) : ?>
-					<span style="color:rgba(255,255,255,0.8);font-size:13px;"><?php echo esc_html( implode( ', ', $row['region_names'] ) ); ?> <?php esc_html_e( 'only', 'vance-health-hub' ); ?></span>
+					<span style="color:#64748B;font-size:13px;"><?php echo esc_html( implode( ', ', $row['region_names'] ) ); ?> <?php esc_html_e( 'only', 'vance-health-hub' ); ?></span>
 				<?php endif; ?>
 			</div>
 		</div>
