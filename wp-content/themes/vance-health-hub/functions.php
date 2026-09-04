@@ -1323,7 +1323,12 @@ function vance_health_hub_scripts() {
     // condition mirrors $vance_on_dashboard_my_recipes above.
     $vance_on_dashboard_discounts = is_page( 'dashboard' )
         && isset( $_GET['tab'] ) && 'discounts' === $_GET['tab'];
-    if ( is_page_template( 'page-ibd-discounts.php' ) || is_singular( 'vance_discount' ) || is_singular( 'post' ) || $vance_on_dashboard_discounts ) {
+    // Homepage: only when an admin has actually picked a scheme for the
+    // Featured Discount section (mirrors vance_append_featured_discount_section()'s
+    // gate in front-page.php) — no point loading the stylesheet on every
+    // front-page hit for a section that isn't configured.
+    $vance_on_homepage_discount = is_front_page() && (int) get_theme_mod( 'vance_discount_featured_homepage', 0 );
+    if ( is_page_template( 'page-ibd-discounts.php' ) || is_singular( 'vance_discount' ) || is_singular( 'post' ) || $vance_on_dashboard_discounts || $vance_on_homepage_discount ) {
         wp_enqueue_style(
             'vance-discounts',
             get_template_directory_uri() . '/assets/css/discounts.css',

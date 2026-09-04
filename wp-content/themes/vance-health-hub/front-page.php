@@ -492,6 +492,13 @@ body {
     // toggling the checkbox takes effect immediately in both directions.
     $sections = vance_append_enabled_content_widgets( $sections );
 
+    // Featured Discount (2026-09-04): same auto-append pattern — fill it in
+    // once an admin has picked a scheme (vance_discount_featured_homepage),
+    // without requiring a Customizer visit to add it to Section Order.
+    if ( function_exists( 'vance_append_featured_discount_section' ) ) {
+        $sections = vance_append_featured_discount_section( $sections );
+    }
+
     // Section seams: a zero-height marker between consecutive sections that
     // blurs 18px either side of the join, so one section's background colour
     // (or image, or gradient) fades into the next instead of meeting it at a

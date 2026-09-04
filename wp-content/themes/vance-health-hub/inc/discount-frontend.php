@@ -537,6 +537,75 @@ function vance_render_featured_discount( $mode = 'auto', $args = array() ) {
 }
 
 /* -------------------------------------------------------------------------
+ * Homepage "Featured Discount" section.
+ *
+ * Registered into the vance_homepage_sections registry like every other
+ * homepage block (inc/customizer-sortable-control.php), so it shows up in
+ * the Customizer's section-order picker. But being registered there does
+ * NOT put it into the live vance_homepage_section_order string — that's a
+ * separate theme_mod nobody has touched. vance_append_featured_discount()
+ * below mirrors vance_append_enabled_content_widgets()'s pattern: append it
+ * to the live order automatically, but only once an admin has actually
+ * picked a scheme (vance_discount_featured_homepage != 0), so existing
+ * sites don't get a new block they never asked for.
+ * ---------------------------------------------------------------------- */
+
+add_filter( 'vance_homepage_sections', function ( $sections ) {
+	$sections['featured-discount'] = array(
+		'label'  => 'Featured Discount',
+		'group'  => 'Homepage',
+		'render' => 'vance_render_homepage_featured_discount',
+	);
+	return $sections;
+} );
+
+/**
+ * Auto-append the featured-discount section to the live homepage order once
+ * an admin has picked a scheme for it, without requiring a Customizer visit.
+ *
+ * @param array $sections Section IDs from vance_homepage_section_order.
+ * @return array
+ */
+function vance_append_featured_discount_section( array $sections ) {
+	if ( in_array( 'featured-discount', $sections, true ) ) {
+		return $sections;
+	}
+	if ( ! (int) get_theme_mod( 'vance_discount_featured_homepage', 0 ) ) {
+		return $sections;
+	}
+	$sections[] = 'featured-discount';
+	return $sections;
+}
+
+/**
+ * Renders the homepage's featured-discount section: an admin-picked scheme
+ * (vance_discount_featured_homepage) shown in a compact, centred card.
+ *
+ * @return void
+ */
+function vance_render_homepage_featured_discount() {
+	$post_id = (int) get_theme_mod( 'vance_discount_featured_homepage', 0 );
+	$card    = $post_id ? vance_render_featured_discount( 'pick', array( 'post_id' => $post_id ) ) : '';
+
+	if ( ! $card ) {
+		return;
+	}
+	?>
+	<section class="vance-hp-featured-discount">
+		<div class="container vance-hp-featured-discount__inner">
+			<div class="vance-hp-featured-discount__intro">
+				<span class="vance-hp-featured-discount__eyebrow"><?php esc_html_e( 'On the Hub', 'vance-health-hub' ); ?></span>
+				<h2 class="vance-hp-featured-discount__title"><?php esc_html_e( 'This week\'s discount', 'vance-health-hub' ); ?></h2>
+				<p class="vance-hp-featured-discount__desc"><?php esc_html_e( 'One IBD-friendly discount or freebie, picked for you. New ones added every week.', 'vance-health-hub' ); ?></p>
+				<a href="<?php echo esc_url( home_url( '/ibd-discounts/' ) ); ?>" class="vance-hp-featured-discount__link"><?php esc_html_e( 'See all discounts', 'vance-health-hub' ); ?> &rarr;</a>
+			</div>
+			<div class="vance-hp-featured-discount__card"><?php echo $card; // phpcs:ignore WordPress.Security.EscapeOutput — vance_render_featured_discount() escapes on output. ?></div>
+		</div>
+	</section>
+	<?php
+}
+
+/* -------------------------------------------------------------------------
  * VAT declaration pre-fill (plan §10 step 7).
  *
  * The HMRC PDF has no fillable fields (confirmed by inspecting the file — no
