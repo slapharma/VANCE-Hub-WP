@@ -216,6 +216,94 @@ function vance_discount_next_best_action_id( $folder ) {
 }
 
 /**
+ * Access Folder signals grouped for display, plus a one-line hint for the
+ * jargon ones (scheme names, benefit codenames) a member might not recognise.
+ * Purely presentational — `vance_discount_signal_labels()` (discount-admin.php)
+ * stays the single source of truth for which keys exist and their label text;
+ * this only says how to lay them out. A signal with no group here would
+ * simply never render, so every key from that function must appear exactly
+ * once below — enforced by vance_discount_folder_render_groups() falling back
+ * to an "Other" bucket for anything left over instead of dropping it.
+ *
+ * @return array<int, array{label:string, signals:array<int,string>}>
+ */
+function vance_discount_signal_groups() {
+	return array(
+		array(
+			'label'   => __( 'Disability & health benefits', 'vance-health-hub' ),
+			'signals' => array( 'pip', 'dla', 'adp', 'aa', 'stoma' ),
+		),
+		array(
+			'label'   => __( 'Mobility & access', 'vance-health-hub' ),
+			'signals' => array( 'blue_badge', 'bus_pass', 'access_card', 'needs_companion' ),
+		),
+		array(
+			'label'   => __( 'Membership', 'vance-health-hub' ),
+			'signals' => array( 'ccuk_member' ),
+		),
+		array(
+			'label'   => __( 'Income-related benefits', 'vance-health-hub' ),
+			'signals' => array( 'uc', 'pension_credit', 'housing_benefit', 'low_income' ),
+		),
+		array(
+			'label'   => __( 'Household & life stage', 'vance-health-hub' ),
+			'signals' => array( 'water_meter', 'state_pension_age', 'employed', 'child_under_16' ),
+		),
+		array(
+			'label'   => __( 'General', 'vance-health-hub' ),
+			'signals' => array( 'ibd_diagnosis' ),
+		),
+	);
+}
+
+/**
+ * Short plain-English gloss for signals whose label alone is jargon a member
+ * new to the benefits system won't recognise. Deliberately short — this is a
+ * checklist hint, not a benefits guide. Signals not listed here render with
+ * no hint, because their label is already self-explanatory.
+ *
+ * @return array<string, string>
+ */
+function vance_discount_signal_help() {
+	return array(
+		'adp'             => __( "Scotland's replacement for PIP.", 'vance-health-hub' ),
+		'low_income'      => __( 'The NHS Low Income Scheme (HC2/HC3 certificate).', 'vance-health-hub' ),
+		'stoma'           => __( 'Permanent (ileostomy/colostomy), not temporary.', 'vance-health-hub' ),
+		'water_meter'     => __( 'Your water bill is metered, not a fixed charge.', 'vance-health-hub' ),
+		'access_card'     => __( 'The Nimbus Access Card specifically.', 'vance-health-hub' ),
+		'ccuk_member'     => __( "Paid Crohn's & Colitis UK membership, not just following them.", 'vance-health-hub' ),
+		'needs_companion' => __( 'You need someone with you for most days out.', 'vance-health-hub' ),
+		'ibd_diagnosis'   => __( 'Tick this even if nothing else here applies — it still surfaces every scheme open to anyone with IBD.', 'vance-health-hub' ),
+	);
+}
+
+/**
+ * How many published schemes list each signal as one of their eligibility
+ * signals — shown next to the toggle so a member can see which credential is
+ * worth chasing before they go get it. Counts a signal once per scheme
+ * regardless of how many other signals that scheme also accepts (OR logic,
+ * same as vance_discount_match()), so it reads as "ticking this makes N
+ * schemes worth a look", not a share of some total.
+ *
+ * @return array<string, int>
+ */
+function vance_discount_signal_counts() {
+	static $counts = null;
+	if ( null !== $counts ) {
+		return $counts;
+	}
+
+	$counts = array();
+	foreach ( vance_discount_directory_data() as $row ) {
+		foreach ( $row['signals'] as $signal ) {
+			$counts[ $signal ] = isset( $counts[ $signal ] ) ? $counts[ $signal ] + 1 : 1;
+		}
+	}
+
+	return $counts;
+}
+
+/**
  * Live counts for the hero band (plan §5's page-hero-spotlight.php edit) and
  * anywhere else a headline number about the directory is needed. Computed
  * per request from the same cached array everything else reads, not stored —

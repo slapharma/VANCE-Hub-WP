@@ -136,11 +136,23 @@
 		});
 	}
 
+	// Ticked-count line updates instantly from the DOM — no need to wait on
+	// the save round trip just to tell a member how many boxes they've ticked.
+	function vanceUpdateFolderProgress($root) {
+		var $progress = $root.find('#vance-discount-folder-progress');
+		if (!$progress.length) { return; }
+		var total = parseInt($progress.attr('data-total'), 10) || 0;
+		var ticked = $root.find('.vance-discount-folder-toggle.is-on').length;
+		$progress.text(ticked + ' of ' + total + ' ticked');
+	}
+
 	$(document).on('click', '.vance-discount-folder-toggle', function () {
 		var $btn = $(this);
 		var on = !$btn.hasClass('is-on');
+		var $root = $btn.closest('.vance-discount-dashboard');
 		$btn.toggleClass('is-on', on).attr('aria-checked', on ? 'true' : 'false');
-		vanceSaveDiscountFolder($btn.closest('.vance-discount-dashboard'));
+		vanceUpdateFolderProgress($root);
+		vanceSaveDiscountFolder($root);
 	});
 
 	$(document).on('change', '#vance-discount-folder-region', function () {

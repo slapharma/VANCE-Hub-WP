@@ -126,16 +126,85 @@ $vance_dt_status_labels = array(
 			</select>
 		</div>
 
-		<div class="vance-discount-folder-grid">
-			<?php foreach ( vance_discount_signal_labels() as $vance_dt_key => $vance_dt_label ) : ?>
-				<div class="vance-discount-folder-row">
-					<span><?php echo esc_html( $vance_dt_label ); ?></span>
-					<button type="button" class="vance-discount-folder-toggle<?php echo ! empty( $vance_dt_folder[ $vance_dt_key ] ) ? ' is-on' : ''; ?>" role="switch" aria-checked="<?php echo ! empty( $vance_dt_folder[ $vance_dt_key ] ) ? 'true' : 'false'; ?>" data-signal="<?php echo esc_attr( $vance_dt_key ); ?>" aria-label="<?php echo esc_attr( $vance_dt_label ); ?>">
-						<span class="vance-discount-folder-toggle__thumb"></span>
-					</button>
+		<?php
+		$vance_dt_all_labels = vance_discount_signal_labels();
+		$vance_dt_help       = vance_discount_signal_help();
+		$vance_dt_counts     = vance_discount_signal_counts();
+		$vance_dt_groups     = vance_discount_signal_groups();
+
+		// Every key vance_discount_signal_labels() defines must render
+		// somewhere — anything not placed in a group above falls into a
+		// trailing "Other" bucket rather than silently vanishing from the
+		// checklist if the two lists ever drift.
+		$vance_dt_grouped_keys = array();
+		foreach ( $vance_dt_groups as $vance_dt_group ) {
+			$vance_dt_grouped_keys = array_merge( $vance_dt_grouped_keys, $vance_dt_group['signals'] );
+		}
+		$vance_dt_leftover = array_diff( array_keys( $vance_dt_all_labels ), $vance_dt_grouped_keys );
+		if ( $vance_dt_leftover ) {
+			$vance_dt_groups[] = array(
+				'label'   => __( 'Other', 'vance-health-hub' ),
+				'signals' => array_values( $vance_dt_leftover ),
+			);
+		}
+
+		$vance_dt_ticked = 0;
+		foreach ( $vance_dt_all_labels as $vance_dt_key => $vance_dt_label ) {
+			if ( ! empty( $vance_dt_folder[ $vance_dt_key ] ) ) {
+				$vance_dt_ticked++;
+			}
+		}
+		?>
+
+		<p class="vance-discount-folder-progress" id="vance-discount-folder-progress" data-total="<?php echo esc_attr( count( $vance_dt_all_labels ) ); ?>">
+			<?php
+			echo esc_html(
+				sprintf(
+					/* translators: 1: number ticked, 2: total number of items */
+					__( '%1$d of %2$d ticked', 'vance-health-hub' ),
+					$vance_dt_ticked,
+					count( $vance_dt_all_labels )
+				)
+			);
+			?>
+		</p>
+
+		<?php foreach ( $vance_dt_groups as $vance_dt_group ) : ?>
+			<?php if ( empty( $vance_dt_group['signals'] ) ) { continue; } ?>
+			<fieldset class="vance-discount-folder-group">
+				<legend><?php echo esc_html( $vance_dt_group['label'] ); ?></legend>
+				<div class="vance-discount-folder-grid">
+					<?php foreach ( $vance_dt_group['signals'] as $vance_dt_key ) : ?>
+						<?php if ( ! isset( $vance_dt_all_labels[ $vance_dt_key ] ) ) { continue; } ?>
+						<?php $vance_dt_label = $vance_dt_all_labels[ $vance_dt_key ]; ?>
+						<div class="vance-discount-folder-row">
+							<span class="vance-discount-folder-row__text">
+								<span class="vance-discount-folder-row__label"><?php echo esc_html( $vance_dt_label ); ?></span>
+								<?php if ( ! empty( $vance_dt_help[ $vance_dt_key ] ) ) : ?>
+									<span class="vance-discount-folder-row__help"><?php echo esc_html( $vance_dt_help[ $vance_dt_key ] ); ?></span>
+								<?php endif; ?>
+								<?php if ( ! empty( $vance_dt_counts[ $vance_dt_key ] ) ) : ?>
+									<span class="vance-discount-folder-row__count">
+										<?php
+										echo esc_html(
+											sprintf(
+												/* translators: %d: number of schemes */
+												_n( 'Opens up %d scheme', 'Opens up %d schemes', $vance_dt_counts[ $vance_dt_key ], 'vance-health-hub' ),
+												$vance_dt_counts[ $vance_dt_key ]
+											)
+										);
+										?>
+									</span>
+								<?php endif; ?>
+							</span>
+							<button type="button" class="vance-discount-folder-toggle<?php echo ! empty( $vance_dt_folder[ $vance_dt_key ] ) ? ' is-on' : ''; ?>" role="switch" aria-checked="<?php echo ! empty( $vance_dt_folder[ $vance_dt_key ] ) ? 'true' : 'false'; ?>" data-signal="<?php echo esc_attr( $vance_dt_key ); ?>" aria-label="<?php echo esc_attr( $vance_dt_label ); ?>">
+								<span class="vance-discount-folder-toggle__thumb"></span>
+							</button>
+						</div>
+					<?php endforeach; ?>
 				</div>
-			<?php endforeach; ?>
-		</div>
+			</fieldset>
+		<?php endforeach; ?>
 
 		<p class="vance-discount-folder-status" id="vance-discount-folder-status" role="status" aria-live="polite"></p>
 	</div>
