@@ -122,7 +122,7 @@ while ( have_posts() ) :
 					? 'width:100%;height:100%;object-fit:contain;'
 					: 'max-width:100%;max-height:100%;object-fit:contain;';
 				?>
-				<div style="flex:0 0 auto;position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
+				<div style="flex:0 0 auto;position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
 					<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="<?php echo esc_attr( $img_style ); ?>">
 				</div>
 			<?php endif; ?>
@@ -142,7 +142,7 @@ while ( have_posts() ) :
 					<?php endif; ?>
 
 					<?php if ( $row['upcoming_change'] ) : ?>
-						<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--radius-field, 16px);padding:14px 18px;margin-bottom:24px;font-size:14px;color:#92400E;">
+						<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--radius-field, 10px);padding:14px 18px;margin-bottom:24px;font-size:14px;color:#92400E;">
 							<strong><?php esc_html_e( 'Upcoming change:', 'vance-health-hub' ); ?></strong> <?php echo esc_html( $row['upcoming_change'] ); ?>
 						</div>
 					<?php endif; ?>
@@ -167,7 +167,7 @@ while ( have_posts() ) :
 					<?php endif; ?>
 
 					<?php if ( $row['ibd_note'] ) : ?>
-						<div style="background:#ECFDF5;border-left:4px solid #10B981;border-radius:0 var(--radius-field, 16px) var(--radius-field, 16px) 0;padding:14px 18px;margin-bottom:24px;font-size:14px;color:#065F46;">
+						<div style="background:#ECFDF5;border-left:4px solid #10B981;border-radius:0 var(--radius-field, 10px) var(--radius-field, 10px) 0;padding:14px 18px;margin-bottom:24px;font-size:14px;color:#065F46;">
 							<strong><?php esc_html_e( 'IMPORTANT TO NOTE', 'vance-health-hub' ); ?></strong> <?php echo esc_html( $row['ibd_note'] ); ?>
 						</div>
 					<?php endif; ?>
@@ -179,7 +179,7 @@ while ( have_posts() ) :
 				</div>
 
 				<aside>
-					<div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 24px);padding:20px;">
+					<div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:20px;">
 						<?php if ( $row['official_url'] ) : ?>
 							<p style="margin:0 0 12px;"><a href="<?php echo esc_url( $row['official_url'] ); ?>" target="_blank" rel="noopener" style="font-size:14px;font-weight:600;color:var(--primary-color);"><?php esc_html_e( 'Official information', 'vance-health-hub' ); ?> &rarr;</a></p>
 						<?php endif; ?>
@@ -215,7 +215,7 @@ while ( have_posts() ) :
 				<div class="vance-discount-surface" style="max-width:700px;margin:0 auto;">
 					<h2 style="font-size:18px;margin:0 0 6px;color:#0f172a;"><?php esc_html_e( 'Find your water company', 'vance-health-hub' ); ?></h2>
 					<p style="font-size:13px;color:#475569;margin:0 0 16px;"><?php esc_html_e( 'WaterSure is applied for through whichever company bills your household, not centrally. Find yours below. Every link goes straight to that company\'s own WaterSure (or identically-named) page.', 'vance-health-hub' ); ?></p>
-					<input type="search" id="vance-watersure-filter" placeholder="<?php esc_attr_e( 'Search by company or area…', 'vance-health-hub' ); ?>" style="width:100%;padding:9px 14px;border:1px solid #e2e8f0;border-radius:var(--radius-field, 16px);font-size:14px;margin-bottom:16px;box-sizing:border-box;">
+					<input type="search" id="vance-watersure-filter" placeholder="<?php esc_attr_e( 'Search by company or area…', 'vance-health-hub' ); ?>" style="width:100%;padding:9px 14px;border:1px solid #e2e8f0;border-radius:var(--radius-field, 10px);font-size:14px;margin-bottom:16px;box-sizing:border-box;">
 					<ul id="vance-watersure-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;">
 						<?php foreach ( vance_watersure_suppliers() as $vance_ws_company ) : ?>
 							<li class="vance-watersure-row" data-search="<?php echo esc_attr( strtolower( $vance_ws_company['name'] . ' ' . $vance_ws_company['regions'] ) ); ?>" style="padding:10px 0;border-bottom:1px solid #F1F5F9;">

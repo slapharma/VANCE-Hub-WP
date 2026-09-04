@@ -233,7 +233,7 @@ function vance_render_patient_download_sidebar( $post_id ) {
 		<h4><?php esc_html_e( 'More Handouts', 'vance-health-hub' ); ?></h4>
 		<div class="oped-sidebar-content" style="display: flex; flex-direction: column; gap: 10px;">
 			<?php foreach ( $siblings as $line ) : ?>
-			<a href="<?php echo esc_url( $line['href'] ); ?>" style="display: block; text-decoration: none; padding: 10px 12px; border-radius: var(--radius-control, 10px); background: var(--accent-color, #F3F4F6);">
+			<a href="<?php echo esc_url( $line['href'] ); ?>" style="display: block; text-decoration: none; padding: 10px 12px; border-radius: var(--radius-control, 6px); background: var(--accent-color, #F3F4F6);">
 				<span style="display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--primary-color, #008080);"><?php echo esc_html( $line['label'] ); ?></span>
 				<span style="display: block; font-size: 13.5px; font-weight: 600; color: var(--secondary-color, #0A1929); margin-top: 2px;"><?php echo esc_html( $line['value'] ); ?></span>
 			</a>

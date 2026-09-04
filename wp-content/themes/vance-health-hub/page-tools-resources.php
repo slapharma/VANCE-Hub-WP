@@ -73,7 +73,7 @@ get_header(); ?>
     <section class="tools-intro-section" style="background: <?php echo esc_attr( $intro_bg ); ?>; padding: 64px 0;">
         <div class="container">
             <div class="text-center max-600 tools-intro-inner" style="margin: 0 auto 0;">
-                <span class="tools-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 10px);">
+                <span class="tools-intro-eyebrow" style="display: inline-block; padding: 6px 16px; background: <?php echo esc_attr( $intro_eyb_bg ); ?>; color: <?php echo esc_attr( $intro_eyb_col ); ?>; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 14px; border-radius: var(--radius-control, 6px);">
                     <?php echo esc_html( $intro_eyebrow ); ?>
                 </span>
                 <h2 class="tools-intro-title" style="<?php echo $intro_text_col ? 'color: ' . esc_attr( $intro_text_col ) . ';' : 'color: var(--secondary-color);'; ?> margin: 0 0 12px;"><?php echo esc_html( $intro_title ); ?></h2>
@@ -139,7 +139,7 @@ get_header(); ?>
                 <?php foreach ( $tools as $tool ) : ?>
                 <a class="tool-card tool-card--<?php echo esc_attr( $tool['slug'] ); ?>" href="<?php echo esc_url( $tool['page_url'] ); ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid #008080; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;">
                     <div class="tool-card__head" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
-                        <div class="tool-card__icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $tool['colors'][0] ); ?>, <?php echo esc_attr( $tool['colors'][1] ); ?>); border-radius: var(--radius-control, 10px); display: flex; align-items: center; justify-content: center;">
+                        <div class="tool-card__icon" style="flex-shrink: 0; width: 56px; height: 56px; background: linear-gradient(135deg, <?php echo esc_attr( $tool['colors'][0] ); ?>, <?php echo esc_attr( $tool['colors'][1] ); ?>); border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center;">
                             <svg width="28" height="28" fill="none" stroke="<?php echo esc_attr( $tool['colors'][2] ); ?>" viewBox="0 0 24 24"><?php echo $tool['icon']; ?></svg>
                         </div>
                         <div>

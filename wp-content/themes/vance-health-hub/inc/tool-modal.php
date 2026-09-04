@@ -167,7 +167,7 @@ $vance_tm_paths = array(
     background-image: none;
     background-color: #f8fafc;
     border: 0;
-    border-radius: var(--radius-surface, 24px);
+    border-radius: var(--radius-surface, 14px);
     box-shadow: 0 24px 60px rgba(10, 25, 41, 0.28);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -199,7 +199,7 @@ $vance_tm_paths = array(
     font-size: 26px; line-height: 1; color: #0A1929;
     background: rgba(255,255,255,0.6);
     border: 1px solid rgba(255,255,255,0.7);
-    border-radius: var(--radius-control, 10px) !important;
+    border-radius: var(--radius-control, 6px) !important;
     cursor: pointer;
     transition: background-color .2s ease;
 }

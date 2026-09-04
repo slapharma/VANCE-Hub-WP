@@ -630,7 +630,7 @@ function vance_gi_hero_styles() {
     align-items: center;
     justify-content: center;
     padding: 13px 14px;
-    border-radius: var(--radius-control, 10px);
+    border-radius: var(--radius-control, 6px);
     background: <?php echo esc_attr( VANCE_GI_PURPLE_TINT ); ?>;
     border: 1px solid <?php echo esc_attr( VANCE_GI_PURPLE_LINE ); ?>;
     text-decoration: none;

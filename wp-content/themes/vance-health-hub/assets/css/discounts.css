@@ -71,7 +71,7 @@
 
 /* ---- Apply button — same family as .vance-save-btn (UI spec §5) -------- */
 
-.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-color, #008080); color: #fff; border: none; border-radius: var(--radius-control, 10px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
+.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-color, #008080); color: #fff; border: none; border-radius: var(--radius-control, 6px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
 .vance-discount-apply-btn:hover { filter: brightness(0.96); color: #fff; }
 .vance-discount-apply-btn:active { transform: scale(.97); }
 .vance-discount-apply-btn.is-disabled { background: #E2E8F0; color: #94A3B8; cursor: default; }
@@ -80,7 +80,7 @@
 /* Save button — .vance-save-btn is defined again here (not inherited from
    single.php's page-scoped inline styles) because this stylesheet loads on
    pages single.php's <style> block never renders on. Rule-for-rule copy. */
-.vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 10px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+.vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
 .vance-save-btn.is-saved { background:#10B981; }
 .vance-save-btn:hover { filter:brightness(0.96); }
 .vance-save-btn:active { transform:scale(.97); }
