@@ -184,7 +184,7 @@ function vance_render_patient_download_hero( $post_id ) {
 				<span class="vhh-hero-spotlight__card-icon" aria-hidden="true"><?php echo vance_page_hero_spotlight_icon( 'clipboard' ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
 				<div class="vhh-hero-spotlight__card-body">
 					<h2 class="vhh-hero-spotlight__card-title"><?php esc_html_e( 'Built for the moments a screen isn’t easiest', 'vance-health-hub' ); ?></h2>
-					<p class="vhh-hero-spotlight__card-text"><?php esc_html_e( 'Every handout is evidence-backed, free, and yours to keep — no account needed to download.', 'vance-health-hub' ); ?></p>
+					<p class="vhh-hero-spotlight__card-text"><?php esc_html_e( 'Every handout is evidence-backed, free, and yours to keep. No account needed to download.', 'vance-health-hub' ); ?></p>
 				</div>
 			</aside>
 		</div>
