@@ -363,16 +363,17 @@ function vance_render_promo_block( array $vals ) {
 		? $free_tools[ $vals['side_tool'] ]
 		: null;
 	// The sidebar's default look is the teal dot-wave graphic, laid under a
-	// translucent white wash so the title/description/CTA on top stay
-	// readable. A chosen background colour replaces it outright — solid
-	// colour, no pattern — rather than tinting through it.
+	// light white wash so the title/description/CTA on top stay readable —
+	// 0.4 rather than the original 0.82, which read as barely-there. A chosen
+	// background colour replaces it outright — solid colour, no pattern —
+	// rather than tinting through it.
 	$aside_style = '';
 	if ( $sidebar ) {
 		$sidebar['slug'] = $vals['side_tool'];
 		$sidebar['url']  = isset( $tool_urls[ $vals['side_tool'] ] ) ? $tool_urls[ $vals['side_tool'] ] : home_url( '/' );
 		$aside_style      = $vals['side_tool_bg']
 			? 'background-color:' . $vals['side_tool_bg'] . ';background-image:none;'
-			: "background-image: linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url('" . esc_url( get_template_directory_uri() . '/assets/img/promo-tool-dots.png' ) . "');";
+			: "background-image: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('" . esc_url( get_template_directory_uri() . '/assets/img/promo-tool-dots.png' ) . "');";
 	}
 	?>
     <section class="vance-cat-promo" aria-label="<?php echo esc_attr( $heading ? $heading : 'Featured' ); ?>"<?php echo $band_style ? ' style="' . esc_attr( $band_style ) . '"' : ''; ?>>
