@@ -121,8 +121,8 @@ $vpd_downloads = array(
 		'title' => 'The IBD Partner Guide',
 		'tag'   => 'Family & Friends',
 		'desc'  => 'What the people closest to you actually need to know to help, not hover.',
-		'file'  => '',
-		'pages' => 0,
+		'file'  => 'Vance-Health-Hub-IBD-Partner-Guide.pdf',
+		'pages' => 3,
 	),
 );
 ?>
