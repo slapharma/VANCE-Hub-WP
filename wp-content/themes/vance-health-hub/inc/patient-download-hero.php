@@ -91,10 +91,28 @@ function vance_patient_download_hero_siblings( $post_id ) {
  * The hero itself. Called from single.php in place of the classic oped-hero
  * when the post carries `_vpd_pdf_file`.
  *
+ * Pinned to the SAME 300px band a regular article's oped-hero uses (see the
+ * inline height/min-height/align-items on that section in single.php) rather
+ * than the much taller landing-page proportions this markup renders at
+ * everywhere else on the site (homepage, Contact, About). At 300px there is
+ * only room for eyebrow + title + one line of intro + the download actions,
+ * so the white "more free handouts" band and the floating reassurance card
+ * that the full-height version carries are dropped here, not shrunk to fit;
+ * the same sibling-handout links move to the sidebar instead, see
+ * vance_render_patient_download_sidebar() below.
+ *
+ * Every size override below is inline rather than a new main.css rule,
+ * matching the same reasoning as vance_patient_download_cta_button()'s inline
+ * colour fix: this hero's normal type scale (a 56px clamp() title, 36px of
+ * space under the buttons) is sized for that taller box, not this one, and
+ * scoping the override to a new CSS class would mean either fighting that
+ * specificity or a second stylesheet deploy for a size that only this one
+ * hero ever uses.
+ *
  * Colour defaults are the same ones vance_hero_spotlight_field_defaults()
  * falls back to for every other spotlight hero on the site (main.css never
  * saw an admin touch these on a patient-download post, so there is nothing to
- * read from the Customizer here — they are simply the brand's spotlight
+ * read from the Customizer here, they are simply the brand's spotlight
  * palette, inline).
  *
  * @param int $post_id
@@ -119,12 +137,10 @@ function vance_render_patient_download_hero( $post_id ) {
 	$fade_to   = vance_hex_to_rgb_triple( '#F6F9FA', '246, 249, 250' );
 
 	$style = sprintf(
-		'--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA; --vhh-hs-from-rgb: %1$s; --vhh-hs-to-rgb: %2$s; --vhh-hs-title: #04504E; --vhh-hs-intro: #3F4B4E; --vhh-hs-cta-bg: #6B489E; --vhh-hs-cta-fg: #ffffff; --vhh-hs-cta-hover: #583B82; --vhh-hs-card-bg: #E5F1F1;',
+		'--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA; --vhh-hs-from-rgb: %1$s; --vhh-hs-to-rgb: %2$s; --vhh-hs-title: #04504E; --vhh-hs-intro: #3F4B4E; --vhh-hs-cta-bg: #6B489E; --vhh-hs-cta-fg: #ffffff; --vhh-hs-cta-hover: #583B82; height: 300px; min-height: 0; padding: 0; display: flex; align-items: center;',
 		esc_attr( $fade_from ),
 		esc_attr( $fade_to )
 	);
-
-	$slot_items = vance_patient_download_hero_siblings( $post_id );
 	?>
 	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--patientdownload<?php echo $has_image ? '' : ' vhh-hero-spotlight--has-motif'; ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
 
@@ -144,51 +160,53 @@ function vance_render_patient_download_hero( $post_id ) {
 		<div class="container vhh-hero-spotlight__inner">
 			<div class="vhh-hero-spotlight__copy">
 
-				<span class="vhh-hero-spotlight__eyebrow"><?php echo esc_html( $eyebrow ); ?></span>
+				<span class="vhh-hero-spotlight__eyebrow" style="margin-bottom: 8px;"><?php echo esc_html( $eyebrow ); ?></span>
 
-				<h1 class="vhh-hero-spotlight__title"><?php echo $title; // phpcs:ignore WordPress.Security.EscapeOutput — wp_kses_post above ?></h1>
+				<h1 class="vhh-hero-spotlight__title" style="font-size: clamp(24px, 2.6vw, 32px); line-height: 1.15; max-width: 480px; margin: 0 0 10px;"><?php echo $title; // phpcs:ignore WordPress.Security.EscapeOutput — wp_kses_post above ?></h1>
 
 				<?php if ( $intro !== '' ) : ?>
-				<p class="vhh-hero-spotlight__intro"><?php echo esc_html( $intro ); ?></p>
+				<p class="vhh-hero-spotlight__intro" style="font-size: 14.5px; line-height: 1.5; max-width: 480px; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo esc_html( $intro ); ?></p>
 				<?php endif; ?>
 
-				<div class="vhh-hero-spotlight__actions">
-					<a class="vhh-hero-spotlight__cta" href="<?php echo esc_url( $pdf_url ); ?>" download>
+				<div class="vhh-hero-spotlight__actions" style="margin-bottom: 0;">
+					<a class="vhh-hero-spotlight__cta" href="<?php echo esc_url( $pdf_url ); ?>" download style="padding: 11px 20px; font-size: 14px;">
 						<span><?php esc_html_e( 'Download the PDF', 'vance-health-hub' ); ?></span>
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 					</a>
-					<a class="vhh-hero-spotlight__cta vhh-hero-spotlight__cta--ghost" href="<?php echo esc_url( home_url( '/patient-downloads/' ) ); ?>"><?php esc_html_e( 'Back to all handouts', 'vance-health-hub' ); ?></a>
+					<a class="vhh-hero-spotlight__cta vhh-hero-spotlight__cta--ghost" href="<?php echo esc_url( home_url( '/patient-downloads/' ) ); ?>" style="padding: 11px 20px; font-size: 14px;"><?php esc_html_e( 'Back to all handouts', 'vance-health-hub' ); ?></a>
 				</div>
-
-				<?php if ( $slot_items ) : ?>
-				<div class="vhh-hero-spotlight__slot-wrap">
-					<span class="vhh-hero-spotlight__slot-label"><?php esc_html_e( 'More free handouts', 'vance-health-hub' ); ?></span>
-					<div class="vhh-hero-spotlight__slot vhh-hero-spotlight__slot--lines">
-						<?php foreach ( $slot_items as $line ) :
-							$tag = $line['href'] ? 'a' : 'div';
-							?>
-							<<?php echo $tag; ?> class="vhh-hero-spotlight__line"<?php if ( $line['href'] ) : ?> href="<?php echo esc_url( $line['href'] ); ?>"<?php endif; ?>>
-								<span class="vhh-hero-spotlight__line-ico"><?php echo vance_page_hero_spotlight_icon( $line['key'] ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
-								<span class="vhh-hero-spotlight__line-body">
-									<span class="vhh-hero-spotlight__line-k"><?php echo esc_html( $line['label'] ); ?></span>
-									<span class="vhh-hero-spotlight__line-v"><?php echo esc_html( $line['value'] ); ?></span>
-								</span>
-							</<?php echo $tag; ?>>
-						<?php endforeach; ?>
-					</div>
-				</div>
-				<?php endif; ?>
 			</div>
-
-			<aside class="vhh-hero-spotlight__card">
-				<span class="vhh-hero-spotlight__card-icon" aria-hidden="true"><?php echo vance_page_hero_spotlight_icon( 'clipboard' ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
-				<div class="vhh-hero-spotlight__card-body">
-					<h2 class="vhh-hero-spotlight__card-title"><?php esc_html_e( 'Built for the moments a screen isn’t easiest', 'vance-health-hub' ); ?></h2>
-					<p class="vhh-hero-spotlight__card-text"><?php esc_html_e( 'Every handout is evidence-backed, free, and yours to keep. No account needed to download.', 'vance-health-hub' ); ?></p>
-				</div>
-			</aside>
 		</div>
 	</section>
+	<?php
+}
+
+/**
+ * Sidebar block listing sibling handouts, replacing the "more free handouts"
+ * band the full-height spotlight hero would otherwise carry (see the height
+ * note on vance_render_patient_download_hero() above for why it moved here).
+ * Markup matches the site's other simple sidebar blocks (e.g. Related
+ * Articles in single.php).
+ *
+ * @param int $post_id
+ */
+function vance_render_patient_download_sidebar( $post_id ) {
+	$siblings = vance_patient_download_hero_siblings( $post_id );
+	if ( ! $siblings ) {
+		return;
+	}
+	?>
+	<div class="oped-sidebar-block oped-patient-download-siblings">
+		<h4><?php esc_html_e( 'More Handouts', 'vance-health-hub' ); ?></h4>
+		<div class="oped-sidebar-content" style="display: flex; flex-direction: column; gap: 10px;">
+			<?php foreach ( $siblings as $line ) : ?>
+			<a href="<?php echo esc_url( $line['href'] ); ?>" style="display: block; text-decoration: none; padding: 10px 12px; border-radius: var(--radius-control, 10px); background: var(--accent-color, #F3F4F6);">
+				<span style="display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--primary-color, #008080);"><?php echo esc_html( $line['label'] ); ?></span>
+				<span style="display: block; font-size: 13.5px; font-weight: 600; color: var(--secondary-color, #0A1929); margin-top: 2px;"><?php echo esc_html( $line['value'] ); ?></span>
+			</a>
+			<?php endforeach; ?>
+		</div>
+	</div>
 	<?php
 }
 

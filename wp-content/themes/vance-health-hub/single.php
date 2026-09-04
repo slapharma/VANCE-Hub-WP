@@ -409,6 +409,17 @@ while ( have_posts() ) :
 
                     <?php // Save button relocated to the article header bar at the top (all-screens redesign). ?>
 
+                    <?php
+                    // Sibling handout links, moved here from the hero's white
+                    // band now that the hero is pinned to the same 300px band
+                    // a regular article uses — see the note on
+                    // vance_render_patient_download_hero() in
+                    // inc/patient-download-hero.php.
+                    if ( $vpd_is_download_post ) {
+                        vance_render_patient_download_sidebar( get_the_ID() );
+                    }
+                    ?>
+
                      <!-- Attached Document -->
                     <?php if ( $attached_document ) : ?>
                         <div class="oped-sidebar-block oped-document-download">
