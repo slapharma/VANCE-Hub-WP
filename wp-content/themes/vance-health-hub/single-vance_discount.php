@@ -168,7 +168,7 @@ while ( have_posts() ) :
 
 					<?php if ( $row['ibd_note'] ) : ?>
 						<div style="background:#ECFDF5;border-left:4px solid #10B981;border-radius:0 var(--radius-field, 16px) var(--radius-field, 16px) 0;padding:14px 18px;margin-bottom:24px;font-size:14px;color:#065F46;">
-							<strong><?php esc_html_e( 'Why this matters for IBD:', 'vance-health-hub' ); ?></strong> <?php echo esc_html( $row['ibd_note'] ); ?>
+							<strong><?php esc_html_e( 'IMPORTANT TO NOTE', 'vance-health-hub' ); ?></strong> <?php echo esc_html( $row['ibd_note'] ); ?>
 						</div>
 					<?php endif; ?>
 
