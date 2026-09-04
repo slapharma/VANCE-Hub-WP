@@ -42,10 +42,19 @@ const VANCE_DISCOUNT_LINK_META = '_vance_discount_link_report';
  * can fail even a browser UA occasionally, and this checker should not cry
  * wolf about a page a human can load fine.
  *
+ * `bluelightcard.co.uk` added 2026-09-04: its signup link 301s to an
+ * Auth0-hosted flow at blcshine.io which sits behind a Cloudflare JS
+ * challenge that 403s a server-side fetch — confirmed manually with curl +
+ * a browser UA and still 403, so this is a bot-challenge a real browser
+ * passes and a script cannot, the same shape as the other four, not a dead
+ * link. Whitelisted by the ORIGINAL host (bluelightcard.co.uk), not the
+ * redirect target: vance_discount_fetch() below reads the host from the
+ * URL it was called with, before wp_remote_get() follows the redirect.
+ *
  * @return string[] Host suffixes.
  */
 function vance_discount_lenient_hosts() {
-	return array( 'nationaltrust.org.uk', 'londonzoo.org', 'kew.org', 'nhsbsa.nhs.uk' );
+	return array( 'nationaltrust.org.uk', 'londonzoo.org', 'kew.org', 'nhsbsa.nhs.uk', 'bluelightcard.co.uk' );
 }
 
 /**
