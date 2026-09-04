@@ -3672,6 +3672,13 @@ body.home .hero {
     gap: 10px;
     padding: 32px 28px;
     min-width: 0;
+    /* The background-image itself (default dot graphic, or none when a
+       background colour is chosen) is set inline per-instance — see
+       vance_render_promo_block(). These three stay in CSS because they never
+       change per-instance. */
+    background-size: cover;
+    background-position: right top;
+    background-repeat: no-repeat;
 }
 .vance-promo-tool-card__title {
     font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 800;

@@ -362,9 +362,17 @@ function vance_render_promo_block( array $vals ) {
 	$sidebar    = ( ! empty( $vals['side_tool_show'] ) && isset( $free_tools[ $vals['side_tool'] ] ) )
 		? $free_tools[ $vals['side_tool'] ]
 		: null;
+	// The sidebar's default look is the teal dot-wave graphic, laid under a
+	// translucent white wash so the title/description/CTA on top stay
+	// readable. A chosen background colour replaces it outright — solid
+	// colour, no pattern — rather than tinting through it.
+	$aside_style = '';
 	if ( $sidebar ) {
 		$sidebar['slug'] = $vals['side_tool'];
 		$sidebar['url']  = isset( $tool_urls[ $vals['side_tool'] ] ) ? $tool_urls[ $vals['side_tool'] ] : home_url( '/' );
+		$aside_style      = $vals['side_tool_bg']
+			? 'background-color:' . $vals['side_tool_bg'] . ';background-image:none;'
+			: "background-image: linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url('" . esc_url( get_template_directory_uri() . '/assets/img/promo-tool-dots.png' ) . "');";
 	}
 	?>
     <section class="vance-cat-promo" aria-label="<?php echo esc_attr( $heading ? $heading : 'Featured' ); ?>"<?php echo $band_style ? ' style="' . esc_attr( $band_style ) . '"' : ''; ?>>
@@ -384,7 +392,7 @@ function vance_render_promo_block( array $vals ) {
                 </div>
             </div>
             <?php if ( $sidebar ) : ?>
-                <aside class="vance-promo-tool-card vance-glass vance-glass--interactive vance-promo-columns__aside" aria-label="<?php echo esc_attr( sprintf( __( 'Featured free tool: %s', 'vance-health-hub' ), $sidebar['name'] ) ); ?>"<?php echo $vals['side_tool_bg'] ? ' style="background-color:' . esc_attr( $vals['side_tool_bg'] ) . ';"' : ''; ?>>
+                <aside class="vance-promo-tool-card vance-glass vance-glass--interactive vance-promo-columns__aside" aria-label="<?php echo esc_attr( sprintf( __( 'Featured free tool: %s', 'vance-health-hub' ), $sidebar['name'] ) ); ?>" style="<?php echo esc_attr( $aside_style ); ?>">
                     <h3 class="vance-promo-tool-card__title"><?php echo esc_html( $sidebar['name'] ); ?></h3>
                     <p class="vance-promo-tool-card__desc"><?php echo esc_html( $sidebar['desc'] ); ?></p>
                     <a class="vance-btn-inverted vance-promo-tool-card__cta" href="<?php echo esc_url( $sidebar['url'] ); ?>" data-vance-tool-open="<?php echo esc_attr( $sidebar['slug'] ); ?>"><?php echo esc_html( $sidebar['cta'] ); ?></a>
