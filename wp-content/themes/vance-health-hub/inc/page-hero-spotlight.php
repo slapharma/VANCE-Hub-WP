@@ -881,6 +881,13 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 		$d['btn1_bg_color'] = '#008080';
 		$d['btn1_hover_bg'] = '#006666';
 	}
+	if ( 'patientdownloads' === $page ) {
+		// The purple half of the same pair. The live install already carries a
+		// saved theme_mod for this, so the default only matters on a fresh
+		// install or after a reset -- which is exactly when a lone mint card in
+		// a purple section would come back.
+		$d['card_bg_color'] = '#EFE9F9';
+	}
 
 	// Only the text card carries its own heading; the stat card's "heading" is
 	// stat 1, which lives in the Trust Badges & Stats section already.

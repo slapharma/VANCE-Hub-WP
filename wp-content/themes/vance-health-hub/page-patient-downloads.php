@@ -226,6 +226,24 @@ $vpd_downloads = array(
 		 */
 		.vpd-card__btn.btn-primary { background-color: #6B489E; }
 		.vpd-card__btn.btn-primary:hover { background-color: #583B82; }
+
+		/*
+		 * The hero trust card, same swap. Its BACKGROUND is a Customizer value
+		 * (Page - Patient Downloads -> Hero Spotlight -> Card Background) and
+		 * stays there rather than being hard-coded here, so the control keeps
+		 * working; the theme_mod was set to #EFE9F9 alongside this, and
+		 * inc/page-hero-spotlight.php carries the same value as the page
+		 * default for a fresh install.
+		 *
+		 * What has no control is the icon tile, hard-coded #C1DFDE in main.css,
+		 * and the card heading, which reads --vhh-hs-title -- the same variable
+		 * as the h1, so it cannot be repointed without turning the headline
+		 * purple as well. Both are overridden here, scoped to the card so the
+		 * headline keeps the section title colour.
+		 */
+		.vhh-hero-spotlight--patientdownloads .vhh-hero-spotlight__card { box-shadow: 0 10px 30px rgba(61, 42, 92, 0.10); }
+		.vhh-hero-spotlight--patientdownloads .vhh-hero-spotlight__card-icon { background: #DCD0F0; color: #4A3270; }
+		.vhh-hero-spotlight--patientdownloads .vhh-hero-spotlight__card-title { color: #3D2A5C; }
 	</style>
 
 </main>
