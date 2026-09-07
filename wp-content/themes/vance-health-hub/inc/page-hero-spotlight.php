@@ -862,6 +862,26 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 		'card_bg_color'   => $home['card_bg_color'],
 	);
 
+	/*
+	 * Per-page accent overrides.
+	 *
+	 * Every spotlight page inherits the homepage hero's purple CTA. Discounts
+	 * is the one section that is deliberately teal end to end (its cards,
+	 * chips and buttons are teal in assets/css/discounts.css), and a purple
+	 * hero button above a teal grid was the one thing left disagreeing with
+	 * itself. Patient Downloads keeps the inherited purple, which is what the
+	 * rest of that section is.
+	 *
+	 * A default, not a hard-coded colour: an admin who sets Button 1's
+	 * background in the Customizer still wins, because vance_get_theme_mod()
+	 * only falls back to these when no mod is saved. Neither page had one
+	 * saved when this was written.
+	 */
+	if ( 'discounts' === $page ) {
+		$d['btn1_bg_color'] = '#008080';
+		$d['btn1_hover_bg'] = '#006666';
+	}
+
 	// Only the text card carries its own heading; the stat card's "heading" is
 	// stat 1, which lives in the Trust Badges & Stats section already.
 	if ( $c['card'] === 'text' ) {

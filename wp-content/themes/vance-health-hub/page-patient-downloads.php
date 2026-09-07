@@ -164,9 +164,9 @@ $vpd_downloads = array(
 					$post_obj  = $is_live ? get_page_by_path( $d['slug'], OBJECT, 'post' ) : null;
 					$post_link = ( $post_obj && $post_obj->post_status === 'publish' ) ? get_permalink( $post_obj ) : '';
 					?>
-				<div class="vpd-card<?php echo $is_live ? '' : ' vpd-card--soon'; ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid <?php echo $is_live ? '#008080' : '#CBD5E1'; ?>;">
+				<div class="vpd-card<?php echo $is_live ? '' : ' vpd-card--soon'; ?>" style="display: flex; flex-direction: column; padding: 32px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-top: 4px solid <?php echo $is_live ? '#6B489E' : '#CBD5E1'; ?>;">
 					<div class="vpd-card__head" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
-						<span style="display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: <?php echo $is_live ? 'var(--primary-color)' : 'var(--text-light)'; ?>;"><?php echo esc_html( $d['tag'] ); ?></span>
+						<span style="display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: <?php echo $is_live ? '#6B489E' : 'var(--text-light)'; ?>;"><?php echo esc_html( $d['tag'] ); ?></span>
 						<?php if ( ! $is_live ) : ?>
 						<span class="vpd-card__soon" style="flex-shrink: 0; padding: 2px 9px; border-radius: var(--radius-pill, 999px); background: var(--accent-color, #F3F4F6); color: var(--text-light); font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;">Soon</span>
 						<?php endif; ?>
@@ -182,7 +182,7 @@ $vpd_downloads = array(
 					<?php if ( $is_live ) : ?>
 						<?php echo vpd_download_btn( $pdf_url ); ?>
 						<?php if ( $post_link ) : ?>
-						<a href="<?php echo esc_url( $post_link ); ?>" class="vpd-card__readmore" style="display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--primary-color);">Read the summary &rarr;</a>
+						<a href="<?php echo esc_url( $post_link ); ?>" class="vpd-card__readmore" style="display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: #6B489E;">Read the summary &rarr;</a>
 						<?php endif; ?>
 					<?php else : ?>
 						<span class="btn vpd-card__btn vpd-card__btn--disabled" style="display: inline-flex; align-items: center; justify-content: center; background: var(--accent-color, #F3F4F6); color: var(--text-light); cursor: default;">Coming soon</span>
@@ -198,6 +198,23 @@ $vpd_downloads = array(
 			.vpd-card-grid { grid-template-columns: 1fr !important; }
 		}
 		.vpd-card--soon { opacity: 0.82; }
+
+		/*
+		 * Patient Downloads is the site's PURPLE section (settled 2026-09-07,
+		 * swapping with Discounts, which is teal). The handouts themselves are
+		 * already purple either side of this page - guide_kit.py's lilac in the
+		 * PDF, and inc/patient-download-hero.php's #6B489E on every companion
+		 * post - so the lobby's cards and its hero motif now match rather than
+		 * sitting teal between two purple neighbours.
+		 *
+		 * The hero's dot field is the shared teal SVG from
+		 * vance_page_hero_spotlight_motif(); recoloured here, scoped to this
+		 * page's own modifier class, rather than in that shared function, so no
+		 * other page's motif moves. The dots carry fill="#04504E" as a
+		 * presentation attribute, which any class-scoped rule outranks, so this
+		 * needs no !important.
+		 */
+		.vhh-hero-spotlight--patientdownloads .vhh-hero-spotlight__motif svg g[fill="#04504E"] { fill: #6B489E; }
 	</style>
 
 </main>

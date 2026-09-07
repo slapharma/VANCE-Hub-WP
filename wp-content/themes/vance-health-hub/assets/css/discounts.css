@@ -9,29 +9,29 @@
  * page-scoped <style> block.
  */
 
-/* ---- Accent palette (2026-09-07) ---------------------------------------
-   Discounts is the site's purple section. The lobby hero motif has been
-   purple since 2026-09-04 and the card's provider label with it; the card
-   surface, chips, buttons and badges now follow, so the page reads as one
-   accent rather than a purple hero above a teal-and-green grid.
+/* ---- Accent palette ------------------------------------------------------
+   Discounts is a TEAL section and Patient Downloads is the purple one. That
+   is the way round it settled on 2026-09-07; it was briefly the opposite, so
+   if you find a stray lavender in here that is where it came from. The purple
+   half of the pair lives in page-patient-downloads.php.
 
-   The values are the theme's existing hero purple family (VANCE_GI_PURPLE
-   and friends in inc/gi-hero.php), named here so nothing in this file can
-   drift to a second lavender. Contrast, measured on the surfaces they are
-   actually used on:
+   These are the brand teal from main.css, plus the two derived stops the rest
+   of the site already uses (#04504E is the spotlight hero's ink, #DEF4F4 the
+   palette's teal wash). Named here so nothing in this file can drift to a
+   second teal. Contrast, measured on the surfaces they are actually used on:
 
-     INK   #4A3270 on #FFFFFF ..... 9.4:1   (AA needs 4.5)
-     EDGE  #6B489E on #FFFFFF ..... 6.4:1
-     TEXT  #FFFFFF on #6B489E ..... 6.4:1   (button labels)
+     INK   #04504E on #FFFFFF ..... 8.6:1   (AA needs 4.5)
+     EDGE  #008080 on #FFFFFF ..... 4.7:1
+     TEXT  #FFFFFF on #008080 ..... 4.5:1   (button labels)
 
    Declared on :root rather than a wrapper class because this stylesheet is
    only enqueued on pages that show discounts (functions.php), and a custom
    property nothing references costs nothing on the pages that do. */
 :root {
-	--vhh-discount-accent: #6B489E; /* buttons, active chip, the card's top edge */
-	--vhh-discount-hover:  #583B82; /* pressed / saved fill */
-	--vhh-discount-ink:    #4A3270; /* purple text on white */
-	--vhh-discount-tint:   #EFE9F9; /* pale fill behind purple ink */
+	--vhh-discount-accent: #008080; /* buttons, active chip, the card's top edge */
+	--vhh-discount-hover:  #006666; /* pressed / saved fill */
+	--vhh-discount-ink:    #04504E; /* teal text on white */
+	--vhh-discount-tint:   #DEF4F4; /* pale fill behind teal ink */
 }
 
 /* ---- Single scheme hero eyebrow — now a link back to the filtered
@@ -83,7 +83,7 @@
 .vance-discount-card-region { font-size: 11px; color: #94A3B8; margin: 0 0 8px; }
 /* Eyebrow / title / body sizes are .vpd-card's (11px uppercase tag,
    18px navy title, 14px body at 1.6) so the two hub pages set text the same
-   way. The provider's #5B3FA0 becomes the named accent - one lavender. */
+   way. The provider's old #5B3FA0 becomes the named accent - one teal. */
 .vance-discount-card__provider { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--vhh-discount-accent); margin-bottom: 6px; }
 /* Clamped to a fixed number of lines (min-height reserves the space even for
    a one-line title/value) so cards stay the same height regardless of which
@@ -147,7 +147,7 @@
 
 /* ---- Apply button — same family as .vance-save-btn (UI spec §5) -------- */
 
-.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--vhh-discount-accent, #6B489E); color: #fff; border: none; border-radius: var(--radius-control, 6px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
+.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--vhh-discount-accent, #008080); color: #fff; border: none; border-radius: var(--radius-control, 6px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
 .vance-discount-apply-btn:hover { filter: brightness(0.96); color: #fff; }
 .vance-discount-apply-btn:active { transform: scale(.97); }
 .vance-discount-apply-btn.is-disabled { background: #E2E8F0; color: #94A3B8; cursor: default; }
@@ -156,15 +156,37 @@
 /* Save button — .vance-save-btn is defined again here (not inherited from
    single.php's page-scoped inline styles) because this stylesheet loads on
    pages single.php's <style> block never renders on. Rule-for-rule copy. */
-/* min-width holds one width across both states: "Save" measures 90.03px
-   and "Saved" 98.58px at this font and padding (measured live 2026-09-07), so
-   the label alone would resize the button on every click. 104px clears the
-   longer of the two with room for the star swapping from outline to solid. */
-.vance-save-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-width:104px; background:var(--vhh-discount-accent,#6B489E); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
-.vance-save-btn.is-saved { background:var(--vhh-discount-hover,#583B82); }
+.vance-save-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+.vance-save-btn.is-saved { background:#10B981; }
 .vance-save-btn:hover { filter:brightness(0.96); }
 .vance-save-btn:active { transform:scale(.97); }
 .vance-save-btn .va-save-icon { font-size:16px; }
+
+/* Save is the SECONDARY action on a scheme - Apply is what the page is for,
+   and two solid buttons of equal weight side by side left the row with no
+   primary. Outline in the same accent, so the pair reads Apply-then-Save.
+   Saving it flips to the solid fill, which is the state change the outline
+   buys us: previously "saved" was only a hue shift between two solid buttons.
+
+   Scoped to the three action rows a discount Save renders in (grid card,
+   single page, dashboard's saved list) rather than restyling .vance-save-btn,
+   because that class is also the ARTICLE bookmark button - this stylesheet
+   loads on article pages too, and single.php's own copy of the rule only wins
+   there by document order.
+
+   1.5px, not 1px: the label is 14px/700, and a hairline under bold text reads
+   as a disabled control. box-sizing is border-box sitewide (main.css), so the
+   border sits inside the 104px and outline and filled states measure the same.
+
+   min-width holds one width across both labels: "Save" measures 90.03px and
+   "Saved" 98.58px at this font and padding (measured live 2026-09-07), so the
+   label alone would resize the button on every click. */
+.vance-discount-card__actions .vance-save-btn,
+.vance-discount-single-actions .vance-save-btn { min-width: 104px; background: transparent; color: var(--vhh-discount-ink); border: 1.5px solid var(--vhh-discount-accent); }
+.vance-discount-card__actions .vance-save-btn:hover,
+.vance-discount-single-actions .vance-save-btn:hover { background: var(--vhh-discount-tint); filter: none; }
+.vance-discount-card__actions .vance-save-btn.is-saved,
+.vance-discount-single-actions .vance-save-btn.is-saved { background: var(--vhh-discount-accent); border-color: var(--vhh-discount-accent); color: #fff; }
 
 /* ---- Featured card (UI spec §7) — sidebar/homepage/promo, singular, not
    square (not an article card — CLAUDE.md's radius rule reserves square for
@@ -269,14 +291,15 @@
 .vance-vat-modal__field { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 14px; }
 .vance-vat-modal__field input, .vance-vat-modal__field textarea { display: block; width: 100%; margin-top: 4px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; font-family: inherit; box-sizing: border-box; }
 .vance-vat-modal__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 8px; }
-.vance-vat-modal__actions a { font-size: 13px; color: var(--vhh-discount-ink, #4A3270); text-decoration: none; font-weight: 600; }
+.vance-vat-modal__actions a { font-size: 13px; color: var(--vhh-discount-ink, #04504E); text-decoration: none; font-weight: 600; }
 .vance-vat-modal__actions a:hover { text-decoration: underline; }
 
-/* ---- Lobby hero dot motif, purple (2026-09-04) -------------------------
-   The Hero Spotlight's dot-field SVG (inc/page-hero-spotlight.php) is teal
-   (#04504E) by default and shared across every page that falls back to it —
-   recoloured here, scoped to `--discounts`, rather than in that shared PHP
-   function, so no other page's motif is affected. The dots are presentation
-   attributes on the SVG (fill="#04504E"), which a class-scoped external rule
-   already outranks in specificity, so no !important is needed. */
-.vhh-hero-spotlight--discounts .vhh-hero-spotlight__motif svg g[fill="#04504E"] { fill: var(--vhh-discount-accent, #6B489E); }
+/* ---- Lobby hero dot motif ----------------------------------------------
+   Nothing here on purpose. The Hero Spotlight's dot-field SVG
+   (inc/page-hero-spotlight.php) is already the teal this section wants, so
+   the override this file carried between 2026-09-04 and 2026-09-07 - which
+   repainted the dots purple - is gone rather than re-pointed. The same
+   technique now runs on the Patient Downloads lobby instead; see the inline
+   <style> at the foot of page-patient-downloads.php if you need the pattern
+   (a class-scoped rule outranks the SVG's own fill="" presentation
+   attribute, so it needs no !important). */
