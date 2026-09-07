@@ -174,15 +174,18 @@
    loads on article pages too, and single.php's own copy of the rule only wins
    there by document order.
 
-   1.5px, not 1px: the label is 14px/700, and a hairline under bold text reads
-   as a disabled control. box-sizing is border-box sitewide (main.css), so the
-   border sits inside the 104px and outline and filled states measure the same.
+   2px, not 1px: the label is 14px/700, and a hairline under bold text reads as
+   a disabled control. 1.5px was the first try and it is worse than either -- a
+   fractional border snaps to the device pixel grid, so it rendered as 1px on a
+   dpr-1 display (checked live) and only as intended on a retina one.
+   box-sizing is border-box sitewide (main.css), so the border sits inside the
+   104px and the outline and filled states measure the same.
 
    min-width holds one width across both labels: "Save" measures 90.03px and
    "Saved" 98.58px at this font and padding (measured live 2026-09-07), so the
    label alone would resize the button on every click. */
 .vance-discount-card__actions .vance-save-btn,
-.vance-discount-single-actions .vance-save-btn { min-width: 104px; background: transparent; color: var(--vhh-discount-ink); border: 1.5px solid var(--vhh-discount-accent); }
+.vance-discount-single-actions .vance-save-btn { min-width: 104px; background: transparent; color: var(--vhh-discount-ink); border: 2px solid var(--vhh-discount-accent); }
 .vance-discount-card__actions .vance-save-btn:hover,
 .vance-discount-single-actions .vance-save-btn:hover { background: var(--vhh-discount-tint); filter: none; }
 .vance-discount-card__actions .vance-save-btn.is-saved,
