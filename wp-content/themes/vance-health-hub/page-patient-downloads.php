@@ -215,6 +215,17 @@ $vpd_downloads = array(
 		 * needs no !important.
 		 */
 		.vhh-hero-spotlight--patientdownloads .vhh-hero-spotlight__motif svg g[fill="#04504E"] { fill: #6B489E; }
+
+		/*
+		 * The download button is the card's primary action, so it carries the
+		 * section accent too. .btn-primary is the sitewide teal and stays that
+		 * way -- this only repaints the copies inside a handout card, matched
+		 * on the page's own .vpd-card__btn class so nothing else moves.
+		 * background-color, not the background shorthand, to leave
+		 * .btn-primary's other properties alone.
+		 */
+		.vpd-card__btn.btn-primary { background-color: #6B489E; }
+		.vpd-card__btn.btn-primary:hover { background-color: #583B82; }
 	</style>
 
 </main>
