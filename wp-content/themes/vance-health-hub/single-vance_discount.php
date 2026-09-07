@@ -172,7 +172,11 @@ while ( have_posts() ) :
 						</div>
 					<?php endif; ?>
 
-					<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;margin-top:12px;">
+					<?php // Class, not an inline style: the Apply/Save gap is fixed in
+					// discounts.css by pulling the apply note out of the button row
+					// (see "Apply and Save keep a fixed 8px" there), and an inline
+					// flex here would keep the note between the two buttons. ?>
+					<div class="vance-discount-single-actions">
 						<?php echo vance_discount_render_apply_group( $action ); ?>
 						<?php echo vance_discount_save_button( $row['id'] ); ?>
 					</div>

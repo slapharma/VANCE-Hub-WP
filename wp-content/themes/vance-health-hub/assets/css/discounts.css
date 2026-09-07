@@ -57,7 +57,25 @@
 .vance-discount-card__value { font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.4; min-height: calc(1.4em * 2); }
 .vance-discount-card__cost { font-size: 13px; color: #475569; margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
-.vance-discount-card__actions { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 8px; }
+.vance-discount-card__actions,
+.vance-discount-single-actions { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 8px; }
+.vance-discount-card__actions { margin-top: auto; padding-top: 8px; }
+.vance-discount-single-actions { margin-top: 12px; }
+
+/* Apply and Save keep a fixed 8px between them, on every card.
+   The note lives inside .vance-discount-apply-group, so the group is as wide
+   as the LONGER of button and note - which pushed Save away from Apply by
+   whatever the note happened to measure. Live on 2026-09-07 that ran from 8px
+   ("Apply" with no note) to 152px ("Opens Student Finance England ..."), and
+   read as random spacing across the grid.
+   `display: contents` drops the group box so the button and the note become
+   direct flex items of the actions row; the note is then ordered last and
+   given a full-width basis, so it wraps onto its own line underneath both
+   buttons instead of sitting between them. */
+.vance-discount-card__actions .vance-discount-apply-group,
+.vance-discount-single-actions .vance-discount-apply-group { display: contents; }
+.vance-discount-card__actions .vance-discount-apply-note,
+.vance-discount-single-actions .vance-discount-apply-note { order: 2; flex-basis: 100%; }
 
 /* Button text is always the bare verb ("Apply"); the channel/provider detail
    ("Opens DWP", "Call 0800 123 4567") sits below it, never inside the button
