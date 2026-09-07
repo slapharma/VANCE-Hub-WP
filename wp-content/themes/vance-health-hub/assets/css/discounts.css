@@ -9,6 +9,31 @@
  * page-scoped <style> block.
  */
 
+/* ---- Accent palette (2026-09-07) ---------------------------------------
+   Discounts is the site's purple section. The lobby hero motif has been
+   purple since 2026-09-04 and the card's provider label with it; the card
+   surface, chips, buttons and badges now follow, so the page reads as one
+   accent rather than a purple hero above a teal-and-green grid.
+
+   The values are the theme's existing hero purple family (VANCE_GI_PURPLE
+   and friends in inc/gi-hero.php), named here so nothing in this file can
+   drift to a second lavender. Contrast, measured on the surfaces they are
+   actually used on:
+
+     INK   #4A3270 on #FFFFFF ..... 9.4:1   (AA needs 4.5)
+     EDGE  #6B489E on #FFFFFF ..... 6.4:1
+     TEXT  #FFFFFF on #6B489E ..... 6.4:1   (button labels)
+
+   Declared on :root rather than a wrapper class because this stylesheet is
+   only enqueued on pages that show discounts (functions.php), and a custom
+   property nothing references costs nothing on the pages that do. */
+:root {
+	--vhh-discount-accent: #6B489E; /* buttons, active chip, the card's top edge */
+	--vhh-discount-hover:  #583B82; /* pressed / saved fill */
+	--vhh-discount-ink:    #4A3270; /* purple text on white */
+	--vhh-discount-tint:   #EFE9F9; /* pale fill behind purple ink */
+}
+
 /* ---- Single scheme hero eyebrow — now a link back to the filtered
    directory, not just decorative text (2026-09-04). Hover feedback per the
    site's touch/interaction rule: a link needs a visible state change, not
@@ -18,11 +43,15 @@
 
 /* ---- Filter bar (recipe-hub.css:13-18, exact copy) -------------------- */
 
-.vance-discount-section { padding: 40px 0 60px; }
+/* Grey wash behind the card grid, and the extra bottom padding that goes
+   with it - the same treatment page-patient-downloads.php gives its own card
+   grid, so the two hub pages read as one pattern. White cards on grey is what
+   makes the 4px purple top edge legible; on white they float. */
+.vance-discount-section { padding: 44px 0 72px; background: var(--accent-color, #F3F4F6); }
 .vance-discount-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .vance-discount-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .vance-discount-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
-.vance-discount-chip.is-active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+.vance-discount-chip.is-active { background: var(--vhh-discount-accent); border-color: var(--vhh-discount-accent); color: #fff; }
 .vance-discount-controls__right { display: flex; flex-wrap: wrap; gap: 10px; }
 .vance-discount-region-select { padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; background: #fff; }
 .vance-discount-search { flex: 0 0 240px; max-width: 100%; padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; }
@@ -31,7 +60,11 @@
 
 .vance-discount-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 
-.vance-discount-card { position: relative; background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 20px; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
+/* Card shape follows page-patient-downloads.php's .vpd-card: no outline,
+   a soft shadow, and a 4px accent bar along the top edge instead of a hairline
+   all the way round. border-top replaces the 1px border rather than joining it,
+   so the bar reads as one solid edge and the other three sides stay clean. */
+.vance-discount-card { position: relative; background: #fff; border: none; border-top: 4px solid var(--vhh-discount-accent); border-radius: var(--radius-lg, 14px); box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05)); padding: 26px 24px 24px; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
 /* Stretched-link: the whole card navigates to the scheme page. Sits below
    .vance-discount-card__actions in z-index so the Apply/Save controls,
    which carry their own separate destinations, stay independently
@@ -48,18 +81,34 @@
    tier badge that used to share a row with it was removed there) — now a
    plain line above the actions, not a flex row of its own. */
 .vance-discount-card-region { font-size: 11px; color: #94A3B8; margin: 0 0 8px; }
-.vance-discount-card__provider { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: #5B3FA0; margin-bottom: 4px; }
+/* Eyebrow / title / body sizes are .vpd-card's (11px uppercase tag,
+   18px navy title, 14px body at 1.6) so the two hub pages set text the same
+   way. The provider's #5B3FA0 becomes the named accent - one lavender. */
+.vance-discount-card__provider { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--vhh-discount-accent); margin-bottom: 6px; }
 /* Clamped to a fixed number of lines (min-height reserves the space even for
    a one-line title/value) so cards stay the same height regardless of which
    scheme has the longest name — "Disabled Students' Allowances (DSA)" next
    to "PIP" otherwise made neighbouring cards visibly uneven. */
-.vance-discount-card__title { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.35; margin: 0 0 8px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: calc(1.35em * 2); }
-.vance-discount-card__value { font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.4; min-height: calc(1.4em * 2); }
-.vance-discount-card__cost { font-size: 13px; color: #475569; margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vance-discount-card__title { font-size: 18px; font-weight: 700; color: var(--secondary-color, #0A1929); line-height: 1.35; margin: 0 0 10px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: calc(1.35em * 2); }
+.vance-discount-card__value { font-size: 14px; font-weight: 600; color: var(--text-main, #1F2937); margin: 0 0 6px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.6; min-height: calc(1.6em * 2); }
+.vance-discount-card__cost { font-size: 13px; line-height: 1.6; color: var(--text-light, #6B7280); margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
 .vance-discount-card__actions,
 .vance-discount-single-actions { position: relative; z-index: 2; display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: 4px 8px; }
-.vance-discount-card__actions { margin-top: auto; padding-top: 8px; }
+.vance-discount-card__actions { margin-top: auto; padding-top: 12px; }
+
+/* Both buttons size to their own content, never to their grid track.
+   The note on row 2 spans both columns, and a spanning item's min-content
+   contribution is distributed across the tracks it spans - so a long note
+   ("Opens Student Finance England...") widened the Apply and Save columns
+   under it. Measured live on 2026-09-07: Save rendered at seven different
+   widths from 90.03px to 113.17px across the grid, every one of them reading
+   the same "Save". justify-self:start takes each button out of that
+   distribution; the tracks still stretch, the buttons no longer do. */
+.vance-discount-card__actions > .vance-save-btn,
+.vance-discount-single-actions > .vance-save-btn,
+.vance-discount-card__actions .vance-discount-apply-btn,
+.vance-discount-single-actions .vance-discount-apply-btn { justify-self: start; }
 .vance-discount-single-actions { margin-top: 12px; }
 
 /* Apply and Save keep a fixed 8px between them, on every card.
@@ -92,13 +141,13 @@
 /* ---- Tier badge (UI spec §4) ------------------------------------------- */
 
 .vance-discount-tier-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: var(--radius-pill); padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px; }
-.vance-discount-tier-badge.is-tier-1 { background: #ECFDF5; color: #10B981; }
+.vance-discount-tier-badge.is-tier-1 { background: var(--vhh-discount-tint); color: var(--vhh-discount-ink); }
 .vance-discount-tier-badge.is-tier-2 { background: #FFFBEB; color: #B45309; }
 .vance-discount-tier-badge.is-tier-3 { background: #F1F5F9; color: #64748B; }
 
 /* ---- Apply button — same family as .vance-save-btn (UI spec §5) -------- */
 
-.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-color, #008080); color: #fff; border: none; border-radius: var(--radius-control, 6px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
+.vance-discount-apply-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--vhh-discount-accent, #6B489E); color: #fff; border: none; border-radius: var(--radius-control, 6px); padding: 10px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; transition: filter .2s, transform .1s; }
 .vance-discount-apply-btn:hover { filter: brightness(0.96); color: #fff; }
 .vance-discount-apply-btn:active { transform: scale(.97); }
 .vance-discount-apply-btn.is-disabled { background: #E2E8F0; color: #94A3B8; cursor: default; }
@@ -107,8 +156,12 @@
 /* Save button — .vance-save-btn is defined again here (not inherited from
    single.php's page-scoped inline styles) because this stylesheet loads on
    pages single.php's <style> block never renders on. Rule-for-rule copy. */
-.vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
-.vance-save-btn.is-saved { background:#10B981; }
+/* min-width holds one width across both states: "Save" measures 90.03px
+   and "Saved" 98.58px at this font and padding (measured live 2026-09-07), so
+   the label alone would resize the button on every click. 104px clears the
+   longer of the two with room for the star swapping from outline to solid. */
+.vance-save-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-width:104px; background:var(--vhh-discount-accent,#6B489E); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:10px 18px; font-weight:700; font-size:14px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
+.vance-save-btn.is-saved { background:var(--vhh-discount-hover,#583B82); }
 .vance-save-btn:hover { filter:brightness(0.96); }
 .vance-save-btn:active { transform:scale(.97); }
 .vance-save-btn .va-save-icon { font-size:16px; }
@@ -118,7 +171,7 @@
    article cards only). --------------------------------------------------- */
 
 .vance-discount-featured { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); padding: 20px; }
-.vance-discount-featured__eyebrow { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--primary-color); margin-bottom: 8px; }
+.vance-discount-featured__eyebrow { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--vhh-discount-accent); margin-bottom: 8px; }
 .vance-discount-featured__title-link { text-decoration: none; }
 .vance-discount-featured__title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 8px; line-height: 1.35; }
 .vance-discount-featured__value { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0 0 6px; }
@@ -131,10 +184,10 @@
 .vance-hp-featured-discount { padding: 56px 0; background: #F6F9FA; }
 .vance-hp-featured-discount__inner { display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
 .vance-hp-featured-discount__intro { flex: 1 1 320px; min-width: 280px; }
-.vance-hp-featured-discount__eyebrow { display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--primary-color); margin-bottom: 8px; }
+.vance-hp-featured-discount__eyebrow { display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--vhh-discount-accent); margin-bottom: 8px; }
 .vance-hp-featured-discount__title { font-size: clamp(22px, 2.6vw, 30px); font-weight: 700; color: #0A1929; margin: 0 0 10px; }
 .vance-hp-featured-discount__desc { font-size: 15px; color: #3F4B4E; line-height: 1.5; margin: 0 0 14px; max-width: 42ch; }
-.vance-hp-featured-discount__link { font-weight: 600; font-size: 14px; color: var(--primary-color); text-decoration: none; }
+.vance-hp-featured-discount__link { font-weight: 600; font-size: 14px; color: var(--vhh-discount-ink); text-decoration: none; }
 .vance-hp-featured-discount__link:hover, .vance-hp-featured-discount__link:focus-visible { text-decoration: underline; }
 .vance-hp-featured-discount__card { flex: 0 1 340px; width: 100%; max-width: 340px; }
 
@@ -145,10 +198,10 @@
 .vance-discount-surface h3 { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 12px; }
 
 .vance-discount-eligibility-summary p { margin: 0; font-size: 15px; color: #0f172a; }
-.vance-discount-eligibility-summary strong { color: var(--primary-color); }
+.vance-discount-eligibility-summary strong { color: var(--vhh-discount-ink); }
 
 .vance-discount-saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-.vance-discount-card--compact { padding: 16px; }
+.vance-discount-card--compact { padding: 14px 16px 16px; }
 .vance-discount-card--compact .vance-discount-card__value { margin-bottom: 0; }
 .vance-discount-status-select { border: 1px solid #e2e8f0; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700; padding: 4px 10px; background: #fff; color: #475569; }
 
@@ -167,15 +220,15 @@
 .vance-discount-folder-row__text { display: flex; flex-direction: column; gap: 2px; }
 .vance-discount-folder-row__label { font-size: 14px; color: #334155; }
 .vance-discount-folder-row__help { font-size: 12px; color: #64748b; }
-.vance-discount-folder-row__count { font-size: 11px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: .02em; }
+.vance-discount-folder-row__count { font-size: 11px; font-weight: 700; color: var(--vhh-discount-ink); text-transform: uppercase; letter-spacing: .02em; }
 
 .vance-discount-folder-toggle { position: relative; width: 40px; height: 22px; padding: 0; border: none; border-radius: var(--radius-pill); background: #cbd5e1; cursor: pointer; flex-shrink: 0; transition: background .2s ease; }
-.vance-discount-folder-toggle.is-on { background: var(--primary-color); }
+.vance-discount-folder-toggle.is-on { background: var(--vhh-discount-accent); }
 .vance-discount-folder-toggle__thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s ease; }
 .vance-discount-folder-toggle.is-on .vance-discount-folder-toggle__thumb { transform: translateX(18px); }
 @media (prefers-reduced-motion: reduce) { .vance-discount-folder-toggle, .vance-discount-folder-toggle__thumb { transition: none; } }
 
-.vance-discount-folder-status { font-size: 13px; color: #10B981; margin: 14px 0 0; min-height: 18px; }
+.vance-discount-folder-status { font-size: 13px; color: var(--vhh-discount-ink); margin: 14px 0 0; min-height: 18px; }
 
 .vance-discount-folder-actions { margin: 0 0 20px; }
 .vance-discount-folder-matches { margin: 0 0 24px; padding: 16px; background: #F8FAFC; border-radius: var(--radius-surface); }
@@ -186,7 +239,7 @@
 
 .vance-discount-empty { display: none; text-align: center; padding: 60px 20px; color: #475569; }
 .vance-discount-empty p { margin: 0 0 12px; font-size: 15px; }
-.vance-discount-empty a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
+.vance-discount-empty a { color: var(--vhh-discount-ink); font-weight: 600; text-decoration: none; }
 .vance-discount-empty-serverside { text-align: center; padding: 40px 20px; color: #475569; }
 
 /* ---- Responsive: keep the search field from forcing horizontal scroll --- */
@@ -216,7 +269,7 @@
 .vance-vat-modal__field { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 14px; }
 .vance-vat-modal__field input, .vance-vat-modal__field textarea { display: block; width: 100%; margin-top: 4px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; font-family: inherit; box-sizing: border-box; }
 .vance-vat-modal__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 8px; }
-.vance-vat-modal__actions a { font-size: 13px; color: var(--primary-color, #008080); text-decoration: none; font-weight: 600; }
+.vance-vat-modal__actions a { font-size: 13px; color: var(--vhh-discount-ink, #4A3270); text-decoration: none; font-weight: 600; }
 .vance-vat-modal__actions a:hover { text-decoration: underline; }
 
 /* ---- Lobby hero dot motif, purple (2026-09-04) -------------------------
@@ -226,4 +279,4 @@
    function, so no other page's motif is affected. The dots are presentation
    attributes on the SVG (fill="#04504E"), which a class-scoped external rule
    already outranks in specificity, so no !important is needed. */
-.vhh-hero-spotlight--discounts .vhh-hero-spotlight__motif svg g[fill="#04504E"] { fill: #5B3FA0; }
+.vhh-hero-spotlight--discounts .vhh-hero-spotlight__motif svg g[fill="#04504E"] { fill: var(--vhh-discount-accent, #6B489E); }
