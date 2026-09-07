@@ -170,16 +170,56 @@ function vance_discount_apply_action( $row ) {
 			// 8am-5pm); online only in some postcodes; Scotland: mygov.scot/...")
 			// rather than a bare number — pull out just the number-shaped run
 			// (a UK number is 10-11 digits, optionally grouped with spaces) so
-			// the note stays short and the tel: href isn't a garbage
+			// the note stays short and any tel: href isn't a garbage
 			// concatenation of every stray digit in the sentence (found live,
 			// 2026-09-04: PIP and Warm Home Discount both broke this way).
+			$phone = '';
 			if ( preg_match( '/0[\d ]{9,13}\d/', (string) $row['apply_contact'], $pm ) ) {
-				$phone  = trim( preg_replace( '/\s+/', ' ', $pm[0] ) );
-				$digits = preg_replace( '/[^0-9+]/', '', $phone );
+				$phone = trim( preg_replace( '/\s+/', ' ', $pm[0] ) );
+			}
+
+			// A `tel:` href on the main button is only ever a last resort.
+			// On desktop it fires the OS "choose an application" picker
+			// instead of doing anything useful — reported live 2026-09-07 for
+			// PIP and the National Trust companion pass, both of which have a
+			// perfectly good web page to send people to. Every phone-type
+			// scheme currently seeded has one, so in practice this branch
+			// always takes the web route and the number rides along in the
+			// note as text. Keep it that way round: `tel:` is a fallback for a
+			// scheme with no URL at all, not the default.
+			if ( $href ) {
+				// Only claim the link "opens <provider>" when it really is an
+				// application URL. Where the scheme has no apply_url — the
+				// National Trust companion pass (nothing to apply for, you ask
+				// at the gate), the Warm Home Discount (DWP matches most
+				// households automatically) — $href is the official_url, an
+				// explainer. Saying so is also the way out of the provider
+				// field being a description rather than a name: "Opens Your
+				// electricity supplier (scheme run by DESNZ/Ofgem)" reads as
+				// broken copy.
+				$lead = $apply
+					? ( $row['provider']
+						/* translators: %s: provider name */
+						? sprintf( __( 'Opens %s', 'vance-health-hub' ), $row['provider'] )
+						: __( 'Opens provider site', 'vance-health-hub' ) )
+					: __( 'Check the rules', 'vance-health-hub' );
+
+				return array(
+					'label' => __( 'Apply', 'vance-health-hub' ),
+					'note'  => $phone
+						/* translators: 1: "Opens <provider>" or "Check the rules", 2: phone number */
+						? sprintf( __( '%1$s, or call %2$s', 'vance-health-hub' ), $lead, $phone )
+						: $lead,
+					'href'  => $href,
+					'attrs' => 'target="_blank" rel="noopener"',
+				);
+			}
+
+			if ( $phone ) {
 				return array(
 					'label' => __( 'Apply', 'vance-health-hub' ),
 					'note'  => sprintf( /* translators: %s: phone number */ __( 'Call %s', 'vance-health-hub' ), $phone ),
-					'href'  => 'tel:' . $digits,
+					'href'  => 'tel:' . preg_replace( '/[^0-9+]/', '', $phone ),
 					'attrs' => '',
 				);
 			}
@@ -617,12 +657,17 @@ function vance_render_homepage_featured_discount() {
  * VAT declaration pre-fill (plan §10 step 7).
  *
  * The HMRC PDF has no fillable fields (confirmed by inspecting the file — no
- * /AcroForm marker), and its Part 1 is the SUPPLIER's section, filled in at
- * the till, not something a patient-facing tool should generate. This modal
- * only ever produces Part 2, the customer's own declaration, as a fresh PDF
- * built client-side with html2pdf.js (same library/version the recipe
- * meal-plan export already uses) — the member still signs it by hand and
- * hands it to their supplier, exactly as the real form instructs.
+ * /AcroForm marker), so assets/js/discounts.js builds a fresh two-page
+ * replica client-side with html2pdf.js (same library/version the recipe
+ * meal-plan export already uses): Part 1 blank for the supplier to complete
+ * at the till, Part 2 filled in from what the member types here. The member
+ * still signs it by hand and hands the whole thing to their supplier,
+ * exactly as the real form instructs.
+ *
+ * Generating Part 2 alone (what this did until 2026-09-07) left the member
+ * handing a shop half a form, and forced Part 2's official wording — "the
+ * goods and/or services detailed overleaf" — to be reworded, because there
+ * was no overleaf. Both parts, HMRC's wording verbatim.
  * ---------------------------------------------------------------------- */
 
 /**
@@ -638,7 +683,7 @@ function vance_discount_vat_modal_markup() {
 		<div class="vance-vat-modal__panel" role="dialog" aria-modal="true" aria-labelledby="vance-vat-modal-title">
 			<button type="button" class="vance-vat-modal__close" id="vance-vat-modal-close" aria-label="<?php esc_attr_e( 'Close', 'vance-health-hub' ); ?>">&times;</button>
 			<h2 id="vance-vat-modal-title"><?php esc_html_e( 'Fill in your declaration', 'vance-health-hub' ); ?></h2>
-			<p class="vance-vat-modal__intro"><?php esc_html_e( "This fills in Part 2 of the form: the section you complete yourself. Part 1 is filled in by the shop at the till. You'll still need to sign the result by hand.", 'vance-health-hub' ); ?></p>
+			<p class="vance-vat-modal__intro"><?php esc_html_e( "This builds the whole two-page declaration with your own section (Part 2) already filled in. Part 1 stays blank for the shop to complete at the till. You'll still need to sign it by hand, then hand both pages over.", 'vance-health-hub' ); ?></p>
 			<label class="vance-vat-modal__field">
 				<?php esc_html_e( 'Full name', 'vance-health-hub' ); ?>
 				<input type="text" id="vance-vat-name">

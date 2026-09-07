@@ -147,6 +147,45 @@ function vance_discount_sentinel_matches( $body, $candidates ) {
 }
 
 /**
+ * True if a 200 response is really a "we cannot find this page" template.
+ *
+ * The sentinel check can't catch these on its own: a soft-404 is served from
+ * the provider's own site, so it carries the site name in its <title> and
+ * chrome — exactly what the sentinel candidates are built from. Motability's
+ * `/car-scheme/getting-started` returned `200 We cannot find this page |
+ * Motability Scheme` for months and passed every check, because "motability"
+ * appears on it (found live 2026-09-07, reported by a reader as a broken
+ * page). apply_url isn't sentinel-checked at all, so a status code was the
+ * only gate it ever had.
+ *
+ * Matched against the <title> only, never the body: a real page may well
+ * mention "404" or "page not found" in help copy, a title that says it almost
+ * never isn't one.
+ *
+ * @param string $body Fetched page HTML.
+ * @return bool
+ */
+function vance_discount_soft_404( $body ) {
+	if ( ! preg_match( '#<title[^>]*>(.*?)</title>#is', $body, $m ) ) {
+		return false;
+	}
+
+	$title = strtolower( html_entity_decode( trim( preg_replace( '/\s+/', ' ', $m[1] ) ), ENT_QUOTES, 'UTF-8' ) );
+	$title = str_replace( array( '’', '‘' ), "'", $title );
+
+	// Whole phrases only. A bare 'not found' also matches a real page titled
+	// "What to do if your claim is not found in time" — verified against the
+	// live titles of every scheme URL before narrowing this list.
+	foreach ( array( 'page not found', 'page cannot be found', 'cannot find this page', "can't find this page", "page doesn't exist", 'page does not exist', 'no longer available', 'page unavailable', 'error 404', '404 error', '404 not found' ) as $phrase ) {
+		if ( false !== strpos( $title, $phrase ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * Fetch one URL with a real browser UA, cached with the citation-check
  * asymmetry: a 200 caches for a week (these pages change less often than a
  * DOI registration, but do get redesigned), a definite failure (404/other
@@ -198,6 +237,14 @@ function vance_discount_fetch( $url, $fresh = false ) {
 		return $result;
 	}
 
+	$body = wp_remote_retrieve_body( $response );
+
+	if ( vance_discount_soft_404( $body ) ) {
+		$result = array( 'ok' => false, 'status' => 'soft-404', 'code' => 200, 'frameable' => null, 'body' => '' );
+		set_transient( $key, $result, DAY_IN_SECONDS );
+		return $result;
+	}
+
 	$xfo  = wp_remote_retrieve_header( $response, 'x-frame-options' );
 	$csp  = wp_remote_retrieve_header( $response, 'content-security-policy' );
 	$framebusted = ( $xfo ) || ( $csp && false !== stripos( (string) $csp, 'frame-ancestors' ) );
@@ -207,7 +254,7 @@ function vance_discount_fetch( $url, $fresh = false ) {
 		'status'    => 'ok',
 		'code'      => 200,
 		'frameable' => ! $framebusted,
-		'body'      => wp_remote_retrieve_body( $response ),
+		'body'      => $body,
 	);
 	set_transient( $key, $result, WEEK_IN_SECONDS );
 
