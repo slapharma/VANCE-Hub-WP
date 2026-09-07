@@ -58,7 +58,7 @@
 .vance-discount-card__cost { font-size: 13px; color: #475569; margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
 .vance-discount-card__actions,
-.vance-discount-single-actions { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 8px; }
+.vance-discount-single-actions { position: relative; z-index: 2; display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: 4px 8px; }
 .vance-discount-card__actions { margin-top: auto; padding-top: 8px; }
 .vance-discount-single-actions { margin-top: 12px; }
 
@@ -69,13 +69,18 @@
    ("Apply" with no note) to 152px ("Opens Student Finance England ..."), and
    read as random spacing across the grid.
    `display: contents` drops the group box so the button and the note become
-   direct flex items of the actions row; the note is then ordered last and
-   given a full-width basis, so it wraps onto its own line underneath both
-   buttons instead of sitting between them. */
+   direct children of the actions row, which is a two-column grid: button,
+   Save, and the note spanning both columns on a second row.
+   Grid, not flex-wrap: the note carries max-width 220px, and a flex item's
+   line-breaking uses its basis CLAMPED by max-width, so `flex-basis: 100%`
+   did not force a break wherever the row was wide enough to fit all three
+   side by side. That is exactly what happened on the single-scheme page
+   (720px row: button 76 + Save 90 + note 220 all fitted, note back between
+   the buttons) while the ~260px cards wrapped and looked fixed. */
 .vance-discount-card__actions .vance-discount-apply-group,
 .vance-discount-single-actions .vance-discount-apply-group { display: contents; }
 .vance-discount-card__actions .vance-discount-apply-note,
-.vance-discount-single-actions .vance-discount-apply-note { order: 2; flex-basis: 100%; }
+.vance-discount-single-actions .vance-discount-apply-note { grid-column: 1 / -1; order: 2; }
 
 /* Button text is always the bare verb ("Apply"); the channel/provider detail
    ("Opens DWP", "Call 0800 123 4567") sits below it, never inside the button
