@@ -145,7 +145,16 @@ function vance_ajax_suggest_discount() {
 
 	// Honeypot: a filled field means a bot. Answer with success so it has
 	// nothing to tune against; nothing is sent.
-	if ( '' !== trim( (string) filter_input( INPUT_POST, 'website' ) ) ) {
+	//
+	// $_POST, NOT filter_input( INPUT_POST, ... ). filter_input reads PHP's
+	// own copy of the original request variables, which on this host comes
+	// back null for every key — so the guard was a condition that could never
+	// be true, and a submission with the honeypot filled sailed through and
+	// sent mail. Caught live on 2026-09-08 by posting one with the field
+	// filled and finding the throttle transient set behind it, which only a
+	// successful send writes.
+	$vance_dsug_hp = isset( $_POST['website'] ) ? trim( (string) wp_unslash( $_POST['website'] ) ) : '';
+	if ( '' !== $vance_dsug_hp ) {
 		wp_send_json_success( array( 'message' => __( 'Thanks — that\'s with our editors.', 'vance-health-hub' ) ) );
 	}
 
