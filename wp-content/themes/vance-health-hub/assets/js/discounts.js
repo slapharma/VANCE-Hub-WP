@@ -199,6 +199,93 @@
 		});
 	});
 
+	// ---- Suggest a discount (inc/discount-suggest.php) ---------------------
+	//
+	// Opens from the pinned card in the directory grid and from the same card
+	// at the top of every single scheme page's sidebar. Focus moves to the
+	// first field on open and back to the trigger on close, and Escape and a
+	// backdrop click both close it — same contract as the VAT modal below.
+
+	var $suggestModal = $('#vance-suggest-modal');
+	if ($suggestModal.length) {
+		var $suggestTrigger = null;
+
+		function suggestStatus(message, isError) {
+			$('#vance-suggest-status').text(message || '').toggleClass('is-error', !!isError);
+		}
+
+		function openSuggestModal($trigger) {
+			$suggestTrigger = $trigger;
+			suggestStatus('');
+			$suggestModal.prop('hidden', false);
+			$('#vance-suggest-name').trigger('focus');
+		}
+
+		function closeSuggestModal() {
+			$suggestModal.prop('hidden', true);
+			if ($suggestTrigger && $suggestTrigger.length) { $suggestTrigger.trigger('focus'); }
+			$suggestTrigger = null;
+		}
+
+		$(document).on('click', '[data-vance-discount-suggest]', function (e) {
+			e.preventDefault();
+			openSuggestModal($(this));
+		});
+		$(document).on('click', '#vance-suggest-modal-close', closeSuggestModal);
+		$(document).on('click', '#vance-suggest-cancel', function (e) {
+			e.preventDefault();
+			closeSuggestModal();
+		});
+		$suggestModal.on('click', function (e) { if (e.target === this) { closeSuggestModal(); } });
+		$(document).on('keydown', function (e) {
+			if (e.key === 'Escape' && !$suggestModal.prop('hidden')) { closeSuggestModal(); }
+		});
+
+		$('#vance-suggest-form').on('submit', function (e) {
+			e.preventDefault();
+
+			var $btn = $('#vance-suggest-send');
+			var name = $('#vance-suggest-name').val().trim();
+
+			// `novalidate` on the form: the browser's own bubble is dismissed
+			// by the next click anywhere, which on a modal is often the
+			// backdrop — the message vanishes as the dialog closes. This puts
+			// the same message in the status line, where it stays put.
+			if (!name) {
+				suggestStatus('Please give the discount a name.', true);
+				$('#vance-suggest-name').trigger('focus');
+				return;
+			}
+
+			var label = $btn.text();
+			$btn.prop('disabled', true).text('Sending…');
+			suggestStatus('');
+
+			$.post(vanceDiscounts.ajaxUrl, {
+				action: 'vance_suggest_discount',
+				nonce: $('#vance-suggest-nonce').val(),
+				discount_name: name,
+				discount_url: $('#vance-suggest-url').val().trim(),
+				discount_info: $('#vance-suggest-info').val().trim(),
+				website: $('#vance-suggest-website').val(),
+				source_url: window.location.href
+			}).done(function (res) {
+				$btn.prop('disabled', false).text(label);
+				if (res && res.success) {
+					suggestStatus((res.data && res.data.message) || 'Thanks, that\'s with our editors.', false);
+					$('#vance-suggest-name, #vance-suggest-url, #vance-suggest-info').val('');
+					// Left open on purpose so the confirmation is actually
+					// read — an auto-close here reads as the form vanishing.
+				} else {
+					suggestStatus((res && res.data && res.data.message) || 'Could not send that, please try again.', true);
+				}
+			}).fail(function () {
+				$btn.prop('disabled', false).text(label);
+				suggestStatus('Could not send that, please try again.', true);
+			});
+		});
+	}
+
 	// ---- VAT relief declaration (plan §10 step 7) --------------------------
 	//
 	// The HMRC PDF has no fillable fields at all (confirmed by inspecting the

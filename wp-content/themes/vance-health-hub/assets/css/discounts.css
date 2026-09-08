@@ -283,6 +283,54 @@
 	.vance-discount-single-grid { grid-template-columns: 1fr !important; }
 }
 
+/* ---- "Suggest a discount" (inc/discount-suggest.php) --------------------
+
+   Two placements, one component:
+
+   - In the directory grid it is PINNED to the top of the right-hand column.
+     `grid-column: -2 / -1` is the last track and `grid-row: 1` the first row;
+     with `repeat(auto-fill, ...)` the tracks are explicit, so the negative
+     line numbers resolve to the real last column at every breakpoint. Taking
+     it out of auto-placement is the whole point: the cards flow around it, so
+     it holds that one position however many schemes a filter leaves behind.
+     At one column (below ~340px of grid width) -2/-1 IS the only column and
+     it sits on top, which is the honest degradation of "top right".
+
+   - In a single scheme's sidebar it is just a block at the top of the aside.
+
+   Teal tint rather than the white of a scheme card, on purpose: it sits in a
+   grid of cards that all offer something to apply for, and a white one here
+   was read as a scheme. Contrast on #DEF4F4: ink #04504E 7.4:1, body #334155
+   8.3:1. The 4px top edge and surface radius keep it in the same family. */
+
+.vance-discount-suggest { background: var(--vhh-discount-tint); border: none; border-top: 4px solid var(--vhh-discount-accent); border-radius: var(--radius-lg, 14px); box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05)); padding: 26px 24px 24px; display: flex; flex-direction: column; align-items: flex-start; }
+.vance-discount-suggest--grid { grid-column: -2 / -1; grid-row: 1; }
+.vance-discount-suggest--sidebar { margin-bottom: 20px; padding: 20px; }
+.vance-discount-suggest__eyebrow { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--vhh-discount-accent); margin-bottom: 6px; }
+.vance-discount-suggest__title { font-size: 18px; font-weight: 700; color: var(--secondary-color, #0A1929); line-height: 1.35; margin: 0 0 10px; }
+.vance-discount-suggest__body { font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 16px; }
+.vance-discount-suggest--sidebar .vance-discount-suggest__title { font-size: 16px; }
+.vance-discount-suggest--sidebar .vance-discount-suggest__body { font-size: 13px; }
+/* Pushed to the bottom edge in the grid so the button lines up with the
+   Apply/Save row of the cards beside it whatever the copy measures. */
+.vance-discount-suggest--grid .vance-discount-suggest__btn { margin-top: auto; }
+.vance-discount-suggest__btn { cursor: pointer; }
+.vance-discount-suggest__btn:focus-visible { outline: 3px solid var(--vhh-discount-ink); outline-offset: 2px; }
+
+/* Honeypot: off-screen, not display:none — some bots skip hidden inputs and
+   fill positioned ones. Never focusable (tabindex="-1" on the input itself). */
+.vance-suggest-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.vance-suggest-status { font-size: 13px; line-height: 1.5; margin: 0 0 12px; min-height: 0; color: var(--vhh-discount-ink); }
+.vance-suggest-status:empty { margin: 0; }
+.vance-suggest-status.is-error { color: #B91C1C; }
+.vance-suggest-modal .vance-vat-modal__field input:focus-visible,
+.vance-suggest-modal .vance-vat-modal__field textarea:focus-visible { outline: 2px solid var(--vhh-discount-accent); outline-offset: 1px; border-color: var(--vhh-discount-accent); }
+.vance-suggest-modal .vance-discount-apply-btn[disabled] { opacity: 0.6; cursor: default; }
+/* The panel keeps the modal's own 28px padding; the honeypot is absolutely
+   positioned against it, so the panel has to be the containing block. */
+.vance-suggest-modal .vance-vat-modal__panel { position: relative; }
+
 /* ---- VAT declaration modal (plan §10 step 7) ---------------------------- */
 
 .vance-vat-modal { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; background: rgba(10,25,41,0.55); padding: 20px; }

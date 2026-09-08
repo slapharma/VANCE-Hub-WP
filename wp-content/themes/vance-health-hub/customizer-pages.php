@@ -1188,6 +1188,24 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_setting( "vance_discounts_hero_overlay", array( "default" => 70, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_discounts_hero_overlay", array( "label" => "Hero Overlay Opacity (%)", "section" => "vance_discounts_hero", "type" => "number", "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ) ) );
 
+    // Suggest a Discount (inc/discount-suggest.php) — where the visitor
+    // suggestion form emails to. Left blank it falls back to the site admin
+    // email, so the feature works the moment it deploys.
+    $wp_customize->add_section( "vance_discounts_suggest", array(
+        "title"       => __( "Suggest a Discount", "vance-health-hub" ),
+        "panel"       => "vance_discounts_panel",
+        "description" => __( "Where \"Suggest a discount\" sends visitor suggestions. Leave blank to use the site admin email.", "vance-health-hub" ),
+    ) );
+    $wp_customize->add_setting( "vance_discount_suggest_email", array(
+        "default"           => "",
+        "sanitize_callback" => "sanitize_email",
+    ) );
+    $wp_customize->add_control( "vance_discount_suggest_email", array(
+        "label"   => __( "Send suggestions to", "vance-health-hub" ),
+        "section" => "vance_discounts_suggest",
+        "type"    => "email",
+    ) );
+
     // Featured Discounts — one dropdown per slot that can show a hand-picked
     // scheme (vance_render_featured_discount('pick', ...), plan §8). "0"
     // means "let the code decide" (auto/random per caller) — deliberately

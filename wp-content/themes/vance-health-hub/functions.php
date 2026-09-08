@@ -1362,6 +1362,16 @@ function vance_health_hub_scripts() {
         if ( function_exists( 'vance_discount_vat_modal_markup' ) ) {
             add_action( 'wp_footer', 'vance_discount_vat_modal_markup' );
         }
+
+        // "Suggest a discount" modal. Narrower than the enqueue gate around
+        // it on purpose: that gate also covers every article (the featured
+        // discount in single.php's sidebar) and the homepage, neither of
+        // which renders the card that opens this — printing a dialog no
+        // control on the page can reach is dead markup on 149 articles.
+        if ( function_exists( 'vance_discount_suggest_modal_markup' )
+            && ( is_page_template( 'page-ibd-discounts.php' ) || is_singular( 'vance_discount' ) ) ) {
+            add_action( 'wp_footer', 'vance_discount_suggest_modal_markup' );
+        }
     }
 
     // VANCE-Ai: loaded site-wide: the modal can be opened from any page, and the
@@ -3793,6 +3803,10 @@ require get_template_directory() . '/inc/discount-data.php';
 require get_template_directory() . '/inc/discount-frontend.php';
 require get_template_directory() . '/inc/discount-dashboard.php';
 require get_template_directory() . '/inc/discount-check.php';
+// "Suggest a discount" — card, modal and the AJAX handler that emails a
+// suggestion in. Depends on nothing above it; loaded here so the templates
+// that call vance_discount_suggest_card() always find it.
+require get_template_directory() . '/inc/discount-suggest.php';
 
 /**
  * Include Ask AI Functions

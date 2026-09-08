@@ -183,6 +183,14 @@ while ( have_posts() ) :
 				</div>
 
 				<aside>
+					<?php
+					// Top of the sidebar on every scheme page, above "Official
+					// information" — the same component the directory grid
+					// pins to its right column, in its narrower sidebar form.
+					if ( function_exists( 'vance_discount_suggest_card' ) ) {
+						echo vance_discount_suggest_card( 'sidebar' ); // phpcs:ignore WordPress.Security.EscapeOutput — escapes internally.
+					}
+					?>
 					<div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:20px;">
 						<?php if ( $row['official_url'] ) : ?>
 							<p style="margin:0 0 12px;"><a href="<?php echo esc_url( $row['official_url'] ); ?>" target="_blank" rel="noopener" style="font-size:14px;font-weight:600;color:var(--primary-color);"><?php esc_html_e( 'Official information', 'vance-health-hub' ); ?> &rarr;</a></p>

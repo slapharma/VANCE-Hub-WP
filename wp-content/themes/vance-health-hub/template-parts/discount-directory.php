@@ -54,6 +54,21 @@ $vance_dc_regions = array(
 
 		<div class="vance-discount-grid" id="vance-discount-grid">
 			<?php
+			/*
+			 * "Suggest a discount" is pinned to the top of the right-hand
+			 * column (discounts.css: grid-column: -2 / -1; grid-row: 1) rather
+			 * than flowing with the cards, so it holds one position no matter
+			 * how many schemes the current filter leaves on screen. It is
+			 * first in the DOM because explicit grid placement takes it out of
+			 * auto-placement entirely — the cards below flow around it — and
+			 * putting it last would leave a hole in row 1 at some column
+			 * counts. It carries no .vance-discount-card class, so the
+			 * region/search filter in discounts.js never hides it.
+			 */
+			if ( function_exists( 'vance_discount_suggest_card' ) ) {
+				echo vance_discount_suggest_card( 'grid' ); // phpcs:ignore WordPress.Security.EscapeOutput — escapes internally.
+			}
+
 			$vance_dc_shown = 0;
 			foreach ( $vance_dc_rows as $row ) :
 				if ( $vance_dc_cat_filter && ( ! $row['category'] || $vance_dc_cat_filter !== $row['category']['slug'] ) ) {
