@@ -358,12 +358,31 @@
    fill positioned ones. Never focusable (tabindex="-1" on the input itself). */
 .vance-suggest-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
-.vance-suggest-status { font-size: 13px; line-height: 1.5; margin: 0 0 12px; min-height: 0; color: var(--vhh-discount-ink); }
+/* The modal is the second half of the Suggest flow, so it follows the card
+   onto purple — a teal focus ring and a teal status line inside an otherwise
+   purple dialog reads as an unfinished theme, not as a highlight. */
+.vance-suggest-status { font-size: 13px; line-height: 1.5; margin: 0 0 12px; min-height: 0; color: #4A3270; }
 .vance-suggest-status:empty { margin: 0; }
 .vance-suggest-status.is-error { color: #B91C1C; }
 .vance-suggest-modal .vance-vat-modal__field input:focus-visible,
-.vance-suggest-modal .vance-vat-modal__field textarea:focus-visible { outline: 2px solid var(--vhh-discount-accent); outline-offset: 1px; border-color: var(--vhh-discount-accent); }
+.vance-suggest-modal .vance-vat-modal__field textarea:focus-visible { outline: 2px solid #6B489E; outline-offset: 1px; border-color: #6B489E; }
+
+/* Send is a solid purple fill, NOT the card button's white-with-a-purple-edge:
+   it is the primary action of a dialog, sitting beside a plain-text Cancel on
+   a white panel, and an outlined submit there reads as the secondary of the
+   two. It matches the card button's *hovered* state, which is the shape the
+   visitor has just clicked to get here. Hover darkens to #583B82 explicitly
+   rather than leaning on .vance-discount-apply-btn's brightness filter, so
+   the two purples in this flow are both named values. White on #6B489E is
+   6.9:1, on #583B82 8.9:1. */
+.vance-suggest-modal .vance-discount-apply-btn { background: #6B489E; color: #fff; transition: background-color .2s ease, transform .1s ease; }
+.vance-suggest-modal .vance-discount-apply-btn:hover { background: #583B82; color: #fff; filter: none; }
+.vance-suggest-modal .vance-discount-apply-btn:focus-visible { outline: 3px solid #4A3270; outline-offset: 2px; }
 .vance-suggest-modal .vance-discount-apply-btn[disabled] { opacity: 0.6; cursor: default; }
+.vance-suggest-modal .vance-discount-apply-btn[disabled]:hover { background: #6B489E; }
+/* Cancel follows, scoped to this modal only — .vance-vat-modal__actions a is
+   shared with the VAT declaration modal, which stays teal. 10.6:1 on white. */
+.vance-suggest-modal .vance-vat-modal__actions a { color: #4A3270; }
 /* The panel keeps the modal's own 28px padding; the honeypot is absolutely
    positioned against it, so the panel has to be the containing block. */
 .vance-suggest-modal .vance-vat-modal__panel { position: relative; }
