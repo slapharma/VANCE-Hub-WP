@@ -48,11 +48,23 @@
    grid, so the two hub pages read as one pattern. White cards on grey is what
    makes the 4px purple top edge legible; on white they float. */
 .vance-discount-section { padding: 44px 0 72px; background: var(--accent-color, #F3F4F6); }
-.vance-discount-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.vance-discount-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+/* nowrap keeps the chip row and the region/search group on ONE line: with
+   wrap on, the chip list grows past the row's free space at most desktop
+   widths and drops the controls onto a second line. The chips still wrap
+   internally, so the bar gets taller rather than overflowing. min-width: 0 on
+   the chip column is what lets it shrink below its content width - without it
+   a flex item refuses to go under min-content and pushes the group off-row
+   anyway. The <=480px block below puts wrap back for the stacked layout. */
+.vance-discount-controls { display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.vance-discount-chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; min-width: 0; }
 .vance-discount-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
 .vance-discount-chip.is-active { background: var(--vhh-discount-accent); border-color: var(--vhh-discount-accent); color: #fff; }
-.vance-discount-controls__right { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Purple outline round the region/search group - the one deliberate borrow
+   from the Patient Downloads half of the pair (#6B489E), so the two controls
+   read as one unit against the teal chips rather than as two loose fields.
+   flex: 0 0 auto holds it at its natural width so the chip column absorbs
+   the row's slack instead. */
+.vance-discount-controls__right { display: flex; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; border: 1px solid #6B489E; border-radius: var(--radius-field); padding: 6px; }
 .vance-discount-region-select { padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; background: #fff; }
 .vance-discount-search { flex: 0 0 240px; max-width: 100%; padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; }
 
@@ -269,9 +281,19 @@
 
 /* ---- Responsive: keep the search field from forcing horizontal scroll --- */
 
+/* Below tablet the two blocks stack, and wrap has to go back on with them:
+   the region/search group is ~416px at its natural width, so on a nowrap row
+   it needs ~550px of content width before the narrowest chip fits beside it.
+   Anything under that overflows sideways. 767.98px is the same breakpoint
+   .vance-discount-single-grid and main.css's .oped-layout use, and it clears
+   that 550px floor with room to spare (768 - 40px container padding = 728). */
+@media (max-width: 767.98px) {
+	.vance-discount-controls { flex-wrap: wrap; }
+	.vance-discount-controls__right { width: 100%; flex: 1 1 100%; }
+}
+
 @media (max-width: 480px) {
 	.vance-discount-search { flex-basis: 100%; }
-	.vance-discount-controls__right { width: 100%; }
 }
 
 /* ---- Single scheme page: body + "Official information" aside collapses to
