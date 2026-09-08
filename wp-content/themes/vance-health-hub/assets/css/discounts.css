@@ -320,15 +320,21 @@
 
    - In a single scheme's sidebar it is just a block at the top of the aside.
 
-   Teal tint rather than the white of a scheme card, on purpose: it sits in a
+   Tinted rather than the white of a scheme card, on purpose: it sits in a
    grid of cards that all offer something to apply for, and a white one here
-   was read as a scheme. Contrast on #DEF4F4: ink #04504E 7.4:1, body #334155
-   8.3:1. The 4px top edge and surface radius keep it in the same family. */
+   was read as a scheme.
 
-.vance-discount-suggest { background: var(--vhh-discount-tint); border: none; border-top: 4px solid var(--vhh-discount-accent); border-radius: var(--radius-lg, 14px); box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05)); padding: 26px 24px 24px; display: flex; flex-direction: column; align-items: flex-start; }
+   The tint is PURPLE (#EFE9F9 / #6B489E), not this section's teal — the one
+   thing on the page that asks for something instead of offering something,
+   so it is deliberately the odd card out. Same purple as the region/search
+   group's outline above and as the Patient Downloads hub. Contrast on
+   #EFE9F9: eyebrow #4A3270 8.9:1, title #0A1929 14.9:1, body #334155 8.7:1.
+   The 4px top edge and surface radius keep it in the same family. */
+
+.vance-discount-suggest { background: #EFE9F9; border: none; border-top: 4px solid #6B489E; border-radius: var(--radius-lg, 14px); box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05)); padding: 26px 24px 24px; display: flex; flex-direction: column; align-items: flex-start; }
 .vance-discount-suggest--grid { grid-column: -2 / -1; grid-row: 1; }
 .vance-discount-suggest--sidebar { margin-bottom: 20px; padding: 20px; }
-.vance-discount-suggest__eyebrow { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--vhh-discount-accent); margin-bottom: 6px; }
+.vance-discount-suggest__eyebrow { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #4A3270; margin-bottom: 6px; }
 .vance-discount-suggest__title { font-size: 18px; font-weight: 700; color: var(--secondary-color, #0A1929); line-height: 1.35; margin: 0 0 10px; }
 .vance-discount-suggest__body { font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 16px; }
 .vance-discount-suggest--sidebar .vance-discount-suggest__title { font-size: 16px; }
@@ -336,8 +342,17 @@
 /* Pushed to the bottom edge in the grid so the button lines up with the
    Apply/Save row of the cards beside it whatever the copy measures. */
 .vance-discount-suggest--grid .vance-discount-suggest__btn { margin-top: auto; }
-.vance-discount-suggest__btn { cursor: pointer; }
-.vance-discount-suggest__btn:focus-visible { outline: 3px solid var(--vhh-discount-ink); outline-offset: 2px; }
+/* The button inverts on hover: white/purple-text/purple-border at rest, then
+   purple/white-text/white-border. Overriding .vance-discount-apply-btn's teal
+   fill needs no extra specificity — both are one class, and these rules sit
+   later in the file — but the base's `filter: brightness(0.96)` hover DOES
+   have to be turned off explicitly, or the purple dims on the way in. The
+   2px border is carried in BOTH states, only recoloured, so the button does
+   not resize under the cursor; that is also why the transition names
+   background/color/border-color rather than inheriting the base's filter. */
+.vance-discount-suggest__btn { cursor: pointer; background: #fff; color: #6B489E; border: 2px solid #6B489E; transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .1s ease; }
+.vance-discount-suggest__btn:hover, .vance-discount-suggest__btn:focus-visible { background: #6B489E; color: #fff; border-color: #fff; filter: none; }
+.vance-discount-suggest__btn:focus-visible { outline: 3px solid #4A3270; outline-offset: 2px; }
 
 /* Honeypot: off-screen, not display:none — some bots skip hidden inputs and
    fill positioned ones. Never focusable (tabindex="-1" on the input itself). */

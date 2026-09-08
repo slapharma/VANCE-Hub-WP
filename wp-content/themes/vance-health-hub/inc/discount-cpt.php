@@ -120,7 +120,7 @@ function vance_discount_seed_terms() {
 	}
 
 	$cats = array(
-		'toilet-access' => __( 'Toilet Access', 'vance-health-hub' ),
+		'toilet-access' => __( 'Toilets', 'vance-health-hub' ),
 		'travel'        => __( 'Travel', 'vance-health-hub' ),
 		'benefit'       => __( 'Benefits', 'vance-health-hub' ),
 		'nhs'           => __( 'NHS', 'vance-health-hub' ),
