@@ -20,6 +20,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $vance_dc_cat_filter = isset( $_GET['cat'] ) ? sanitize_key( wp_unslash( $_GET['cat'] ) ) : '';
+
+// ?cat=days-out and ?cat=access-card were the chip links for two categories
+// merged away on 2026-09-08. The terms are gone, so those values now match no
+// card and would render an empty grid under a chip row where nothing is
+// active — worse than a wrong answer, because it looks like the section is
+// empty. Rewrite to the surviving slug instead; see
+// vance_discount_merged_categories() in inc/discount-data.php.
+$vance_dc_merged_cats = vance_discount_merged_categories();
+if ( isset( $vance_dc_merged_cats[ $vance_dc_cat_filter ] ) ) {
+	$vance_dc_cat_filter = $vance_dc_merged_cats[ $vance_dc_cat_filter ];
+}
 $vance_dc_categories = vance_discount_categories_in_use();
 $vance_dc_rows       = vance_discount_directory_data();
 $vance_dc_base_url   = get_permalink();

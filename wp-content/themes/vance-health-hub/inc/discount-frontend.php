@@ -436,9 +436,13 @@ function vance_discount_auto_category_map() {
 		'work'        => 'work',
 		'career'      => 'work',
 		'employ'      => 'work',
-		'day'         => 'days-out',
-		'lifestyle'   => 'days-out',
-		'activit'     => 'days-out',
+		// Days Out was merged into Travel on 2026-09-08, so these three
+		// fragments follow it there. Left pointing at the retired slug they
+		// would match no term and fall through to the featured pool — not
+		// broken, but silently worse than the card they should pick.
+		'day'         => 'travel',
+		'lifestyle'   => 'travel',
+		'activit'     => 'travel',
 		'toilet'      => 'toilet-access',
 		'bathroom'    => 'toilet-access',
 		'urgency'     => 'toilet-access',
@@ -704,3 +708,58 @@ function vance_discount_vat_modal_markup() {
 	</div>
 	<?php
 }
+
+/**
+ * 301 a retired discount-category archive to the term it was merged into.
+ *
+ * /discount-category/days-out/ and /discount-category/access-card/ were live,
+ * indexable archives until the terms behind them were deleted on 2026-09-08.
+ * Deleting a term does not retire its URL — WordPress simply starts 404ing it
+ * — so the ten Days Out schemes' section page would have gone dark for anyone
+ * holding a link to it.
+ *
+ * Matched on the request path rather than on the query, because by the time
+ * this runs there is no term left to inspect: the request has already resolved
+ * to a 404, and `is_tax()` is false. The rewrite base is read back from the
+ * taxonomy's own registration so this keeps working if that slug ever moves.
+ *
+ * @return void
+ */
+function vance_discount_merged_category_redirect() {
+	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+	if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+		return;
+	}
+
+	$path = wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+	if ( ! is_string( $path ) ) {
+		return;
+	}
+
+	$tax = get_taxonomy( 'vance_discount_cat' );
+	if ( ! $tax || empty( $tax->rewrite['slug'] ) ) {
+		return;
+	}
+	$base = trim( $tax->rewrite['slug'], '/' );
+
+	$parts = explode( '/', trim( $path, '/' ) );
+	if ( count( $parts ) !== 2 || $parts[0] !== $base ) {
+		return;
+	}
+
+	$merged = vance_discount_merged_categories();
+	if ( ! isset( $merged[ $parts[1] ] ) ) {
+		return;
+	}
+
+	$target = get_term_link( $merged[ $parts[1] ], 'vance_discount_cat' );
+	if ( is_wp_error( $target ) ) {
+		return;
+	}
+
+	wp_safe_redirect( $target, 301 );
+	exit;
+}
+add_action( 'template_redirect', 'vance_discount_merged_category_redirect' );

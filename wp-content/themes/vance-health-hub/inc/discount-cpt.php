@@ -104,6 +104,15 @@ add_action( 'init', 'vance_discount_register_taxonomies' );
  * slugs are the five single-nation terms; a scheme valid in more than one
  * nation (JSON's "England+Wales" etc.) gets more than one term, never a term
  * of its own — see vance_discount_region_slugs_from_json().
+ *
+ * Seven categories, not the plan's nine: `days-out` was merged into `travel`
+ * and `access-card` into `benefit` on 2026-09-08, on the live site as well as
+ * here. They are dropped from this list so a fresh install does not recreate
+ * two terms the site has retired — the live database is unaffected either way,
+ * since seeding is gated on the `vance_discount_terms_seeded` option. Anything
+ * importing the original JSON must map those two slugs; see
+ * vance_discount_merged_categories() in inc/discount-data.php, which is the one
+ * place that mapping is written down.
  */
 function vance_discount_seed_terms() {
 	if ( get_option( 'vance_discount_terms_seeded' ) ) {
@@ -112,9 +121,7 @@ function vance_discount_seed_terms() {
 
 	$cats = array(
 		'toilet-access' => __( 'Toilet Access', 'vance-health-hub' ),
-		'days-out'      => __( 'Days Out', 'vance-health-hub' ),
 		'travel'        => __( 'Travel', 'vance-health-hub' ),
-		'access-card'   => __( 'Access Card', 'vance-health-hub' ),
 		'benefit'       => __( 'Benefits', 'vance-health-hub' ),
 		'nhs'           => __( 'NHS', 'vance-health-hub' ),
 		'tax'           => __( 'Tax', 'vance-health-hub' ),
@@ -357,7 +364,19 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			update_post_meta( $post_id, '_vance_discount_featured', 0 );
 		}
 
-		wp_set_object_terms( $post_id, sanitize_key( isset( $scheme['category'] ) ? $scheme['category'] : '' ), 'vance_discount_cat', false );
+		// tools/discounts-seed.json still carries the pre-merge vocabulary — 14
+		// of its rows say days-out or access-card — and wp_set_object_terms()
+		// CREATES a term it cannot find. Re-running the import without this
+		// mapping would therefore resurrect both retired terms and pull eleven
+		// schemes back out of Travel and Benefits. Mapped here rather than
+		// rewritten in the JSON so the seed file stays a faithful copy of the
+		// researched dataset.
+		$vance_dc_cat    = sanitize_key( isset( $scheme['category'] ) ? $scheme['category'] : '' );
+		$vance_dc_merged = vance_discount_merged_categories();
+		if ( isset( $vance_dc_merged[ $vance_dc_cat ] ) ) {
+			$vance_dc_cat = $vance_dc_merged[ $vance_dc_cat ];
+		}
+		wp_set_object_terms( $post_id, $vance_dc_cat, 'vance_discount_cat', false );
 		wp_set_object_terms( $post_id, vance_discount_region_slugs_from_json( isset( $scheme['region'] ) ? $scheme['region'] : '' ), 'vance_discount_region', false );
 
 		return $post_id;

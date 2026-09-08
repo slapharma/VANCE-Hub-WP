@@ -439,11 +439,34 @@ function vance_discount_hero_image( $slug ) {
 }
 
 /**
+ * Retired category slug => the slug it was merged into.
+ *
+ * Merged 2026-09-08, in the live database as well as in code: the ten Days Out
+ * schemes (companion and carer tickets for attractions) went to Travel, and
+ * the single Access Card scheme to Benefits. Both source terms were deleted,
+ * so nothing reads them from the taxonomy any more — this map exists for the
+ * URLs that outlived them. Two callers: the 301 in inc/discount-frontend.php
+ * for /discount-category/<old>/, and the directory's own `?cat=` filter, which
+ * silently rewrites an old value rather than showing an empty grid.
+ *
+ * Keep the entries forever. They cost one array lookup and they are the only
+ * record that those slugs ever meant something.
+ *
+ * @return array<string, string>
+ */
+function vance_discount_merged_categories() {
+	return array(
+		'days-out'    => 'travel',
+		'access-card' => 'benefit',
+	);
+}
+
+/**
  * All distinct categories present in the data, in taxonomy term order (not
- * alphabetical) — plan §5 fixes the order: toilet-access, days-out, travel,
- * access-card, benefit, nhs, tax, work, household. Only categories that
- * actually have a published scheme are returned, so the filter bar never
- * offers an empty chip.
+ * alphabetical) — plan §5 fixed the order, less the two merged away on
+ * 2026-09-08: toilet-access, travel, benefit, nhs, tax, work, household. Only
+ * categories that actually have a published scheme are returned, so the filter
+ * bar never offers an empty chip.
  *
  * @return array<int, array{slug:string,name:string}>
  */
@@ -458,7 +481,7 @@ function vance_discount_categories_in_use() {
 		return array();
 	}
 
-	$order = array_flip( array( 'toilet-access', 'days-out', 'travel', 'access-card', 'benefit', 'nhs', 'tax', 'work', 'household' ) );
+	$order = array_flip( array( 'toilet-access', 'travel', 'benefit', 'nhs', 'tax', 'work', 'household' ) );
 	usort(
 		$terms,
 		function ( $a, $b ) use ( $order ) {
