@@ -5681,6 +5681,31 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
     margin: 0 0 18px;
 }
 
+/* Shown in place of the whole form to logged-out visitors, since commenting
+   requires an account. It is the only comment UI most readers will ever see,
+   so it gets the form's own card rather than a bare line of text. */
+.vance-comments__must-log-in {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-surface, 14px);
+    padding: 18px 20px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #475569;
+}
+
+.vance-comments__must-log-in a {
+    color: var(--primary-color, #008080);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.vance-comments__must-log-in a:hover,
+.vance-comments__must-log-in a:focus-visible {
+    text-decoration: underline;
+}
+
 .vance-comment-form p {
     margin: 0 0 16px;
 }

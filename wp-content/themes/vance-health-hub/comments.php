@@ -78,9 +78,33 @@ if ( post_password_required() ) {
 		<?php
 	endif;
 
+	/*
+	 * Commenting requires an account (Settings -> Discussion -> "Users must be
+	 * registered and logged in to comment"), which is what keeps 70 recipe
+	 * pages from being 70 unauthenticated write endpoints with no spam filter
+	 * in front of them.
+	 *
+	 * Core's own must-log-in notice points at wp_login_url(), i.e. wp-login.php.
+	 * That does work here — vance_redirect_wp_login_to_themed_login() catches
+	 * the bare GET and carries ?redirect_to= across — but it spends a redirect
+	 * to arrive somewhere this can link to directly, and core's wording offers
+	 * no way to sign up. Both links are the ones the header and footer already
+	 * use.
+	 */
+	$vance_comment_login = add_query_arg( 'redirect_to', rawurlencode( get_permalink() ), home_url( '/login/' ) );
+
 	comment_form(
 		array(
 			'class_form'           => 'vance-comment-form',
+			'must_log_in'          => sprintf(
+				'<p class="vance-comments__must-log-in">%s</p>',
+				sprintf(
+					/* translators: 1: sign-in link, 2: sign-up link */
+					esc_html__( 'Please %1$s to leave a comment, or %2$s. Comments are checked before they appear.', 'vance-health-hub' ),
+					'<a href="' . esc_url( $vance_comment_login ) . '">' . esc_html__( 'sign in', 'vance-health-hub' ) . '</a>',
+					'<a href="' . esc_url( home_url( '/login/?tab=signup' ) ) . '">' . esc_html__( 'create an account', 'vance-health-hub' ) . '</a>'
+				)
+			),
 			'title_reply'          => esc_html__( 'Leave a comment', 'vance-health-hub' ),
 			'title_reply_to'       => esc_html__( 'Reply to %s', 'vance-health-hub' ),
 			'title_reply_before'   => '<h2 id="reply-title" class="vance-comments__title vance-comments__title--form">',
