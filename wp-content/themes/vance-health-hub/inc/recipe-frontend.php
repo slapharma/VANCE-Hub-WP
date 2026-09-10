@@ -253,11 +253,21 @@ function vance_recipe_nutrition_panel_html( $post_id ) {
 		$macros[] = array( 'EPA', $epa, 'mg' );
 	}
 
+	// What the figures are actually per. Almost every recipe is per serving, but
+	// a batch recipe states its nutrition per muffin, per bite or per wrap, and
+	// printing "Per serving" against a per-muffin figure understates the meal by
+	// the batch size. Unset falls back to the previous hard-coded wording, so
+	// the recipes that predate this meta are unaffected.
+	$basis = get_post_meta( $post_id, '_vance_recipe_nutrition_basis', true );
+	if ( '' === $basis ) {
+		$basis = __( 'Per serving', 'vance-health-hub' );
+	}
+
 	ob_start();
 	?>
 	<div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
 		<h3 style="margin:0 0 4px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;color:#0A1929;text-transform:uppercase;letter-spacing:0.4px;">Nutrition</h3>
-		<p style="margin:0 0 16px;font-size:12.5px;color:#94a3b8;">Per serving</p>
+		<p style="margin:0 0 16px;font-size:12.5px;color:#94a3b8;"><?php echo esc_html( $basis ); ?></p>
 		<?php if ( '' !== $kcal ) : ?>
 		<div style="text-align:center;padding:12px 0 18px;border-bottom:1px solid #e2e8f0;margin-bottom:16px;">
 			<div style="font-size:38px;font-weight:900;color:var(--primary-color);font-family:'Outfit',sans-serif;line-height:1;"><?php echo esc_html( $kcal ); ?></div>

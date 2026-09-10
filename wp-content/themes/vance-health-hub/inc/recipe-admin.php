@@ -126,15 +126,30 @@ function vance_recipe_method_to_text( $steps ) {
 
 function vance_recipe_add_meta_boxes() {
 	add_meta_box( 'vance_recipe_details', __( 'Recipe Details', 'vance-health-hub' ), 'vance_recipe_render_details_box', 'vance_recipe', 'side', 'default' );
-	add_meta_box( 'vance_recipe_nutrition', __( 'Nutrition (per serving)', 'vance-health-hub' ), 'vance_recipe_render_nutrition_box', 'vance_recipe', 'side', 'default' );
+	add_meta_box( 'vance_recipe_nutrition', __( 'Nutrition', 'vance-health-hub' ), 'vance_recipe_render_nutrition_box', 'vance_recipe', 'side', 'default' );
 	add_meta_box( 'vance_recipe_credit', __( 'Photo Credit (Unsplash)', 'vance-health-hub' ), 'vance_recipe_render_credit_box', 'vance_recipe', 'side', 'low' );
 	add_meta_box( 'vance_recipe_ingredients', __( 'Ingredients', 'vance-health-hub' ), 'vance_recipe_render_ingredients_box', 'vance_recipe', 'normal', 'high' );
 	add_meta_box( 'vance_recipe_method', __( 'Method', 'vance-health-hub' ), 'vance_recipe_render_method_box', 'vance_recipe', 'normal', 'high' );
 }
 add_action( 'add_meta_boxes_vance_recipe', 'vance_recipe_add_meta_boxes' );
 
+/**
+ * One meta-box input.
+ *
+ * $key is the FORM field name (`vance_recipe_kcal`); the value lives under the
+ * underscore-prefixed meta key (`_vance_recipe_kcal`), per the theme's
+ * form-name-to-meta-key translation convention (CLAUDE.md constraint 2). Reading
+ * $key unprefixed - as this did until 2026-09-10 - renders every field blank no
+ * matter what is stored, and because the save handler treats blank as "clear
+ * it" (delete_post_meta below), opening a recipe and pressing Update wiped its
+ * servings, timings, all five macros, EPA and photo credit. The CPT is
+ * show_in_rest => false, so the classic editor posts this whole form on every
+ * Publish: reviewing a draft and publishing it was enough to destroy its data.
+ * Verified against live post 3015, which held _vance_recipe_kcal = '420' while
+ * this function read '' from vance_recipe_kcal.
+ */
 function vance_recipe_meta_field( $post, $key, $label, $type = 'number', $extra = '' ) {
-	$value = get_post_meta( $post->ID, $key, true );
+	$value = get_post_meta( $post->ID, '_' . $key, true );
 	printf(
 		'<p><label for="%1$s" style="display:block;font-weight:600;margin-bottom:2px;">%2$s</label>' .
 		'<input type="%3$s" id="%1$s" name="%1$s" value="%4$s" style="width:100%%;" %5$s></p>',
@@ -169,6 +184,9 @@ function vance_recipe_render_nutrition_box( $post ) {
 	vance_recipe_meta_field( $post, 'vance_recipe_fat_g', __( 'Fat (g)', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
 	vance_recipe_meta_field( $post, 'vance_recipe_fibre_g', __( 'Fibre (g)', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
 	vance_recipe_meta_field( $post, 'vance_recipe_epa_mg', __( 'EPA (mg), optional', 'vance-health-hub' ), 'number', 'min="0" step="1"' );
+	// Batch recipes state their figures per muffin / per bite / per wrap rather
+	// than per serving. Blank renders the default "Per serving".
+	vance_recipe_meta_field( $post, 'vance_recipe_nutrition_basis', __( 'Figures are per (blank = "Per serving")', 'vance-health-hub' ), 'text' );
 }
 
 function vance_recipe_render_credit_box( $post ) {
@@ -236,12 +254,13 @@ function vance_recipe_save_meta( $post_id, $post ) {
 		}
 	}
 
-	$url_fields = array(
+	$text_fields = array(
+		'vance_recipe_nutrition_basis'   => '_vance_recipe_nutrition_basis',
 		'vance_recipe_credit_author'     => '_vance_recipe_credit_author',
 		'vance_recipe_credit_author_url' => '_vance_recipe_credit_author_url',
 		'vance_recipe_credit_source_url' => '_vance_recipe_credit_source_url',
 	);
-	foreach ( $url_fields as $field => $meta_key ) {
+	foreach ( $text_fields as $field => $meta_key ) {
 		$raw = isset( $_POST[ $field ] ) ? trim( (string) wp_unslash( $_POST[ $field ] ) ) : '';
 		if ( '' === $raw ) {
 			delete_post_meta( $post_id, $meta_key );
