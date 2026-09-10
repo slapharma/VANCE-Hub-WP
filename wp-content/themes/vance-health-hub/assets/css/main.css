@@ -4094,11 +4094,26 @@ body.home .hero {
     );
 }
 
+/* The bottom dissolve. 17% was too short for a photograph whose bottom edge is
+   dark: the recipes asset ends on a deep teal cabinet (mean RGB 136,150,147) at
+   its very last row, and ramping that to #F6F9FA over 17% of the box read as a
+   hard horizontal band rather than a fade. The stacked variant below had
+   already been given 34% for the same reason.
+
+   Multi-stop rather than a single 0-to-1 pair: a linear alpha ramp this long
+   bands visibly against a flat ground, so the stops approximate an ease-out and
+   put most of the travel in the first half. Lengthening only ever softens, so
+   the thirteen other pages sharing this rule are safe. */
 .vhh-hero-spotlight__media::after {
     background: linear-gradient(
         to top,
         rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 1) 0%,
-        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0) 17%
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0.97) 7%,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0.85) 15%,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0.60) 24%,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0.32) 33%,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0.11) 40%,
+        rgba(var(--vhh-hs-to-rgb, 246, 249, 250), 0) 47%
     );
 }
 
@@ -4528,6 +4543,23 @@ body.home .hero {
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+/* The meal planner's band carries five cells, not three: the collection total
+   plus one per meal slot. grid-auto-flow: column would give each a fifth of an
+   already-narrow copy column and break "Breakfast" onto two lines, so this
+   variant wraps instead — auto-fit keeps them on one row wherever there is
+   room and folds to two rows when there is not, rather than squeezing. Scoped
+   to the modifier so the three-cell bands elsewhere are untouched. */
+.vhh-hero-spotlight__slot--recipestats {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+}
+
+.vhh-hero-spotlight__slot--recipestats .vhh-hero-spotlight__line {
+    /* Five cells cannot afford the three-cell padding and stay legible. */
+    padding: 13px 12px;
+    gap: 9px;
 }
 
 /* Contact — email / phone / opening hours */
