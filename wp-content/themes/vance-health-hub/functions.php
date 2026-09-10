@@ -1406,7 +1406,8 @@ function vance_is_tool_embed() {
  *
  * `get_header('embed')` gives the tool a chromeless shell, but it still runs
  * wp_head(), so the iframe was booting the entire site stack before the tool
- * itself got a connection. Measured on /ibd-recipies/?tool_embed=1: 13 requests
+ * itself got a connection. Measured on /ibd-recipies/?tool_embed=1 (the URL the
+ * meal planner had at the time; it is /gastro-meal-planner/ now): 13 requests
  * and a 1.7s load event before the tool's own iframe had started, of which the
  * tool needed almost none —
  *

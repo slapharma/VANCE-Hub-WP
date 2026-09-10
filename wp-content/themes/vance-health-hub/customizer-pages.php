@@ -674,7 +674,8 @@ function vance_pages_customize_register( $wp_customize ) {
     // ============================================================
     // PER-TOOL HERO SECTIONS — grouped under the Tools panel.
     // Mods read by page-{slug}.php wrapper templates (malnutrition,
-    // ibd-recipies). Each tool gets one section with name,
+    // gastro-recipies -- the page itself now lives at /gastro-meal-planner/).
+    // Each tool gets one section with name,
     // subtitle, hero bg image, and overlay slider.
     // ============================================================
     $tool_hero_specs = array(

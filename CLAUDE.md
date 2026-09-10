@@ -368,6 +368,11 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   chat sends/receives (REST route `wp-json/vance-health/v1` + customizer API key)
 - `/get-started-today/` renders the evidence pillars (NOT `/turn-evidence-into-action/`,
   which 404s)
+- The recipe hub is at **`/gastro-meal-planner/`** (NOT `/ibd-recipies/`, which 404s,
+  and not `/gastro-recipies/`, which 301s). It lists every published `vance_recipe`,
+  and its hero's white band counts the collection live — one cell for the total and
+  one per meal slot, from `vance_page_hero_spotlight_recipe_stats()`. A wrong count
+  means the query changed, not that a value went stale.
 - Every **category archive** shows the light spotlight hero (`inc/category-hero.php`):
   eyebrow pill, teal headline, and a white band of live facts — Articles / Topics /
   Last added. The numbers are computed per request, so a wrong one means the query

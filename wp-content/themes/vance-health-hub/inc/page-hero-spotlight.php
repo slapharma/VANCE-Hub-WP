@@ -240,8 +240,8 @@ function vance_page_hero_spotlight_config( $page ) {
 			'btn1_link'    => '#recipes',
 			'btn2_text'    => __( 'Build a weekly plan', 'vance-health-hub' ),
 			'btn2_link'    => '#planner',
-			'slot'         => 'tools',
-			'slot_label'   => __( 'The other free tools', 'vance-health-hub' ),
+			'slot'         => 'recipestats',
+			'slot_label'   => __( 'What is in the collection', 'vance-health-hub' ),
 			'card'         => 'text',
 			'card_icon'    => 'bowl',
 			'card_title'   => __( 'Every recipe carries its nutrition data', 'vance-health-hub' ),
@@ -1008,6 +1008,12 @@ function vance_page_hero_spotlight_icon( $name ) {
 		'bowl'       => '<path d="M3.4 11.4h17.2a8.6 8.6 0 0 1-17.2 0z"/><path d="M8.2 8.4c0-1.7 1.3-2 1.3-3.4"/><path d="M12 8.4c0-1.7 1.3-2 1.3-3.4"/><path d="M15.8 8.4c0-1.7 1.3-2 1.3-3.4"/>',
 		'calculator' => '<rect x="4.6" y="2.6" width="14.8" height="18.8" rx="2.4"/><rect x="8" y="6" width="8" height="3.2" rx="1"/><path d="M8.6 13h.02"/><path d="M12 13h.02"/><path d="M15.4 13h.02"/><path d="M8.6 17h.02"/><path d="M12 17h.02"/><path d="M15.4 17h.02"/>',
 		'grid'       => '<rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.8"/>',
+		// The four meal slots. Drawn on the same 24x24 grid, same 2px stroke and
+		// same open style as the set above, so the band reads as one row rather
+		// than five borrowed pictograms.
+		'sunrise'    => '<path d="M3.5 18.5h17"/><path d="M6.5 18.5a5.5 5.5 0 0 1 11 0"/><path d="M12 4.5v2.4"/><path d="M5.6 7.2l1.7 1.7"/><path d="M18.4 7.2l-1.7 1.7"/><path d="M2.5 21.5h19"/>',
+		'plate'      => '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.7"/>',
+		'apple'      => '<path d="M12 8.2c-1.1-1-2.6-1.3-4-.7-2 .8-3 3.2-2.2 5.9.7 2.5 2.6 5.4 4.3 6.2 1 .5 2.2 0 3.9 0s2.9.5 3.9 0c1.7-.8 3.6-3.7 4.3-6.2.8-2.7-.2-5.1-2.2-5.9-1.4-.6-2.9-.3-4 .7"/><path d="M12 8.2V5.1"/><path d="M12 5.1c1.9 0 3-1.1 3-2.6-1.9 0-3 1.1-3 2.6z"/>',
 		'book'       => '<path d="M4 4.6A1.6 1.6 0 0 1 5.6 3H11v18H5.6A1.6 1.6 0 0 1 4 19.4z"/><path d="M20 4.6A1.6 1.6 0 0 0 18.4 3H13v18h5.4a1.6 1.6 0 0 0 1.6-1.6z"/>',
 	);
 	if ( ! isset( $paths[ $name ] ) ) { return ''; }
@@ -1120,6 +1126,69 @@ function vance_page_hero_spotlight_lines() {
  * @param string $page The page doing the rendering; it is never listed.
  * @return array<int, array{key: string, label: string, value: string, href: string}>
  */
+/**
+ * The recipe collection, counted live, for the meal planner's white band.
+ *
+ * One cell for the whole collection and one per meal slot, in the order a day
+ * runs rather than alphabetically — a band that reads Breakfast, Dinner, Lunch,
+ * Snacks looks like a bug even though it is only a sort order.
+ *
+ * Counts come from the published `vance_recipe` posts and their category terms,
+ * so they are the same numbers `vance_recipe_catalogue()` serves the planner. A
+ * figure that looks wrong means the query changed, not that a value went stale;
+ * nothing here is cached beyond the request.
+ *
+ * A category with nothing in it is dropped rather than shown as a zero, which
+ * is the same rule the section band on a category archive follows: "0" in a
+ * white panel is worse than one fewer cell.
+ *
+ * @return array<int, array{key:string, label:string, value:string, href:string}>
+ */
+function vance_page_hero_spotlight_recipe_stats() {
+	static $cells = null;
+	if ( null !== $cells ) {
+		return $cells;
+	}
+
+	$cells = array();
+
+	$counts = wp_count_posts( 'vance_recipe' );
+	$total  = isset( $counts->publish ) ? (int) $counts->publish : 0;
+
+	if ( $total > 0 ) {
+		$cells[] = array(
+			'key'   => 'grid',
+			'label' => _n( 'Recipe', 'Recipes', $total, 'vance-health-hub' ),
+			'value' => number_format_i18n( $total ),
+			'href'  => '',
+		);
+	}
+
+	// Slug => icon, in service order. Keyed by the seeded term slugs in
+	// inc/recipe-cpt.php, so a renamed term label does not break the pairing.
+	$slots = array(
+		'breakfast' => 'sunrise',
+		'lunch'     => 'bowl',
+		'dinner'    => 'plate',
+		'snacks'    => 'apple',
+	);
+
+	foreach ( $slots as $slug => $icon ) {
+		$term = get_term_by( 'slug', $slug, 'vance_recipe_cat' );
+		if ( ! $term || is_wp_error( $term ) || (int) $term->count < 1 ) {
+			continue;
+		}
+		$cells[] = array(
+			'key'   => $icon,
+			'label' => $term->name,
+			'value' => number_format_i18n( (int) $term->count ),
+			'href'  => '',
+		);
+	}
+
+	return $cells;
+}
+
 function vance_page_hero_spotlight_tools( $page ) {
 	$tools = array(
 		'hquiz' => array(
@@ -1514,6 +1583,9 @@ function vance_render_page_hero_spotlight( $page ) {
 			break;
 		case 'tools':
 			$slot_items = vance_page_hero_spotlight_tools( $page );
+			break;
+		case 'recipestats':
+			$slot_items = vance_page_hero_spotlight_recipe_stats();
 			break;
 		case 'pillars':
 			$slot_items = vance_page_hero_spotlight_pillars();

@@ -47,7 +47,7 @@ function vance_recipe_register_cpt() {
 			'menu_icon'          => 'dashicons-carrot',
 			'menu_position'      => 25,
 			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
-			'has_archive'        => false, // The hub at /ibd-recipies/ is the browse page, not a CPT archive.
+			'has_archive'        => false, // The hub at /gastro-meal-planner/ is the browse page, not a CPT archive.
 			'rewrite'            => array( 'slug' => 'recipes', 'with_front' => false ),
 			'query_var'          => true,
 			'capability_type'    => 'post',

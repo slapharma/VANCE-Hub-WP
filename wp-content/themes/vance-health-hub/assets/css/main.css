@@ -4530,6 +4530,23 @@ body.home .hero {
     padding: 0;
 }
 
+/* The meal planner's band carries five cells, not three: the collection total
+   plus one per meal slot. grid-auto-flow: column would give each a fifth of an
+   already-narrow copy column and break "Breakfast" onto two lines, so this
+   variant wraps instead — auto-fit keeps them on one row wherever there is
+   room and folds to two rows when there is not, rather than squeezing. Scoped
+   to the modifier so the three-cell bands elsewhere are untouched. */
+.vhh-hero-spotlight__slot--recipestats {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+}
+
+.vhh-hero-spotlight__slot--recipestats .vhh-hero-spotlight__line {
+    /* Five cells cannot afford the three-cell padding and stay legible. */
+    padding: 13px 12px;
+    gap: 9px;
+}
+
 /* Contact — email / phone / opening hours */
 
 .vhh-hero-spotlight__line {
