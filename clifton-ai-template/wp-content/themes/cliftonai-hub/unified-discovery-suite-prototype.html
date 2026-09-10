@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Longevity Hub Control Panel - Hyper-Compact Final</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #10B981;
+            --accent-orange: #008080;
+            --accent-blue: #0EA5E9;
+            --bg-white: #FFFFFF;
+            --bg-light: #F8FAFC;
+            --border-color: #CBD5E1;
+            --text-main: #0A1929;
+            --text-secondary: #475569;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: #E2E8F0;
+            color: var(--text-main);
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .longevity-panel {
+            width: 100%;
+            max-width: 900px;
+            /* Reduced for better focus and density */
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 32px;
+            /* Reduced padding */
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .panel-header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .panel-header h2 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            /* Slightly more compact */
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.01em;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .panel-header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .section-box {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .label-text {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 13px;
+            /* As requested: 14px would be big here, but sticking to 14 below */
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent-orange);
+            margin-bottom: 14px;
+            border-bottom: 2px solid #E2E8F0;
+            padding-bottom: 8px;
+        }
+
+        /* Specific override for the 14px requirement */
+        .longevity-panel .label-text {
+            font-size: 14px;
+        }
+
+        /* Search Bar - Slimmer */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .search-container input {
+            width: 100%;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px 12px 48px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-container input:focus {
+            border-color: var(--primary-green);
+        }
+
+        .search-container .icon {
+            position: absolute;
+            left: 18px;
+            color: var(--primary-green);
+            font-size: 18px;
+        }
+
+        /* Twin Grids - Tighter */
+        .twin-grids {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 16px;
+        }
+
+        .grid-column {
+            background: white;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .card-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .path-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .content-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .suite-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 4px;
+            /* Very compact */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suite-card .icon-box {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #E2E8F0;
+        }
+
+        .suite-card .icon-box img {
+            width: 22px;
+            height: 22px;
+        }
+
+        .suite-card h4 {
+            margin: 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: center;
+        }
+
+        .suite-card.path-card.active {
+            border-color: var(--accent-orange);
+            background: #def4f4;
+        }
+
+        .suite-card.content-card.active {
+            border-color: var(--accent-blue);
+            background: #F0F9FF;
+        }
+
+        /* Reading Level - Slimmer row */
+        .reading-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 18px;
+        }
+
+        .segmented-control {
+            display: flex;
+            background: white;
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+        }
+
+        .segment {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .segment.active {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        /* Focus & Actions - Compacted */
+        .bottom-layout {
+            display: grid;
+            grid-template-columns: 1fr 180px;
+            /* Reduced action width */
+            gap: 16px;
+        }
+
+        .focus-box {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .focus-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            /* 4 columns makes it less the "too wide" feel/overflow */
+            gap: 8px;
+        }
+
+        .focus-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .focus-checkbox .box-check {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            background: white;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .focus-checkbox.active {
+            border-color: var(--primary-green);
+            background: #F0FDF4;
+        }
+
+        .focus-checkbox.active .box-check {
+            background: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        .focus-checkbox.active .box-check::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .focus-checkbox span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .actions-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-go {
+            width: 100%;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: var(--font-heading);
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-go:hover {
+            background: #059669;
+            transform: scale(1.02);
+        }
+
+        .btn-clear {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+            .twin-grids {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .focus-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="longevity-panel">
+        <header class="panel-header">
+            <h2>EXPLORE THE LONGEVITY HUB</h2>
+            <p>Use our Control Panel to Discover The Right Content for Your Needs.</p>
+        </header>
+
+        <!-- Search Section -->
+        <section class="section-box">
+            <span class="label-text">SEARCH ARTICLES</span>
+            <div class="search-container">
+                <span class="icon">🔍</span>
+                <input type="text" placeholder="Keywords, compound names, therapeutic areas...">
+            </div>
+
+            <div class="twin-grids">
+                <div class="grid-column">
+                    <span class="label-text"
+                        style="color: var(--accent-orange); border-bottom:0; margin-bottom: 8px;">LONGEVITY PATH</span>
+                    <div class="card-grid path-grid">
+                        <div class="suite-card path-card active">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/pill.svg">
+                            </div>
+                            <h4>Pharmaceutical</h4>
+                        </div>
+                        <div class="suite-card path-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/pill.svg">
+                            </div>
+                            <h4>Supplementation</h4>
+                        </div>
+                        <div class="suite-card path-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/apple.svg">
+                            </div>
+                            <h4>Medical Food</h4>
+                        </div>
+                        <div class="suite-card path-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/heart.svg">
+                            </div>
+                            <h4>Lifestyle</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-column">
+                    <span class="label-text"
+                        style="color: var(--accent-blue); border-bottom:0; margin-bottom: 8px;">CONTENT TYPE</span>
+                    <div class="card-grid content-grid">
+                        <div class="suite-card content-card active">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/microscope.svg">
+                            </div>
+                            <h4>Clinical Reviews</h4>
+                        </div>
+                        <div class="suite-card content-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/clipboard.svg">
+                            </div>
+                            <h4>Expert Opinions</h4>
+                        </div>
+                        <div class="suite-card content-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/ambulance.svg">
+                            </div>
+                            <h4>Healthcare News</h4>
+                        </div>
+                        <div class="suite-card content-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/pulse.svg">
+                            </div>
+                            <h4>Media Library</h4>
+                        </div>
+                        <div class="suite-card content-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/scale.svg">
+                            </div>
+                            <h4>Tools & Resources</h4>
+                        </div>
+                        <div class="suite-card content-card">
+                            <div class="icon-box"><img
+                                    src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/brain.svg">
+                            </div>
+                            <h4>Education Courses</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reading Level -->
+        <section class="section-box reading-box">
+            <span class="label-text"
+                style="color: var(--text-main); margin-bottom:0; border-bottom:none; padding-bottom:0; white-space: nowrap;">READING
+                LEVEL</span>
+            <div class="segmented-control">
+                <div class="segment">Novice</div>
+                <div class="segment active">Educated</div>
+                <div class="segment">Technical</div>
+            </div>
+        </section>
+
+        <!-- Focus & Global Actions -->
+        <div class="bottom-layout section-box">
+            <div class="focus-box">
+                <span class="label-text">LONGEVITY FOCUS</span>
+                <div class="focus-list">
+                    <div class="focus-checkbox active">
+                        <div class="box-check"></div><span>Oncology</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Cardiology</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Neurology</span>
+                    </div>
+                    <div class="focus-checkbox active">
+                        <div class="box-check"></div><span>Longevity & Aging</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Metabolic Health</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Mental Health</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Infectious</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Rare Disease</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Immunology</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Dermatology</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Orthopedic</span>
+                    </div>
+                    <div class="focus-checkbox">
+                        <div class="box-check"></div><span>Hormonal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions-col">
+                <button class="btn-go">GO</button>
+                <button class="btn-clear">CLEAR OPTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive UI
+        document.querySelectorAll('.suite-card').forEach(card => {
+            card.addEventListener('click', () => card.classList.toggle('active'));
+        });
+
+        document.querySelectorAll('.segment').forEach(seg => {
+            seg.addEventListener('click', () => {
+                document.querySelectorAll('.segment').forEach(s => s.classList.remove('active'));
+                seg.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.focus-checkbox').forEach(box => {
+            box.addEventListener('click', () => box.classList.toggle('active'));
+        });
+
+        document.querySelector('.btn-clear').addEventListener('click', () => {
+            document.querySelectorAll('.suite-card, .focus-checkbox').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.segment').forEach(s => s.classList.remove('active'));
+            document.querySelector('.segment:first-child').classList.add('active');
+            document.querySelector('input').value = '';
+        });
+    </script>
+</body>
+
+</html>
