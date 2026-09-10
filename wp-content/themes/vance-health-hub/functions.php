@@ -4209,6 +4209,32 @@ function vance_post_eyebrow_color( $post_id = null ) {
 }
 
 /**
+ * Label for a recipe card's eyebrow chip.
+ *
+ * "Gastro Recipes" rather than the meal slot, because the badge's job on a
+ * search page is to say what KIND of thing the card is, next to articles that
+ * say "Food & Nutrition" — and because that is what the nineteen converted
+ * recipes have always shown, so nothing on screen moves.
+ *
+ * Filterable for the site that wants the meal slot instead:
+ *
+ *     add_filter( 'vance_recipe_eyebrow_label', function ( $label, $post_id ) {
+ *         $terms = get_the_terms( $post_id, 'vance_recipe_cat' );
+ *         return ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->name : $label;
+ *     }, 10, 2 );
+ *
+ * @param int $post_id
+ * @return string
+ */
+function vance_recipe_eyebrow_label( $post_id ) {
+    return (string) apply_filters(
+        'vance_recipe_eyebrow_label',
+        __( 'Gastro Recipes', 'vance-health-hub' ),
+        $post_id
+    );
+}
+
+/**
  * Article-card category eyebrow chip.
  *
  * A small uppercase label pinned to the top-left corner of a card thumbnail.
@@ -4227,6 +4253,34 @@ function vance_card_eyebrow_html( $post_id = null, $prefer_sub = false ) {
     if ( null === $post_id ) {
         $post_id = get_the_ID();
     }
+
+    /*
+     * Recipes carry their own taxonomy, not `category`.
+     *
+     * The nineteen recipes converted from posts kept a "Gastro Recipes"
+     * `category` term from their post days, and this function read it happily.
+     * The fifty-one created directly as CPT posts never had one, so their
+     * search-result cards rendered with no badge at all.
+     *
+     * Assigning them the same term works, and did for an afternoon, but it
+     * leaves the badge depending on a relationship in a taxonomy that is NOT
+     * registered for this post type (get_object_taxonomies('vance_recipe')
+     * does not list `category`) and that exists only because of a one-off
+     * conversion. Anything that rebuilds these posts would silently lose it.
+     * Answering from the post type instead cannot rot that way.
+     *
+     * The colour is unchanged either way: vance_post_eyebrow_color() resolves
+     * #454545 for these posts through the category, and #454545 is also its
+     * global fallback, so the badge looks identical.
+     */
+    if ( 'vance_recipe' === get_post_type( $post_id ) ) {
+        return sprintf(
+            '<span class="card-eyebrow" style="background:%1$s;">%2$s</span>',
+            esc_attr( vance_post_eyebrow_color( $post_id ) ),
+            esc_html( vance_recipe_eyebrow_label( $post_id ) )
+        );
+    }
+
     $main_id = vance_post_overlay_main_category_id( $post_id );
     if ( ! $main_id ) {
         return '';
