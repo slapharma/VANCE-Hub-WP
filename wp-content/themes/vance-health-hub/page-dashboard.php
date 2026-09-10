@@ -1670,6 +1670,7 @@ get_header();
                                             <div class="vance-mp-actions vance-mp-actions--head">
                                                 <?php if ($is_structured): ?>
                                                     <a href="<?php echo esc_url( home_url( '/gastro-meal-planner/?plan=' . rawurlencode( $key ) . '#planner' ) ); ?>" class="vance-btn-inverted vance-btn--sm" data-no-tool-modal>Edit meal plan</a>
+                                                    <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-shopping" data-plan-index="<?php echo (int) $mp_i; ?>">Shopping list</button>
                                                     <button type="button" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="<?php echo (int) $mp_i; ?>">Download PDF</button>
                                                     <button type="button" class="vance-btn-glass vance-btn--sm btn-view-meal-plan" data-plan-index="<?php echo (int) $mp_i; ?>">View full</button>
                                                 <?php endif; ?>
@@ -1745,11 +1746,50 @@ get_header();
                                 <!-- Days are rendered here on open -->
                             </div>
                             <div style="padding:20px; border-top:1px solid rgba(0,128,128,0.16); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                                <button type="button" id="modal-meal-plan-shopping" class="vance-btn-glass vance-btn--sm vance-mp-shopping" data-plan-index="">Shopping list</button>
                                 <button type="button" id="modal-meal-plan-pdf" class="vance-btn-glass vance-btn--sm vance-mp-pdf" data-plan-index="">Download PDF</button>
                                 <button onclick="closeMealPlanModal()" class="vance-btn-inverted vance-btn--sm">Close</button>
                             </div>
                         </div>
                     </div>
+                    <?php
+                    /**
+                     * Shopping list.
+                     *
+                     * The consolidated list used to exist only inside the meal-plan PDF, so
+                     * the only way to see what to buy was to download a document. This is the
+                     * same list on screen, plus the one thing the PDF cannot offer: a servings
+                     * control per recipe.
+                     *
+                     * It is built in the browser from the plan's `recipes` payload rather than
+                     * from the server's pre-collapsed `shopping` array, because scaling has to
+                     * happen before identical lines are merged - "1 tbsp olive oil" scaled to
+                     * 1.5 is no longer the same line as an unscaled "1 tbsp olive oil" from
+                     * another recipe, and merging first would hide that. With every recipe at
+                     * its own servings the result is identical to the server's list, which is
+                     * the property the tests check.
+                     */
+                    ?>
+                    <div id="shopping-list-modal" class="vance-glass-scrim" style="display:none; position:fixed; inset:0; z-index:10002; align-items:center; justify-content:center; padding:20px;">
+                        <div class="vance-glass-panel" style="width:100%; max-width:760px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+                            <div style="padding:24px; border-bottom:1px solid rgba(0,128,128,0.16); display:flex; justify-content:space-between; align-items:center; gap:16px;">
+                                <div>
+                                    <h3 style="margin:0; font-family:'Outfit'; font-size:20px; color:#0A1929;">Shopping list</h3>
+                                    <p id="shopping-list-sub" style="margin:4px 0 0 0; font-size:12px; color:#64748B;"></p>
+                                </div>
+                                <button onclick="closeShoppingList()" aria-label="Close" style="font-size:24px; border:1px solid rgba(255,255,255,0.6); background:rgba(255,255,255,0.5); cursor:pointer; color:#0A1929; line-height:1; width:40px; height:40px; border-radius:var(--radius-control, 6px); display:flex; align-items:center; justify-content:center; flex:none;">&times;</button>
+                            </div>
+                            <div style="flex:1; overflow-y:auto; padding:24px 32px 28px;">
+                                <div id="shopping-list-servings" style="margin-bottom:22px;"></div>
+                                <div id="shopping-list-items"></div>
+                            </div>
+                            <div style="padding:20px; border-top:1px solid rgba(0,128,128,0.16); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <button type="button" id="shopping-list-reset" class="vance-mp-textbtn">Reset servings</button>
+                                <button onclick="closeShoppingList()" class="vance-btn-inverted vance-btn--sm">Close</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
                     <script>
@@ -2063,25 +2103,21 @@ get_header();
                                    '<div style="font-size:9px; letter-spacing:0.6px; text-transform:uppercase; color:' + PDF_MUTE + '; margin-top:3px;">' + label + '</div></td>';
                         }
 
-                        function pdfMealRow(m) {
-                            var facts = [];
-                            if (m.calories) { facts.push(esc(m.calories) + ' kcal'); }
-                            if (m.minutes)  { facts.push(esc(m.minutes) + ' min'); }
-                            if (m.nutrition && m.nutrition.protein) { facts.push(esc(m.nutrition.protein) + 'g protein'); }
-                            if (m.nutrition && m.nutrition.fibre)   { facts.push(esc(m.nutrition.fibre) + 'g fibre'); }
-                            if (m.servings) { facts.push('serves ' + esc(m.servings)); }
-
-                            var img = m.image
-                                ? pdfPhoto(m.image, 'width:62px; height:62px; border:1px solid #E2E8F0;')
-                                : '';
-
-                            return '<tr>' +
-                                '<td style="width:70px; padding:8px 10px 8px 0; vertical-align:top;">' + img + '</td>' +
-                                '<td style="padding:8px 0; vertical-align:top;">' +
-                                    '<div style="font-size:8.5px; font-weight:700; letter-spacing:0.7px; text-transform:uppercase; color:' + PDF_MUTE + ';">' + esc(m.slot || '') + '</div>' +
-                                    '<div style="font-size:12.5px; font-weight:700; color:' + PDF_INK + '; margin:2px 0 3px;">' + esc(m.name || '') + '</div>' +
-                                    (facts.length ? '<div style="font-size:10px; color:' + PDF_BODY + ';">' + facts.join(' &nbsp;·&nbsp; ') + '</div>' : '') +
-                                '</td></tr>';
+                        /**
+                         * Compact meal line for the one-page schedule.
+                         *
+                         * No thumbnail and no nutrition breakdown: a 62px photo against all 28
+                         * meals is what pushed the schedule over three pages. The detail is not
+                         * lost, it moves — every dish still gets a full card, photo included, in
+                         * the recipe appendix.
+                         */
+                        function pdfMealLine(m) {
+                            return '<div style="padding:2.5px 0; border-bottom:1px solid #F1F5F9;">' +
+                                '<span style="display:inline-block; min-width:52px; font-size:7.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:' + PDF_MUTE + ';">' +
+                                    esc(m.slot || '') + '</span>' +
+                                '<span style="font-size:9.5px; font-weight:600; color:' + PDF_INK + ';">' + esc(m.name || '') + '</span>' +
+                                (m.calories ? '<span style="float:right; font-size:8.5px; color:' + PDF_BODY + ';">' + esc(m.calories) + ' kcal</span>' : '') +
+                                '</div>';
                         }
 
                         // Section rule shared by the shopping list and the recipe appendix.
@@ -2152,21 +2188,50 @@ get_header();
                                 (t.minutes ? pdfStat(num(t.minutes) + ' min', 'Kitchen time') : '') +
                                 '</tr></table>';
 
-                            var daysHtml = days.map(function (d) {
-                                return '<div class="pdf-block" style="margin-bottom:16px;">' +
-                                    '<table style="width:100%; border-collapse:collapse; background:' + PDF_TEAL + ';"><tr>' +
-                                        '<td style="padding:8px 12px; color:#fff; font-size:13px; font-weight:800; letter-spacing:0.4px;">' + esc(d.day) + '</td>' +
-                                        '<td style="padding:8px 12px; color:rgba(255,255,255,0.92); font-size:10px; text-align:right;">' +
-                                            (d.calories ? num(d.calories) + ' kcal' : '') + '</td>' +
-                                    '</tr></table>' +
-                                    '<table style="width:100%; border-collapse:collapse; border:1px solid #E2E8F0; border-top:none; padding:0 12px;">' +
-                                        d.meals.map(pdfMealRow).join('') +
-                                    '</table></div>';
-                            }).join('');
+                            // The week on ONE page: seven day cells in two columns, laid out as
+                            // a table because html2canvas rasterises the document and CSS grid is
+                            // the first thing it gets wrong. The whole schedule sits inside a
+                            // single .pdf-block, which the html2pdf `avoid` rule keeps off a page
+                            // fold — previously each day was its own block and the schedule ran
+                            // to three pages, one photo-heavy day at a time.
+                            var dayCell = function (d) {
+                                if (!d) { return '<td style="width:50%;"></td>'; }
+                                return '<td style="width:50%; vertical-align:top; padding:0 6px 10px 0;">' +
+                                    '<div style="border:1px solid #E2E8F0;">' +
+                                        '<div style="background:' + PDF_TEAL + '; padding:4px 8px; color:#fff; font-size:10px; font-weight:800; letter-spacing:0.3px;">' +
+                                            esc(d.day) +
+                                            (d.calories ? '<span style="float:right; font-weight:600; color:rgba(255,255,255,0.92);">' + num(d.calories) + ' kcal</span>' : '') +
+                                        '</div>' +
+                                        '<div style="padding:4px 8px 6px;">' + d.meals.map(pdfMealLine).join('') + '</div>' +
+                                    '</div></td>';
+                            };
+                            var dayRows = '';
+                            for (var di = 0; di < days.length; di += 2) {
+                                dayRows += '<tr>' + dayCell(days[di]) + dayCell(days[di + 1]) + '</tr>';
+                            }
+                            var daysHtml = days.length
+                                ? '<div class="pdf-block"><table style="width:100%; border-collapse:collapse;">' + dayRows + '</table></div>'
+                                : '';
 
-                            // Shopping list: two columns of tick-boxes. Quantities are per recipe
-                            // (see vance_recipe_shopping_list) — the ×N says how many times over.
-                            var shopping = plan.shopping || [];
+                            // Shopping list: two columns of tick-boxes, consolidated to one row
+                            // per item. Built through the same VanceRecipeScale.consolidate() the
+                            // on-screen list uses, so "Juice of 1 lemon" and five of "Juice of ½
+                            // lemon" print as "Juice of 3½ lemons" rather than as two rows and a
+                            // multiplier. Falls back to the server's pre-collapsed array when the
+                            // scaler is unavailable or the plan predates the `recipes` payload.
+                            //
+                            // Servings: if this plan's shopping list is open on screen and its
+                            // steppers have been moved, the PDF prints those figures — a document
+                            // that disagreed with the screen it was generated from would be worse
+                            // than no document.
+                            var shopping = (function () {
+                                var recipes = shoppingRecipes(plan);
+                                if (!window.VanceRecipeScale || !recipes.length) { return plan.shopping || []; }
+                                var overrides = (shoppingPlan === plan) ? shoppingServings : {};
+                                return shoppingEntries(recipes, overrides).map(function (i) {
+                                    return { item: i.text, count: i.count };
+                                });
+                            }());
                             var shoppingHtml = '';
                             if (shopping.length) {
                                 var half  = Math.ceil(shopping.length / 2);
@@ -2181,7 +2246,7 @@ get_header();
                                 shoppingHtml =
                                     '<div class="pdf-block" style="margin-top:22px;">' +
                                     pdfHeading('Shopping list') +
-                                    '<div style="font-size:9.5px; color:' + PDF_MUTE + '; margin-bottom:8px;">Quantities are per recipe. &times;2 means that quantity is needed twice across the plan.</div>' +
+                                    '<div style="font-size:9.5px; color:' + PDF_MUTE + '; margin-bottom:8px;">Quantities in the same unit are added together. A &times;N marks a line that could not be added &mdash; no quantity, a range, or a different unit for the same ingredient.</div>' +
                                     '<table style="width:100%; border-collapse:collapse;"><tr>' +
                                     cell(shopping.slice(0, half)) + cell(shopping.slice(half)) +
                                     '</tr></table></div>';
@@ -2319,10 +2384,183 @@ get_header();
                             });
                         }
 
+                        // ==============================================================
+                        // Shopping list
+                        // ==============================================================
+                        //
+                        // The consolidated list used to exist only inside the PDF, so the only
+                        // way to see what to buy was to download a document. This is the same
+                        // list on screen, plus the thing a PDF cannot offer: a servings control
+                        // per recipe.
+                        //
+                        // Built in the browser from the plan's `recipes` payload rather than the
+                        // server's pre-collapsed `shopping` array, because scaling has to happen
+                        // BEFORE quantities are added up.
+
+                        var shoppingPlan = null;      // plan currently on screen
+                        var shoppingServings = {};    // slug -> servings the user chose
+
+                        // Every distinct recipe in the plan, with how many times it is planned.
+                        // Occurrences and servings are kept apart on purpose: cooking a dahl on
+                        // two days is a different thing from cooking it for six instead of four.
+                        function shoppingRecipes(plan) {
+                            var counts = {};
+                            (plan.days || []).forEach(function (d) {
+                                (d.meals || []).forEach(function (m) {
+                                    if (m && m.slug) { counts[m.slug] = (counts[m.slug] || 0) + 1; }
+                                });
+                            });
+                            return Object.keys(counts).map(function (slug) {
+                                var r = (plan.recipes || {})[slug] || {};
+                                return {
+                                    slug: slug,
+                                    name: r.name || slug,
+                                    base: parseInt(r.servings, 10) || 0,
+                                    times: counts[slug],
+                                    ingredients: r.ingredients || []
+                                };
+                            }).filter(function (r) { return r.ingredients.length; })
+                              .sort(function (a, b) { return a.name.localeCompare(b.name); });
+                        }
+
+                        function servStep(slug, dir, label) {
+                            return '<button type="button" class="shop-serv-' + dir + '" data-slug="' + esc(slug) + '"' +
+                                ' aria-label="' + esc(label) + '"' +
+                                ' style="width:26px; height:26px; border:1px solid #E2E8F0; background:#fff;' +
+                                ' border-radius:var(--radius-control, 6px); cursor:pointer; font-weight:700; color:#008080;">' +
+                                (dir === 'plus' ? '&plus;' : '&minus;') + '</button>';
+                        }
+
+                        function renderShoppingServings(recipes) {
+                            var rows = recipes.map(function (r) {
+                                var chosen = shoppingServings[r.slug] || r.base || 0;
+                                // A recipe with no recorded servings cannot be scaled; saying so
+                                // beats showing a stepper that does nothing.
+                                var control = r.base
+                                    ? '<span style="display:inline-flex; align-items:center; gap:8px; flex:none;">' +
+                                          servStep(r.slug, 'minus', 'Fewer servings of ' + r.name) +
+                                          '<b style="min-width:22px; text-align:center; font-variant-numeric:tabular-nums;">' + chosen + '</b>' +
+                                          servStep(r.slug, 'plus', 'More servings of ' + r.name) +
+                                      '</span>'
+                                    : '<span style="font-size:12px; color:#94A3B8;">servings not recorded</span>';
+                                return '<div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px solid #F1F5F9;">' +
+                                    '<span style="font-size:13.5px; color:#334155;">' + esc(r.name) +
+                                        (r.times > 1 ? ' <span style="color:#64748B;">&times;' + r.times + ' in the plan</span>' : '') +
+                                        (r.base ? ' <span style="color:#94A3B8; font-size:12px;">(serves ' + r.base + ')</span>' : '') +
+                                    '</span>' + control + '</div>';
+                            }).join('');
+                            document.getElementById('shopping-list-servings').innerHTML =
+                                '<div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.7px; color:#475569; margin-bottom:6px;">Servings</div>' +
+                                (rows || '<p style="font-size:13px; color:#475569;">No recipe in this plan has its ingredients recorded.</p>');
+                        }
+
+                        // Scale first, then consolidate. Order matters: two lines are only the
+                        // same purchase once they read the same after scaling.
+                        function shoppingEntries(recipes, overrides) {
+                            var scale = window.VanceRecipeScale;
+                            var chosenFor = overrides || shoppingServings;
+                            var entries = [];
+                            recipes.forEach(function (r) {
+                                var chosen = chosenFor[r.slug] || r.base || 0;
+                                var ratio = (r.base && chosen) ? (chosen / r.base) : 1;
+                                r.ingredients.forEach(function (sec) {
+                                    (sec.items || []).forEach(function (item) {
+                                        entries.push({
+                                            line: scale ? scale.line(item, ratio) : item,
+                                            times: r.times
+                                        });
+                                    });
+                                });
+                            });
+                            return scale
+                                ? scale.consolidate(entries)
+                                : entries.map(function (e) { return { text: e.line, count: e.times }; });
+                        }
+
+                        function renderShoppingItems(recipes) {
+                            var items = shoppingEntries(recipes);
+                            var box = document.getElementById('shopping-list-items');
+                            if (!items.length) {
+                                box.innerHTML = '<p style="font-size:13px; color:#475569;">Nothing to buy \u2014 this plan has no ingredients recorded against it.</p>';
+                                return;
+                            }
+                            var half = Math.ceil(items.length / 2);
+                            var cell = function (list) {
+                                return '<div>' + list.map(function (i) {
+                                    return '<label style="display:flex; align-items:flex-start; gap:9px; padding:5px 0; border-bottom:1px solid #F1F5F9; font-size:13.5px; color:#334155; cursor:pointer;">' +
+                                        '<input type="checkbox" style="margin-top:3px; accent-color:#008080; flex:none;">' +
+                                        '<span>' + esc(i.text) +
+                                        (i.count > 1 ? ' <b style="color:#008080;">&times;' + i.count + '</b>' : '') +
+                                        '</span></label>';
+                                }).join('') + '</div>';
+                            };
+                            box.innerHTML =
+                                '<div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.7px; color:#475569; margin-bottom:6px;">' +
+                                    items.length + ' item' + (1 === items.length ? '' : 's') + '</div>' +
+                                '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0 28px;">' +
+                                    cell(items.slice(0, half)) + cell(items.slice(half)) +
+                                '</div>' +
+                                '<p style="margin:14px 0 0; font-size:11.5px; color:#94A3B8; line-height:1.6;">' +
+                                    'Quantities in the same unit are added together. A &times;N marks a line that could not be added \u2014 no quantity, a range, or a different unit for the same ingredient.' +
+                                '</p>';
+                        }
+
+                        function renderShoppingList() {
+                            if (!shoppingPlan) { return; }
+                            var recipes = shoppingRecipes(shoppingPlan);
+                            renderShoppingServings(recipes);
+                            renderShoppingItems(recipes);
+                        }
+
+                        window.openShoppingList = function (btn) {
+                            var plan = planFor(btn);
+                            if (!plan) { return; }
+                            shoppingPlan = plan;
+                            shoppingServings = {};   // always opens at each recipe's own servings
+                            document.getElementById('shopping-list-sub').textContent =
+                                (plan.name || 'Meal plan') + (plan.when ? ' \u00b7 saved on ' + plan.when : '');
+                            renderShoppingList();
+                            document.getElementById('shopping-list-modal').style.display = 'flex';
+                            document.body.style.overflow = 'hidden';
+                        };
+
+                        window.closeShoppingList = function () {
+                            document.getElementById('shopping-list-modal').style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                        };
+
+                        (function () {
+                            var modal = document.getElementById('shopping-list-modal');
+                            if (!modal) { return; }
+                            modal.addEventListener('click', function (e) {
+                                if (e.target === modal) { window.closeShoppingList(); return; }
+                                if (!e.target.closest) { return; }
+                                var minus = e.target.closest('.shop-serv-minus');
+                                var plus  = e.target.closest('.shop-serv-plus');
+                                if (!minus && !plus) { return; }
+                                var slug = (minus || plus).getAttribute('data-slug');
+                                var match = shoppingRecipes(shoppingPlan || {}).filter(function (x) { return x.slug === slug; })[0];
+                                if (!match || !match.base) { return; }
+                                var current = shoppingServings[slug] || match.base;
+                                // 1..50, the bounds the single recipe page's stepper uses.
+                                shoppingServings[slug] = Math.max(1, Math.min(50, current + (plus ? 1 : -1)));
+                                renderShoppingList();
+                            });
+                            var reset = document.getElementById('shopping-list-reset');
+                            if (reset) {
+                                reset.addEventListener('click', function () {
+                                    shoppingServings = {};
+                                    renderShoppingList();
+                                });
+                            }
+                        }());
+
                         document.addEventListener('click', function (e) {
                             if (!e.target.closest) { return; }
                             var viewBtn = e.target.closest('.btn-view-meal-plan');
                             if (viewBtn) { window.openMealPlanModal(viewBtn); return; }
+                            var shopBtn = e.target.closest('.vance-mp-shopping');
+                            if (shopBtn) { window.openShoppingList(shopBtn); return; }
                             var pdfBtn = e.target.closest('.vance-mp-pdf');
                             if (pdfBtn) { downloadMealPlanPDF(pdfBtn); return; }
                             var toggle = e.target.closest('.vance-mp-toggle');

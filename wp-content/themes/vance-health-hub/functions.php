@@ -1293,6 +1293,20 @@ function vance_health_hub_scripts() {
         wp_localize_script( 'vance-recipe-planner', 'vanceRecipePlanner', vance_recipe_planner_script_config() );
     }
 
+    // The dashboard's saved meal plans carry a shopping list that scales with
+    // servings, using the same assets/js/recipe-scale.js the single recipe page
+    // uses — one implementation, so a recipe page and a shopping list can never
+    // disagree about a quantity.
+    if ( is_page( 'dashboard' ) ) {
+        wp_enqueue_script(
+            'vance-recipe-scale',
+            get_template_directory_uri() . '/assets/js/recipe-scale.js',
+            array(),
+            @filemtime( get_template_directory() . '/assets/js/recipe-scale.js' ) ?: '1.0.0',
+            true
+        );
+    }
+
     // Single recipe page — servings scaler, "Add to meal plan" quick-add
     // modal, and PDF export. html2pdf.js is the same CDN build/version
     // page-dashboard.php already uses for meal-plan PDF export.
@@ -1305,9 +1319,16 @@ function vance_health_hub_scripts() {
             true
         );
         wp_enqueue_script(
+            'vance-recipe-scale',
+            get_template_directory_uri() . '/assets/js/recipe-scale.js',
+            array(),
+            @filemtime( get_template_directory() . '/assets/js/recipe-scale.js' ) ?: '1.0.0',
+            true
+        );
+        wp_enqueue_script(
             'vance-recipe-single',
             get_template_directory_uri() . '/assets/js/recipe-single.js',
-            array( 'html2pdf' ),
+            array( 'html2pdf', 'vance-recipe-scale' ),
             @filemtime( get_template_directory() . '/assets/js/recipe-single.js' ) ?: '1.0.0',
             true
         );
