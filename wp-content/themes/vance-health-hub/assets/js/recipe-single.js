@@ -26,56 +26,13 @@
 	// 1. Servings stepper
 	// ======================================================================
 
-	var FRAC = { '¼': 0.25, '½': 0.5, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3, '⅕': 0.2, '⅖': 0.4, '⅗': 0.6, '⅘': 0.8, '⅙': 1 / 6, '⅚': 5 / 6, '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875 };
-	var FRAC_CHARS = Object.keys(FRAC).join('');
-	var NUM_TOKEN = '(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+[' + FRAC_CHARS + ']|[' + FRAC_CHARS + ']|\\d+(?:\\.\\d+)?)';
-	var LEADING_QTY_RE = new RegExp('^(' + NUM_TOKEN + ')(\\s*[-–]\\s*(' + NUM_TOKEN + '))?');
-
-	function parseNumberToken(tok) {
-		tok = tok.trim();
-		var fracOnly = tok.match(new RegExp('^(\\d+)?\\s*([' + FRAC_CHARS + '])$'));
-		if (fracOnly) {
-			return (fracOnly[1] ? parseFloat(fracOnly[1]) : 0) + FRAC[fracOnly[2]];
-		}
-		var mixed = tok.match(/^(\d+)\s+(\d+)\/(\d+)$/);
-		if (mixed) {
-			return parseFloat(mixed[1]) + parseFloat(mixed[2]) / parseFloat(mixed[3]);
-		}
-		var simpleFrac = tok.match(/^(\d+)\/(\d+)$/);
-		if (simpleFrac) {
-			return parseFloat(simpleFrac[1]) / parseFloat(simpleFrac[2]);
-		}
-		var num = parseFloat(tok);
-		return isNaN(num) ? null : num;
-	}
-
-	// Snaps to the nearest quarter and renders as a unicode fraction where
-	// possible — "exact" decimals like 1.33 read as an estimate anyway once
-	// you're scaling a recipe, so a tidy ¼-step reads more like a real recipe.
-	function formatQty(n) {
-		var snapped = Math.round(n * 4) / 4;
-		var whole = Math.floor(snapped);
-		var frac = snapped - whole;
-		var fracStr = '';
-		if (frac >= 0.875) { whole += 1; }
-		else if (frac >= 0.625) { fracStr = '¾'; }
-		else if (frac >= 0.375) { fracStr = '½'; }
-		else if (frac >= 0.125) { fracStr = '¼'; }
-		if (0 === whole && fracStr) { return fracStr; }
-		return fracStr ? (whole + fracStr) : String(whole);
-	}
-
+	// Quantity scaling lives in assets/js/recipe-scale.js so the dashboard's
+	// shopping list runs the identical arithmetic and rounding. Enqueued as a
+	// dependency of this script, so it is always defined by the time this runs;
+	// the guard is for the case where someone loads this file on its own.
+	var SCALE = window.VanceRecipeScale;
 	function scaleIngredientLine(line, ratio) {
-		var m = line.match(LEADING_QTY_RE);
-		if (!m) { return line; } // No leading quantity — e.g. "Pinch of salt", "Optional: ..." — leave untouched.
-		var startVal = parseNumberToken(m[1]);
-		if (null === startVal) { return line; }
-		var out = formatQty(startVal * ratio);
-		if (m[3]) {
-			var endVal = parseNumberToken(m[3]);
-			if (null !== endVal) { out += '–' + formatQty(endVal * ratio); }
-		}
-		return out + line.slice(m[0].length);
+		return SCALE ? SCALE.line(line, ratio) : line;
 	}
 
 	var servingsInput = document.getElementById('vance-rs-servings');
