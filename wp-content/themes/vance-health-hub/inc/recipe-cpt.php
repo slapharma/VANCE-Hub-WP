@@ -46,7 +46,11 @@ function vance_recipe_register_cpt() {
 			'show_in_rest'       => false, // Classic editor + hand-coded meta boxes, no ACF.
 			'menu_icon'          => 'dashicons-carrot',
 			'menu_position'      => 25,
-			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+			// 'comments' added 2026-09-10. It only makes the Discussion box and
+			// the per-post comment_status available — whether a given recipe
+			// actually accepts comments is still that post's own setting, and
+			// Settings -> Discussion still governs the defaults.
+			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'comments' ),
 			'has_archive'        => false, // The hub at /gastro-meal-planner/ is the browse page, not a CPT archive.
 			'rewrite'            => array( 'slug' => 'recipes', 'with_front' => false ),
 			'query_var'          => true,

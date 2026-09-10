@@ -196,6 +196,28 @@ while ( have_posts() ) :
 	endif;
 	?>
 
+	<?php
+	/*
+	 * Comments. comments_template() renders nothing unless this recipe has
+	 * comments open or already carries a thread, so the section appears and
+	 * disappears with the post's own Discussion setting rather than needing a
+	 * separate toggle. Wrapped in the same 1100px container as the body copy,
+	 * and capped narrower than the recipe grid — a comment is prose, and prose
+	 * at 1100px runs past a comfortable line length.
+	 */
+	if ( comments_open() || get_comments_number() ) :
+		?>
+		<section style="padding:0 0 70px;">
+			<div class="container" style="max-width:1100px;">
+				<div style="max-width:760px;">
+					<?php comments_template(); ?>
+				</div>
+			</div>
+		</section>
+		<?php
+	endif;
+	?>
+
 	</main>
 
 	<style>

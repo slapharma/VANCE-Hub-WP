@@ -1215,21 +1215,41 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_section( "vance_discounts_featured", array(
         "title"       => __( "Featured Discounts", "vance-health-hub" ),
         "panel"       => "vance_discounts_panel",
-        "description" => __( "Pin one scheme per slot. Leave on \"Let the page decide\" to use the automatic pick instead (by article topic on a sidebar, or the featured pool elsewhere).", "vance-health-hub" ),
+        "description" => __( "Pin one scheme per slot. The sidebar and promo slots fall back to an automatic pick (by article topic on a sidebar, or the featured pool elsewhere). The homepage slot has no automatic pick - setting it to None removes the \"This week's discount\" section from the homepage.", "vance-health-hub" ),
     ) );
 
     if ( post_type_exists( 'vance_discount' ) ) {
-        $vance_discount_choices = array( 0 => __( 'Let the page decide', 'vance-health-hub' ) );
+        $vance_discount_posts = array();
         foreach ( get_posts( array( 'post_type' => 'vance_discount', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) ) as $vd_post ) {
-            $vance_discount_choices[ $vd_post->ID ] = get_the_title( $vd_post );
+            $vance_discount_posts[ $vd_post->ID ] = get_the_title( $vd_post );
         }
 
+        // 0 means different things in different slots, so it is labelled
+        // differently in each. The sidebar and promo slots fall back to an
+        // automatic pick, so 0 there really is "let the page decide". The
+        // homepage slot has no automatic pick: the whole section is appended
+        // to the homepage only while a scheme is pinned
+        // (vance_append_featured_discount_section() in inc/discount-frontend.php),
+        // and vance_render_homepage_featured_discount() returns nothing on 0.
+        // Calling that "let the page decide" told an admin looking for an off
+        // switch that there wasn't one, when 0 IS the off switch.
         $vance_discount_featured_slots = array(
-            'vance_discount_featured_homepage' => __( 'Homepage section', 'vance-health-hub' ),
-            'vance_discount_featured_sidebar'  => __( 'Article sidebar (default)', 'vance-health-hub' ),
-            'vance_discount_featured_promo'    => __( 'Promo / prime block', 'vance-health-hub' ),
+            'vance_discount_featured_homepage' => array(
+                __( 'Homepage section', 'vance-health-hub' ),
+                __( 'None - hide this section', 'vance-health-hub' ),
+            ),
+            'vance_discount_featured_sidebar'  => array(
+                __( 'Article sidebar (default)', 'vance-health-hub' ),
+                __( 'Let the page decide', 'vance-health-hub' ),
+            ),
+            'vance_discount_featured_promo'    => array(
+                __( 'Promo / prime block', 'vance-health-hub' ),
+                __( 'Let the page decide', 'vance-health-hub' ),
+            ),
         );
-        foreach ( $vance_discount_featured_slots as $vd_id => $vd_label ) {
+        foreach ( $vance_discount_featured_slots as $vd_id => $vd_slot ) {
+            list( $vd_label, $vd_zero_label ) = $vd_slot;
+
             $wp_customize->add_setting( $vd_id, array(
                 'default'           => 0,
                 'sanitize_callback' => 'absint',
@@ -1238,7 +1258,7 @@ function vance_pages_customize_register( $wp_customize ) {
                 'label'   => $vd_label,
                 'section' => 'vance_discounts_featured',
                 'type'    => 'select',
-                'choices' => $vance_discount_choices,
+                'choices' => array( 0 => $vd_zero_label ) + $vance_discount_posts,
             ) );
         }
     }

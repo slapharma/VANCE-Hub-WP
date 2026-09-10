@@ -5493,3 +5493,304 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
     align-items: center;
     box-sizing: border-box;
 }
+
+/* ============================================================================
+   COMMENTS
+   ----------------------------------------------------------------------------
+   Added 2026-09-10 with the recipe comment thread (comments.php). Styled here
+   rather than inline like the rest of the recipe template because a thread is
+   a list of unknown length -- the inline habit would repeat itself once per
+   comment, and WordPress generates the <li> markup, so there is nowhere to put
+   an inline style anyway.
+
+   Everything is drawn from the site's existing tokens: Outfit for headings,
+   Inter for body, the teal primary, the three-step radius scale. Nothing here
+   introduces a colour the rest of the stylesheet does not already use.
+   ========================================================================== */
+
+.vance-comments {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.vance-comments__title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0A1929;
+    margin: 0 0 22px;
+}
+
+.vance-comments__title--form {
+    margin-top: 34px;
+}
+
+.vance-comments__closed {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 24px;
+}
+
+/* --- The thread ---------------------------------------------------------- */
+
+.vance-comments__list,
+.vance-comments__list .children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* One indent step per reply level, kept small so a deep thread on a phone does
+   not walk its text off the right edge. */
+.vance-comments__list .children {
+    margin-left: 24px;
+    padding-left: 18px;
+    border-left: 2px solid #e2e8f0;
+}
+
+.vance-comments__list .comment,
+.vance-comments__list .pingback {
+    margin: 0 0 18px;
+}
+
+.vance-comments__list article.comment-body {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-surface, 14px);
+    padding: 18px 20px;
+}
+
+/* An unapproved comment is visible only to its author, and must say so rather
+   than looking like it posted normally. */
+.vance-comments__list .comment-awaiting-moderation {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #b45309;
+}
+
+.vance-comments__list .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.vance-comments__list .comment-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.vance-comments__list .comment-author img.avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-control, 6px);
+    flex-shrink: 0;
+}
+
+/* Screen readers get "says" from the markup; showing it reads as a typo. */
+.vance-comments__list .comment-author .says {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.vance-comments__list .comment-metadata {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.vance-comments__list .comment-metadata a {
+    color: #64748b;
+    text-decoration: none;
+}
+
+.vance-comments__list .comment-metadata a:hover,
+.vance-comments__list .comment-metadata a:focus-visible {
+    color: var(--primary-color, #008080);
+    text-decoration: underline;
+}
+
+.vance-comments__list .comment-content {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #334155;
+}
+
+.vance-comments__list .comment-content p {
+    margin: 0 0 12px;
+}
+
+.vance-comments__list .comment-content p:last-child {
+    margin-bottom: 0;
+}
+
+.vance-comments__list .reply {
+    margin-top: 12px;
+}
+
+/* 44px tall so the reply link clears the minimum touch target, which a bare
+   inline link at 13px does not. */
+.vance-comments__list .comment-reply-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-control, 6px);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-color, #008080);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.vance-comments__list .comment-reply-link:hover,
+.vance-comments__list .comment-reply-link:focus-visible {
+    background: var(--primary-color, #008080);
+    border-color: var(--primary-color, #008080);
+    color: #ffffff;
+}
+
+/* --- The form ------------------------------------------------------------ */
+
+.vance-comment-form {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-surface, 14px);
+    padding: 22px 20px;
+}
+
+.vance-comment-form__notes,
+.vance-comment-form .comment-notes {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 18px;
+}
+
+.vance-comment-form p {
+    margin: 0 0 16px;
+}
+
+.vance-comment-form label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0A1929;
+    margin-bottom: 6px;
+}
+
+/* 16px, not smaller: iOS Safari zooms the whole page in on any focused field
+   below 16px, which on a phone reads as the layout breaking. */
+.vance-comment-form input[type="text"],
+.vance-comment-form input[type="email"],
+.vance-comment-form input[type="url"],
+.vance-comment-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 11px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-field, 10px);
+    background: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #0f172a;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.vance-comment-form textarea {
+    resize: vertical;
+}
+
+.vance-comment-form input[type="text"]:focus-visible,
+.vance-comment-form input[type="email"]:focus-visible,
+.vance-comment-form input[type="url"]:focus-visible,
+.vance-comment-form textarea:focus-visible {
+    outline: none;
+    border-color: var(--primary-color, #008080);
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.18);
+}
+
+.vance-comment-form .comment-form-cookies-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.vance-comment-form .comment-form-cookies-consent input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.vance-comment-form .comment-form-cookies-consent label {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.vance-comment-form__submit,
+.vance-comment-form input[type="submit"] {
+    min-height: 44px;
+    padding: 0 26px;
+    border: 1px solid var(--primary-color, #008080);
+    border-radius: var(--radius-control, 6px);
+    background: var(--primary-color, #008080);
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 200ms ease, border-color 200ms ease;
+}
+
+.vance-comment-form__submit:hover,
+.vance-comment-form input[type="submit"]:hover,
+.vance-comment-form__submit:focus-visible,
+.vance-comment-form input[type="submit"]:focus-visible {
+    background: #006A6A;
+    border-color: #006A6A;
+}
+
+/* Core puts "Cancel reply" inside the form's own heading. */
+.vance-comments #cancel-comment-reply-link {
+    margin-left: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-color, #008080);
+}
+
+.vance-comments__list .comment-respond {
+    margin-top: 16px;
+}
+
+@media (max-width: 600px) {
+    .vance-comments__list .children {
+        margin-left: 10px;
+        padding-left: 12px;
+    }
+
+    .vance-comments__list article.comment-body {
+        padding: 16px 14px;
+    }
+}

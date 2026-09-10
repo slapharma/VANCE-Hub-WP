@@ -74,6 +74,9 @@ require_once get_template_directory() . '/inc/thumbnail-alt.php';
 // Supplies a default og:image / twitter:image where AIOSEO has none — the
 // homepage had no share image at all.
 require_once get_template_directory() . '/inc/social-image.php';
+// Site search: OR across stemmed words instead of core's AND across literal
+// ones, then rank title and opening-paragraph matches above passing mentions.
+require_once get_template_directory() . '/inc/search-relevance.php';
 // Drops the admin icon font for logged-out visitors and takes the Google
 // sign-in client off the critical path. Loaded late: it dequeues other handles.
 require_once get_template_directory() . '/inc/frontend-assets.php';
@@ -8758,12 +8761,6 @@ function vance_testimonials_shortcode( $atts ) {
                     <div class="vance-testimonials-track" style="display: flex; gap: 16px; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform;">
                         <?php foreach ( $items as $item ) : ?>
                             <div class="vance-testimonial-card" style="flex: 0 0 auto; box-sizing: border-box; background: <?php echo esc_attr( $card_bg ); ?>; border-radius: var(--radius-surface, 14px); padding: 24px 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border: 1px solid <?php echo esc_attr( $card_border ); ?>; display: flex; flex-direction: column; position: relative;">
-                                <div style="position: absolute; top: 14px; right: 14px;">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="<?php echo esc_attr( $accent ); ?>" style="opacity: 0.1;">
-                                        <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.01697 21L5.01697 18C5.01697 16.8954 5.9124 16 7.01697 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.01697C5.46468 8 5.01697 8.44772 5.01697 9V11C5.01697 11.5523 4.56925 12 4.01697 12H3.01697V5H13.017V15C13.017 18.3137 10.3307 21 7.01697 21H5.01697Z"></path>
-                                    </svg>
-                                </div>
-
                                 <div style="font-family: 'Inter', sans-serif; font-size: <?php echo max( 12, $quote_size - 2 ); ?>px; color: <?php echo esc_attr( $quote_col ); ?>; line-height: 1.55; font-style: italic; margin-bottom: 16px; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;">
                                     "<?php echo wp_kses_post( $item['quote'] ); ?>"
                                 </div>
