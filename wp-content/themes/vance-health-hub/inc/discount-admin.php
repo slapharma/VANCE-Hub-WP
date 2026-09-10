@@ -70,7 +70,21 @@ add_action( 'add_meta_boxes_vance_discount', 'vance_discount_add_meta_boxes' );
  * vance_recipe_meta_field() signature and inline-style convention.
  */
 function vance_discount_meta_field( $post, $key, $label, $type = 'text', $extra = '', $options = array() ) {
-	$value = get_post_meta( $post->ID, $key, true );
+	// $key is the FORM field name (`vance_discount_provider`); the value is
+	// stored under the underscore-prefixed meta key, per the theme's
+	// form-name-to-meta-key convention (CLAUDE.md constraint 2). Reading $key
+	// unprefixed - as this did until 2026-09-10 - returned '' for every field,
+	// and because the save handler below treats '' as "clear it"
+	// (delete_post_meta) and writes the two checkboxes unconditionally, opening
+	// a scheme and pressing Update wiped provider, value, cost, verified-on
+	// date, confidence, both URLs, apply type and contact, tier, what/who/IBD
+	// note and upcoming change, and forced frameable and featured to 0. Tier is
+	// what discount-cpt.php orders by and what routes a scheme to the on-hub or
+	// popup hand-off, so the directory's behaviour changed, not just its copy.
+	// Same defect as vance_recipe_meta_field(), fixed in the same pass; checked
+	// live first - all 35 schemes still had _vance_discount_provider, so no
+	// scheme had yet been saved through this screen.
+	$value = get_post_meta( $post->ID, '_' . $key, true );
 
 	if ( 'select' === $type ) {
 		printf( '<p><label for="%1$s" style="display:block;font-weight:600;margin-bottom:2px;">%2$s</label><select id="%1$s" name="%1$s" style="width:100%%;">', esc_attr( $key ), esc_html( $label ) );
