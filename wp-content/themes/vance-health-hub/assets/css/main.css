@@ -4071,18 +4071,46 @@ body.home .hero {
        than the asset's 1.6:1. */
     object-fit: cover;
     object-position: 46% 14%;
+    /* The photograph's paint position is DECLARED, not left to the painting
+       algorithm. Without these two lines the img is an unpositioned in-flow
+       box, so the ::before/::after dissolves cover it only as a side effect of
+       being positioned. Anything that gives the img a stacking context of its
+       own — a transform, an opacity below 1, a filter, will-change, or a
+       browser extension injecting one — moves it up alongside the overlays,
+       where tree order decides: ::before, img, ::after. The img then covers
+       the LEFT dissolve and that edge goes hard. Pinning it to 0 against the
+       overlays' 1 makes that impossible however the img is promoted.
+
+       Reported 2026-09-10 by several people in the UK as "the feathered edge
+       shows for half a second, then flicks to hard edges" — first paint has
+       the gradients, the promoted layer arrives with the decoded image. Not
+       reproducible on every machine, because layer promotion is a GPU and
+       driver decision. */
+    position: relative;
+    z-index: 0;
 }
 
-/* The asset ships with a gentle alpha feather already baked in (see
-   LOCAL/hero_couple_feather.py). These two overlays finish the dissolve in the
-   live background colour, which matters because object-fit: cover crops the
-   baked feather by a different amount at every viewport width — the overlays
-   are measured against the rendered box, so the edges stay soft regardless. */
+/* These two overlays ARE the dissolve. They finish the photograph's left and
+   bottom edges in the live background colour, measured against the rendered
+   box, so the edges stay soft at every viewport width whatever object-fit:
+   cover crops away.
+
+   Only the homepage couple asset carries a baked alpha feather as well (see
+   LOCAL/hero_couple_feather.py). Every other page sharing this block ships a
+   flat RGB photograph with no alpha at all, so there these gradients are the
+   ENTIRE effect. Verified 2026-09-10 against all three lobby-walk variants:
+   mode=RGB, no alpha channel.
+
+   z-index: 1 is load-bearing, not decoration — see the note on the img above.
+   It cannot leak the gradients over the copy: .vhh-hero-spotlight__media
+   carries z-index -1 on desktop and 0 at <=900px, and either value makes it a
+   stacking context, so 1 is only ever "above the photograph inside this box". */
 .vhh-hero-spotlight__media::before,
 .vhh-hero-spotlight__media::after {
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
 }
 
 .vhh-hero-spotlight__media::before {
