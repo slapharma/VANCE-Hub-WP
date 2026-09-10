@@ -72,27 +72,53 @@ function vance_search_stopwords() {
  * Words of five characters or fewer are left whole: shortening "flare" or
  * "Crohn" buys nothing and starts matching unrelated words.
  *
- * The looseness is affordable because the stem is only used for MATCHING.
- * Scoring in vance_search_score_sql() uses the word the visitor actually
- * typed, so a stem-only hit lands at the bottom of the results, not the top.
+ * The looseness is affordable because a stem-only hit is scored on its own,
+ * lighter tier in vance_search_score_sql() — it can rank a result, but never
+ * above one that matched the word the visitor actually typed.
+ *
+ * CHARACTERS, not bytes. strlen()/substr() would cut a Hebrew or Cyrillic word
+ * mid-sequence — the tokeniser accepts any Unicode letter — and hand MySQL a
+ * LIKE pattern containing a broken UTF-8 sequence, which matches nothing at
+ * best and is refused by wpdb at worst.
  *
  * @param string $word Lowercased search word.
  * @return string
  */
 function vance_search_stem( $word ) {
-	$length = strlen( $word );
+	$length = vance_search_strlen( $word );
 	if ( $length <= 5 ) {
 		return $word;
 	}
-	return substr( $word, 0, max( 4, (int) ceil( $length * 0.6 ) ) );
+	$cut = max( 4, (int) ceil( $length * 0.6 ) );
+
+	if ( function_exists( 'mb_substr' ) ) {
+		return mb_substr( $word, 0, $cut, 'UTF-8' );
+	}
+
+	// No mbstring: substr() is safe on ASCII and only on ASCII. A non-ASCII
+	// word goes through whole rather than being cut into a broken sequence —
+	// a narrower match, which is the right direction to fail in.
+	return preg_match( '/^[\x20-\x7E]*$/', $word ) ? substr( $word, 0, $cut ) : $word;
+}
+
+/**
+ * Character length, falling back to bytes only where mbstring is absent.
+ *
+ * @param string $word
+ * @return int
+ */
+function vance_search_strlen( $word ) {
+	return function_exists( 'mb_strlen' ) ? mb_strlen( $word, 'UTF-8' ) : strlen( $word );
 }
 
 /**
  * The search words worth using, or an empty array when there are none.
  *
- * Returns at most eight: each word adds three CASE expressions to the score
- * and three LIKEs to the WHERE, and nobody types a meaningful nine-word query
- * into a site search.
+ * Returns at most five. Each word adds up to six CASE expressions to the score
+ * — which MySQL evaluates twice per candidate row, once for the SELECT and
+ * once for the ORDER BY — plus three leading-wildcard LIKEs in the WHERE. Five
+ * is past any real query and keeps a deliberately expensive one, typed by
+ * anyone with a browser and no cookie, from being expensive enough to matter.
  *
  * @param string $query Raw search string.
  * @return string[] Lowercased words, punctuation stripped, stopwords removed.
@@ -109,20 +135,28 @@ function vance_search_terms( $query ) {
 	$kept      = array();
 
 	foreach ( $words as $word ) {
-		if ( strlen( $word ) < 2 || in_array( $word, $stopwords, true ) ) {
+		if ( vance_search_strlen( $word ) < 2 || in_array( $word, $stopwords, true ) ) {
 			continue;
 		}
 		$kept[] = $word;
 	}
 
 	// A query made entirely of stopwords ("how do I") still has to search for
-	// something, so fall back to the words as typed rather than returning
-	// nothing and handing the visitor an empty results page.
+	// something, so fall back to the words as typed. Re-apply a length floor
+	// while doing it: without one, "?s=a" came back through here as LIKE '%a%'
+	// against the title, excerpt and content of every post on the site, which
+	// is both a useless result page and the cheapest way to make the database
+	// work hard from an anonymous GET. Nothing usable left means nothing to
+	// rank, so hand the query back to core rather than inventing terms.
 	if ( empty( $kept ) ) {
-		$kept = $words;
+		foreach ( $words as $word ) {
+			if ( vance_search_strlen( $word ) >= 3 ) {
+				$kept[] = $word;
+			}
+		}
 	}
 
-	return array_slice( array_values( array_unique( $kept ) ), 0, 8 );
+	return array_slice( array_values( array_unique( $kept ) ), 0, 5 );
 }
 
 /**
@@ -138,8 +172,19 @@ function vance_search_should_rank( $query ) {
 	if ( ! $query->is_search() || ! $query->is_main_query() ) {
 		return false;
 	}
-	// Quoted query: core's literal phrase match is what was asked for.
-	if ( ! empty( $query->query_vars['sentence'] ) ) {
+	/*
+	 * Quoted query: core's literal phrase match is what was asked for, so get
+	 * out of its way.
+	 *
+	 * The quotes have to be detected in `s` itself. WP_Query does NOT set
+	 * `sentence` for a quoted query — it handles quotes inside parse_search()'s
+	 * own term regex, and `sentence` is only ever set from the URL or by a
+	 * pre_get_posts callback. Testing `sentence` alone therefore never fired,
+	 * and a visitor searching "low FODMAP" got the loose OR match anyway. It
+	 * is still honoured, for the callback that sets it deliberately.
+	 */
+	$raw = (string) $query->get( 's' );
+	if ( ! empty( $query->query_vars['sentence'] ) || preg_match( '/"[^"]{2,}"/', $raw ) ) {
 		return false;
 	}
 
@@ -270,10 +315,14 @@ add_filter( 'posts_fields', 'vance_search_fields', 10, 2 );
 /**
  * Score first, newest first inside a tie.
  *
- * The expression is repeated rather than referenced by its alias: MySQL allows
- * the alias in ORDER BY, but WP_Query's found_rows count runs the same clauses
- * through a SELECT COUNT(*) that carries no field list, so an alias there is
- * an "Unknown column" fatal on every search.
+ * The expression is repeated rather than referenced by its alias. MySQL would
+ * accept the alias here — core counts found rows with SQL_CALC_FOUND_ROWS and
+ * a follow-up SELECT FOUND_ROWS(), not a second query that re-runs this filter
+ * without a field list. Repeating it keeps posts_orderby self-contained, which
+ * is what the filter's contract asks for and what survives another plugin
+ * rewriting the SELECT list; the cost is that MySQL evaluates the CASE
+ * expressions twice per candidate row, which is why vance_search_terms() caps
+ * the word count.
  *
  * @param string   $orderby
  * @param WP_Query $query

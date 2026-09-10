@@ -1414,6 +1414,15 @@ function vance_health_hub_scripts() {
         true
     );
     wp_localize_script( 'vance-askai', 'vanceAskAi', vance_askai_script_data() );
+
+    // Core's threaded-reply script. Without it a reply link is a plain
+    // ?replytocom=123#respond link, which reloads the page and — more to the
+    // point on a site working on its index footprint — mints one crawlable
+    // duplicate URL of the recipe per comment. Conditions are core's own: only
+    // where a thread can actually be replied to.
+    if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
+        wp_enqueue_script( 'comment-reply' );
+    }
 }
 add_action( 'wp_enqueue_scripts', 'vance_health_hub_scripts' );
 
@@ -1872,6 +1881,15 @@ function vance_health_hub_setup() {
 
     // Enable support for Post Thumbnails on posts and pages.
     add_theme_support( 'post-thumbnails' );
+
+    // Comment markup. Without this, wp_list_comments() falls back to
+    // Walker_Comment's xhtml branch, which emits div.comment-body with
+    // .comment-meta as a SIBLING of .comment-author and no .comment-content
+    // wrapper at all — so most of the COMMENTS block in main.css silently
+    // matches nothing and a thread renders half-styled. Scoped to the two
+    // comment features on purpose: adding 'search-form', 'gallery' or
+    // 'caption' here would change markup the rest of the site already styles.
+    add_theme_support( 'html5', array( 'comment-list', 'comment-form' ) );
 
     // Register Navigation Menus
     register_nav_menus(
