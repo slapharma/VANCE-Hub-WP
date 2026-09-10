@@ -87,11 +87,13 @@ if ( post_password_required() ) {
 			'title_reply_after'    => '</h2>',
 			'label_submit'         => esc_html__( 'Post comment', 'vance-health-hub' ),
 			'class_submit'         => 'vance-comment-form__submit',
-			// Accurate as the site is configured: comment_moderation is off but
-			// comment_previously_approved is on, so a first comment is held and
-			// later ones from the same person are not. If either option changes,
-			// change this line with it.
-			'comment_notes_before' => '<p class="vance-comment-form__notes">' . esc_html__( 'Your email address is not published. Your first comment is checked before it appears.', 'vance-health-hub' ) . '</p>',
+			// Accurate as the site is configured: comment_moderation is on, so
+			// every comment is held for approval — not just a commenter's
+			// first. Settings -> Discussion -> "Comment must be manually
+			// approved". If that is ever switched off, change this line with
+			// it; the fallback then becomes comment_previously_approved, which
+			// holds only the first comment from a given name and email.
+			'comment_notes_before' => '<p class="vance-comment-form__notes">' . esc_html__( 'Your email address is not published. Comments are checked before they appear.', 'vance-health-hub' ) . '</p>',
 			'comment_field'        => sprintf(
 				'<p class="comment-form-comment"><label for="comment">%1$s</label><textarea id="comment" name="comment" rows="5" required></textarea></p>',
 				esc_html__( 'Your comment', 'vance-health-hub' )
