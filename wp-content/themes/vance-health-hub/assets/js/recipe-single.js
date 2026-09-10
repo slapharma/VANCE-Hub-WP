@@ -201,6 +201,35 @@
 				pdfBtn.textContent = label;
 			};
 
+			// html2canvas paints whatever has decoded at the moment it fires, so a
+			// logo or photograph still in flight rasterises to an empty box. Wait
+			// for both — but never hang the download on one that will not load:
+			// a dead URL resolves rather than rejects, and the broken frame is
+			// dropped so it does not print as a grey rectangle. Same approach as
+			// page-dashboard.php's meal-plan export.
+			whenImagesSettled(el).then(function () { runPdf(el, cleanup); });
+		});
+	}
+
+	function whenImagesSettled(el) {
+		var imgs = [].slice.call(el.querySelectorAll('img'));
+		if (!imgs.length) { return Promise.resolve(); }
+		return Promise.all(imgs.map(function (img) {
+			if (img.complete && img.naturalWidth > 0) { return Promise.resolve(); }
+			return new Promise(function (resolve) {
+				var done = false;
+				var finish = function () { if (!done) { done = true; resolve(); } };
+				img.addEventListener('load', finish);
+				img.addEventListener('error', function () {
+					if (img.parentNode) { img.parentNode.removeChild(img); }
+					finish();
+				});
+				setTimeout(finish, 8000);
+			});
+		}));
+	}
+
+	function runPdf(el, cleanup) {
 			window.html2pdf().set({
 				margin: 10,
 				filename: (CFG.recipe.slug || 'recipe') + '.pdf',
@@ -215,7 +244,6 @@
 				cleanup();
 				showToast('Could not build the PDF, please try again.', 3500);
 			});
-		});
 	}
 
 	function esc(s) { return escapeHtml(s == null ? '' : s); }
@@ -261,12 +289,25 @@
 		var wrap = document.createElement('div');
 		wrap.style.cssText = 'width:100%;box-sizing:border-box;background:#fff;padding:14px;font-family:Arial,sans-serif;';
 		wrap.innerHTML =
-			'<div style="border-bottom:3px solid ' + TEAL + ';padding-bottom:10px;margin-bottom:14px;">' +
-				'<div style="font-size:10px;font-weight:700;color:' + TEAL + ';text-transform:uppercase;letter-spacing:0.6px;">Vance Medical Hub</div>' +
-				'<div style="font-size:20px;font-weight:800;color:' + INK + ';margin-top:4px;">' + esc(r.name) + '</div>' +
-				(metaBits.length ? '<div style="font-size:11px;color:' + MUTE + ';margin-top:4px;">' + metaBits.join(' &nbsp;·&nbsp; ') + '</div>' : '') +
-			'</div>' +
+			// Masthead. A table, not flexbox: html2canvas rasterises the clone and
+			// gets flex alignment wrong often enough that the meal-plan export
+			// already avoids it for the same reason.
+			'<table style="width:100%;border-collapse:collapse;border-bottom:3px solid ' + TEAL + ';margin-bottom:14px;"><tr>' +
+				(r.logo ? '<td style="width:120px;vertical-align:middle;padding:0 14px 10px 0;">' +
+					'<img src="' + esc(r.logo) + '" alt="Vance Medical" style="width:120px;height:auto;display:block;">' +
+				'</td>' : '') +
+				'<td style="vertical-align:middle;padding-bottom:10px;">' +
+					'<div style="font-size:10px;font-weight:700;color:' + TEAL + ';text-transform:uppercase;letter-spacing:0.6px;">Vance Medical Hub</div>' +
+					'<div style="font-size:20px;font-weight:800;color:' + INK + ';margin-top:4px;">' + esc(r.name) + '</div>' +
+					(metaBits.length ? '<div style="font-size:11px;color:' + MUTE + ';margin-top:4px;">' + metaBits.join(' &nbsp;·&nbsp; ') + '</div>' : '') +
+				'</td>' +
+			'</tr></table>' +
 			nutritionHtml +
+			// The photograph sits under the key stats: the numbers are what the
+			// page is for, the picture is what makes it recognisable in a folder.
+			(r.image
+				? '<img src="' + esc(r.image) + '" alt="" style="width:100%;height:170px;object-fit:cover;display:block;margin-top:14px;">'
+				: '') +
 			'<table style="width:100%;border-collapse:collapse;margin-top:16px;"><tr>' +
 				'<td style="width:42%;vertical-align:top;padding-right:18px;">' +
 					'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:' + MUTE + ';margin-bottom:6px;">Ingredients' + (currentServings !== r.servings ? ' (scaled to ' + currentServings + ' servings, approximate)' : '') + '</div>' +

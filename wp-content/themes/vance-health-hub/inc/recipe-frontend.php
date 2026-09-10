@@ -209,7 +209,18 @@ function vance_recipe_single_script_config( $post_id ) {
 		'days'  => wp_list_pluck( vance_recipe_planner_days_skeleton(), 'day' ),
 		'recipe' => array(
 			'slug'        => get_post_field( 'post_name', $post_id ),
-			'name'        => get_the_title( $post_id ),
+			// Raw post_title, not get_the_title(): the latter HTML-entity-encodes
+			// ampersands ("&" -> "&#038;"), and the JS side escapes again when it
+			// builds the PDF, so "Apple & Almond" printed as "Apple &#038; Almond".
+			// Same reason vance_recipe_catalogue() reads the raw column — see the
+			// note there. wp_json_encode() handles the escaping this actually needs.
+			'name'        => get_post_field( 'post_title', $post_id, 'raw' ),
+			// For the PDF: the recipe's own photograph and the site logo. Both go
+			// through the same await-then-rasterise path as the meal-plan export,
+			// because html2canvas paints whatever has decoded at the moment it
+			// fires and would otherwise emit empty boxes.
+			'image'       => get_the_post_thumbnail_url( $post_id, 'large' ) ?: '',
+			'logo'        => get_template_directory_uri() . '/assets/img/logo.png',
 			'servings'    => '' !== $servings ? (int) $servings : 0,
 			'prep'        => '' !== $prep ? (int) $prep : 0,
 			'cook'        => '' !== $cook ? (int) $cook : 0,
