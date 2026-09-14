@@ -308,16 +308,23 @@
 	display: none;
 }
 
+/* Max Mega Menu ships its own generated CSS for ".mega-block-title" at the
+   same double-ID specificity used here (see the note on !important at the
+   top of this file) and it was winning outright — every property below was
+   being overridden, not just the color. !important matches this rule to
+   "Browse the library" (a.mega-menu-link, styled by main.css), the plugin's
+   own default column-heading look, so a widget-supplied title like
+   "Understanding digestive conditions" reads the same as a plain column. */
 #mega-menu-wrap-primary-menu .mega-block-title {
-	font-family: var(--font-heading, 'Outfit', sans-serif);
-	font-size: 12px;
-	font-weight: 600;
-	letter-spacing: .1em;
-	text-transform: uppercase;
-	color: var(--primary-color, #008080);
-	padding: 0 0 9px;
-	margin: 0 0 10px;
-	border-bottom: 1px solid #e4eaea;
+	font-family: var(--font-heading, 'Outfit', sans-serif) !important;
+	font-size: 10.5px !important;
+	font-weight: 600 !important;
+	letter-spacing: .1em !important;
+	text-transform: uppercase !important;
+	color: #2f4f6f !important;
+	padding: 0 0 9px !important;
+	margin: 0 0 10px !important;
+	border-bottom: 1px solid #e4eaea !important;
 }
 
 /* -----------------------------------------------------------------------------
@@ -433,6 +440,16 @@
 #mega-menu-wrap-primary-menu .vance-nav-tile--feature .vance-nav-tile__icon svg {
 	width: 15px;
 	height: 15px;
+}
+
+/* "View all" was added to the tiles list for the mobile drawer only — the
+   desktop grid already ends with a full-width feature row, so a second
+   view-all link here would be redundant. Matched by its href since this
+   widget gives every plain tile the same untitled markup otherwise. */
+@media (min-width: 769px) {
+	#mega-menu-wrap-primary-menu .vance-nav-tile[href="https://vancehealthhub.co.uk/gastro-health-explained/"] {
+		display: none;
+	}
 }
 
 #mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) .vance-nav-tile__icon {
@@ -691,6 +708,14 @@
 	#mega-menu-wrap-primary-menu .vance-nav-cta,
 	#mega-menu-wrap-primary-menu .vance-nav-feature,
 	#mega-menu-wrap-primary-menu .vance-nav-feature__more {
+		display: none;
+	}
+
+	/* The feature widget's own "Latest from the Hub" heading sits beside
+	   .vance-nav-feature, not inside it, so hiding the cards above left the
+	   title standing over empty space. Hide it too — scoped to this one
+	   widget's own class so the Conditions panel's h4 is untouched. */
+	#mega-menu-wrap-primary-menu li.vhh_nav_featured > .mega-block-title {
 		display: none;
 	}
 

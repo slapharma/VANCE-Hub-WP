@@ -60,6 +60,45 @@ function vance_nav_mega_assets() {
 }
 add_action( 'wp_enqueue_scripts', 'vance_nav_mega_assets', 20 );
 
+/**
+ * Mobile drawer: closing a top-level item's siblings makes it an accordion.
+ *
+ * Max Mega Menu's own click handler (showPanel/hidePanel) only ever opens —
+ * it never closes a sibling, so THE HUB, KNOWLEDGEBASE and CONDITIONS could
+ * all sit open at once in the drawer. The plugin fires a non-bubbling
+ * "open_panel" event on the li it just opened; this listens for that on each
+ * top-level item directly (triggerHandler does not bubble, so a delegated
+ * listener on an ancestor would never see it) and, on mobile only, closes
+ * any other open top-level item by clicking its own link — which is exactly
+ * what the plugin's own hidePanel path already does on a manual click, so
+ * this reuses ITS animation and state cleanup rather than toggling classes
+ * directly.
+ */
+function vance_nav_mega_mobile_accordion_script() {
+	wp_enqueue_script( 'jquery' );
+
+	$script = <<<'JS'
+( function ( $ ) {
+	$( function () {
+		var $top = $( '#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu' );
+		if ( ! $top.length ) { return; }
+
+		$top.on( 'open_panel', function () {
+			if ( ! window.matchMedia( '(max-width: 768px)' ).matches ) { return; }
+
+			var $opened = $( this );
+			$top.not( $opened ).filter( '.mega-toggle-on' ).children( 'a.mega-menu-link' ).each( function () {
+				this.click();
+			} );
+		} );
+	} );
+} )( jQuery );
+JS;
+
+	wp_add_inline_script( 'jquery', $script );
+}
+add_action( 'wp_enqueue_scripts', 'vance_nav_mega_mobile_accordion_script', 21 );
+
 
 /* =============================================================================
    ICONS
