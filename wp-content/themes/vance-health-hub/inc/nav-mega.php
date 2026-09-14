@@ -63,45 +63,92 @@ add_action( 'wp_enqueue_scripts', 'vance_nav_mega_assets', 20 );
 /**
  * Mobile drawer: closing a top-level item's siblings makes it an accordion.
  *
- * Max Mega Menu's own click handler (showPanel/hidePanel) only ever opens —
- * it never closes a sibling, so the top-level items could all sit open at
- * once in the drawer. The plugin fires a non-bubbling "open_panel" event on
- * the li it just opened; this listens for that on each top-level item
- * directly (triggerHandler does not bubble, so a delegated listener on an
- * ancestor would never see it) and, on mobile only, closes any other open
- * top-level item by clicking its own link — which is exactly what the
- * plugin's own hidePanel path already does on a manual click, so this
- * reuses ITS animation and state cleanup rather than toggling classes
- * directly.
+ * Two earlier versions of this looked right in every test and still failed
+ * on a real phone. Both assumed a listener bound at $(document).ready would
+ * simply stay bound. It doesn't, on this site:
  *
- * The selector matches EVERY top-level item that can expand
- * ('mega-menu-item-has-children'), not just 'mega-menu-megamenu' ones.
- * '.mega-menu-megamenu' only marks items built as a full-width grid panel
- * (KNOWLEDGEBASE, CONDITIONS on this menu) — the plugin fires the exact same
- * open_panel/close_panel/mega-toggle-on plumbing for a plain list-style
- * dropdown ("Start here", "Patient Resources", "Vance Medical" here), it just
- * doesn't get that class. Scoping to '.mega-menu-megamenu' bound the listener
- * to only 2 of the 5 top-level items: opening one of the other 3 never fired
- * anything, and closing them from a megamenu item's open_panel handler could
- * never find them either, since they weren't in the matched set to begin
- * with. That passed every test run against Knowledgebase/Conditions alone
- * and failed on a real phone the moment the other three were involved.
+ *   1. This menu location has "Unbind Events" enabled (Appearance → Menus →
+ *      this location → Unbind Events; stored as megamenu_settings[...][unbind]
+ *      = 'enabled'), so the plugin's own plugin.init() calls
+ *      plugin.unbindAllEvents() — a BARE .off() (no event type, no
+ *      namespace) against ul.mega-sub-menu, li.mega-menu-item,
+ *      li.mega-menu-row, li.mega-menu-column, a.mega-menu-link and
+ *      .mega-indicator, run once per page load. That strips every handler on
+ *      those elements, ours included, regardless of what event name or
+ *      namespace it was bound under. Confirmed live: an "open_panel" listener
+ *      bound on a top-level <li> (which carries .mega-menu-item) reads back
+ *      as bound the instant .on() returns, and as gone within 50ms — before
+ *      window's load event even fires. THE_HUB/KNOWLEDGEBASE/CONDITIONS all
+ *      carry the classes this wipes; a fast manual test can beat the wipe by
+ *      luck, a real page load never does.
+ *   2. Even surviving that, closing a sibling by calling .click() on its own
+ *      link is unsafe here: this location's "Second click on already open
+ *      parent" setting is "Go to link" (megamenu_settings[...][second_click]
+ *      = 'go'). The plugin's own click handler only calls hidePanel() on a
+ *      second click when the anchor has no href; KNOWLEDGEBASE and
+ *      CONDITIONS both do, so clicking either one's own link while open
+ *      navigates instead of closing it.
+ *
+ * The fix sidesteps both problems by binding after the wipe instead of
+ * fighting it, and by closing panels through the plugin's own method instead
+ * of simulating a click on them:
+ *
+ *   - $menu itself (#mega-menu-primary-menu, the <ul>) is never touched by
+ *     unbindAllEvents() — that call searches DESCENDANTS of $menu for the
+ *     classes above, and the root <ul> matches none of them. A listener
+ *     bound directly on $menu survives.
+ *   - The plugin fires "after_mega_menu_init" (also via triggerHandler, also
+ *     non-bubbling — direct binding is required) on $menu at the very end of
+ *     plugin.init(), strictly after unbindAllEvents() and after its own
+ *     bindClickEvents()/bindHoverEvents() have already run. Waiting for this
+ *     event before doing anything means the wipe has already happened and
+ *     won't happen again for this page load (plugin.init() runs once).
+ *   - $.fn.maxmegamenu stores the plugin instance via
+ *     $(el).data('maxmegamenu', plugin); that instance's own hidePanel()
+ *     method is what hideSiblingPanels() calls internally to close a panel
+ *     on desktop. Calling it directly closes a sibling correctly — same
+ *     animation, same state, same aria-expanded cleanup the plugin would do
+ *     itself — without touching its href or its second-click behaviour.
+ *   - Our own click listener is attached to the top-level links strictly
+ *     inside the after_mega_menu_init handler (i.e. after the plugin's own
+ *     click.megamenu handler already bound), so on a real click both fire in
+ *     the same dispatch, plugin's first: it toggles .mega-toggle-on, then
+ *     ours reads that state and closes whichever other top-level item still
+ *     has it.
+ *
+ * The selector matches every top-level item that can expand
+ * ('mega-menu-item-has-children'), not just the two built as full-width grid
+ * panels ('mega-menu-megamenu') — the first version of this fix scoped to
+ * the latter and only ever bound to 2 of the menu's top-level items.
  */
 function vance_nav_mega_mobile_accordion_script() {
 	wp_enqueue_script( 'jquery' );
 
 	$script = <<<'JS'
 ( function ( $ ) {
-	$( function () {
-		var $top = $( '#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item-has-children' );
-		if ( ! $top.length ) { return; }
+	var $menu = $( '#mega-menu-wrap-primary-menu #mega-menu-primary-menu' );
+	if ( ! $menu.length ) { return; }
 
-		$top.on( 'open_panel', function () {
+	$menu.on( 'after_mega_menu_init', function () {
+		// $(el).data('maxmegamenu', plugin) is set by $.fn.maxmegamenu AFTER
+		// `new $.maxmegamenu(...)` returns, and that constructor is what
+		// fires this event as its own last step — so the data isn't there
+		// yet on THIS tick. Read it lazily inside the click handler instead,
+		// by which point (an actual user tap, well after page load) it has
+		// always been set.
+		var $top = $menu.children( 'li.mega-menu-item-has-children' );
+
+		$top.children( 'a.mega-menu-link' ).on( 'click.vanceAccordion', function () {
 			if ( ! window.matchMedia( '(max-width: 768px)' ).matches ) { return; }
 
-			var $opened = $( this );
-			$top.not( $opened ).filter( '.mega-toggle-on' ).children( 'a.mega-menu-link' ).each( function () {
-				this.click();
+			var plugin = $menu.data( 'maxmegamenu' );
+			if ( ! plugin ) { return; }
+
+			var $clickedItem = $( this ).parent();
+			if ( ! $clickedItem.hasClass( 'mega-toggle-on' ) ) { return; }
+
+			$top.not( $clickedItem ).filter( '.mega-toggle-on' ).each( function () {
+				plugin.hidePanel( $( this ).children( 'a.mega-menu-link' ), false );
 			} );
 		} );
 	} );
