@@ -335,7 +335,7 @@
 #mega-menu-wrap-primary-menu .vance-nav-tile {
 	display: flex;
 	gap: 12px;
-	align-items: flex-start;
+	align-items: center;
 	text-decoration: none;
 	background: #fff;
 	border: 1px solid #e4eaea;
@@ -389,30 +389,13 @@
 	color: var(--text-main, #1F2937);
 }
 
+/* Every tile is a title-only link now — the widget still writes a
+   description into the markup (parse_tiles()), it just never renders. */
 #mega-menu-wrap-primary-menu .vance-nav-tile__desc {
-	display: block;
-	font-size: 11.5px;
-	font-weight: 400;
-	line-height: 1.4;
-	color: var(--text-light, #6B7280);
-	margin-top: 3px;
+	display: none;
 }
 
-/* A tile flagged "feature" in the widget — the odd one out at the end of a row
-   that asks a question rather than naming a condition. */
-#mega-menu-wrap-primary-menu .vance-nav-tile--feature {
-	grid-column: span 2;
-	border-color: var(--primary-pale, #aedbdb);
-	background: #f4fcfc;
-}
-
-#mega-menu-wrap-primary-menu .vance-nav-tile--feature .vance-nav-tile__icon {
-	background: var(--primary-color, #008080);
-	color: #fff;
-}
-
-/* Only the feature tile ("Not sure where to start?") keeps the boxed card
-   look with an icon tile. Condition tiles render as plain text links. */
+/* Condition tiles render as plain text links: no box, no icon. */
 #mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) {
 	background: transparent;
 	border-color: transparent;
@@ -425,6 +408,31 @@
 	border-color: transparent;
 	background: #f9fdfd;
 	box-shadow: none;
+}
+
+/* A tile flagged "feature" in the widget — the odd one out that asks a
+   question rather than naming a condition. Runs full-width beneath the
+   plain-link grid as a slim highlighted row, not a second card shape —
+   with every other tile now text-only, a boxed two-column card here read
+   as an oversized leftover rather than a deliberate CTA. */
+#mega-menu-wrap-primary-menu .vance-nav-tile--feature {
+	grid-column: 1 / -1;
+	margin-top: 4px;
+	border-color: var(--primary-pale, #aedbdb);
+	background: #f4fcfc;
+}
+
+#mega-menu-wrap-primary-menu .vance-nav-tile--feature .vance-nav-tile__icon {
+	flex: 0 0 26px;
+	width: 26px;
+	height: 26px;
+	background: var(--primary-color, #008080);
+	color: #fff;
+}
+
+#mega-menu-wrap-primary-menu .vance-nav-tile--feature .vance-nav-tile__icon svg {
+	width: 15px;
+	height: 15px;
 }
 
 #mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) .vance-nav-tile__icon {
