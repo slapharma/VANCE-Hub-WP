@@ -411,6 +411,26 @@
 	color: #fff;
 }
 
+/* Only the feature tile ("Not sure where to start?") keeps the boxed card
+   look with an icon tile. Condition tiles render as plain text links. */
+#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) {
+	background: transparent;
+	border-color: transparent;
+	padding: 13px 16px;
+	box-shadow: none;
+}
+
+#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature):hover,
+#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature):focus {
+	border-color: transparent;
+	background: #f9fdfd;
+	box-shadow: none;
+}
+
+#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) .vance-nav-tile__icon {
+	display: none;
+}
+
 /* -----------------------------------------------------------------------------
    6. CTA RAIL  (VHH_Nav_CTA_Widget)
    -------------------------------------------------------------------------- */
