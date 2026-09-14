@@ -714,9 +714,12 @@
 	/* The feature widget's own "Latest from the Hub" heading sits beside
 	   .vance-nav-feature, not inside it, so hiding the cards above left the
 	   title standing over empty space. Hide it too — scoped to this one
-	   widget's own class so the Conditions panel's h4 is untouched. */
+	   widget's own class so the Conditions panel's h4 is untouched.
+	   !important: the plugin's own generated rule for h4.mega-block-title
+	   uses a double-ID selector (see the .mega-block-title fix below)  that
+	   this single-ID selector cannot outrank on specificity alone. */
 	#mega-menu-wrap-primary-menu li.vhh_nav_featured > .mega-block-title {
-		display: none;
+		display: none !important;
 	}
 
 	/* Tiles collapse to plain rows: one column, no icon, no description. */
