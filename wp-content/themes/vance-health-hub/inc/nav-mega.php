@@ -64,15 +64,28 @@ add_action( 'wp_enqueue_scripts', 'vance_nav_mega_assets', 20 );
  * Mobile drawer: closing a top-level item's siblings makes it an accordion.
  *
  * Max Mega Menu's own click handler (showPanel/hidePanel) only ever opens —
- * it never closes a sibling, so THE HUB, KNOWLEDGEBASE and CONDITIONS could
- * all sit open at once in the drawer. The plugin fires a non-bubbling
- * "open_panel" event on the li it just opened; this listens for that on each
- * top-level item directly (triggerHandler does not bubble, so a delegated
- * listener on an ancestor would never see it) and, on mobile only, closes
- * any other open top-level item by clicking its own link — which is exactly
- * what the plugin's own hidePanel path already does on a manual click, so
- * this reuses ITS animation and state cleanup rather than toggling classes
+ * it never closes a sibling, so the top-level items could all sit open at
+ * once in the drawer. The plugin fires a non-bubbling "open_panel" event on
+ * the li it just opened; this listens for that on each top-level item
+ * directly (triggerHandler does not bubble, so a delegated listener on an
+ * ancestor would never see it) and, on mobile only, closes any other open
+ * top-level item by clicking its own link — which is exactly what the
+ * plugin's own hidePanel path already does on a manual click, so this
+ * reuses ITS animation and state cleanup rather than toggling classes
  * directly.
+ *
+ * The selector matches EVERY top-level item that can expand
+ * ('mega-menu-item-has-children'), not just 'mega-menu-megamenu' ones.
+ * '.mega-menu-megamenu' only marks items built as a full-width grid panel
+ * (KNOWLEDGEBASE, CONDITIONS on this menu) — the plugin fires the exact same
+ * open_panel/close_panel/mega-toggle-on plumbing for a plain list-style
+ * dropdown ("Start here", "Patient Resources", "Vance Medical" here), it just
+ * doesn't get that class. Scoping to '.mega-menu-megamenu' bound the listener
+ * to only 2 of the 5 top-level items: opening one of the other 3 never fired
+ * anything, and closing them from a megamenu item's open_panel handler could
+ * never find them either, since they weren't in the matched set to begin
+ * with. That passed every test run against Knowledgebase/Conditions alone
+ * and failed on a real phone the moment the other three were involved.
  */
 function vance_nav_mega_mobile_accordion_script() {
 	wp_enqueue_script( 'jquery' );
@@ -80,7 +93,7 @@ function vance_nav_mega_mobile_accordion_script() {
 	$script = <<<'JS'
 ( function ( $ ) {
 	$( function () {
-		var $top = $( '#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu' );
+		var $top = $( '#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item-has-children' );
 		if ( ! $top.length ) { return; }
 
 		$top.on( 'open_panel', function () {
