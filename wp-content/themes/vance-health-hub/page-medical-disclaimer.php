@@ -44,7 +44,7 @@ vance_render_legal_hero( 'disclaimer' );
 
     <h2>General information only</h2>
     <p>
-        Vance Medical Hub provides general information and community support for people affected by gastrointestinal conditions. It is not medical advice and is not a substitute for the care of your own healthcare team. Nothing on this site should be used to diagnose or treat a health problem or disease.
+        Vance Medical Hub provides general information and community support for people affected by gastrointestinal conditions. It is not medical advice and is not a substitute for the care of your own health team. Nothing on this site should be used to diagnose or treat a health problem or disease.
     </p>
     <p>
         Always speak to your GP, pharmacist, dietitian or other qualified healthcare professional before making changes to your diet, medication or treatment, and with any questions you may have about a medical condition. Never disregard professional advice, or delay seeking it, because of something you have read or used on this site.
