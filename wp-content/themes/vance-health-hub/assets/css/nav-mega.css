@@ -312,16 +312,19 @@
    same double-ID specificity used here (see the note on !important at the
    top of this file) and it was winning outright — every property below was
    being overridden, not just the color. !important matches this rule to
-   "Browse the library" (a.mega-menu-link, styled by main.css), the plugin's
-   own default column-heading look, so a widget-supplied title like
-   "Understanding digestive conditions" reads the same as a plain column. */
+   "Browse the library" (a.mega-menu-link, styled by main.css) at DESKTOP
+   width, the plugin's own default column-heading look there, so a
+   widget-supplied title like "Understanding Gastro" reads the same as a
+   plain column. "Browse the library" is styled differently again at mobile
+   width (10.5px, navy #2f4f6f — see the mobile override below), so this
+   base rule is desktop's values only; do not merge the two. */
 #mega-menu-wrap-primary-menu .mega-block-title {
 	font-family: var(--font-heading, 'Outfit', sans-serif) !important;
-	font-size: 10.5px !important;
+	font-size: 12px !important;
 	font-weight: 600 !important;
 	letter-spacing: .1em !important;
 	text-transform: uppercase !important;
-	color: #2f4f6f !important;
+	color: var(--primary-color, #008080) !important;
 	padding: 0 0 9px !important;
 	margin: 0 0 10px !important;
 	border-bottom: 1px solid #e4eaea !important;
@@ -720,6 +723,14 @@
 	   this single-ID selector cannot outrank on specificity alone. */
 	#mega-menu-wrap-primary-menu li.vhh_nav_featured > .mega-block-title {
 		display: none !important;
+	}
+
+	/* Mobile keeps its own smaller, navy-coloured treatment (matching
+	   "Browse the library" at this width, which is styled separately from
+	   its desktop self above) — bumped 10.5px -> 12.5px on request. */
+	#mega-menu-wrap-primary-menu .mega-block-title {
+		font-size: 12.5px !important;
+		color: #2f4f6f !important;
 	}
 
 	/* Tiles collapse to plain rows: one column, no icon, no description. */
