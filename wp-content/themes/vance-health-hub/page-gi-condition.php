@@ -870,7 +870,7 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
             <div class="gi-cp-row-text">
               <p>Identifying your personal triggers, often with a food and symptom diary, managing stress, staying active and keeping a regular routine can all make a big difference.</p>
               <p>IBS tends to come and go, but most people find a management plan that lets them get on with daily life.</p>
-              <div class="gi-cp-highlight"><p><strong>Tip:</strong> Keeping a food and symptom diary for a few weeks can help you and your healthcare team identify patterns and triggers specific to you.</p></div>
+              <div class="gi-cp-highlight"><p><strong>Tip:</strong> Keeping a food and symptom diary for a few weeks can help you and your health team identify patterns and triggers specific to you.</p></div>
             </div>
           </div>
         </div>

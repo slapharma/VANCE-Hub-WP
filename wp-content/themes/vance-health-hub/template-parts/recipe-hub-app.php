@@ -126,7 +126,7 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 			<?php endforeach; ?>
 		</div>
 
-		<p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.6;"><?php esc_html_e( 'Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your healthcare team.', 'vance-health-hub' ); ?></p>
+		<p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.6;"><?php esc_html_e( 'Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your health team.', 'vance-health-hub' ); ?></p>
 	</div>
 </section>
 

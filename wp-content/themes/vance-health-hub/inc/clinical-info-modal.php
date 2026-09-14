@@ -151,7 +151,7 @@ $vance_cp_flare  = array(
 			</form>
 		</div>
 
-		<p class="vance-mk__footer">Stored privately against your account. General information only. Not a diagnosis, and not a substitute for advice from your healthcare team.</p>
+		<p class="vance-mk__footer">Stored privately against your account. General information only. Not a diagnosis, and not a substitute for advice from your health team.</p>
 	</div>
 </div>
 

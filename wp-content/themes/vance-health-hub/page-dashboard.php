@@ -1270,7 +1270,7 @@ get_header();
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your healthcare team.</p>
+                            <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your health team.</p>
                         <?php endif; ?>
                     </div>
 
@@ -1333,7 +1333,7 @@ get_header();
                             <h3 id="vance-mc-modal-title" class="card-title" style="margin:0 0 4px; font-family:'Outfit'; font-size:24px;">Screening Result</h3>
                             <p id="vance-mc-modal-date" style="margin:0 0 24px; font-size:13px; color:#64748B;"></p>
                             <div id="vance-mc-modal-body"></div>
-                            <p style="margin:24px 0 0; padding-top:16px; border-top:1px solid #E2E8F0; font-size:12px; color:#94A3B8; line-height:1.5;">This is a screening estimate, not a diagnosis. Discuss any concerns with your healthcare team.</p>
+                            <p style="margin:24px 0 0; padding-top:16px; border-top:1px solid #E2E8F0; font-size:12px; color:#94A3B8; line-height:1.5;">This is a screening estimate, not a diagnosis. Discuss any concerns with your health team.</p>
                         </div>
                     </div>
 
@@ -1716,7 +1716,7 @@ get_header();
                                 // viewer and the PDF share one already-resolved shape.
                                 window.VANCE_MEAL_PLANS = <?php echo wp_json_encode($meal_plan_payloads); ?>;
                             </script>
-                            <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your healthcare team.</p>
+                            <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your health team.</p>
                             <?php
                             // Unsplash licence: credit the photographer wherever the photo
                             // appears. Deliberately near-invisible — it belongs on the page,
@@ -2299,7 +2299,7 @@ get_header();
                                     // the disclaimer at the foot of page 11 and stranded the credit
                                     // alone on a near-empty page 12.
                                     '<div class="pdf-block" style="margin-top:26px; border-top:1px solid #E2E8F0; padding-top:10px; font-size:9px; color:' + PDF_MUTE + '; line-height:1.5;">' +
-                                        'Generated from Vance Medical Hub. Meal plans are general guidance, not personalised dietary advice — check any dietary change with your healthcare team.' +
+                                        'Generated from Vance Medical Hub. Meal plans are general guidance, not personalised dietary advice — check any dietary change with your health team.' +
                                         // Unsplash licence: credit travels with the photos.
                                         (plan.credit ? '<div style="margin-top:5px; color:#94A3B8;">' + esc(plan.credit) + '</div>' : '') +
                                     '</div>' +

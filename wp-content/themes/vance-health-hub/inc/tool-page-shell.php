@@ -315,7 +315,7 @@ $nonce        = wp_create_nonce( 'vance_tool_save_' . $slug );
         </div>
 
         <div class="tool-page-disclaimer">
-            <strong>About this tool.</strong> This tool provides general information to help you understand your health and prepare for conversations with your healthcare team. It does not provide a medical diagnosis and is not a substitute for assessment by a qualified healthcare professional. Results are estimates based only on the information you enter and the general method described; they may not be accurate for your individual circumstances. Do not start, stop or change any treatment, medication or diet on the basis of this tool alone. If you have any concerns about your health, contact your GP, pharmacist or healthcare team. In an emergency call 999 or NHS 111.
+            <strong>About this tool.</strong> This tool provides general information to help you understand your health and prepare for conversations with your health team. It does not provide a medical diagnosis and is not a substitute for assessment by a qualified healthcare professional. Results are estimates based only on the information you enter and the general method described; they may not be accurate for your individual circumstances. Do not start, stop or change any treatment, medication or diet on the basis of this tool alone. If you have any concerns about your health, contact your GP, pharmacist or health team. In an emergency call 999 or NHS 111.
         </div>
 
         <p style="margin: 24px 0 0; font-size: 13px; color: var(--text-light); text-align: center;">

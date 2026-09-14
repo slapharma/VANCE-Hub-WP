@@ -1713,7 +1713,7 @@ function vance_askai_script_data() {
     $disclaimer = sprintf(
         /* translators: %s: medical disclaimer page URL */
         __( '<p><strong>VANCE-Ai gives general information only.</strong> It answers from articles published on this hub and a curated reference library. It is an automated assistant: it can be wrong, incomplete or out of date.</p>
-<p>It does not know your medical history, and it does not provide a diagnosis, a prescription or a treatment plan. It is not a substitute for advice from your own healthcare team, and must not be used for urgent or emergency needs. <strong>If you feel unwell or think you may have a medical emergency, call 999, or NHS 111 now.</strong></p>
+<p>It does not know your medical history, and it does not provide a diagnosis, a prescription or a treatment plan. It is not a substitute for advice from your own health team, and must not be used for urgent or emergency needs. <strong>If you feel unwell or think you may have a medical emergency, call 999, or NHS 111 now.</strong></p>
 <p>Where an answer draws on general knowledge rather than this hub\'s library, it will say so on the line concerned.</p>
 <p>Please do not type anything that identifies you or another person. Conversations are processed by a third-party AI provider and may be stored to improve the service. If you are signed in, your conversations are saved to your account and you can delete them at any time.</p>
 <p>By using VANCE-Ai you accept that it is for general information only. <a href="%s" target="_blank" rel="noopener">Read the full medical disclaimer</a>.</p>', 'vance-health-hub' ),

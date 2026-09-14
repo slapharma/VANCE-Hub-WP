@@ -91,7 +91,7 @@ else : ?>
 <div class="container" style="max-width:900px;">
 	<p style="margin:30px 0 0; padding:20px 24px; background:#EEF6F6; border-left:4px solid var(--primary-color); font-size:13.5px; line-height:1.75; color:#475569;">
 		<strong style="color:var(--secondary-color);"><?php esc_html_e( 'For general information only.', 'vance-health-hub' ); ?></strong>
-		<?php esc_html_e( 'These recipes and meal plans are for general information and are not a substitute for professional medical or dietary advice. Always talk to your GP, dietitian or healthcare team before making significant changes to your diet.', 'vance-health-hub' ); ?>
+		<?php esc_html_e( 'These recipes and meal plans are for general information and are not a substitute for professional medical or dietary advice. Always talk to your GP, dietitian or health team before making significant changes to your diet.', 'vance-health-hub' ); ?>
 	</p>
 </div>
 
