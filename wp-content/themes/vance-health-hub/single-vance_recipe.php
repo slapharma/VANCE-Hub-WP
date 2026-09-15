@@ -80,40 +80,6 @@ while ( have_posts() ) :
 						<img src="<?php echo esc_url( get_the_post_thumbnail_url( $post_id, 'large' ) ); ?>" alt="<?php the_title_attribute(); ?>" style="width:100%;height:auto;max-height:420px;object-fit:cover;border-radius:var(--radius-surface, 14px);margin-bottom:36px;">
 					<?php endif; ?>
 
-					<?php if ( $ingredients ) : ?>
-						<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-							<h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0A1929;margin:0;">Ingredients</h2>
-							<?php if ( '' !== $servings && (int) $servings > 0 ) : ?>
-								<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:var(--radius-surface, 14px);padding:6px 8px;">
-									<span style="font-size:13px;font-weight:600;color:#475569;">Servings</span>
-									<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
-									<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:var(--radius-control, 6px);padding:4px 2px;font-weight:700;">
-									<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
-								</div>
-							<?php endif; ?>
-						</div>
-						<p style="font-size:12.5px;color:#94a3b8;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
-						<?php foreach ( $ingredients as $section ) :
-							$section_name = isset( $section['section'] ) ? trim( (string) $section['section'] ) : '';
-							$items        = isset( $section['items'] ) ? (array) $section['items'] : array();
-							if ( ! $items ) {
-								continue;
-							}
-							?>
-							<?php if ( $section_name ) : ?>
-								<h3 style="font-size:15px;font-weight:700;color:var(--primary-color);margin:20px 0 10px;"><?php echo esc_html( $section_name ); ?></h3>
-							<?php endif; ?>
-							<ul style="list-style:none;margin:0 0 8px;padding:0;">
-								<?php foreach ( $items as $item ) : ?>
-									<li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:15px;color:#334155;">
-										<span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--primary-color);margin-top:8px;"></span>
-										<span data-ingredient-line><?php echo esc_html( $item ); ?></span>
-									</li>
-								<?php endforeach; ?>
-							</ul>
-						<?php endforeach; ?>
-					<?php endif; ?>
-
 					<?php if ( $method ) : ?>
 						<h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0A1929;margin:36px 0 16px;">Method</h2>
 						<ol style="list-style:none;margin:0;padding:0;">
@@ -147,6 +113,46 @@ while ( have_posts() ) :
 					<?php echo vance_recipe_nutrition_panel_html( $post_id ); // phpcs:ignore -- pre-escaped in vance_recipe_nutrition_panel_html(). ?>
 					<?php if ( $credit_line ) : ?>
 						<p style="margin:14px 4px 0;font-size:11px;color:#94a3b8;line-height:1.6;"><?php echo $credit_line; // phpcs:ignore -- pre-escaped in vance_recipe_credit_line_html(). ?></p>
+					<?php endif; ?>
+
+					<a href="<?php echo esc_url( home_url( '/gastro-meal-planner/#recipes' ) ); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:16px;background:#fff;color:var(--primary-color);font-weight:700;font-size:14px;padding:12px 16px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);text-decoration:none;">
+						&larr; Return to Recipe List
+					</a>
+
+					<?php if ( $ingredients ) : ?>
+						<div style="margin-top:24px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:20px;">
+							<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+								<h2 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:#0A1929;margin:0;">Ingredients</h2>
+							</div>
+							<?php if ( '' !== $servings && (int) $servings > 0 ) : ?>
+								<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:var(--radius-surface, 14px);padding:6px 8px;margin-bottom:12px;">
+									<span style="font-size:13px;font-weight:600;color:#475569;">Servings</span>
+									<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
+									<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:var(--radius-control, 6px);padding:4px 2px;font-weight:700;">
+									<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
+								</div>
+							<?php endif; ?>
+							<p style="font-size:12.5px;color:#94a3b8;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
+							<?php foreach ( $ingredients as $section ) :
+								$section_name = isset( $section['section'] ) ? trim( (string) $section['section'] ) : '';
+								$items        = isset( $section['items'] ) ? (array) $section['items'] : array();
+								if ( ! $items ) {
+									continue;
+								}
+								?>
+								<?php if ( $section_name ) : ?>
+									<h3 style="font-size:14px;font-weight:700;color:var(--primary-color);margin:16px 0 8px;"><?php echo esc_html( $section_name ); ?></h3>
+								<?php endif; ?>
+								<ul style="list-style:none;margin:0 0 8px;padding:0;">
+									<?php foreach ( $items as $item ) : ?>
+										<li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#334155;">
+											<span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--primary-color);margin-top:7px;"></span>
+											<span data-ingredient-line><?php echo esc_html( $item ); ?></span>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endforeach; ?>
+						</div>
 					<?php endif; ?>
 				</aside>
 
@@ -245,6 +251,16 @@ while ( have_posts() ) :
 	   can't lose to source order or specificity drift elsewhere. */
 	@media (max-width: 768px) {
 		.vance-rs-layout { grid-template-columns: 1fr !important; }
+		/* Grid items with no explicit order stack in source order, and the
+		   aside (Nutrition, Return to Recipe List, Ingredients+servings) is
+		   the second DOM child — collapsed to one column that put it dead
+		   last, after Method, the plan/PDF buttons and the disclaimer. A
+		   visitor following the recipe on a phone needs the ingredients and
+		   servings stepper before that, not after. order:-1 moves the whole
+		   aside ahead of the main column instead, onto its own line here
+		   since order only reorders direct grid children, not anything
+		   nested inside them. */
+		.vance-rs-layout > aside { order: -1; }
 	}
 	</style>
 
