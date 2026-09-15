@@ -52,7 +52,10 @@
 
 	var grid          = document.getElementById('vance-rh-grid');
 	var searchInput    = document.getElementById('vance-rh-search');
-	var chips          = document.querySelectorAll('.vance-rh-chip');
+	var categoryChipsWrap  = document.getElementById('vance-rh-category-chips');
+	var conditionChipsWrap = document.getElementById('vance-rh-condition-chips');
+	var chips          = categoryChipsWrap ? categoryChipsWrap.querySelectorAll('.vance-rh-chip') : [];
+	var conditionChips = conditionChipsWrap ? conditionChipsWrap.querySelectorAll('.vance-rh-chip') : [];
 	var planNameInput  = document.getElementById('vance-rh-plan-name');
 	var saveBtn        = document.getElementById('vance-rh-save');
 	var totalMealsEl   = document.getElementById('vance-rh-total-meals');
@@ -384,30 +387,56 @@
 		});
 	}
 
-	function applyGridFilter(category, query) {
+	function applyGridFilter(category, query, condition) {
 		if (!grid) { return; }
 		var q = (query || '').trim().toLowerCase();
 		Array.prototype.forEach.call(grid.querySelectorAll('.vance-rh-card'), function (card) {
 			var matchesCat = !category || card.getAttribute('data-recipe-category') === category;
 			var matchesQuery = !q || card.getAttribute('data-recipe-name').indexOf(q) !== -1;
-			card.style.display = (matchesCat && matchesQuery) ? '' : 'none';
+			var tags = (card.getAttribute('data-recipe-tags') || '').split(',');
+			var matchesCondition = !condition || tags.indexOf(condition) !== -1;
+			card.style.display = (matchesCat && matchesQuery && matchesCondition) ? '' : 'none';
 		});
 	}
 
 	var activeCategory = '';
+	var activeCondition = '';
+
+	// Both chip rows update the SAME url (cat= and condition= coexist) and
+	// re-run the filter with whichever dimension didn't just change, so
+	// picking a condition doesn't reset an already-chosen meal category and
+	// vice versa — matching the no-JS server-rendered fallback, which reads
+	// both query args at once (template-parts/recipe-hub-app.php).
+	function updateUrl() {
+		var params = [];
+		if (activeCategory) { params.push('cat=' + encodeURIComponent(activeCategory)); }
+		if (activeCondition) { params.push('condition=' + encodeURIComponent(activeCondition)); }
+		var newUrl = window.location.pathname + (params.length ? '?' + params.join('&') : '') + '#recipes';
+		window.history.replaceState(null, '', newUrl);
+	}
+
 	Array.prototype.forEach.call(chips, function (chip) {
 		chip.addEventListener('click', function (e) {
 			e.preventDefault();
 			var url = new URL(chip.href, window.location.href);
 			activeCategory = url.searchParams.get('cat') || '';
 			Array.prototype.forEach.call(chips, function (c) { c.classList.toggle('is-active', c === chip); });
-			applyGridFilter(activeCategory, searchInput ? searchInput.value : '');
-			var newUrl = window.location.pathname + (activeCategory ? '?cat=' + encodeURIComponent(activeCategory) : '') + '#recipes';
-			window.history.replaceState(null, '', newUrl);
+			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeCondition);
+			updateUrl();
+		});
+	});
+	Array.prototype.forEach.call(conditionChips, function (chip) {
+		chip.addEventListener('click', function (e) {
+			e.preventDefault();
+			var url = new URL(chip.href, window.location.href);
+			activeCondition = url.searchParams.get('condition') || '';
+			Array.prototype.forEach.call(conditionChips, function (c) { c.classList.toggle('is-active', c === chip); });
+			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeCondition);
+			updateUrl();
 		});
 	});
 	if (searchInput) {
-		searchInput.addEventListener('input', function () { applyGridFilter(activeCategory, searchInput.value); });
+		searchInput.addEventListener('input', function () { applyGridFilter(activeCategory, searchInput.value, activeCondition); });
 	}
 
 	// --- Save ----------------------------------------------------------------

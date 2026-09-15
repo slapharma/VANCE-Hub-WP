@@ -16,18 +16,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * everything both need, in one shape, so the server-rendered grid and the
  * client-side picker/search are describing the same data.
  *
- * @return array<int, array{slug:string, name:string, category:string, image:string, url:string, calories:int, minutes:int, servings:int}>
+ * @return array<int, array{slug:string, name:string, category:string, tags:string[], image:string, url:string, calories:int, minutes:int, servings:int}>
  */
 function vance_recipe_planner_data() {
 	$data = vance_recipe_data();
 	$out  = array();
 
 	foreach ( vance_recipe_catalogue() as $slug => $meta ) {
-		$facts = isset( $data[ $slug ] ) ? $data[ $slug ] : array();
-		$out[] = array(
+		$facts     = isset( $data[ $slug ] ) ? $data[ $slug ] : array();
+		$tag_terms = get_the_terms( $meta['id'], 'vance_recipe_tag' );
+		$out[]     = array(
 			'slug'     => $slug,
 			'name'     => $meta['name'],
 			'category' => $meta['category'],
+			'tags'     => ( $tag_terms && ! is_wp_error( $tag_terms ) ) ? wp_list_pluck( $tag_terms, 'slug' ) : array(),
 			'image'    => vance_recipe_image_url( $slug ),
 			'url'      => vance_recipe_url( $slug ),
 			'calories' => isset( $facts['nutrition']['calories'] ) ? (int) $facts['nutrition']['calories'] : 0,
