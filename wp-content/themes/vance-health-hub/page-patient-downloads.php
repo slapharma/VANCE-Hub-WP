@@ -124,6 +124,22 @@ $vpd_downloads = array(
 		'file'  => 'Vance-Health-Hub-IBD-Partner-Guide.pdf',
 		'pages' => 3,
 	),
+	array(
+		'slug'  => 'uc-flare-recovery-guide',
+		'title' => 'Eating During a Flare and Adding Foods Back',
+		'tag'   => 'Ulcerative Colitis',
+		'desc'  => 'What to reduce short-term during a UC flare, and how to widen your diet again as symptoms settle.',
+		'file'  => 'Vance-Health-Hub-UC-Flare-Recovery-Guide.pdf',
+		'pages' => 4,
+	),
+	array(
+		'slug'  => 'uc-3-day-meal-plan',
+		'title' => '3-Day Gentle Meal Plan for a UC Flare',
+		'tag'   => 'Ulcerative Colitis',
+		'desc'  => 'Nine soft-textured recipes for the days a UC flare makes eating harder, ready to follow as written.',
+		'file'  => 'Vance-Health-Hub-UC-3-Day-Meal-Plan.pdf',
+		'pages' => 9,
+	),
 );
 ?>
 
