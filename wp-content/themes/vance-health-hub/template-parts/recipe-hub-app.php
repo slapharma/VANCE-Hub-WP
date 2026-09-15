@@ -82,6 +82,14 @@ $vance_tags = array(
 	'vegetarian'         => __( 'Vegetarian', 'vance-health-hub' ),
 );
 $vance_base_url = home_url( '/gastro-meal-planner/' );
+// Admin-only "Date Uploaded" sort + the upload date shown on each card —
+// current_user_can( 'manage_options' ) is the standard single-site proxy
+// for "is an Administrator". Matches the gate already in
+// vance_recipe_planner_data(), which is WHY $vance_recipes only carries
+// dateUploaded/dateTimestamp at all when this is true; nothing here can
+// show a date to anyone that function already decided not to hand over.
+$vance_is_admin  = current_user_can( 'manage_options' );
+$vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET['sort'];
 ?>
 <div class="<?php echo $vance_rh_embedded ? 'vance-rh-embedded' : ''; ?>">
 
@@ -109,6 +117,18 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 			}
 		);
 		$vance_filters_active = ( '' !== $vance_cat_filter || $vance_tags_filter );
+
+		// Admin-only, and only possible at all because vance_recipe_planner_data()
+		// only put dateTimestamp on $vance_recipes in the first place for an
+		// Administrator — see the gate there.
+		if ( $vance_sort_date ) {
+			usort(
+				$vance_visible_recipes,
+				function ( $a, $b ) {
+					return ( isset( $b['dateTimestamp'] ) ? $b['dateTimestamp'] : 0 ) <=> ( isset( $a['dateTimestamp'] ) ? $a['dateTimestamp'] : 0 );
+				}
+			);
+		}
 		?>
 		<div class="vance-rh-controls">
 			<div class="vance-rh-chips vance-rh-chips--meal" id="vance-rh-filter-chips">
@@ -151,6 +171,20 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 				</form>
 			</div>
 			<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
+			<?php if ( $vance_is_admin ) : ?>
+				<?php
+				// Toggle link: on when NOT already sorted, off (back to the default
+				// order) when it is — carries the current cat/tags filters either way,
+				// same $vance_tags_arg the category chips above already carry.
+				$vance_sort_args = array_merge( $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array(), $vance_tags_arg );
+				if ( ! $vance_sort_date ) {
+					$vance_sort_args['sort'] = 'date';
+				}
+				?>
+				<a class="vance-rh-chip vance-rh-admin-sort<?php echo $vance_sort_date ? ' is-active' : ''; ?>" id="vance-rh-sort-date" data-sort-date="1" data-sort-active="<?php echo $vance_sort_date ? '1' : '0'; ?>" href="<?php echo esc_url( add_query_arg( $vance_sort_args, $vance_base_url ) . '#recipes' ); ?>" title="<?php esc_attr_e( 'Admin only', 'vance-health-hub' ); ?>">
+					<?php esc_html_e( 'Date Uploaded', 'vance-health-hub' ); ?>
+				</a>
+			<?php endif; ?>
 		</div>
 		<p class="vance-rh-count" id="vance-rh-count"<?php echo $vance_filters_active ? '' : ' hidden'; ?>>
 			<?php
@@ -164,7 +198,7 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 		</p>
 		<div class="vance-rh-grid" id="vance-rh-grid">
 			<?php foreach ( $vance_visible_recipes as $r ) : ?>
-				<div class="vance-rh-card" data-recipe-category="<?php echo esc_attr( $r['category'] ); ?>" data-recipe-tags="<?php echo esc_attr( implode( ',', $r['tags'] ) ); ?>" data-recipe-name="<?php echo esc_attr( strtolower( $r['name'] ) ); ?>">
+				<div class="vance-rh-card" data-recipe-category="<?php echo esc_attr( $r['category'] ); ?>" data-recipe-tags="<?php echo esc_attr( implode( ',', $r['tags'] ) ); ?>" data-recipe-name="<?php echo esc_attr( strtolower( $r['name'] ) ); ?>"<?php echo isset( $r['dateTimestamp'] ) ? ' data-recipe-date="' . esc_attr( $r['dateTimestamp'] ) . '"' : ''; ?>>
 					<button type="button" class="vance-rh-card-add" data-quick-add="<?php echo esc_attr( $r['slug'] ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Add %s to plan', 'vance-health-hub' ), $r['name'] ) ); ?>">+</button>
 					<a href="<?php echo esc_url( $r['url'] ); ?>">
 						<div class="vance-rh-card-img" style="background-image:url('<?php echo esc_url( $r['image'] ); ?>');"></div>
@@ -172,6 +206,9 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 							<span class="vance-rh-card-cat"><?php echo esc_html( isset( $vance_categories[ $r['category'] ] ) ? $vance_categories[ $r['category'] ] : $r['category'] ); ?></span>
 							<h3 class="vance-rh-card-name"><?php echo esc_html( $r['name'] ); ?></h3>
 							<div class="vance-rh-card-facts"><?php echo $r['minutes'] ? esc_html( $r['minutes'] . ' min' ) : ''; ?><?php echo ( $r['minutes'] && $r['calories'] ) ? ' &middot; ' : ''; ?><?php echo $r['calories'] ? esc_html( $r['calories'] . ' kcal' ) : ''; ?></div>
+							<?php if ( isset( $r['dateUploaded'] ) ) : ?>
+								<div class="vance-rh-card-date"><?php esc_html_e( 'Uploaded', 'vance-health-hub' ); ?> <?php echo esc_html( $r['dateUploaded'] ); ?></div>
+							<?php endif; ?>
 						</div>
 					</a>
 				</div>

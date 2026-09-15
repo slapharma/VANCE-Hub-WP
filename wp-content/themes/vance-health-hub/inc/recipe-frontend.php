@@ -16,16 +16,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  * everything both need, in one shape, so the server-rendered grid and the
  * client-side picker/search are describing the same data.
  *
- * @return array<int, array{slug:string, name:string, category:string, tags:string[], image:string, url:string, calories:int, minutes:int, servings:int}>
+ * `dateUploaded`/`dateTimestamp` are ONLY added for an Administrator
+ * (current_user_can( 'manage_options' )) — the "Date Uploaded" admin-only
+ * sort in the recipe hub (template-parts/recipe-hub-app.php,
+ * assets/js/recipe-planner.js) reads them, and everyone else's page simply
+ * never has the upload date in its markup or its localized JS config to
+ * find, rather than having it present and merely hidden by CSS.
+ *
+ * @return array<int, array{slug:string, name:string, category:string, tags:string[], image:string, url:string, calories:int, minutes:int, servings:int, dateUploaded?:string, dateTimestamp?:int}>
  */
 function vance_recipe_planner_data() {
-	$data = vance_recipe_data();
-	$out  = array();
+	$data      = vance_recipe_data();
+	$out       = array();
+	$show_date = current_user_can( 'manage_options' );
 
 	foreach ( vance_recipe_catalogue() as $slug => $meta ) {
 		$facts     = isset( $data[ $slug ] ) ? $data[ $slug ] : array();
 		$tag_terms = get_the_terms( $meta['id'], 'vance_recipe_tag' );
-		$out[]     = array(
+		$row       = array(
 			'slug'     => $slug,
 			'name'     => $meta['name'],
 			'category' => $meta['category'],
@@ -36,6 +44,11 @@ function vance_recipe_planner_data() {
 			'minutes'  => isset( $facts['prep'] ) ? ( (int) $facts['prep'] + (int) $facts['cook'] ) : 0,
 			'servings' => isset( $facts['servings'] ) ? (int) $facts['servings'] : 0,
 		);
+		if ( $show_date ) {
+			$row['dateUploaded']  = get_the_date( 'j M Y', $meta['id'] );
+			$row['dateTimestamp'] = (int) get_post_time( 'U', true, $meta['id'] );
+		}
+		$out[] = $row;
 	}
 
 	return $out;
