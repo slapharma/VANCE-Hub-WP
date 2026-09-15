@@ -60,12 +60,13 @@ $vance_categories = array(
  * so a one-off editorial term (e.g. "5-Ingredient Meals for Busy Days",
  * count 1) never silently shows up as a filter chip. Add a slug => label
  * pair by hand when a new condition or dietary-attribute term is worth
- * filtering by. IBD/IBS first (added 2026-09-15), then the pre-existing
- * dietary-attribute terms alphabetically.
+ * filtering by. IBD/IBS/Ulcerative Colitis first (added 2026-09-15), then
+ * the pre-existing dietary-attribute terms alphabetically.
  */
 $vance_tags = array(
 	'ibd'                => __( 'IBD', 'vance-health-hub' ),
 	'ibs'                => __( 'IBS', 'vance-health-hub' ),
+	'ulcerative-colitis' => __( 'Ulcerative Colitis', 'vance-health-hub' ),
 	'dairy-free'         => __( 'Dairy-Free', 'vance-health-hub' ),
 	'garlic-free'        => __( 'Garlic-Free', 'vance-health-hub' ),
 	'gluten-free'        => __( 'Gluten-Free', 'vance-health-hub' ),
