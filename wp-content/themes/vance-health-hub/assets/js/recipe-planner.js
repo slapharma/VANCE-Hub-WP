@@ -405,8 +405,16 @@
 		var cards = grid.querySelectorAll('.vance-rh-card');
 		Array.prototype.forEach.call(cards, function (card) {
 			var matchesCat = !category || card.getAttribute('data-recipe-category') === category;
-			var matchesQuery = !q || card.getAttribute('data-recipe-name').indexOf(q) !== -1;
 			var cardTags = (card.getAttribute('data-recipe-tags') || '').split(',');
+			// Matches the recipe's name OR one of its condition/dietary tags — a
+			// visitor typing a condition like "IBD" expects recipes tagged with
+			// it to surface, not just ones with that word in the title. Tags here
+			// are slugs (e.g. "ibd", "ulcerative-colitis"), which is why a plain
+			// substring check against the joined string is enough; no separate
+			// per-tag loop like matchesTags below needs, since search is OR, not AND.
+			var matchesQuery = !q ||
+				card.getAttribute('data-recipe-name').indexOf(q) !== -1 ||
+				cardTags.join(' ').indexOf(q) !== -1;
 			// Every active tag must be on the card (AND), not just one —
 			// picking Oat-Free and Vegetarian together should narrow the
 			// list, not widen it back out.

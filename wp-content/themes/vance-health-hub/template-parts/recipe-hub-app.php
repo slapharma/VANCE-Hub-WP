@@ -118,9 +118,28 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 		);
 		$vance_filters_active = ( '' !== $vance_cat_filter || $vance_tags_filter );
 
+		/**
+		 * Recipes the initial filter excludes, kept (not dropped) so the grid
+		 * markup below can still render them — hidden — into the DOM. Without
+		 * this, unchecking a tag client-side (assets/js/recipe-planner.js's
+		 * applyGridFilter()) can never reveal a recipe that the *first* page
+		 * load's cat/tags excluded, because querySelectorAll('.vance-rh-card')
+		 * only ever finds what PHP put on the page; only a real reload (which
+		 * re-runs this filter with the new URL) could recover it. Computed via
+		 * array_diff_key (order- and key-preserving) rather than a second
+		 * array_filter with the inverse condition, so this can never drift out
+		 * of sync with $vance_visible_recipes above.
+		 */
+		$vance_hidden_recipes = array_diff_key( $vance_recipes, $vance_visible_recipes );
+		// Fast slug lookup for the hidden flag in the grid loop below — avoids an
+		// in_array() scan of $vance_hidden_recipes per card.
+		$vance_hidden_slugs = array_flip( wp_list_pluck( $vance_hidden_recipes, 'slug' ) );
+
 		// Admin-only, and only possible at all because vance_recipe_planner_data()
 		// only put dateTimestamp on $vance_recipes in the first place for an
-		// Administrator — see the gate there.
+		// Administrator — see the gate there. Only reorders the VISIBLE recipes
+		// (computed above, before this runs) — the hidden ones appended after
+		// them in the grid don't need a display order they're not shown in.
 		if ( $vance_sort_date ) {
 			usort(
 				$vance_visible_recipes,
@@ -129,14 +148,26 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 				}
 			);
 		}
+
+		// What actually gets looped into <div class="vance-rh-grid"> below:
+		// every recipe, visible ones first (in whatever order the block above
+		// left them in) so the no-JS/first-paint DOM order matches what
+		// $vance_visible_recipes says is showing, then the rest, present in
+		// the DOM but display:none, purely as a pool for client-side filtering
+		// to reveal — see the comment on $vance_hidden_recipes above.
+		$vance_grid_recipes = array_merge( $vance_visible_recipes, $vance_hidden_recipes );
 		?>
 		<div class="vance-rh-controls">
-			<div class="vance-rh-chips vance-rh-chips--meal" id="vance-rh-filter-chips">
-				<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
-				<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
-					<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
-				<?php endforeach; ?>
+			<div class="vance-rh-group vance-rh-group--meals">
+				<span class="vance-rh-group-label"><?php esc_html_e( 'Meals', 'vance-health-hub' ); ?></span>
+				<div class="vance-rh-chips vance-rh-chips--meal" id="vance-rh-filter-chips">
+					<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
+					<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
+						<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
+					<?php endforeach; ?>
+				</div>
 			</div>
+			<div class="vance-rh-divider" aria-hidden="true"></div>
 			<?php
 			/**
 			 * Tag dropdown: a checkbox per condition/dietary term, multi-select,
@@ -149,28 +180,38 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 			 * needing the button.
 			 */
 			?>
-			<div class="vance-rh-tags-dropdown">
-				<button type="button" class="vance-rh-chip vance-rh-tags-toggle" id="vance-rh-tags-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="vance-rh-tags-panel">
-					<?php esc_html_e( 'Tags', 'vance-health-hub' ); ?>
-					<span class="vance-rh-tags-count" id="vance-rh-tags-count"<?php echo $vance_tags_filter ? '' : ' hidden'; ?>><?php echo esc_html( count( $vance_tags_filter ) ); ?></span>
-				</button>
-				<form class="vance-rh-tags-panel" id="vance-rh-tags-panel" method="get" action="<?php echo esc_url( $vance_base_url ); ?>">
-					<?php if ( $vance_cat_filter ) : ?>
-						<input type="hidden" name="cat" value="<?php echo esc_attr( $vance_cat_filter ); ?>">
-					<?php endif; ?>
-					<?php foreach ( $vance_tags as $tag_slug => $tag_label ) : ?>
-						<label class="vance-rh-tag-check">
-							<input type="checkbox" name="tags[]" value="<?php echo esc_attr( $tag_slug ); ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>"<?php checked( in_array( $tag_slug, $vance_tags_filter, true ) ); ?>>
-							<?php echo esc_html( $tag_label ); ?>
-						</label>
-					<?php endforeach; ?>
-					<div class="vance-rh-tags-panel-actions">
-						<button type="button" id="vance-rh-tags-clear" class="vance-rh-tags-clear"><?php esc_html_e( 'Clear', 'vance-health-hub' ); ?></button>
-						<button type="submit" class="vance-rh-tags-apply"><?php esc_html_e( 'Apply', 'vance-health-hub' ); ?></button>
-					</div>
-				</form>
+			<div class="vance-rh-group vance-rh-group--tags">
+				<span class="vance-rh-group-label"><?php esc_html_e( 'Recipe Tags', 'vance-health-hub' ); ?></span>
+				<div class="vance-rh-tags-dropdown">
+					<button type="button" class="vance-rh-chip vance-rh-tags-toggle" id="vance-rh-tags-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="vance-rh-tags-panel">
+						<?php esc_html_e( 'Choose', 'vance-health-hub' ); ?>
+						<span class="vance-rh-tags-count" id="vance-rh-tags-count"<?php echo $vance_tags_filter ? '' : ' hidden'; ?>><?php echo esc_html( count( $vance_tags_filter ) ); ?></span>
+					</button>
+					<form class="vance-rh-tags-panel" id="vance-rh-tags-panel" method="get" action="<?php echo esc_url( $vance_base_url ); ?>">
+						<?php if ( $vance_cat_filter ) : ?>
+							<input type="hidden" name="cat" value="<?php echo esc_attr( $vance_cat_filter ); ?>">
+						<?php endif; ?>
+						<?php foreach ( $vance_tags as $tag_slug => $tag_label ) : ?>
+							<label class="vance-rh-tag-check">
+								<input type="checkbox" name="tags[]" value="<?php echo esc_attr( $tag_slug ); ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>"<?php checked( in_array( $tag_slug, $vance_tags_filter, true ) ); ?>>
+								<?php echo esc_html( $tag_label ); ?>
+							</label>
+						<?php endforeach; ?>
+						<div class="vance-rh-tags-panel-actions">
+							<button type="button" id="vance-rh-tags-clear" class="vance-rh-tags-clear"><?php esc_html_e( 'Clear', 'vance-health-hub' ); ?></button>
+							<button type="submit" class="vance-rh-tags-apply"><?php esc_html_e( 'Apply', 'vance-health-hub' ); ?></button>
+						</div>
+					</form>
+				</div>
 			</div>
-			<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
+			<div class="vance-rh-divider" aria-hidden="true"></div>
+			<div class="vance-rh-group vance-rh-group--search">
+				<span class="vance-rh-group-label"><?php esc_html_e( 'Search', 'vance-health-hub' ); ?></span>
+				<div class="vance-rh-search-wrap">
+					<svg class="vance-rh-search-icon" width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M18 18L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+					<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
+				</div>
+			</div>
 			<?php if ( $vance_is_admin ) : ?>
 				<?php
 				// Toggle link: on when NOT already sorted, off (back to the default
@@ -197,8 +238,14 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 			?>
 		</p>
 		<div class="vance-rh-grid" id="vance-rh-grid">
-			<?php foreach ( $vance_visible_recipes as $r ) : ?>
-				<div class="vance-rh-card" data-recipe-category="<?php echo esc_attr( $r['category'] ); ?>" data-recipe-tags="<?php echo esc_attr( implode( ',', $r['tags'] ) ); ?>" data-recipe-name="<?php echo esc_attr( strtolower( $r['name'] ) ); ?>"<?php echo isset( $r['dateTimestamp'] ) ? ' data-recipe-date="' . esc_attr( $r['dateTimestamp'] ) . '"' : ''; ?>>
+			<?php foreach ( $vance_grid_recipes as $r ) : ?>
+				<?php
+				// Present in the DOM either way (see $vance_hidden_recipes above); only the
+				// inline display:none differs — client-side filtering un-hides these by
+				// clearing that style, same as every other .vance-rh-card toggle.
+				$vance_card_hidden = isset( $vance_hidden_slugs[ $r['slug'] ] );
+				?>
+				<div class="vance-rh-card" data-recipe-category="<?php echo esc_attr( $r['category'] ); ?>" data-recipe-tags="<?php echo esc_attr( implode( ',', $r['tags'] ) ); ?>" data-recipe-name="<?php echo esc_attr( strtolower( $r['name'] ) ); ?>"<?php echo isset( $r['dateTimestamp'] ) ? ' data-recipe-date="' . esc_attr( $r['dateTimestamp'] ) . '"' : ''; ?><?php echo $vance_card_hidden ? ' style="display:none;"' : ''; ?>>
 					<button type="button" class="vance-rh-card-add" data-quick-add="<?php echo esc_attr( $r['slug'] ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Add %s to plan', 'vance-health-hub' ), $r['name'] ) ); ?>">+</button>
 					<a href="<?php echo esc_url( $r['url'] ); ?>">
 						<div class="vance-rh-card-img" style="background-image:url('<?php echo esc_url( $r['image'] ); ?>');"></div>

@@ -9,14 +9,28 @@
 .vance-rh-section--grey { background: #f8fafc; }
 .vance-rh-h2 { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #0A1929; margin: 0 0 20px; }
 
-.vance-rh-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+/* Dashboard-style filter bar: one bordered row split into three labelled
+   groups (Meals / Recipe Tags / Search) by a hairline divider each, rather
+   than a loose row of same-weight controls. --radius-field matches the
+   search input/dropdown-menu step of the site's corner-radius scale (see
+   main.css :root) so the bar reads as one control surface, not a card. */
+.vance-rh-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-field); padding: 10px 16px; margin-bottom: 24px; }
+.vance-rh-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vance-rh-group--tags { flex: 0 0 auto; }
+.vance-rh-group--search { flex: 1 1 200px; min-width: 180px; }
+.vance-rh-group-label { flex: none; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--primary-color); white-space: nowrap; }
+.vance-rh-divider { flex: none; align-self: stretch; width: 1px; min-height: 28px; background: #e2e8f0; }
 .vance-rh-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-/* inline-flex + min-height rather than taller padding, so the pill grows to
-   the 44px touch minimum without the label drifting off centre. Was 36px. */
-.vance-rh-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
+/* inline-flex + min-height rather than taller padding, so the chip grows to
+   the 44px touch minimum without the label drifting off centre. Was 36px.
+   --radius-field (not --radius-pill) so chips match the search bar/dropdown
+   step of the corner-radius scale, per the filter bar's own controls. */
+.vance-rh-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-field); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; cursor: pointer; }
 .vance-rh-chip.is-active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
 #vance-rh-filter-chips { flex: 0 1 auto; }
-.vance-rh-search { flex: 1 1 200px; min-width: 160px; max-width: 280px; padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; }
+.vance-rh-search-wrap { position: relative; flex: 1 1 auto; min-width: 0; }
+.vance-rh-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+.vance-rh-search { width: 100%; min-width: 160px; padding: 9px 14px 9px 34px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; background: #fff; }
 
 /* --- Tags dropdown ------------------------------------------------------ */
 .vance-rh-tags-dropdown { position: relative; flex: 0 0 auto; }
@@ -49,6 +63,20 @@
 
 .vance-rh-count { margin: 0 0 16px; font-size: 13.5px; color: #64748b; }
 .vance-rh-count[hidden] { display: none; }
+
+/* Below ~560px the three groups wrap onto their own lines rather than
+   crowding one row — the vertical dividers only make sense between groups
+   sitting side by side, so drop them once a group owns the full width. */
+@media (max-width: 560px) {
+	.vance-rh-controls { flex-direction: column; align-items: stretch; }
+	.vance-rh-divider { display: none; }
+	/* .vance-rh-group--search's desktop flex-basis (200px) is a WIDTH on the
+	   normal row layout, but in this column layout the main axis is height —
+	   a length flex-basis there measures the item's hypothetical HEIGHT, so
+	   without resetting flex-grow/basis too the search group inflates into a
+	   tall, mostly-empty box. Reset the whole shorthand, not just min-width. */
+	.vance-rh-group--search { flex: 0 0 auto; min-width: 0; }
+}
 
 /* --- Admin-only "Date Uploaded" sort ------------------------------------ */
 /* Amber rather than the primary teal is deliberate: it marks this control as
