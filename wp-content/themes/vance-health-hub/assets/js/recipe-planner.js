@@ -52,10 +52,11 @@
 
 	var grid          = document.getElementById('vance-rh-grid');
 	var searchInput    = document.getElementById('vance-rh-search');
-	var categoryChipsWrap  = document.getElementById('vance-rh-category-chips');
-	var conditionChipsWrap = document.getElementById('vance-rh-condition-chips');
-	var chips          = categoryChipsWrap ? categoryChipsWrap.querySelectorAll('.vance-rh-chip') : [];
-	var conditionChips = conditionChipsWrap ? conditionChipsWrap.querySelectorAll('.vance-rh-chip') : [];
+	// One row, three kinds of chip (data-chip-all / data-chip-cat / data-chip-tag)
+	// — see template-parts/recipe-hub-app.php. All chips share one .vance-rh-chip
+	// visual style; only the click handling differs by which data attribute is set.
+	var filterChipsWrap = document.getElementById('vance-rh-filter-chips');
+	var allChips        = filterChipsWrap ? filterChipsWrap.querySelectorAll('.vance-rh-chip') : [];
 	var planNameInput  = document.getElementById('vance-rh-plan-name');
 	var saveBtn        = document.getElementById('vance-rh-save');
 	var totalMealsEl   = document.getElementById('vance-rh-total-meals');
@@ -387,64 +388,81 @@
 		});
 	}
 
-	function applyGridFilter(category, query, condition) {
+	function applyGridFilter(category, query, tags) {
 		if (!grid) { return; }
 		var q = (query || '').trim().toLowerCase();
 		Array.prototype.forEach.call(grid.querySelectorAll('.vance-rh-card'), function (card) {
 			var matchesCat = !category || card.getAttribute('data-recipe-category') === category;
 			var matchesQuery = !q || card.getAttribute('data-recipe-name').indexOf(q) !== -1;
-			var tags = (card.getAttribute('data-recipe-tags') || '').split(',');
-			var matchesCondition = !condition || tags.indexOf(condition) !== -1;
-			card.style.display = (matchesCat && matchesQuery && matchesCondition) ? '' : 'none';
+			var cardTags = (card.getAttribute('data-recipe-tags') || '').split(',');
+			// Every active tag must be on the card (AND), not just one —
+			// picking Oat-Free and Vegetarian together should narrow the
+			// list, not widen it back out.
+			var matchesTags = tags.every(function (t) { return cardTags.indexOf(t) !== -1; });
+			card.style.display = (matchesCat && matchesQuery && matchesTags) ? '' : 'none';
 		});
 	}
 
-	// Seeded from the URL the page actually loaded with — not left at '' —
-	// because both chip rows' click handlers rewrite the url from these two
-	// variables together (updateUrl() below). Leaving condition unseeded
-	// meant loading ?condition=ibs then clicking a category chip silently
-	// dropped &condition=ibs from the address bar (filtering itself still
-	// looked right, since the server had already only rendered IBS cards,
-	// but the URL a visitor copied from there no longer reproduced it).
+	// Seeded from the URL the page actually loaded with, not left empty —
+	// the chip click handlers below rewrite the whole url from these
+	// variables on every click (updateUrl()), so an unseeded value would
+	// silently vanish from the address bar the first time a DIFFERENT chip
+	// was clicked, even though the filtering itself still looked right (the
+	// server had already only rendered the matching cards to begin with).
 	var initialParams = new URLSearchParams(window.location.search);
 	var activeCategory = initialParams.get('cat') || '';
-	var activeCondition = initialParams.get('condition') || '';
+	var activeTags = (initialParams.get('tags') || '').split(',').filter(Boolean);
 
-	// Both chip rows update the SAME url (cat= and condition= coexist) and
-	// re-run the filter with whichever dimension didn't just change, so
-	// picking a condition doesn't reset an already-chosen meal category and
-	// vice versa — matching the no-JS server-rendered fallback, which reads
-	// both query args at once (template-parts/recipe-hub-app.php).
 	function updateUrl() {
 		var params = [];
 		if (activeCategory) { params.push('cat=' + encodeURIComponent(activeCategory)); }
-		if (activeCondition) { params.push('condition=' + encodeURIComponent(activeCondition)); }
+		if (activeTags.length) { params.push('tags=' + encodeURIComponent(activeTags.join(','))); }
 		var newUrl = window.location.pathname + (params.length ? '?' + params.join('&') : '') + '#recipes';
 		window.history.replaceState(null, '', newUrl);
 	}
 
-	Array.prototype.forEach.call(chips, function (chip) {
-		chip.addEventListener('click', function (e) {
+	function refreshChipStates() {
+		Array.prototype.forEach.call(allChips, function (chip) {
+			if (chip.hasAttribute('data-chip-all')) {
+				chip.classList.toggle('is-active', !activeCategory && !activeTags.length);
+			} else if (chip.hasAttribute('data-chip-cat')) {
+				chip.classList.toggle('is-active', chip.getAttribute('data-chip-cat') === activeCategory);
+			} else if (chip.hasAttribute('data-chip-tag')) {
+				chip.classList.toggle('is-active', activeTags.indexOf(chip.getAttribute('data-chip-tag')) !== -1);
+			}
+		});
+	}
+
+	if (filterChipsWrap) {
+		filterChipsWrap.addEventListener('click', function (e) {
+			var chip = e.target.closest('.vance-rh-chip');
+			if (!chip) { return; }
 			e.preventDefault();
-			var url = new URL(chip.href, window.location.href);
-			activeCategory = url.searchParams.get('cat') || '';
-			Array.prototype.forEach.call(chips, function (c) { c.classList.toggle('is-active', c === chip); });
-			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeCondition);
+
+			if (chip.hasAttribute('data-chip-all')) {
+				activeCategory = '';
+				activeTags = [];
+			} else if (chip.hasAttribute('data-chip-cat')) {
+				// Single-select: a recipe only has one category, so picking one
+				// replaces whichever was active rather than toggling.
+				activeCategory = chip.getAttribute('data-chip-cat');
+			} else if (chip.hasAttribute('data-chip-tag')) {
+				// Multi-select: toggle this one tag, leave the rest of the
+				// selection (and the category) exactly as it was.
+				var tag = chip.getAttribute('data-chip-tag');
+				var idx = activeTags.indexOf(tag);
+				if (idx === -1) { activeTags.push(tag); } else { activeTags.splice(idx, 1); }
+			} else {
+				return;
+			}
+
+			refreshChipStates();
+			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeTags);
 			updateUrl();
 		});
-	});
-	Array.prototype.forEach.call(conditionChips, function (chip) {
-		chip.addEventListener('click', function (e) {
-			e.preventDefault();
-			var url = new URL(chip.href, window.location.href);
-			activeCondition = url.searchParams.get('condition') || '';
-			Array.prototype.forEach.call(conditionChips, function (c) { c.classList.toggle('is-active', c === chip); });
-			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeCondition);
-			updateUrl();
-		});
-	});
+	}
 	if (searchInput) {
-		searchInput.addEventListener('input', function () { applyGridFilter(activeCategory, searchInput.value, activeCondition); });
+		searchInput.addEventListener('input', function () { applyGridFilter(activeCategory, searchInput.value, activeTags); });
 	}
 
 	// --- Save ----------------------------------------------------------------

@@ -35,25 +35,50 @@ $vance_rh_embedded = ! empty( $vance_rh_embedded )
 	|| ( isset( $args['vance_rh_embedded'] ) && $args['vance_rh_embedded'] );
 
 $vance_cat_filter  = isset( $_GET['cat'] ) ? sanitize_key( wp_unslash( $_GET['cat'] ) ) : '';
-$vance_cond_filter = isset( $_GET['condition'] ) ? sanitize_key( wp_unslash( $_GET['condition'] ) ) : '';
-$vance_recipes     = vance_recipe_planner_data();
-$vance_categories  = array(
+// Comma-separated, order-preserved, deduped: several can be active together
+// (a recipe can be both Oat-Free and Vegetarian), unlike category, which a
+// recipe only ever has one of.
+$vance_tags_filter = array();
+if ( isset( $_GET['tags'] ) ) {
+	foreach ( explode( ',', sanitize_text_field( wp_unslash( $_GET['tags'] ) ) ) as $t ) {
+		$t = sanitize_key( $t );
+		if ( '' !== $t && ! in_array( $t, $vance_tags_filter, true ) ) {
+			$vance_tags_filter[] = $t;
+		}
+	}
+}
+$vance_recipes    = vance_recipe_planner_data();
+$vance_categories = array(
 	'breakfast' => __( 'Breakfast', 'vance-health-hub' ),
 	'lunch'     => __( 'Lunch', 'vance-health-hub' ),
 	'dinner'    => __( 'Dinner', 'vance-health-hub' ),
 	'snacks'    => __( 'Snacks', 'vance-health-hub' ),
 );
 /**
- * Indication chips, a second filter row alongside the meal-category one
- * above. Fixed list (not every vance_recipe_tag term — this row is for the
- * IBD/IBS condition tags added 2026-09-15, not the dietary-attribute tags
- * living in the same taxonomy) so a new "Oat-Free"-style term never
- * silently appears here uninvited; add a slug => label pair by hand when a
- * new condition tag is introduced.
+ * Tag chips, sharing one row with the meal-category chips above rather than
+ * every vance_recipe_tag term automatically appearing here — a fixed list
+ * so a one-off editorial term (e.g. "5-Ingredient Meals for Busy Days",
+ * count 1) never silently shows up as a filter chip. Add a slug => label
+ * pair by hand when a new condition or dietary-attribute term is worth
+ * filtering by. IBD/IBS first (added 2026-09-15), then the pre-existing
+ * dietary-attribute terms alphabetically.
  */
-$vance_conditions = array(
-	'ibd' => __( 'IBD', 'vance-health-hub' ),
-	'ibs' => __( 'IBS', 'vance-health-hub' ),
+$vance_tags = array(
+	'ibd'                => __( 'IBD', 'vance-health-hub' ),
+	'ibs'                => __( 'IBS', 'vance-health-hub' ),
+	'dairy-free'         => __( 'Dairy-Free', 'vance-health-hub' ),
+	'garlic-free'        => __( 'Garlic-Free', 'vance-health-hub' ),
+	'gluten-free'        => __( 'Gluten-Free', 'vance-health-hub' ),
+	'high-fibre'         => __( 'High Fibre', 'vance-health-hub' ),
+	'high-protein'       => __( 'High Protein', 'vance-health-hub' ),
+	'mediterranean-style' => __( 'Mediterranean-Style', 'vance-health-hub' ),
+	'nutrient-dense'     => __( 'Nutrient-Dense', 'vance-health-hub' ),
+	'oat-free'           => __( 'Oat-Free', 'vance-health-hub' ),
+	'omega-3-rich'       => __( 'Omega-3 Rich', 'vance-health-hub' ),
+	'onion-free'         => __( 'Onion-Free', 'vance-health-hub' ),
+	'refined-sugar-free' => __( 'Refined Sugar-Free', 'vance-health-hub' ),
+	'vegan-friendly'     => __( 'Vegan-Friendly', 'vance-health-hub' ),
+	'vegetarian'         => __( 'Vegetarian', 'vance-health-hub' ),
 );
 $vance_base_url = home_url( '/gastro-meal-planner/' );
 ?>
@@ -63,37 +88,45 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 	<div class="container">
 		<h2 class="vance-rh-h2"><?php esc_html_e( 'Recipes', 'vance-health-hub' ); ?></h2>
 		<?php
-		// Carried into whichever chip row's OWN link doesn't already set it, so
-		// clicking a category chip doesn't drop an active condition filter and
-		// vice versa — the two rows filter independently, not exclusively.
-		$vance_carry_cat  = $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array();
-		$vance_carry_cond = $vance_cond_filter ? array( 'condition' => $vance_cond_filter ) : array();
+		// Carried into a category chip's own link so picking a meal type
+		// doesn't drop the active tag selection, and vice versa — the two
+		// filter independently (AND together), not exclusively. $vance_tags_arg
+		// is the one bit shared by every category-chip href below.
+		$vance_tags_arg = $vance_tags_filter ? array( 'tags' => implode( ',', $vance_tags_filter ) ) : array();
 		?>
 		<div class="vance-rh-controls">
-			<div class="vance-rh-chips" id="vance-rh-category-chips">
-				<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( $vance_carry_cond, $vance_base_url ) . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
+			<div class="vance-rh-chips" id="vance-rh-filter-chips">
+				<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
 				<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
-					<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_carry_cond ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
+					<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
+				<?php endforeach; ?>
+				<?php
+				foreach ( $vance_tags as $tag_slug => $tag_label ) :
+					// Toggle href: drop this slug if it's already selected, add it
+					// if not, everything else (category, other active tags) kept —
+					// the no-JS equivalent of the JS click handler's multi-select
+					// toggle below.
+					$tag_is_active = in_array( $tag_slug, $vance_tags_filter, true );
+					$next_tags     = $tag_is_active
+						? array_diff( $vance_tags_filter, array( $tag_slug ) )
+						: array_merge( $vance_tags_filter, array( $tag_slug ) );
+					$tag_args      = $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array();
+					if ( $next_tags ) {
+						$tag_args['tags'] = implode( ',', $next_tags );
+					}
+					?>
+					<a class="vance-rh-chip<?php echo $tag_is_active ? ' is-active' : ''; ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>" href="<?php echo esc_url( add_query_arg( $tag_args, $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $tag_label ); ?></a>
 				<?php endforeach; ?>
 			</div>
 			<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
-		</div>
-		<div class="vance-rh-controls vance-rh-controls--condition">
-			<div class="vance-rh-chips" id="vance-rh-condition-chips">
-				<span class="vance-rh-chips-label"><?php esc_html_e( 'Suitable for:', 'vance-health-hub' ); ?></span>
-				<a class="vance-rh-chip<?php echo ( '' === $vance_cond_filter ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( $vance_carry_cat, $vance_base_url ) . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
-				<?php foreach ( $vance_conditions as $cond_slug => $cond_label ) : ?>
-					<a class="vance-rh-chip<?php echo ( $vance_cond_filter === $cond_slug ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'condition' => $cond_slug ), $vance_carry_cat ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cond_label ); ?></a>
-				<?php endforeach; ?>
-			</div>
 		</div>
 		<div class="vance-rh-grid" id="vance-rh-grid">
 			<?php foreach ( $vance_recipes as $r ) :
 				if ( $vance_cat_filter && $vance_cat_filter !== $r['category'] ) {
 					continue; // No-JS fallback: server-side filter when JS hasn't taken over.
 				}
-				if ( $vance_cond_filter && ! in_array( $vance_cond_filter, $r['tags'], true ) ) {
-					continue;
+				if ( array_diff( $vance_tags_filter, $r['tags'] ) ) {
+					continue; // Every selected tag must be present (AND), not just one.
 				}
 				?>
 				<div class="vance-rh-card" data-recipe-category="<?php echo esc_attr( $r['category'] ); ?>" data-recipe-tags="<?php echo esc_attr( implode( ',', $r['tags'] ) ); ?>" data-recipe-name="<?php echo esc_attr( strtolower( $r['name'] ) ); ?>">
