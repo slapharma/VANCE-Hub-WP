@@ -52,11 +52,21 @@
 
 	var grid          = document.getElementById('vance-rh-grid');
 	var searchInput    = document.getElementById('vance-rh-search');
-	// One row, three kinds of chip (data-chip-all / data-chip-cat / data-chip-tag)
-	// — see template-parts/recipe-hub-app.php. All chips share one .vance-rh-chip
-	// visual style; only the click handling differs by which data attribute is set.
+	var countEl        = document.getElementById('vance-rh-count');
+	// Meal row: two kinds of chip (data-chip-all / data-chip-cat) — see
+	// template-parts/recipe-hub-app.php.
 	var filterChipsWrap = document.getElementById('vance-rh-filter-chips');
 	var allChips        = filterChipsWrap ? filterChipsWrap.querySelectorAll('.vance-rh-chip') : [];
+	// Tags dropdown: a <form> of checkboxes rather than chips, so it works
+	// with no JS at all (a plain GET submit) before this enhances it into an
+	// actual dropdown — see the PHP comment above the form.
+	var tagsDropdown  = document.querySelector('.vance-rh-tags-dropdown');
+	var tagsToggle    = document.getElementById('vance-rh-tags-toggle');
+	var tagsPanel     = document.getElementById('vance-rh-tags-panel');
+	var tagsCountEl   = document.getElementById('vance-rh-tags-count');
+	var tagsClearBtn  = document.getElementById('vance-rh-tags-clear');
+	var tagsApplyBtn  = tagsPanel ? tagsPanel.querySelector('.vance-rh-tags-apply') : null;
+	var tagCheckboxes = tagsPanel ? tagsPanel.querySelectorAll('input[type="checkbox"]') : [];
 	var planNameInput  = document.getElementById('vance-rh-plan-name');
 	var saveBtn        = document.getElementById('vance-rh-save');
 	var totalMealsEl   = document.getElementById('vance-rh-total-meals');
@@ -391,7 +401,9 @@
 	function applyGridFilter(category, query, tags) {
 		if (!grid) { return; }
 		var q = (query || '').trim().toLowerCase();
-		Array.prototype.forEach.call(grid.querySelectorAll('.vance-rh-card'), function (card) {
+		var visible = 0;
+		var cards = grid.querySelectorAll('.vance-rh-card');
+		Array.prototype.forEach.call(cards, function (card) {
 			var matchesCat = !category || card.getAttribute('data-recipe-category') === category;
 			var matchesQuery = !q || card.getAttribute('data-recipe-name').indexOf(q) !== -1;
 			var cardTags = (card.getAttribute('data-recipe-tags') || '').split(',');
@@ -399,8 +411,15 @@
 			// picking Oat-Free and Vegetarian together should narrow the
 			// list, not widen it back out.
 			var matchesTags = tags.every(function (t) { return cardTags.indexOf(t) !== -1; });
-			card.style.display = (matchesCat && matchesQuery && matchesTags) ? '' : 'none';
+			var show = matchesCat && matchesQuery && matchesTags;
+			card.style.display = show ? '' : 'none';
+			if (show) { visible++; }
 		});
+		if (countEl) {
+			var active = !!category || tags.length > 0 || q !== '';
+			countEl.hidden = !active;
+			if (active) { countEl.textContent = 'Showing ' + visible + ' of ' + cards.length + ' recipes'; }
+		}
 	}
 
 	// Seeded from the URL the page actually loaded with, not left empty —
@@ -427,10 +446,13 @@
 				chip.classList.toggle('is-active', !activeCategory && !activeTags.length);
 			} else if (chip.hasAttribute('data-chip-cat')) {
 				chip.classList.toggle('is-active', chip.getAttribute('data-chip-cat') === activeCategory);
-			} else if (chip.hasAttribute('data-chip-tag')) {
-				chip.classList.toggle('is-active', activeTags.indexOf(chip.getAttribute('data-chip-tag')) !== -1);
 			}
 		});
+		if (tagsToggle) { tagsToggle.classList.toggle('is-active', activeTags.length > 0); }
+		if (tagsCountEl) {
+			tagsCountEl.textContent = String(activeTags.length);
+			tagsCountEl.hidden = activeTags.length === 0;
+		}
 	}
 
 	if (filterChipsWrap) {
@@ -442,16 +464,11 @@
 			if (chip.hasAttribute('data-chip-all')) {
 				activeCategory = '';
 				activeTags = [];
+				Array.prototype.forEach.call(tagCheckboxes, function (cb) { cb.checked = false; });
 			} else if (chip.hasAttribute('data-chip-cat')) {
 				// Single-select: a recipe only has one category, so picking one
 				// replaces whichever was active rather than toggling.
 				activeCategory = chip.getAttribute('data-chip-cat');
-			} else if (chip.hasAttribute('data-chip-tag')) {
-				// Multi-select: toggle this one tag, leave the rest of the
-				// selection (and the category) exactly as it was.
-				var tag = chip.getAttribute('data-chip-tag');
-				var idx = activeTags.indexOf(tag);
-				if (idx === -1) { activeTags.push(tag); } else { activeTags.splice(idx, 1); }
 			} else {
 				return;
 			}
@@ -463,6 +480,67 @@
 	}
 	if (searchInput) {
 		searchInput.addEventListener('input', function () { applyGridFilter(activeCategory, searchInput.value, activeTags); });
+	}
+
+	// --- Tags dropdown ---------------------------------------------------
+
+	if (tagsPanel && tagsToggle) {
+		// Enhance the always-visible, no-JS form into a real dropdown. Done
+		// here rather than in the PHP-rendered default so a visitor with JS
+		// disabled (or JS that fails before this line) still gets a working,
+		// if inline, checkbox list instead of one hidden behind a broken toggle.
+		tagsPanel.setAttribute('hidden', '');
+		tagsPanel.classList.add('vance-rh-tags-panel--js');
+		if (tagsApplyBtn) { tagsApplyBtn.classList.add('vance-rh-is-redundant'); }
+
+		function closeTagsPanel() {
+			tagsPanel.setAttribute('hidden', '');
+			tagsToggle.setAttribute('aria-expanded', 'false');
+		}
+		function openTagsPanel() {
+			tagsPanel.removeAttribute('hidden');
+			tagsToggle.setAttribute('aria-expanded', 'true');
+		}
+
+		tagsToggle.addEventListener('click', function (e) {
+			e.preventDefault();
+			if (tagsPanel.hasAttribute('hidden')) { openTagsPanel(); } else { closeTagsPanel(); }
+		});
+		document.addEventListener('click', function (e) {
+			if (tagsDropdown && !tagsDropdown.contains(e.target)) { closeTagsPanel(); }
+		});
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && !tagsPanel.hasAttribute('hidden')) { closeTagsPanel(); tagsToggle.focus(); }
+		});
+
+		// No-JS fallback is a real GET submit; once JS is running, every
+		// checkbox applies instantly instead, so the submit only matters if
+		// something above threw before reaching this line.
+		tagsPanel.addEventListener('submit', function (e) { e.preventDefault(); closeTagsPanel(); });
+
+		tagsPanel.addEventListener('change', function (e) {
+			var cb = e.target.closest('input[type="checkbox"]');
+			if (!cb) { return; }
+			var tag = cb.getAttribute('data-chip-tag');
+			var idx = activeTags.indexOf(tag);
+			if (cb.checked && idx === -1) { activeTags.push(tag); }
+			else if (!cb.checked && idx !== -1) { activeTags.splice(idx, 1); }
+
+			refreshChipStates();
+			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeTags);
+			updateUrl();
+		});
+
+		if (tagsClearBtn) {
+			tagsClearBtn.addEventListener('click', function () {
+				if (!activeTags.length) { return; }
+				activeTags = [];
+				Array.prototype.forEach.call(tagCheckboxes, function (cb) { cb.checked = false; });
+				refreshChipStates();
+				applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeTags);
+				updateUrl();
+			});
+		}
 	}
 
 	// --- Save ----------------------------------------------------------------

@@ -94,55 +94,76 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 		// filter independently (AND together), not exclusively. $vance_tags_arg
 		// is the one bit shared by every category-chip href below.
 		$vance_tags_arg = $vance_tags_filter ? array( 'tags' => implode( ',', $vance_tags_filter ) ) : array();
+
+		// Filtered once here (not inside the grid loop with `continue`) so the
+		// result count above the grid and the cards actually rendered come
+		// from the exact same list, rather than the count being a second,
+		// separately-written copy of this same logic that could drift from it.
+		$vance_visible_recipes = array_filter(
+			$vance_recipes,
+			function ( $r ) use ( $vance_cat_filter, $vance_tags_filter ) {
+				if ( $vance_cat_filter && $vance_cat_filter !== $r['category'] ) {
+					return false;
+				}
+				return ! array_diff( $vance_tags_filter, $r['tags'] ); // every selected tag present (AND).
+			}
+		);
+		$vance_filters_active = ( '' !== $vance_cat_filter || $vance_tags_filter );
 		?>
 		<div class="vance-rh-controls">
-			<div id="vance-rh-filter-chips">
-				<?php
-				/**
-				 * Two visually distinct rows sharing one #vance-rh-filter-chips
-				 * ancestor — the JS click delegation (assets/js/recipe-planner.js)
-				 * listens on that ancestor and tells a meal chip from a tag chip by
-				 * its data-chip-* attribute, not by which row it's in, so splitting
-				 * the markup into two rows needed no JS change at all.
-				 */
-				?>
-				<div class="vance-rh-chips vance-rh-chips--meal">
-					<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
-					<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
-						<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
+			<div class="vance-rh-chips vance-rh-chips--meal" id="vance-rh-filter-chips">
+				<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
+				<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
+					<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
+				<?php endforeach; ?>
+			</div>
+			<?php
+			/**
+			 * Tag dropdown: a checkbox per condition/dietary term, multi-select,
+			 * AND-combined with each other and with the category above — same
+			 * filtering semantics as the old inline tag-chip row, just a
+			 * different control. Rendered OPEN (no `hidden`) by default so the
+			 * checkboxes work with no JS at all (the "Apply" button below submits
+			 * the surrounding form as a normal GET request); JS then collapses it
+			 * into an actual dropdown and applies each change instantly instead of
+			 * needing the button.
+			 */
+			?>
+			<div class="vance-rh-tags-dropdown">
+				<button type="button" class="vance-rh-chip vance-rh-tags-toggle" id="vance-rh-tags-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="vance-rh-tags-panel">
+					<?php esc_html_e( 'Tags', 'vance-health-hub' ); ?>
+					<span class="vance-rh-tags-count" id="vance-rh-tags-count"<?php echo $vance_tags_filter ? '' : ' hidden'; ?>><?php echo esc_html( count( $vance_tags_filter ) ); ?></span>
+				</button>
+				<form class="vance-rh-tags-panel" id="vance-rh-tags-panel" method="get" action="<?php echo esc_url( $vance_base_url ); ?>">
+					<?php if ( $vance_cat_filter ) : ?>
+						<input type="hidden" name="cat" value="<?php echo esc_attr( $vance_cat_filter ); ?>">
+					<?php endif; ?>
+					<?php foreach ( $vance_tags as $tag_slug => $tag_label ) : ?>
+						<label class="vance-rh-tag-check">
+							<input type="checkbox" name="tags[]" value="<?php echo esc_attr( $tag_slug ); ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>"<?php checked( in_array( $tag_slug, $vance_tags_filter, true ) ); ?>>
+							<?php echo esc_html( $tag_label ); ?>
+						</label>
 					<?php endforeach; ?>
-				</div>
-				<div class="vance-rh-chips vance-rh-chips--tags">
-					<?php
-					foreach ( $vance_tags as $tag_slug => $tag_label ) :
-						// Toggle href: drop this slug if it's already selected, add it
-						// if not, everything else (category, other active tags) kept —
-						// the no-JS equivalent of the JS click handler's multi-select
-						// toggle below.
-						$tag_is_active = in_array( $tag_slug, $vance_tags_filter, true );
-						$next_tags     = $tag_is_active
-							? array_diff( $vance_tags_filter, array( $tag_slug ) )
-							: array_merge( $vance_tags_filter, array( $tag_slug ) );
-						$tag_args      = $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array();
-						if ( $next_tags ) {
-							$tag_args['tags'] = implode( ',', $next_tags );
-						}
-						?>
-						<a class="vance-rh-chip vance-rh-chip--tag<?php echo $tag_is_active ? ' is-active' : ''; ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>" href="<?php echo esc_url( add_query_arg( $tag_args, $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $tag_label ); ?></a>
-					<?php endforeach; ?>
-				</div>
+					<div class="vance-rh-tags-panel-actions">
+						<button type="button" id="vance-rh-tags-clear" class="vance-rh-tags-clear"><?php esc_html_e( 'Clear', 'vance-health-hub' ); ?></button>
+						<button type="submit" class="vance-rh-tags-apply"><?php esc_html_e( 'Apply', 'vance-health-hub' ); ?></button>
+					</div>
+				</form>
 			</div>
 			<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
 		</div>
+		<p class="vance-rh-count" id="vance-rh-count"<?php echo $vance_filters_active ? '' : ' hidden'; ?>>
+			<?php
+			printf(
+				/* translators: 1: number of matching recipes, 2: total number of recipes */
+				esc_html__( 'Showing %1$d of %2$d recipes', 'vance-health-hub' ),
+				count( $vance_visible_recipes ),
+				count( $vance_recipes )
+			);
+			?>
+		</p>
 		<div class="vance-rh-grid" id="vance-rh-grid">
-			<?php foreach ( $vance_recipes as $r ) :
-				if ( $vance_cat_filter && $vance_cat_filter !== $r['category'] ) {
-					continue; // No-JS fallback: server-side filter when JS hasn't taken over.
-				}
-				if ( array_diff( $vance_tags_filter, $r['tags'] ) ) {
-					continue; // Every selected tag must be present (AND), not just one.
-				}
-				?>
+			<?php foreach ( $vance_visible_recipes as $r ) : ?>
 				<div class="vance-rh-card" data-recipe-category="<?php echo esc_attr( $r['category'] ); ?>" data-recipe-tags="<?php echo esc_attr( implode( ',', $r['tags'] ) ); ?>" data-recipe-name="<?php echo esc_attr( strtolower( $r['name'] ) ); ?>">
 					<button type="button" class="vance-rh-card-add" data-quick-add="<?php echo esc_attr( $r['slug'] ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Add %s to plan', 'vance-health-hub' ), $r['name'] ) ); ?>">+</button>
 					<a href="<?php echo esc_url( $r['url'] ); ?>">
