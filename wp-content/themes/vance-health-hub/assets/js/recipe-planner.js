@@ -399,8 +399,16 @@
 		});
 	}
 
-	var activeCategory = '';
-	var activeCondition = '';
+	// Seeded from the URL the page actually loaded with — not left at '' —
+	// because both chip rows' click handlers rewrite the url from these two
+	// variables together (updateUrl() below). Leaving condition unseeded
+	// meant loading ?condition=ibs then clicking a category chip silently
+	// dropped &condition=ibs from the address bar (filtering itself still
+	// looked right, since the server had already only rendered IBS cards,
+	// but the URL a visitor copied from there no longer reproduced it).
+	var initialParams = new URLSearchParams(window.location.search);
+	var activeCategory = initialParams.get('cat') || '';
+	var activeCondition = initialParams.get('condition') || '';
 
 	// Both chip rows update the SAME url (cat= and condition= coexist) and
 	// re-run the filter with whichever dimension didn't just change, so
