@@ -95,7 +95,6 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 
 <section class="vance-rh-section" id="recipes">
 	<div class="container">
-		<h2 class="vance-rh-h2"><?php esc_html_e( 'Recipes', 'vance-health-hub' ); ?></h2>
 		<?php
 		// Carried into a category chip's own link so picking a meal type
 		// doesn't drop the active tag selection, and vice versa — the two
@@ -157,6 +156,26 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 		// to reveal — see the comment on $vance_hidden_recipes above.
 		$vance_grid_recipes = array_merge( $vance_visible_recipes, $vance_hidden_recipes );
 		?>
+		<div class="vance-rh-section-head">
+			<h2 class="vance-rh-h2"><?php esc_html_e( 'Recipes', 'vance-health-hub' ); ?></h2>
+			<?php if ( $vance_is_admin ) : ?>
+				<?php
+				// Toggle link: on when NOT already sorted, off (back to the default
+				// order) when it is -- carries the current cat/tags filters either way,
+				// same $vance_tags_arg the category chips above already carry. Lives
+				// next to the title rather than inside .vance-rh-controls: it isn't a
+				// visitor-facing filter, just an admin convenience, so it doesn't
+				// belong in the same row as Meals/Recipe Tags/Search.
+				$vance_sort_args = array_merge( $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array(), $vance_tags_arg );
+				if ( ! $vance_sort_date ) {
+					$vance_sort_args['sort'] = 'date';
+				}
+				?>
+				<a class="vance-rh-chip vance-rh-admin-sort<?php echo $vance_sort_date ? ' is-active' : ''; ?>" id="vance-rh-sort-date" data-sort-date="1" data-sort-active="<?php echo $vance_sort_date ? '1' : '0'; ?>" href="<?php echo esc_url( add_query_arg( $vance_sort_args, $vance_base_url ) . '#recipes' ); ?>" title="<?php esc_attr_e( 'Admin only', 'vance-health-hub' ); ?>">
+					<?php esc_html_e( 'Date Uploaded', 'vance-health-hub' ); ?>
+				</a>
+			<?php endif; ?>
+		</div>
 		<div class="vance-rh-controls">
 			<div class="vance-rh-group vance-rh-group--meals">
 				<span class="vance-rh-group-label"><?php esc_html_e( 'Meals', 'vance-health-hub' ); ?></span>
@@ -212,20 +231,6 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 					<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
 				</div>
 			</div>
-			<?php if ( $vance_is_admin ) : ?>
-				<?php
-				// Toggle link: on when NOT already sorted, off (back to the default
-				// order) when it is — carries the current cat/tags filters either way,
-				// same $vance_tags_arg the category chips above already carry.
-				$vance_sort_args = array_merge( $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array(), $vance_tags_arg );
-				if ( ! $vance_sort_date ) {
-					$vance_sort_args['sort'] = 'date';
-				}
-				?>
-				<a class="vance-rh-chip vance-rh-admin-sort<?php echo $vance_sort_date ? ' is-active' : ''; ?>" id="vance-rh-sort-date" data-sort-date="1" data-sort-active="<?php echo $vance_sort_date ? '1' : '0'; ?>" href="<?php echo esc_url( add_query_arg( $vance_sort_args, $vance_base_url ) . '#recipes' ); ?>" title="<?php esc_attr_e( 'Admin only', 'vance-health-hub' ); ?>">
-					<?php esc_html_e( 'Date Uploaded', 'vance-health-hub' ); ?>
-				</a>
-			<?php endif; ?>
 		</div>
 		<p class="vance-rh-count" id="vance-rh-count"<?php echo $vance_filters_active ? '' : ' hidden'; ?>>
 			<?php

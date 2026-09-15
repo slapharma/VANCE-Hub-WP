@@ -7,7 +7,10 @@
  */
 .vance-rh-section { padding: 48px 0; }
 .vance-rh-section--grey { background: #f8fafc; }
-.vance-rh-h2 { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #0A1929; margin: 0 0 20px; }
+.vance-rh-h2 { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #0A1929; margin: 0; }
+/* Admin-only "Date Uploaded" sort lives here, next to the title, rather than
+   in .vance-rh-controls — it isn't a visitor-facing filter. */
+.vance-rh-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 
 /* Dashboard-style filter bar: one bordered row split into three labelled
    groups (Meals / Recipe Tags / Search) by a hairline divider each, rather
@@ -76,6 +79,16 @@
 	   without resetting flex-grow/basis too the search group inflates into a
 	   tall, mostly-empty box. Reset the whole shorthand, not just min-width. */
 	.vance-rh-group--search { flex: 0 0 auto; min-width: 0; }
+	/* Stack each group's label above its row instead of beside it, so the
+	   meal chips get the full row width to fit in rather than losing ~65px
+	   off the left to the "Meals" caption sitting next to them. */
+	.vance-rh-group { flex-direction: column; align-items: flex-start; gap: 6px; }
+	/* flex: 1 1 0 on five chips always sums to exactly the row width no
+	   matter how long "Breakfast" is, so this can never wrap to a second
+	   line — text-overflow ellipsis is the fallback if a label is still
+	   tighter than its share at a given phone width, rather than a wrap. */
+	.vance-rh-chips--meal { flex-wrap: nowrap; gap: 4px; width: 100%; }
+	.vance-rh-chips--meal .vance-rh-chip { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 6px 4px; font-size: 11px; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* --- Admin-only "Date Uploaded" sort ------------------------------------ */
