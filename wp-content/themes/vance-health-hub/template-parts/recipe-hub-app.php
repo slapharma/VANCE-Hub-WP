@@ -95,28 +95,41 @@ $vance_base_url = home_url( '/gastro-meal-planner/' );
 		$vance_tags_arg = $vance_tags_filter ? array( 'tags' => implode( ',', $vance_tags_filter ) ) : array();
 		?>
 		<div class="vance-rh-controls">
-			<div class="vance-rh-chips" id="vance-rh-filter-chips">
-				<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
-				<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
-					<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
-				<?php endforeach; ?>
+			<div id="vance-rh-filter-chips">
 				<?php
-				foreach ( $vance_tags as $tag_slug => $tag_label ) :
-					// Toggle href: drop this slug if it's already selected, add it
-					// if not, everything else (category, other active tags) kept —
-					// the no-JS equivalent of the JS click handler's multi-select
-					// toggle below.
-					$tag_is_active = in_array( $tag_slug, $vance_tags_filter, true );
-					$next_tags     = $tag_is_active
-						? array_diff( $vance_tags_filter, array( $tag_slug ) )
-						: array_merge( $vance_tags_filter, array( $tag_slug ) );
-					$tag_args      = $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array();
-					if ( $next_tags ) {
-						$tag_args['tags'] = implode( ',', $next_tags );
-					}
-					?>
-					<a class="vance-rh-chip<?php echo $tag_is_active ? ' is-active' : ''; ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>" href="<?php echo esc_url( add_query_arg( $tag_args, $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $tag_label ); ?></a>
-				<?php endforeach; ?>
+				/**
+				 * Two visually distinct rows sharing one #vance-rh-filter-chips
+				 * ancestor — the JS click delegation (assets/js/recipe-planner.js)
+				 * listens on that ancestor and tells a meal chip from a tag chip by
+				 * its data-chip-* attribute, not by which row it's in, so splitting
+				 * the markup into two rows needed no JS change at all.
+				 */
+				?>
+				<div class="vance-rh-chips vance-rh-chips--meal">
+					<a class="vance-rh-chip<?php echo ( '' === $vance_cat_filter && ! $vance_tags_filter ) ? ' is-active' : ''; ?>" data-chip-all="1" href="<?php echo esc_url( $vance_base_url . '#recipes' ); ?>"><?php esc_html_e( 'All', 'vance-health-hub' ); ?></a>
+					<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
+						<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
+					<?php endforeach; ?>
+				</div>
+				<div class="vance-rh-chips vance-rh-chips--tags">
+					<?php
+					foreach ( $vance_tags as $tag_slug => $tag_label ) :
+						// Toggle href: drop this slug if it's already selected, add it
+						// if not, everything else (category, other active tags) kept —
+						// the no-JS equivalent of the JS click handler's multi-select
+						// toggle below.
+						$tag_is_active = in_array( $tag_slug, $vance_tags_filter, true );
+						$next_tags     = $tag_is_active
+							? array_diff( $vance_tags_filter, array( $tag_slug ) )
+							: array_merge( $vance_tags_filter, array( $tag_slug ) );
+						$tag_args      = $vance_cat_filter ? array( 'cat' => $vance_cat_filter ) : array();
+						if ( $next_tags ) {
+							$tag_args['tags'] = implode( ',', $next_tags );
+						}
+						?>
+						<a class="vance-rh-chip vance-rh-chip--tag<?php echo $tag_is_active ? ' is-active' : ''; ?>" data-chip-tag="<?php echo esc_attr( $tag_slug ); ?>" href="<?php echo esc_url( add_query_arg( $tag_args, $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $tag_label ); ?></a>
+					<?php endforeach; ?>
+				</div>
 			</div>
 			<input type="search" class="vance-rh-search" id="vance-rh-search" placeholder="<?php esc_attr_e( 'Search recipes…', 'vance-health-hub' ); ?>">
 		</div>
