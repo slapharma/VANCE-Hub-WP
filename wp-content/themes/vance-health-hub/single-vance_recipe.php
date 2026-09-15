@@ -66,7 +66,7 @@ while ( have_posts() ) :
 
 	<section style="padding:48px 0 60px;">
 		<div class="container" style="max-width:1100px;">
-			<div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;align-items:start;">
+			<div class="vance-rs-layout" style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;align-items:start;">
 
 				<div style="min-width:0;">
 					<?php
@@ -235,6 +235,17 @@ while ( have_posts() ) :
 	.vance-rs-modal-cell.is-filled { background:#EEF6F6; border-color:var(--primary-color); color:#0A1929; font-weight:600; }
 	.vance-rs-toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px); background:#0A1929; color:#fff; font-size:13.5px; padding:12px 22px; border-radius:var(--radius-field, 10px); z-index:100060; opacity:0; pointer-events:none; transition:opacity 200ms ease, transform 200ms ease; }
 	.vance-rs-toast.is-visible { opacity:1; transform:translate(-50%,0); }
+
+	/* The article/nutrition-sidebar grid above is inline-styled (desktop
+	   minmax(0,1fr) 300px), with no responsive collapse — on a ~375px phone
+	   the fixed 300px column left the flexible one only 3px, and grid tracks
+	   don't wrap the way flex items do, so the sidebar rendered on top of the
+	   nearly-invisible article column instead of squeezing it. !important is
+	   required to win over that inline style; unlike a class-only rule, this
+	   can't lose to source order or specificity drift elsewhere. */
+	@media (max-width: 768px) {
+		.vance-rs-layout { grid-template-columns: 1fr !important; }
+	}
 	</style>
 
 	<div class="vance-rs-modal" id="vance-rs-modal" role="dialog" aria-modal="true" aria-hidden="true">
