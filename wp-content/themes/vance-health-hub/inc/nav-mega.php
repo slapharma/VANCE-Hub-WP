@@ -161,6 +161,37 @@ add_action( 'wp_enqueue_scripts', 'vance_nav_mega_mobile_accordion_script', 21 )
 
 
 /* =============================================================================
+   MOBILE MENU BANNERS
+   ========================================================================== */
+
+/**
+ * Append the Mobile Menu Banners to the primary menu's item list.
+ *
+ * Added at render time through wp_nav_menu_items, never as menu items in the
+ * database: the primary menu is maintained by hand, and a stored item would be
+ * one more thing to keep out of the desktop bar. Max Mega Menu builds the list
+ * with its own walker but still goes through wp_nav_menu(), so this filter sees
+ * its output. The <li>s carry none of the plugin's mega-menu-item classes, so
+ * its script and generated stylesheet leave them alone; nav-mega.css shows
+ * them in the drawer and hides them above 768px.
+ *
+ * @param string   $items Menu item markup.
+ * @param stdClass $args  wp_nav_menu() arguments.
+ * @return string
+ */
+function vance_nav_menu_promo_items( $items, $args ) {
+	if ( empty( $args->theme_location ) || 'primary-menu' !== $args->theme_location ) {
+		return $items;
+	}
+	if ( ! function_exists( 'vance_menu_promo_items_html' ) ) {
+		return $items;
+	}
+	return $items . vance_menu_promo_items_html();
+}
+add_filter( 'wp_nav_menu_items', 'vance_nav_menu_promo_items', 20, 2 );
+
+
+/* =============================================================================
    ICONS
    ========================================================================== */
 

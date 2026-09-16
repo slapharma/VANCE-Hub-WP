@@ -19,6 +19,7 @@
  *   Homepage       vance_promo_*              (prefix)
  *   Knowledgebase  vance_kbpromo_*            (prefix)
  *   Categories     vance_cat_promo_*_{termId} (term-suffixed)
+ *   Mobile menu    vance_menupromo1_*, vance_menupromo2_* (prefix; end of file)
  *
  * Addressing differs between them — one is a prefix, the other a suffix — so an
  * instance is described by a KEY CLOSURE mapping a logical field name to its
@@ -375,8 +376,16 @@ function vance_render_promo_block( array $vals ) {
 			? 'background-color:' . $vals['side_tool_bg'] . ';background-image:none;'
 			: "background-image: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('" . esc_url( get_template_directory_uri() . '/assets/img/promo-tool-dots.png' ) . "');";
 	}
+
+	// Page instances are a labelled <section> with an <h2>. The mobile menu
+	// instance overrides both: a region landmark per banner inside the nav
+	// would clutter a screen reader's landmark list, and the mobile sheets pin
+	// every h2 with !important. Whitelisted, so a bad value falls back to the
+	// page defaults rather than emitting an arbitrary tag.
+	$wrapper_tag = ( isset( $vals['wrapper_tag'] ) && 'div' === $vals['wrapper_tag'] ) ? 'div' : 'section';
+	$heading_tag = ( isset( $vals['heading_tag'] ) && in_array( $vals['heading_tag'], array( 'h3', 'span' ), true ) ) ? $vals['heading_tag'] : 'h2';
 	?>
-    <section class="vance-cat-promo<?php echo empty( $vals['section_class'] ) ? '' : ' ' . esc_attr( $vals['section_class'] ); ?>" aria-label="<?php echo esc_attr( $heading ? $heading : 'Featured' ); ?>"<?php echo $band_style ? ' style="' . esc_attr( $band_style ) . '"' : ''; ?>>
+    <<?php echo $wrapper_tag; ?> class="vance-cat-promo<?php echo empty( $vals['section_class'] ) ? '' : ' ' . esc_attr( $vals['section_class'] ); ?>"<?php echo 'section' === $wrapper_tag ? ' aria-label="' . esc_attr( $heading ? $heading : 'Featured' ) . '"' : ''; ?><?php echo $band_style ? ' style="' . esc_attr( $band_style ) . '"' : ''; ?>>
         <div class="<?php echo esc_attr( $container_class ); ?>">
             <?php if ( $sidebar ) : ?><div class="vance-promo-columns"><?php endif; ?>
             <div class="<?php echo esc_attr( $inner_classes ); ?><?php echo $sidebar ? ' vance-promo-columns__main' : ''; ?>"<?php echo $inner_style ? ' style="' . esc_attr( $inner_style ) . '"' : ''; ?>>
@@ -385,7 +394,7 @@ function vance_render_promo_block( array $vals ) {
                 <?php endif; ?>
                 <div class="vance-cat-promo__body">
                     <?php if ( $eyebrow ) : ?><span class="vance-cat-promo__eyebrow"><?php echo esc_html( $eyebrow ); ?></span><?php endif; ?>
-                    <?php if ( $heading ) : ?><h2 class="vance-cat-promo__title"><?php echo esc_html( $heading ); ?></h2><?php endif; ?>
+                    <?php if ( $heading ) : ?><<?php echo $heading_tag; ?> class="vance-cat-promo__title"><?php echo esc_html( $heading ); ?></<?php echo $heading_tag; ?>><?php endif; ?>
                     <?php if ( $text ) : ?><p class="vance-cat-promo__text"><?php echo esc_html( $text ); ?></p><?php endif; ?>
                     <?php if ( $has_cta ) : ?>
                         <a class="vance-btn-inverted" href="<?php echo esc_url( $href ); ?>"<?php echo $data_attr; // phpcs:ignore ?>><?php echo esc_html( $cta ); ?></a>
@@ -401,7 +410,7 @@ function vance_render_promo_block( array $vals ) {
             <?php endif; ?>
             <?php if ( $sidebar ) : ?></div><?php endif; ?>
         </div>
-    </section>
+    </<?php echo $wrapper_tag; ?>>
 	<?php
 }
 
@@ -474,4 +483,91 @@ function vance_render_category_promo( $term_id ) {
  */
 function vance_cat_promo_mobile_key( $term_id ) {
 	return 'vance_cat_promo_show_mobile_' . (int) $term_id;
+}
+
+
+/* =============================================================================
+   MOBILE MENU INSTANCES
+   ========================================================================== */
+
+/**
+ * Two promo banners at the foot of the mobile menu drawer.
+ *
+ * Same renderer and the same key closure as the page instances, under
+ * vance_menupromo1_* and vance_menupromo2_*. Appended to the primary menu's
+ * items by vance_nav_menu_promo_items() in inc/nav-mega.php and hidden above
+ * 768px in nav-mega.css, so desktop never shows them and the hand-maintained
+ * menu itself is untouched.
+ *
+ * The drawer is 300px wide, so only the two layouts that stack vertically are
+ * offered. A stored value from outside that pair is read as 'stacked' here
+ * rather than rejected by the shared sanitizer, which has to accept all five.
+ */
+function vance_menu_promo_slots() {
+	return array( 1, 2 );
+}
+
+/** Prefix for one menu banner's settings. */
+function vance_menu_promo_prefix( $slot ) {
+	return 'vance_menupromo' . (int) $slot . '_';
+}
+
+/** The two layouts that fit a 300px drawer. */
+function vance_menu_promo_layout_choices() {
+	$all = vance_promo_layout_choices();
+	return array(
+		'stacked' => $all['stacked'],
+		'banner'  => $all['banner'],
+	);
+}
+
+/**
+ * Defaults for a menu banner. Everything blank except the layout, so a fresh
+ * install renders nothing until an editor ticks "Show" AND writes some copy.
+ * MUST match what vance_register_promo_block_controls() is given for these
+ * instances in functions.php.
+ */
+function vance_menu_promo_defaults() {
+	return array( 'layout' => 'stacked' );
+}
+
+/**
+ * Markup for every switched-on menu banner, one <li> each, or '' if none.
+ *
+ * Returned rather than echoed because it is appended to a menu's item string.
+ *
+ * @return string
+ */
+function vance_menu_promo_items_html() {
+	$html = '';
+	foreach ( vance_menu_promo_slots() as $slot ) {
+		$prefix = vance_menu_promo_prefix( $slot );
+		if ( ! vance_get_theme_mod( $prefix . 'show', false ) ) {
+			continue;
+		}
+
+		$vals = vance_promo_block_vals( vance_promo_keys_prefixed( $prefix ), vance_menu_promo_defaults() );
+		if ( ! array_key_exists( $vals['layout'], vance_menu_promo_layout_choices() ) ) {
+			$vals['layout'] = 'stacked';
+		}
+		// Page-only options, forced off whatever is stored: there is no band,
+		// no page width and no room for a second column inside the drawer.
+		$vals['side_tool_show'] = false;
+		$vals['width']          = 'container';
+		$vals['band_bg']        = '';
+		$vals['border_scope']   = 'container';
+		$vals['wrapper_tag']    = 'div';
+		$vals['heading_tag']    = 'span';
+		$vals['section_class']  = 'vance-menu-promo__block';
+
+		ob_start();
+		vance_render_promo_block( $vals );
+		$block = trim( ob_get_clean() );
+
+		// The renderer bails on a block with no heading, text or image.
+		if ( '' !== $block ) {
+			$html .= '<li class="vance-menu-promo vance-menu-promo--' . (int) $slot . '">' . $block . '</li>';
+		}
+	}
+	return $html;
 }

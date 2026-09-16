@@ -817,6 +817,122 @@
 }
 
 /* -----------------------------------------------------------------------------
+   8b. MOBILE MENU BANNERS — Customizer → Brand Identity → Mobile Menu Banners
+
+   Up to two promo cards appended after the last drawer row by
+   vance_nav_menu_promo_items() (inc/nav-mega.php), drawn by the shared promo
+   renderer. Hidden by default everywhere and revealed only inside the plugin's
+   drawer, so the desktop bar never shows them and nor does the theme's old
+   fallback nav if the plugin is ever switched off.
+
+   The page-sized promo rules in main.css (26-32px titles, 24-44px padding,
+   180-280px media) are re-scaled here for a 300px panel. Every selector starts
+   from the wrap ID so it out-ranks those class-only rules without !important;
+   the few !importants below each answer a rule that already has one.
+   -------------------------------------------------------------------------- */
+.vance-menu-promo {
+	display: none;
+}
+
+@media (max-width: 768px) {
+
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.vance-menu-promo {
+		display: block;
+		width: 100%;
+		margin: 0;
+		padding: 0 16px 16px;
+		list-style: none;
+		box-sizing: border-box;
+	}
+	/* Breathing room between the last menu row and the first banner. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item + li.vance-menu-promo {
+		padding-top: 20px;
+	}
+
+	/* The renderer wraps the card in a page .container; inside the drawer that
+	   gutter would double the li's. mobile-base.css sets the 16px container
+	   padding with !important below 480px, hence the match. */
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo {
+		padding: 0;
+	}
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo > .container {
+		width: auto;
+		max-width: none;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+	}
+
+	/* Solid white card: the frosted glass fill is translucent, and over the
+	   navy drawer it would drag the dark copy under 4.5:1. A Customizer card
+	   colour is inline and still wins. */
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__inner {
+		background-color: #ffffff;
+		padding: 0;
+		border-radius: var(--radius-surface, 14px) !important;
+		overflow: hidden;
+	}
+	/* No lift on hover: nothing in a drawer moves under the finger. */
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-glass--interactive:hover {
+		transform: none;
+	}
+
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__media {
+		min-height: 130px;
+	}
+
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__body {
+		gap: 8px;
+		padding: 16px;
+	}
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__eyebrow {
+		font-size: 11px;
+		line-height: 1.3;
+	}
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__title {
+		display: block;
+		font-size: 18px;
+		line-height: 1.2;
+	}
+	/* margin: the plugin's own `#wrap #menu p` rule adds a 10px bottom margin. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu .vance-menu-promo .vance-cat-promo__text {
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.5;
+	}
+	/* Full-width, 44px-plus button. */
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__body .vance-btn-inverted {
+		align-self: stretch;
+		min-height: 44px;
+		margin-top: 4px;
+		padding: 12px 16px;
+		font-size: 14px;
+		line-height: 1.2;
+		text-align: center;
+	}
+
+	/* Banner: the copy sits over the photo on the same flat scrim main.css uses
+	   at phone width (restated because the drawer shows at exactly 768px too,
+	   where that rule's 767.98px query does not match). main.css paints that
+	   scrim on every banner below 768px, photo or not, but only turns the copy
+	   white when there is a photo — so without one the scrim is removed and the
+	   card reads like the stacked one, dark copy on white. */
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__inner--banner {
+		min-height: 0;
+	}
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__inner--banner:not(.has-image) .vance-cat-promo__body {
+		background: none;
+	}
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__inner--banner.has-image .vance-cat-promo__body {
+		max-width: none;
+		padding: 22px 16px;
+		background: rgba(10, 25, 41, 0.72);
+	}
+	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__inner--banner.has-image .vance-cat-promo__title {
+		font-size: 18px;
+	}
+}
+
+/* -----------------------------------------------------------------------------
    9. REDUCED MOTION
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {

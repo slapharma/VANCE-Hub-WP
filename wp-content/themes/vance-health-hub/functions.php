@@ -450,6 +450,12 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     $show_label   = isset( $args['show_label'] ) ? $args['show_label'] : __( 'Show promo block', 'vance-health-hub' );
     $placement    = isset( $args['placement'] ) ? $args['placement'] : '';
     $p            = isset( $args['label_prefix'] ) ? $args['label_prefix'] : '';
+    // The mobile menu banners pass a narrower layout list and 'compact', which
+    // drops the controls that mean nothing inside a 300px drawer: the sidebar,
+    // the page width, the band colour and the border scope. The renderer forces
+    // those off for that instance too, so a hidden control cannot be stale.
+    $layouts      = isset( $args['layout_choices'] ) ? $args['layout_choices'] : vance_promo_layout_choices();
+    $compact      = ! empty( $args['compact'] );
 
     if ( $show_key ) {
         $wp_customize->add_setting( $show_key, array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
@@ -488,10 +494,12 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     $wp_customize->add_setting( $key( 'layout' ), array( 'default' => $d( 'layout', 'image_left' ), 'sanitize_callback' => 'vance_promo_sanitize_layout' ) );
     $wp_customize->add_control( $key( 'layout' ), array(
         'label'       => $p . __( 'Layout', 'vance-health-hub' ),
-        'description' => __( 'Banner puts the copy over the photo. Text only ignores the image without deleting it.', 'vance-health-hub' ),
+        'description' => $compact
+            ? __( 'Banner puts the copy over the photo.', 'vance-health-hub' )
+            : __( 'Banner puts the copy over the photo. Text only ignores the image without deleting it.', 'vance-health-hub' ),
         'section'     => $section_id,
         'type'        => 'select',
-        'choices'     => vance_promo_layout_choices(),
+        'choices'     => $layouts,
     ) );
 
     $wp_customize->add_setting( $key( 'eyebrow' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -530,6 +538,8 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
         'section'     => $section_id,
         'type'        => 'text',
     ) );
+
+    if ( ! $compact ) { // Page-only controls: sidebar, width, band colour.
 
     // -- Featured-tool sidebar ---------------------------------------------
     // Off by default, so an existing promo keeps rendering as one column
@@ -578,6 +588,8 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
         'section'     => $section_id,
     ) ) );
 
+    } // End page-only controls.
+
     $wp_customize->add_setting( $key( 'container_bg_color' ), array( 'default' => '', 'sanitize_callback' => 'sanitize_hex_color' ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $key( 'container_bg_color' ), array(
         'label'       => $p . __( 'Card background colour', 'vance-health-hub' ),
@@ -594,13 +606,15 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
     $wp_customize->add_setting( $key( 'border_enable' ), array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
     $wp_customize->add_control( $key( 'border_enable' ), array( 'label' => $p . __( 'Show border', 'vance-health-hub' ), 'section' => $section_id, 'type' => 'checkbox' ) );
 
-    $wp_customize->add_setting( $key( 'border_scope' ), array( 'default' => 'container', 'sanitize_callback' => 'sanitize_key' ) );
-    $wp_customize->add_control( $key( 'border_scope' ), array(
-        'label'   => $p . __( 'Border around', 'vance-health-hub' ),
-        'section' => $section_id,
-        'type'    => 'select',
-        'choices' => array( 'container' => __( 'The card', 'vance-health-hub' ), 'full' => __( 'The whole band', 'vance-health-hub' ) ),
-    ) );
+    if ( ! $compact ) {
+        $wp_customize->add_setting( $key( 'border_scope' ), array( 'default' => 'container', 'sanitize_callback' => 'sanitize_key' ) );
+        $wp_customize->add_control( $key( 'border_scope' ), array(
+            'label'   => $p . __( 'Border around', 'vance-health-hub' ),
+            'section' => $section_id,
+            'type'    => 'select',
+            'choices' => array( 'container' => __( 'The card', 'vance-health-hub' ), 'full' => __( 'The whole band', 'vance-health-hub' ) ),
+        ) );
+    }
 
     $wp_customize->add_setting( $key( 'border_width' ), array( 'default' => 1, 'sanitize_callback' => 'absint' ) );
     $wp_customize->add_control( $key( 'border_width' ), array(
@@ -5424,6 +5438,31 @@ function vance_customize_register( $wp_customize ) {
             'defaults'   => vance_promo_prefixed_defaults(),
         )
     );
+
+    // Mobile Menu Banners -- two promo cards at the foot of the phone menu
+    // drawer, drawn by the same renderer (vance_menu_promo_items_html() in
+    // inc/promo-block.php). Never shown on desktop.
+    $wp_customize->add_section( 'vance_menu_promo_banners', array(
+        'title'       => __( 'Mobile Menu Banners', 'vance-health-hub' ),
+        'priority'    => 2,
+        'panel'       => 'vance_brand_panel',
+        'description' => __( 'Up to two banners under the links in the phone menu. Each stays hidden until you tick its switch and give it a heading, text or image. Desktop never shows them.', 'vance-health-hub' ),
+    ) );
+    foreach ( vance_menu_promo_slots() as $vance_menu_slot ) {
+        vance_register_promo_block_controls(
+            $wp_customize,
+            'vance_menu_promo_banners',
+            vance_promo_keys_prefixed( vance_menu_promo_prefix( $vance_menu_slot ) ),
+            array(
+                'show_label'     => __( 'Show this banner', 'vance-health-hub' ),
+                /* translators: %d: banner number, 1 or 2. */
+                'label_prefix'   => sprintf( __( 'Banner %d: ', 'vance-health-hub' ), $vance_menu_slot ),
+                'defaults'       => vance_menu_promo_defaults(),
+                'layout_choices' => vance_menu_promo_layout_choices(),
+                'compact'        => true,
+            )
+        );
+    }
 
     // 2.6.9 Gastro Conditions — one big animated tile per GI condition plus a
     // "view all" tile. The condition list itself comes from

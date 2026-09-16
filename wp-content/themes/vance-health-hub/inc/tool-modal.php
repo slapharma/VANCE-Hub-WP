@@ -282,11 +282,28 @@ $vance_tm_paths = array(
         return url + (url.indexOf('?') === -1 ? '?' : '&') + 'tool_embed=1';
     }
 
+    // Max Mega Menu's phone drawer stacks at z-index 9999999999, far above this
+    // modal, so a tool opened from inside it (a Mobile Menu Banner, or a link to
+    // a tool page) would load hidden behind the drawer. Close the drawer first
+    // through the plugin's own instance, which also clears its overlay and body
+    // classes. No-op on desktop, with the drawer shut, or without the plugin.
+    function closeMobileMenu() {
+        if (!window.jQuery || !document.querySelector('.mega-menu-toggle.mega-menu-open')) { return; }
+        var plugin = window.jQuery('#mega-menu-primary-menu').data('maxmegamenu');
+        if (plugin && typeof plugin.hideMobileMenu === 'function') {
+            plugin.hideMobileMenu();
+            // The trigger is now inside a hidden drawer; return focus to the
+            // hamburger when the modal closes instead.
+            lastTrigger = document.querySelector('.mega-menu-toggle .mega-toggle-animated') || lastTrigger;
+        }
+    }
+
     function openModal(slug, trigger) {
         slug = normalizeSlug(slug);
         var tool = CFG.tools[slug];
         if (!tool) { return false; }
         lastTrigger = trigger || document.activeElement || null;
+        closeMobileMenu();
 
         // The quiz keeps its own inline modal.
         if (tool.inline) {
