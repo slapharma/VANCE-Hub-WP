@@ -91,6 +91,7 @@ function vance_legal_hero_docs() {
 			'eyebrow' => __( 'Privacy', 'vance-health-hub' ),
 			'title'   => __( 'Privacy Policy', 'vance-health-hub' ),
 			'short'   => __( 'Privacy Policy', 'vance-health-hub' ),
+			'mobile'  => __( 'Privacy', 'vance-health-hub' ), // the band on a phone
 			'kicker'  => __( 'Your data', 'vance-health-hub' ),
 			// Reworded by the client on 2026-08-28, tightening the two clauses.
 			// The dark hero's wording was 'your right to privacy ... safeguard
@@ -110,6 +111,7 @@ function vance_legal_hero_docs() {
 			// this literal is what the tests and any un-titled render use.
 			'title'   => __( 'Cookie Policy (UK)', 'vance-health-hub' ),
 			'short'   => __( 'Cookie Policy', 'vance-health-hub' ),
+			'mobile'  => __( 'Cookies', 'vance-health-hub' ), // the band on a phone
 			'kicker'  => __( 'Your choices', 'vance-health-hub' ),
 			// Written for this hero, because there was no intro to carry
 			// across — the generic hero has never had one.
@@ -122,6 +124,7 @@ function vance_legal_hero_docs() {
 			'eyebrow' => __( 'Legal', 'vance-health-hub' ),
 			'title'   => __( 'Terms of Use', 'vance-health-hub' ),
 			'short'   => __( 'Terms of Use', 'vance-health-hub' ),
+			'mobile'  => __( 'Terms', 'vance-health-hub' ), // the band on a phone
 			'kicker'  => __( 'The agreement', 'vance-health-hub' ),
 			// Reworded in one place only: the classic hero said "the Gastro
 			// Health Hub platform", a pre-rebrand name that survives nowhere
@@ -137,6 +140,7 @@ function vance_legal_hero_docs() {
 			'eyebrow' => __( 'Important', 'vance-health-hub' ),
 			'title'   => __( 'Medical Disclaimer', 'vance-health-hub' ),
 			'short'   => __( 'Medical Disclaimer', 'vance-health-hub' ),
+			'mobile'  => __( 'Disclaimer', 'vance-health-hub' ), // the band on a phone
 			'kicker'  => __( 'Before you rely on this', 'vance-health-hub' ),
 			'intro'   => __( 'Please read this before using Vance Medical Hub, its articles, tools or VANCE-Ai.', 'vance-health-hub' ),
 			'icon'    => 'alert',
@@ -147,6 +151,7 @@ function vance_legal_hero_docs() {
 			'eyebrow' => __( 'Accessibility', 'vance-health-hub' ),
 			'title'   => __( 'Accessibility Statement', 'vance-health-hub' ),
 			'short'   => __( 'Accessibility Statement', 'vance-health-hub' ),
+			'mobile'  => __( 'Accessibility', 'vance-health-hub' ), // the band on a phone
 			'kicker'  => __( 'Using this site', 'vance-health-hub' ),
 			// Rewritten by the client on 2026-08-28. The dark hero's line was
 			// "We want everyone to be able to use Vance Medical Hub.", which sat
@@ -220,6 +225,7 @@ function vance_legal_hero_siblings( $doc ) {
 			'icon'  => $d['icon'],
 			'label' => $d['kicker'],
 			'value' => $d['short'],
+			'mobile' => isset( $d['mobile'] ) ? $d['mobile'] : '',
 			'href'  => vance_legal_hero_url( $d['slug'], $d['path'] ),
 		);
 	}
@@ -692,7 +698,11 @@ function vance_render_legal_hero( $doc, $overrides = array() ) {
 
 	vance_legal_hero_styles();
 	?>
-	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--legal vhh-hero-spotlight--<?php echo esc_attr( $doc ); ?>">
+	<?php
+	$mobile_keys = function_exists( 'vance_legal_hero_mobile_keys' ) ? vance_legal_hero_mobile_keys( $doc ) : null;
+	?>
+	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--legal vhh-hero-spotlight--<?php echo esc_attr( $doc ); ?><?php
+		echo $mobile_keys ? vance_hero_mobile_classes_for( $mobile_keys['band'], $mobile_keys['card'] ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed class names ?>">
 
 		<div class="vhh-hero-spotlight__motif" aria-hidden="true"><?php
 			echo vance_legal_hero_motif(); // phpcs:ignore WordPress.Security.EscapeOutput — static markup
@@ -723,7 +733,11 @@ function vance_render_legal_hero( $doc, $overrides = array() ) {
 							?></span>
 							<span class="vhh-hero-spotlight__line-body">
 								<span class="vhh-hero-spotlight__line-k"><?php echo esc_html( $cell['label'] ); ?></span>
-								<span class="vhh-hero-spotlight__line-v"><?php echo esc_html( $cell['value'] ); ?></span>
+								<span class="vhh-hero-spotlight__line-v"><?php
+									echo function_exists( 'vance_hero_band_value' )
+										? vance_hero_band_value( $cell['value'], $cell['mobile'] )
+										: esc_html( $cell['value'] ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside
+								?></span>
 							</span>
 						</a>
 						<?php endforeach; ?>

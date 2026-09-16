@@ -62,6 +62,13 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
 
     $sec = 'vance_gi_hub_hero';
 
+    // Phone switches for the lobby hero's chips band and review card.
+    if ( function_exists( 'vance_hero_mobile_register_controls' ) ) {
+        vance_hero_mobile_register_controls( $wp_customize, $sec, 'vance_gi_hub_hero_show_band_mobile', 'vance_gi_hub_hero_show_card_mobile', [
+            'band_label' => 'Show the condition chips on mobile',
+        ] );
+    }
+
     /* Every default below comes from vance_gi_hero_hub_defaults() in
        inc/gi-hero.php, which the RENDERER also reads. They used to be typed
        out in both files, and a default that disagrees between the two is
@@ -244,6 +251,11 @@ function vance_gi_customize_register( WP_Customize_Manager $wp_customize ): void
 
         $wp_customize->add_setting( "{$sec_id}_lede", [ 'default' => $default_lede, 'sanitize_callback' => 'sanitize_textarea_field' ] );
         $wp_customize->add_control( "{$sec_id}_lede", [ 'label' => 'Lede paragraph', 'section' => $sec_id, 'type' => 'textarea' ] );
+
+        // Phone switches for this condition hero's band and review card.
+        if ( function_exists( 'vance_hero_mobile_register_controls' ) ) {
+            vance_hero_mobile_register_controls( $wp_customize, $sec_id, "{$sec_id}_show_band_mobile", "{$sec_id}_show_card_mobile" );
+        }
 
         /* Same key, new role, exactly as on the hub — see the note there. This
            one has never had a visible job on the seven redesigned pages: the

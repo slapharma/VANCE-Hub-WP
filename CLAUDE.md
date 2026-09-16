@@ -379,10 +379,18 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   changed, not that a value went stale. Check a top-level section
   (`/category/content-gastro-living/`) AND a sub-category
   (`/category/food-nutrition/`): the sub-category must show a breadcrumb, inherit the
-  parent's photograph, and NOT repeat the parent's name in the pill.
+  parent's photograph, and NOT repeat the parent's name in the pill. Below 768px the
+  band stays on **one row** — long values switch to a short form (`Aug 2025`, not
+  `August 2025`) via `vance_hero_band_value()`; the full text is still in the markup
+  for a screen reader, just visually hidden. Every spotlight hero, this one included,
+  now has two Customizer checkboxes — "Show the white band on mobile" and "Show the
+  floating card on mobile" — both defaulting ON, so a fresh install should show no
+  difference from before.
 - `/gastro-health-explained/` and all seven condition pages show the light spotlight hero
   (`inc/gi-hero.php`): purple eyebrow, teal CTA, and the lobby's seven condition chips on
-  **two** rows. Three rows means the copy column narrowed — check, don't "fix" the split.
+  **two** rows **on desktop**. Three rows means the copy column narrowed — check, don't
+  "fix" the split. Below 768px the chips switch to **one horizontally-scrolling row**
+  instead — two (or three) rows there means the phone CSS in `main.css` didn't load.
 - Dashboard → Profile edit saves (AJAX nonce + `_sla_*` meta round-trip)
 - Malnutrition calculator completes (postMessage contract)
 - WP Customizer opens and saves cleanly
@@ -445,6 +453,14 @@ rewrite stored content, so backing any of them out is deleting a `require` line.
 And **everything degrades to the previous behaviour** rather than inventing data —
 an image with no alt still renders `alt=""`, a post with no reviewer renders
 nothing, an article with no confident condition match gets no chip.
+
+`inc/hero-mobile.php` is loaded the same way but is not an SEO include: it holds
+the phone-only "show on mobile" band/card switches and the band's short labels,
+shared by every `.vhh-hero-spotlight` family (homepage, page heroes, category
+archives, GI heroes, policy documents). It is required early in `functions.php`
+(line 37) because the category, GI, legal and page hero files call its helpers
+behind `function_exists()` and fall back to the plain full-text render if it is
+ever missing.
 
 ## Local-only helpers (in `LOCAL/`, gitignored)
 - `vance_rebrand.py` — text rebrand transformer (round 1)

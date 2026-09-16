@@ -343,8 +343,9 @@ function vance_category_hero_term_name( $term ) {
  * `found_posts` still reflects the whole set because pagination is left on.
  *
  * @param int $term_id
- * @return array{total: int, topics: int, latest: string} `latest` is a
- *               localised "August 2026", or '' when the section is empty.
+ * @return array{total: int, topics: int, latest: string, latest_short: string}
+ *               `latest` is a localised "August 2026" and `latest_short` its
+ *               "Aug 2026" form, or '' when the section is empty.
  */
 function vance_category_hero_facts( $term_id ) {
 	static $cache = array();
@@ -362,11 +363,15 @@ function vance_category_hero_facts( $term_id ) {
 		'update_post_term_cache' => false,
 	) );
 
-	$latest = '';
+	$latest       = '';
+	$latest_short = '';
 	if ( ! empty( $q->posts ) ) {
 		// date_i18n over get_the_date so the month name follows the site's
 		// locale rather than the template's hard-coded English.
-		$latest = date_i18n( 'F Y', (int) get_post_time( 'U', false, $q->posts[0] ) );
+		$latest_ts    = (int) get_post_time( 'U', false, $q->posts[0] );
+		$latest       = date_i18n( 'F Y', $latest_ts );
+		// "Sep 2026" for the one-line band on a phone.
+		$latest_short = date_i18n( 'M Y', $latest_ts );
 	}
 
 	$topics = get_categories( array(
@@ -379,6 +384,7 @@ function vance_category_hero_facts( $term_id ) {
 		'total'  => (int) $q->found_posts,
 		'topics' => is_array( $topics ) ? count( $topics ) : 0,
 		'latest' => $latest,
+		'latest_short' => $latest_short,
 	);
 
 	wp_reset_postdata();
@@ -801,6 +807,7 @@ function vance_render_category_hero( $term = null ) {
 			'icon'  => 'clock',
 			'key'   => __( 'Last added', 'vance-health-hub' ),
 			'value' => $facts['latest'],
+			'short' => isset( $facts['latest_short'] ) ? $facts['latest_short'] : '',
 		);
 	}
 
@@ -821,7 +828,10 @@ function vance_render_category_hero( $term = null ) {
 	vance_category_hero_styles();
 	?>
 	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--cat vhh-hero-spotlight--cat-<?php
-		echo esc_attr( $slug_class ); ?><?php echo $photo ? '' : ' has-motif'; ?>">
+		echo esc_attr( $slug_class ); ?><?php echo $photo ? '' : ' has-motif'; ?><?php
+		echo function_exists( 'vance_hero_mobile_classes_for' )
+			? vance_hero_mobile_classes_for( "vance_cat_hero_show_band_mobile_{$term->term_id}", "vance_cat_hero_show_card_mobile_{$term->term_id}" )
+			: ''; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed class names ?>">
 
 		<?php /* First in source order in both branches: on desktop it is
 		         absolutely positioned so source order is irrelevant, and when
@@ -896,7 +906,11 @@ function vance_render_category_hero( $term = null ) {
 							?></span>
 							<span class="vhh-hero-spotlight__line-body">
 								<span class="vhh-hero-spotlight__line-k"><?php echo esc_html( $cell['key'] ); ?></span>
-								<span class="vhh-hero-spotlight__line-v"><?php echo esc_html( $cell['value'] ); ?></span>
+								<span class="vhh-hero-spotlight__line-v"><?php
+									echo function_exists( 'vance_hero_band_value' )
+										? vance_hero_band_value( $cell['value'], isset( $cell['short'] ) ? $cell['short'] : '' )
+										: esc_html( $cell['value'] ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside
+								?></span>
 							</span>
 						</div>
 						<?php endforeach; ?>

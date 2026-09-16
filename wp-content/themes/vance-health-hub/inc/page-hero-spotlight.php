@@ -856,8 +856,10 @@ function vance_page_hero_spotlight_field_defaults( $page ) {
 		'btn2_text'       => isset( $c['btn2_text'] ) ? $c['btn2_text'] : '',
 		'btn2_link'       => isset( $c['btn2_link'] ) ? $c['btn2_link'] : '',
 		'show_slot'       => true,
+		'show_slot_mobile' => true,
 		'slot_label'      => $c['slot_label'],
 		'show_card'       => true,
+		'show_card_mobile' => true,
 		'card_text'       => $c['card_text'],
 		'card_bg_color'   => $home['card_bg_color'],
 	);
@@ -1082,6 +1084,7 @@ function vance_page_hero_spotlight_lines() {
 			'key'   => 'mail',
 			'label' => __( 'Email', 'vance-health-hub' ),
 			'value' => $email,
+			'short' => __( 'Email us', 'vance-health-hub' ),
 			'href'  => 'mailto:' . $email,
 		);
 	}
@@ -1090,6 +1093,7 @@ function vance_page_hero_spotlight_lines() {
 			'key'   => 'phone',
 			'label' => __( 'Phone', 'vance-health-hub' ),
 			'value' => $phone,
+			'short' => __( 'Call us', 'vance-health-hub' ),
 			'href'  => 'tel:' . vance_page_hero_spotlight_tel( $phone ),
 		);
 	}
@@ -1199,6 +1203,7 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'name_def' => 'Gastro Health Survey',
 			'tag_key'  => 'vance_hquiz_hero_badge',
 			'tag_def'  => 'Self-Assessment',
+			'short'    => __( 'Health Survey', 'vance-health-hub' ),
 		),
 		'recipes' => array(
 			'icon'     => 'bowl',
@@ -1208,6 +1213,7 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'name_def' => 'Gastro Recipes & Meal Planner',
 			'tag_key'  => 'vance_tool_recipes_badge',
 			'tag_def'  => 'Meal Planning',
+			'short'    => __( 'Meal Planner', 'vance-health-hub' ),
 		),
 		'malnutrition' => array(
 			'icon'     => 'calculator',
@@ -1217,6 +1223,7 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'name_def' => 'IBD Malnutrition Calculator',
 			'tag_key'  => 'vance_tool_malnutrition_badge',
 			'tag_def'  => 'IBD Screening',
+			'short'    => __( 'Malnutrition', 'vance-health-hub' ),
 		),
 	);
 
@@ -1234,6 +1241,7 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'key'   => $t['icon'],
 			'label' => vance_get_theme_mod( $t['tag_key'], $t['tag_def'] ),
 			'value' => $name,
+			'short' => $t['short'],
 			'href'  => vance_page_hero_spotlight_page_url( $t['slug'], $t['path'] ),
 		);
 	}
@@ -1249,6 +1257,7 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'key'   => 'grid',
 			'label' => __( 'More', 'vance-health-hub' ),
 			'value' => __( 'Browse all free tools', 'vance-health-hub' ),
+			'short' => __( 'All tools', 'vance-health-hub' ),
 			// The shelf's slug is free-health-tools, NOT tools-resources — that is
 			// only what page-tools-resources.php's docblock suggests, and
 			// /tools-resources/ 404s on the live site. Nobody had seen this cell,
@@ -1278,13 +1287,13 @@ function vance_page_hero_spotlight_tools( $page ) {
 function vance_page_hero_spotlight_start() {
 	$cells = array(
 		array( 'grid', __( 'Free tools', 'vance-health-hub' ),
-			__( 'Free Health Tools', 'vance-health-hub' ), 'free-health-tools', '/free-health-tools/' ),
+			__( 'Free Health Tools', 'vance-health-hub' ), 'free-health-tools', '/free-health-tools/', __( 'Tools', 'vance-health-hub' ) ),
 		array( 'chat', __( 'Ask a question', 'vance-health-hub' ),
-			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/' ),
+			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/', '' ),
 		array( 'clipboard', __( 'Self-assessment', 'vance-health-hub' ),
-			__( 'Gastro Health Survey', 'vance-health-hub' ), 'gastro-health-survey', '/gastro-health-survey/' ),
+			__( 'Gastro Health Survey', 'vance-health-hub' ), 'gastro-health-survey', '/gastro-health-survey/', __( 'Survey', 'vance-health-hub' ) ),
 		array( 'mail', __( 'Still stuck', 'vance-health-hub' ),
-			__( 'Contact us', 'vance-health-hub' ), 'contact-us', '/contact-us/' ),
+			__( 'Contact us', 'vance-health-hub' ), 'contact-us', '/contact-us/', __( 'Contact', 'vance-health-hub' ) ),
 	);
 
 	$out = array();
@@ -1293,6 +1302,7 @@ function vance_page_hero_spotlight_start() {
 			'key'   => $c[0],
 			'label' => $c[1],
 			'value' => $c[2],
+			'short' => $c[5],
 			// By slug, so a renamed page keeps its cell rather than sending a
 			// visitor who is already lost to a second 404.
 			'href'  => vance_page_hero_spotlight_page_url( $c[3], $c[4] ),
@@ -1327,11 +1337,11 @@ function vance_page_hero_spotlight_learn() {
 		// education that exists on this site today. The other two are ways of
 		// using it.
 		array( 'book', __( 'Read up', 'vance-health-hub' ),
-			__( 'Knowledgebase', 'vance-health-hub' ), 'knowledgebase', '/knowledgebase/' ),
+			__( 'Knowledgebase', 'vance-health-hub' ), 'knowledgebase', '/knowledgebase/', '' ),
 		array( 'chat', __( 'Ask a question', 'vance-health-hub' ),
-			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/' ),
+			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/', '' ),
 		array( 'grid', __( 'Use them free', 'vance-health-hub' ),
-			__( 'Free Health Tools', 'vance-health-hub' ), 'free-health-tools', '/free-health-tools/' ),
+			__( 'Free Health Tools', 'vance-health-hub' ), 'free-health-tools', '/free-health-tools/', __( 'Free tools', 'vance-health-hub' ) ),
 	);
 
 	$out = array();
@@ -1340,6 +1350,7 @@ function vance_page_hero_spotlight_learn() {
 			'key'   => $c[0],
 			'label' => $c[1],
 			'value' => $c[2],
+			'short' => $c[5],
 			'href'  => vance_page_hero_spotlight_page_url( $c[3], $c[4] ),
 		);
 	}
@@ -1368,12 +1379,14 @@ function vance_page_hero_spotlight_downloads() {
 		array(
 			'icon'  => 'clipboard',
 			'tag'   => 'Appointment Prep',
+			'short' => 'Appointments',
 			'title' => 'Preparing for Your Doctor Appointment',
 			'file'  => 'Vance-Health-Hub-Appointment-Preparation.pdf',
 		),
 		array(
 			'icon'  => 'book',
 			'tag'   => 'Travel',
+			'short' => 'Travel',
 			'title' => 'Your IBD Travel Checklist',
 			'file'  => 'Vance-Health-Hub-IBD-Travel-Checklist.pdf',
 		),
@@ -1388,6 +1401,7 @@ function vance_page_hero_spotlight_downloads() {
 			'key'   => $h['icon'],
 			'label' => $h['tag'],
 			'value' => $h['title'],
+			'short' => $h['short'],
 			'href'  => get_template_directory_uri() . '/assets/downloads/' . $h['file'],
 		);
 	}
@@ -1396,6 +1410,7 @@ function vance_page_hero_spotlight_downloads() {
 		'key'   => 'grid',
 		'label' => __( 'More', 'vance-health-hub' ),
 		'value' => __( 'See all the handouts', 'vance-health-hub' ),
+		'short' => __( 'All handouts', 'vance-health-hub' ),
 		'href'  => '#downloads-grid',
 	);
 
@@ -1659,7 +1674,7 @@ function vance_render_page_hero_spotlight( $page ) {
 	// read wrong eventually.
 	$has_motif = ( $s['image'] === '' && ! empty( $c['motif'] ) );
 	?>
-	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--<?php echo esc_attr( $page ); ?><?php echo $has_motif ? ' vhh-hero-spotlight--has-motif' : ''; ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
+	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--<?php echo esc_attr( $page ); ?><?php echo $has_motif ? ' vhh-hero-spotlight--has-motif' : ''; ?><?php echo function_exists( 'vance_hero_mobile_classes' ) ? vance_hero_mobile_classes( ! empty( $s['show_slot_mobile'] ), ! empty( $s['show_card_mobile'] ) ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed class names ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
 
 		<?php if ( $has_motif ) : ?>
 		<?php /* No photograph, and the config says none is wanted — see
@@ -1752,7 +1767,10 @@ function vance_render_page_hero_spotlight( $page ) {
 								<span class="vhh-hero-spotlight__line-ico"><?php echo vance_page_hero_spotlight_icon( $line['key'] ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
 								<span class="vhh-hero-spotlight__line-body">
 									<span class="vhh-hero-spotlight__line-k"><?php echo esc_html( $line['label'] ); ?></span>
-									<span class="vhh-hero-spotlight__line-v"><?php echo esc_html( $line['value'] ); ?></span>
+									<span class="vhh-hero-spotlight__line-v"><?php
+										$line_short = isset( $line['short'] ) ? $line['short'] : '';
+										echo function_exists( 'vance_hero_band_value' ) ? vance_hero_band_value( $line['value'], $line_short ) : esc_html( $line['value'] ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside
+									?></span>
 								</span>
 							</<?php echo $tag; ?>>
 						<?php endforeach; ?>
@@ -1762,7 +1780,9 @@ function vance_render_page_hero_spotlight( $page ) {
 						<?php foreach ( $slot_items as $badge ) : ?>
 						<li class="vhh-hero-spotlight__badge">
 							<span class="vhh-hero-spotlight__badge-ico"><?php echo vance_page_hero_spotlight_icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput — static markup ?></span>
-							<span class="vhh-hero-spotlight__badge-t"><?php echo esc_html( $badge ); ?></span>
+							<span class="vhh-hero-spotlight__badge-t"><?php
+								echo function_exists( 'vance_hero_band_value' ) ? vance_hero_band_value( $badge, vance_hero_band_short( $badge ) ) : esc_html( $badge ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside
+							?></span>
 						</li>
 						<?php endforeach; ?>
 					</ul>
@@ -1842,9 +1862,11 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		'btn2_text'       => array( 'type' => 'text',     'label' => 'Button 2, Text' ),
 		'btn2_link'       => array( 'type' => 'text',     'label' => 'Button 2, Link' ),
 		'show_slot'       => array( 'type' => 'checkbox', 'label' => 'Show the white band' ),
+		'show_slot_mobile' => array( 'type' => 'checkbox', 'label' => 'Show the white band on mobile', 'description' => 'Untick to hide the band on screens narrower than 768px. Desktop is unaffected.' ),
 		'slot_label'      => array( 'type' => 'text',     'label' => 'White band, Prompt' ),
 		'search_placeholder' => array( 'type' => 'text',  'label' => 'White band, Search field placeholder' ),
 		'show_card'       => array( 'type' => 'checkbox', 'label' => 'Show the floating card' ),
+		'show_card_mobile' => array( 'type' => 'checkbox', 'label' => 'Show the floating card on mobile', 'description' => 'Untick to hide the card on screens narrower than 768px. Desktop is unaffected.' ),
 		'card_title'      => array( 'type' => 'text',     'label' => 'Card, Heading' ),
 		'card_text'       => array( 'type' => 'textarea', 'label' => 'Card, Body' ),
 		'card_bg_color'   => array( 'type' => 'color',    'label' => 'Card, Background' ),

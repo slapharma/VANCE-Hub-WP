@@ -32,6 +32,9 @@ require_once get_template_directory() . '/inc/tool-widgets.php';
 // tool-widgets-row, patients-*, hcp-*) silently failed to render on the
 // frontend.
 require_once get_template_directory() . '/inc/customizer-sortable-control.php';
+// Spotlight heroes on a phone: the band's short labels and the per-hero "show
+// on mobile" switches. Loaded before every hero family that calls it.
+require_once get_template_directory() . '/inc/hero-mobile.php';
 require_once get_template_directory() . '/inc/promo-block.php';
 // Category promo block — configurable glass promo card on category archives.
 // Renderer used by archive.php + template-parts/subcategory-grouped-archive.php;
@@ -454,6 +457,20 @@ function vance_register_promo_block_controls( $wp_customize, $section_id, $key, 
             'label'   => $p . $show_label,
             'section' => $section_id,
             'type'    => 'checkbox',
+        ) );
+    }
+
+    // Mobile visibility. Only instances that pass a key get the control; the
+    // category blocks do, and default it OFF, so a block switched on for a
+    // category shows on desktop and stays out of the way on a phone until an
+    // admin asks for it there too.
+    if ( ! empty( $args['mobile_key'] ) ) {
+        $wp_customize->add_setting( $args['mobile_key'], array( 'default' => false, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
+        $wp_customize->add_control( $args['mobile_key'], array(
+            'label'       => $p . __( 'Show on mobile', 'vance-health-hub' ),
+            'description' => __( 'Off by default: the block is hidden on screens narrower than 768px.', 'vance-health-hub' ),
+            'section'     => $section_id,
+            'type'        => 'checkbox',
         ) );
     }
 
@@ -4545,9 +4562,11 @@ function vance_customize_register( $wp_customize ) {
         'btn2_text'          => array( 'type' => 'text',     'label' => 'Button 2, Text' ),
         'btn2_link'          => array( 'type' => 'text',     'label' => 'Button 2, Link', 'description' => 'Prefilled from the classic hero. Clear it to fall back to the Knowledgebase.' ),
         'show_search'        => array( 'type' => 'checkbox', 'label' => 'Show the search field' ),
+        'show_search_mobile' => array( 'type' => 'checkbox', 'label' => 'Show the search field on mobile', 'description' => 'Untick to hide the search field on screens narrower than 768px. Desktop is unaffected.' ),
         'search_label'       => array( 'type' => 'text',     'label' => 'Search — Prompt' ),
         'search_placeholder' => array( 'type' => 'text',     'label' => 'Search — Placeholder' ),
         'show_card'          => array( 'type' => 'checkbox', 'label' => 'Show the trust card' ),
+        'show_card_mobile'   => array( 'type' => 'checkbox', 'label' => 'Show the trust card on mobile', 'description' => 'Untick to hide the card on screens narrower than 768px. Desktop is unaffected.' ),
         'card_title'         => array( 'type' => 'text',     'label' => 'Trust Card — Heading' ),
         'card_text'          => array( 'type' => 'textarea', 'label' => 'Trust Card — Body' ),
         'card_bg_color'      => array( 'type' => 'color',    'label' => 'Trust Card — Background' ),
@@ -6805,6 +6824,15 @@ function vance_customize_register( $wp_customize ) {
             'section'     => 'vance_category_heroes',
         ) ) );
 
+        // Phone switches for this category's hero band and floating card.
+        vance_hero_mobile_register_controls(
+            $wp_customize,
+            'vance_category_heroes',
+            "vance_cat_hero_show_band_mobile_{$cat->term_id}",
+            "vance_cat_hero_show_card_mobile_{$cat->term_id}",
+            array( 'label_prefix' => $cat->name . ': ' )
+        );
+
         // Tagline
         $wp_customize->add_setting( "vance_cat_tagline_{$cat->term_id}", array(
             'default'           => '',
@@ -6895,7 +6923,8 @@ function vance_customize_register( $wp_customize ) {
         vance_register_promo_block_controls(
             $wp_customize,
             $promo_sec,
-            vance_promo_keys_term( $cat->term_id )
+            vance_promo_keys_term( $cat->term_id ),
+            array( 'mobile_key' => vance_cat_promo_mobile_key( $cat->term_id ) )
         );
     }
     // 5.5 Sub-Category Layouts (Clinical Reviews & Gastro Living)
@@ -7003,7 +7032,7 @@ function vance_customize_register( $wp_customize ) {
             ) );
             $wp_customize->add_control( "vance_subcat_grid_cols_{$vance_sub->term_id}", array(
                 'label'       => sprintf( __( '%1$s → %2$s: Grid columns', 'vance-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
-                'description' => __( 'Articles per row (Standard Grid only).', 'vance-health-hub' ),
+                'description' => __( 'Articles per row: Standard Grid, and the cards beneath a Bento or Featured + List.', 'vance-health-hub' ),
                 'section'     => 'vance_subcategory_layouts',
                 'type'        => 'select',
                 'choices'     => array(
@@ -7013,14 +7042,14 @@ function vance_customize_register( $wp_customize ) {
                 ),
             ) );
 
-            // Rows cap (applies to Standard Grid, Posters, Asymmetric)
+            // Rows cap (every layout; Bento and Featured + List count their block as row 1)
             $wp_customize->add_setting( "vance_subcat_rows_{$vance_sub->term_id}", array(
                 'default'           => '0',
                 'sanitize_callback' => 'vance_sanitize_rows',
             ) );
             $wp_customize->add_control( "vance_subcat_rows_{$vance_sub->term_id}", array(
                 'label'       => sprintf( __( '%1$s → %2$s: Rows to show', 'vance-health-hub' ), $vance_parent_term->name, $vance_sub->name ),
-                'description' => __( 'Limit how many rows appear (Standard Grid, Posters, Asymmetric). Extra articles stay reachable via “View all”. Choose All to show everything.', 'vance-health-hub' ),
+                'description' => __( 'Limit how many rows appear. For Bento and Featured + List the large block is the first row, and each extra row adds a row of cards beneath it at the Grid columns setting. Extra articles stay reachable via “View all”. Choose All to show everything.', 'vance-health-hub' ),
                 'section'     => 'vance_subcategory_layouts',
                 'type'        => 'select',
                 'choices'     => array(
@@ -7950,10 +7979,13 @@ function vance_get_cat_grid_cols( $term_id ) {
     return vance_sanitize_grid_cols( (string) vance_get_theme_mod( "vance_cat_grid_cols_{$term_id}", '3' ) );
 }
 
+
 /**
- * "Rows to show" cap for the Standard Grid, Posters and Asymmetric layouts.
- * The article limit is rows x per-row (per-row depends on the layout's column
- * count); 0 means show every article in the group. Extras remain reachable via
+ * "Rows to show" cap for every sub-category layout. For Standard Grid, Posters
+ * and Asymmetric the article limit is rows x per-row (per-row depends on the
+ * layout's column count). Bento and Featured + List count their block as the
+ * first row and cap the grid beneath it (see vance_subcat_overflow_cap()).
+ * 0 means show every article in the group. Extras remain reachable via
  * the group's "View all" link.
  */
 function vance_sanitize_rows( $v ) {

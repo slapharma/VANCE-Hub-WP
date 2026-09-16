@@ -85,6 +85,30 @@ if ( ! function_exists( 'vance_render_subcat_card' ) ) {
     }
 }
 
+if ( ! function_exists( 'vance_subcat_overflow_cap' ) ) {
+    /**
+     * Apply "Rows to show" to the grid that follows a Bento or Featured + List
+     * block.
+     *
+     * The block itself counts as the first row, so 1 row shows the block alone
+     * and every further row adds one row of the overflow grid, at the
+     * sub-category's Standard Grid column count. 0 (All rows) leaves the
+     * overflow untouched.
+     *
+     * @param int   $tid       Sub-category term id.
+     * @param array $ids       Post ids left over after the block took its share.
+     * @param bool  $cap_rows  False on a sub-category's own page; see below.
+     * @return array
+     */
+    function vance_subcat_overflow_cap( $tid, $ids, $cap_rows ) {
+        $rows = (int) vance_get_subcat_rows( $tid );
+        if ( ! $cap_rows || $rows < 1 ) {
+            return $ids;
+        }
+        return array_slice( $ids, 0, ( $rows - 1 ) * (int) vance_get_subcat_grid_cols( $tid ) );
+    }
+}
+
 if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
     /**
      * Render one sub-category's posts in its chosen layout.
@@ -96,7 +120,9 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
      * @param int    $tid            Sub-category term id (drives the layout sub-options).
      * @param array  $vance_post_ids Post ids to render, in query order.
      * @param string $vance_layout   Layout slug from vance_get_subcat_layout().
-     * @param bool   $vance_cap_rows Apply the "Rows to show" cap. False on a
+     * @param bool   $vance_cap_rows Apply the "Rows to show" cap (every layout;
+     *                               Bento and Featured + List count their block
+     *                               as the first row). False on a
      *                               sub-category's own page, where trimmed posts
      *                               would have nowhere left to be reached from.
      */
@@ -117,7 +143,7 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
         $vance_ids    = $vance_post_ids;
         $vance_main   = array_shift( $vance_ids );
         $vance_side   = array_splice( $vance_ids, 0, $vance_bcount );
-        $vance_rest   = $vance_ids;
+        $vance_rest   = vance_subcat_overflow_cap( $tid, $vance_ids, $vance_cap_rows );
         $vance_solo   = empty( $vance_side );
         ?>
         <div class="va-bento va-bento--count-<?php echo (int) $vance_bcount; ?> va-bento--<?php echo esc_attr( $vance_bside ); ?><?php echo $vance_solo ? ' va-bento--solo' : ''; ?>">
@@ -131,7 +157,7 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
             <?php endif; ?>
         </div>
         <?php if ( ! empty( $vance_rest ) ) : ?>
-            <div class="va-sub-grid va-layout-grid va-bento-overflow">
+            <div class="va-sub-grid va-layout-grid va-grid--cols-<?php echo (int) vance_get_subcat_grid_cols( $tid ); ?> va-bento-overflow">
                 <?php $vance_ri = 0; foreach ( $vance_rest as $vpid ) { $post = get_post( $vpid ); setup_postdata( $post ); vance_render_subcat_card( 'grid', $vance_ri ); $vance_ri++; } wp_reset_postdata(); ?>
             </div>
         <?php endif; ?>
@@ -143,7 +169,7 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
         $vance_ids  = $vance_post_ids;
         $vance_feat = array_shift( $vance_ids );
         $vance_list = array_splice( $vance_ids, 0, 6 ); // up to 6 rows beside the hero
-        $vance_rest = $vance_ids;
+        $vance_rest = vance_subcat_overflow_cap( $tid, $vance_ids, $vance_cap_rows );
         $vance_solo = empty( $vance_list );
         ?>
         <div class="va-featured-list<?php echo $vance_solo ? ' va-featured-list--solo' : ''; ?>">
@@ -189,7 +215,7 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
             <?php endif; ?>
         </div>
         <?php if ( ! empty( $vance_rest ) ) : ?>
-            <div class="va-sub-grid va-layout-grid va-fl-overflow">
+            <div class="va-sub-grid va-layout-grid va-grid--cols-<?php echo (int) vance_get_subcat_grid_cols( $tid ); ?> va-fl-overflow">
                 <?php $vance_ri = 0; foreach ( $vance_rest as $vpid ) { $post = get_post( $vpid ); setup_postdata( $post ); vance_render_subcat_card( 'grid', $vance_ri ); $vance_ri++; } wp_reset_postdata(); ?>
             </div>
         <?php endif; ?>
@@ -379,6 +405,17 @@ $vance_cat = get_queried_object();
                         <?php endif; ?>
                         <a class="va-subcat-viewall" href="<?php echo esc_url( get_category_link( $tid ) ); ?>">View all <?php echo esc_html( $term_obj->name ); ?> &rarr;</a>
                     </header>
+
+                    <?php
+                    // The sub-category's own promo block (Customizer -> Category
+                    // Promo Blocks -> Parent -> Child). It already renders on the
+                    // sub-category's own archive; on the parent lobby it sits at
+                    // the top of that sub-category's group, so switching one on is
+                    // visible from the page most visitors actually land on.
+                    if ( function_exists( 'vance_render_category_promo' ) ) {
+                        vance_render_category_promo( $tid );
+                    }
+                    ?>
 
                     <?php vance_render_subcat_layout( $tid, $vance_post_ids, $vance_layout ); ?>
                 </section>

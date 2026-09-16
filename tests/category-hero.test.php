@@ -149,7 +149,7 @@ function seed_terms() {
 		// the bare ampersand would hide the double-escaping bug entirely.
 		array( 87, 'Food &amp; Nutrition',   'food-nutrition',            75 ),
 		array( 88, 'Tests &amp; Treatments', 'tests-treatments',          75 ),
-		array( 15, 'Healthcare News',        'content-healthcare-news',    0 ),
+		array( 15, 'Health News',            'content-health-news',        0 ),
 		array( 21, 'White Papers',           'content-white-papers',       0 ),
 		array( 66, 'Brand New Section',      'brand-new-section',          0 ),
 	) as $r ) {
@@ -555,7 +555,7 @@ section( '8. The registry and the icon set' );
 $meta = vance_category_hero_meta();
 
 check( '8a  every live top-level category with content has an entry',
-	isset( $meta['content-clinical-reviews'], $meta['content-gastro-living'], $meta['content-healthcare-news'] ) );
+	isset( $meta['content-clinical-reviews'], $meta['content-gastro-living'], $meta['content-health-news'] ) );
 
 $bad = array();
 foreach ( $meta as $slug => $m ) {
@@ -654,7 +654,7 @@ section( '9. The three templates (SOURCE assertions — see the file header)' );
 $templates = array(
 	'archive.php',
 	'template-parts/subcategory-grouped-archive.php',
-	'category-content-healthcare-news.php',
+	'category-content-health-news.php',
 );
 
 foreach ( $templates as $t ) {
@@ -740,17 +740,24 @@ foreach ( $cm[1] as $attr ) {
 	}
 }
 /*
- * Five classes are structural wrappers or markers that carry no rules of their
- * own, and inc/page-hero-spotlight.php and inc/gi-hero.php emit every one of
- * them unstyled too. They are listed rather than pattern-matched so that a
- * SIXTH unstyled class — the actual failure mode, a component that renders as
- * a bare div — still turns this check red.
+ * Three classes are structural wrappers or markers that carry no rules of
+ * their own, and inc/page-hero-spotlight.php and inc/gi-hero.php emit every
+ * one of them unstyled too. They are listed rather than pattern-matched so
+ * that a FOURTH unstyled class — the actual failure mode, a component that
+ * renders as a bare div — still turns this check red.
+ *
+ * vhh-hero-spotlight__slot-wrap and vhh-hero-spotlight__slot--lines used to be
+ * here too. The "Spotlight heroes on a phone" block added to main.css
+ * (inc/hero-mobile.php) gave both their first real rules — the band-hide
+ * switch hides __slot-wrap outright, and the one-row phone layout sets
+ * __slot--lines to grid-auto-flow: column — so leaving them allowlisted would
+ * have let those rules disappear again without this check going red. This is
+ * the "no allowlisted structural class has quietly gained rules" check
+ * catching exactly what it says it catches.
  */
 $structural = array(
 	'vhh-hero-spotlight--page',        // set marker, no rules anywhere
 	'vhh-hero-spotlight__copy',        // grid child; the grid is on __inner
-	'vhh-hero-spotlight__slot-wrap',   // label + band grouping
-	'vhh-hero-spotlight__slot--lines', // markup-shape marker; rules are on __line
 	'vhh-hero-spotlight__slot--facts', // scoping modifier; every rule is `--facts .__line-v`
 	'vhh-hero-spotlight__card-body',   // flex child of __card
 );

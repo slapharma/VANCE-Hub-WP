@@ -376,7 +376,7 @@ function vance_render_promo_block( array $vals ) {
 			: "background-image: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('" . esc_url( get_template_directory_uri() . '/assets/img/promo-tool-dots.png' ) . "');";
 	}
 	?>
-    <section class="vance-cat-promo" aria-label="<?php echo esc_attr( $heading ? $heading : 'Featured' ); ?>"<?php echo $band_style ? ' style="' . esc_attr( $band_style ) . '"' : ''; ?>>
+    <section class="vance-cat-promo<?php echo empty( $vals['section_class'] ) ? '' : ' ' . esc_attr( $vals['section_class'] ); ?>" aria-label="<?php echo esc_attr( $heading ? $heading : 'Featured' ); ?>"<?php echo $band_style ? ' style="' . esc_attr( $band_style ) . '"' : ''; ?>>
         <div class="<?php echo esc_attr( $container_class ); ?>">
             <?php if ( $sidebar ) : ?><div class="vance-promo-columns"><?php endif; ?>
             <div class="<?php echo esc_attr( $inner_classes ); ?><?php echo $sidebar ? ' vance-promo-columns__main' : ''; ?>"<?php echo $inner_style ? ' style="' . esc_attr( $inner_style ) . '"' : ''; ?>>
@@ -456,5 +456,22 @@ function vance_render_category_promo( $term_id ) {
 	if ( ! vance_get_theme_mod( 'vance_cat_promo_show_' . $term_id, false ) ) {
 		return;
 	}
-	vance_render_promo_block( vance_promo_block_vals( vance_promo_keys_term( $term_id ) ) );
+	$vals = vance_promo_block_vals( vance_promo_keys_term( $term_id ) );
+	if ( ! vance_get_theme_mod( vance_cat_promo_mobile_key( $term_id ), false ) ) {
+		$vals['section_class'] = 'vance-cat-promo--hide-mobile';
+	}
+	vance_render_promo_block( $vals );
+}
+
+/**
+ * Setting id for a category promo block's "Show on mobile" checkbox.
+ *
+ * Default false, read and registered through this one name so the control and
+ * the renderer cannot disagree about which key they mean.
+ *
+ * @param int $term_id
+ * @return string
+ */
+function vance_cat_promo_mobile_key( $term_id ) {
+	return 'vance_cat_promo_show_mobile_' . (int) $term_id;
 }

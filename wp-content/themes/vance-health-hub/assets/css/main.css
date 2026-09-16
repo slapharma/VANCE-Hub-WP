@@ -3059,14 +3059,14 @@ body.home .hero {
 }
 .va-poster-title {
     color: #fff;
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1.25;
     font-weight: 700;
     margin: 0;
 }
-/* Homepage Knowledge Base poster cards use a slightly smaller title (-4px) than
-   the sub-category archive posters. Scoped to .kb-content-wrapper so the
-   sub-category grouped archives keep the 22px above. */
+/* Homepage Knowledge Base poster cards use a smaller title than the category
+   archive posters. Scoped to .kb-content-wrapper so the category archives keep
+   the 20px above. */
 .kb-content-wrapper .va-poster-title {
     font-size: 18px;
 }
@@ -3615,6 +3615,20 @@ body.home .hero {
 }
 .vance-cat-promo__inner--text .vance-cat-promo__title { font-size: 22px; }
 .vance-cat-promo__inner--text .vance-cat-promo__text { max-width: 68ch; }
+
+/* A sub-category's promo block rendered inside its group on the parent lobby
+   (template-parts/subcategory-grouped-archive.php). The group already sits in
+   the page's .container, so the block's own container gives up its gutter
+   rather than indenting the card 20px inside the article grid's edges. */
+.va-subcat-group .vance-cat-promo { padding: 0 0 24px; }
+.va-subcat-group .vance-cat-promo > .container,
+.va-subcat-group .vance-cat-promo > .container-fluid { padding-left: 0; padding-right: 0; }
+
+/* "Show on mobile" unticked in Customizer -> Category Promo Blocks (the
+   default). Same 768px line the rest of this block collapses at. */
+@media (max-width: 767.98px) {
+    .vance-cat-promo--hide-mobile { display: none !important; }
+}
 
 @media (max-width: 767.98px) {
     .vance-cat-promo__inner.has-image { grid-template-columns: 1fr; }
@@ -5258,6 +5272,207 @@ li.mega-toggle-on > a.mega-menu-link > span.mega-indicator::after {
 .va-related-articles__item a:hover,
 .va-related-articles__item a:focus {
     text-decoration: underline;
+}
+
+
+/* ==========================================================================
+   Spotlight heroes on a phone  (inc/hero-mobile.php)
+   ==========================================================================
+   Two jobs, for every hero family at once: the homepage, the page heroes, the
+   category archives, the GI set and the policy documents all render the same
+   .vhh-hero-spotlight section.
+
+   1. The white band stays on ONE line below 768px. Above that, the shared
+      rules stack it at 900px, which on a phone turned three facts into a tower
+      of full-width rows under the headline. Here the cells sit side by side
+      instead: no icon tile, value only for the link bands, value over caption
+      for the number bands, and a short form of any long name
+      (__short, emitted by vance_hero_band_value()) in place of the full one.
+      The full name stays in the markup, visually hidden, for screen readers.
+
+   2. The per-hero "Show ... on mobile" switches. Each adds a modifier to the
+      section; the element is hidden below 768px only.
+
+   Selectors are doubled up with .vhh-hero-spotlight on purpose. The category,
+   GI and policy heroes print their own <style> block later in the document,
+   and several of their band rules are one or two classes deep; the extra class
+   wins on specificity instead of relying on source order.
+
+   Sits above "Article cards stay square" so that block stays last.
+   ========================================================================== */
+
+.vhh-hero-spotlight__short { display: none; }
+
+@media (max-width: 767.98px) {
+
+    /* --- The switches --------------------------------------------------- */
+
+    .vhh-hero-spotlight.vhh-hero-spotlight--band-hide-mobile .vhh-hero-spotlight__slot-wrap,
+    .vhh-hero-spotlight.vhh-hero-spotlight--band-hide-mobile .vhh-hero-spotlight__search {
+        display: none !important;
+    }
+
+    .vhh-hero-spotlight.vhh-hero-spotlight--card-hide-mobile .vhh-hero-spotlight__card {
+        display: none !important;
+    }
+
+    /* --- Short form in, full form visually hidden ------------------------ */
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__short { display: inline; }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__full {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* --- One row -------------------------------------------------------- */
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot-label {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--lines,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--badges {
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        grid-template-columns: none;
+    }
+
+    /* :nth-child(n) matches every cell; it is there to out-rank the 2x2 bands'
+       `:nth-child(odd)` divider rules, which would otherwise redraw a hairline
+       under half the cells. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__line:nth-child(n),
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__badge:nth-child(n) {
+        min-width: 0;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+        padding: 11px 6px;
+        text-align: center;
+        border-right: 1px solid #DCE9E8;
+        border-bottom: 0;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__line:last-child,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__badge:last-child {
+        border-right: 0;
+    }
+
+    /* The affordance chevron on the link bands has no room at this width; the
+       whole cell is still the link. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__line::after {
+        display: none;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__line-ico,
+    .vhh-hero-spotlight .vhh-hero-spotlight__badge-ico {
+        display: none;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__line-body {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__line-k,
+    .vhh-hero-spotlight .vhh-hero-spotlight__line-v,
+    .vhh-hero-spotlight .vhh-hero-spotlight__badge-t {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        overflow-wrap: normal;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__line-k {
+        font-size: 9.5px;
+        letter-spacing: 0.06em;
+        margin-bottom: 0;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__line-v,
+    .vhh-hero-spotlight .vhh-hero-spotlight__badge-t {
+        font-size: 13px;
+        line-height: 1.3;
+    }
+
+    /* Link bands: the destination's name is the whole message, so the caption
+       above it goes. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--lines:not(.vhh-hero-spotlight__slot--facts):not(.vhh-hero-spotlight__slot--recipestats):not(.vhh-hero-spotlight__slot--discounts) .vhh-hero-spotlight__line-k {
+        display: none;
+    }
+
+    /* Number bands: the figure leads, its caption sits under it. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--facts .vhh-hero-spotlight__line-body,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--recipestats .vhh-hero-spotlight__line-body,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--discounts .vhh-hero-spotlight__line-body {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--facts .vhh-hero-spotlight__line-v,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--recipestats .vhh-hero-spotlight__line-v,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--discounts .vhh-hero-spotlight__line-v {
+        font-size: 17px;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Four or more cells (the 404 and policy bands, the meal planner): a
+       quantity query, so a band's type only tightens when it has to. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__line:first-child:nth-last-child(n + 4),
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot > .vhh-hero-spotlight__line:first-child:nth-last-child(n + 4) ~ .vhh-hero-spotlight__line {
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+
+    /* Names only: the meal planner's figures keep their size. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot:not(.vhh-hero-spotlight__slot--recipestats) > .vhh-hero-spotlight__line:first-child:nth-last-child(n + 4) .vhh-hero-spotlight__line-v,
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot:not(.vhh-hero-spotlight__slot--recipestats) > .vhh-hero-spotlight__line:first-child:nth-last-child(n + 4) ~ .vhh-hero-spotlight__line .vhh-hero-spotlight__line-v {
+        font-size: 12px;
+    }
+
+    /* The meal planner's five cells are the tightest band on the site. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--recipestats > .vhh-hero-spotlight__line:nth-child(n) {
+        padding: 10px 3px;
+    }
+
+    /* --- GI lobby: the seven condition chips ---------------------------- */
+
+    /* One scrolling row rather than two fixed rows. The row wrappers stop
+       generating boxes so all seven chips are siblings of one flex line. */
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--chips {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 8px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--chips::-webkit-scrollbar { display: none; }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--chips .vhh-hero-spotlight__chip-row {
+        display: contents;
+    }
+
+    .vhh-hero-spotlight .vhh-hero-spotlight__slot--chips .vhh-hero-spotlight__chip {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        scroll-snap-align: start;
+    }
 }
 
 

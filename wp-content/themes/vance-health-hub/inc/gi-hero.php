@@ -127,6 +127,7 @@ function vance_gi_hero_meta() {
 	return array(
 		'inflammatory-bowel-disease' => array(
 			'eyebrow' => __( 'Inflammatory bowel disease', 'vance-health-hub' ),
+			'short'   => __( 'IBD', 'vance-health-hub' ), // the band on a phone
 			'kicker'  => __( 'The umbrella term', 'vance-health-hub' ),
 			'icon'    => 'branch',
 			// Rewritten for the hero. The classic lede opened "A chronic
@@ -138,6 +139,7 @@ function vance_gi_hero_meta() {
 			'focal'   => '50% 30%',
 		),
 		'ulcerative-colitis' => array(
+			'short'   => __( 'UC', 'vance-health-hub' ), // the band on a phone
 			'eyebrow' => __( 'Inflammatory bowel disease', 'vance-health-hub' ),
 			'kicker'  => __( 'Colon and rectum', 'vance-health-hub' ),
 			'icon'    => 'horseshoe',
@@ -146,6 +148,7 @@ function vance_gi_hero_meta() {
 			'focal'   => '62% 28%',
 		),
 		'crohns-disease' => array(
+			'short'   => __( 'Crohn’s', 'vance-health-hub' ), // the band on a phone
 			'eyebrow' => __( 'Inflammatory bowel disease', 'vance-health-hub' ),
 			'kicker'  => __( 'Anywhere in the gut', 'vance-health-hub' ),
 			'icon'    => 'tract',
@@ -154,6 +157,7 @@ function vance_gi_hero_meta() {
 			'focal'   => '68% 28%',
 		),
 		'microscopic-colitis' => array(
+			'short'   => __( 'Microscopic', 'vance-health-hub' ), // the band on a phone
 			'eyebrow' => __( 'Inflammatory bowel disease', 'vance-health-hub' ),
 			'kicker'  => __( 'Under the microscope', 'vance-health-hub' ),
 			'icon'    => 'lens',
@@ -166,6 +170,7 @@ function vance_gi_hero_meta() {
 			'focal'   => '44% 26%',
 		),
 		'irritable-bowel-syndrome' => array(
+			'short'   => __( 'IBS', 'vance-health-hub' ), // the band on a phone
 			'eyebrow' => __( 'Functional gut disorder', 'vance-health-hub' ),
 			'kicker'  => __( 'How the gut works', 'vance-health-hub' ),
 			'icon'    => 'wave',
@@ -174,6 +179,7 @@ function vance_gi_hero_meta() {
 			'focal'   => '60% 32%',
 		),
 		'colorectal-cancer' => array(
+			'short'   => __( 'Colorectal', 'vance-health-hub' ), // the band on a phone
 			'eyebrow' => __( 'Bowel cancer', 'vance-health-hub' ),
 			'kicker'  => __( 'Colon or rectum', 'vance-health-hub' ),
 			'icon'    => 'scan',
@@ -187,6 +193,7 @@ function vance_gi_hero_meta() {
 			'focal'   => '60% 26%',
 		),
 		'diverticular-disease' => array(
+			'short'   => __( 'Diverticular', 'vance-health-hub' ), // the band on a phone
 			'eyebrow' => __( 'Structural bowel condition', 'vance-health-hub' ),
 			'kicker'  => __( 'Pouches in the colon', 'vance-health-hub' ),
 			'icon'    => 'pouches',
@@ -288,6 +295,7 @@ function vance_gi_hero_cells( $slug ) {
 			'icon'  => $meta[ $rel ]['icon'],
 			'label' => $meta[ $rel ]['kicker'],
 			'value' => vance_gi_hero_label( $rel ),
+			'short' => isset( $meta[ $rel ]['short'] ) ? $meta[ $rel ]['short'] : '',
 			'href'  => vance_gi_page_url( $rel ),
 		);
 	}
@@ -296,6 +304,7 @@ function vance_gi_hero_cells( $slug ) {
 		'icon'  => 'grid',
 		'label' => __( 'All seven', 'vance-health-hub' ),
 		'value' => __( 'Gastro Health Explained', 'vance-health-hub' ),
+		'short' => __( 'All seven', 'vance-health-hub' ),
 		'href'  => vance_gi_hub_url(),
 	);
 
@@ -853,7 +862,10 @@ function vance_render_gi_hero( $slug ) {
 	vance_gi_hero_styles();
 	?>
 	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--gi vhh-hero-spotlight--gi-<?php
-		echo esc_attr( $key ? $key : $slug ); ?><?php echo $photo ? '' : ' has-no-media'; ?>">
+		echo esc_attr( $key ? $key : $slug ); ?><?php echo $photo ? '' : ' has-no-media'; ?><?php
+		echo ( $key && function_exists( 'vance_hero_mobile_classes_for' ) )
+			? vance_hero_mobile_classes_for( "vance_gi_cond_{$key}_show_band_mobile", "vance_gi_cond_{$key}_show_card_mobile" )
+			: ''; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed class names ?>">
 
 		<?php vance_gi_hero_media( $photo ); ?>
 
@@ -887,7 +899,11 @@ function vance_render_gi_hero( $slug ) {
 							?></span>
 							<span class="vhh-hero-spotlight__line-body">
 								<span class="vhh-hero-spotlight__line-k"><?php echo esc_html( $cell['label'] ); ?></span>
-								<span class="vhh-hero-spotlight__line-v"><?php echo esc_html( $cell['value'] ); ?></span>
+								<span class="vhh-hero-spotlight__line-v"><?php
+									echo function_exists( 'vance_hero_band_value' )
+										? vance_hero_band_value( $cell['value'], $cell['short'] )
+										: esc_html( $cell['value'] ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside
+								?></span>
 							</span>
 						</a>
 						<?php endforeach; ?>
@@ -937,7 +953,10 @@ function vance_render_gi_hub_hero() {
 	vance_gi_hero_styles();
 	?>
 	<section class="vhh-hero-spotlight vhh-hero-spotlight--page vhh-hero-spotlight--gi vhh-hero-spotlight--gi-hub<?php
-		echo $photo ? '' : ' has-no-media'; ?>">
+		echo $photo ? '' : ' has-no-media'; ?><?php
+		echo function_exists( 'vance_hero_mobile_classes_for' )
+			? vance_hero_mobile_classes_for( 'vance_gi_hub_hero_show_band_mobile', 'vance_gi_hub_hero_show_card_mobile' )
+			: ''; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed class names ?>">
 
 		<?php vance_gi_hero_media( $photo ); ?>
 

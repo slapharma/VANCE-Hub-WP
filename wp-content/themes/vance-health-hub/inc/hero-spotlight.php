@@ -57,9 +57,11 @@ function vance_hero_spotlight_field_defaults() {
 		'btn2_text'         => $inherited['btn2_text'],
 		'btn2_link'         => $inherited['btn2_link'],
 		'show_search'       => true,
+		'show_search_mobile'=> true,
 		'search_label'      => 'What would you like to know?',
 		'search_placeholder'=> 'Search conditions, symptoms, treatments, recipes and articles...',
 		'show_card'         => true,
+		'show_card_mobile'  => true,
 		'card_title'        => 'Created for patients, built on expertise',
 		'card_text'         => 'All content is written or reviewed by gastroenterology experts and explained for patients.',
 		'card_bg_color'     => '#E5F1F1',
@@ -197,7 +199,7 @@ function vance_render_hero_spotlight() {
 		esc_attr( $s['card_bg_color'] )
 	);
 	?>
-	<section class="vhh-hero-spotlight" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
+	<section class="vhh-hero-spotlight<?php echo function_exists( 'vance_hero_mobile_classes' ) ? vance_hero_mobile_classes( ! empty( $s['show_search_mobile'] ), ! empty( $s['show_card_mobile'] ) ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed class names ?>" style="<?php echo $style; // phpcs:ignore WordPress.Security.EscapeOutput — each part escaped above ?>">
 
 		<div class="vhh-hero-spotlight__media">
 			<?php /* Above the fold and the page's LCP candidate — eager, high priority,

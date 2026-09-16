@@ -34,8 +34,17 @@ cd tests && php gi-hero.test.php
 cd tests && php category-hero.test.php
 ```
 
-All six exit non-zero on failure, and all six are green. As of 2026-09-01:
-341 / 147 / 22 / 182 / 260 / 87 checks.
+```bash
+cd tests && php hero-mobile.test.php
+```
+
+All seven exit non-zero on failure. As of 2026-09-01 the first six were
+341 / 147 / 22 / 182 / 260 / 87 checks; `hero-mobile.test.php` is new and adds
+80. **`hero-render.test.php` and `hero-customizer.test.php` currently have
+failing checks that predate this change** — a red run of either of those two
+is not evidence this change broke something; treat it as separate, pre-existing
+work. The other five (`reveal.test.js`, `legal-hero.test.php`, `gi-hero.test.php`,
+`category-hero.test.php`, `hero-mobile.test.php`) are green.
 
 ### Never write an image filename in a test — the WebP lesson
 
@@ -82,6 +91,7 @@ mutant proves they can fail. Every line must read `went RED`.
 | `gi-hero.test.php` | `inc/gi-hero.php` — the Gastro Health Explained lobby and the seven condition heroes: the four-cell band and its never-itself guard, the lobby's seven chips on two fixed rows, purple's two jobs and the teal CTA override, photograph resolution and the focal-point whitelist, the opt-in review date, and **both templates included and run** so a commented-out call cannot pass. Section -1 lifts `vance_gi_conditions()` and `vance_gi_condition_cards()` out of `functions.php` and evaluates them, so the suite tests the real registry rather than a copy of it that could rot |
 | `category-hero.test.php` | `inc/category-hero.php` — the category-archive heroes: the live facts band and the cells it drops rather than showing a zero, sub-category inheritance (photograph, card and family eyebrow from the parent) and the breadcrumb, term-name decoding, photograph resolution and its motif fallback, both title-override keys, and the three archive templates read as **source** — see the caveat below |
 | `legal-hero.test.php` | `inc/legal-hero.php` — the five policy-document heroes: copy carried across from the dark heroes verbatim, the band of sibling documents, the no-photography constraint, slug resolution and its path fallback, the inline stylesheet, and the five templates **included and run** so a commented-out call cannot pass |
+| `hero-mobile.test.php` | `inc/hero-mobile.php` — the phone-only "show on mobile" band/card switches and the band's short-label helper (`vance_hero_band_value()`), run against every hero family **twice**: once with `hero-mobile.php` loaded, pinning the "loaded" path, and once without, since the other five suites here never require it and so pin the "not loaded" fallback. Also covers the shared Policy Document Heroes Customizer section the switches added, `vance_subcat_overflow_cap()` lifted from `template-parts/subcategory-grouped-archive.php`, and the category promo block's default-off "Show on mobile" visibility class |
 
 ## Not harnesses — the hero photographs
 
