@@ -766,18 +766,22 @@
 		display: none;
 	}
 
-	/* Match the navy used by the standard-panel drawer rows (Hub,
-	   Knowledgebase) at this width — desktop's .vance-nav-tile__title color
-	   is near-black and this class carries no "a.mega-menu-link" for the
-	   mobile-base.css navy rule to catch. Scoped with the same :not() as the
-	   border rule above so the feature CTA row's title keeps its own color. */
 	#mega-menu-wrap-primary-menu .vance-nav-tile__title {
 		font-size: 14px;
 		font-weight: 500;
 	}
 
+	/* Match the navy used by the standard-panel drawer rows (Hub,
+	   Knowledgebase) at this width — desktop's .vance-nav-tile__title color
+	   is near-black and this class carries no "a.mega-menu-link" for the
+	   mobile-base.css navy rule to catch. font-weight is knocked down to
+	   the standard rows' 400 too: at equal color, 500 read visibly darker/
+	   bolder next to them, which is what looked like a color mismatch.
+	   Scoped with the same :not() as the border rule above so the feature
+	   CTA row's title keeps its own weight and color. */
 	#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) .vance-nav-tile__title {
 		color: #2f4f6f !important;
+		font-weight: 400;
 	}
 
 	/* The feature tile spans two columns on desktop; there is one column here. */
