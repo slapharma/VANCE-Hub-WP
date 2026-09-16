@@ -6,7 +6,7 @@
  * dark band: a 350px `.hero` with a navy veil over one of four PNGs from 2026,
  * an eyebrow and a headline, and nothing else. Three templates carried their
  * own copy of it — archive.php, template-parts/subcategory-grouped-archive.php
- * and category-content-healthcare-news.php — which is why the same forty lines
+ * and category-content-health-news.php — which is why the same forty lines
  * of overlay-gradient arithmetic appear three times in this theme.
  *
  * They now render the same `.vhh-hero-spotlight` section as the homepage, the
@@ -132,7 +132,7 @@ function vance_category_hero_meta() {
 			),
 		),
 
-		'content-healthcare-news' => array(
+		'content-health-news' => array(
 			'eyebrow' => __( 'What changed', 'vance-health-hub' ),
 			'intro'   => __( 'Developments in gastroenterology, nutrition science and health policy, reported as they happen and grouped by when they were published.', 'vance-health-hub' ),
 			'image'   => 'healthcare-news.jpg',

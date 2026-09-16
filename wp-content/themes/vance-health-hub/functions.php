@@ -6831,7 +6831,7 @@ function vance_customize_register( $wp_customize ) {
         // buckets, not real sub-category terms, so it can't use the per-sub-category
         // "Grid columns" control in Sub-category Layouts; this is the equivalent
         // scoped to just this page. Reuses vance_sanitize_grid_cols() (below).
-        if ( 'content-healthcare-news' === $cat->slug ) {
+        if ( 'content-health-news' === $cat->slug ) {
             $wp_customize->add_setting( "vance_cat_grid_cols_{$cat->term_id}", array(
                 'default'           => '3',
                 'sanitize_callback' => 'vance_sanitize_grid_cols',
@@ -7943,7 +7943,7 @@ function vance_get_subcat_grid_cols( $term_id ) {
 
 /**
  * Same option, scoped to a whole category rather than a sub-category — used
- * by category-content-healthcare-news.php, whose sections are computed date
+ * by category-content-health-news.php, whose sections are computed date
  * buckets rather than real sub-category terms.
  */
 function vance_get_cat_grid_cols( $term_id ) {

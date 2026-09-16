@@ -7,7 +7,7 @@
  * a dated news item, an evergreen patient guide and a summary of a journal
  * paper are three different things, and only one of them is a blog post.
  *
- *   content-healthcare-news   (32)  -> NewsArticle
+ *   content-health-news       (32)  -> NewsArticle
  *   content-clinical-reviews  (28)  -> Article
  *   content-gastro-living     (89)  -> Article
  *
@@ -40,7 +40,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function vance_article_schema_map() {
 	return array(
-		'content-healthcare-news'  => 'NewsArticle',
+		'content-health-news'      => 'NewsArticle',
 		'content-clinical-reviews' => 'Article',
 		'content-gastro-living'    => 'Article',
 	);

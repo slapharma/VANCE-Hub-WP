@@ -1,6 +1,6 @@
 <?php
 /**
- * Category template: Healthcare News (slug: content-healthcare-news).
+ * Category template: Health News (slug: content-health-news).
  *
  * Unlike Clinical Reviews / Gastro Living (grouped by real child categories via
  * template-parts/subcategory-grouped-archive.php), Healthcare News has no child

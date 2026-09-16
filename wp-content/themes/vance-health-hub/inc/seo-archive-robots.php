@@ -75,7 +75,7 @@
  * Note for anyone extending this list: measure unique content as the rendered
  * word count minus the site chrome, which is 1,089 words on every page. Naive
  * extraction badly misreads this theme. Splitting rendered HTML on the last
- * </header> reports /category/content-healthcare-news/ as a 38-word empty
+ * </header> reports /category/content-health-news/ as a 38-word empty
  * archive, because each of its 32 cards contains a <header>; it actually
  * carries the most unique content of any category on the site.
  *

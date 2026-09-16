@@ -238,7 +238,7 @@ if ( ! function_exists( 'vance_render_subcat_layout' ) ) {
  * HERO
  * ----------------------------------------------------------------------
  * The light spotlight hero, shared with archive.php and
- * category-content-healthcare-news.php through one renderer. Forty lines of
+ * category-content-health-news.php through one renderer. Forty lines of
  * overlay-gradient arithmetic used to live here as a third copy of the dark
  * band; every one of the settings it read is still honoured, by
  * inc/category-hero.php.

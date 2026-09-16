@@ -443,7 +443,7 @@ function vance_render_promo_knowledgebase( $slot = 'below_intro' ) {
  * something different on each category page.
  *
  * Keeps its original function name because archive.php,
- * category-content-healthcare-news.php and
+ * category-content-health-news.php and
  * template-parts/subcategory-grouped-archive.php all call it.
  *
  * @param int $term_id
