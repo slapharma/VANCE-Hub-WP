@@ -398,6 +398,17 @@ $vance_cat = get_queried_object();
                 $vance_desc   = vance_get_subcat_description( $term_obj );
                 ?>
                 <section class="va-subcat-group va-subcat-group--<?php echo esc_attr( $vance_layout ); ?>" aria-labelledby="va-subcat-<?php echo (int) $tid; ?>">
+                    <?php
+                    // The sub-category's own promo block (Customizer -> Category
+                    // Promo Blocks -> Parent -> Child). It already renders on the
+                    // sub-category's own archive; on the parent lobby it sits above
+                    // that sub-category's title, so switching one on is
+                    // visible from the page most visitors actually land on.
+                    if ( function_exists( 'vance_render_category_promo' ) ) {
+                        vance_render_category_promo( $tid );
+                    }
+                    ?>
+
                     <header class="va-subcat-head">
                         <h2 class="va-subcat-title" id="va-subcat-<?php echo (int) $tid; ?>"><?php echo esc_html( $term_obj->name ); ?></h2>
                         <?php if ( '' !== trim( (string) $vance_desc ) ) : ?>
@@ -405,17 +416,6 @@ $vance_cat = get_queried_object();
                         <?php endif; ?>
                         <a class="va-subcat-viewall" href="<?php echo esc_url( get_category_link( $tid ) ); ?>">View all <?php echo esc_html( $term_obj->name ); ?> &rarr;</a>
                     </header>
-
-                    <?php
-                    // The sub-category's own promo block (Customizer -> Category
-                    // Promo Blocks -> Parent -> Child). It already renders on the
-                    // sub-category's own archive; on the parent lobby it sits at
-                    // the top of that sub-category's group, so switching one on is
-                    // visible from the page most visitors actually land on.
-                    if ( function_exists( 'vance_render_category_promo' ) ) {
-                        vance_render_category_promo( $tid );
-                    }
-                    ?>
 
                     <?php vance_render_subcat_layout( $tid, $vance_post_ids, $vance_layout ); ?>
                 </section>

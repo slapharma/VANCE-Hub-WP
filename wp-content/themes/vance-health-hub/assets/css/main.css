@@ -3617,10 +3617,14 @@ body.home .hero {
 .vance-cat-promo__inner--text .vance-cat-promo__text { max-width: 68ch; }
 
 /* A sub-category's promo block rendered inside its group on the parent lobby
-   (template-parts/subcategory-grouped-archive.php). The group already sits in
-   the page's .container, so the block's own container gives up its gutter
-   rather than indenting the card 20px inside the article grid's edges. */
-.va-subcat-group .vance-cat-promo { padding: 0 0 24px; }
+   (template-parts/subcategory-grouped-archive.php), above the sub-category's
+   title with 75px above and below it. The group already sits in the page's
+   .container, so the block's own container gives up its gutter rather than
+   indenting the card 20px inside the article grid's edges. */
+/* The attribute selector out-ranks the later band-colour rule, which would
+   otherwise pull a coloured promo back to 40px. */
+.va-subcat-group .vance-cat-promo,
+.va-subcat-group .vance-cat-promo[style*="background-color"] { padding: 75px 0; }
 .va-subcat-group .vance-cat-promo > .container,
 .va-subcat-group .vance-cat-promo > .container-fluid { padding-left: 0; padding-right: 0; }
 
