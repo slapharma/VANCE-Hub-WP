@@ -848,6 +848,14 @@
 	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-item + li.vance-menu-promo {
 		padding-top: 20px;
 	}
+	/* The fixed bottom tab bar (.vance-bottom-nav, mobile-components.css, 56px
+	   plus the safe area, below 768px) paints over the foot of the drawer, so
+	   without this the last banner's button scrolls no further than under it.
+	   Measured live at 375px: the drawer's content ended flush with the
+	   viewport bottom, button hidden. */
+	#mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.vance-menu-promo:last-child {
+		padding-bottom: calc(16px + 56px + env(safe-area-inset-bottom, 0px));
+	}
 
 	/* The renderer wraps the card in a page .container; inside the drawer that
 	   gutter would double the li's. mobile-base.css sets the 16px container
@@ -880,9 +888,12 @@
 		min-height: 130px;
 	}
 
+	/* text-align: the drawer centres its content, which left the body copy
+	   centred under a left-aligned heading. */
 	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__body {
 		gap: 8px;
 		padding: 16px;
+		text-align: left;
 	}
 	#mega-menu-wrap-primary-menu .vance-menu-promo .vance-cat-promo__eyebrow {
 		font-size: 11px;
