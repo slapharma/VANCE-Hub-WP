@@ -739,14 +739,20 @@
 		gap: 0;
 	}
 
-	#mega-menu-wrap-primary-menu .vance-nav-tile {
+	/* :not(.vance-nav-tile--feature) matches the desktop "plain text link"
+	   rule above (border-color: transparent) so this wins on specificity
+	   too, not just !important — that unguarded desktop rule has no media
+	   query, so its (1 ID, 2 classes) beats a plain "#wrap .vance-nav-tile"
+	   selector's (1 ID, 1 class) at every width, leaving mobile Condition
+	   rows with no left border regardless of source order. */
+	#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) {
 		display: flex;
 		align-items: center;
 		min-height: 46px;
 		gap: 0;
 		background: none;
 		border: 0;
-		border-left: 2px solid #e4eaea;
+		border-left: 2px solid #e4eaea !important;
 		/* Squared on purpose, and correctly so per the corner-radius rules in
 		   CLAUDE.md: a card that goes full-bleed inside a mobile sheet stops
 		   being a card. Do not "restore" a token here. */
@@ -760,9 +766,18 @@
 		display: none;
 	}
 
+	/* Match the navy used by the standard-panel drawer rows (Hub,
+	   Knowledgebase) at this width — desktop's .vance-nav-tile__title color
+	   is near-black and this class carries no "a.mega-menu-link" for the
+	   mobile-base.css navy rule to catch. Scoped with the same :not() as the
+	   border rule above so the feature CTA row's title keeps its own color. */
 	#mega-menu-wrap-primary-menu .vance-nav-tile__title {
 		font-size: 14px;
 		font-weight: 500;
+	}
+
+	#mega-menu-wrap-primary-menu .vance-nav-tile:not(.vance-nav-tile--feature) .vance-nav-tile__title {
+		color: #2f4f6f !important;
 	}
 
 	/* The feature tile spans two columns on desktop; there is one column here. */
