@@ -71,14 +71,22 @@
    crowding one row — the vertical dividers only make sense between groups
    sitting side by side, so drop them once a group owns the full width. */
 @media (max-width: 560px) {
-	.vance-rh-controls { flex-direction: column; align-items: stretch; }
+	/* Meals takes a full row; Recipe Tags and Search share the row beneath it.
+	   A wrapping row rather than a column, so the two short groups can sit
+	   side by side, with their labels bottom-aligned above the controls. */
+	.vance-rh-controls { flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 10px; row-gap: 12px; }
 	.vance-rh-divider { display: none; }
-	/* .vance-rh-group--search's desktop flex-basis (200px) is a WIDTH on the
-	   normal row layout, but in this column layout the main axis is height —
-	   a length flex-basis there measures the item's hypothetical HEIGHT, so
-	   without resetting flex-grow/basis too the search group inflates into a
-	   tall, mostly-empty box. Reset the whole shorthand, not just min-width. */
-	.vance-rh-group--search { flex: 0 0 auto; min-width: 0; }
+	.vance-rh-group--meals { flex: 1 1 100%; min-width: 0; }
+	.vance-rh-group--tags { flex: 0 0 auto; }
+	/* Without JS the tag list renders open inline rather than as a dropdown;
+	   give it its own row then so it doesn't squeeze the search box. */
+	.vance-rh-group--tags:has(.vance-rh-tags-panel:not(.vance-rh-tags-panel--js)) { flex-basis: 100%; }
+	/* Takes whatever the tags dropdown leaves; min-width 0 lets it shrink
+	   below its 180px desktop floor, and the input's own 160px floor goes
+	   too, or the pair wraps back onto two lines on a 320px phone. */
+	.vance-rh-group--search { flex: 1 1 0; min-width: 0; }
+	.vance-rh-group--search .vance-rh-search-wrap { width: 100%; }
+	.vance-rh-search { min-width: 0; min-height: 44px; }
 	/* Stack each group's label above its row instead of beside it, so the
 	   meal chips get the full row width to fit in rather than losing ~65px
 	   off the left to the "Meals" caption sitting next to them. */
