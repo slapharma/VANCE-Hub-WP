@@ -4655,19 +4655,30 @@ body.home .hero {
     }
 }
 
+/* Always one row on any phone width, never stacked -- each button shares
+   the row equally and shrinks its own padding/font rather than wrapping to
+   a second line of buttons. Label text itself may still wrap to two lines
+   inside a button on a long/customised label; that's fine, the row stays
+   one row either way. Its own block (not inside the 560px one below) since
+   the plain flex-wrap:wrap on .vhh-hero-spotlight__actions can drop to two
+   rows anywhere under ~767px, not just below 560px. */
+@media (max-width: 767px) {
+    .vhh-hero-spotlight__actions {
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+    .vhh-hero-spotlight__cta {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        padding: 13px 12px;
+        font-size: 13px;
+        text-align: center;
+    }
+}
 @media (max-width: 560px) {
     .vhh-hero-spotlight__media { height: 190px; }
     .vhh-hero-spotlight__title { letter-spacing: -0.5px; }
-
-    .vhh-hero-spotlight__actions {
-        gap: 12px;
-    }
-
-    /* Full-width stacked CTAs — side by side they wrap to two lines of text
-       inside a 26px-padded pill at this width. */
-    .vhh-hero-spotlight__cta {
-        width: 100%;
-    }
 
     .vhh-hero-spotlight__search-field {
         padding: 16px 6px 16px 16px;

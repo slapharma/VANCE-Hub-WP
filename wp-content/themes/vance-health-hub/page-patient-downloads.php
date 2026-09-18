@@ -213,6 +213,17 @@ $vpd_downloads = array(
 		@media (max-width: 900px) {
 			.vpd-card-grid { grid-template-columns: 1fr !important; }
 		}
+		/* Density pass: 2-up rather than a full single-column stack at phone
+		   widths -- everything on the card is inline-styled (see the PHP
+		   loop above), so !important is needed to reach past it here. */
+		@media (max-width: 767px) {
+			.vpd-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+			.vpd-card { padding: 14px !important; }
+			.vpd-card__title { font-size: 14px !important; margin-bottom: 6px !important; }
+			.vpd-card__desc { font-size: 12px !important; margin-bottom: 12px !important; -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+			.vpd-card__readmore { font-size: 11px !important; }
+			.vpd-card__btn { width: 100%; padding: 10px 12px !important; font-size: 12px !important; }
+		}
 		.vpd-card--soon { opacity: 0.82; }
 
 		/*

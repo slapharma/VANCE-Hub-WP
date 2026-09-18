@@ -39,6 +39,14 @@
 	$(document).on('change', '#vance-discount-region', filterCards);
 	$(document).on('input', '#vance-discount-search', filterCards);
 
+	// Mobile category dropdown -- same server-rendered ?cat= navigation as
+	// the desktop chip row (see template-parts/discount-directory.php), just
+	// a real page load rather than client-side filtering.
+	$(document).on('change', '#vance-discount-cat-mobile', function () {
+		var url = $(this).val();
+		if (url) { window.location.href = url; }
+	});
+
 	$(document).on('click', '#vance-discount-clear-filters', function (e) {
 		e.preventDefault();
 		$('#vance-discount-region').val('');

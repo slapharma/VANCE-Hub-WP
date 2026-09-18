@@ -604,7 +604,17 @@
     .gi-compare-table td:first-child { white-space: normal; }
 }
 @media (max-width: 767.98px) {
-    .gi-cp-facts { grid-template-columns: 1fr !important; }
+    /* Density pass: 2-up compact tiles instead of a full-width stack --
+       matches the 2-up treatment used elsewhere on this phone pass. */
+    .gi-cp-facts,
+    .gi-cp-facts.is-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; }
+    .gi-cp-fact { padding: 14px 10px; box-shadow: none; border-top-width: 2px; }
+    .gi-cp-fact-num { font-size: 20px; margin-bottom: 2px; }
+    .gi-cp-fact-label { font-size: 12px; line-height: 1.3; }
+    /* Some condition pages have an odd fact count (3), which would otherwise
+       leave the last card alone in a half-empty row -- centre it at roughly
+       one column's width instead of leaving a visible gap beside it. */
+    .gi-cp-fact:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; margin: 0 auto; }
     .gi-cp-row { flex-direction: column; }
     .gi-cp-row-image, .gi-cp-row-text { width: 100%; }
     .gi-cp-row-image.is-portrait { width: 100%; min-width: 0; }

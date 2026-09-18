@@ -185,6 +185,21 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 						<a class="vance-rh-chip<?php echo ( $vance_cat_filter === $cat_slug ) ? ' is-active' : ''; ?>" data-chip-cat="<?php echo esc_attr( $cat_slug ); ?>" href="<?php echo esc_url( add_query_arg( array_merge( array( 'cat' => $cat_slug ), $vance_tags_arg ), $vance_base_url ) . '#recipes' ); ?>"><?php echo esc_html( $cat_label ); ?></a>
 					<?php endforeach; ?>
 				</div>
+				<?php
+				/*
+				 * Mobile-only stand-in for the chip row above, so Meals can share
+				 * one row with Recipe Tags + Search instead of taking its own full
+				 * row. assets/js/recipe-planner.js wires its change event into the
+				 * same activeCategory state/applyGridFilter() the chips use --
+				 * same instant client-side filtering, not a page navigation.
+				 */
+				?>
+				<select class="vance-rh-meal-select" id="vance-rh-meal-mobile" aria-label="<?php esc_attr_e( 'Filter by meal', 'vance-health-hub' ); ?>">
+					<option value=""<?php selected( '' === $vance_cat_filter ); ?>><?php esc_html_e( 'All meals', 'vance-health-hub' ); ?></option>
+					<?php foreach ( $vance_categories as $cat_slug => $cat_label ) : ?>
+						<option value="<?php echo esc_attr( $cat_slug ); ?>"<?php selected( $vance_cat_filter === $cat_slug ); ?>><?php echo esc_html( $cat_label ); ?></option>
+					<?php endforeach; ?>
+				</select>
 			</div>
 			<div class="vance-rh-divider" aria-hidden="true"></div>
 			<?php

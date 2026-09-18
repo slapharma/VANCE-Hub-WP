@@ -189,12 +189,21 @@ function vance_render_gastro_conditions() {
 			}
 			#vance-gastro-conditions .vance-gc-tile-label { font-size: 15px; line-height: 1.2; }
 			#vance-gastro-conditions .vance-gc-tile-arrow { display: none; }
+			/* Back in the grid as the final tile (natural flow -- no
+			   grid-column override) rather than its own full-width row.
+			   Inverted from its own desktop look -- and from the teal-bg
+			   photo-tile grid around it -- so it still reads as the odd one
+			   out: light bg, teal border/text instead of solid teal fill. */
 			#vance-gastro-conditions .vance-gc-tile--all {
-				grid-column: 1 / -1;
-				min-height: 52px;
-				padding: 12px;
+				background-color: #ffffff;
+				border-color: <?php echo esc_attr( $view_all_bg ); ?>;
+				min-height: 120px;
+				padding: 14px;
 			}
-			#vance-gastro-conditions .vance-gc-tile--all .vance-gc-tile-label { font-size: 14px; }
+			#vance-gastro-conditions .vance-gc-tile--all .vance-gc-tile-label {
+				font-size: 14px;
+				color: <?php echo esc_attr( $view_all_bg ); ?>;
+			}
 		}
 		@media (prefers-reduced-motion: reduce) {
 			#vance-gastro-conditions .vance-gc-tile { transition: none; }

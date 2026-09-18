@@ -1084,7 +1084,17 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     .vabout-cta-actions .vabout-btn { width: 100%; }
 }
 @media (max-width: 480px) {
-    .vabout-stats-grid, .vabout-pillars { grid-template-columns: 1fr; }
+    .vabout-pillars { grid-template-columns: 1fr; }
+    /* Density pass: stay 2-up rather than collapsing to a full stack -- this
+       is the width most phones actually land on, so a 1-column stack was the
+       tall/uncompact case in practice, not just an edge case. */
+    .vabout-stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vabout-stat { padding: 16px 10px; }
+    .vabout-stat-ico { width: 40px; height: 40px; margin: 0 auto 10px; }
+    .vabout-stat-ico svg { width: 18px; height: 18px; }
+    .vabout-stat-num { font-size: 1.2rem; }
+    .vabout-stat-suffix { font-size: 0.85rem; }
+    .vabout-stat-label { font-size: 0.76rem; margin: 8px 0 12px; }
 }
 
 /* ====================== REDUCED MOTION ====================== */

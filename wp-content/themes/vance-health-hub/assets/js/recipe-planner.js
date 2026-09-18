@@ -461,6 +461,11 @@
 			tagsCountEl.textContent = String(activeTags.length);
 			tagsCountEl.hidden = activeTags.length === 0;
 		}
+		// Keep the mobile <select> in step with activeCategory regardless of
+		// which control changed it (a chip click never touched this before,
+		// so resizing into the single-row mobile layout after clicking a
+		// chip left the select showing the previous value).
+		if (mealSelect) { mealSelect.value = activeCategory; }
 	}
 
 	if (filterChipsWrap) {
@@ -488,6 +493,19 @@
 	}
 	if (searchInput) {
 		searchInput.addEventListener('input', function () { applyGridFilter(activeCategory, searchInput.value, activeTags); });
+	}
+
+	// Mobile meal dropdown -- same activeCategory state and instant filter
+	// as clicking a chip above, just a compact <select> instead of a chip
+	// row (see template-parts/recipe-hub-app.php).
+	var mealSelect = document.getElementById('vance-rh-meal-mobile');
+	if (mealSelect) {
+		mealSelect.addEventListener('change', function () {
+			activeCategory = mealSelect.value;
+			refreshChipStates();
+			applyGridFilter(activeCategory, searchInput ? searchInput.value : '', activeTags);
+			updateUrl();
+		});
 	}
 
 	// --- Tags dropdown ---------------------------------------------------

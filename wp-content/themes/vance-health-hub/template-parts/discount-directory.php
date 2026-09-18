@@ -53,6 +53,21 @@ $vance_dc_regions = array(
 					<a class="vance-discount-chip<?php echo ( $vance_dc_cat_filter === $cat['slug'] ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( 'cat', $cat['slug'], $vance_dc_base_url ) . '#discounts-grid' ); ?>"><?php echo esc_html( $cat['name'] ); ?></a>
 				<?php endforeach; ?>
 			</div>
+			<?php
+			/*
+			 * Mobile-only equivalent of the chip row above, so "Filters" can be
+			 * a compact dropdown sharing one row with Region + Search instead of
+			 * a wrapping chip list. Same ?cat= navigation, no JS filtering state
+			 * to keep in sync -- see the change handler in discounts.js.
+			 * assets/css/discounts.css hides one or the other by width.
+			 */
+			?>
+			<select class="vance-discount-cat-select" id="vance-discount-cat-mobile" aria-label="<?php esc_attr_e( 'Filter by category', 'vance-health-hub' ); ?>">
+				<option value="<?php echo esc_url( $vance_dc_base_url . '#discounts-grid' ); ?>"<?php selected( '' === $vance_dc_cat_filter ); ?>><?php esc_html_e( 'All categories', 'vance-health-hub' ); ?></option>
+				<?php foreach ( $vance_dc_categories as $cat ) : ?>
+					<option value="<?php echo esc_url( add_query_arg( 'cat', $cat['slug'], $vance_dc_base_url ) . '#discounts-grid' ); ?>"<?php selected( $vance_dc_cat_filter === $cat['slug'] ); ?>><?php echo esc_html( $cat['name'] ); ?></option>
+				<?php endforeach; ?>
+			</select>
 			<div class="vance-discount-controls__right">
 				<select class="vance-discount-region-select" id="vance-discount-region">
 					<?php foreach ( $vance_dc_regions as $slug => $label ) : ?>

@@ -59,6 +59,9 @@
 .vance-discount-chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; min-width: 0; }
 .vance-discount-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; }
 .vance-discount-chip.is-active { background: var(--vhh-discount-accent); border-color: var(--vhh-discount-accent); color: #fff; }
+/* Mobile-only stand-in for the chip row above -- shown instead of it (not
+   alongside) below 767.98px, see the media block further down. */
+.vance-discount-cat-select { display: none; }
 /* Purple outline round the region/search group - the one deliberate borrow
    from the Patient Downloads half of the pair (#6B489E), so the two controls
    read as one unit against the teal chips rather than as two loose fields.
@@ -288,12 +291,59 @@
    .vance-discount-single-grid and main.css's .oped-layout use, and it clears
    that 550px floor with room to spare (768 - 40px container padding = 728). */
 @media (max-width: 767.98px) {
-	.vance-discount-controls { flex-wrap: wrap; }
-	.vance-discount-controls__right { width: 100%; flex: 1 1 100%; }
-}
-
-@media (max-width: 480px) {
-	.vance-discount-search { flex-basis: 100%; }
+	/* Filters (as a dropdown) + Region + Search all on one row, replacing
+	   the wrap-to-two-rows layout above. The chip row is swapped for the
+	   compact <select> added in discount-directory.php -- a wrapping chip
+	   list has no natural narrow width to share a row with anything. */
+	.vance-discount-controls { flex-wrap: nowrap; gap: 8px; }
+	.vance-discount-chips { display: none; }
+	.vance-discount-cat-select {
+		display: block;
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 9px 8px;
+		border: 1px solid #e2e8f0;
+		border-radius: var(--radius-field);
+		font-size: 13px;
+		background: #fff;
+	}
+	/* display:contents drops the wrapper's own box so region-select and
+	   search become direct flex children of .vance-discount-controls,
+	   getting an even three-way split with the category select instead of
+	   each taking half of whatever's left after category -- nested 50/50s
+	   left region at ~1/4 of the row, too narrow for "Northern Ireland". */
+	.vance-discount-controls__right {
+		display: contents;
+	}
+	.vance-discount-region-select,
+	.vance-discount-search {
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 8px 6px;
+		font-size: 12.5px;
+	}
+	/* Density pass: 2-up instead of auto-fill's single column at phone
+	   widths (280px minmax doesn't leave room for a second track under
+	   ~600px viewport). */
+	.vance-discount-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+	/* A 2-up card is ~155-165px wide (375px viewport, 12px gap). Apply +
+	   Save side by side (the desktop grid-template-columns: auto auto) need
+	   ~190px of min-content between them and overflow at that width, so they
+	   stack here instead; everything else shrinks to fit the narrower card. */
+	.vance-discount-card { padding: 16px 14px 14px; }
+	.vance-discount-card__title { font-size: 14px; margin-bottom: 6px; min-height: calc(1.3em * 2); line-height: 1.3; }
+	.vance-discount-card__value { font-size: 12px; margin-bottom: 4px; min-height: calc(1.4em * 2); line-height: 1.4; }
+	.vance-discount-card__cost { font-size: 11px; }
+	.vance-discount-card-region { font-size: 10px; }
+	.vance-discount-card__actions { grid-template-columns: 1fr; justify-items: stretch; gap: 6px; }
+	.vance-discount-card__actions > .vance-save-btn,
+	.vance-discount-card__actions .vance-discount-apply-btn {
+		justify-self: stretch;
+		justify-content: center;
+		width: 100%;
+		padding: 8px 10px;
+		font-size: 12px;
+	}
 }
 
 /* ---- Single scheme page: body + "Official information" aside collapses to

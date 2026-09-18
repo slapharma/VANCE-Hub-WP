@@ -31,6 +31,9 @@
 .vance-rh-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 7px 16px; border-radius: var(--radius-field); font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid #e2e8f0; color: #475569; background: #fff; cursor: pointer; }
 .vance-rh-chip.is-active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
 #vance-rh-filter-chips { flex: 0 1 auto; }
+/* Mobile-only stand-in for the meal chip row -- shown instead of it (not
+   alongside) below 767px, see the media block further down. */
+.vance-rh-meal-select { display: none; }
 .vance-rh-search-wrap { position: relative; flex: 1 1 auto; min-width: 0; }
 .vance-rh-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
 .vance-rh-search { width: 100%; min-width: 160px; padding: 9px 14px 9px 34px; border: 1px solid #e2e8f0; border-radius: var(--radius-field); font-size: 14px; background: #fff; }
@@ -67,13 +70,10 @@
 .vance-rh-count { margin: 0 0 16px; font-size: 13.5px; color: #64748b; }
 .vance-rh-count[hidden] { display: none; }
 
-/* Below ~560px the three groups wrap onto their own lines rather than
-   crowding one row — the vertical dividers only make sense between groups
-   sitting side by side, so drop them once a group owns the full width. */
-@media (max-width: 560px) {
-	/* Meals takes a full row; Recipe Tags and Search share the row beneath it.
-	   A wrapping row rather than a column, so the two short groups can sit
-	   side by side, with their labels bottom-aligned above the controls. */
+/* No-JS / pre-enhancement fallback (below 767px): same stacked layout as
+   the phone pass elsewhere, chips stay visible and are real working links.
+   Meals takes a full row; Recipe Tags and Search share the row beneath it. */
+@media (max-width: 767px) {
 	.vance-rh-controls { flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 10px; row-gap: 12px; }
 	.vance-rh-divider { display: none; }
 	.vance-rh-group--meals { flex: 1 1 100%; min-width: 0; }
@@ -97,6 +97,38 @@
 	   tighter than its share at a given phone width, rather than a wrap. */
 	.vance-rh-chips--meal { flex-wrap: nowrap; gap: 4px; width: 100%; }
 	.vance-rh-chips--meal .vance-rh-chip { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 6px 4px; font-size: 11px; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+/* Once JS has enhanced the tags panel into a real dropdown (the --js class,
+   added unconditionally as soon as recipe-planner.js's tags-init block
+   runs), Meals swaps for its own compact <select> too and Meals/Tags/Search
+   share one row instead of stacking. Gated on that same signal rather than
+   shown unconditionally: a no-JS visitor's meal <select> has nothing wired
+   to its change event (see recipe-planner.js), so the working chip-row
+   fallback above stays in place for them instead of a dead control. */
+@media (max-width: 767px) {
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) { flex-wrap: nowrap; align-items: center; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group { flex-direction: row; align-items: center; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group-label { display: none; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-chips--meal { display: none; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group--meals,
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group--tags,
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group--search {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-meal-select {
+		display: block;
+		width: 100%;
+		padding: 8px 6px;
+		border: 1px solid #e2e8f0;
+		border-radius: var(--radius-field);
+		font-size: 12px;
+		background: #fff;
+	}
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-tags-toggle { width: 100%; justify-content: center; padding: 8px 6px; font-size: 12px; min-height: 0; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search-wrap { width: 100%; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search { min-width: 0; min-height: 0; padding: 8px 8px 8px 30px; font-size: 12px; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search-icon { left: 8px; }
 }
 
 /* Mobile density pass: 2-up grid with a square photo, matching the condition
