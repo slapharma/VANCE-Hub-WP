@@ -689,8 +689,15 @@ function vance_render_prime_block( array $vals ) {
 			outline-offset: 3px;
 		}
 		@media (max-width: 992px) {
-			/* The list drops below the featured cell, full width. */
+			/* The list drops below the featured cell, full width. Padding-left
+			   is 0 by design at desktop -- the list sits to the RIGHT of the
+			   featured cell there, with the grid's own 20px gap already
+			   giving it clearance. Once it stacks full-width, that same 0
+			   lands the category chip/title flush against the block's own
+			   1.5px border (main.css .bento-grid-news--grow), so it needs its
+			   own left padding here that desktop doesn't. */
 			<?php echo $sel; ?> .latest-list-box { grid-row: auto; }
+			<?php echo $sel; ?> .latest-list-item { padding-left: 16px; }
 		}
 		@media (prefers-reduced-motion: reduce) {
 			<?php echo $sel; ?> .pwc-card,
