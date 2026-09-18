@@ -1235,6 +1235,18 @@ function vance_health_hub_scripts() {
         true
     );
 
+    // Footer accordion (mobile density pass) — footer.php renders on every
+    // page, so this is site-wide too. Inert above 767.98px: the CSS never
+    // collapses anything at desktop width, so a click there has nothing to
+    // toggle open/closed.
+    wp_enqueue_script(
+        'vance-footer-accordion',
+        get_template_directory_uri() . '/assets/js/footer-accordion.js',
+        array(),
+        @filemtime( get_template_directory() . '/assets/js/footer-accordion.js' ) ?: '1.0.0',
+        true
+    );
+
     // Knowledgebase lobby — CSS enqueued only on that page.
     // is_page_template() alone is NOT enough here: this filename also matches
     // WP's page-{slug}.php convention, so a Page with slug `knowledgebase`
@@ -8898,7 +8910,7 @@ function vance_testimonials_shortcode( $atts ) {
                         width: calc((100% - 2 * 16px) / 3);
                     }
                 }
-                @media (max-width: 600px) {
+                @media (max-width: 767px) {
                     #<?php echo esc_attr( $tslider_id ); ?> .vance-testimonial-card {
                         width: calc((100% - 0.2 * 16px) / 1.2);
                     }
@@ -8931,9 +8943,13 @@ function vance_testimonials_shortcode( $atts ) {
                 var GAP = 16; // matches .vance-testimonials-track gap
 
                 function getVisible() {
+                    // Kept in step with the width breakpoints in the <style>
+                    // block above (1024px / 767px) -- if one changes, so must
+                    // the other, or the arrow-disable and step-distance math
+                    // below goes out of sync with what's actually on screen.
                     var w = window.innerWidth;
                     if (w >= 1025) return 5;
-                    if (w >= 601)  return 3;
+                    if (w >= 768)  return 3;
                     return 1.2;
                 }
 

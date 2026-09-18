@@ -423,7 +423,11 @@ function vance_render_promo_home() {
 	if ( ! vance_get_theme_mod( 'vance_promo_show', false ) ) {
 		return;
 	}
-	vance_render_promo_block( vance_promo_block_vals( vance_promo_keys_prefixed( 'vance_promo_' ), vance_promo_prefixed_defaults() ) );
+	$vals = vance_promo_block_vals( vance_promo_keys_prefixed( 'vance_promo_' ), vance_promo_prefixed_defaults() );
+	// Scopes the phone density trim (main.css) to just this instance --
+	// category-archive promo instances keep their existing mobile sizing.
+	$vals['section_class'] = trim( ( isset( $vals['section_class'] ) ? $vals['section_class'] . ' ' : '' ) . 'vance-cat-promo--home' );
+	vance_render_promo_block( $vals );
 }
 
 /**

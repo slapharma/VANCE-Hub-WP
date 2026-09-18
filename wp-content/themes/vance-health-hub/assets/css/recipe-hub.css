@@ -99,6 +99,19 @@
 	.vance-rh-chips--meal .vance-rh-chip { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 6px 4px; font-size: 11px; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
+/* Mobile density pass: 2-up grid with a square photo, matching the condition
+   tiles/tools density elsewhere on the phone pass. Independent of the 560px
+   controls-row breakpoint above -- this only touches the card grid. */
+@media (max-width: 767px) {
+	.vance-rh-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+	.vance-rh-card-img { height: auto; aspect-ratio: 1 / 1; }
+	.vance-rh-card-body { padding: 10px 12px; }
+	.vance-rh-card-name { font-size: 13px; margin-bottom: 4px; }
+	.vance-rh-card-cat { font-size: 10px; margin-bottom: 4px; }
+	.vance-rh-card-facts { font-size: 11px; }
+	.vance-rh-card-add { width: 28px; height: 28px; font-size: 15px; }
+}
+
 /* --- Admin-only "Date Uploaded" sort ------------------------------------ */
 /* Amber rather than the primary teal is deliberate: it marks this control as
    something a visitor never sees rather than just another equal option in

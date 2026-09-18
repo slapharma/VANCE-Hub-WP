@@ -1412,6 +1412,30 @@ body.home .hero {
     color: var(--secondary-color);
 }
 
+/* The heading text lives inside a <button> (footer.php) so the mobile
+   accordion below has a real, keyboard-accessible toggle -- reset it back to
+   looking exactly like plain heading text at every width. Only below 767.98px
+   does it start behaving like a button (cursor, chevron, click target). */
+.footer-col-toggle {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    font: inherit;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--secondary-color);
+    cursor: default;
+}
+.footer-col-chevron { display: none; }
+
+/* Disclaimer "Read full disclaimer" toggle -- hidden and inert above
+   767.98px, where the full text always shows (see .footer-disclaimer in
+   footer.php inline styles for the always-on layout). */
+.footer-disclaimer-toggle { display: none; }
+
 .footer-col ul li {
     margin-bottom: 12px;
 }
@@ -2034,6 +2058,67 @@ body.home .hero {
         gap: 16px;
         text-align: center;
     }
+
+    /* Footer accordion: each .footer-col's nav collapses behind its heading
+       button, and the disclaimer collapses behind a "Read full disclaimer"
+       toggle. footer-accordion.js flips .is-open + aria-expanded; nothing
+       here fires without JS -- the panels default open (see the base ul
+       rule) so a no-JS visitor still gets the full footer, just without the
+       density saving. */
+    .footer-col-toggle {
+        cursor: pointer;
+        padding: 12px 0;
+        min-height: 44px;
+    }
+    .footer-col-chevron {
+        display: block;
+        flex-shrink: 0;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+    }
+    .footer-col-toggle[aria-expanded="true"] .footer-col-chevron {
+        transform: rotate(-135deg);
+    }
+    .footer-col.js-ready ul {
+        display: none;
+        overflow: hidden;
+    }
+    .footer-col.js-ready.is-open ul {
+        display: block;
+    }
+
+    .footer-disclaimer-toggle {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 0;
+        min-height: 44px;
+        background: none;
+        border: none;
+        color: var(--primary-color, #008080);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .footer-disclaimer.js-ready .footer-disclaimer-text {
+        max-height: 4.5em;
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+        mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+    }
+    .footer-disclaimer.js-ready.is-open .footer-disclaimer-text {
+        max-height: none;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+}
+@media (max-width: 767.98px) and (prefers-reduced-motion: reduce) {
+    .footer-col-chevron { transition: none; }
+}
+@media (max-width: 767.98px) {
 
     .epavance-banner {
         flex-direction: column;
@@ -3271,6 +3356,49 @@ body.home .hero {
     }
 }
 
+/* Mobile density pass (2026-09-17): the Featured + List component gets its
+   own phone sizing here, shared by every place it renders -- the
+   knowledgebase's .kb-mobile-featured (front-page.php) and category
+   archives using the "Featured + List" sub-category layout alike. */
+@media (max-width: 767px) {
+    .va-fl-featured { min-height: 180px; }
+    .va-fl-featured-body { padding: 14px; }
+    .va-fl-featured-title { font-size: 17px; margin-bottom: 4px; }
+    .va-fl-featured-excerpt { display: none; }
+    .va-fl-featured-meta { font-size: 11px; }
+    .va-fl-item { padding: 8px 12px; gap: 8px; }
+    .va-fl-cat { font-size: 9px; }
+    .va-fl-title { font-size: 13px; }
+}
+/* Knowledgebase-only: exactly one of the two markup variants front-page.php
+   emits is ever shown -- .kb-desktop-grid (the existing .va-kb-grid) above
+   767px, .kb-mobile-featured (a .va-featured-list instance) at or below it.
+   The grid's images already carry loading="lazy" (added alongside this), so
+   hiding it with display:none also means its images are never fetched on a
+   phone. */
+.kb-mobile-featured { display: none; }
+@media (max-width: 767px) {
+    .kb-desktop-grid { display: none; }
+    .kb-mobile-featured { display: block; }
+}
+
+/* Category archives on Standard Grid layout (.va-layout-grid, archive.php's
+   flat .portal-grid fallback) get the same phone tightening as the Featured
+   + List cards above -- shorter image, tighter body copy. Scoped to these
+   two grid wrappers specifically, not the bare .card-image/.card-content
+   classes, which render on templates well outside this pass (single posts,
+   etc.) that were not reviewed here. */
+@media (max-width: 767px) {
+    .va-layout-grid .card-image,
+    .portal-grid .card-image { height: 140px; }
+    .va-layout-grid .card-content,
+    .portal-grid .card-content { padding: 14px; }
+    .va-layout-grid .entry-title a,
+    .portal-grid .entry-title a { font-size: 16px !important; }
+    .va-layout-grid .card-content p,
+    .portal-grid .card-content p { font-size: 13px; margin-bottom: 8px; }
+}
+
 /* =====================================================================
    VANCE GLASSMORPHISM DESIGN SYSTEM  (added 2026-07-24)
    Shared frosted-glass surfaces, inverted-teal buttons, and expand/collapse
@@ -3661,9 +3789,46 @@ body.home .hero {
     .vance-cat-promo__inner--text { padding: 22px 24px; }
 }
 
+/* Homepage promo, mobile density pass: shrink the whole band toward ~200px
+   and clamp the copy to 2 lines. Scoped to .vance-cat-promo--home
+   (vance_render_promo_home() only) so category-archive promo instances keep
+   the sizing above untouched. */
+@media (max-width: 767.98px) {
+    .vance-cat-promo--home .vance-cat-promo__media { min-height: 0; max-height: 100px; }
+    .vance-cat-promo--home .vance-cat-promo__inner,
+    .vance-cat-promo--home .vance-cat-promo__inner.has-image .vance-cat-promo__body { padding: 16px; }
+    .vance-cat-promo--home .vance-cat-promo__title { font-size: 18px; }
+    .vance-cat-promo--home .vance-cat-promo__text {
+        font-size: 13px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .vance-cat-promo--home .vance-btn-inverted { padding: 8px 16px; font-size: 13px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .vance-cat-promo .vance-glass--interactive { transition: none; }
     .vance-cat-promo .vance-glass--interactive:hover { transform: none; }
+}
+
+/* Homepage section reorder, phone only (front-page.php wraps the whole
+   section-order loop in .vance-hp-sections for exactly this). The promo
+   block moves to sit right after the knowledgebase content instead of
+   wherever Section Order otherwise places it; every other section keeps its
+   default order (0), which preserves their relative document order among
+   themselves. Desktop is untouched -- .vance-hp-sections is not a flex
+   container above 767px, so `order` has no effect there.
+   Limitation: this only accounts for the sections known at the time this was
+   written. A section added later that also renders after the knowledgebase
+   block (besides Testimonials) would need its own `order` rule here to stay
+   below the promo band -- see the class list below. */
+@media (max-width: 767px) {
+    .vance-hp-sections { display: flex; flex-direction: column; }
+    .vance-hp-sections > .kb-content-wrapper { order: 1; }
+    .vance-hp-sections > .vance-cat-promo--home { order: 2; }
+    .vance-hp-sections > .vance-testimonials-section { order: 3; }
 }
 
 /* --- Promo block: featured-tool sidebar (inc/promo-block.php) -----------

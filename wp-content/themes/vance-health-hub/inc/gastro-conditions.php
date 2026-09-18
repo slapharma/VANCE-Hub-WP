@@ -170,9 +170,31 @@ function vance_render_gastro_conditions() {
 		@media (max-width: 992px) {
 			#vance-gastro-conditions .vance-gc-grid { grid-template-columns: repeat(<?php echo (int) min( 2, $per_row ); ?>, minmax(0, 1fr)); }
 		}
-		@media (max-width: 600px) {
-			#vance-gastro-conditions .vance-gc-grid { grid-template-columns: 1fr; }
-			#vance-gastro-conditions .vance-gc-header h2 { font-size: 30px; }
+		/* Phone density pass: stay 2-up all the way down (client's explicit
+		   ask), small title-only tiles instead of the desktop photo panel, and
+		   the "view all" tile becomes a full-width slim row underneath. */
+		@media (max-width: 767px) {
+			#vance-gastro-conditions { padding: 24px 0 40px; }
+			#vance-gastro-conditions .vance-gc-header { margin-bottom: 20px; }
+			#vance-gastro-conditions .vance-gc-header h2 { font-size: 24px; }
+			#vance-gastro-conditions .vance-gc-header p { font-size: 15px; margin-top: 6px; }
+			#vance-gastro-conditions .vance-gc-grid {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 10px;
+			}
+			#vance-gastro-conditions .vance-gc-tile {
+				min-height: 120px;
+				padding: 14px;
+				align-items: flex-end;
+			}
+			#vance-gastro-conditions .vance-gc-tile-label { font-size: 15px; line-height: 1.2; }
+			#vance-gastro-conditions .vance-gc-tile-arrow { display: none; }
+			#vance-gastro-conditions .vance-gc-tile--all {
+				grid-column: 1 / -1;
+				min-height: 52px;
+				padding: 12px;
+			}
+			#vance-gastro-conditions .vance-gc-tile--all .vance-gc-tile-label { font-size: 14px; }
 		}
 		@media (prefers-reduced-motion: reduce) {
 			#vance-gastro-conditions .vance-gc-tile { transition: none; }

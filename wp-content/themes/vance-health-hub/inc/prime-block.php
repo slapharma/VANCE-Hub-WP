@@ -424,6 +424,41 @@ function vance_render_prime_block( array $vals ) {
 			<?php echo $sel; ?>.pathway-content-section { padding-top: 60px; }
 			<?php echo $sel; ?> .pwc-card-image { height: 60px; }
 		}
+			/* Phone density pass: both tool tiles on one row (client's explicit
+			   ask), ~165x140, icon/image strip + title + one line. Grid rather
+			   than the flex-wrap the stacked layouts use at desktop -- flex-wrap
+			   inside a stretched, definite-height grid item is exactly the bug
+			   documented above (284px of horizontal scroll on the homepage), so
+			   this uses `display: grid !important` to sidestep it entirely and
+			   also clears the stacked layout's `min-width: 240px` override, which
+			   would otherwise force two 240px tiles into a 343px-wide screen. */
+			@media (max-width: 767px) {
+				<?php echo $sel; ?> .pathway-tiles-stack {
+					display: grid !important;
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					gap: 10px;
+					height: auto;
+				}
+				<?php echo $sel; ?> .pathway-tiles-stack > .section-label { grid-column: 1 / -1; }
+				<?php echo $sel; ?> .pwc-card,
+				<?php echo $sel; ?> .pwc-banner { min-width: 0; min-height: 140px; }
+				<?php echo $sel; ?> .pwc-card-image { height: 44px; }
+				<?php echo $sel; ?> .pwc-card-body { padding: 10px 12px; }
+				<?php echo $sel; ?> .pwc-card-title,
+				<?php echo $sel; ?> .pwc-banner-title { font-size: 14px !important; margin-bottom: 4px !important; }
+				<?php echo $sel; ?> .pwc-card-body p,
+				<?php echo $sel; ?> .pwc-banner p { display: none !important; }
+				<?php echo $sel; ?> .pwc-banner--image > div {
+					min-height: 140px !important;
+					padding: 14px !important;
+					display: flex;
+					flex-direction: column;
+					justify-content: flex-end;
+				}
+				<?php echo $sel; ?> .pwc-banner--image_text > div { min-height: 140px !important; padding: 12px !important; gap: 10px !important; }
+				<?php echo $sel; ?> .pwc-banner--image_text > div > div:first-child { width: 44px !important; height: 44px !important; }
+				<?php echo $sel; ?> .pwc-banner--pill > div { min-height: 0 !important; padding: 10px 12px !important; }
+			}
 
 		/* ====================================================================
 		 * Chrome the homepage used to supply.

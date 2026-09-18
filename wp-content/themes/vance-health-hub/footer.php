@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="footer-col">
-                    <h4><?php echo esc_html(vance_get_theme_mod('vance_footer_heading_col1', 'Topics')); ?></h4>
+                    <h4><button type="button" class="footer-col-toggle" aria-expanded="false"><?php echo esc_html(vance_get_theme_mod('vance_footer_heading_col1', 'Topics')); ?><span class="footer-col-chevron" aria-hidden="true"></span></button></h4>
                     <?php
                     wp_nav_menu( array(
                         'theme_location' => 'footer-menu-1',
@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="footer-col">
-                    <h4><?php echo esc_html(vance_get_theme_mod('vance_footer_heading_col2', 'For Professionals')); ?></h4>
+                    <h4><button type="button" class="footer-col-toggle" aria-expanded="false"><?php echo esc_html(vance_get_theme_mod('vance_footer_heading_col2', 'For Professionals')); ?><span class="footer-col-chevron" aria-hidden="true"></span></button></h4>
                     <?php
                     wp_nav_menu( array(
                         'theme_location' => 'footer-menu-2',
@@ -60,7 +60,7 @@
                 </div>
 
                 <div class="footer-col">
-                    <h4><?php echo esc_html(vance_get_theme_mod('vance_footer_heading_col3', 'For Patients')); ?></h4>
+                    <h4><button type="button" class="footer-col-toggle" aria-expanded="false"><?php echo esc_html(vance_get_theme_mod('vance_footer_heading_col3', 'For Patients')); ?><span class="footer-col-chevron" aria-hidden="true"></span></button></h4>
                     <?php
                     wp_nav_menu( array(
                         'theme_location' => 'footer-menu-3',
@@ -79,10 +79,13 @@
             $vance_footer_operator = vance_get_theme_mod( 'vance_footer_operator', 'Operated by Vance Medical Foods Ltd, 3a Chestnut House, Farm Close, Shenley, Hertfordshire, WD7 9AD, United Kingdom. Registered in England and Wales, company number 17157853.' );
             ?>
             <div class="footer-disclaimer" style="border-top: 1px solid rgba(148,163,184,0.22); margin-top: 32px; padding-top: 24px; color: #94a3b8; font-size: 13px; line-height: 1.75; max-width: 1000px;">
-                <strong style="color:#cbd5e1;">Medical disclaimer.</strong> <?php echo esc_html( $vance_footer_disclaimer ); ?>
-                <?php if ( $vance_footer_operator ) : ?>
-                    <div style="margin-top: 12px;"><?php echo esc_html( $vance_footer_operator ); ?></div>
-                <?php endif; ?>
+                <div class="footer-disclaimer-text">
+                    <strong style="color:#cbd5e1;">Medical disclaimer.</strong> <?php echo esc_html( $vance_footer_disclaimer ); ?>
+                    <?php if ( $vance_footer_operator ) : ?>
+                        <div style="margin-top: 12px;"><?php echo esc_html( $vance_footer_operator ); ?></div>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="footer-disclaimer-toggle" aria-expanded="false">Read full disclaimer</button>
             </div>
 
             <div class="footer-bottom">

@@ -506,6 +506,14 @@ body {
     // section rather than after, so the last section never trails one.
     $vance_seam_after = false;
 
+    // Wraps the whole section-order loop as one flex container so a
+    // mobile-only @media rule can visually reorder specific sections
+    // (see .vance-hp-sections in main.css) without touching render
+    // order or the Customizer's Section Order setting -- desktop is
+    // untouched because the flex/order rule only applies below 768px.
+    ?>
+    <div class="vance-hp-sections">
+    <?php
     foreach ($sections as $section_id) {
         $section_id = trim($section_id);
         if ( $vance_seam_after ) {
@@ -1227,6 +1235,7 @@ body {
                        over any stylesheet rule. */
                     $kb_grid_min = ( $layout === 'grid-5' ) ? 200 : 260;
                 ?>
+                    <div class="kb-desktop-grid">
                     <div class="va-kb-grid va-kb-grid--min-<?php echo (int) $kb_grid_min; ?>">
                         <?php foreach ($posts_array as $p): ?>
                         <article class="news-card" style="background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
@@ -1236,7 +1245,7 @@ body {
                             ?>
                             <?php if (has_post_thumbnail($p->ID)): ?>
                                 <div style="position: relative; overflow: hidden; height: 180px; background: #f1f5f9;">
-                                    <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $p->ID ) ); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="<?php echo get_the_post_thumbnail_url($p->ID, 'medium'); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $p->ID ) ); ?>" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                                     <?php echo vance_card_eyebrow_html($p->ID); ?>
                                 </div>
                             <?php endif; ?>
@@ -1252,6 +1261,44 @@ body {
                         </article>
                         <?php endforeach; ?>
                     </div>
+                    </div><!-- .kb-desktop-grid -->
+                    <div class="kb-mobile-featured va-featured-list<?php echo count($posts_array) < 2 ? ' va-featured-list--solo' : ''; ?>">
+                        <?php
+                            $vance_kbm_feat       = $posts_array[0];
+                            $vance_kbm_feat_thumb = get_the_post_thumbnail_url( $vance_kbm_feat->ID, 'large' );
+                            $vance_kbm_feat_read  = vance_get_read_time( $vance_kbm_feat->ID );
+                        ?>
+                        <a class="va-fl-featured" href="<?php echo esc_url( get_permalink( $vance_kbm_feat->ID ) ); ?>" data-vhh-post-id="<?php echo (int) $vance_kbm_feat->ID; ?>">
+                            <span class="va-fl-media" style="background-image: url('<?php echo esc_url( $vance_kbm_feat_thumb ); ?>');" aria-hidden="true"></span>
+                            <span class="va-fl-shade" aria-hidden="true"></span>
+                            <?php echo vance_card_eyebrow_html( $vance_kbm_feat->ID, true ); ?>
+                            <div class="va-fl-featured-body">
+                                <h3 class="va-fl-featured-title"><?php echo esc_html( vance_card_title( $vance_kbm_feat->ID ) ); ?></h3>
+                                <div class="va-fl-featured-meta"><?php echo esc_html( get_the_date( '', $vance_kbm_feat->ID ) ); ?><?php if ( $vance_kbm_feat_read > 0 ) : ?> &middot; <?php echo (int) $vance_kbm_feat_read; ?> min read<?php endif; ?></div>
+                            </div>
+                        </a>
+                        <?php if ( count( $posts_array ) > 1 ) : ?>
+                        <div class="va-fl-list">
+                            <?php foreach ( array_slice( $posts_array, 1, 4 ) as $vance_kbm_p ) :
+                                $vance_kbm_thumb = get_the_post_thumbnail_url( $vance_kbm_p->ID, 'thumbnail' );
+                                $vance_kbm_cat   = get_term( vance_post_overlay_main_category_id( $vance_kbm_p->ID ), 'category' );
+                                $vance_kbm_color = vance_post_eyebrow_color( $vance_kbm_p->ID );
+                            ?>
+                            <a class="va-fl-item" href="<?php echo esc_url( get_permalink( $vance_kbm_p->ID ) ); ?>" data-vhh-post-id="<?php echo (int) $vance_kbm_p->ID; ?>">
+                                <div class="va-fl-text">
+                                    <?php if ( $vance_kbm_cat && ! is_wp_error( $vance_kbm_cat ) ) : ?>
+                                    <span class="va-fl-cat" style="color: <?php echo esc_attr( $vance_kbm_color ); ?>;"><?php echo esc_html( $vance_kbm_cat->name ); ?></span>
+                                    <?php endif; ?>
+                                    <h4 class="va-fl-title"><?php echo esc_html( vance_card_title( $vance_kbm_p->ID ) ); ?></h4>
+                                </div>
+                                <?php if ( $vance_kbm_thumb ) : ?>
+                                <img class="va-fl-thumb" src="<?php echo esc_url( $vance_kbm_thumb ); ?>" alt="<?php echo esc_attr( vance_thumbnail_alt( $vance_kbm_p->ID ) ); ?>" loading="lazy">
+                                <?php endif; ?>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div><!-- .kb-mobile-featured -->
                 <?php endif; ?>
             </div>
         </section>
@@ -1315,8 +1362,16 @@ body {
                     $div_padding = 32; // visible band height
                 }
             }
+            // Keeps a divider glued to the section it was configured to follow
+            // when the mobile reorder below moves that section -- otherwise,
+            // as a plain order:0 flex item, the divider would render BEFORE
+            // the section it's meant to close off on phones. Mirrors the
+            // .vance-hp-sections order map in main.css; a section not listed
+            // there doesn't move, so its divider doesn't need one either.
+            $div_mobile_order = array( 'kb-content' => 1, 'promo' => 2, 'testimonials' => 3 );
+            $div_order_style  = isset( $div_mobile_order[ $section_id ] ) ? 'order:' . (int) $div_mobile_order[ $section_id ] . ';' : '';
             ?>
-            <div class="vance-section-divider-wrap" style="padding: <?php echo $div_padding; ?>px 0; margin: <?php echo $div_margin; ?>px 0; <?php echo $div_bg_decl; ?>">
+            <div class="vance-section-divider-wrap" style="padding: <?php echo $div_padding; ?>px 0; margin: <?php echo $div_margin; ?>px 0; <?php echo $div_bg_decl; ?> <?php echo $div_order_style; ?>">
                 <hr class="vance-section-divider" style="
                     border: 0;
                     border-top: <?php echo $div_thickness; ?>px <?php echo esc_attr( $div_style ); ?> <?php echo esc_attr( $div_color ); ?>;
@@ -1328,6 +1383,7 @@ body {
         }
     }
     ?>
+    </div><!-- .vance-hp-sections -->
 </main>
 
 <!-- Modals & Scripts -->
@@ -1381,12 +1437,22 @@ body {
         .premium-subscribe-section .premium-pill-check { background: rgba(255,255,255,0.10); width: 24px; height: 24px; border-radius: var(--radius-control, 6px); display: flex; align-items: center; justify-content: center; color: <?php echo esc_attr($prem_pill_check); ?>; }
         .premium-subscribe-section .premium-pill { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: <?php echo esc_attr($prem_pill_text); ?>; }
         .premium-subscribe-section .premium-input::placeholder { color: rgba(255,255,255,0.55); }
+        /* Mobile density pass: scoped to --home (single.php's oped-template.css
+           has its own, unrelated .premium-subscribe-section) so the ~0.5-screen
+           band target doesn't bleed into that other component. */
+        @media (max-width: 767px) {
+            .premium-subscribe-section--home { padding-top: 40px !important; padding-bottom: 40px !important; }
+            .premium-subscribe-section--home > .container { gap: 24px !important; }
+            .premium-subscribe-section--home h2 { font-size: 26px !important; margin-bottom: 12px !important; }
+            .premium-subscribe-section--home p { font-size: 14px !important; margin-bottom: 16px !important; }
+            .premium-subscribe-section--home > .container > div:last-child { padding: 20px !important; }
+        }
     </style>
     <!-- Seam into the premium band. This section sits outside the Section
          Order loop, so it needs its own; it is also the sharpest join on the
          page (light grey straight into #2f4f6f). -->
     <div class="vance-hp-seam" aria-hidden="true"></div>
-    <section class="premium-subscribe-section" style="background: <?php echo esc_attr($prem_section_bg); ?>; padding: <?php echo $prem_pad_top; ?>px 0 <?php echo $prem_pad_bot; ?>px; color: <?php echo esc_attr($prem_heading_color); ?>;">
+    <section class="premium-subscribe-section premium-subscribe-section--home" style="background: <?php echo esc_attr($prem_section_bg); ?>; padding: <?php echo $prem_pad_top; ?>px 0 <?php echo $prem_pad_bot; ?>px; color: <?php echo esc_attr($prem_heading_color); ?>;">
         <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: 60px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 300px;">
                 <span class="tag-label" style="<?php echo $prem_eyebrow_style; ?>"><?php echo esc_html($prem_eyebrow); ?></span>
