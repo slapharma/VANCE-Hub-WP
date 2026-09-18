@@ -1,0 +1,669 @@
+{
+    "taken": "2026-09-18T12:05:54+00:00",
+    "terms": {
+        "121": "5-Ingredient Meals for Busy Days",
+        "118": "Anti-Inflammatory Breakfast Smoothies",
+        "112": "Dairy-Free",
+        "142": "Garlic-Free",
+        "111": "Gluten-Free",
+        "114": "High Fibre",
+        "117": "High Protein",
+        "144": "IBD",
+        "140": "IBS",
+        "120": "Mediterranean-Style",
+        "115": "Nutrient-Dense",
+        "141": "Oat-Free",
+        "119": "Omega-3 Rich",
+        "143": "Onion-Free",
+        "113": "Refined Sugar-Free",
+        "145": "Ulcerative Colitis",
+        "116": "Vegan-Friendly",
+        "139": "Vegetarian"
+    },
+    "assignments": {
+        "4327": [
+            "gluten-free",
+            "ibd",
+            "ulcerative-colitis"
+        ],
+        "4325": [
+            "gluten-free",
+            "ibd",
+            "ulcerative-colitis",
+            "vegetarian"
+        ],
+        "4323": [
+            "ibd",
+            "ulcerative-colitis",
+            "vegetarian"
+        ],
+        "4321": [
+            "gluten-free",
+            "ibd",
+            "ulcerative-colitis"
+        ],
+        "4319": [
+            "ibd",
+            "ulcerative-colitis"
+        ],
+        "4317": [
+            "ibd",
+            "ulcerative-colitis",
+            "vegetarian"
+        ],
+        "4315": [
+            "gluten-free",
+            "ibd",
+            "ulcerative-colitis"
+        ],
+        "4313": [
+            "ibd",
+            "ulcerative-colitis"
+        ],
+        "4311": [
+            "ibd",
+            "ulcerative-colitis",
+            "vegetarian"
+        ],
+        "4308": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free"
+        ],
+        "4306": [
+            "dairy-free",
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free",
+            "vegan-friendly"
+        ],
+        "4304": [
+            "dairy-free",
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free"
+        ],
+        "4302": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free"
+        ],
+        "4300": [
+            "dairy-free",
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free"
+        ],
+        "4298": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free"
+        ],
+        "4296": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free",
+            "vegetarian"
+        ],
+        "4294": [
+            "dairy-free",
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free"
+        ],
+        "4292": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free",
+            "vegetarian"
+        ],
+        "4290": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free",
+            "vegetarian"
+        ],
+        "4288": [
+            "garlic-free",
+            "ibs",
+            "oat-free",
+            "onion-free",
+            "vegetarian"
+        ],
+        "4130": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4128": [
+            "dairy-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4126": [
+            "dairy-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegan-friendly"
+        ],
+        "4124": [
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "4122": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4120": [
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "4118": [
+            "dairy-free",
+            "high-fibre",
+            "ibd",
+            "refined-sugar-free",
+            "vegan-friendly"
+        ],
+        "4116": [
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegan-friendly"
+        ],
+        "4114": [
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "4112": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "4110": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4108": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "4106": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4104": [
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4102": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "4100": [
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4098": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4096": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "mediterranean-style"
+        ],
+        "4094": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "4092": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "4090": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "4088": [
+            "dairy-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4086": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "mediterranean-style"
+        ],
+        "4084": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "high-protein",
+            "ibd"
+        ],
+        "4082": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "4080": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "4078": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "4076": [
+            "dairy-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4074": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "4072": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "mediterranean-style",
+            "vegan-friendly"
+        ],
+        "4070": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "4068": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4066": [
+            "dairy-free",
+            "high-fibre",
+            "ibd",
+            "refined-sugar-free",
+            "vegan-friendly"
+        ],
+        "4064": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "4062": [
+            "gluten-free",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "4060": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "4058": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4056": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "4054": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4052": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4050": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "mediterranean-style"
+        ],
+        "4048": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "4046": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "mediterranean-style",
+            "vegan-friendly"
+        ],
+        "4044": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense"
+        ],
+        "4042": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "4040": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "mediterranean-style",
+            "vegan-friendly"
+        ],
+        "4038": [
+            "high-protein",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "4036": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4034": [
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense",
+            "vegetarian"
+        ],
+        "4032": [
+            "dairy-free",
+            "high-fibre",
+            "ibd",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "4030": [
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegetarian"
+        ],
+        "3027": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "3025": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegan-friendly"
+        ],
+        "3023": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free"
+        ],
+        "3021": [
+            "dairy-free",
+            "gluten-free",
+            "ibd",
+            "vegan-friendly"
+        ],
+        "3019": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "3017": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "3015": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense",
+            "omega-3-rich"
+        ],
+        "3013": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "3011": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "3009": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "mediterranean-style",
+            "nutrient-dense"
+        ],
+        "3007": [
+            "5-ingredient-meals-for-busy-days",
+            "dairy-free",
+            "gluten-free",
+            "ibd",
+            "mediterranean-style",
+            "omega-3-rich"
+        ],
+        "3005": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "3003": [
+            "anti-inflammatory-breakfast-smoothies",
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free"
+        ],
+        "3001": [
+            "anti-inflammatory-breakfast-smoothies",
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free"
+        ],
+        "2999": [
+            "dairy-free",
+            "gluten-free",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "2997": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "nutrient-dense",
+            "vegan-friendly"
+        ],
+        "2995": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "high-protein",
+            "ibd",
+            "nutrient-dense"
+        ],
+        "2993": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free"
+        ],
+        "2991": [
+            "dairy-free",
+            "gluten-free",
+            "high-fibre",
+            "ibd",
+            "nutrient-dense",
+            "refined-sugar-free",
+            "vegan-friendly"
+        ]
+    }
+}
