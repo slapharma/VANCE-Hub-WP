@@ -416,6 +416,10 @@ function vance_render_prime_block( array $vals ) {
 		/* Image-led banner */
 		<?php echo $sel; ?> .pwc-banner--image > div { position: relative; overflow: hidden; padding: 26px 24px; color: #ffffff; min-height: 160px; flex: 1; }
 		<?php echo $sel; ?> .pwc-banner--image::after { content: ''; display: block; }
+		/* Icon badge: only shown by the phone redesign below (767px) -- the
+		   desktop image-led banner has no use for it, the photo/gradient is
+		   the visual anchor there. */
+		<?php echo $sel; ?> .pwc-banner-icon { display: none; }
 		/* Pill banner */
 		<?php echo $sel; ?> .pwc-banner--pill > div { background: #ffffff; border: 1.5px solid #0A1929; padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-height: 72px; flex: 1; }
 		/* Horizontal image+text banner */
@@ -447,13 +451,66 @@ function vance_render_prime_block( array $vals ) {
 				<?php echo $sel; ?> .pwc-card-title,
 				<?php echo $sel; ?> .pwc-banner-title { font-size: 14px !important; margin-bottom: 4px !important; }
 				<?php echo $sel; ?> .pwc-card-body p,
-				<?php echo $sel; ?> .pwc-banner p { display: none !important; }
+				<?php echo $sel; ?> .pwc-banner--image_text p,
+				<?php echo $sel; ?> .pwc-banner--pill p { display: none !important; }
+				/* One line, not zero, but only for the redesigned image-led
+				   banner below -- .pwc-banner--image_text/--pill keep their
+				   dark background at this size (untouched by this redesign),
+				   so slate-grey text there would be near-illegible; those
+				   stay hidden same as before. */
+				<?php echo $sel; ?> .pwc-banner--image p {
+					display: -webkit-box !important;
+					-webkit-line-clamp: 1;
+					-webkit-box-orient: vertical;
+					overflow: hidden;
+					margin: 0 !important;
+					font-size: 12px !important;
+					opacity: 1 !important;
+					color: #64748b !important;
+				}
+				/* Redesign: the image-led banner drops its photo/gradient at
+				   this size (client's explicit ask) for a light icon+title
+				   card matching .pwc-card's own surface -- white, bordered,
+				   --radius-surface -- instead of the dark full-bleed panel
+				   that was here before. */
 				<?php echo $sel; ?> .pwc-banner--image > div {
+					background-image: none !important;
+					background: #ffffff !important;
+					border: 1.5px solid #e2e8f0;
+					border-radius: var(--radius-surface, 14px);
 					min-height: 140px !important;
 					padding: 14px !important;
 					display: flex;
 					flex-direction: column;
-					justify-content: flex-end;
+					align-items: flex-start;
+					justify-content: flex-start;
+					gap: 6px;
+				}
+				<?php echo $sel; ?> .pwc-banner-icon {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 36px;
+					height: 36px;
+					flex-shrink: 0;
+					border-radius: var(--radius-control, 6px);
+					background: rgba(0,128,128,0.12);
+					color: var(--primary-color, #008080);
+					font-size: 13px;
+					font-weight: 800;
+					font-family: 'Outfit', sans-serif;
+				}
+				<?php echo $sel; ?> .pwc-banner--image .pwc-banner-eyebrow {
+					padding: 0 !important;
+					margin: 0 !important;
+					background: none !important;
+					color: var(--primary-color, #008080) !important;
+					font-size: 10px !important;
+				}
+				<?php echo $sel; ?> .pwc-banner--image .pwc-banner-title {
+					color: #0A1929 !important;
+					font-size: 14px !important;
+					margin: 0 !important;
 				}
 				<?php echo $sel; ?> .pwc-banner--image_text > div { min-height: 140px !important; padding: 12px !important; gap: 10px !important; }
 				<?php echo $sel; ?> .pwc-banner--image_text > div > div:first-child { width: 44px !important; height: 44px !important; }
@@ -677,8 +734,11 @@ function vance_render_prime_block( array $vals ) {
 					?>
 						<a href="<?php echo $c_link; ?>" class="pwc-banner pwc-banner--image">
 							<div style="<?php echo $bg; // phpcs:ignore WordPress.Security.EscapeOutput ?>">
+								<?php if ( $c_fi !== '' ) : ?>
+									<span class="pwc-banner-icon"><?php echo $c_fi; ?></span>
+								<?php endif; ?>
 								<?php if ( $c_eye !== '' ) : ?>
-									<div style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( $eyebrow_color ); ?>; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;"><?php echo $c_eye; ?></div>
+									<div class="pwc-banner-eyebrow" style="display: inline-block; padding: 4px 10px; background: <?php echo esc_attr( $eyebrow_color ); ?>; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;"><?php echo $c_eye; ?></div>
 								<?php endif; ?>
 								<h3 class="pwc-banner-title" style="margin: 0 0 6px; font-size: 22px; font-weight: 800; color: #ffffff; line-height: 1.15; font-family: 'Outfit', sans-serif;"><?php echo $c_title; ?></h3>
 								<p style="margin: 0; font-size: 13px; opacity: 0.9; max-width: 320px; line-height: 1.5;"><?php echo $c_desc; ?></p>
