@@ -5915,11 +5915,9 @@ function vance_customize_register( $wp_customize ) {
     }
 
     // 2.8 Join the Hub Section
-    $wp_customize->add_section( 'vance_join_community', array(
-        'title'    => __( 'Join the Hub Block', 'vance-health-hub' ),
-        'priority' => 31.8,
-        'panel'    => 'vance_content_panel',
-    ) );
+    // The section itself is registered once, under "8. Join Block Settings"
+    // below. It used to be registered here as well; the later call replaced
+    // this one, so these controls have always shown in that section.
 
     $wp_customize->add_setting( 'vance_join_title', array(
         'default'           => 'Join the Hub',
@@ -9052,6 +9050,9 @@ add_action( 'login_form_register', 'vance_prefill_register_email' );
  */
 require_once get_template_directory() . '/customizer-pages.php';
 require_once get_template_directory() . '/inc/customizer-gi-health.php';
+// Which panel each Customizer section sits in, its title and its order. The
+// registrations above say one thing and this file has the last word.
+require_once get_template_directory() . '/inc/customizer-structure.php';
 
 
 
