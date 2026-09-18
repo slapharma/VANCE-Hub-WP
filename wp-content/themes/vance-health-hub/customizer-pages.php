@@ -779,14 +779,16 @@ function vance_pages_customize_register( $wp_customize ) {
     $wp_customize->add_control( "vance_evidence_hero_btn1_link", array( "label" => "Primary Button Link", "section" => "vance_evidence_hero", "type" => "url" ) );
     // Secondary hero button ("Dive into our Knowledgebase" / "Request a
     // Clinical Consultation") removed 2026-08-07 — see page-turn-evidence-into-action.php.
-    // Hero overlay slider lives in this section so admins find it next to the bg image (was in "Hero Overlays (extra)" only)
+    // Convenience duplicate from when the working slider sat in the separate "Hero Overlays" panel.
+    // inc/customizer-structure.php now moves that slider (vance_evidence_hero_overlay) into this
+    // same section, and the template reads only that one; nothing reads the _inline setting below.
     $wp_customize->add_setting( "vance_evidence_hero_overlay_inline", array( "default" => 78, "sanitize_callback" => "absint" ) );
     $wp_customize->add_control( "vance_evidence_hero_overlay_inline", array(
-        "label"       => "Hero Overlay Opacity (%) - duplicates the slider in “Hero Overlays (extra)”",
+        "label"       => "Hero Overlay Opacity (%) - duplicate, use “Turn Evidence hero overlay opacity (%)” in this section",
         "section"     => "vance_evidence_hero",
         "type"        => "number",
         "input_attrs" => array( "min" => 0, "max" => 100, "step" => 5 ),
-        "description" => "Note: the canonical slider is `vance_evidence_hero_overlay`; this is a convenience duplicate.",
+        "description" => "Note: the slider the page actually reads is “Turn Evidence hero overlay opacity (%)” (`vance_evidence_hero_overlay`), which now sits in this same section. This one is a leftover duplicate and changing it has no effect.",
     ) );
 
     // ─── Pillars ───────────────────────────────────────────────────
@@ -1592,7 +1594,8 @@ function vance_pages_customize_register( $wp_customize ) {
     /* ---- Contact / About "Spotlight" heroes ----
        Registered here rather than in the file that renders them because their
        sections hang off the Contact and About panels, which are built above.
-       Adds a design toggle to each page's existing Hero Section (defaulting to
+       Adds a design toggle to each page's existing classic hero section (shown
+       to the admin as "Hero (classic) + design switch"; defaulting to
        the classic dark hero, so nothing changes until an admin switches it)
        plus one section per page for the spotlight's own settings. */
     if ( function_exists( 'vance_page_hero_spotlight_customize' ) ) {

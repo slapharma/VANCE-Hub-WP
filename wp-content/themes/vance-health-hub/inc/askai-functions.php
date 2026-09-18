@@ -1004,14 +1004,15 @@ function vance_rest_ai_chat( $request ) {
 	$reading_level   = vance_ai_normalise_reading_level( isset( $params['reading_level'] ) ? $params['reading_level'] : '' );
 
 	// --- Credentials -------------------------------------------------------
-	// Read from the Customizer (Appearance → Customize → VANCE-Ai Configuration).
+	// Read from the Customizer (Appearance → Customize → Section · VANCE-Ai →
+	// Configuration + hero design switch).
 	// Do NOT hardcode keys here; they end up in public git history and on the
 	// deployed web server.
 	$api_key = vance_get_theme_mod( 'vance_askai_api_key', '' );
 	if ( empty( $api_key ) ) {
 		return new WP_Error(
 			'ai_api_key_missing',
-			__( 'AI API key is not configured. Site admin: set it in Appearance → Customize → VANCE-Ai Configuration.', 'vance-health-hub' ),
+			__( 'AI API key is not configured. Site admin: set it in Appearance → Customize → Section · VANCE-Ai → Configuration + hero design switch.', 'vance-health-hub' ),
 			array( 'status' => 503 )
 		);
 	}

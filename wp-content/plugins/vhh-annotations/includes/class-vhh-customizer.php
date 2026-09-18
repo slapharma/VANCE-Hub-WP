@@ -1,6 +1,8 @@
 <?php
 /**
- * Customizer section: Appearance → Customize → Article Annotations.
+ * Customizer section: Appearance → Customize → Content · Articles → Article
+ * annotations (the theme's inc/customizer-structure.php moves and retitles
+ * the section registered here).
  *
  * All settings live inside the single autoloaded option
  * vhh_annotations_options (type => 'option', names like

@@ -10,7 +10,8 @@
  * choose "Education (Coming Soon)" as the template under Page Attributes.
  *
  * All copy + colours read through vance_get_theme_mod() — override defaults
- * via Appearance → Customize → Education Page Settings.
+ * via Appearance → Customize → Section · Education & Survey (the sections
+ * prefixed "Education:").
  */
 get_header();
 
@@ -45,8 +46,9 @@ $track_icons = array(
 
     <?php
     /*
-     * HERO. Two designs, chosen by Appearance -> Customize -> Page - Education
-     * -> Hero Section -> "Education hero design". Defaults to 'classic', so
+     * HERO. Two designs, chosen by Appearance -> Customize -> Section ·
+     * Education & Survey -> Education: Hero (classic) + design switch ->
+     * "Education hero design". Defaults to 'classic', so
      * deploying this changes nothing until an admin flips it.
      *
      * The spotlight renderer reads this page's OWN tag and title keys, so

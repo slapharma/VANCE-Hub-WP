@@ -3,7 +3,8 @@
  * Mobile bottom navigation bar (Phase 2.1).
  *
  * App-style persistent tab bar shown only on phones (≤767px via CSS) and only
- * when enabled in Appearance → Customize → Mobile Experience. Rendering is
+ * when enabled in Appearance → Customize → Site · Mobile → Bottom navigation &
+ * phone components. Rendering is
  * gated server-side by vance_mobile_bottomnav_active() so it never outputs HTML
  * on the dashboard or when the toggle is OFF.
  *

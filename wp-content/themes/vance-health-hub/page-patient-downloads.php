@@ -15,7 +15,7 @@
  * child nav item for each handout as it goes live, is a manual wp-admin
  * step (the primary menu is hand-maintained, see CLAUDE.md).
  *
- * Customizer panel: Appearance → Customize → Page - Patient Downloads.
+ * Customizer panel: Appearance → Customize → Section · Patient Downloads.
  */
 get_header();
 
@@ -256,7 +256,7 @@ $vpd_downloads = array(
 
 		/*
 		 * The hero trust card, same swap. Its BACKGROUND is a Customizer value
-		 * (Page - Patient Downloads -> Hero Spotlight -> Card Background) and
+		 * (Section · Patient Downloads -> Hero (spotlight) -> Card, Background) and
 		 * stays there rather than being hard-coded here, so the control keeps
 		 * working; the theme_mod was set to #EFE9F9 alongside this, and
 		 * inc/page-hero-spotlight.php carries the same value as the page

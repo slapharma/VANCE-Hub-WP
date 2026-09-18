@@ -3756,7 +3756,7 @@ body.home .hero {
 .va-subcat-group .vance-cat-promo > .container,
 .va-subcat-group .vance-cat-promo > .container-fluid { padding-left: 0; padding-right: 0; }
 
-/* "Show on mobile" unticked in Customizer -> Category Promo Blocks (the
+/* "Show on mobile" unticked in Customizer -> Content · Category Promo Blocks (the
    default). Same 768px line the rest of this block collapses at. */
 @media (max-width: 767.98px) {
     .vance-cat-promo--hide-mobile { display: none !important; }

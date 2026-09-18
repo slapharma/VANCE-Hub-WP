@@ -391,7 +391,7 @@ body {
 
     <?php
     // Section order is now driven by the sortable Customizer control:
-    // Appearance -> Customize -> Vance Theme -> Homepage -> Section Order.
+    // Appearance -> Customize -> Home · Hero & Layout -> Section order.
     // Stored as a comma-separated string of CHECKED section IDs in display
     // order. The previous "force-add testimonials/pathway_content" fallbacks
     // have been removed now that the admin has explicit per-section checkboxes.
@@ -523,7 +523,7 @@ body {
         switch ($section_id) {
             case 'hero':
                 // Two hero designs share this slot, chosen in Customize →
-                // Homepage → Hero:
+                // Home · Hero & Layout → Hero (classic) + design switch:
                 //   spotlight — the light, search-led hero (default).
                 //   carousel  — the previous dark hero; renders as a single
                 //               static slide until a second slide is enabled.
@@ -1332,7 +1332,7 @@ body {
         // SECTION DIVIDER (per-section toggle)
         // After each section's case body runs, check whether the admin has
         // ticked "Show divider AFTER {section}" in Appearance -> Customize
-        // -> Homepage -> Section Dividers. If so, emit a styled <hr> using
+        // -> Home · Hero & Layout -> Section dividers. If so, emit a styled <hr> using
         // the shared look config (colour, thickness, width, style, margin,
         // padding). Section IDs with hyphens are stored with underscores in
         // the setting key (Customizer doesn't like hyphenated keys mid-name

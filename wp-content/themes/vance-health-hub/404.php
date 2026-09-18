@@ -18,7 +18,8 @@
  *   - NO CUSTOMIZER COPY. The eyebrow, headline and intro are literals in the
  *     config, the same call inc/legal-hero.php made for the five policy
  *     documents. Colours, buttons, the card and the photograph ARE editable,
- *     under Appearance -> Customize -> Page - Not Found (404).
+ *     under Appearance -> Customize -> Pages · Contact, Guide, Search, 404 ->
+ *     Not found (404): Hero (spotlight).
  *   - THE START PAGE IS THE KNOWLEDGEBASE, not the homepage. It is the one door
  *     on this site that leads to every other -- collections, conditions, the
  *     free tools, the newest articles and a search field are all on it, and it
