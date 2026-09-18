@@ -405,6 +405,10 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   discarding `_wp_attachment_image_alt` again — see `inc/thumbnail-alt.php`.
 - **`og:image` is present on every page**, falling back to
   `assets/img/og-default.jpg` where AIOSEO has none.
+- **The Customizer shows 24 theme panels**, grouped Site / Home / Content /
+  Section / Pages / Members / Website Functions. No panel called "Hero
+  Overlays" or "Advanced" — those are the old names; see "Customizer
+  structure" above.
 
 A quick way to run most of this: fetch every URL in the sitemap and assert on
 content, not status codes. All 217 returned 200 with zero PHP notices on
@@ -460,7 +464,82 @@ shared by every `.vhh-hero-spotlight` family (homepage, page heroes, category
 archives, GI heroes, policy documents). It is required early in `functions.php`
 (line 37) because the category, GI, legal and page hero files call its helpers
 behind `function_exists()` and fall back to the plain full-text render if it is
-ever missing.
+ever missing. `inc/customizer-structure.php` is loaded right after
+`inc/customizer-gi-health.php` and is also not an SEO include: it decides where
+every Customizer panel and section appears on screen, not what those panels
+contain. See "Customizer structure" below.
+
+## Customizer structure: one map decides where everything sits
+
+Panels, sections and controls are still registered where they always were:
+`functions.php`, `customizer-pages.php`, `inc/customizer-gi-health.php`,
+`inc/dashboard-features.php`, `inc/page-hero-spotlight.php`,
+`inc/hero-mobile.php`, and the `vhh-annotations` plugin. `inc/customizer-structure.php`
+runs after all of that, on `customize_register` at priority 999 (after every
+registration hook in the theme, which top out at 30, and after the plugin's),
+and rewrites three things on every section it names: which panel it sits in,
+its title, and its order. The `title` and `panel` args written at registration
+are no longer what the admin sees. If you're hunting for why a panel says
+something different from its `add_panel()` call, this file is why.
+
+WordPress has no nested panels, so the seven silos read as a title prefix plus
+a priority band:
+
+| Silo | Priority band |
+|---|---|
+| Site | 10-19 |
+| Home | 20-29 |
+| Content | 30-39 |
+| Section | 40-49 |
+| Pages | 50-59 |
+| Members | 60 |
+| Website Functions | 70 |
+
+That's 24 theme panels in total.
+
+To move, rename or reorder a section, edit the map in this file, not the
+`add_section()` call at its point of registration; the map wins regardless of
+what the registration call says. To add a new section, register it as usual
+and then add it to the map, otherwise it appears wherever its own `panel` arg
+puts it, silently outside the intended silo.
+
+Never change a setting id as part of reorganising. Settings are `theme_mods`
+keyed by setting id alone, so moving a section between panels or retitling it
+is free, but renaming a setting orphans the value a user already saved.
+Section ids stay fixed for the same reason plus one more: several families
+build their setting keys from the same variable they use as the section id
+(`vance_gi_cond_*`, `vance_kb_cat_*`, `vance_dash_feature_*`,
+`vance_cat_promo_sec_*`), and `vance_page_hero_spotlight_config()` names
+sections and panels by id too.
+
+The apply step also removes any `vance_`-prefixed section left with no
+controls, and any `vance_`-prefixed panel left with no sections. That's how
+the old "Hero Overlays" panel disappears once its three overlay sliders move
+into the hero sections they darken.
+
+Hero section naming follows one rule everywhere: "Hero (classic) + design
+switch" comes before "Hero (spotlight)", in that order. The classic section is
+the one holding the design toggle, the same section named as `style_section`
+in that page's spotlight config.
+
+Backing the whole thing out is deleting the one `require` line in
+`functions.php`.
+
+**Tests:** `php tests/customizer-structure.test.php` (plain PHP, no WordPress
+required). It includes a source-level guard that fails if the map names a
+section id that none of the registration files actually produce, because
+`apply()` silently skips an id it can't find, so a typo here fails quietly in
+the admin and needs a static check to catch it instead.
+
+**Verifying against the live tree without deploying:** the Customizer manager
+can be built under WP-CLI's `eval-file`, but the theme only defines its custom
+control classes when `WP_Customize_Control` exists at theme load time, so the
+`eval-file` run needs a `--require` prelude that loads
+`wp-includes/class-wp-customize-{setting,panel,section,control}.php` on
+`plugins_loaded`, and core's `register_controls()` has to be called by hand
+before firing `do_action('customize_register')`. This is a known trap, not a
+recipe: the scripts that did this were session scratch files, not anything
+kept in the repo.
 
 ## Local-only helpers (in `LOCAL/`, gitignored)
 - `vance_rebrand.py` — text rebrand transformer (round 1)
