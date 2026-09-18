@@ -31,7 +31,7 @@ class VHH_Frontend {
 			return false;
 		}
 		// Restricted to roles holding vhh_annotate — Administrator and Editor
-		// by default; Customize → Article Annotations can widen it to more
+		// by default; Customize → Content · Articles → Article annotations can widen it to more
 		// roles. Logged-out visitors, and logged-in users without the
 		// capability, still get zero annotation output.
 		if ( is_singular() ) {

@@ -39,7 +39,7 @@ Edited in place. No setting IDs were reused/renamed, so nothing existing is affe
 ## How to use (admin)
 1. **Posts → Categories**: create child categories under *Clinical Reviews* and
    *Gastro Living* and assign posts to them.
-2. **Appearance → Customize → Content & Knowledge Base → Sub-Category Layouts**:
+2. **Appearance → Customize → Content · Categories → Sub-category layouts**:
    pick a layout and (optionally) write a description for each sub-category.
 3. Visit the Clinical Reviews / Gastro Living pages — articles are now grouped, each
    group using its chosen layout.

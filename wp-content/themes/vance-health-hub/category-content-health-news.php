@@ -13,9 +13,10 @@
  * chrome (.va-subcat-group / .va-sub-grid) mirrors the taxonomy-grouped
  * template, so this page looks consistent with both without depending on
  * either — the buckets here are computed, not real WP terms, so they can't
- * use the per-sub-category "Grid columns" control in Sub-category Layouts.
+ * use the per-sub-category "Grid columns" control in Sub-category layouts.
  * Grid width instead comes from a category-scoped equivalent, "Grid Columns"
- * under Customizer → Category Heroes (vance_get_cat_grid_cols(), functions.php).
+ * under Customizer → Content · Categories → Category heroes
+ * (vance_get_cat_grid_cols(), functions.php).
  *
  * @package vance-health-hub
  */
@@ -46,8 +47,8 @@ $vhn_grid_cols = ( $vhn_cat instanceof WP_Term ) ? vance_get_cat_grid_cols( $vhn
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
 
     <?php
-    // Prime Block for category archives (Customizer -> Homepage -> Prime Block
-    // Categories). This template previously skipped the block entirely, so
+    // Prime Block for category archives (Customizer -> Content · Categories ->
+    // Prime block on category pages). This template previously skipped the block entirely, so
     // Healthcare News was the one archive it could never appear on however the
     // Customizer was set. Same three-slot arrangement as archive.php.
     if ( function_exists( 'vance_render_prime_block_categories' ) ) {

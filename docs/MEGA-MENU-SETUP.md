@@ -345,7 +345,7 @@ only `documents` is off. `?tab=calculators` is a legacy alias that
 | My Notes | `notes` | My Notes |
 
 The "My Ai Chats" label differs from the dashboard's own "My VANCE-Ai". Either
-rename the menu item or change the label in Appearance → Customize → Member
+rename the menu item or change the label in Appearance → Customize → Members ·
 Dashboard so the two agree.
 
 **Logged out**, `page-dashboard.php` redirects to the themed `/login/` overlay

@@ -4,7 +4,7 @@
  *
  * Registers 5 pre-configured content-widget slots (content-widget-1 .. -5)
  * that the admin can independently enable, position, and configure via the
- * Section Order control + the "Content Widgets" Customizer panel.
+ * Section order control + the "Content · Reusable Widgets" Customizer panel.
  *
  * Each instance lets the admin choose:
  *  - How many posts to show

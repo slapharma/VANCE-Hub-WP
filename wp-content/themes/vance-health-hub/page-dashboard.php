@@ -124,7 +124,7 @@ get_header();
     // Back-compat: legacy ?tab=clinical-profile links resolve to the renamed Health Profile tab.
     if ( $current_tab === 'clinical-profile' ) { $current_tab = 'health-profile'; }
     // The sidebar is built from the feature registry, not hardcoded here:
-    // Appearance → Customize → Member Dashboard controls which tabs exist, what
+    // Appearance → Customize → Members · Dashboard controls which tabs exist, what
     // they are called and which group they sit in. See inc/dashboard-features.php.
     // Building it in one place is what keeps the sidebar, the breadcrumb, the
     // router and the home grid from disagreeing about any of that.

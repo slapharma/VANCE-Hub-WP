@@ -7,8 +7,8 @@
  * on phones only. front-page.php is NOT modified — if this enhancer is disabled
  * or the markup changes, the grid simply renders as before.
  *
- * Renders only on the front page and only when enabled in Customizer → Mobile
- * Experience. Dot styles live in assets/css/mobile-components.css §2.3.
+ * Renders only on the front page and only when enabled in Customizer → Site ·
+ * Mobile → Bottom navigation & phone components. Dot styles live in assets/css/mobile-components.css §2.3.
  *
  * @package vance-health-hub
  */

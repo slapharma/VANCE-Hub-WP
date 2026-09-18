@@ -710,7 +710,7 @@ function vance_render_category_hero( $term = null ) {
 	 * heroes have always read, and `vance_cat_title_<id>` is what the
 	 * Customizer control in functions.php actually registers. They have never
 	 * matched, which is why the "Title Override" field in Appearance →
-	 * Customize → Content → Category Heroes has never done anything. Reading
+	 * Customize → Content · Categories → Category heroes has never done anything. Reading
 	 * both means neither an admin who typed into that field nor a site with a
 	 * value saved under the old key loses their work here.
 	 */

@@ -90,8 +90,9 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
     ?>
     <?php
     /*
-     * Which hero. Defaults to 'classic' (Appearance > Customize > Page - Get
-     * Started > Hero Section > "Get Started hero design"), so this page renders
+     * Which hero. Defaults to 'classic' (Appearance > Customize > Pages · Get
+     * Started > Hero (classic) + design switch > "Get Started hero design"), so
+     * this page renders
      * exactly what it always has until an admin switches it.
      *
      * NOTE the id below. #evd-hero-join-btn is the analytics hook on the join

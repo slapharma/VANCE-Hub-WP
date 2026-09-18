@@ -6,7 +6,7 @@
  * category-content-gastro-living.php. Renders the category hero, then groups
  * the current query's posts by their child (sub-)category. Each group shows an
  * editable description block and is laid out using the per-sub-category layout
- * chosen in Customizer → Content & Knowledge Base → Sub-Category Layouts:
+ * chosen in Customizer → Content · Categories → Sub-category layouts:
  * Standard Grid, Bento, Asymmetric, Posters (3 or 4 per row), or
  * Featured + List (one large hero article beside a compact scannable list of
  * the rest, mirroring the homepage "Latest" bento minus the Featured Tools).
@@ -317,15 +317,15 @@ $vance_cat = get_queried_object();
     ?>
 
     <?php
-    // Prime Block for category archives (Customizer → Homepage → Prime Block
-    // Categories). Called once per placement slot; the block renders in the
+    // Prime Block for category archives (Customizer → Content · Categories →
+    // Prime block on category pages). Called once per placement slot; the block renders in the
     // slot matching its "Position on the page" setting and bails in the other
     // two. See archive.php for the same three-slot arrangement.
     if ( function_exists( 'vance_render_prime_block_categories' ) ) {
         vance_render_prime_block_categories( 'above_promo' );
     }
 
-    // Configurable per-category promo block (Customizer → Content → Category Promo Blocks).
+    // Configurable per-category promo block (Customizer → Content · Category Promo Blocks).
     if ( is_category() && function_exists( 'vance_render_category_promo' ) ) {
         vance_render_category_promo( get_queried_object_id() );
     }
@@ -399,8 +399,8 @@ $vance_cat = get_queried_object();
                 ?>
                 <section class="va-subcat-group va-subcat-group--<?php echo esc_attr( $vance_layout ); ?>" aria-labelledby="va-subcat-<?php echo (int) $tid; ?>">
                     <?php
-                    // The sub-category's own promo block (Customizer -> Category
-                    // Promo Blocks -> Parent -> Child). It already renders on the
+                    // The sub-category's own promo block (Customizer -> Content ·
+                    // Category Promo Blocks -> Parent -> Child). It already renders on the
                     // sub-category's own archive; on the parent lobby it sits above
                     // that sub-category's title, so switching one on is
                     // visible from the page most visitors actually land on.
@@ -437,8 +437,8 @@ $vance_cat = get_queried_object();
                 // removed).
                 if ( ! $vance_has_groups ) :
                     // A leaf sub-category routed here by archive.php is laid out
-                    // with the layout it was given in Customizer → Sub-Category
-                    // Layouts, so its own page matches its group on the parent
+                    // with the layout it was given in Customizer → Content ·
+                    // Categories → Sub-category layouts, so its own page matches its group on the parent
                     // archive. A parent category with no children has no layout
                     // control registered, so it defaults to the standard grid.
                     // The "Rows to show" cap is deliberately not applied here:
