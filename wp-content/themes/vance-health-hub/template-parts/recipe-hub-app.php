@@ -55,32 +55,17 @@ $vance_categories = array(
 	'snacks'    => __( 'Snacks', 'vance-health-hub' ),
 );
 /**
- * Tag chips, sharing one row with the meal-category chips above rather than
- * every vance_recipe_tag term automatically appearing here — a fixed list
- * so a one-off editorial term (e.g. "5-Ingredient Meals for Busy Days",
- * count 1) never silently shows up as a filter chip. Add a slug => label
- * pair by hand when a new condition or dietary-attribute term is worth
- * filtering by. IBD/IBS/Ulcerative Colitis first (added 2026-09-15), then
- * the pre-existing dietary-attribute terms alphabetically.
+ * The Recipe Tags filter offers the 8 core labels and nothing else — never
+ * every vance_recipe_tag term, and never the 6 descriptors, which are card
+ * chips rather than filters. The list and its order come from
+ * vance_recipe_label_model() (inc/recipe-frontend.php); change it there.
  */
-$vance_tags = array(
-	'ibd'                => __( 'IBD', 'vance-health-hub' ),
-	'ibs'                => __( 'IBS', 'vance-health-hub' ),
-	'ulcerative-colitis' => __( 'Ulcerative Colitis', 'vance-health-hub' ),
-	'dairy-free'         => __( 'Dairy-Free', 'vance-health-hub' ),
-	'garlic-free'        => __( 'Garlic-Free', 'vance-health-hub' ),
-	'gluten-free'        => __( 'Gluten-Free', 'vance-health-hub' ),
-	'high-fibre'         => __( 'High Fibre', 'vance-health-hub' ),
-	'high-protein'       => __( 'High Protein', 'vance-health-hub' ),
-	'mediterranean-style' => __( 'Mediterranean-Style', 'vance-health-hub' ),
-	'nutrient-dense'     => __( 'Nutrient-Dense', 'vance-health-hub' ),
-	'oat-free'           => __( 'Oat-Free', 'vance-health-hub' ),
-	'omega-3-rich'       => __( 'Omega-3 Rich', 'vance-health-hub' ),
-	'onion-free'         => __( 'Onion-Free', 'vance-health-hub' ),
-	'refined-sugar-free' => __( 'Refined Sugar-Free', 'vance-health-hub' ),
-	'vegan-friendly'     => __( 'Vegan-Friendly', 'vance-health-hub' ),
-	'vegetarian'         => __( 'Vegetarian', 'vance-health-hub' ),
-);
+$vance_label_model = vance_recipe_label_model();
+$vance_tags        = $vance_label_model['core'];
+// A ?tags= value outside the core list (an old bookmark to ?tags=ibd, a
+// descriptor slug) is dropped rather than applied: it has no checkbox, so
+// left in it would filter the grid with nothing on the page to untick.
+$vance_tags_filter = array_values( array_intersect( $vance_tags_filter, array_keys( $vance_tags ) ) );
 $vance_base_url = home_url( '/gastro-meal-planner/' );
 // Admin-only "Date Uploaded" sort + the upload date shown on each card —
 // current_user_can( 'manage_options' ) is the standard single-site proxy
@@ -273,6 +258,13 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 							<span class="vance-rh-card-cat"><?php echo esc_html( isset( $vance_categories[ $r['category'] ] ) ? $vance_categories[ $r['category'] ] : $r['category'] ); ?></span>
 							<h3 class="vance-rh-card-name"><?php echo esc_html( $r['name'] ); ?></h3>
 							<div class="vance-rh-card-facts"><?php echo $r['minutes'] ? esc_html( $r['minutes'] . ' min' ) : ''; ?><?php echo ( $r['minutes'] && $r['calories'] ) ? ' &middot; ' : ''; ?><?php echo $r['calories'] ? esc_html( $r['calories'] . ' kcal' ) : ''; ?></div>
+							<?php if ( $r['chips'] ) : ?>
+								<ul class="vance-rh-card-chips">
+									<?php foreach ( $r['chips'] as $vance_chip ) : ?>
+										<li><?php echo esc_html( $vance_chip ); ?></li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endif; ?>
 							<?php if ( isset( $r['dateUploaded'] ) ) : ?>
 								<div class="vance-rh-card-date"><?php esc_html_e( 'Uploaded', 'vance-health-hub' ); ?> <?php echo esc_html( $r['dateUploaded'] ); ?></div>
 							<?php endif; ?>

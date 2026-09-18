@@ -406,15 +406,15 @@
 		Array.prototype.forEach.call(cards, function (card) {
 			var matchesCat = !category || card.getAttribute('data-recipe-category') === category;
 			var cardTags = (card.getAttribute('data-recipe-tags') || '').split(',');
-			// Matches the recipe's name OR one of its condition/dietary tags — a
-			// visitor typing a condition like "IBD" expects recipes tagged with
-			// it to surface, not just ones with that word in the title. Tags here
-			// are slugs (e.g. "ibd", "ulcerative-colitis"), which is why a plain
-			// substring check against the joined string is enough; no separate
-			// per-tag loop like matchesTags below needs, since search is OR, not AND.
+			// Matches the recipe's name OR one of its labels — a visitor typing
+			// "low fodmap" or "no onion" expects recipes carrying that label to
+			// surface, not just ones with those words in the title. Labels here
+			// are slugs ("low-fodmap"), so the query is hyphenated the same way
+			// before the substring check; no separate per-tag loop like
+			// matchesTags below needs, since search is OR, not AND.
 			var matchesQuery = !q ||
 				card.getAttribute('data-recipe-name').indexOf(q) !== -1 ||
-				cardTags.join(' ').indexOf(q) !== -1;
+				cardTags.join(' ').indexOf(q.replace(/\s+/g, '-')) !== -1;
 			// Every active tag must be on the card (AND), not just one —
 			// picking Oat-Free and Vegetarian together should narrow the
 			// list, not widen it back out.
@@ -438,7 +438,13 @@
 	// server had already only rendered the matching cards to begin with).
 	var initialParams = new URLSearchParams(window.location.search);
 	var activeCategory = initialParams.get('cat') || '';
-	var activeTags = (initialParams.get('tags') || '').split(',').filter(Boolean);
+	// Only tags that have a checkbox: an old ?tags=ibd bookmark, or a descriptor
+	// slug, would otherwise filter the grid with nothing on the page to untick.
+	// Same rule the server applies in template-parts/recipe-hub-app.php.
+	var filterableTags = Array.prototype.map.call(tagCheckboxes, function (cb) { return cb.value; });
+	var activeTags = (initialParams.get('tags') || '').split(',').filter(function (t) {
+		return filterableTags.indexOf(t) !== -1;
+	});
 
 	function updateUrl() {
 		var params = [];

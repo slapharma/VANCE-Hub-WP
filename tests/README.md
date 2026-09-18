@@ -38,13 +38,19 @@ cd tests && php category-hero.test.php
 cd tests && php hero-mobile.test.php
 ```
 
-All seven exit non-zero on failure. As of 2026-09-01 the first six were
-341 / 147 / 22 / 182 / 260 / 87 checks; `hero-mobile.test.php` is new and adds
-80. **`hero-render.test.php` and `hero-customizer.test.php` currently have
-failing checks that predate this change** — a red run of either of those two
-is not evidence this change broke something; treat it as separate, pre-existing
-work. The other five (`reveal.test.js`, `legal-hero.test.php`, `gi-hero.test.php`,
-`category-hero.test.php`, `hero-mobile.test.php`) are green.
+```bash
+cd tests && php recipe-labels.test.php
+```
+
+All eight exit non-zero on failure. As of 2026-09-01 the first six were
+341 / 147 / 22 / 182 / 260 / 87 checks; `hero-mobile.test.php` added 80.
+`recipe-labels.test.php` is new and adds 48. **`hero-render.test.php` and
+`hero-customizer.test.php` currently have failing checks that predate this
+change** — a red run of either of those two is not evidence this change broke
+something; treat it as separate, pre-existing work. The other six
+(`reveal.test.js`, `legal-hero.test.php`, `gi-hero.test.php`,
+`category-hero.test.php`, `hero-mobile.test.php`, `recipe-labels.test.php`) are
+green.
 
 ### Never write an image filename in a test — the WebP lesson
 
@@ -92,6 +98,7 @@ mutant proves they can fail. Every line must read `went RED`.
 | `category-hero.test.php` | `inc/category-hero.php` — the category-archive heroes: the live facts band and the cells it drops rather than showing a zero, sub-category inheritance (photograph, card and family eyebrow from the parent) and the breadcrumb, term-name decoding, photograph resolution and its motif fallback, both title-override keys, and the three archive templates read as **source** — see the caveat below |
 | `legal-hero.test.php` | `inc/legal-hero.php` — the five policy-document heroes: copy carried across from the dark heroes verbatim, the band of sibling documents, the no-photography constraint, slug resolution and its path fallback, the inline stylesheet, and the five templates **included and run** so a commented-out call cannot pass |
 | `hero-mobile.test.php` | `inc/hero-mobile.php` — the phone-only "show on mobile" band/card switches and the band's short-label helper (`vance_hero_band_value()`), run against every hero family **twice**: once with `hero-mobile.php` loaded, pinning the "loaded" path, and once without, since the other five suites here never require it and so pin the "not loaded" fallback. Also covers the shared Policy Document Heroes Customizer section the switches added, `vance_subcat_overflow_cap()` lifted from `template-parts/subcategory-grouped-archive.php`, and the category promo block's default-off "Show on mobile" visibility class |
+| `recipe-labels.test.php` | `inc/recipe-frontend.php` — the recipe label model: `vance_recipe_label_model()`'s 8 core / 6 descriptor slugs and that the two layers never overlap; `vance_recipe_labels_for()` splitting a post's terms by layer in MODEL order regardless of assignment order, dropping terms outside the model, and tolerating `get_the_terms()` returning `false` or a `WP_Error`; and `vance_recipe_planner_data()`'s `tags` (core then descriptor slugs) versus `chips` (descriptor display labels only) split. Also checks `tools/recipe-labels.json` (90 recipes, unique ids, every label slug in the model, per-label counts against the handover's expected totals) and `tools/apply-recipe-labels.php`'s `$vance_labels` list against the model — parsed as text, never `require()`'d, since the script exits immediately without `WP_CLI` defined |
 
 ## Not harnesses — the hero photographs
 

@@ -15,8 +15,10 @@ while ( have_posts() ) :
 
 	$cat_terms = get_the_terms( $post_id, 'vance_recipe_cat' );
 	$category  = ( $cat_terms && ! is_wp_error( $cat_terms ) ) ? $cat_terms[0] : null;
-	$tag_terms = get_the_terms( $post_id, 'vance_recipe_tag' );
-	$tags      = ( $tag_terms && ! is_wp_error( $tag_terms ) ) ? $tag_terms : array();
+	// Core labels first, then descriptors; terms outside the label model are
+	// not shown — see vance_recipe_label_model().
+	$labels = vance_recipe_labels_for( $post_id );
+	$tags   = array_merge( array_values( $labels['core'] ), array_values( $labels['descriptors'] ) );
 
 	$servings = get_post_meta( $post_id, '_vance_recipe_servings', true );
 	$prep     = get_post_meta( $post_id, '_vance_recipe_prep_min', true );
@@ -48,7 +50,7 @@ while ( have_posts() ) :
 			<?php if ( $tags ) : ?>
 				<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;">
 					<?php foreach ( $tags as $tag ) : ?>
-						<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:12px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill, 999px);"><?php echo esc_html( $tag->name ); ?></span>
+						<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:12px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill, 999px);"><?php echo esc_html( $tag ); ?></span>
 					<?php endforeach; ?>
 				</div>
 			<?php endif; ?>
