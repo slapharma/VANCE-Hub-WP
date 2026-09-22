@@ -88,8 +88,8 @@ while ( have_posts() ) :
 		// body section below isn't display:flex, so it never hit this.
 		// width:100% forces the flex item to fill the main axis, leaving no
 		// space for the auto-margins to redistribute. ?>
-		<div class="container" style="max-width:1100px;width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;">
-			<div style="flex:1;min-width:260px;">
+		<div class="container vance-discount-hero-row" style="max-width:1100px;width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;">
+			<div class="vance-discount-hero-copy" style="flex:1;min-width:260px;">
 				<?php if ( $row['category'] ) : ?>
 					<?php // The correct action for a category pill: back to the
 					// directory, pre-filtered to this scheme's own category. ?>
@@ -122,7 +122,7 @@ while ( have_posts() ) :
 					? 'width:100%;height:100%;object-fit:contain;'
 					: 'max-width:100%;max-height:100%;object-fit:contain;';
 				?>
-				<div style="flex:0 0 auto;position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
+				<div class="vance-discount-hero-logo" style="flex:0 0 auto;position:relative;width:275px;height:188px;background:<?php echo esc_attr( $hero_image['bg'] ); ?>;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;box-shadow:0 8px 20px -8px rgba(4,80,78,0.25);">
 					<img src="<?php echo esc_url( $hero_image['url'] ); ?>" alt="<?php echo esc_attr( $hero_image['alt'] ); ?>" style="<?php echo esc_attr( $img_style ); ?>">
 				</div>
 			<?php endif; ?>

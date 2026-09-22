@@ -344,9 +344,16 @@ function vance_render_discount_card( $post_id_or_row ) {
 		? implode( ', ', $row['region_names'] ) . ' ' . __( 'only', 'vance-health-hub' )
 		: '';
 
+	// Same small per-scheme logo the single page's hero already uses
+	// (vance_discount_hero_image(), inc/discount-data.php) — reused here at
+	// card size rather than a second image source. Returns null for a
+	// scheme with no matching asset, so this degrades to no logo exactly
+	// like the hero does.
+	$vance_dc_logo = function_exists( 'vance_discount_hero_image' ) ? vance_discount_hero_image( $row['slug'] ) : null;
+
 	ob_start();
 	?>
-	<div class="vance-discount-card"
+	<div class="vance-discount-card<?php echo $vance_dc_logo ? ' vance-discount-card--has-logo' : ''; ?>"
 		data-cat="<?php echo esc_attr( $row['category'] ? $row['category']['slug'] : '' ); ?>"
 		data-region="<?php echo esc_attr( implode( ' ', $row['regions'] ) ); ?>"
 		data-search="<?php echo esc_attr( strtolower( $row['title'] . ' ' . $row['provider'] ) ); ?>">
@@ -364,6 +371,11 @@ function vance_render_discount_card( $post_id_or_row ) {
 		// lobby cards keep it off; the single page and the dashboard's saved
 		// list still show it via their own vance_discount_tier_badge() calls,
 		// unaffected since neither goes through this function). ?>
+		<?php if ( $vance_dc_logo ) : ?>
+			<span class="vance-discount-card__logo" style="background: <?php echo esc_attr( $vance_dc_logo['bg'] ); ?>;">
+				<img src="<?php echo esc_url( $vance_dc_logo['url'] ); ?>" alt="" loading="lazy">
+			</span>
+		<?php endif; ?>
 		<?php if ( $row['provider'] ) : ?>
 			<span class="vance-discount-card__provider"><?php echo esc_html( $row['provider'] ); ?></span>
 		<?php endif; ?>
@@ -373,9 +385,6 @@ function vance_render_discount_card( $post_id_or_row ) {
 		<?php endif; ?>
 		<?php if ( $row['cost'] ) : ?>
 			<p class="vance-discount-card__cost"><?php echo esc_html( $row['cost'] ); ?></p>
-		<?php endif; ?>
-		<?php if ( $row['upcoming_change'] ) : ?>
-			<p class="vance-discount-card__upcoming"><?php echo esc_html( $row['upcoming_change'] ); ?></p>
 		<?php endif; ?>
 		<?php // Region note moved to the bottom of the card (2026-09-04) — with
 		// the tier badge gone, it no longer needs a top row of its own. ?>

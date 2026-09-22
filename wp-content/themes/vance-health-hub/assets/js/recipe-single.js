@@ -64,6 +64,36 @@
 	}
 
 	// ======================================================================
+	// 1b. Ingredients expand/collapse (mobile density pass)
+	// ======================================================================
+
+	// Progressive enhancement: the CSS only hides #vance-rs-ingredients-body
+	// once <body> carries this class (see the <style> block in
+	// single-vance_recipe.php), so a visitor with JS disabled -- or before
+	// this line runs -- always sees the full ingredient list, same pattern
+	// as the footer accordion elsewhere on the site.
+	(function () {
+		var toggle = document.getElementById('vance-rs-ingredients-toggle');
+		var body   = document.getElementById('vance-rs-ingredients-body');
+		var label  = toggle ? toggle.querySelector('.vance-rs-ingredients-toggle-label') : null;
+		if (!toggle || !body) { return; }
+
+		document.body.classList.add('vance-rs-js');
+		// Starts collapsed on mobile; the toggle's initial aria-expanded="true"
+		// in the markup is the no-JS/desktop state, corrected here now that
+		// the collapse is actually in effect.
+		toggle.setAttribute('aria-expanded', 'false');
+		if (label) { label.textContent = 'Expand'; }
+
+		toggle.addEventListener('click', function () {
+			var willOpen = toggle.getAttribute('aria-expanded') !== 'true';
+			toggle.setAttribute('aria-expanded', String(willOpen));
+			body.classList.toggle('is-open', willOpen);
+			if (label) { label.textContent = willOpen ? 'Collapse' : 'Expand'; }
+		});
+	})();
+
+	// ======================================================================
 	// 2. "Add to meal plan" quick-add modal
 	// ======================================================================
 
