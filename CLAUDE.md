@@ -284,6 +284,63 @@ Three things to know before changing it:
 
 ---
 
+## Recipe labels
+
+On 2026-09-18 the 90 recipes' tags were rebuilt from Daisy Gershon's spreadsheet
+(`Recipe-Tag-Descriptor-Chart-Daisy Edit.xlsx`, Google Drive id
+`1oi3jzOYtc2CcWFYEjOcV7f2gsHsey5dq`), which is the source of truth for which
+recipe carries which label — not the theme, not the database.
+
+One taxonomy, `vance_recipe_tag`, 14 terms, in two layers. The split lives only
+in `vance_recipe_label_model()` in `inc/recipe-frontend.php`; a term whose slug
+isn't in that registry is never shown, whatever it's assigned to in the database.
+
+- **8 core** — the only labels offered as hub filters: Gluten Free, Dairy Free,
+  Vegetarian, Vegan-Friendly, Low Fibre, High Fibre, High Protein, Low FODMAP.
+- **6 descriptors** — chips on a recipe card, not filters: No onion, No garlic,
+  Easy to digest, Nutrient dense, Refined sugar free, Omega-3 Rich.
+
+Three terms are assigned but never rendered on purpose: the condition terms
+`ibd` (79), `ibs` (11), `ulcerative-colitis` (9). Whether readers should be able
+to filter by condition is Daisy's open decision, not a bug. Six retired terms
+(`garlic-free`, `onion-free`, `oat-free`, `mediterranean-style`,
+`anti-inflammatory-breakfast-smoothies`, `5-ingredient-meals-for-busy-days`) are
+left in the taxonomy unassigned (count 0) rather than deleted.
+
+Live counts after the 2026-09-18 apply: Gluten Free 70, Dairy Free 57,
+Vegetarian 53, Vegan-Friendly 26, Low Fibre 8, High Fibre 59, High Protein 52,
+Low FODMAP 14, No onion 67, No garlic 62, Easy to digest 17, Nutrient dense 63,
+Refined sugar free 89, Omega-3 Rich 23.
+
+Rules from Daisy's handover, worth knowing before touching an assignment:
+labels describe the recipe as written, not an aspiration; don't add Low FODMAP
+to any recipe that doesn't already carry it (14 recipes are on it, pending
+dietitian sign-off against Monash); Low Fibre / High Fibre / High Protein are
+formulas run against the nutrition meta, so editing a recipe's nutrition means
+re-checking it against the sheet, not just trusting the existing term; five
+recipes (3015, 4315, 4321, 4325, 4298) have a queried fibre figure and carry no
+fibre label until it's recalculated.
+
+**Re-applying after the spreadsheet changes:** regenerate `tools/recipe-labels.json`
+from the sheet, copy it and `tools/apply-recipe-labels.php` to the server, then:
+
+```bash
+wp eval-file apply-recipe-labels.php <labels.json> <backup-dryrun.json>        # dry run
+wp eval-file apply-recipe-labels.php <labels.json> <backup.json> apply     # write; new backup path, it refuses to overwrite one
+```
+
+Arguments are positional on purpose — `wp eval-file` swallows `--flags`, so a
+`--dry-run` flag would never reach the script. It checks all 90 ids and titles
+and the expected per-label counts against the database before writing anything,
+backs up the previous assignments first, and after writing, verifies from the
+database rather than from what it just sent. It exits non-zero on any mismatch.
+The expected counts are hard-coded in the script itself and in
+`tests/recipe-labels.test.php` — both must be updated together with the JSON
+whenever the sheet changes, or the next apply will refuse to run. The pre-change
+backup of the old assignments is `tools/recipe-tags-backup-2026-09-18.json`.
+
+---
+
 ## Deploy workflow
 
 **Use `git archive`, not `tar` on the working tree.** Run it from anywhere in the
@@ -397,6 +454,9 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 - **Menu arrows render as chevrons**, not tofu boxes — Dashicons is dequeued for
   visitors and the arrows are drawn in CSS. Three visible indicators on desktop.
 - **Article DOIs are links.** `wp vance citations` should report 595 ok and exit 0.
+- **Recipe hub's Recipe Tags dropdown lists exactly the 8 core labels** (no
+  descriptors, no condition terms). Cards show descriptor chips underneath.
+  `?tags=low-fodmap` shows 14 of the 90 recipes.
 - **Articles show their condition chips** under the copy (`va-article-conditions`)
   and carry `about` → `MedicalCondition` in the schema. 143 of 149 do; six general
   pieces deliberately show nothing.

@@ -12,6 +12,65 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * The recipe label model: 14 vance_recipe_tag terms in two layers (Daisy
+ * Gershon's tagging review, 2026-09-18).
+ *
+ *  - `core`        the 8 labels offered as filters on the recipe hub.
+ *  - `descriptors` the 6 labels shown as chips on a recipe card. Not filters.
+ *
+ * Both layers live in the one taxonomy; this registry is what tells them
+ * apart, and it is the only place that does. A vance_recipe_tag term whose slug
+ * is not listed here (the retired vocabulary, the dormant IBD / IBS /
+ * Ulcerative Colitis condition terms) is never shown anywhere on the frontend.
+ * Array order is display order.
+ *
+ * Which recipe carries which label is decided in the spreadsheet, not here —
+ * see tools/apply-recipe-labels.php.
+ *
+ * @return array{core: array<string,string>, descriptors: array<string,string>} slug => label.
+ */
+function vance_recipe_label_model() {
+	return array(
+		'core'        => array(
+			'gluten-free'    => __( 'Gluten Free', 'vance-health-hub' ),
+			'dairy-free'     => __( 'Dairy Free', 'vance-health-hub' ),
+			'vegetarian'     => __( 'Vegetarian', 'vance-health-hub' ),
+			'vegan-friendly' => __( 'Vegan-Friendly', 'vance-health-hub' ),
+			'low-fibre'      => __( 'Low Fibre', 'vance-health-hub' ),
+			'high-fibre'     => __( 'High Fibre', 'vance-health-hub' ),
+			'high-protein'   => __( 'High Protein', 'vance-health-hub' ),
+			'low-fodmap'     => __( 'Low FODMAP', 'vance-health-hub' ),
+		),
+		'descriptors' => array(
+			'no-onion'           => __( 'No onion', 'vance-health-hub' ),
+			'no-garlic'          => __( 'No garlic', 'vance-health-hub' ),
+			'easy-to-digest'     => __( 'Easy to digest', 'vance-health-hub' ),
+			'nutrient-dense'     => __( 'Nutrient dense', 'vance-health-hub' ),
+			'refined-sugar-free' => __( 'Refined sugar free', 'vance-health-hub' ),
+			'omega-3-rich'       => __( 'Omega-3 Rich', 'vance-health-hub' ),
+		),
+	);
+}
+
+/**
+ * A recipe's labels, split by layer and in model order. Terms outside the
+ * model are dropped — see vance_recipe_label_model().
+ *
+ * @param int $post_id
+ * @return array{core: array<string,string>, descriptors: array<string,string>} slug => label.
+ */
+function vance_recipe_labels_for( $post_id ) {
+	$terms = get_the_terms( $post_id, 'vance_recipe_tag' );
+	$slugs = ( $terms && ! is_wp_error( $terms ) ) ? array_flip( wp_list_pluck( $terms, 'slug' ) ) : array();
+
+	$out = array();
+	foreach ( vance_recipe_label_model() as $layer => $labels ) {
+		$out[ $layer ] = array_intersect_key( $labels, $slugs );
+	}
+	return $out;
+}
+
+/**
  * Flat recipe list for the hub's card grid and the planner's picker —
  * everything both need, in one shape, so the server-rendered grid and the
  * client-side picker/search are describing the same data.
@@ -23,7 +82,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * never has the upload date in its markup or its localized JS config to
  * find, rather than having it present and merely hidden by CSS.
  *
- * @return array<int, array{slug:string, name:string, category:string, tags:string[], image:string, url:string, calories:int, minutes:int, servings:int, dateUploaded?:string, dateTimestamp?:int}>
+ * @return array<int, array{slug:string, name:string, category:string, tags:string[], chips:string[], image:string, url:string, calories:int, minutes:int, servings:int, dateUploaded?:string, dateTimestamp?:int}>
  */
 function vance_recipe_planner_data() {
 	$data      = vance_recipe_data();
@@ -31,13 +90,17 @@ function vance_recipe_planner_data() {
 	$show_date = current_user_can( 'manage_options' );
 
 	foreach ( vance_recipe_catalogue() as $slug => $meta ) {
-		$facts     = isset( $data[ $slug ] ) ? $data[ $slug ] : array();
-		$tag_terms = get_the_terms( $meta['id'], 'vance_recipe_tag' );
-		$row       = array(
+		$facts  = isset( $data[ $slug ] ) ? $data[ $slug ] : array();
+		$labels = vance_recipe_labels_for( $meta['id'] );
+		$row    = array(
 			'slug'     => $slug,
 			'name'     => $meta['name'],
 			'category' => $meta['category'],
-			'tags'     => ( $tag_terms && ! is_wp_error( $tag_terms ) ) ? wp_list_pluck( $tag_terms, 'slug' ) : array(),
+			// Both layers: the hub filters on the core slugs, and its search
+			// box matches either, so "no onion" finds what the chip promises.
+			'tags'     => array_merge( array_keys( $labels['core'] ), array_keys( $labels['descriptors'] ) ),
+			// Display labels for the card's chips, not slugs.
+			'chips'    => array_values( $labels['descriptors'] ),
 			'image'    => vance_recipe_image_url( $slug ),
 			'url'      => vance_recipe_url( $slug ),
 			'calories' => isset( $facts['nutrition']['calories'] ) ? (int) $facts['nutrition']['calories'] : 0,
