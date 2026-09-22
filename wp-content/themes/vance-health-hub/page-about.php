@@ -1067,10 +1067,12 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
     .vabout-trustbadges { flex-direction: column; align-items: flex-start; }
     .vabout-stats { padding: 32px 0 30px; }
     .vabout-stats-overlap { margin-top: 0; padding-top: 32px; }
-    .vabout-stats-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
-    .vabout-stat { padding: 26px 16px; }
-    .vabout-stat-num { font-size: 1.6rem; }
-    .vabout-stat-suffix { font-size: 1rem; }
+    /* One row, all three stats -- not 2-up (which strands the third stat
+       alone on its own row). */
+    .vabout-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .vabout-stat { padding: 20px 12px; }
+    .vabout-stat-num { font-size: 1.4rem; }
+    .vabout-stat-suffix { font-size: 0.9rem; }
     .vabout-story, .vabout-trust,
     .vabout-testimonials, .vabout-digital { padding: 32px 0; }
     .vabout-mission { padding: 36px 0; }
@@ -1085,16 +1087,15 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 }
 @media (max-width: 480px) {
     .vabout-pillars { grid-template-columns: 1fr; }
-    /* Density pass: stay 2-up rather than collapsing to a full stack -- this
-       is the width most phones actually land on, so a 1-column stack was the
-       tall/uncompact case in practice, not just an edge case. */
-    .vabout-stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .vabout-stat { padding: 16px 10px; }
-    .vabout-stat-ico { width: 40px; height: 40px; margin: 0 auto 10px; }
-    .vabout-stat-ico svg { width: 18px; height: 18px; }
-    .vabout-stat-num { font-size: 1.2rem; }
-    .vabout-stat-suffix { font-size: 0.85rem; }
-    .vabout-stat-label { font-size: 0.76rem; margin: 8px 0 12px; }
+    /* One row, all three stats, down to the smallest phones -- not 2-up
+       (which strands the third stat alone on its own row). */
+    .vabout-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .vabout-stat { padding: 14px 6px; }
+    .vabout-stat-ico { width: 32px; height: 32px; margin: 0 auto 8px; }
+    .vabout-stat-ico svg { width: 15px; height: 15px; }
+    .vabout-stat-num { font-size: 1rem; }
+    .vabout-stat-suffix { font-size: 0.7rem; }
+    .vabout-stat-label { font-size: 0.62rem; line-height: 1.2; margin: 6px 0 10px; }
 }
 
 /* ====================== REDUCED MOTION ====================== */

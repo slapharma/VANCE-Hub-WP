@@ -92,14 +92,14 @@ while ( have_posts() ) :
 						</ol>
 					<?php endif; ?>
 
-					<div style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px;">
-						<a id="vance-rs-addplan-trigger" href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);text-decoration:none;">
+					<div class="vance-rs-actions" style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px;">
+						<a id="vance-rs-addplan-trigger" href="<?php echo esc_url( home_url( '/gastro-meal-planner/?add=' . get_post_field( 'post_name', $post_id ) . '#planner' ) ); ?>" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--primary-color);color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);text-decoration:none;">
 							Add to meal plan
 						</a>
-						<a id="vance-rs-viewplan" href="<?php echo esc_url( home_url( '/gastro-meal-planner/#planner' ) ); ?>" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);text-decoration:none;">
+						<a id="vance-rs-viewplan" href="<?php echo esc_url( home_url( '/gastro-meal-planner/#planner' ) ); ?>" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);text-decoration:none;">
 							View plan
 						</a>
-						<button type="button" id="vance-rs-pdf" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);cursor:pointer;">
+						<button type="button" id="vance-rs-pdf" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--primary-color);font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);cursor:pointer;">
 							Download PDF
 						</button>
 					</div>
@@ -120,38 +120,53 @@ while ( have_posts() ) :
 					</a>
 
 					<?php if ( $ingredients ) : ?>
-						<div style="margin-top:24px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:20px;">
+						<div class="vance-rs-ingredients" style="margin-top:24px;background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-surface, 14px);padding:20px;">
 							<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
 								<h2 style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:#0A1929;margin:0;">Ingredients</h2>
 							</div>
-							<?php if ( '' !== $servings && (int) $servings > 0 ) : ?>
-								<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:var(--radius-surface, 14px);padding:6px 8px;margin-bottom:12px;">
-									<span style="font-size:13px;font-weight:600;color:#475569;">Servings</span>
-									<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
-									<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:var(--radius-control, 6px);padding:4px 2px;font-weight:700;">
-									<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
-								</div>
-							<?php endif; ?>
-							<p style="font-size:12.5px;color:#94a3b8;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
-							<?php foreach ( $ingredients as $section ) :
-								$section_name = isset( $section['section'] ) ? trim( (string) $section['section'] ) : '';
-								$items        = isset( $section['items'] ) ? (array) $section['items'] : array();
-								if ( ! $items ) {
-									continue;
-								}
-								?>
-								<?php if ( $section_name ) : ?>
-									<h3 style="font-size:14px;font-weight:700;color:var(--primary-color);margin:16px 0 8px;"><?php echo esc_html( $section_name ); ?></h3>
+							<?php
+							// Servings + the expand toggle share one row on mobile (see
+							// .vance-rs-ingredients-controls in the <style> block below) --
+							// the toggle only actually collapses anything once JS adds
+							// .vance-rs-js, so a no-JS visitor always sees the full list
+							// (same progressive-enhancement pattern as the footer accordion).
+							?>
+							<div class="vance-rs-ingredients-controls" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+								<?php if ( '' !== $servings && (int) $servings > 0 ) : ?>
+									<div style="display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:var(--radius-surface, 14px);padding:6px 8px;">
+										<span style="font-size:13px;font-weight:600;color:#475569;">Servings</span>
+										<button type="button" id="vance-rs-servings-minus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&minus;</button>
+										<input type="number" id="vance-rs-servings" min="1" max="50" value="<?php echo esc_attr( $servings ); ?>" style="width:44px;text-align:center;border:1px solid #E2E8F0;border-radius:var(--radius-control, 6px);padding:4px 2px;font-weight:700;">
+										<button type="button" id="vance-rs-servings-plus" style="width:26px;height:26px;border:1px solid #E2E8F0;background:#fff;border-radius:var(--radius-control, 6px);cursor:pointer;font-weight:700;color:var(--primary-color);">&plus;</button>
+									</div>
 								<?php endif; ?>
-								<ul style="list-style:none;margin:0 0 8px;padding:0;">
-									<?php foreach ( $items as $item ) : ?>
-										<li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#334155;">
-											<span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--primary-color);margin-top:7px;"></span>
-											<span data-ingredient-line><?php echo esc_html( $item ); ?></span>
-										</li>
-									<?php endforeach; ?>
-								</ul>
-							<?php endforeach; ?>
+								<button type="button" id="vance-rs-ingredients-toggle" class="vance-rs-ingredients-toggle" aria-expanded="true" aria-controls="vance-rs-ingredients-body" style="display:none;align-items:center;justify-content:center;gap:6px;margin-left:auto;background:#fff;border:1px solid var(--primary-color);color:var(--primary-color);font-weight:700;font-size:13px;padding:8px 14px;border-radius:var(--radius-control, 6px);cursor:pointer;">
+									<span class="vance-rs-ingredients-toggle-label">Collapse</span>
+									<span class="vance-rs-ingredients-toggle-chevron" aria-hidden="true"></span>
+								</button>
+							</div>
+							<div id="vance-rs-ingredients-body">
+								<p style="font-size:12.5px;color:#94a3b8;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
+								<?php foreach ( $ingredients as $section ) :
+									$section_name = isset( $section['section'] ) ? trim( (string) $section['section'] ) : '';
+									$items        = isset( $section['items'] ) ? (array) $section['items'] : array();
+									if ( ! $items ) {
+										continue;
+									}
+									?>
+									<?php if ( $section_name ) : ?>
+										<h3 style="font-size:14px;font-weight:700;color:var(--primary-color);margin:16px 0 8px;"><?php echo esc_html( $section_name ); ?></h3>
+									<?php endif; ?>
+									<ul style="list-style:none;margin:0 0 8px;padding:0;">
+										<?php foreach ( $items as $item ) : ?>
+											<li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#334155;">
+												<span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--primary-color);margin-top:7px;"></span>
+												<span data-ingredient-line><?php echo esc_html( $item ); ?></span>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								<?php endforeach; ?>
+							</div>
 						</div>
 					<?php endif; ?>
 				</aside>
@@ -261,6 +276,59 @@ while ( have_posts() ) :
 		   since order only reorders direct grid children, not anything
 		   nested inside them. */
 		.vance-rs-layout > aside { order: -1; }
+
+		/* Nutrition panel: compact to at most 2 rows of macro cells. 3
+		   columns rather than the desktop 2 -- 4 macros is 2 rows either
+		   way, but the 5th (EPA, shown only when a recipe has it) pushes a
+		   2-column grid to 3 rows; 3 columns holds 4 or 5 items in 2 rows.
+		   minmax(0,1fr) so a track can't refuse to shrink below its cell's
+		   min-content width (the same guard needed on similar mobile grids
+		   elsewhere in this pass). */
+		.vance-rs-nutrition { padding: 16px !important; }
+		.vance-rs-nutrition-kcal { padding: 8px 0 12px !important; margin-bottom: 12px !important; }
+		.vance-rs-nutrition-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+		.vance-rs-nutrition-cell { padding: 8px 6px !important; }
+
+		/* Ingredients: servings + the expand toggle share one row, and the
+		   list itself collapses behind that toggle -- but only once JS has
+		   added .vance-rs-js to <body> (see the script below). A visitor
+		   with JS disabled, or before it runs, keeps seeing the full list
+		   open, same progressive-enhancement pattern as the footer
+		   accordion elsewhere on this site. */
+		.vance-rs-ingredients { padding: 14px !important; }
+		/* The servings stepper (fixed-width: two 26px buttons + a 44px input,
+		   ~198px intrinsic minimum) and the toggle button together can exceed
+		   a 320-375px card interior with no room to shrink either child --
+		   wrap lets the toggle drop to its own line there instead of
+		   overflowing/overlapping the stepper. */
+		.vance-rs-ingredients-controls { flex-wrap: wrap !important; row-gap: 8px !important; }
+		.vance-rs-ingredients-toggle { display: inline-flex !important; }
+		body.vance-rs-js #vance-rs-ingredients-body { display: none; }
+		body.vance-rs-js #vance-rs-ingredients-body.is-open { display: block; }
+		.vance-rs-ingredients-toggle-chevron { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 0.2s ease; }
+		.vance-rs-ingredients-toggle[aria-expanded="true"] .vance-rs-ingredients-toggle-chevron { transform: rotate(-135deg); }
+
+		/* Action row: always one line, each button sharing the row equally
+		   rather than wrapping -- same technique as the homepage hero CTAs
+		   elsewhere in this pass. */
+		.vance-rs-actions { flex-wrap: nowrap !important; gap: 8px !important; }
+		.vance-rs-actions > a,
+		.vance-rs-actions > button {
+			flex: 1 1 0;
+			min-width: 0;
+			padding: 12px 6px !important;
+			font-size: 11.5px !important;
+			text-align: center;
+			/* Not nowrap -- "Add to meal plan" doesn't fit one line at 1/3 of a
+			   phone-width row even at this font size. Letting it wrap to a
+			   second line (same choice already made for the homepage hero
+			   CTAs) keeps the row itself to one line without clipping text. */
+			white-space: normal;
+			line-height: 1.2;
+		}
+	}
+	@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+		.vance-rs-ingredients-toggle-chevron { transition: none; }
 	}
 	</style>
 

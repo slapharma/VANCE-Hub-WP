@@ -107,7 +107,38 @@
 .vance-discount-card__title { font-size: 18px; font-weight: 700; color: var(--secondary-color, #0A1929); line-height: 1.35; margin: 0 0 10px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: calc(1.35em * 2); }
 .vance-discount-card__value { font-size: 14px; font-weight: 600; color: var(--text-main, #1F2937); margin: 0 0 6px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.6; min-height: calc(1.6em * 2); }
 .vance-discount-card__cost { font-size: 13px; line-height: 1.6; color: var(--text-light, #6B7280); margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vance-discount-card__upcoming { font-size: 12px; color: #92400E; background: #FFFBEB; border-radius: var(--radius-control); padding: 6px 10px; margin: 0 0 12px; }
+/* Small provider logo, top-right corner of the card -- reuses the same
+   asset/lookup the single scheme page's hero uses (vance_discount_hero_image()
+   in inc/discount-data.php), just at badge size instead of the hero's
+   275x188 box. Absolutely positioned so it doesn't disturb the existing
+   provider/title/value stack below it. */
+.vance-discount-card__logo {
+	position: absolute;
+	top: 20px;
+	right: 20px;
+	z-index: 2;
+	width: 36px;
+	height: 36px;
+	border-radius: var(--radius-control, 6px);
+	border: 1px solid #e2e8f0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 5px;
+	box-sizing: border-box;
+	/* Purely decorative, no destination of its own -- without this, sitting
+	   above .vance-discount-card__cover-link (z-index:1) would make this
+	   corner of the card a dead zone where the whole-card click stops
+	   working. */
+	pointer-events: none;
+}
+.vance-discount-card__logo img { width: 100%; height: 100%; object-fit: contain; }
+/* Keeps the provider/title text clear of the badge above -- only applied
+   when a logo actually rendered (see the --has-logo modifier in
+   vance_render_discount_card()), so a scheme with no matching asset keeps
+   the full-width text it had before. */
+.vance-discount-card--has-logo .vance-discount-card__provider,
+.vance-discount-card--has-logo .vance-discount-card__title { padding-right: 48px; }
 .vance-discount-card__actions,
 .vance-discount-single-actions { position: relative; z-index: 2; display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: 4px 8px; }
 .vance-discount-card__actions { margin-top: auto; padding-top: 12px; }
@@ -331,6 +362,9 @@
 	   ~190px of min-content between them and overflow at that width, so they
 	   stack here instead; everything else shrinks to fit the narrower card. */
 	.vance-discount-card { padding: 16px 14px 14px; }
+	.vance-discount-card__logo { top: 12px; right: 12px; width: 26px; height: 26px; padding: 3px; }
+	.vance-discount-card--has-logo .vance-discount-card__provider,
+	.vance-discount-card--has-logo .vance-discount-card__title { padding-right: 32px; }
 	.vance-discount-card__title { font-size: 14px; margin-bottom: 6px; min-height: calc(1.3em * 2); line-height: 1.3; }
 	.vance-discount-card__value { font-size: 12px; margin-bottom: 4px; min-height: calc(1.4em * 2); line-height: 1.4; }
 	.vance-discount-card__cost { font-size: 11px; }
@@ -353,6 +387,23 @@
    columns combined (found live 2026-09-04 at 375px). ------------------------ */
 @media (max-width: 767.98px) {
 	.vance-discount-single-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ---- Single scheme page: hero title + logo stay on one row -------------
+   The hero row is flex-wrap:wrap with no breakpoint of its own (see the
+   doc comment in single-vance_discount.php) -- the logo box's fixed 275px
+   width plus the text block's 260px min-width together exceed a phone
+   viewport, so it wraps there by default. Forcing nowrap and shrinking both
+   sides keeps them side by side down to the smallest phones instead. */
+@media (max-width: 767.98px) {
+	.vance-discount-hero-row { flex-wrap: nowrap !important; align-items: flex-start !important; gap: 14px !important; }
+	.vance-discount-hero-copy { min-width: 0 !important; }
+	.vance-discount-hero-copy .vhh-hero-spotlight__title { font-size: 20px !important; margin-bottom: 4px !important; }
+	.vance-discount-hero-logo {
+		width: 64px !important;
+		height: 64px !important;
+		padding: 8px !important;
+	}
 }
 
 /* ---- "Suggest a discount" (inc/discount-suggest.php) --------------------
