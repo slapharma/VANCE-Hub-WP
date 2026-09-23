@@ -121,7 +121,7 @@
 
 ### To Customize Join the Community Block:
 1. Go to WordPress Admin → Appearance → Customize
-2. Navigate to "SLA Theme Settings" → "Join the Community Block"
+2. Navigate to "Home · Blocks" → "Join block"
 3. Edit any of the text fields
 4. Click "Publish" to save changes
 

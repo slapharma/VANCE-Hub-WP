@@ -13,7 +13,8 @@
  *
  * Hero tag/title/description are read through vance_get_theme_mod() with
  * the defaults below as fallback, editable at Appearance → Customize →
- * Page - User Guide → Hero Section (controls registered in
+ * Pages · Contact, Guide, Search, 404 → User Guide: Hero (classic) + design
+ * switch (controls registered in
  * customizer-pages.php). Everything else on the page (steps, journey,
  * tools, dashboard tabs) is intentionally not theme-mod-driven — it mirrors
  * real product data (inc/dashboard-features.php, the live tool list) and
@@ -199,8 +200,9 @@ $tools = array(
 	?>
 	<?php
 	/*
-	 * Which hero. Defaults to 'classic' (Appearance > Customize > Page - User
-	 * Guide > Hero Section > "User Guide hero design"), so this page renders
+	 * Which hero. Defaults to 'classic' (Appearance > Customize > Pages ·
+	 * Contact, Guide, Search, 404 > User Guide: Hero (classic) + design switch >
+	 * "User Guide hero design"), so this page renders
 	 * exactly what it always has until an admin switches it.
 	 *
 	 * The spotlight hero keeps the PDF as its second button, including the

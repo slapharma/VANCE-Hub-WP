@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Where suggestions are emailed.
  *
- * Customizer → Page - IBD Discounts → Suggest a Discount, falling back to the
+ * Customizer → Section · Benefits & Access → Suggest a discount, falling back to the
  * site admin email so the feature works before anyone sets it.
  *
  * @return string

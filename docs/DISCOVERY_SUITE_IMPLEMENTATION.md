@@ -39,7 +39,7 @@ Complete overhaul of the Content Discovery Suite to use a tag-based system with 
 
 ### Customizer Location
 All settings accessible via:
-**Appearance → Customize → SLA Theme Settings**
+**Appearance → Customize → Section · Discovery Engine**
 - Discovery Suite: Reading Levels
 - Discovery Suite: Content Types
 - Discovery Suite: Longevity Paths
@@ -206,7 +206,7 @@ To use the Discovery Suite, create tags with the following prefixes:
 
 ### Configuring Display
 1. Go to **Appearance → Customize**
-2. Navigate to **SLA Theme Settings**
+2. Navigate to **Section · Discovery Engine**
 3. Configure each Discovery Suite section:
    - Enable desired tags/categories
    - Set custom display text

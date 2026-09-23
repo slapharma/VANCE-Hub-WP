@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard features — Appearance → Customize → Member Dashboard.
+ * Dashboard features — Appearance → Customize → Members · Dashboard.
  *
  * Per feature: show or hide it, rename its menu item, and move it between the
  * sidebar's sections. Plus editable headings for the sections themselves.

@@ -4,8 +4,9 @@
  *
  * Shares the AskAi visual shell: tall navy hero (badge → H1 → subtitle) with
  * the quiz card overlapping by -40px, brand-teal border. Customizable via
- * Customize → Healthcare Quiz panel (title / subtitle / badge / hero bg /
- * overlay opacity).
+ * Customize → Section · Education & Survey → Gastro Health Survey: Hero
+ * (classic) + design switch (title / subtitle / badge / hero bg / overlay
+ * opacity).
  */
 
 // Get saved quiz answers for logged-in users to pre-populate.
@@ -359,8 +360,9 @@ get_header();
 <?php
 /*
  * Which hero. Defaults to 'classic', so this file renders exactly what it
- * always has until an admin sets Appearance > Customize > Page - Gastro Health
- * Survey > Hero Section > "Survey hero design" to Spotlight.
+ * always has until an admin sets Appearance > Customize > Section · Education
+ * & Survey > Gastro Health Survey: Hero (classic) + design switch > "Survey
+ * hero design" to Spotlight.
  */
 $hq_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
     && vance_page_hero_spotlight_active( 'hquiz' );

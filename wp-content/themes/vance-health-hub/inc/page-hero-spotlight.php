@@ -1883,14 +1883,14 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 
 	$notes = array(
 		'contact' => array(
-			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your email, phone and opening hours in a white band. Classic is the dark navy hero configured by the rest of this panel.',
-			'section'    => 'The light hero for this page. Only rendered while "Contact hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero, edit them in the Hero Section, and they follow whichever design is switched on.',
-			'slot_label' => 'Sits above the white band. The band itself is filled from Email Address, Phone Number and Office Hours in the Contact Information section.',
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your email, phone and opening hours in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while "Contact hero design", in the "Contact: Hero (classic) + design switch" section, is set to Spotlight. The eyebrow, headline and description are shared with the classic hero, edit them in that section, and they follow whichever design is switched on.',
+			'slot_label' => 'Sits above the white band. The band itself is filled from Email Address, Phone Number and Office Hours in the "Contact: Contact information" section.',
 		),
 		'about' => array(
-			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your trust badges in a white band. Classic is the dark navy hero configured by the rest of this panel.',
-			'section'    => 'The light hero for this page. Only rendered while "About hero design" (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero, edit them in the Hero Section, and they follow whichever design is switched on.',
-			'slot_label' => 'Sits above the white band. The band itself is filled from Badge 1–3 in the Trust Badges &amp; Stats section, and the card shows Stat 1 from that same section.',
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and your trust badges in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while "About hero design", in the "Hero (classic) + design switch" section, is set to Spotlight. The eyebrow, headline and description are shared with the classic hero, edit them in that section, and they follow whichever design is switched on.',
+			'slot_label' => 'Sits above the white band. The band itself is filled from Badge 1–3 in the &ldquo;Trust badges &amp; stats&rdquo; section, and the card shows Stat 1 from that same section.',
 		),
 		'hquiz'        => $tool_note,
 		'recipes'      => $tool_note,
@@ -1905,13 +1905,13 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings. Nothing to type here beyond the prompt.',
 		),
 		'evidence'  => array(
-			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and the four evidence pillars in a white band. Classic is the dark navy hero configured by the rest of this panel.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;Get Started hero design&rdquo; (in the Hero Section) is set to Spotlight. The eyebrow, headline, description and the first button&rsquo;s label are all shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons and the four evidence pillars in a white band. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Get Started hero design&rdquo;, in the &ldquo;Hero (classic) + design switch&rdquo; section, is set to Spotlight. The eyebrow, headline, description and the first button&rsquo;s label are all shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself is filled from Pillar 1&ndash;4 in this panel, so renaming a pillar renames it here too.',
 		),
 		'userguide' => array(
-			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three free tools in a white band. The PDF download stays as the second button. Classic is the dark navy hero configured by the rest of this panel.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;User Guide hero design&rdquo; (in the Hero Section) is set to Spotlight. The eyebrow, headline and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
+			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three free tools in a white band. The PDF download stays as the second button. Classic is the dark navy hero configured by the rest of this section.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;User Guide hero design&rdquo;, in the &ldquo;User Guide: Hero (classic) + design switch&rdquo; section, is set to Spotlight. The eyebrow, headline and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings.',
 		),
 		'patientdownloads' => array(
@@ -1921,22 +1921,22 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 		),
 		'discounts' => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif or photograph, two buttons, and the directory\'s three live counts in a white band. Classic is the dark navy hero configured by the rest of this section.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;Discounts hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Discounts hero design&rdquo;, in the &ldquo;Hero (classic) + design switch&rdquo; section, is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them there, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif.',
 			'slot_label' => 'Sits above the white band. The band itself is the live scheme count, free-to-apply count and tier-1 (apply-on-the-hub) count, read straight from the published schemes &mdash; nothing to type here beyond the prompt.',
 		),
 		'tools'     => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the three tools listed in a white band. Classic is the dark navy hero configured by the rest of this section.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;Free tools hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title, description AND the account button&rsquo;s label and link are all shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Free tools hero design&rdquo;, in the &ldquo;Tools shelf: Hero (classic) + design switch&rdquo; section, is set to Spotlight. The tag, title, description AND the account button&rsquo;s label and link are all shared with the classic hero &mdash; edit them in that section, and they follow whichever design is switched on.',
 			'slot_label' => 'Sits above the white band. The band itself lists the three free tools, taking each one&rsquo;s name and badge from that tool&rsquo;s own hero settings. Nothing to type here beyond the prompt.',
 		),
 		'education' => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, dissolving photograph, two buttons, and the Knowledgebase, VANCE-Ai and the free tools in a white band. Classic is the dark navy hero configured by the rest of this section.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;Education hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on. Note that Description has no effect on the classic hero, which renders only the tag and the title. The supplied photograph was shot for this hero; a replacement wants the same shape and a bright, uncluttered left-hand side, because that edge is dissolved into the band.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Education hero design&rdquo;, in the &ldquo;Education: Hero (classic) + design switch&rdquo; section, is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in that section, and they follow whichever design is switched on. Note that Description has no effect on the classic hero, which renders only the tag and the title. The supplied photograph was shot for this hero; a replacement wants the same shape and a bright, uncluttered left-hand side, because that edge is dissolved into the band.',
 			'slot_label' => 'Sits above the white band. The band itself points at the Knowledgebase, VANCE-Ai and Free Health Tools &mdash; the things a visitor can use today while the courses are still in build &mdash; all resolved by page slug. Nothing to type here beyond the prompt.',
 		),
 		'kblobby'   => array(
 			'toggle'     => 'Spotlight is the light hero: mint band, geometric motif, two buttons and the knowledgebase search field in a white band. Classic is the dark navy hero configured by the rest of this section.',
-			'section'    => 'The light hero for this page. Only rendered while &ldquo;Knowledgebase hero design&rdquo; (in the Hero Section) is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in the Hero Section, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
+			'section'    => 'The light hero for this page. Only rendered while &ldquo;Knowledgebase hero design&rdquo;, in the &ldquo;Hero (classic) + design switch&rdquo; section, is set to Spotlight. The tag, title and description are shared with the classic hero &mdash; edit them in that section, and they follow whichever design is switched on. Leave Photograph empty to keep the teal motif; upload one and it takes over.',
 			'slot_label' => 'The label above the search field. The field itself searches the whole site, exactly as the dark hero&rsquo;s did.',
 		),
 		'e404'      => array(
@@ -1955,7 +1955,8 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 
 		$defaults = vance_page_hero_spotlight_field_defaults( $page );
 
-		// -- The toggle, in the page's existing Hero Section so it sits with
+		// -- The toggle, in the page's existing classic hero section (the admin
+		//    sees it as "Hero (classic) + design switch") so it sits with
 		//    the classic hero it switches away from. A page whose config says
 		//    'always' has no classic hero, so it gets no control: offering
 		//    'Classic' there would offer a design that does not exist, and

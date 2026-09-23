@@ -416,8 +416,8 @@ function vance_render_promo_block( array $vals ) {
 
 /**
  * Homepage instance. Called from front-page.php's `case 'promo'`; visibility is
- * the vance_promo_show checkbox and position comes from Homepage → Section
- * Order, both exactly as before.
+ * the vance_promo_show checkbox and position comes from Home · Hero & Layout →
+ * Section order, both exactly as before.
  */
 function vance_render_promo_home() {
 	if ( ! vance_get_theme_mod( 'vance_promo_show', false ) ) {

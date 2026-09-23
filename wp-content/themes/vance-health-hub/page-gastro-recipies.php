@@ -61,8 +61,9 @@ $vance_hero_alpha_bottom  = min( 1, $vance_hero_alpha_top + 0.05 );
 
 <?php
 /*
- * Which hero. Defaults to 'classic' (Appearance > Customize > Tools &
- * Resources > IBD Recipes, Hero > "Meal planner hero design"), so this page
+ * Which hero. Defaults to 'classic' (Appearance > Customize > Section ·
+ * Recipes & Tools > Recipes: Hero (classic) + design switch > "Meal planner
+ * hero design"), so this page
  * renders exactly what it always has until an admin switches it.
  *
  * The embed check is the same one the CSS above makes for the classic hero
