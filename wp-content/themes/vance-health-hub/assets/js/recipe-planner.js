@@ -150,6 +150,7 @@
 
 		if (totalMealsEl) { totalMealsEl.textContent = String(totalMeals); }
 		if (totalKcalEl) { totalKcalEl.textContent = String(totalKcal); }
+		syncPhoneUI(totalMeals, totalKcal);
 	}
 
 	function cssEscape(s) { return String(s).replace(/"/g, '\\"'); }
@@ -305,6 +306,13 @@
 	function armRecipe(slug) {
 		var recipe = recipesBySlug[slug];
 		if (!recipe) { return; }
+		// On a phone the planner is thousands of pixels below the grid, so
+		// arming it and scrolling there strands the reader far from the recipes
+		// they were browsing. Ask for the slot right here instead.
+		if (isPhone()) {
+			openSlotSheet(slug);
+			return;
+		}
 		armedSlug = slug;
 		if (armedText) { armedText.textContent = 'Adding "' + recipe.name + '", click an empty slot below to place it.'; }
 		if (armedBar) { armedBar.classList.add('is-visible'); }
@@ -752,6 +760,236 @@
 	if (saveBtn) { saveBtn.addEventListener('click', openSaveModal); }
 	if (planNameInput) {
 		planNameInput.addEventListener('input', function () { state.name = planNameInput.value; saveState(); });
+	}
+
+	// --- Phone layout ------------------------------------------------------
+	//
+	// Below 768px the recipe grid and the planner are ~17,000px apart, so three
+	// things stand in for scrolling between them:
+	//   - a "N meals · K kcal / View plan" bar, pinned above the tab bar while
+	//     the planner is off screen;
+	//   - a bottom sheet that files a recipe into a day/slot straight from its
+	//     card, instead of scrolling to the planner (see armRecipe());
+	//   - day tabs, so the planner shows one day at a time rather than seven
+	//     stacked cards.
+	// All of it is inert on wider screens: the CSS hides the extra elements and
+	// shows every day, so desktop and the dashboard tab are unchanged.
+
+	var phoneMQ = window.matchMedia ? window.matchMedia('(max-width: 767.98px)') : null;
+	function isPhone() { return !!(phoneMQ && phoneMQ.matches); }
+
+	var plannerSection = document.getElementById('planner');
+	var recipesSection = document.getElementById('recipes');
+	var dayTabsEl = null;
+	var planBarEl = null;
+	var planBarText = null;
+	// Starts true so the plan bar stays hidden until the observer has actually
+	// reported the planner off screen; false flashed it for a frame on load.
+	var plannerInView = true;
+	var activeDayIndex = -1; // Set on first sync to today's weekday, else the first day.
+	var sheetEl = null;
+	var sheetSlug = null;
+	var sheetReturnFocus = null;
+	var sheetPriorOverflow = '';
+
+	function slotLabel(slot) { return slot.charAt(0).toUpperCase() + slot.slice(1); }
+
+	function todayIndex() {
+		var today = '';
+		try { today = new Date().toLocaleDateString('en-GB', { weekday: 'long' }).toLowerCase(); } catch (e) { /* older engines: fall back to the first day */ }
+		for (var i = 0; i < state.days.length; i++) {
+			if (String(state.days[i].day).toLowerCase() === today) { return i; }
+		}
+		return 0;
+	}
+
+	function buildDayTabs() {
+		var days = document.getElementById('vance-rh-days');
+		if (!days || dayTabsEl) { return; }
+
+		// Way back to the recipes, above the tabs: the plan bar takes the reader
+		// down here, and nothing else brings them back.
+		var back = document.createElement('button');
+		back.type = 'button';
+		back.className = 'vance-rh-backtop';
+		back.textContent = '↑ Back to recipes';
+		back.addEventListener('click', function () {
+			if (recipesSection) { recipesSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+		});
+		days.parentNode.insertBefore(back, days);
+
+		dayTabsEl = document.createElement('div');
+		dayTabsEl.className = 'vance-rh-daytabs';
+		dayTabsEl.setAttribute('role', 'tablist');
+		dayTabsEl.setAttribute('aria-label', 'Day of the week');
+		dayTabsEl.innerHTML = state.days.map(function (d, i) {
+			return '<button type="button" role="tab" class="vance-rh-daytab" data-day-index="' + i + '" aria-label="' + escapeAttr(d.day) + '">' +
+				escapeHtml(String(d.day).slice(0, 3)) + '<span class="vance-rh-daytab-dot" aria-hidden="true"></span></button>';
+		}).join('');
+		dayTabsEl.addEventListener('click', function (e) {
+			var tab = e.target.closest('[data-day-index]');
+			if (!tab) { return; }
+			activeDayIndex = parseInt(tab.getAttribute('data-day-index'), 10) || 0;
+			syncPhoneUI();
+		});
+		days.parentNode.insertBefore(dayTabsEl, days);
+	}
+
+	function buildPlanBar() {
+		if (planBarEl) { return; }
+		planBarEl = document.createElement('div');
+		planBarEl.className = 'vance-rh-planbar';
+		planBarEl.hidden = true;
+		planBarEl.innerHTML = '<span class="vance-rh-planbar-text" id="vance-rh-planbar-text"></span>' +
+			'<button type="button" class="vance-rh-planbar-btn">View plan</button>';
+		planBarText = planBarEl.querySelector('#vance-rh-planbar-text');
+		planBarEl.querySelector('button').addEventListener('click', function () {
+			if (plannerSection) { plannerSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+		});
+		document.body.appendChild(planBarEl);
+
+		if (plannerSection && 'IntersectionObserver' in window) {
+			new IntersectionObserver(function (entries) {
+				plannerInView = entries[0].isIntersecting;
+				syncPhoneUI();
+			}, { threshold: 0.1 }).observe(plannerSection);
+		}
+	}
+
+	function syncPhoneUI(mealCount, kcal) {
+		if (!plannerSection) { return; }
+		buildDayTabs();
+		buildPlanBar();
+
+		if (activeDayIndex < 0) { activeDayIndex = todayIndex(); }
+
+		var tabs = dayTabsEl ? dayTabsEl.querySelectorAll('.vance-rh-daytab') : [];
+		var dayEls = document.querySelectorAll('.vance-rh-day');
+		state.days.forEach(function (d, i) {
+			var has = SLOT_KEYS.some(function (slot) { return d.meals[slot]; });
+			if (tabs[i]) {
+				tabs[i].classList.toggle('is-active', i === activeDayIndex);
+				tabs[i].classList.toggle('has-meals', has);
+				tabs[i].setAttribute('aria-selected', i === activeDayIndex ? 'true' : 'false');
+			}
+			if (dayEls[i]) { dayEls[i].classList.toggle('is-active', i === activeDayIndex); }
+		});
+
+		if (mealCount === undefined) {
+			mealCount = plannedMealCount();
+			kcal = 0;
+			state.days.forEach(function (d) { SLOT_KEYS.forEach(function (slot) { if (d.meals[slot]) { kcal += d.meals[slot].calories || 0; } }); });
+		}
+		if (planBarText) {
+			planBarText.innerHTML = '<b>' + mealCount + '</b> meal' + (mealCount === 1 ? '' : 's') + ' &middot; <b>' + kcal + '</b> kcal';
+		}
+		var showBar = isPhone() && mealCount > 0 && !plannerInView && !(sheetEl && sheetEl.classList.contains('is-open')) &&
+			!(picker && picker.classList.contains('is-open')) && !(saveModal && saveModal.classList.contains('is-open'));
+		if (planBarEl) { planBarEl.hidden = !showBar; }
+		document.body.classList.toggle('vance-rh-has-planbar', showBar);
+	}
+
+	if (phoneMQ && phoneMQ.addEventListener) {
+		phoneMQ.addEventListener('change', function () {
+			// The sheet is CSS-hidden from 768px up; leaving it "open" would keep
+			// the page scroll locked with nothing on screen to dismiss.
+			if (!isPhone() && sheetEl && sheetEl.classList.contains('is-open')) { closeSlotSheet(); }
+			syncPhoneUI();
+		});
+	}
+
+	// The sheet: rows are days, columns are the four meals. Taken slots are shown
+	// but disabled, so adding a recipe here can never silently replace a meal.
+	function buildSheet() {
+		if (sheetEl) { return; }
+		sheetEl = document.createElement('div');
+		sheetEl.className = 'vance-rh-sheet';
+		sheetEl.setAttribute('role', 'dialog');
+		sheetEl.setAttribute('aria-modal', 'true');
+		sheetEl.setAttribute('aria-hidden', 'true');
+		sheetEl.setAttribute('aria-labelledby', 'vance-rh-sheet-title');
+		sheetEl.innerHTML =
+			'<div class="vance-rh-sheet-panel">' +
+				'<div class="vance-rh-sheet-head">' +
+					'<div class="vance-rh-sheet-headtext"><strong id="vance-rh-sheet-title">Add to your plan</strong>' +
+					'<span class="vance-rh-sheet-sub" id="vance-rh-sheet-sub"></span></div>' +
+					'<button type="button" class="vance-rh-sheet-close" aria-label="Close">&times;</button>' +
+				'</div>' +
+				'<div class="vance-rh-sheet-grid" id="vance-rh-sheet-grid"></div>' +
+			'</div>';
+		document.body.appendChild(sheetEl);
+
+		sheetEl.addEventListener('click', function (e) {
+			if (e.target === sheetEl || e.target.closest('.vance-rh-sheet-close')) { closeSlotSheet(); return; }
+			var pick = e.target.closest('[data-sheet-day]');
+			if (!pick || pick.disabled) { return; }
+			var recipe = recipesBySlug[sheetSlug];
+			var day = pick.getAttribute('data-sheet-day');
+			var slot = pick.getAttribute('data-sheet-slot');
+			placeMeal(day, slot, sheetSlug);
+			// Show the day just filled when the reader next opens the planner.
+			state.days.forEach(function (d, i) { if (d.day === day) { activeDayIndex = i; } });
+			closeSlotSheet();
+			showToast('Added ' + (recipe ? recipe.name : 'recipe') + ' to ' + day + ' ' + slot + ' ✓', 3000);
+		});
+		document.addEventListener('keydown', function (e) {
+			if ('Escape' === e.key && sheetEl && sheetEl.classList.contains('is-open')) { closeSlotSheet(); }
+		});
+	}
+
+	function renderSheet() {
+		var recipe = recipesBySlug[sheetSlug];
+		var sub = document.getElementById('vance-rh-sheet-sub');
+		if (sub) { sub.textContent = recipe ? recipe.name : ''; }
+
+		// Highlight the column that matches the recipe (a lunch recipe -> Lunch).
+		var preferred = '';
+		SLOT_KEYS.forEach(function (slot) { if (recipe && SLOT_CATEGORY[slot] === recipe.category) { preferred = slot; } });
+
+		var html = '<span class="vance-rh-sheet-corner"></span>' + SLOT_KEYS.map(function (slot) {
+			return '<span class="vance-rh-sheet-col' + (slot === preferred ? ' is-pref' : '') + '">' + slotLabel(slot) + '</span>';
+		}).join('');
+		state.days.forEach(function (d) {
+			html += '<span class="vance-rh-sheet-day">' + escapeHtml(String(d.day).slice(0, 3)) + '</span>';
+			SLOT_KEYS.forEach(function (slot) {
+				var taken = d.meals[slot];
+				var pref = slot === preferred ? ' is-pref' : '';
+				if (taken) {
+					html += '<button type="button" class="vance-rh-sheet-slot is-taken" disabled aria-label="' +
+						escapeAttr(d.day + ' ' + slot + ': already ' + taken.name) + '">✓</button>';
+				} else {
+					html += '<button type="button" class="vance-rh-sheet-slot' + pref + '" data-sheet-day="' + escapeAttr(d.day) +
+						'" data-sheet-slot="' + slot + '" aria-label="' + escapeAttr('Add to ' + d.day + ' ' + slot) + '">+</button>';
+				}
+			});
+		});
+		document.getElementById('vance-rh-sheet-grid').innerHTML = html;
+	}
+
+	function openSlotSheet(slug) {
+		buildSheet();
+		sheetSlug = slug;
+		renderSheet();
+		sheetReturnFocus = document.activeElement;
+		sheetEl.classList.add('is-open');
+		sheetEl.setAttribute('aria-hidden', 'false');
+		// Remember whatever lock was already there (another modal, the tab bar's
+		// More sheet) so closing this sheet does not release it.
+		sheetPriorOverflow = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+		syncPhoneUI();
+		var close = sheetEl.querySelector('.vance-rh-sheet-close');
+		if (close) { close.focus(); }
+	}
+
+	function closeSlotSheet() {
+		if (!sheetEl) { return; }
+		sheetEl.classList.remove('is-open');
+		sheetEl.setAttribute('aria-hidden', 'true');
+		document.body.style.overflow = sheetPriorOverflow;
+		sheetSlug = null;
+		syncPhoneUI();
+		if (sheetReturnFocus && sheetReturnFocus.focus) { sheetReturnFocus.focus(); }
 	}
 
 	// --- Init ------------------------------------------------------------
