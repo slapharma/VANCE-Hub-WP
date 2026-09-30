@@ -122,12 +122,12 @@
 		padding: 8px 6px;
 		border: 1px solid #e2e8f0;
 		border-radius: var(--radius-field);
-		font-size: 12px;
+		font-size: 16px;
 		background: #fff;
 	}
 	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-tags-toggle { width: 100%; justify-content: center; padding: 8px 6px; font-size: 12px; min-height: 0; }
 	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search-wrap { width: 100%; }
-	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search { min-width: 0; min-height: 0; padding: 8px 8px 8px 30px; font-size: 12px; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search { min-width: 0; min-height: 0; padding: 8px 8px 8px 30px; font-size: 16px; }
 	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search-icon { left: 8px; }
 }
 
@@ -178,7 +178,7 @@
 }
 
 .vance-rh-planner-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
-.vance-rh-plan-name { padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); font-size: 14px; min-width: 220px; }
+.vance-rh-plan-name { padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-surface); font-size: 16px; min-width: 220px; }
 .vance-rh-totals { display: flex; gap: 18px; font-size: 13px; color: #475569; }
 .vance-rh-totals b { color: #0A1929; font-family: 'Outfit', sans-serif; }
 /* Transparent border rather than none: its two pixels are what keep this the

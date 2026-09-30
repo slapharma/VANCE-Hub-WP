@@ -3007,9 +3007,9 @@ function vance_auth_modal_shortcode( $atts ) {
     .vance-auth-form.active{display:block}
     .vance-auth-field{margin-bottom:10px}
     .vance-auth-field label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:4px}
-    .vance-auth-field input{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
+    .vance-auth-field input{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:16px;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
     .vance-auth-field input:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
-    .vance-auth-field select{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:15px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
+    .vance-auth-field select{width:100%;padding:9px 14px;border:1.5px solid #e0e6e6;border-radius:var(--radius-field, 10px);font-size:16px;box-sizing:border-box;transition:border-color .15s;font-family:inherit;background:#fff}
     .vance-auth-field select:focus{outline:none;border-color:#008080;box-shadow:0 0 0 3px rgba(0,128,128,0.1)}
     .vance-auth-consent{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#666;line-height:1.5;cursor:pointer;margin:0 0 8px;font-weight:400}
     .vance-auth-consent input{width:auto;margin-top:2px}
