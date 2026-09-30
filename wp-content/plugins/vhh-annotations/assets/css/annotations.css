@@ -50,6 +50,14 @@ body.vhh-resolved-hide mark.vhh-mark--resolved {
 	background: transparent;
 	border-bottom: none;
 	cursor: text;
+	opacity: 1; /* the dim rule above would otherwise fade the article text itself */
+	animation: none; /* the sidebar's focus pulse animates background, which beats the rule above */
+}
+/* Image regions and insertion markers are pure overlays with no article text
+   inside, so "hide" can remove them outright. */
+body.vhh-resolved-hide .vhh-img-region--resolved,
+body.vhh-resolved-hide .vhh-insert-marker--resolved {
+	display: none;
 }
 mark.vhh-mark--pulse {
 	animation: vhh-pulse 0.8s ease 2;

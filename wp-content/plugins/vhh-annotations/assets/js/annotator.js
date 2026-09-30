@@ -54,6 +54,20 @@
 		return state.root.querySelectorAll( 'mark.vhh-mark[data-annotation-id="' + id + '"]' );
 	}
 
+	/**
+	 * Nearest mark around a node that is actually visible. In "hide" mode a
+	 * resolved mark is invisible, so it must not react to hover or click; skip
+	 * past it in case it sits inside an open mark that overlaps it.
+	 */
+	function visibleMark( node ) {
+		var hide = document.body.classList.contains( 'vhh-resolved-hide' );
+		var mark = node.closest ? node.closest( 'mark.vhh-mark' ) : null;
+		while ( mark && hide && mark.classList.contains( 'vhh-mark--resolved' ) ) {
+			mark = mark.parentElement ? mark.parentElement.closest( 'mark.vhh-mark' ) : null;
+		}
+		return mark;
+	}
+
 	function applyMarkStatus( annotation ) {
 		marksFor( annotation.id ).forEach( function ( m ) {
 			m.classList.toggle( 'vhh-mark--resolved', annotation.status === 'resolved' );
@@ -315,19 +329,19 @@
 
 		// Mark interactions (delegated).
 		state.root.addEventListener( 'click', function ( e ) {
-			var mark = e.target.closest ? e.target.closest( 'mark.vhh-mark' ) : null;
+			var mark = visibleMark( e.target );
 			if ( ! mark ) { return; }
 			var id = mark.getAttribute( 'data-annotation-id' );
 			VHH.bus.emit( 'focus:card', id );
 		} );
 		state.root.addEventListener( 'mouseover', function ( e ) {
-			var mark = e.target.closest ? e.target.closest( 'mark.vhh-mark' ) : null;
+			var mark = visibleMark( e.target );
 			if ( ! mark ) { return; }
 			var item = state.items[ mark.getAttribute( 'data-annotation-id' ) ];
 			if ( item ) { showHoverCard( item, mark ); }
 		} );
 		state.root.addEventListener( 'mouseout', function ( e ) {
-			if ( e.target.closest && e.target.closest( 'mark.vhh-mark' ) ) { hideHoverCard(); }
+			if ( visibleMark( e.target ) ) { hideHoverCard(); }
 		} );
 
 		document.addEventListener( 'click', function ( e ) {
