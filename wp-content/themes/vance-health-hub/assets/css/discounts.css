@@ -335,7 +335,7 @@
 		padding: 9px 8px;
 		border: 1px solid #e2e8f0;
 		border-radius: var(--radius-field);
-		font-size: 13px;
+		font-size: 16px;
 		background: #fff;
 	}
 	/* display:contents drops the wrapper's own box so region-select and
@@ -351,7 +351,7 @@
 		flex: 1 1 0;
 		min-width: 0;
 		padding: 8px 6px;
-		font-size: 12.5px;
+		font-size: 16px;
 	}
 	/* Density pass: 2-up instead of auto-fill's single column at phone
 	   widths (280px minmax doesn't leave room for a second track under
@@ -451,7 +451,7 @@
    2px border is carried in BOTH states, only recoloured, so the button does
    not resize under the cursor; that is also why the transition names
    background/color/border-color rather than inheriting the base's filter. */
-.vance-discount-suggest__btn { cursor: pointer; background: #fff; color: #6B489E; border: 2px solid #6B489E; transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .1s ease; }
+.vance-discount-suggest__btn { cursor: pointer; max-width: 100%; white-space: normal; justify-content: center; text-align: center; background: #fff; color: #6B489E; border: 2px solid #6B489E; transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .1s ease; }
 .vance-discount-suggest__btn:hover, .vance-discount-suggest__btn:focus-visible { background: #6B489E; color: #fff; border-color: #fff; filter: none; }
 .vance-discount-suggest__btn:focus-visible { outline: 3px solid #4A3270; outline-offset: 2px; }
 

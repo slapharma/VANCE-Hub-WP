@@ -194,7 +194,7 @@ $evd_cta_text_color   = vance_get_theme_mod( 'vance_evidence_cta_text_color',  '
                 <h2 style="color: <?php echo esc_attr( $evd_proc_title_color ); ?>;"><?php echo esc_html( $proc_title ); ?></h2>
                 <p style="color: <?php echo esc_attr( $evd_proc_text_color ); ?>;"><?php echo esc_html( $proc_desc ); ?></p>
             </div>
-            <div class="grid-3" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+            <div class="grid-3" style="gap: 24px;">
                 <?php for ( $i = 1; $i <= 3; $i++ ) :
                     $step_title = vance_get_theme_mod( "vance_evidence_proc{$i}_title", $proc_defaults[ $i ][0] );
                     $step_desc  = vance_get_theme_mod( "vance_evidence_proc{$i}_desc",  $proc_defaults[ $i ][1] );

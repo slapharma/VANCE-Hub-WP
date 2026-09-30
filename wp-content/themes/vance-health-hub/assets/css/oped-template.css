@@ -194,6 +194,18 @@
     margin: 0 0 37.5px;
 }
 
+/* Phones: the hero above already shows the title at full size, so repeating it
+   pushed the first paragraph below the fold (161px of duplicate heading). Kept
+   on tablet/desktop where the hero copy sits beside the image. */
+@media (max-width: 767.98px) {
+    .va-article-title {
+        display: none;
+    }
+    .oped-article-body.has-article-title {
+        padding-top: 24px;
+    }
+}
+
 .oped-article-body p {
     margin-bottom: 24px;
 }

@@ -275,7 +275,7 @@ get_header(); ?>
                                 <input type="text" id="contact_name" name="contact_name" required
                                        value="<?php echo esc_attr( $_POST['contact_name'] ?? '' ); ?>"
                                        placeholder="Your full name"
-                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
+                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 16px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
                                        onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                        onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';">
                             </div>
@@ -286,7 +286,7 @@ get_header(); ?>
                                 <input type="email" id="contact_email" name="contact_email" required
                                        value="<?php echo esc_attr( $_POST['contact_email'] ?? '' ); ?>"
                                        placeholder="your@email.com"
-                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
+                                       style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 16px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box;"
                                        onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                        onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';">
                             </div>
@@ -297,7 +297,7 @@ get_header(); ?>
                                 Subject
                             </label>
                             <select id="contact_subject" name="contact_subject"
-                                    style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; appearance: none; cursor: pointer;"
+                                    style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 16px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; appearance: none; cursor: pointer;"
                                     onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';">
                                 <option value="">Select a topic…</option>
@@ -316,7 +316,7 @@ get_header(); ?>
                             </label>
                             <textarea id="contact_message" name="contact_message" required rows="6"
                                       placeholder="How can we help you?"
-                                      style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 15px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.6;"
+                                      style="width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-field, 10px); font-size: 16px; color: var(--secondary-color); background: #f8fafc; transition: border-color .2s; outline: none; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.6;"
                                       onfocus="this.style.borderColor='var(--primary-color)';this.style.background='white';"
                                       onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';"><?php echo esc_textarea( $_POST['contact_message'] ?? '' ); ?></textarea>
                         </div>
