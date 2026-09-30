@@ -766,7 +766,8 @@ function vance_gi_hero_styles() {
  *
  * THE DATE IS OPT-IN. There is no per-page reviewed-on field in this theme, so
  * the line renders only when an admin has set the site-wide value at
- * Appearance → Customize → Page - GI Health → Conditions, Shared. Left unset,
+ * Appearance → Customize → Section · Gastro Conditions → Last reviewed date,
+ * all condition pages. Left unset,
  * the card simply does not claim a date. A stale date on a clinical page is
  * worse than no date, and a hard-coded one would be stale the moment it
  * shipped.

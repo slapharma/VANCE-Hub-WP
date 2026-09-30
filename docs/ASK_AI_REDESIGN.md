@@ -81,7 +81,7 @@ Each AI agent has:
 ## 3. Customization Tools
 
 ### Location
-**Appearance → Customize → SLA Theme Settings → Ask AI Configuration**
+**Appearance → Customize → Section · VANCE-Ai → Configuration + hero design switch**
 
 ### Hero Settings
 - **Hero Background Image** - Upload custom background
@@ -219,7 +219,7 @@ array(
 
 ### Step 1: Configure API
 1. Go to **Appearance → Customize**
-2. Navigate to **SLA Theme Settings → Ask AI Configuration**
+2. Navigate to **Section · VANCE-Ai → Configuration + hero design switch**
 3. Enter your AI API key
 4. Select AI provider (OpenAI/Anthropic/Google)
 5. Specify model name

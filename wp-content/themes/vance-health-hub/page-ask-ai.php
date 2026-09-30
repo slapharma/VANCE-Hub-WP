@@ -177,8 +177,8 @@ $agent_data = array(
 <?php
 /*
  * Which hero. Defaults to 'classic', so this page renders exactly what it
- * always has until an admin sets Appearance > Customize > Content >
- * VANCE-Ai Configuration > "Ask AI hero design" to Spotlight.
+ * always has until an admin sets Appearance > Customize > Section · VANCE-Ai >
+ * Configuration + hero design switch > "Ask AI hero design" to Spotlight.
  */
 $askai_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
     && vance_page_hero_spotlight_active( 'askai' );

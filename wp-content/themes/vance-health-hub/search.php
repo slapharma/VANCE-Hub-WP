@@ -9,7 +9,8 @@
  *
  * Every piece of copy, the hero image/overlay/height, the title colour and size
  * and the button colours are editable at
- * Appearance -> Customize -> Page - Search Results.
+ * Appearance -> Customize -> Pages · Contact, Guide, Search, 404 (the sections
+ * prefixed "Search results:").
  *
  * Two copy fields carry tokens rather than sprintf placeholders: {query} and
  * {count}. sprintf() would fatal the page if an editor typed a stray % into the

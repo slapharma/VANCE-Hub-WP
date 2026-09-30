@@ -18,7 +18,7 @@
  * point of the page: a grid of eight words tells a visitor nothing about which
  * door to open, and the titles do.
  *
- * Everything configurable lives in Appearance -> Customize -> Page -
+ * Everything configurable lives in Appearance -> Customize -> Section ·
  * Knowledgebase: copy, cards per row, accent colour, which collections are
  * hidden or flagged as not launched, and how many preview links to show.
  */
@@ -1021,9 +1021,9 @@ $kb_hub_url = function_exists( 'vance_gi_hub_url' ) ? vance_gi_hub_url() : '';
 
 	<?php
 	/*
-	 * HERO. Two designs, chosen by Appearance -> Customize -> Page -
-	 * Knowledgebase -> Hero Section -> "Knowledgebase hero design". Defaults
-	 * to 'classic', so deploying this changes nothing until an admin flips it.
+	 * HERO. Two designs, chosen by Appearance -> Customize -> Section ·
+	 * Knowledgebase -> Hero (classic) + design switch -> "Knowledgebase hero
+	 * design". Defaults to 'classic', so deploying this changes nothing until an admin flips it.
 	 * The spotlight renderer reads this page's own tag/title/description keys,
 	 * and its band is the same site search this hero carries, so nothing is
 	 * lost in the switch. See inc/page-hero-spotlight.php.

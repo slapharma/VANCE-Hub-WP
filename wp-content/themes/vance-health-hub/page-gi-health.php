@@ -5,7 +5,7 @@
  * Landing page for the GI Health section: 7 condition cards, gut-statistics band,
  * and a dashboard CTA. Condition child pages use the "GI Health Condition" template.
  *
- * All copy and colours are editable via Appearance → Customize → Page — GI Health.
+ * All copy and colours are editable via Appearance → Customize → Section · Gastro Conditions.
  *
  * Requires child pages with slugs:
  *   inflammatory-bowel-disease, ulcerative-colitis, crohns-disease,

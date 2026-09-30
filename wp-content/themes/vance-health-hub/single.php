@@ -65,7 +65,7 @@ while ( have_posts() ) :
         else $hero_bg = get_template_directory_uri() . '/assets/img/opinion_hero.png';
     }
 
-    // Left → right gradient overlay (Customizer: Content → Post Hero Overlay,
+    // Left → right gradient overlay (Customizer: Content · Articles → Article hero overlay,
     // with optional per-main-category overrides). Solid colour on the left keeps
     // the title legible, fading to transparent on the right. Layered above the
     // image so it is one continuous full-bleed wash over the hero.

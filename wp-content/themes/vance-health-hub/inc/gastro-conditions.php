@@ -12,7 +12,7 @@
  * vance_gi_page_url() / vance_gi_hub_url() for the same reason.
  *
  * Registry-driven: visibility is controlled by adding `gastro-conditions` to
- * Appearance → Customize → Homepage → Section Order.
+ * Appearance → Customize → Home · Hero & Layout → Section order.
  *
  * @package vance-health-hub
  * @since   2026-08-21
@@ -53,7 +53,7 @@ function vance_render_gastro_conditions() {
 		}
 		/* Alignment moved off the wrapper and onto the two children so the
 		   heading and subtitle can be set independently (Customizer →
-		   Homepage → Gastro Conditions). */
+		   Home · Blocks → Gastro condition tiles). */
 		#vance-gastro-conditions .vance-gc-header { margin-bottom: 44px; }
 		#vance-gastro-conditions .vance-gc-header h2 {
 			text-align: <?php echo esc_attr( $head_align ); ?>;

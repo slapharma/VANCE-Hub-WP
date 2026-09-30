@@ -16,7 +16,7 @@ require_once get_template_directory() . '/ai-visibility.php';
 require_once get_template_directory() . '/inc/cross-page-sections.php';
 // Multi-instance Content Widget — 5 pre-registered latest-content blocks the
 // admin can enable, position, and configure independently via the Section
-// Order control + the "Content Widgets" Customizer panel.
+// order control + the "Content · Reusable Widgets" Customizer panel.
 require_once get_template_directory() . '/inc/content-widget.php';
 // Tool Widgets — two modal-opening cards that replace the legacy Discovery
 // block (Content Filters + Vance AI). Modal infrastructure (iframe + CSS + JS)
@@ -4202,7 +4202,7 @@ function vance_category_source_color( $cat_id ) {
  *
  * @param array|null $settings Effective settings (enable/color/opacity/spread).
  *                             When null, the global Customizer settings are read
- *                             — Content & Knowledge Base → Post Hero Overlay.
+ *                             — Content · Articles → Article hero overlay.
  * @return string A CSS linear-gradient() value, or '' when the overlay is off.
  */
 function vance_post_hero_overlay_gradient( $settings = null ) {
@@ -4551,7 +4551,7 @@ function vance_customize_register( $wp_customize ) {
     ) );
     $wp_customize->add_control( 'vance_hero_style', array(
         'label'       => __( 'Homepage hero design', 'vance-health-hub' ),
-        'description' => __( 'Spotlight is the light, search-led hero. Classic is the dark hero configured by the rest of this section (and by the Hero Slide sections).', 'vance-health-hub' ),
+        'description' => __( 'Spotlight is the light, search-led hero. Classic is the dark hero configured by the rest of this section (and by the "Hero slide 2" to "Hero slide 5" sections).', 'vance-health-hub' ),
         'section'     => 'vance_hero_settings',
         'type'        => 'select',
         'choices'     => array(
@@ -4566,7 +4566,7 @@ function vance_customize_register( $wp_customize ) {
     // list and the renderer cannot drift apart.
     $wp_customize->add_section( 'vance_hero_spotlight_settings', array(
         'title'       => __( 'Hero: Spotlight', 'vance-health-hub' ),
-        'description' => __( 'The light, search-led homepage hero. Only rendered while "Homepage hero design" (in the Hero section) is set to Spotlight. Headline, intro and both buttons start out inheriting whatever the classic hero says; editing them here stores a Spotlight-only override and leaves the classic hero untouched.', 'vance-health-hub' ),
+        'description' => __( 'The light, search-led homepage hero. Only rendered while "Homepage hero design", in the "Hero (classic) + design switch" section, is set to Spotlight. Headline, intro and both buttons start out inheriting whatever the classic hero says; editing them here stores a Spotlight-only override and leaves the classic hero untouched.', 'vance-health-hub' ),
         'priority'    => 30.5,
         'panel'       => 'vance_homepage_panel',
     ) );
@@ -5221,7 +5221,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Prime Block Home 1', 'vance-health-hub' ),
         'priority'    => 31.7,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'Featured tool cards beside a Latest Content list. Showing/hiding and position are controlled by Homepage → Section Order, add or remove "Prime Block Home 1" there.', 'vance-health-hub' ),
+        'description' => __( 'Featured tool cards beside a Latest Content list. Showing/hiding and position are controlled by Home · Hero & Layout → Section order, add or remove "Prime Block Home 1" there.', 'vance-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_pwc_label', array( 'default' => 'Featured Tools', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -5408,7 +5408,7 @@ function vance_customize_register( $wp_customize ) {
     // Both use the clean vance_pb2_* / vance_pbc_* prefixes (Home 1 stays
     // pinned to the legacy vance_pwc_* / vance_hquiz_* / vance_askai_* keys so
     // its saved values survive), so one registration helper serves both.
-    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_home2_settings', 'vance_pb2_', __( 'Prime Block Home 2', 'vance-health-hub' ), 31.72, __( 'A second, independently-configured Prime Block. Showing/hiding and position are controlled by Homepage → Section Order, add or remove "Prime Block Home 2" there.', 'vance-health-hub' ) );
+    vance_register_prime_block_controls( $wp_customize, 'vance_prime_block_home2_settings', 'vance_pb2_', __( 'Prime Block Home 2', 'vance-health-hub' ), 31.72, __( 'A second, independently-configured Prime Block. Showing/hiding and position are controlled by Home · Hero & Layout → Section order, add or remove "Prime Block Home 2" there.', 'vance-health-hub' ) );
 
     vance_register_prime_block_controls(
         $wp_customize,
@@ -5483,7 +5483,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Gastro Conditions', 'vance-health-hub' ),
         'priority'    => 31.76,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'Big linked tiles for each GI condition. Add "Gastro Conditions" to Homepage → Section Order to show it.', 'vance-health-hub' ),
+        'description' => __( 'Big linked tiles for each GI condition. Add "Gastro Conditions" to Home · Hero & Layout → Section order to show it.', 'vance-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_gc_heading', array( 'default' => 'Gastro Conditions', 'sanitize_callback' => 'sanitize_text_field' ) );
@@ -5761,7 +5761,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Knowledge Base Content', 'vance-health-hub' ),
         'priority'    => 31.72,
         'panel'       => 'vance_content_panel',
-        'description' => __( 'Standalone homepage section that renders the category content blocks below the Mini-Hero. Enable it from Section Order.', 'vance-health-hub' ),
+        'description' => __( 'Standalone homepage section that renders the category content blocks below the Knowledgebase band. Enable it from Home · Hero & Layout → Section order.', 'vance-health-hub' ),
     ) );
 
     $wp_customize->add_setting( 'vance_kb_content_bg', array(
@@ -5770,7 +5770,7 @@ function vance_customize_register( $wp_customize ) {
     ) );
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_kb_content_bg', array(
         'label'       => __( 'Background Colour', 'vance-health-hub' ),
-        'description' => __( 'Falls back to Knowledge Base Section Background Color from the Mini-Hero panel if left blank.', 'vance-health-hub' ),
+        'description' => __( 'Falls back to Knowledge Base Section Background Color from the "Knowledgebase band" section if left blank.', 'vance-health-hub' ),
         'section'     => 'vance_kb_content',
     ) ) );
 
@@ -7289,7 +7289,7 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_panel( 'vance_content_widgets_panel', array(
         'title'       => __( 'Content Widgets', 'vance-health-hub' ),
         'priority'    => 14.5,
-        'description' => __( 'Five reusable latest-content blocks. Enable any combination via Appearance → Customize → Homepage → Section Order, then configure each one here.', 'vance-health-hub' ),
+        'description' => __( 'Five reusable latest-content blocks. Enable any combination via Appearance → Customize → Home · Hero & Layout → Section order, then configure each one here.', 'vance-health-hub' ),
     ) );
 
     // Build the category choices once (re-used across all 5 widget panels).
@@ -7316,7 +7316,7 @@ function vance_customize_register( $wp_customize ) {
         $wp_customize->add_setting( $prefix . 'show', array( 'default' => true, 'sanitize_callback' => 'vance_sanitize_checkbox' ) );
         $wp_customize->add_control( $prefix . 'show', array(
             'label'       => 'Show this widget',
-            'description' => 'Untick to hide this widget without removing it from Section Order.',
+            'description' => 'Untick to hide this widget without removing it from Home · Hero & Layout → Section order.',
             'section'     => $sec_id,
             'type'        => 'checkbox',
         ) );
@@ -7539,7 +7539,7 @@ function vance_customize_register( $wp_customize ) {
 
     // 6d. Tool Widgets — LEGACY Customizer panel was removed 2026-05-26.
     // The two single tool widgets were merged into one row; configure the
-    // merged section under Vance Theme → Content → Tool Widgets Row (merged).
+    // merged section under Home · Blocks → Tool widgets row.
     // The vance_tw_content_filters_* and vance_tw_vance_ai_* theme_mods still
     // exist in the DB (read as fallback defaults by the merged renderer) but
     // are no longer exposed in the Customizer UI.
@@ -7552,7 +7552,7 @@ function vance_customize_register( $wp_customize ) {
         'title'       => __( 'Promo Block', 'vance-health-hub' ),
         'priority'    => 31.55,
         'panel'       => 'vance_homepage_panel',
-        'description' => __( 'The promo card on the homepage. Position comes from Homepage &rarr; Section Order.', 'vance-health-hub' ),
+        'description' => __( 'The promo card on the homepage. Position comes from Home &middot; Hero &amp; Layout &rarr; Section order.', 'vance-health-hub' ),
     ) );
     vance_register_promo_block_controls(
         $wp_customize,
@@ -9360,7 +9360,7 @@ add_action( 'wp_ajax_vance_save_quiz_results', 'vance_save_quiz_results' );
  * Phase 2 mobile components — Customizer registration + helpers.
  * See MOBILE-PLAN.md §2. Every component defaults OFF so nothing renders on the
  * live site until an admin explicitly enables it under Appearance → Customize →
- * Mobile Experience.
+ * Site · Mobile → Bottom navigation & phone components.
  * ---------------------------------------------------------------------------
  */
 function vance_mobile_customize_register( $wp_customize ) {

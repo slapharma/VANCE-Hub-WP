@@ -159,7 +159,7 @@ class VHH_Apply {
 		}
 		$key = self::api_key();
 		if ( '' === $key ) {
-			return new WP_Error( 'vhh_no_key', 'No OpenRouter key. Set it in Appearance → Customize → Ask AI Configuration (or the Article Annotations override).' );
+			return new WP_Error( 'vhh_no_key', 'No OpenRouter key. Set it in Appearance → Customize → Section · VANCE-Ai → Configuration + hero design switch (or the override in Content · Articles → Article annotations).' );
 		}
 
 		$instruction = $todo->post_title . "\n\n" . $todo->post_content;
@@ -369,7 +369,7 @@ class VHH_Apply {
 		}
 
 		if ( '' === self::api_key() ) {
-			echo '<p class="description">' . esc_html__( 'No OpenRouter key found. Set it in Appearance → Customize → Ask AI Configuration.', 'vhh-annotations' ) . '</p>';
+			echo '<p class="description">' . esc_html__( 'No OpenRouter key found. Set it in Appearance → Customize → Section · VANCE-Ai → Configuration + hero design switch.', 'vhh-annotations' ) . '</p>';
 			echo '<p>' . self::reject_link( $post->ID ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput
 			return;
 		}

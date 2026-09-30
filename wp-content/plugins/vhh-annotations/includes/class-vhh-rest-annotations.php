@@ -145,7 +145,7 @@ class VHH_REST_Annotations {
 			return $enabled;
 		}
 		// Restricted to roles holding vhh_annotate — Administrator and Editor
-		// by default; Customize → Article Annotations can widen it to more
+		// by default; Customize → Content · Articles → Article annotations can widen it to more
 		// roles. Moderation (resolve/delete/export) still needs the separate
 		// vhh_moderate_annotations capability (see can_patch / can_export).
 		if ( ! VHH_Plugin::user_can_annotate() ) {

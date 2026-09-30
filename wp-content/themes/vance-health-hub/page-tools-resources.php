@@ -9,7 +9,8 @@
  * To activate: create a Page titled "Tools & Resources", set slug
  * `tools-resources`, and choose "Tools & Resources" as the template.
  *
- * Customizer panel: Appearance → Customize → Tools & Resources Page.
+ * Customizer panel: Appearance → Customize → Section · Recipes & Tools (the
+ * sections prefixed "Tools shelf:").
  */
 get_header(); ?>
 
@@ -17,9 +18,10 @@ get_header(); ?>
 
     <?php
     /*
-     * HERO. Two designs, chosen by Appearance -> Customize -> Page - Tools &
-     * Resources -> Hero Section -> "Free tools hero design". Defaults to
-     * 'classic', so deploying this changes nothing until an admin flips it.
+     * HERO. Two designs, chosen by Appearance -> Customize -> Section · Recipes
+     * & Tools -> Tools shelf: Hero (classic) + design switch -> "Free tools
+     * hero design". Defaults to 'classic', so deploying this changes nothing
+     * until an admin flips it.
      * The spotlight renderer reads this page's OWN tag/title/description
      * keys, and the account button's label and link too, so switching design
      * cannot silently reword the page. See inc/page-hero-spotlight.php.

@@ -24,8 +24,9 @@ if ( is_category() ) {
 
         /*
          * A leaf sub-category of a grouped parent routes here too, so its own
-         * page is laid out with the layout picked in Customizer → Sub-Category
-         * Layouts instead of always falling through to the flat grid below.
+         * page is laid out with the layout picked in Customizer → Content ·
+         * Categories → Sub-category layouts instead of always falling through
+         * to the flat grid below.
          * Without this, a sub-category set to Posters looked right inside its
          * parent archive and reverted to standard cards on its own page.
          */
@@ -192,8 +193,8 @@ if ( is_category() ) {
     <?php get_template_part( 'template-parts/inner-category-nav' ); ?>
 
     <?php
-    // Prime Block for category archives (Customizer → Homepage → Prime Block
-    // Categories). Called once per placement slot; the block renders in the
+    // Prime Block for category archives (Customizer → Content · Categories →
+    // Prime block on category pages). Called once per placement slot; the block renders in the
     // slot matching its "Position on the page" setting and bails in the other
     // two, and bails entirely when the master toggle is off or this category
     // is unticked. A direct call rather than a hook, matching the category
@@ -202,7 +203,7 @@ if ( is_category() ) {
         vance_render_prime_block_categories( 'above_promo' );
     }
 
-    // Configurable per-category promo block (Customizer → Content → Category Promo Blocks).
+    // Configurable per-category promo block (Customizer → Content · Category Promo Blocks).
     if ( is_category() && function_exists( 'vance_render_category_promo' ) ) {
         vance_render_category_promo( get_queried_object_id() );
     }

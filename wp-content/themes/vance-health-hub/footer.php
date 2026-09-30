@@ -422,7 +422,8 @@
 
 <?php
 // Phase 2.1 — mobile bottom navigation (renders only when enabled in
-// Customizer → Mobile Experience, and never on the dashboard). Self-gated.
+// Customizer → Site · Mobile → Bottom navigation & phone components, and
+// never on the dashboard). Self-gated.
 include get_template_directory() . '/template-parts/mobile-bottom-nav.php';
 // Phase 2.2 — mobile sticky CTA bar (self-gated; never shows alongside the
 // bottom nav or on the dashboard).

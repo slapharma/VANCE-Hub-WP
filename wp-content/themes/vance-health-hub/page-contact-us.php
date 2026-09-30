@@ -64,8 +64,8 @@ get_header(); ?>
 
     <!-- ══ HERO SECTION ══════════════════════════════════════════════════ -->
     <?php
-    // Two hero designs share this slot, chosen in Customize → Page - Contact Us
-    // → Hero Section → "Contact hero design":
+    // Two hero designs share this slot, chosen in Customize → Pages · Contact, Guide,
+    // Search, 404 → Contact: Hero (classic) + design switch → "Contact hero design":
     //   classic   — the dark navy band below (default; nothing changes on deploy).
     //   spotlight — the light, action-led hero, inc/page-hero-spotlight.php.
     // The spotlight reads the same tag/title/description settings the classic

@@ -169,8 +169,8 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
 
     <?php
     /* ============================ HERO ============================ */
-    // Two hero designs share this slot, chosen in Customize → Page - About Us →
-    // Hero Section → "About hero design":
+    // Two hero designs share this slot, chosen in Customize → Pages · About Us →
+    // Hero (classic) + design switch → "About hero design":
     //   classic   — the dark navy band below (default; nothing changes on deploy).
     //   spotlight — the light, action-led hero, inc/page-hero-spotlight.php.
     // The spotlight reads the same tag/title/description settings the classic

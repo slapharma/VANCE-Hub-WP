@@ -13,7 +13,7 @@
  * Attributes). Then `wp vance discounts import tools/discounts-seed.json`
  * and `wp vance discounts check` (plan §5's "Manual, on the live site" list).
  *
- * Customizer panel: Appearance → Customize → Page - IBD Discounts.
+ * Customizer panel: Appearance → Customize → Section · Benefits & Access.
  */
 get_header();
 ?>

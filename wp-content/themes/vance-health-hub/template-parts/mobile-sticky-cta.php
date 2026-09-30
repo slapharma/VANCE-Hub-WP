@@ -7,7 +7,8 @@
  * session via localStorage (not user meta) so it doesn't nag on every scroll
  * but also doesn't persist forever.
  *
- * Renders only when enabled in Customizer → Mobile Experience and only when the
+ * Renders only when enabled in Customizer → Site · Mobile → Bottom navigation &
+ * phone components and only when the
  * bottom nav is NOT showing (see vance_mobile_stickycta_active()). Styles live
  * in assets/css/mobile-components.css §2.2.
  *
