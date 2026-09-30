@@ -472,7 +472,7 @@
 /* highlight / warning callouts */
 .gi-cp-highlight { background: var(--gi-primary-wash); border-left: 4px solid var(--gi-primary); padding: 18px 22px; margin: 20px 0; border-radius: var(--radius-surface); }
 .gi-cp-highlight p { color: #006060; font-size: 15.5px; margin-bottom: 0 !important; }
-.gi-cp-highlight strong { color: var(--gi-primary); }
+.gi-cp-highlight strong { color: #006060; } /* var(--gi-primary) was 4.17:1 on the wash; matches the paragraph colour above */
 .gi-cp-warning { background: #fff8e6; border-left: 4px solid #d4a017; padding: 18px 22px; margin: 20px 0; border-radius: var(--radius-surface); }
 .gi-cp-warning p { color: #6b5a00; font-size: 15.5px; margin-bottom: 0 !important; }
 .gi-cp-warning strong { color: #8b7000; }

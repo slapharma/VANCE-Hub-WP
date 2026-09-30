@@ -119,7 +119,7 @@ $track_icons = array(
                         <h3 style="font-size: 22px; <?php echo $tracks_title_color ? 'color:' . esc_attr( $tracks_title_color ) . ';' : 'color: var(--secondary-color);'; ?> margin-bottom: 12px;"><?php echo esc_html( $t_title ); ?></h3>
                         <p style="<?php echo $tracks_text_color ? 'color:' . esc_attr( $tracks_text_color ) . ';' : 'color: var(--text-light);'; ?> font-size: 15px; margin: 0; line-height: 1.7;"><?php echo esc_html( $t_desc ); ?></p>
                         <div style="margin-top: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--accent-color); border-radius: var(--radius-pill, 999px); font-size: 12px; font-weight: 600; color: var(--primary-color); letter-spacing: 0.3px;">
+                            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--accent-color); border-radius: var(--radius-pill, 999px); font-size: 12px; font-weight: 600; color: #006666; letter-spacing: 0.3px;">
                                 <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color); display: inline-block;"></span>
                                 In development
                             </span>

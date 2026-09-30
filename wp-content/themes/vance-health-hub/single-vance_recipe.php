@@ -114,7 +114,7 @@ while ( have_posts() ) :
 				<aside style="min-width:0;">
 					<?php echo vance_recipe_nutrition_panel_html( $post_id ); // phpcs:ignore -- pre-escaped in vance_recipe_nutrition_panel_html(). ?>
 					<?php if ( $credit_line ) : ?>
-						<p style="margin:14px 4px 0;font-size:11px;color:#94a3b8;line-height:1.6;"><?php echo $credit_line; // phpcs:ignore -- pre-escaped in vance_recipe_credit_line_html(). ?></p>
+						<p style="margin:14px 4px 0;font-size:11px;color:#64748b;line-height:1.6;"><?php echo $credit_line; // phpcs:ignore -- pre-escaped in vance_recipe_credit_line_html(). ?></p>
 					<?php endif; ?>
 
 					<a href="<?php echo esc_url( home_url( '/gastro-meal-planner/#recipes' ) ); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:16px;background:#fff;color:var(--primary-color);font-weight:700;font-size:14px;padding:12px 16px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);text-decoration:none;">
@@ -148,7 +148,7 @@ while ( have_posts() ) :
 								</button>
 							</div>
 							<div id="vance-rs-ingredients-body">
-								<p style="font-size:12.5px;color:#94a3b8;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
+								<p style="font-size:12.5px;color:#64748b;margin:0 0 14px;">Quantities update as you change servings — treat scaled amounts as a guide, not an exact measure.</p>
 								<?php foreach ( $ingredients as $section ) :
 									$section_name = isset( $section['section'] ) ? trim( (string) $section['section'] ) : '';
 									$items        = isset( $section['items'] ) ? (array) $section['items'] : array();
