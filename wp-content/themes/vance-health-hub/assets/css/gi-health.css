@@ -622,7 +622,32 @@
     .gi-cp-grid, .gi-cp-tips, .gi-cp-step-cards, .gi-cp-split { grid-template-columns: 1fr !important; }
     .gi-cp-explore-links { flex-direction: column; align-items: center; }
     .gi-cp-card { padding: 25px 20px; }
-    .gi-cp-nav { top: 70px; }
+    /* Compact jump bar. On a phone the six links wrapped onto three rows and,
+       stuck under the header, ate ~125px of a 812px screen. Now one
+       horizontally-scrolling row of chips, full width, ~48px tall; the last
+       chip is cut off by the screen edge, which signals there is more to swipe.
+       The chip for the section being read is highlighted (scrollspy in
+       page-gi-condition.php). */
+    .gi-cp-nav {
+        top: 70px;
+        margin: 0 -20px 24px;
+        padding: 6px 0;
+        border-radius: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        scroll-snap-type: x proximity;
+        overscroll-behavior-x: contain;
+    }
+    .gi-cp-nav::-webkit-scrollbar { display: none; }
+    .gi-cp-nav ul { flex-wrap: nowrap; justify-content: flex-start; gap: 6px; padding: 0 20px; width: max-content; min-width: 100%; }
+    .gi-cp-nav li { flex: 0 0 auto; scroll-snap-align: center; }
+    .gi-cp-nav a { min-height: 36px; padding: 6px 14px; font-size: 13px; }
+    /* Teal, not the bar's own navy: navy-on-navy differed from the resting chip
+       only by its border, which read like the hover state. */
+    .gi-cp-nav a.is-current { background: #008080; color: #fff; border-color: #fff; }
+    /* Bar is 48px instead of 125px, so jumps land closer under the header. */
+    .gi-cp-section { scroll-margin-top: 130px; }
 }
 
 /* ---------- Reduced motion ---------- */

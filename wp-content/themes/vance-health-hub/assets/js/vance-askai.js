@@ -1036,12 +1036,30 @@
 		}
 	}
 
+	// On phones the modal is a full-screen app view, so the system Back gesture
+	// or button should close it rather than leave the page underneath. One
+	// history entry is pushed while it is open and popped when it closes.
+	// modalPopPending covers the gap between closeModal() asking for that pop
+	// and the browser delivering it: history.back() is asynchronous, so without
+	// it a quick reopen would be closed again by the popstate meant for the
+	// previous close. If the reader follows a link out of the modal, the entry
+	// stays behind and Back lands on this page once more; accepted.
+	var modalHistoryPushed = false;
+	var modalPopPending = false;
+
 	function openModal(prefill) {
 		ensureModal();
 		lastFocused = document.activeElement;
 		modalEl.classList.add('is-open');
 		document.body.classList.add('vance-askai-open');
 		document.addEventListener('keydown', trapFocus);
+
+		if (!modalHistoryPushed && !modalPopPending && window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches) {
+			try {
+				window.history.pushState({ vanceAskAi: 1 }, '');
+				modalHistoryPushed = true;
+			} catch (e) {}
+		}
 
 		renderSurface(modalSurface);
 		syncLevelUI(modalSurface);
@@ -1055,9 +1073,31 @@
 		}, 30);
 	}
 
+	window.addEventListener('popstate', function () {
+		if (modalPopPending) {
+			// This is the pop closeModal() asked for, not a Back gesture.
+			modalPopPending = false;
+			return;
+		}
+		if (modalEl && modalEl.classList.contains('is-open')) {
+			// The Back gesture already popped our entry; do not pop it again.
+			modalHistoryPushed = false;
+			closeModal();
+		}
+	});
+
 	function closeModal() {
 		if (!modalEl) {
 			return;
+		}
+		if (modalHistoryPushed) {
+			modalHistoryPushed = false;
+			try {
+				modalPopPending = true;
+				window.history.back();
+			} catch (e) {
+				modalPopPending = false;
+			}
 		}
 		modalEl.classList.remove('is-open');
 		document.body.classList.remove('vance-askai-open');
