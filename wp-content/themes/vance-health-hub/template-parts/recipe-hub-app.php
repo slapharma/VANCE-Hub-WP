@@ -322,7 +322,7 @@ $vance_sort_date = $vance_is_admin && isset( $_GET['sort'] ) && 'date' === $_GET
 			<?php endforeach; ?>
 		</div>
 
-		<p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.6;"><?php esc_html_e( 'Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your health team.', 'vance-health-hub' ); ?></p>
+		<p style="margin:20px 0 0; font-size:12px; color:#64748b; line-height:1.6;"><?php esc_html_e( 'Meal plans are a general guide, not personalised dietary advice. Check any dietary change with your health team.', 'vance-health-hub' ); ?></p>
 	</div>
 </section>
 

@@ -248,13 +248,13 @@
 .vance-rh-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 @media (max-width: 720px) { .vance-rh-slots { grid-template-columns: repeat(2, 1fr); } }
 .vance-rh-slot { border: 1px dashed #cbd5e1; border-radius: var(--radius-surface); padding: 10px; min-height: 92px; display: flex; flex-direction: column; }
-.vance-rh-slot-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; }
-.vance-rh-slot-add { flex: 1; background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.vance-rh-slot-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #64748b; margin-bottom: 6px; }
+.vance-rh-slot-add { flex: 1; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .vance-rh-slot-add:hover { color: var(--primary-color); }
 .vance-rh-slot-filled { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
 .vance-rh-slot-meal-name { font-size: 12.5px; font-weight: 600; color: #0f172a; line-height: 1.3; }
 .vance-rh-slot-meal-facts { font-size: 11px; color: #64748b; margin-top: 4px; }
-.vance-rh-slot-remove { align-self: flex-end; background: none; border: none; color: #94a3b8; font-size: 11px; cursor: pointer; padding: 4px 0 0; border-radius: var(--radius-control); }
+.vance-rh-slot-remove { align-self: flex-end; background: none; border: none; color: #64748b; font-size: 11px; cursor: pointer; padding: 4px 0 0; border-radius: var(--radius-control); }
 .vance-rh-slot-remove:hover { color: #dc2626; }
 
 .vance-rh-armed { display: none; background: #EEF6F6; border: 1px solid var(--primary-color); border-radius: var(--radius-surface); padding: 14px 18px; margin-bottom: 18px; font-size: 14px; color: #0A1929; align-items: center; justify-content: space-between; gap: 12px; }
@@ -281,3 +281,92 @@
    the dashboard card already provides the container. */
 .vance-rh-embedded .vance-rh-section { padding: 0; background: none; }
 .vance-rh-embedded .vance-rh-section + .vance-rh-section { margin-top: 40px; }
+
+/* =========================================================================
+   Phone layout (below 768px)
+   Pairs with the "Phone layout" block in assets/js/recipe-planner.js. The
+   elements it builds (plan bar, day tabs, back link, slot sheet) are hidden
+   here by default so desktop and the dashboard tab never show them.
+   ========================================================================= */
+.vance-rh-planbar,
+.vance-rh-daytabs,
+.vance-rh-backtop,
+.vance-rh-sheet { display: none; }
+
+@media (max-width: 767.98px) {
+	#planner { scroll-margin-top: 80px; }
+	.vance-rh-section { padding: 32px 0; }
+
+	/* Filter bar: Meals and Tags share the first row, Search gets a full row
+	   under them. Three across left ~105px each, which clipped the search
+	   placeholder and "Northern Ireland"-length labels at the 16px that stops
+	   iOS zooming the page on focus. */
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) { flex-wrap: wrap; gap: 10px; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group--meals,
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group--tags { flex: 1 1 calc(50% - 5px); }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-group--search { flex: 1 1 100%; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-meal-select { min-height: 44px; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-tags-toggle { min-height: 44px; font-size: 14px; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search { min-height: 44px; padding-left: 36px; }
+	.vance-rh-controls:has(.vance-rh-tags-panel--js) .vance-rh-search-icon { left: 12px; }
+
+	/* Planner head: name field full width; Save on top, then Autofill and Clear
+	   sharing a row, so the head is two button rows instead of three. */
+	.vance-rh-planner-head > div:first-child { flex: 1 1 100%; }
+	.vance-rh-plan-name { width: 100%; min-width: 0; box-sizing: border-box; }
+	.vance-rh-planner-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+	.vance-rh-planner-buttons > * { min-width: 0; padding-left: 10px; padding-right: 10px; font-size: 13px; }
+	.vance-rh-planner-buttons > .vance-rh-save { grid-column: 1 / -1; order: -1; font-size: 14px; }
+
+	/* Planner: one day at a time. Tabs choose the day; the four meals stack as
+	   rows (label left, meal right) instead of a 2x2 grid of 92px tiles. */
+	.vance-rh-daytabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; padding: 2px 0; }
+	.vance-rh-daytabs::-webkit-scrollbar { display: none; }
+	.vance-rh-daytab { position: relative; flex: 1 0 auto; min-width: 44px; min-height: 44px; padding: 0 10px; border: 1px solid #e2e8f0; border-radius: var(--radius-control); background: #fff; color: #475569; font-size: 13px; font-weight: 700; cursor: pointer; }
+	.vance-rh-daytab.is-active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+	.vance-rh-daytab-dot { display: none; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--primary-color); }
+	.vance-rh-daytab.has-meals .vance-rh-daytab-dot { display: block; }
+	.vance-rh-daytab.is-active .vance-rh-daytab-dot { background: #fff; }
+	.vance-rh-backtop { display: inline-flex; align-items: center; min-height: 44px; margin: 0 0 4px; padding: 0; background: none; border: none; color: var(--primary-color); font-size: 14px; font-weight: 700; cursor: pointer; }
+	.vance-rh-day { display: none; }
+	.vance-rh-day.is-active { display: block; }
+	.vance-rh-slots { grid-template-columns: 1fr; gap: 8px; }
+	.vance-rh-slot { flex-direction: row; align-items: center; gap: 12px; min-height: 56px; padding: 6px 12px; }
+	.vance-rh-slot-label { flex: none; width: 76px; margin: 0; font-size: 12px; }
+	.vance-rh-slot-body { flex: 1; min-width: 0; display: flex; }
+	.vance-rh-slot-add { min-height: 44px; justify-content: flex-start; font-size: 14px; font-weight: 600; color: var(--primary-color); }
+	.vance-rh-slot-filled { flex-direction: row; align-items: center; gap: 8px; }
+	.vance-rh-slot-filled > div { flex: 1; min-width: 0; }
+	.vance-rh-slot-remove { align-self: center; min-height: 44px; padding: 0 0 0 8px; font-size: 13px; }
+
+	/* Plan bar: pinned above the tab bar while the planner is off screen. */
+	.vance-rh-planbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 999; padding: 8px 8px 8px 16px; background: #0A1929; color: #fff; border-radius: var(--radius-surface); box-shadow: 0 6px 24px rgba(15, 23, 42, 0.28); }
+	.vance-rh-planbar[hidden] { display: none; }
+	body.has-vance-bottom-nav .vance-rh-planbar { bottom: calc(56px + 8px + env(safe-area-inset-bottom)); }
+	.vance-rh-planbar-text { font-size: 14px; }
+	.vance-rh-planbar-text b { font-family: 'Outfit', sans-serif; }
+	.vance-rh-planbar-btn { flex: none; min-height: 44px; padding: 0 20px; border: none; border-radius: var(--radius-control); background: var(--primary-color); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+	/* Both sit in the same spot; the plan bar wins while it is showing. */
+	body.vance-rh-has-planbar .vance-sticky-cta { display: none !important; }
+
+	/* The toast must clear the tab bar (and the plan bar when it is up). */
+	.vance-rh-toast { bottom: calc(76px + env(safe-area-inset-bottom)); width: max-content; max-width: calc(100vw - 32px); text-align: center; }
+	body.vance-rh-has-planbar .vance-rh-toast { bottom: calc(136px + env(safe-area-inset-bottom)); }
+
+	/* Add-to-plan sheet. */
+	.vance-rh-sheet { position: fixed; inset: 0; z-index: 100022; align-items: flex-end; background: rgba(10, 25, 41, 0.6); }
+	.vance-rh-sheet.is-open { display: flex; }
+	.vance-rh-sheet-panel { width: 100%; max-height: 90dvh; overflow-y: auto; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); background: #fff; border-radius: var(--radius-surface) var(--radius-surface) 0 0; }
+	.vance-rh-sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 0 12px; }
+	.vance-rh-sheet-headtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+	.vance-rh-sheet-headtext strong { font-family: 'Outfit', sans-serif; font-size: 17px; color: #0A1929; }
+	.vance-rh-sheet-sub { font-size: 13px; color: #475569; line-height: 1.4; }
+	.vance-rh-sheet-close { flex: none; width: 44px; height: 44px; margin: -6px -10px 0 0; background: none; border: none; font-size: 26px; color: #475569; cursor: pointer; }
+	.vance-rh-sheet-grid { display: grid; grid-template-columns: 40px repeat(4, minmax(0, 1fr)); gap: 6px; align-items: center; }
+	.vance-rh-sheet-col { font-size: 11px; font-weight: 700; text-align: center; color: #475569; }
+	.vance-rh-sheet-col.is-pref { color: var(--primary-color); }
+	.vance-rh-sheet-day { font-size: 13px; font-weight: 700; color: #0A1929; }
+	.vance-rh-sheet-slot { min-height: 44px; border: 1px dashed #94a3b8; border-radius: var(--radius-control); background: #fff; color: #475569; font-size: 18px; font-weight: 700; cursor: pointer; }
+	.vance-rh-sheet-slot.is-pref { border-color: var(--primary-color); background: #EEF6F6; color: var(--primary-color); }
+	.vance-rh-sheet-slot.is-taken { border-style: solid; border-color: #e2e8f0; background: #f1f5f9; color: #64748b; cursor: default; }
+}
