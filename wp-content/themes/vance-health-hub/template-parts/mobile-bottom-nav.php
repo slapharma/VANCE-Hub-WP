@@ -47,7 +47,8 @@ $vbn_active = function ( $cond ) {
         <svg class="vbn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.1-2.1 2.6-2.4Z" /></svg>
         <span class="vbn-label"><?php esc_html_e( 'Tools', 'vance-health-hub' ); ?></span>
     </a>
-    <a class="vbn-tab<?php $vbn_active( $vbn_is_askai ); ?>" href="<?php echo esc_url( $vbn_askai ); ?>">
+    <?php /* data-vance-askai-open: assets/js/vance-askai.js opens the full-screen chat in place of navigating; the href is the fallback if that script has not loaded. */ ?>
+    <a class="vbn-tab<?php $vbn_active( $vbn_is_askai ); ?>" href="<?php echo esc_url( $vbn_askai ); ?>"<?php echo $vbn_is_askai ? '' : ' data-vance-askai-open aria-haspopup="dialog"'; ?>>
         <svg class="vbn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.6A8 8 0 1 1 21 12Z" /><circle cx="8.5" cy="12" r="1.1" /><circle cx="12" cy="12" r="1.1" /><circle cx="15.5" cy="12" r="1.1" /></svg>
         <span class="vbn-label"><?php esc_html_e( 'VANCE-Ai', 'vance-health-hub' ); ?></span>
     </a>

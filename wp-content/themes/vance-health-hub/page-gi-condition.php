@@ -1310,6 +1310,32 @@ $is_redesigned = in_array( $slug, $redesigned_conditions, true );
     nums.forEach(function (el) { io.observe(el); });
   })();
 
+  /* Jump-bar scrollspy: highlight the chip for the section being read and keep
+     it in view inside the (phone-only) horizontally scrolling bar. */
+  (function () {
+    var bar = document.querySelector('.gi-cp-nav');
+    if (!bar || !('IntersectionObserver' in window)) return;
+    var links = bar.querySelectorAll('a[href^="#"]');
+    var map = {};
+    links.forEach(function (a) {
+      var sec = document.getElementById(a.getAttribute('href').slice(1));
+      if (sec) map[sec.id] = a;
+    });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var a = map[e.target.id];
+        if (!e.isIntersecting || !a) return;
+        links.forEach(function (l) { l.classList.remove('is-current'); l.removeAttribute('aria-current'); });
+        a.classList.add('is-current');
+        a.setAttribute('aria-current', 'true');
+        if (bar.scrollWidth > bar.clientWidth) {
+          bar.scrollTo({ left: a.offsetLeft - (bar.clientWidth - a.offsetWidth) / 2, behavior: 'smooth' });
+        }
+      });
+    }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+    Object.keys(map).forEach(function (id) { io.observe(document.getElementById(id)); });
+  })();
+
   /* TOC scrollspy */
   (function () {
     var links = document.querySelectorAll('.gi-toc a[href^="#"]');
