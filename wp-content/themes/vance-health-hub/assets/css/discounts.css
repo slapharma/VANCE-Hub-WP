@@ -95,7 +95,7 @@
 /* Region note moved to the bottom of the grid card (2026-09-04, once the
    tier badge that used to share a row with it was removed there) — now a
    plain line above the actions, not a flex row of its own. */
-.vance-discount-card-region { font-size: 11px; color: #94A3B8; margin: 0 0 8px; }
+.vance-discount-card-region { font-size: 11px; color: #64748b; margin: 0 0 8px; }
 /* Eyebrow / title / body sizes are .vpd-card's (11px uppercase tag,
    18px navy title, 14px body at 1.6) so the two hub pages set text the same
    way. The provider's old #5B3FA0 becomes the named accent - one teal. */
@@ -246,7 +246,7 @@
 .vance-discount-featured__title-link { text-decoration: none; }
 .vance-discount-featured__title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 8px; line-height: 1.35; }
 .vance-discount-featured__value { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0 0 6px; }
-.vance-discount-featured__verified { font-size: 11px; color: #94A3B8; margin: 0 0 14px; }
+.vance-discount-featured__verified { font-size: 11px; color: #64748b; margin: 0 0 14px; }
 .vance-discount-featured-cta { width: 100%; justify-content: center; }
 .vance-discount-featured-note { display: block; text-align: center; font-size: 11px; color: #64748B; margin-top: 4px; }
 

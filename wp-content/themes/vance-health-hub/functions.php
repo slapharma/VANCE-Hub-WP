@@ -4269,7 +4269,58 @@ function vance_post_eyebrow_color( $post_id = null ) {
     }
     $settings = vance_resolve_post_overlay_settings( $post_id );
 
-    return ! empty( $settings['color'] ) ? $settings['color'] : '#008080';
+    // Every caller draws white text on this colour, or this colour as text on
+    // white, so it has to clear 4.5:1 against white either way. The hero
+    // overlay itself keeps the configured colour; only the small labels shift.
+    return vance_ensure_white_contrast( ! empty( $settings['color'] ) ? $settings['color'] : '#008080' );
+}
+
+/**
+ * Darken a hex colour until it reaches WCAG AA (4.5:1) against white.
+ *
+ * Used for category chips, where an editor-chosen overlay colour (a light blue
+ * such as #87ADC4 gives white text only 2.39:1) sets the chip's background.
+ * Colours that already pass are returned untouched, so only the failing
+ * categories change, and only as far as they must: each step scales the
+ * channels by 0.93, which keeps the hue.
+ *
+ * Anything that is not a #rgb / #rrggbb hex is returned as given.
+ *
+ * @param string $color Hex colour.
+ * @return string Hex colour with at least 4.5:1 contrast on white.
+ */
+function vance_ensure_white_contrast( $color ) {
+    $hex = ltrim( (string) $color, '#' );
+    if ( 3 === strlen( $hex ) ) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+        return $color;
+    }
+    $rgb = array( hexdec( substr( $hex, 0, 2 ) ), hexdec( substr( $hex, 2, 2 ) ), hexdec( substr( $hex, 4, 2 ) ) );
+
+    $contrast = function ( $c ) {
+        $lin = array_map(
+            function ( $v ) {
+                $v /= 255;
+                return $v <= 0.03928 ? $v / 12.92 : pow( ( $v + 0.055 ) / 1.055, 2.4 );
+            },
+            $c
+        );
+        return 1.05 / ( 0.2126 * $lin[0] + 0.7152 * $lin[1] + 0.0722 * $lin[2] + 0.05 );
+    };
+
+    $steps = 0;
+    while ( $contrast( $rgb ) < 4.5 && $steps < 40 ) {
+        $rgb = array_map(
+            function ( $v ) {
+                return (int) round( $v * 0.93 );
+            },
+            $rgb
+        );
+        $steps++;
+    }
+    return 0 === $steps ? $color : sprintf( '#%02x%02x%02x', $rgb[0], $rgb[1], $rgb[2] );
 }
 
 /**

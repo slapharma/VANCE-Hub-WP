@@ -144,7 +144,7 @@ $agent_data = array(
 
 .agent-status {
     font-size: 12px;
-    color: #22C55E;
+    color: #15803d; /* was #22C55E: 2.18:1 on the light header; the dot beside it keeps the brighter green */
     font-weight: 700;
     display: flex;
     align-items: center;
