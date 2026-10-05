@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>VANCE Screenshot Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Concept: a QA contact sheet. One row per page or tool state, desktop capture beside the phone capture, in the Hub's own teal. */
+:root {
+  --bg: #f3f7f7; --card: #ffffff; --ink: #0f2a2c; --mut: #54696b; --line: #d3e0e0;
+  --teal: #006e6e; --teal-soft: #dff0f0; --on-teal: #ffffff;
+  --shadow: 0 1px 2px rgba(15, 42, 44, .06), 0 6px 18px rgba(15, 42, 44, .05);
+  --display: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1617; --card: #132123; --ink: #e5f0f0; --mut: #9bb3b4; --line: #264043;
+    --teal: #43c4c4; --teal-soft: #11393b; --on-teal: #062123; --shadow: none; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding-inline: 16px; padding-block: 0 56px; margin: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+a { color: var(--teal); }
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+header.top { padding-block: 40px 14px; display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--mut); font-weight: 600; }
+h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.05; font-weight: 700; color: var(--teal); }
+.lede { color: var(--mut); max-width: 66ch; margin: 0; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.stats div { display: flex; align-items: baseline; gap: 6px; }
+.stats b { font: 600 22px var(--display); }
+.stats span { color: var(--mut); font-size: 13px; }
+.controls { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-block: 12px; margin-top: 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--body); border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline; }
+.chip em { font-style: normal; color: var(--mut); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: var(--on-teal); }
+.chip[aria-pressed="true"] em { color: var(--on-teal); opacity: .8; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card); }
+.seg button { font: 500 13px var(--body); border: 0; background: transparent; color: var(--ink); padding: 7px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--teal-soft); color: var(--teal); font-weight: 600; }
+.search { flex: 1 1 200px; min-width: 0; font: 14px var(--body); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--card); color: var(--ink); }
+.count { color: var(--mut); font-size: 13px; font-variant-numeric: tabular-nums; }
+section.group { margin-top: 30px; }
+section.group > h2 { font-size: 22px; padding-bottom: 8px; border-bottom: 2px solid var(--teal); display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+section.group > h2 small { font: 500 13px var(--body); color: var(--mut); }
+.rows { display: grid; gap: 12px; margin-top: 14px; }
+.row { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 14px; box-shadow: var(--shadow); --th: 250px; }
+.info { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.info h3 { font-size: 17px; font-weight: 600; line-height: 1.2; }
+.slug { font: 11.5px var(--mono); color: var(--mut); overflow-wrap: anywhere; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 2px 7px; background: var(--teal-soft); color: var(--teal); }
+.media { display: flex; gap: 12px; align-items: flex-start; min-width: 0; overflow: hidden; }
+.shot { appearance: none; border: 1px solid var(--line); border-radius: 8px; padding: 0; background: var(--bg); cursor: zoom-in; overflow: hidden; height: var(--th); flex: 0 0 auto; max-width: 100%; }
+.shot.d { aspect-ratio: 960 / 600; }
+.shot.m { aspect-ratio: 390 / 844; }
+.shot img { display: block; height: 100%; width: 100%; object-fit: cover; object-position: top left; }
+.shot:hover { border-color: var(--teal); }
+.nodev { height: var(--th); display: grid; place-items: center; color: var(--mut); font-size: 12px; border: 1px dashed var(--line); border-radius: 8px; padding-inline: 14px; }
+.media.only-d .m, .media.only-m .d { display: none; }
+
+.vids { margin-top: 40px; }
+.vids > h2 { font-size: 22px; padding-bottom: 8px; border-bottom: 2px solid var(--teal); }
+.vids > p { color: var(--mut); margin: 10px 0 0; max-width: 66ch; }
+.vgroup { margin-top: 18px; }
+.vgroup h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--mut); margin-bottom: 10px; }
+.vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.vgrid.phone { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.vcard { appearance: none; text-align: left; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card); cursor: pointer; color: var(--ink); box-shadow: var(--shadow); }
+.vcard:hover { border-color: var(--teal); }
+.vcard .poster { position: relative; display: block; background: #0c1617; aspect-ratio: 16 / 10; }
+.vgrid.phone .vcard .poster { aspect-ratio: 390 / 844; }
+.vcard img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.vcard .play { position: absolute; inset: 0; display: grid; place-items: center; }
+.vcard .play i { width: 46px; height: 46px; border-radius: 50%; background: rgba(0, 110, 110, .9); display: grid; place-items: center; }
+.vcard .play i::after { content: ""; border-style: solid; border-width: 9px 0 9px 15px; border-color: transparent transparent transparent #fff; margin-left: 4px; }
+.vcard span.cap { display: block; padding: 8px 10px; font: 500 13px var(--body); }
+.vcard small { display: block; padding: 0 10px 8px; color: var(--mut); font: 11.5px var(--mono); }
+
+footer { margin-top: 40px; color: var(--mut); font-size: 12.5px; }
+
+#lb { position: fixed; inset: 0; z-index: 50; background: rgba(5, 14, 15, .92); display: grid; grid-template-rows: auto minmax(0, 1fr); padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)); }
+#lb[hidden] { display: none; }
+#lb .bar2 { display: flex; align-items: center; gap: 8px; color: #e9f4f4; padding-bottom: 10px; flex-wrap: wrap; }
+#lb .t { font: 600 16px var(--display); margin-right: auto; min-width: 0; overflow-wrap: anywhere; }
+#lb small { color: #a9c3c4; }
+#lb .btn { font: 600 13px var(--body); border: 1px solid #2c4a4a; background: #17302f; color: #e9f4f4; border-radius: 8px; padding: 7px 12px; cursor: pointer; text-decoration: none; }
+#lb .btn[aria-pressed="true"] { background: #0a6d6d; border-color: #43c4c4; }
+#lb .btn[hidden] { display: none; }
+#lb .stage { min-height: 0; overflow: auto; display: flex; justify-content: center; align-items: flex-start; }
+#lb .stage img { display: block; border-radius: 6px; background: #fff; height: auto; }
+#lb .stage img.dm { width: min(100%, 1440px); }
+#lb .stage img.mb { width: min(100%, 390px); }
+#lb .stage video { max-width: 100%; max-height: 100%; border-radius: 6px; background: #000; align-self: center; }
+#lb .msg { color: #a9c3c4; align-self: center; position: absolute; }
+@media (max-width: 760px) { .row { grid-template-columns: 1fr; --th: 190px; } header.top { padding-block-start: 28px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Vance Health Hub, 5 October 2026</div>
+    <h1>VANCE Screenshot Index</h1>
+    <p class="lede">Every main page, content type, free tool and My Dashboard view, captured on a 1440 wide desktop and a 390 wide phone. Click any thumbnail for the full size capture, or any video to play it.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="controls" role="region" aria-label="Filters">
+    <div class="chips" id="chips"></div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Device">
+        <button type="button" data-dev="both" aria-pressed="true">Desktop and phone</button>
+        <button type="button" data-dev="desktop" aria-pressed="false">Desktop</button>
+        <button type="button" data-dev="mobile" aria-pressed="false">Phone</button>
+      </div>
+      <input class="search" id="q" type="search" placeholder="Search by name, for example calculator" aria-label="Search screenshots">
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <main id="out"></main>
+
+  <section class="vids" id="vids">
+    <h2>Scroll videos</h2>
+    <p>Smooth scroll-throughs from top to bottom of the longest pages. Click a video to play it.</p>
+    <div id="vwrap"></div>
+  </section>
+
+  <footer>Captured against the live site on 5 October 2026. My Dashboard views use a test account with fictional demo content.</footer>
+</div>
+
+<div id="lb" hidden role="dialog" aria-modal="true" aria-label="Preview">
+  <div class="bar2">
+    <span class="t" id="lbt"></span>
+    <small id="lbs"></small>
+    <button class="btn" id="vscreen" type="button" aria-pressed="true" hidden>Screen</button>
+    <button class="btn" id="vfull" type="button" aria-pressed="false" hidden>Full page</button>
+    <a class="btn" id="orig" target="_blank" rel="noopener">Open original</a>
+    <button class="btn" id="prev" type="button" aria-label="Previous">Prev</button>
+    <button class="btn" id="next" type="button" aria-label="Next">Next</button>
+    <button class="btn" id="close" type="button">Close</button>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+const DATA = {"list":[{"group":"pages","name":"home","thumbs":{"desktop":"thumbs/desktop/pages__home.jpg","mobile":"thumbs/mobile/pages__home.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/home__static.png","full":"shots/desktop/pages/home__full.png"},"mobile":{"static":"shots/mobile/pages/home__static.png","full":"shots/mobile/pages/home__full.png"}}},{"group":"pages","name":"about-us","thumbs":{"desktop":"thumbs/desktop/pages__about-us.jpg","mobile":"thumbs/mobile/pages__about-us.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/about-us__static.png","full":"shots/desktop/pages/about-us__full.png"},"mobile":{"static":"shots/mobile/pages/about-us__static.png","full":"shots/mobile/pages/about-us__full.png"}}},{"group":"pages","name":"contact-us","thumbs":{"desktop":"thumbs/desktop/pages__contact-us.jpg","mobile":"thumbs/mobile/pages__contact-us.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/contact-us__static.png","full":"shots/desktop/pages/contact-us__full.png"},"mobile":{"static":"shots/mobile/pages/contact-us__static.png","full":"shots/mobile/pages/contact-us__full.png"}}},{"group":"pages","name":"get-started-today","thumbs":{"desktop":"thumbs/desktop/pages__get-started-today.jpg","mobile":"thumbs/mobile/pages__get-started-today.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/get-started-today__static.png","full":"shots/desktop/pages/get-started-today__full.png"},"mobile":{"static":"shots/mobile/pages/get-started-today__static.png","full":"shots/mobile/pages/get-started-today__full.png"}}},{"group":"pages","name":"healthcare-professionals","thumbs":{"desktop":"thumbs/desktop/pages__healthcare-professionals.jpg","mobile":"thumbs/mobile/pages__healthcare-professionals.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/healthcare-professionals__static.png","full":"shots/desktop/pages/healthcare-professionals__full.png"},"mobile":{"static":"shots/mobile/pages/healthcare-professionals__static.png","full":"shots/mobile/pages/healthcare-professionals__full.png"}}},{"group":"pages","name":"webinars-and-courses","thumbs":{"desktop":"thumbs/desktop/pages__webinars-and-courses.jpg","mobile":"thumbs/mobile/pages__webinars-and-courses.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/webinars-and-courses__static.png","full":"shots/desktop/pages/webinars-and-courses__full.png"},"mobile":{"static":"shots/mobile/pages/webinars-and-courses__static.png","full":"shots/mobile/pages/webinars-and-courses__full.png"}}},{"group":"pages","name":"knowledgebase","thumbs":{"desktop":"thumbs/desktop/pages__knowledgebase.jpg","mobile":"thumbs/mobile/pages__knowledgebase.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/knowledgebase__static.png","full":"shots/desktop/pages/knowledgebase__full.png"},"mobile":{"static":"shots/mobile/pages/knowledgebase__static.png","full":"shots/mobile/pages/knowledgebase__full.png"}}},{"group":"pages","name":"user-guide","thumbs":{"desktop":"thumbs/desktop/pages__user-guide.jpg","mobile":"thumbs/mobile/pages__user-guide.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/user-guide__static.png","full":"shots/desktop/pages/user-guide__full.png"},"mobile":{"static":"shots/mobile/pages/user-guide__static.png","full":"shots/mobile/pages/user-guide__full.png"}}},{"group":"pages","name":"gastro-health-explained","thumbs":{"desktop":"thumbs/desktop/pages__gastro-health-explained.jpg","mobile":"thumbs/mobile/pages__gastro-health-explained.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/gastro-health-explained__static.png","full":"shots/desktop/pages/gastro-health-explained__full.png"},"mobile":{"static":"shots/mobile/pages/gastro-health-explained__static.png","full":"shots/mobile/pages/gastro-health-explained__full.png"}}},{"group":"pages","name":"login","thumbs":{"desktop":"thumbs/desktop/pages__login.jpg","mobile":"thumbs/mobile/pages__login.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/login__static.png"},"mobile":{"static":"shots/mobile/pages/login__static.png"}}},{"group":"pages","name":"register","thumbs":{"desktop":"thumbs/desktop/pages__register.jpg","mobile":"thumbs/mobile/pages__register.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/register__static.png","full":"shots/desktop/pages/register__full.png"},"mobile":{"static":"shots/mobile/pages/register__static.png","full":"shots/mobile/pages/register__full.png"}}},{"group":"pages","name":"search-hit","thumbs":{"desktop":"thumbs/desktop/pages__search-hit.jpg","mobile":"thumbs/mobile/pages__search-hit.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/search-hit__static.png","full":"shots/desktop/pages/search-hit__full.png"},"mobile":{"static":"shots/mobile/pages/search-hit__static.png","full":"shots/mobile/pages/search-hit__full.png"}}},{"group":"pages","name":"search-zero","thumbs":{"desktop":"thumbs/desktop/pages__search-zero.jpg","mobile":"thumbs/mobile/pages__search-zero.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/search-zero__static.png"},"mobile":{"static":"shots/mobile/pages/search-zero__static.png"}}},{"group":"pages","name":"404","thumbs":{"desktop":"thumbs/desktop/pages__404.jpg","mobile":"thumbs/mobile/pages__404.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/404__static.png","full":"shots/desktop/pages/404__full.png"},"mobile":{"static":"shots/mobile/pages/404__static.png","full":"shots/mobile/pages/404__full.png"}}},{"group":"pages","name":"privacy-policy","thumbs":{"desktop":"thumbs/desktop/pages__privacy-policy.jpg","mobile":"thumbs/mobile/pages__privacy-policy.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/privacy-policy__static.png"},"mobile":{"static":"shots/mobile/pages/privacy-policy__static.png"}}},{"group":"pages","name":"terms-of-use","thumbs":{"desktop":"thumbs/desktop/pages__terms-of-use.jpg","mobile":"thumbs/mobile/pages__terms-of-use.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/terms-of-use__static.png"},"mobile":{"static":"shots/mobile/pages/terms-of-use__static.png"}}},{"group":"pages","name":"medical-disclaimer","thumbs":{"desktop":"thumbs/desktop/pages__medical-disclaimer.jpg","mobile":"thumbs/mobile/pages__medical-disclaimer.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/medical-disclaimer__static.png"},"mobile":{"static":"shots/mobile/pages/medical-disclaimer__static.png"}}},{"group":"pages","name":"accessibility","thumbs":{"desktop":"thumbs/desktop/pages__accessibility.jpg","mobile":"thumbs/mobile/pages__accessibility.jpg"},"full":{"desktop":{"static":"shots/desktop/pages/accessibility__static.png"},"mobile":{"static":"shots/mobile/pages/accessibility__static.png"}}},{"group":"content","name":"cat-clinical-reviews","thumbs":{"desktop":"thumbs/desktop/content__cat-clinical-reviews.jpg","mobile":"thumbs/mobile/content__cat-clinical-reviews.jpg"},"full":{"desktop":{"static":"shots/desktop/content/cat-clinical-reviews__static.png","full":"shots/desktop/content/cat-clinical-reviews__full.png"},"mobile":{"static":"shots/mobile/content/cat-clinical-reviews__static.png","full":"shots/mobile/content/cat-clinical-reviews__full.png"}}},{"group":"content","name":"cat-patient-handouts","thumbs":{"desktop":"thumbs/desktop/content__cat-patient-handouts.jpg","mobile":"thumbs/mobile/content__cat-patient-handouts.jpg"},"full":{"desktop":{"static":"shots/desktop/content/cat-patient-handouts__static.png"},"mobile":{"static":"shots/mobile/content/cat-patient-handouts__static.png"}}},{"group":"content","name":"article-living","thumbs":{"desktop":"thumbs/desktop/content__article-living.jpg","mobile":"thumbs/mobile/content__article-living.jpg"},"full":{"desktop":{"static":"shots/desktop/content/article-living__static.png","full":"shots/desktop/content/article-living__full.png"},"mobile":{"static":"shots/mobile/content/article-living__static.png","full":"shots/mobile/content/article-living__full.png"}}},{"group":"content","name":"article-news","thumbs":{"desktop":"thumbs/desktop/content__article-news.jpg","mobile":"thumbs/mobile/content__article-news.jpg"},"full":{"desktop":{"static":"shots/desktop/content/article-news__static.png","full":"shots/desktop/content/article-news__full.png"},"mobile":{"static":"shots/mobile/content/article-news__static.png","full":"shots/mobile/content/article-news__full.png"}}},{"group":"content","name":"article-clinical-abstract","thumbs":{"desktop":"thumbs/desktop/content__article-clinical-abstract.jpg","mobile":"thumbs/mobile/content__article-clinical-abstract.jpg"},"full":{"desktop":{"static":"shots/desktop/content/article-clinical-abstract__static.png","full":"shots/desktop/content/article-clinical-abstract__full.png"},"mobile":{"static":"shots/mobile/content/article-clinical-abstract__static.png","full":"shots/mobile/content/article-clinical-abstract__full.png"}}},{"group":"content","name":"cond-ibd","thumbs":{"desktop":"thumbs/desktop/content__cond-ibd.jpg","mobile":"thumbs/mobile/content__cond-ibd.jpg"},"full":{"desktop":{"static":"shots/desktop/content/cond-ibd__static.png","full":"shots/desktop/content/cond-ibd__full.png"},"mobile":{"static":"shots/mobile/content/cond-ibd__static.png","full":"shots/mobile/content/cond-ibd__full.png"}}},{"group":"content","name":"cond-crohns","thumbs":{"desktop":"thumbs/desktop/content__cond-crohns.jpg","mobile":"thumbs/mobile/content__cond-crohns.jpg"},"full":{"desktop":{"static":"shots/desktop/content/cond-crohns__static.png","full":"shots/desktop/content/cond-crohns__full.png"},"mobile":{"static":"shots/mobile/content/cond-crohns__static.png","full":"shots/mobile/content/cond-crohns__full.png"}}},{"group":"content","name":"cond-uc","thumbs":{"desktop":"thumbs/desktop/content__cond-uc.jpg","mobile":"thumbs/mobile/content__cond-uc.jpg"},"full":{"desktop":{"static":"shots/desktop/content/cond-uc__static.png","full":"shots/desktop/content/cond-uc__full.png"},"mobile":{"static":"shots/mobile/content/cond-uc__static.png","full":"shots/mobile/content/cond-uc__full.png"}}},{"group":"content","name":"cond-ibs","thumbs":{"desktop":"thumbs/desktop/content__cond-ibs.jpg","mobile":"thumbs/mobile/content__cond-ibs.jpg"},"full":{"desktop":{"full":"shots/desktop/content/cond-ibs__full.png"},"mobile":{"full":"shots/mobile/content/cond-ibs__full.png"}}},{"group":"content","name":"cond-microscopic-colitis","thumbs":{"desktop":"thumbs/desktop/content__cond-microscopic-colitis.jpg","mobile":"thumbs/mobile/content__cond-microscopic-colitis.jpg"},"full":{"desktop":{"full":"shots/desktop/content/cond-microscopic-colitis__full.png"},"mobile":{"full":"shots/mobile/content/cond-microscopic-colitis__full.png"}}},{"group":"content","name":"cond-colorectal-cancer","thumbs":{"desktop":"thumbs/desktop/content__cond-colorectal-cancer.jpg","mobile":"thumbs/mobile/content__cond-colorectal-cancer.jpg"},"full":{"desktop":{"full":"shots/desktop/content/cond-colorectal-cancer__full.png"},"mobile":{"full":"shots/mobile/content/cond-colorectal-cancer__full.png"}}},{"group":"content","name":"cond-diverticular","thumbs":{"desktop":"thumbs/desktop/content__cond-diverticular.jpg","mobile":"thumbs/mobile/content__cond-diverticular.jpg"},"full":{"desktop":{"full":"shots/desktop/content/cond-diverticular__full.png"},"mobile":{"full":"shots/mobile/content/cond-diverticular__full.png"}}},{"group":"content","name":"recipe-blueberry-chia","thumbs":{"desktop":"thumbs/desktop/content__recipe-blueberry-chia.jpg","mobile":"thumbs/mobile/content__recipe-blueberry-chia.jpg"},"full":{"desktop":{"static":"shots/desktop/content/recipe-blueberry-chia__static.png","full":"shots/desktop/content/recipe-blueberry-chia__full.png"},"mobile":{"static":"shots/mobile/content/recipe-blueberry-chia__static.png","full":"shots/mobile/content/recipe-blueberry-chia__full.png"}}},{"group":"content","name":"recipe-baked-trout","thumbs":{"desktop":"thumbs/desktop/content__recipe-baked-trout.jpg","mobile":"thumbs/mobile/content__recipe-baked-trout.jpg"},"full":{"desktop":{"static":"shots/desktop/content/recipe-baked-trout__static.png","full":"shots/desktop/content/recipe-baked-trout__full.png"},"mobile":{"static":"shots/mobile/content/recipe-baked-trout__static.png","full":"shots/mobile/content/recipe-baked-trout__full.png"}}},{"group":"content","name":"discount-pip","thumbs":{"desktop":"thumbs/desktop/content__discount-pip.jpg","mobile":"thumbs/mobile/content__discount-pip.jpg"},"full":{"desktop":{"static":"shots/desktop/content/discount-pip__static.png","full":"shots/desktop/content/discount-pip__full.png"},"mobile":{"static":"shots/mobile/content/discount-pip__static.png","full":"shots/mobile/content/discount-pip__full.png"}}},{"group":"tools","name":"free-health-tools","thumbs":{"desktop":"thumbs/desktop/tools__free-health-tools.jpg","mobile":"thumbs/mobile/tools__free-health-tools.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/free-health-tools__static.png","full":"shots/desktop/tools/free-health-tools__full.png"},"mobile":{"static":"shots/mobile/tools/free-health-tools__static.png","full":"shots/mobile/tools/free-health-tools__full.png"}}},{"group":"tools","name":"patient-downloads","thumbs":{"desktop":"thumbs/desktop/tools__patient-downloads.jpg","mobile":"thumbs/mobile/tools__patient-downloads.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/patient-downloads__static.png","full":"shots/desktop/tools/patient-downloads__full.png"},"mobile":{"static":"shots/mobile/tools/patient-downloads__static.png","full":"shots/mobile/tools/patient-downloads__full.png"}}},{"group":"tools","name":"ibd-discounts","thumbs":{"desktop":"thumbs/desktop/tools__ibd-discounts.jpg","mobile":"thumbs/mobile/tools__ibd-discounts.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/ibd-discounts__static.png","full":"shots/desktop/tools/ibd-discounts__full.png"},"mobile":{"static":"shots/mobile/tools/ibd-discounts__static.png","full":"shots/mobile/tools/ibd-discounts__full.png"}}},{"group":"tools","name":"ibd-discounts-travel","thumbs":{"desktop":"thumbs/desktop/tools__ibd-discounts-travel.jpg","mobile":"thumbs/mobile/tools__ibd-discounts-travel.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/ibd-discounts-travel__static.png"},"mobile":{"static":"shots/mobile/tools/ibd-discounts-travel__static.png"}}},{"group":"tools","name":"recipe-hub","thumbs":{"desktop":"thumbs/desktop/tools__recipe-hub.jpg","mobile":"thumbs/mobile/tools__recipe-hub.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/recipe-hub__static.png","full":"shots/desktop/tools/recipe-hub__full.png"},"mobile":{"static":"shots/mobile/tools/recipe-hub__static.png","full":"shots/mobile/tools/recipe-hub__full.png"}}},{"group":"tools","name":"discovery-results","thumbs":{"desktop":"thumbs/desktop/tools__discovery-results.jpg","mobile":"thumbs/mobile/tools__discovery-results.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/discovery-results__static.png","full":"shots/desktop/tools/discovery-results__full.png"},"mobile":{"static":"shots/mobile/tools/discovery-results__static.png","full":"shots/mobile/tools/discovery-results__full.png"}}},{"group":"tools","name":"discovery-results-empty","thumbs":{"desktop":"thumbs/desktop/tools__discovery-results-empty.jpg","mobile":"thumbs/mobile/tools__discovery-results-empty.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/discovery-results-empty__static.png"},"mobile":{"static":"shots/mobile/tools/discovery-results-empty__static.png"}}},{"group":"content","name":"cat-gastro-living","thumbs":{"desktop":"thumbs/desktop/content__cat-gastro-living.jpg","mobile":"thumbs/mobile/content__cat-gastro-living.jpg"},"full":{"mobile":{"static":"shots/mobile/content/cat-gastro-living__static.png","full":"shots/mobile/content/cat-gastro-living__full.png"},"desktop":{"static":"shots/desktop/content/cat-gastro-living__static.png","full":"shots/desktop/content/cat-gastro-living__full.png"}}},{"group":"content","name":"cat-health-news","thumbs":{"desktop":"thumbs/desktop/content__cat-health-news.jpg","mobile":"thumbs/mobile/content__cat-health-news.jpg"},"full":{"mobile":{"static":"shots/mobile/content/cat-health-news__static.png","full":"shots/mobile/content/cat-health-news__full.png"},"desktop":{"static":"shots/desktop/content/cat-health-news__static.png","full":"shots/desktop/content/cat-health-news__full.png"}}},{"group":"content","name":"cat-food-nutrition","thumbs":{"desktop":"thumbs/desktop/content__cat-food-nutrition.jpg","mobile":"thumbs/mobile/content__cat-food-nutrition.jpg"},"full":{"mobile":{"static":"shots/mobile/content/cat-food-nutrition__static.png","full":"shots/mobile/content/cat-food-nutrition__full.png"},"desktop":{"static":"shots/desktop/content/cat-food-nutrition__static.png","full":"shots/desktop/content/cat-food-nutrition__full.png"}}},{"group":"tools","name":"survey-1-step1","thumbs":{"desktop":"thumbs/desktop/tools__survey-1-step1.jpg","mobile":"thumbs/mobile/tools__survey-1-step1.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/survey-1-step1__static.png"},"mobile":{"static":"shots/mobile/tools/survey-1-step1__static.png"}}},{"group":"tools","name":"survey-2-mid-step","thumbs":{"desktop":"thumbs/desktop/tools__survey-2-mid-step.jpg","mobile":"thumbs/mobile/tools__survey-2-mid-step.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/survey-2-mid-step__static.png"},"mobile":{"static":"shots/mobile/tools/survey-2-mid-step__static.png"}}},{"group":"tools","name":"survey-3-complete","thumbs":{"desktop":"thumbs/desktop/tools__survey-3-complete.jpg","mobile":"thumbs/mobile/tools__survey-3-complete.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/survey-3-complete__static.png","full":"shots/desktop/tools/survey-3-complete__full.png"},"mobile":{"static":"shots/mobile/tools/survey-3-complete__static.png","full":"shots/mobile/tools/survey-3-complete__full.png"}}},{"group":"tools","name":"recipes-1-tags-dropdown","thumbs":{"desktop":"thumbs/desktop/tools__recipes-1-tags-dropdown.jpg","mobile":"thumbs/mobile/tools__recipes-1-tags-dropdown.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/recipes-1-tags-dropdown__static.png"},"mobile":{"static":"shots/mobile/tools/recipes-1-tags-dropdown__static.png"}}},{"group":"tools","name":"recipes-2-low-fodmap-filtered","thumbs":{"desktop":"thumbs/desktop/tools__recipes-2-low-fodmap-filtered.jpg","mobile":"thumbs/mobile/tools__recipes-2-low-fodmap-filtered.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/recipes-2-low-fodmap-filtered__static.png"},"mobile":{"static":"shots/mobile/tools/recipes-2-low-fodmap-filtered__static.png"}}},{"group":"tools","name":"recipes-3-add-to-slot","thumbs":{"desktop":"thumbs/desktop/tools__recipes-3-add-to-slot.jpg","mobile":"thumbs/mobile/tools__recipes-3-add-to-slot.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/recipes-3-add-to-slot__static.png"},"mobile":{"static":"shots/mobile/tools/recipes-3-add-to-slot__static.png"}}},{"group":"tools","name":"recipes-4-autofilled-week","thumbs":{"desktop":"thumbs/desktop/tools__recipes-4-autofilled-week.jpg","mobile":"thumbs/mobile/tools__recipes-4-autofilled-week.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/recipes-4-autofilled-week__static.png","full":"shots/desktop/tools/recipes-4-autofilled-week__full.png"},"mobile":{"static":"shots/mobile/tools/recipes-4-autofilled-week__static.png","full":"shots/mobile/tools/recipes-4-autofilled-week__full.png"}}},{"group":"tools","name":"discounts-1-region-filter","thumbs":{"desktop":"thumbs/desktop/tools__discounts-1-region-filter.jpg","mobile":"thumbs/mobile/tools__discounts-1-region-filter.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/discounts-1-region-filter__static.png"},"mobile":{"static":"shots/mobile/tools/discounts-1-region-filter__static.png"}}},{"group":"tools","name":"discounts-2-search-railcard","thumbs":{"desktop":"thumbs/desktop/tools__discounts-2-search-railcard.jpg","mobile":"thumbs/mobile/tools__discounts-2-search-railcard.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/discounts-2-search-railcard__static.png"},"mobile":{"static":"shots/mobile/tools/discounts-2-search-railcard__static.png"}}},{"group":"tools","name":"discounts-3-zero-results","thumbs":{"desktop":"thumbs/desktop/tools__discounts-3-zero-results.jpg","mobile":"thumbs/mobile/tools__discounts-3-zero-results.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/discounts-3-zero-results__static.png"},"mobile":{"static":"shots/mobile/tools/discounts-3-zero-results__static.png"}}},{"group":"tools","name":"vance-ai-1-empty","thumbs":{"desktop":"thumbs/desktop/tools__vance-ai-1-empty.jpg","mobile":"thumbs/mobile/tools__vance-ai-1-empty.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/vance-ai-1-empty__static.png"},"mobile":{"static":"shots/mobile/tools/vance-ai-1-empty__static.png"}}},{"group":"tools","name":"vance-ai-2-answer","thumbs":{"desktop":"thumbs/desktop/tools__vance-ai-2-answer.jpg","mobile":"thumbs/mobile/tools__vance-ai-2-answer.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/vance-ai-2-answer__static.png","full":"shots/desktop/tools/vance-ai-2-answer__full.png"},"mobile":{"static":"shots/mobile/tools/vance-ai-2-answer__static.png","full":"shots/mobile/tools/vance-ai-2-answer__full.png"}}},{"group":"dashboard-empty","name":"dash-home","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-home.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-home__static.png","full":"shots/desktop/dashboard-empty/dash-home__full.png"}}},{"group":"dashboard-empty","name":"dash-profile","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-profile.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-profile__static.png","full":"shots/desktop/dashboard-empty/dash-profile__full.png"}}},{"group":"dashboard-empty","name":"dash-health-profile","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-health-profile.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-health-profile__static.png","full":"shots/desktop/dashboard-empty/dash-health-profile__full.png"}}},{"group":"dashboard-empty","name":"dash-tools","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-tools.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-tools__static.png","full":"shots/desktop/dashboard-empty/dash-tools__full.png"}}},{"group":"dashboard-empty","name":"dash-my-recipes","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-my-recipes.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-my-recipes__static.png","full":"shots/desktop/dashboard-empty/dash-my-recipes__full.png"}}},{"group":"dashboard-empty","name":"dash-discounts","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-discounts.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-discounts__static.png","full":"shots/desktop/dashboard-empty/dash-discounts__full.png"}}},{"group":"dashboard-empty","name":"dash-reading-list","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-reading-list.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-reading-list__static.png","full":"shots/desktop/dashboard-empty/dash-reading-list__full.png"}}},{"group":"dashboard-empty","name":"dash-courses","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-courses.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-courses__static.png","full":"shots/desktop/dashboard-empty/dash-courses__full.png"}}},{"group":"dashboard-empty","name":"dash-searches","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-searches.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-searches__static.png","full":"shots/desktop/dashboard-empty/dash-searches__full.png"}}},{"group":"dashboard-empty","name":"dash-notes","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-notes.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-notes__static.png","full":"shots/desktop/dashboard-empty/dash-notes__full.png"}}},{"group":"dashboard-empty","name":"dash-ai-chats","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-ai-chats.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-ai-chats__static.png","full":"shots/desktop/dashboard-empty/dash-ai-chats__full.png"}}},{"group":"dashboard-empty","name":"dash-messages","thumbs":{"desktop":"thumbs/desktop/dashboard-empty__dash-messages.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard-empty/dash-messages__static.png","full":"shots/desktop/dashboard-empty/dash-messages__full.png"}}},{"group":"dashboard","name":"dash-home","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-home.jpg","mobile":"thumbs/mobile/dashboard__dash-home.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-home__static.png","full":"shots/desktop/dashboard/dash-home__full.png"},"mobile":{"static":"shots/mobile/dashboard/dash-home__static.png","full":"shots/mobile/dashboard/dash-home__full.png"}}},{"group":"dashboard","name":"dash-profile","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-profile.jpg","mobile":"thumbs/mobile/dashboard__dash-profile.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-profile__static.png","full":"shots/desktop/dashboard/dash-profile__full.png"},"mobile":{"static":"shots/mobile/dashboard/dash-profile__static.png","full":"shots/mobile/dashboard/dash-profile__full.png"}}},{"group":"dashboard","name":"dash-health-profile","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-health-profile.jpg","mobile":"thumbs/mobile/dashboard__dash-health-profile.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-health-profile__static.png","full":"shots/desktop/dashboard/dash-health-profile__full.png"},"mobile":{"static":"shots/mobile/dashboard/dash-health-profile__static.png","full":"shots/mobile/dashboard/dash-health-profile__full.png"}}},{"group":"dashboard","name":"dash-tools","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-tools.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-tools__static.png","full":"shots/desktop/dashboard/dash-tools__full.png"}}},{"group":"dashboard","name":"dash-my-recipes","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-my-recipes.jpg","mobile":"thumbs/mobile/dashboard__dash-my-recipes.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-my-recipes__static.png","full":"shots/desktop/dashboard/dash-my-recipes__full.png"},"mobile":{"static":"shots/mobile/dashboard/dash-my-recipes__static.png","full":"shots/mobile/dashboard/dash-my-recipes__full.png"}}},{"group":"dashboard","name":"dash-discounts","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-discounts.jpg","mobile":"thumbs/mobile/dashboard__dash-discounts.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-discounts__static.png","full":"shots/desktop/dashboard/dash-discounts__full.png"},"mobile":{"static":"shots/mobile/dashboard/dash-discounts__static.png","full":"shots/mobile/dashboard/dash-discounts__full.png"}}},{"group":"dashboard","name":"dash-reading-list","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-reading-list.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-reading-list__static.png","full":"shots/desktop/dashboard/dash-reading-list__full.png"}}},{"group":"dashboard","name":"dash-courses","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-courses.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-courses__static.png","full":"shots/desktop/dashboard/dash-courses__full.png"}}},{"group":"dashboard","name":"dash-searches","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-searches.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-searches__static.png","full":"shots/desktop/dashboard/dash-searches__full.png"}}},{"group":"dashboard","name":"dash-notes","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-notes.jpg","mobile":"thumbs/mobile/dashboard__dash-notes.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-notes__static.png","full":"shots/desktop/dashboard/dash-notes__full.png"},"mobile":{"static":"shots/mobile/dashboard/dash-notes__static.png","full":"shots/mobile/dashboard/dash-notes__full.png"}}},{"group":"dashboard","name":"dash-ai-chats","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-ai-chats.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-ai-chats__static.png","full":"shots/desktop/dashboard/dash-ai-chats__full.png"}}},{"group":"dashboard","name":"dash-messages","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-messages.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-messages__static.png","full":"shots/desktop/dashboard/dash-messages__full.png"}}},{"group":"tools","name":"malnutrition-1-start","thumbs":{"desktop":"thumbs/desktop/tools__malnutrition-1-start.jpg","mobile":"thumbs/mobile/tools__malnutrition-1-start.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/malnutrition-1-start__static.png"},"mobile":{"static":"shots/mobile/tools/malnutrition-1-start__static.png"}}},{"group":"tools","name":"malnutrition-2-weight-bmi","thumbs":{"desktop":"thumbs/desktop/tools__malnutrition-2-weight-bmi.jpg","mobile":"thumbs/mobile/tools__malnutrition-2-weight-bmi.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/malnutrition-2-weight-bmi__static.png"},"mobile":{"static":"shots/mobile/tools/malnutrition-2-weight-bmi__static.png"}}},{"group":"tools","name":"malnutrition-3-result","thumbs":{"desktop":"thumbs/desktop/tools__malnutrition-3-result.jpg","mobile":"thumbs/mobile/tools__malnutrition-3-result.jpg"},"full":{"desktop":{"static":"shots/desktop/tools/malnutrition-3-result__static.png","full":"shots/desktop/tools/malnutrition-3-result__full.png"},"mobile":{"static":"shots/mobile/tools/malnutrition-3-result__static.png","full":"shots/mobile/tools/malnutrition-3-result__full.png"}}},{"group":"ui-states","name":"mega-the-hub","thumbs":{"desktop":"thumbs/desktop/ui-states__mega-the-hub.jpg"},"full":{"desktop":{"static":"shots/desktop/ui-states/mega-the-hub__static.png"}}},{"group":"ui-states","name":"mega-knowledgebase","thumbs":{"desktop":"thumbs/desktop/ui-states__mega-knowledgebase.jpg"},"full":{"desktop":{"static":"shots/desktop/ui-states/mega-knowledgebase__static.png"}}},{"group":"ui-states","name":"mega-conditions","thumbs":{"desktop":"thumbs/desktop/ui-states__mega-conditions.jpg"},"full":{"desktop":{"static":"shots/desktop/ui-states/mega-conditions__static.png"}}},{"group":"ui-states","name":"header-search-open","thumbs":{"desktop":"thumbs/desktop/ui-states__header-search-open.jpg","mobile":"thumbs/mobile/ui-states__header-search-open.jpg"},"full":{"desktop":{"static":"shots/desktop/ui-states/header-search-open__static.png"},"mobile":{"static":"shots/mobile/ui-states/header-search-open__static.png"}}},{"group":"ui-states","name":"vance-ai-modal","thumbs":{"desktop":"thumbs/desktop/ui-states__vance-ai-modal.jpg","mobile":"thumbs/mobile/ui-states__vance-ai-modal.jpg"},"full":{"desktop":{"static":"shots/desktop/ui-states/vance-ai-modal__static.png"},"mobile":{"static":"shots/mobile/ui-states/vance-ai-modal__static.png"}}},{"group":"ui-states","name":"mobile-offcanvas-menu","thumbs":{"mobile":"thumbs/mobile/ui-states__mobile-offcanvas-menu.jpg"},"full":{"mobile":{"static":"shots/mobile/ui-states/mobile-offcanvas-menu__static.png"}}},{"group":"dashboard","name":"dash-modal-malnutrition-detail","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-modal-malnutrition-detail.jpg","mobile":"thumbs/mobile/dashboard__dash-modal-malnutrition-detail.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-modal-malnutrition-detail__static.png"},"mobile":{"static":"shots/mobile/dashboard/dash-modal-malnutrition-detail__static.png"}}},{"group":"dashboard","name":"dash-modal-edit-health-details","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-modal-edit-health-details.jpg","mobile":"thumbs/mobile/dashboard__dash-modal-edit-health-details.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-modal-edit-health-details__static.png"},"mobile":{"static":"shots/mobile/dashboard/dash-modal-edit-health-details__static.png"}}},{"group":"dashboard","name":"dash-modal-meal-plan","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-modal-meal-plan.jpg","mobile":"thumbs/mobile/dashboard__dash-modal-meal-plan.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-modal-meal-plan__static.png"},"mobile":{"static":"shots/mobile/dashboard/dash-modal-meal-plan__static.png"}}},{"group":"dashboard","name":"dash-modal-shopping-list","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-modal-shopping-list.jpg","mobile":"thumbs/mobile/dashboard__dash-modal-shopping-list.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-modal-shopping-list__static.png"},"mobile":{"static":"shots/mobile/dashboard/dash-modal-shopping-list__static.png"}}},{"group":"dashboard","name":"dash-modal-note-view","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-modal-note-view.jpg","mobile":"thumbs/mobile/dashboard__dash-modal-note-view.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-modal-note-view__static.png"},"mobile":{"static":"shots/mobile/dashboard/dash-modal-note-view__static.png"}}},{"group":"dashboard","name":"dash-modal-chat-transcript","thumbs":{"desktop":"thumbs/desktop/dashboard__dash-modal-chat-transcript.jpg","mobile":"thumbs/mobile/dashboard__dash-modal-chat-transcript.jpg"},"full":{"desktop":{"static":"shots/desktop/dashboard/dash-modal-chat-transcript__static.png"},"mobile":{"static":"shots/mobile/dashboard/dash-modal-chat-transcript__static.png"}}},{"group":"dashboard","name":"dash-mobile-sidebar-open","thumbs":{"mobile":"thumbs/mobile/dashboard__dash-mobile-sidebar-open.jpg"},"full":{"mobile":{"static":"shots/mobile/dashboard/dash-mobile-sidebar-open__static.png"}}}],"videos":[{"device":"desktop","name":"article-living","src":"videos/desktop/article-living.mp4","poster":"videos/posters/desktop__article-living.jpg","size":"5.4 MB"},{"device":"desktop","name":"cat-gastro-living","src":"videos/desktop/cat-gastro-living.mp4","poster":"videos/posters/desktop__cat-gastro-living.jpg","size":"9.7 MB"},{"device":"desktop","name":"cond-crohns","src":"videos/desktop/cond-crohns.mp4","poster":"videos/posters/desktop__cond-crohns.jpg","size":"4.0 MB"},{"device":"desktop","name":"dash-home","src":"videos/desktop/dash-home.mp4","poster":"videos/posters/desktop__dash-home.jpg","size":"0.3 MB"},{"device":"desktop","name":"free-health-tools","src":"videos/desktop/free-health-tools.mp4","poster":"videos/posters/desktop__free-health-tools.jpg","size":"1.6 MB"},{"device":"desktop","name":"home","src":"videos/desktop/home.mp4","poster":"videos/posters/desktop__home.jpg","size":"5.3 MB"},{"device":"desktop","name":"ibd-discounts","src":"videos/desktop/ibd-discounts.mp4","poster":"videos/posters/desktop__ibd-discounts.jpg","size":"4.7 MB"},{"device":"desktop","name":"knowledgebase","src":"videos/desktop/knowledgebase.mp4","poster":"videos/posters/desktop__knowledgebase.jpg","size":"2.1 MB"},{"device":"desktop","name":"patient-downloads","src":"videos/desktop/patient-downloads.mp4","poster":"videos/posters/desktop__patient-downloads.jpg","size":"1.7 MB"},{"device":"desktop","name":"recipe-hub","src":"videos/desktop/recipe-hub.mp4","poster":"videos/posters/desktop__recipe-hub.jpg","size":"20.6 MB"},{"device":"mobile","name":"article-living","src":"videos/mobile/article-living.mp4","poster":"videos/posters/mobile__article-living.jpg","size":"5.6 MB"},{"device":"mobile","name":"cat-gastro-living","src":"videos/mobile/cat-gastro-living.mp4","poster":"videos/posters/mobile__cat-gastro-living.jpg","size":"9.4 MB"},{"device":"mobile","name":"cond-crohns","src":"videos/mobile/cond-crohns.mp4","poster":"videos/posters/mobile__cond-crohns.jpg","size":"4.1 MB"},{"device":"mobile","name":"dash-home","src":"videos/mobile/dash-home.mp4","poster":"videos/posters/mobile__dash-home.jpg","size":"0.2 MB"},{"device":"mobile","name":"free-health-tools","src":"videos/mobile/free-health-tools.mp4","poster":"videos/posters/mobile__free-health-tools.jpg","size":"1.5 MB"},{"device":"mobile","name":"home","src":"videos/mobile/home.mp4","poster":"videos/posters/mobile__home.jpg","size":"3.5 MB"},{"device":"mobile","name":"ibd-discounts","src":"videos/mobile/ibd-discounts.mp4","poster":"videos/posters/mobile__ibd-discounts.jpg","size":"4.3 MB"},{"device":"mobile","name":"knowledgebase","src":"videos/mobile/knowledgebase.mp4","poster":"videos/posters/mobile__knowledgebase.jpg","size":"2.2 MB"},{"device":"mobile","name":"patient-downloads","src":"videos/mobile/patient-downloads.mp4","poster":"videos/posters/mobile__patient-downloads.jpg","size":"1.4 MB"},{"device":"mobile","name":"recipe-hub","src":"videos/mobile/recipe-hub.mp4","poster":"videos/posters/mobile__recipe-hub.jpg","size":"13.6 MB"}]};
+const GROUPS = [
+  ['pages', 'Main pages'], ['content', 'Content examples'], ['tools', 'Free tools'],
+  ['ui-states', 'Menus and overlays'], ['dashboard', 'My Dashboard'], ['dashboard-empty', 'My Dashboard, empty account'],
+];
+const PREFIX = { cat: 'Category', cond: 'Condition', recipe: 'Recipe', article: 'Article', dash: 'Dashboard', discount: 'Discount', mega: 'Mega menu' };
+const state = { group: 'all', dev: 'both', q: '' };
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const devName = (d) => (d === 'desktop' ? 'Desktop' : 'Phone');
+
+function human(name) {
+  const parts = name.split('-');
+  if (PREFIX[parts[0]] && parts.length > 1) parts.splice(0, 1, PREFIX[parts[0]] + ':');
+  const s = parts.join(' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function visibleItems() {
+  const q = state.q.trim().toLowerCase();
+  return DATA.list.filter((it) => (state.group === 'all' || it.group === state.group)
+    && (!q || (it.name + ' ' + human(it.name)).toLowerCase().includes(q))
+    && (state.dev === 'both' || it.thumbs[state.dev]));
+}
+
+function render() {
+  const out = document.getElementById('out');
+  out.textContent = '';
+  const items = visibleItems();
+  let shots = 0;
+  for (const [g, title] of GROUPS) {
+    const inGroup = items.filter((it) => it.group === g);
+    if (!inGroup.length) continue;
+    const sec = el('section', 'group');
+    const h = el('h2', null, title);
+    h.appendChild(el('small', null, inGroup.length + (inGroup.length === 1 ? ' view' : ' views')));
+    sec.appendChild(h);
+    const rows = el('div', 'rows');
+    for (const it of inGroup) {
+      const row = el('article', 'row');
+      const info = el('div', 'info');
+      info.appendChild(el('h3', null, human(it.name)));
+      info.appendChild(el('div', 'slug', it.name));
+      const tags = el('div', 'tags');
+      for (const d of ['desktop', 'mobile']) if (it.full[d] && it.full[d].full) tags.appendChild(el('span', 'tag', 'Full page, ' + (d === 'desktop' ? 'desktop' : 'phone')));
+      if (tags.childNodes.length) info.appendChild(tags);
+      row.appendChild(info);
+      const media = el('div', 'media' + (state.dev === 'desktop' ? ' only-d' : state.dev === 'mobile' ? ' only-m' : ''));
+      for (const d of ['desktop', 'mobile']) {
+        const cls = d === 'desktop' ? 'd' : 'm';
+        if (!it.thumbs[d]) { media.appendChild(el('div', 'nodev ' + cls, d === 'desktop' ? 'No desktop capture' : 'No phone capture')); continue; }
+        const b = el('button', 'shot ' + cls);
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Open ' + human(it.name) + ' ' + devName(d).toLowerCase());
+        const img = new Image();
+        img.loading = 'lazy'; img.decoding = 'async';
+        img.src = it.thumbs[d]; img.alt = human(it.name) + ', ' + devName(d).toLowerCase();
+        b.appendChild(img);
+        b.addEventListener('click', () => openLb({ kind: 'img', it, d }, b));
+        media.appendChild(b);
+        shots++;
+      }
+      row.appendChild(media);
+      rows.appendChild(row);
+    }
+    sec.appendChild(rows);
+    out.appendChild(sec);
+  }
+  if (!items.length) out.appendChild(el('p', null, 'Nothing matches. Clear the search or pick another group.'));
+  document.getElementById('count').textContent = items.length + ' views, ' + shots + ' thumbnails';
+}
+
+function buildChips() {
+  const box = document.getElementById('chips');
+  const make = (key, label, n) => {
+    const b = el('button', 'chip'); b.type = 'button';
+    b.setAttribute('aria-pressed', String(state.group === key));
+    b.append(label + ' ', el('em', null, String(n)));
+    b.addEventListener('click', () => { state.group = key; for (const c of box.children) c.setAttribute('aria-pressed', String(c === b)); render(); });
+    box.appendChild(b);
+  };
+  make('all', 'All', DATA.list.length);
+  for (const [g, t] of GROUPS) make(g, t, DATA.list.filter((i) => i.group === g).length);
+}
+function buildStats() {
+  const shots = DATA.list.reduce((n, it) => n + ['desktop', 'mobile'].reduce((m, d) => m + (it.full[d] ? Object.keys(it.full[d]).length : 0), 0), 0);
+  const s = document.getElementById('stats');
+  for (const [n, l] of [[DATA.list.length, 'pages and states'], [shots, 'full size images'], [DATA.videos.length, 'scroll videos'], [2, 'devices']]) {
+    const d = el('div'); d.append(el('b', null, String(n)), el('span', null, l)); s.appendChild(d);
+  }
+}
+function buildVideos() {
+  const wrap = document.getElementById('vwrap');
+  for (const d of ['desktop', 'mobile']) {
+    const list = DATA.videos.filter((v) => v.device === d);
+    const g = el('div', 'vgroup'); g.appendChild(el('h3', null, devName(d)));
+    const grid = el('div', 'vgrid' + (d === 'mobile' ? ' phone' : ''));
+    for (const v of list) {
+      const b = el('button', 'vcard'); b.type = 'button';
+      b.setAttribute('aria-label', 'Play ' + human(v.name) + ' ' + devName(d).toLowerCase());
+      const p = el('span', 'poster');
+      const img = new Image(); img.loading = 'lazy'; img.src = v.poster; img.alt = '';
+      p.appendChild(img);
+      const pl = el('span', 'play'); pl.appendChild(el('i')); p.appendChild(pl);
+      b.appendChild(p);
+      b.appendChild(el('span', 'cap', human(v.name)));
+      b.appendChild(el('small', null, v.size));
+      b.addEventListener('click', () => openLb({ kind: 'vid', v }, b));
+      grid.appendChild(b);
+    }
+    g.appendChild(grid); wrap.appendChild(g);
+  }
+}
+
+/* Lightbox: one sequence of everything currently on screen (images in the filtered list, then videos). */
+const lb = document.getElementById('lb'), stage = document.getElementById('stage');
+let seq = [], pos = 0, mode = 'static', opener = null;
+function buildSeq() {
+  seq = [];
+  for (const it of visibleItems()) for (const d of ['desktop', 'mobile']) if (it.thumbs[d] && (state.dev === 'both' || state.dev === d)) seq.push({ kind: 'img', it, d });
+  for (const v of DATA.videos) if (state.dev === 'both' || state.dev === v.device) seq.push({ kind: 'vid', v });
+}
+function sameEntry(a, b) { return a.kind === b.kind && (a.kind === 'img' ? a.it === b.it && a.d === b.d : a.v === b.v); }
+function openLb(entry, from) {
+  opener = from; buildSeq();
+  pos = Math.max(0, seq.findIndex((s) => sameEntry(s, entry)));
+  if (!seq.length) seq = [entry];
+  mode = 'static';
+  lb.hidden = false; document.body.style.overflow = 'hidden';
+  showLb();
+  document.getElementById('close').focus();
+}
+function closeLb() {
+  stage.textContent = ''; lb.hidden = true; document.body.style.overflow = '';
+  if (opener) opener.focus();
+}
+function showLb() {
+  const s = seq[pos];
+  stage.textContent = '';
+  const vs = document.getElementById('vscreen'), vf = document.getElementById('vfull'), orig = document.getElementById('orig');
+  document.getElementById('lbs').textContent = (pos + 1) + ' of ' + seq.length;
+  if (s.kind === 'vid') {
+    vs.hidden = vf.hidden = true;
+    document.getElementById('lbt').textContent = human(s.v.name) + ' (' + devName(s.v.device).toLowerCase() + ' video)';
+    orig.href = s.v.src;
+    const v = document.createElement('video');
+    v.controls = true; v.autoplay = true; v.playsInline = true; v.preload = 'metadata'; v.src = s.v.src; v.poster = s.v.poster;
+    if (s.v.device === 'mobile') v.style.maxHeight = '100%';
+    stage.appendChild(v);
+    return;
+  }
+  const f = s.it.full[s.d] || {};
+  const hasBoth = !!(f.static && f.full);
+  if (!f[mode]) mode = f.static ? 'static' : 'full';
+  vs.hidden = vf.hidden = !hasBoth;
+  vs.setAttribute('aria-pressed', String(mode === 'static'));
+  vf.setAttribute('aria-pressed', String(mode === 'full'));
+  document.getElementById('lbt').textContent = human(s.it.name) + ' (' + devName(s.d).toLowerCase() + (hasBoth ? (mode === 'full' ? ', full page' : ', screen') : '') + ')';
+  orig.href = f[mode];
+  const msg = el('div', 'msg', 'Loading full size image');
+  stage.appendChild(msg);
+  const img = new Image();
+  img.className = s.d === 'desktop' ? 'dm' : 'mb';
+  img.alt = human(s.it.name) + ', ' + devName(s.d).toLowerCase();
+  img.onload = () => msg.remove();
+  img.onerror = () => { msg.textContent = 'Could not load this image.'; };
+  img.src = f[mode];
+  stage.appendChild(img);
+  stage.scrollTop = 0;
+}
+function step(n) { pos = (pos + n + seq.length) % seq.length; mode = 'static'; showLb(); }
+document.getElementById('close').addEventListener('click', closeLb);
+document.getElementById('prev').addEventListener('click', () => step(-1));
+document.getElementById('next').addEventListener('click', () => step(1));
+document.getElementById('vscreen').addEventListener('click', () => { mode = 'static'; showLb(); });
+document.getElementById('vfull').addEventListener('click', () => { mode = 'full'; showLb(); });
+lb.addEventListener('click', (e) => { if (e.target === lb || e.target === stage) closeLb(); });
+document.addEventListener('keydown', (e) => {
+  if (lb.hidden) return;
+  if (e.key === 'Escape') closeLb();
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'Tab') { // keep focus inside the dialog
+    const f = [...lb.querySelectorAll('button:not([hidden]), a[href]:not([hidden])')];
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+for (const b of document.querySelectorAll('.seg button')) b.addEventListener('click', () => {
+  state.dev = b.dataset.dev;
+  for (const x of document.querySelectorAll('.seg button')) x.setAttribute('aria-pressed', String(x === b));
+  render();
+});
+document.getElementById('q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
+
+buildStats(); buildChips(); buildVideos(); render();
+</script>
+</body>
+</html>
