@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CliftonAI - Evolution V1 Mockup</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /* --- GLOBAL BASE --- */
+        :root {
+            --primary-color: #008080;
+            --primary-green: #10B981;
+            --accent-blue: #0EA5E9;
+            --secondary-color: #0A1929;
+            --bg-white: #FFFFFF;
+            --bg-light: #F8FAFC;
+            --border-color: #CBD5E1;
+            --text-main: #1F2937;
+            --text-light: #6B7280;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --radius-lg: 12px;
+        }
+
+        body {
+            background-color: #F8FAFC;
+            color: var(--text-main);
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: white;
+            padding: 20px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .logo {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 24px;
+            color: var(--secondary-color);
+        }
+
+        /* --- PATIENT HERO STRUCTURE --- */
+        .patient-hero {
+            padding: 80px 0 120px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(rgba(10, 25, 41, 0.7), rgba(10, 25, 41, 0.85)), url('https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/patient_hero.png') no-repeat center center;
+            background-size: cover;
+            color: white;
+        }
+
+        .hero-content {
+            max-width: 700px;
+        }
+
+        .tag-label {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .patient-hero h1 {
+            font-family: var(--font-heading);
+            font-size: 52px;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .patient-hero .highlight {
+            color: var(--primary-color);
+        }
+
+        .patient-hero p {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 32px;
+        }
+
+        .hero-actions .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-right: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-outline {
+            border: 2px solid white;
+            color: white;
+        }
+
+        /* --- PATHWAY TILES (Vertical Stack Title/Icon) --- */
+        .pathway-tiles {
+            margin-top: -60px;
+            position: relative;
+            z-index: 10;
+            margin-bottom: 40px;
+        }
+
+        .pathway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .pathway-card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .pathway-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pathway-card .top-meta {
+            margin-bottom: 20px;
+        }
+
+        .pathway-card .icon-label-wrap {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .pathway-card .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pathway-card h2 {
+            font-family: var(--font-heading);
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .pathway-card .body-text {
+            color: var(--text-light);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .pathway-card .extra-line {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 30px;
+        }
+
+        /* CARD IMAGE AT BOTTOM */
+        .pathway-card .card-bottom-image {
+            width: 100%;
+            height: 160px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            margin-top: auto;
+        }
+
+        /* --- DISCOVERY SUITE SECTION --- */
+        .discovery-suite-section {
+            padding: 20px 0 80px;
+        }
+
+        .longevity-panel {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 32px;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 20px 40px -10px rgba(0,128,128, 0.1);
+            margin: 0 auto;
+        }
+
+        .panel-header {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .panel-header h2 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .panel-header p {
+            color: var(--text-light);
+            font-size: 15px;
+            margin-top: 8px;
+            font-weight: 500;
+            max-width: 800px;
+        }
+
+        .section-box {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .label-text {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 6px;
+        }
+
+        .top-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container input {
+            width: 100%;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px 10px 40px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-container .icon {
+            position: absolute;
+            left: 14px;
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+
+        .segmented-control {
+            display: flex;
+            background: white;
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .segment {
+            flex: 1;
+            padding: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .segment.active {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .twin-grids {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-grid {
+            display: grid;
+            gap: 6px;
+        }
+
+        .path-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .content-grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .suite-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .suite-card .icon-box {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .suite-card h4 {
+            margin: 0;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: center;
+        }
+
+        .suite-card.active {
+            border-color: var(--primary-color);
+            background: #def4f4;
+        }
+
+        .bottom-layout {
+            display: grid;
+            grid-template-columns: 1fr 160px;
+            gap: 12px;
+        }
+
+        .focus-box {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .focus-list {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }
+
+        .focus-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .focus-checkbox .box-check {
+            width: 14px;
+            height: 14px;
+            border: 2px solid #CBD5E1;
+            border-radius: 3px;
+            background: white;
+            position: relative;
+        }
+
+        .focus-checkbox.active {
+            border-color: var(--primary-color);
+            background: #def4f4;
+        }
+
+        .focus-checkbox.active .box-check {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .actions-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-go {
+            width: 100%;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: var(--font-heading);
+            font-size: 22px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .btn-clear {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* KB SECTIONS STYLE */
+        .section-padding {
+            padding: 80px 0;
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 16px;
+            justify-content: space-between;
+        }
+
+        .color-bar {
+            width: 6px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--primary-color);
+        }
+
+        .bento-grid-news {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: repeat(2, 210px);
+            gap: 24px;
+        }
+
+        .bento-cell-featured {
+            grid-row: 1 / -1;
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: #0A1929;
+            color: white;
+            display: flex;
+            align-items: flex-end;
+            text-decoration: none;
+        }
+
+        .bento-content-overlay {
+            position: relative;
+            z-index: 2;
+            padding: 40px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            width: 100%;
+        }
+
+        .bento-cell-side {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid #e5e7eb;
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="logo">Clifton HEALTH</div>
+            <nav style="display: flex; gap: 30px;">
+                <a href="#" style="text-decoration:none; color:var(--text-main); font-weight:600;">KNOWLEDGE HUB</a>
+                <a href="#" style="text-decoration:none; color:var(--text-main); font-weight:600;">MY DASHBOARD</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- NEW PATIENT-STYLE HERO -->
+    <section class="patient-hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="tag-label">HEALTHCARE KNOWLEDGE HUB</span>
+                <h1>Your Partner in <span class="highlight">Lifelong Wellness</span></h1>
+                <p>Trusted, science-backed information to help you understand your health, manage your condition, and
+                    live your best life through nutrition and longevity science.</p>
+                <div class="hero-actions">
+                    <a href="#" class="btn btn-primary">Explore Resources</a>
+                    <a href="#" class="btn btn-outline">Subscribe Free</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RESTRUCTURED PATHWAY TILES -->
+    <section class="pathway-tiles">
+        <div class="container">
+            <div class="pathway-grid">
+                <!-- For Practitioners -->
+                <a href="#" class="pathway-card">
+                    <div class="top-meta">
+                        <div class="icon-label-wrap">
+                            <div class="icon-box" style="background: var(--secondary-color);">
+                                <img src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/stethoscope.svg"
+                                    style="width: 28px; filter: brightness(0) invert(1);">
+                            </div>
+                            <h2>For Practitioners</h2>
+                        </div>
+                        <p class="body-text">Access clinical reviews, evidence-based guidelines, and professional tools
+                            tailored for modern healthcare practitioners.</p>
+                        <p class="extra-line">Bridging science and clinical outcomes</p>
+                    </div>
+                    <div class="card-bottom-image"
+                        style="background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400');">
+                    </div>
+                </a>
+
+                <!-- For Patients -->
+                <a href="#" class="pathway-card">
+                    <div class="top-meta">
+                        <div class="icon-label-wrap">
+                            <div class="icon-box" style="background: var(--primary-color);">
+                                <img src="https://cliftonai.com/wp-content/themes/cliftonai-hub/assets/img/icons/heart.svg"
+                                    style="width: 28px; filter: brightness(0) invert(1);">
+                            </div>
+                            <h2>For Patients</h2>
+                        </div>
+                        <p class="body-text">Learn about chronic conditions, health optimization, and healthy living
+                            through our expert-led patient curriculum.</p>
+                        <p class="extra-line">Empowering your health journey daily</p>
+                    </div>
+                    <div class="card-bottom-image"
+                        style="background-image: url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=400');">
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- DISCOVERY SUITE -->
+    <section class="discovery-suite-section">
+        <div class="container">
+            <div class="longevity-panel">
+                <div class="panel-header">
+                    <h2>CONTENT DISCOVERY SUITE</h2>
+                    <p>Use the controls below to customize and filter content relevant for you and your clinical
+                        longevity journey.</p>
+                </div>
+
+                <div class="top-row">
+                    <div class="section-box">
+                        <span class="label-text">READING LEVEL</span>
+                        <div class="segmented-control">
+                            <div class="segment">Novice</div>
+                            <div class="segment active">Educated</div>
+                            <div class="segment">Technical</div>
+                        </div>
+                    </div>
+                    <div class="section-box">
+                        <span class="label-text">SEARCH ARTICLES</span>
+                        <div class="search-container">
+                            <span class="icon">🔍</span>
+                            <input type="text" placeholder="Keywords, therapeutic areas...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="twin-grids">
+                    <div class="section-box">
+                        <span class="label-text">LONGEVITY PATH</span>
+                        <div class="card-grid path-grid">
+                            <div class="suite-card active"><span class="icon-box">💊</span>
+                                <h4>Pharmaceutical</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">🌿</span>
+                                <h4>Supplements</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">🍎</span>
+                                <h4>Medical Food</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">🏃</span>
+                                <h4>Lifestyle</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-box">
+                        <span class="label-text">CONTENT TYPE</span>
+                        <div class="card-grid content-grid">
+                            <div class="suite-card active"><span class="icon-box">🔬</span>
+                                <h4>Reviews</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">📋</span>
+                                <h4>Opinions</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">🚑</span>
+                                <h4>News</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">🎬</span>
+                                <h4>Media</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">⚖️</span>
+                                <h4>Tools</h4>
+                            </div>
+                            <div class="suite-card"><span class="icon-box">🧠</span>
+                                <h4>Courses</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-layout">
+                    <div class="section-box">
+                        <span class="label-text">LONGEVITY FOCUS</span>
+                        <div class="focus-list">
+                            <div class="focus-checkbox active"><span>Oncology</span></div>
+                            <div class="focus-checkbox"><span>Cardiology</span></div>
+                            <div class="focus-checkbox"><span>Neurology</span></div>
+                            <div class="focus-checkbox active"><span>Aging</span></div>
+                            <div class="focus-checkbox"><span>Metabolic</span></div>
+                            <div class="focus-checkbox"><span>Mental</span></div>
+                            <div class="focus-checkbox"><span>Infectious</span></div>
+                            <div class="focus-checkbox"><span>Rare Dis.</span></div>
+                            <div class="focus-checkbox"><span>Immuno.</span></div>
+                            <div class="focus-checkbox"><span>Dermato.</span></div>
+                            <div class="focus-checkbox"><span>Orthopedic</span></div>
+                            <div class="focus-checkbox"><span>Hormonal</span></div>
+                        </div>
+                    </div>
+                    <div class="actions-col">
+                        <button class="btn-go">GO</button>
+                        <button class="btn-clear" onclick="alert('Options Cleared')">CLEAR OPTIONS</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LIVE KB CONTEXT -->
+    <section class="kb-section container">
+        <div class="section-label">
+            <div class="section-label-left">
+                <div class="color-bar"></div>
+                <h2>Healthcare News</h2>
+            </div>
+            <a href="#"
+                style="color: var(--primary-color); font-weight: 600; text-decoration: none; font-size: 14px;">View All
+                →</a>
+        </div>
+        <div class="bento-grid-news">
+            <a href="#" class="bento-cell-featured"
+                style="background-image: url('https://images.unsplash.com/photo-1576091160550-217359f4ecf8?auto=format&fit=crop&q=80&w=800'); background-size: cover; background-position: center;">
+                <div class="bento-content-overlay">
+                    <span
+                        style="background: #F59E0B; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-bottom: 12px; display: inline-block;">FEATURED</span>
+                    <h3 style="font-size: 28px; color: white; margin-bottom: 12px; font-family: 'Outfit';">Emerging
+                        Trends in Preventive Longevity</h3>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.8);">By Clinical Team • 2 Hours Ago</div>
+                </div>
+            </a>
+            <a href="#" class="bento-cell-side">
+                <span
+                    style="color: #F59E0B; font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block;">RESEARCH</span>
+                <h4 class="heading-small">New Findings in Mitochondrial Health</h4>
+                <p class="text-body">How practitioners are using AI to track patient aging markers...</p>
+                <div style="font-size: 11px; color: #9ca3af;">4 Hours Ago</div>
+            </a>
+            <a href="#" class="bento-cell-side">
+                <span
+                    style="color: #F59E0B; font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block;">TECHNOLOGY</span>
+                <h4 class="heading-small">AI Diagnostics for Biological Aging</h4>
+                <p class="text-body">Latest research affects clinical practice models...</p>
+                <div style="font-size: 11px; color: #9ca3af;">6 Hours Ago</div>
+            </a>
+        </div>
+    </section>
+
+</body>
+
+</html>
