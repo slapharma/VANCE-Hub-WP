@@ -406,7 +406,20 @@ while ( have_posts() ) :
                     <?php endif; ?>
 
                     <div class="va-article-disclaimer" style="margin-top:40px; padding:20px 24px; background:#e4def4; border-left:4px solid #8e7dbe; font-size:14px; line-height:1.75; color:#475569;">
-                        <strong style="color:var(--secondary-color);">For general information only.</strong> This article is for general information and is not a substitute for professional medical advice, diagnosis or treatment. It reflects the best available evidence at the time of writing and may not capture the most recent developments. Always talk to your GP, pharmacist or health team before acting on anything you read here, and never disregard professional advice or delay seeking it because of something on this site. Where we mention products from Vance Medical Foods Ltd we identify this clearly.
+                        <?php
+                        // Crisis signposting: shown on any article an editor tags 'mental-health'.
+                        if ( has_tag( 'mental-health' ) ) :
+                        ?>
+                            <p style="margin:0 0 12px;"><strong style="color:var(--secondary-color);">If you are struggling.</strong> You can call Samaritans free on 116 123, day or night. If you are in immediate danger, call 999.</p>
+                        <?php endif; ?>
+                        <strong style="color:var(--secondary-color);">For general information only.</strong> This article is for general information and is not a substitute for professional medical advice, diagnosis or treatment. It reflects the best available evidence at the time of writing and may not capture the most recent developments. Always talk to your GP, pharmacist or health team before acting on anything you read here, and never disregard professional advice or delay seeking it because of something on this site.
+                        <p style="margin:12px 0 0;"><strong style="color:var(--secondary-color);">Who publishes this hub.</strong> Vance Medical Hub is published by Vance Medical Foods Ltd, which makes foods for special medical purposes (FSMPs). Some articles discuss nutrients, research or types of product related to what we make. Our articles do not recommend any product, including our own, and where we mention our products we identify this clearly. Foods for special medical purposes must be used under medical supervision.</p>
+                        <?php
+                        // Editorials (formerly Op-Eds) argue a position, so say whose position it is.
+                        if ( in_category( 'gastro-editorials' ) ) :
+                        ?>
+                            <p style="margin:12px 0 0;"><strong style="color:var(--secondary-color);">This is an editorial.</strong> It sets out a position. It is the view of the Vance Medical Hub editorial team, based on the evidence cited. Other experts may hold a different view.</p>
+                        <?php endif; ?>
                         <div style="margin-top:12px; font-size:12.5px; color:#475569;">
                             <?php
                             $vance_reviewer = get_post_meta( get_the_ID(), '_oped_medical_reviewer', true );

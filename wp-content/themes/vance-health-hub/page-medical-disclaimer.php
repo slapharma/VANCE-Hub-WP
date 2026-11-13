@@ -63,7 +63,7 @@ vance_render_legal_hero( 'disclaimer' );
     <h2>In an emergency</h2>
     <div class="legal-emergency-box">
         <p>
-            Do not use this site for urgent or emergency needs. If you feel unwell, or think you may have a medical emergency, call 999 or NHS 111 straight away.
+            Do not use this site for urgent or emergency needs. If you think you may have a medical emergency, call 999 straight away. If you feel unwell and need urgent medical advice, but it is not an emergency, contact NHS 111.
         </p>
     </div>
 
