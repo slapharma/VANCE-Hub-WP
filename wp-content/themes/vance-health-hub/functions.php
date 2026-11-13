@@ -1653,6 +1653,10 @@ function vance_redirect_superseded_pages() {
 		'take-our-survey'    => 'gastro-health-survey',
 		'take-a-quiz-2'      => 'gastro-health-survey',
 		'clinical-reviews-2' => array( 'category', 'content-clinical-reviews' ),
+		// Category renamed 2026-11-13: Expert Opinions -> Editorials. WordPress
+		// keeps no old slug for terms, so the old archive URLs 404 without these.
+		'category/content-expert-opinions' => array( 'category', 'gastro-editorials' ),
+		'category/expert-opinions'         => array( 'category', 'gastro-editorials' ),
 	);
 
 	$path = trim( wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ?: '', '/' );
@@ -1978,7 +1982,8 @@ function vance_content_cpts() {
     return array(
         'news' => 'Healthcare News',
         'research' => 'Clinical Reviews',
-        'oped' => 'Expert Opinions',
+        // Singular: vance_register_cpts() appends "s" for the plural labels.
+        'oped' => 'Editorial',
         'review' => 'Reviews',
         'whitepaper' => 'Tools & Resources',
         'podcast' => 'Media Library',
@@ -2108,7 +2113,7 @@ function vance_register_content_hub_menu() {
     $cpts = array(
         'news' => 'Healthcare News',
         'research' => 'Clinical Reviews',
-        'oped' => 'Expert Opinions',
+        'oped' => 'Editorials',
         'review' => 'Reviews', // Removes the buggy default "Reviewss" top-level menu entry
         'whitepaper' => 'Tools & Resources',
         'podcast' => 'Media Library',
@@ -2214,6 +2219,7 @@ function vance_get_category_icon_url($name) {
         'healthcare news' => 'megaphone.svg',
         'research' => 'analytics.svg',
         'clinical reviews' => 'analytics.svg',
+        'editorials' => 'clipboard.svg',
         'expert opinions' => 'clipboard.svg',
         'oped' => 'clipboard.svg',
         'reviews' => 'star.svg',
@@ -2259,7 +2265,7 @@ function vance_render_content_hub_dashboard() {
     $cpts = array(
         'news' => array('name' => 'Healthcare News', 'icon' => 'dashicons-megaphone', 'desc' => 'Articles and updates about the healthcare industry.'),
         'research' => array('name' => 'Clinical Reviews', 'icon' => 'dashicons-analytics', 'desc' => 'In-depth reviews of clinical research and trials.'),
-        'oped' => array('name' => 'Expert Opinions', 'icon' => 'dashicons-id-alt', 'desc' => 'Professional perspectives and thought leadership.'),
+        'oped' => array('name' => 'Editorials', 'icon' => 'dashicons-id-alt', 'desc' => 'Professional perspectives and thought leadership.'),
         'review' => array('name' => 'Product Reviews', 'icon' => 'dashicons-star-filled', 'desc' => 'Reviews of healthcare products and supplements.'),
         'whitepaper' => array('name' => 'Tools & Resources', 'icon' => 'dashicons-media-text', 'desc' => 'Technical papers, guides, and professional tools.'),
         'podcast' => array('name' => 'Media Library', 'icon' => 'dashicons-microphone', 'desc' => 'Audio content and professional discussions.'),
@@ -2381,8 +2387,10 @@ function vance_auto_assign_category( $post_id, $post, $update ) {
     $cpts = array(
         'news' => 'Healthcare News',
         'research' => 'Clinical Reviews',
-        'oped' => 'Expert Opinions',
-        'review' => 'Expert Opinions',
+        // Looked up by NAME, and created if missing: these must match the live
+        // term names exactly, or the next save makes a duplicate category.
+        'oped' => 'Editorials',
+        'review' => 'Editorials',
         'whitepaper' => 'Tools & Resources',
         'podcast' => 'Media Library',
         'webinar' => 'Media Library',
@@ -2424,8 +2432,8 @@ function vance_content_creation_notice() {
             $cpt_names = array(
                 'news' => 'Healthcare News',
                 'research' => 'Clinical Reviews',
-                'oped' => 'Expert Opinions',
-                'review' => 'Expert Opinions',
+                'oped' => 'Editorials',
+                'review' => 'Editorials',
                 'whitepaper' => 'Tools & Resources',
                 'podcast' => 'Media Library',
                 'webinar' => 'Media Library',
@@ -8143,7 +8151,7 @@ function vance_get_cpt_category_choices() {
     $cpt_category_names = array(
         'Healthcare News',
         'Clinical Reviews',
-        'Expert Opinions',
+        'Editorials',
         'Tools & Resources',
         'Media Library',
         'Webinars',

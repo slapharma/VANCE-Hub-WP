@@ -154,7 +154,9 @@ function vance_category_hero_meta() {
 		 * how good it is — see the note on `card` above.
 		 */
 
-		'content-expert-opinions' => array(
+		// Renamed 2026-11-13: "Expert Opinions" (content-expert-opinions), earlier
+		// "Op-Eds", is now "Editorials". The key must track the live term slug.
+		'gastro-editorials' => array(
 			'eyebrow' => __( 'Perspective', 'vance-health-hub' ),
 			'intro'   => __( 'Signed commentary from clinicians and researchers: argued positions, clearly attributed, and kept separate from the evidence summaries.', 'vance-health-hub' ),
 			'image'   => 'expert-opinions.jpg',

@@ -97,7 +97,7 @@ if ( is_category() ) {
            $hero_bg = get_template_directory_uri() . '/assets/img/news_hero.png';
            $category_tagline = 'Stay Ahead of the Curve';
            $category_description = 'Breaking news, industry updates, and the latest developments in healthcare, nutrition science, and longevity medicine.';
-       } elseif ( stripos($cat_name, 'Opinion') !== false || stripos($cat_name, 'Expert') !== false ) {
+       } elseif ( stripos($cat_name, 'Editorial') !== false || stripos($cat_name, 'Opinion') !== false || stripos($cat_name, 'Expert') !== false ) {
            $hero_bg = get_template_directory_uri() . '/assets/img/opinion_hero.png';
            $category_tagline = 'Insights That Inspire';
            $category_description = 'Thought-provoking perspectives from leading experts, thought leaders, and innovators shaping the future of healthcare and nutritional medicine.';

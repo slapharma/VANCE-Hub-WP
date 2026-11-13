@@ -1129,7 +1129,7 @@ body {
         foreach ($kb_sections as $sec):
             $cat = $sec['cat'];
             $layout = $sec['layout'];
-            if ($cat->name === 'Expert Opinions' || $cat->slug === 'expert-opinions') { $layout = 'bento'; }
+            if ($cat->slug === 'gastro-editorials') { $layout = 'bento'; } // Editorials, formerly Expert Opinions / Op-Eds
             // Posters fetch exactly columns x rows cards (admin-controlled, 3-5
             // cols x 1-3 rows); bento/asymmetric are fixed at 3; grids use the
             // per-category count. Cols default is reused by the render branch.
