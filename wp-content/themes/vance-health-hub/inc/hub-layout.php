@@ -435,6 +435,28 @@ function vance_hub_customize_register( $wp_customize ) {
 		'type'        => 'date',
 	) );
 
+	$wp_customize->add_setting( 'vance_hub_show_promo', array(
+		'default'           => true,
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_show_promo', array(
+		'label'       => __( 'Hub: show the promo block', 'vance-health-hub' ),
+		'description' => __( 'The same promo block as the VanceHealthHub home page. Its content and its own on/off switch are in the "Promo Block" section. It shows here only when both switches are on.', 'vance-health-hub' ),
+		'section'     => $section,
+		'type'        => 'checkbox',
+	) );
+
+	$wp_customize->add_setting( 'vance_hub_show_dashboard', array(
+		'default'           => false,
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_show_dashboard', array(
+		'label'       => __( 'Member dashboard: use the VanceHubClub home', 'vance-health-hub' ),
+		'description' => __( 'Replaces the first screen of the member dashboard with the VanceHubClub layout: a greeting, one next step, the free tools with the member\'s own progress, and the member\'s saved items. The other dashboard tabs do not change. Administrators can preview it without saving: add ?vhh_layout=hub to the dashboard address.', 'vance-health-hub' ),
+		'section'     => $section,
+		'type'        => 'checkbox',
+	) );
+
 	$wp_customize->add_setting( 'vance_hub_show_sections', array(
 		'default'           => true,
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',

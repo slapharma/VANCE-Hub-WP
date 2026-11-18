@@ -133,6 +133,8 @@ require_once get_template_directory() . '/inc/nav-mega.php';
 require_once get_template_directory() . '/inc/hub-layout.php';
 // VanceHubClub article layout: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-article.php';
+// VanceHubClub member dashboard home: opt-in (Customizer, default off). Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-dashboard.php';
 
 /**
  * Rebrand migration helper.
