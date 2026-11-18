@@ -435,6 +435,7 @@ while ( have_posts() ) :
 
                 <!-- Sidebar Column -->
                 <aside class="oped-sidebar">
+<?php do_action( 'vance_article_sidebar_top' ); // Flush left on purpose: indentation before the tag would be output on every article. ?>
 
                     <?php // Save button relocated to the article header bar at the top (all-screens redesign). ?>
 

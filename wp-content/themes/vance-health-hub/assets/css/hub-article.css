@@ -1,0 +1,331 @@
+/* ==========================================================================
+   VanceHubClub article layout (inc/hub-article.php)
+
+   Loaded only when the article layout is active, and every rule is scoped
+   under body.vhub-article, so with the layout off this file is not on the
+   page and nothing here can apply.
+
+   Colour roles, as on the hub home: teal for tools and primary actions,
+   purple for member and account things, navy for headings. The page wash is
+   the spotlight gradient (#ECF5F5 to #F6F9FA).
+
+   Radii come from the token scale in main.css :root, with literal fallbacks.
+   The article body card (.oped-main-content) is not touched.
+
+   Two kinds of rule:
+     1. the new blocks (prompt in the body, three sidebar cards), styled fully;
+     2. low-risk harmonising of the existing template: the content-section
+        background, the sidebar block frame and heading colour, and hiding the
+        old Ask VANCE-Ai block that the new Ask card replaces. Nothing here
+        competes with an inline style in single.php.
+   ========================================================================== */
+
+body.vhub-article {
+	--vhub-teal: #008080;
+	--vhub-teal-hover: #006666;
+	--vhub-teal-ink: #004C4C;
+	--vhub-wash: #DEF4F4;
+	--vhub-navy: #0A1929;
+	--vhub-purple: #6B489E;
+	--vhub-purple-ink: #5B3D8A;
+	--vhub-ink: #1F2937;
+	--vhub-muted: #4B5563;
+	--vhub-line: #D9ECEC;
+	--vhub-focus: #6B489E;
+	--vhub-heading: var(--font-heading, 'Outfit', sans-serif);
+	--vhub-body: var(--font-main, 'Inter', system-ui, sans-serif);
+}
+
+/* ---- 2. harmonising the existing template -------------------------------- */
+
+/* The reading area sits on the spotlight wash instead of flat #FAFAFA. */
+body.vhub-article .oped-content-section {
+	background: linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 560px, #F6F9FA 100%);
+}
+
+/* Sidebar blocks: a hairline frame and a teal top rule, as the hub home
+   tiles. Only the direct children of the aside, so a block's inner widgets
+   (the flash cards, the featured discount) keep their own look. */
+body.vhub-article .oped-sidebar > .oped-sidebar-block {
+	border: 1px solid var(--vhub-line);
+	border-top: 4px solid var(--vhub-teal);
+	box-shadow: 0 1px 3px rgba(10, 25, 41, 0.05);
+}
+body.vhub-article .oped-sidebar > .oped-sidebar-block > h4 {
+	color: var(--vhub-navy);
+	font-weight: 700;
+	line-height: 1.3;
+}
+body.vhub-article .oped-sidebar > .oped-audio-summary > h4 { color: #FFFFFF; }
+
+/* The new Ask card at the top of the sidebar replaces this block. */
+body.vhub-article .oped-sidebar > .oped-askai-widget { display: none; }
+
+/* ---- 1a. the tool prompt in the article body ----------------------------- */
+
+body.vhub-article .vhub-aprompt {
+	display: grid;
+	grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+	margin: 32px 0;
+	overflow: hidden;
+	background: linear-gradient(180deg, #ECF5F5 0%, #F6F9FA 100%);
+	border: 1px solid var(--vhub-line);
+	border-left: 4px solid var(--vhub-teal);
+	border-radius: var(--radius-surface, 14px);
+	font-style: normal;
+}
+
+body.vhub-article .vhub-aprompt__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: 180px;
+	max-width: none;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 0;
+	margin: 0;
+}
+
+body.vhub-article .vhub-aprompt__body {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 22px 24px 24px;
+	min-width: 0;
+}
+
+body.vhub-article .oped-article-body .vhub-aprompt p { margin: 0; }
+
+body.vhub-article .vhub-aprompt__eyebrow {
+	font-family: var(--vhub-body);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.3;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+	color: var(--vhub-teal-ink);
+}
+body.vhub-article .vhub-aprompt__title {
+	font-family: var(--vhub-heading);
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--vhub-navy);
+}
+body.vhub-article .vhub-aprompt__text {
+	font-size: 16px;
+	line-height: 1.55;
+	color: var(--vhub-muted);
+}
+
+/* Beats .oped-article-body a / a:hover (oped-template.css), which underline
+   and colour every link in the body. */
+body.vhub-article .oped-article-body .vhub-aprompt__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 48px;
+	margin-top: 8px;
+	padding: 12px 22px;
+	background: var(--vhub-teal);
+	color: #FFFFFF;
+	border-radius: var(--radius-control, 6px);
+	font-family: var(--vhub-body);
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	transition: background-color 0.15s ease;
+}
+body.vhub-article .oped-article-body .vhub-aprompt__btn:hover {
+	background: var(--vhub-teal-hover);
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+/* Narrow reading column: photo on top, a fixed band rather than the square
+   the side-by-side layout needs. */
+@media (max-width: 600px) {
+	body.vhub-article .vhub-aprompt { grid-template-columns: minmax(0, 1fr); }
+	body.vhub-article .vhub-aprompt__img { height: 160px; min-height: 0; }
+	body.vhub-article .vhub-aprompt__body { padding: 18px 18px 20px; }
+	body.vhub-article .vhub-aprompt__title { font-size: 20px; }
+	body.vhub-article .oped-article-body .vhub-aprompt__btn { width: 100%; }
+}
+
+/* ---- 1b. sidebar cards --------------------------------------------------- */
+
+body.vhub-article .vhub-acard ul { list-style: none; margin: 0; padding: 0; }
+body.vhub-article .vhub-acard p { margin: 0; }
+
+body.vhub-article .vhub-acard a:focus-visible,
+body.vhub-article .vhub-acard button:focus-visible,
+body.vhub-article .oped-article-body .vhub-aprompt__btn:focus-visible {
+	outline: 3px solid var(--vhub-focus);
+	outline-offset: 3px;
+}
+
+/* Ask VANCE-Ai */
+body.vhub-article .vhub-aask {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+body.vhub-article .vhub-aask__label {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--vhub-ink);
+}
+body.vhub-article .vhub-aask__box {
+	display: flex;
+	gap: 6px;
+	padding: 4px;
+	background: #FFFFFF;
+	border: 2px solid var(--vhub-teal);
+	border-radius: var(--radius-field, 10px);
+}
+body.vhub-article .vhub-aask__box:focus-within {
+	outline: 3px solid var(--vhub-focus);
+	outline-offset: 2px;
+}
+body.vhub-article .vhub-aask__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 44px;
+	padding: 10px;
+	border: 0;
+	background: transparent;
+	font-family: inherit;
+	font-size: 16px; /* 16px keeps iOS from zooming on focus */
+	color: var(--vhub-ink);
+}
+body.vhub-article .vhub-aask__input:focus,
+body.vhub-article .vhub-aask__input:focus-visible { outline: none; } /* the box draws the ring */
+body.vhub-article .vhub-aask__input::placeholder { color: #6B7280; }
+body.vhub-article .vhub-aask__btn {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 44px;
+	padding: 10px 16px;
+	border: 0;
+	border-radius: var(--radius-control, 6px);
+	background: var(--vhub-teal);
+	color: #FFFFFF;
+	font-family: inherit;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+}
+body.vhub-article .vhub-aask__btn:hover { background: var(--vhub-teal-hover); }
+body.vhub-article .vhub-acard__hint {
+	margin-top: 12px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--vhub-muted);
+}
+
+/* Tools for this subject */
+body.vhub-article .vhub-atools {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+body.vhub-article .vhub-atool {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 72px;
+	padding: 8px;
+	border: 1px solid var(--vhub-line);
+	border-radius: var(--radius-field, 10px);
+	background: #FFFFFF;
+	color: var(--vhub-ink);
+	text-decoration: none;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+body.vhub-article .vhub-atool:hover {
+	background: #F3FBFB;
+	border-color: var(--vhub-teal);
+	color: var(--vhub-ink);
+}
+body.vhub-article .vhub-atool__img {
+	flex: 0 0 64px;
+	width: 64px;
+	height: 64px;
+	object-fit: cover;
+	border-radius: var(--radius-control, 6px);
+}
+body.vhub-article .vhub-atool__body {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+body.vhub-article .vhub-atool__name {
+	font-family: var(--vhub-heading);
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--vhub-teal-ink);
+}
+body.vhub-article .vhub-atool__desc {
+	font-size: 13px;
+	line-height: 1.45;
+	color: var(--vhub-muted);
+}
+
+/* Inside the Hub this week: member content, so purple. */
+body.vhub-article .oped-sidebar > .vhub-acard--tiles { border-top-color: var(--vhub-purple); }
+body.vhub-article .vhub-atiles {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+body.vhub-article .vhub-atile {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	min-height: 44px;
+	padding: 10px 12px;
+	border-left: 3px solid var(--vhub-purple);
+	border-radius: var(--radius-control, 6px);
+	background: #F6F2FB;
+	color: var(--vhub-ink);
+	text-decoration: none;
+}
+body.vhub-article a.vhub-atile:hover { background: #EDE6F6; color: var(--vhub-ink); }
+body.vhub-article .vhub-atile__badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: var(--radius-control, 6px);
+	background: var(--vhub-purple);
+	color: #FFFFFF;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.6px;
+	text-transform: uppercase;
+}
+body.vhub-article .vhub-atile__title {
+	font-family: var(--vhub-heading);
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--vhub-purple-ink);
+}
+body.vhub-article .vhub-atile__text {
+	font-size: 13px;
+	line-height: 1.45;
+	color: var(--vhub-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	body.vhub-article .vhub-atool,
+	body.vhub-article .oped-article-body .vhub-aprompt__btn { transition: none; }
+}
