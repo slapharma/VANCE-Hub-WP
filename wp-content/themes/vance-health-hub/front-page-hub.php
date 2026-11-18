@@ -268,6 +268,25 @@ if ( ! empty( $vhub_quotes ) ) :
 <?php endif; ?>
 
 <?php /* ---------------------------------------------------------------
+ * f2. Promo block: the same Customizer-driven block the VanceHealthHub home
+ *     page shows (inc/promo-block.php, "Promo Block" settings). It prints
+ *     nothing when its own "show" setting is off, so the output is buffered
+ *     and the wrapper renders only when there is a block to wrap. Off for
+ *     this layout alone with "Hub: show the promo block".
+ * ------------------------------------------------------------------ */
+$vhub_promo = '';
+if ( function_exists( 'vance_render_promo_home' ) && vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_promo', true ) ) ) {
+	ob_start();
+	vance_render_promo_home();
+	$vhub_promo = trim( (string) ob_get_clean() );
+}
+if ( '' !== $vhub_promo ) : ?>
+<div class="vhub-promo">
+	<?php echo $vhub_promo; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by vance_render_promo_block(). ?>
+</div>
+<?php endif; ?>
+
+<?php /* ---------------------------------------------------------------
  * g. Conditions: photo tiles and a list, from the real registry.
  * ------------------------------------------------------------------ */
 $vhub_cards = function_exists( 'vance_gi_condition_cards' ) ? vance_gi_condition_cards() : array();

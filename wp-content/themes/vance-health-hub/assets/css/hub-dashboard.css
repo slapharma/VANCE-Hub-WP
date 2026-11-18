@@ -1,0 +1,347 @@
+/* ==========================================================================
+   VanceHubClub member dashboard home (inc/hub-dashboard.php)
+
+   Loaded only on the dashboard page, and only when the layout is active.
+   Every class is prefixed vhd- and every rule sits under .vhd, so nothing
+   here can reach the classic dashboard, its other tabs or its sidebar.
+
+   page-dashboard.php prints its own <style> blocks in the body, after this
+   file. They win a tie at equal weight, so each rule here carries the .vhd
+   ancestor (0,2,0 or more) and does not rely on source order.
+
+   Radii come from the token scale in main.css :root, with literal fallbacks.
+   Article rows are square (--radius-article), like every post tile.
+   ========================================================================== */
+
+.vhd {
+	--vhd-teal: #008080;
+	--vhd-teal-ink: #004C4C;
+	--vhd-wash: #DEF4F4;
+	--vhd-navy: #0A1929;
+	--vhd-purple: #6B489E;
+	--vhd-purple-ink: #5B3D8A;
+	--vhd-ink: #1F2937;
+	--vhd-muted: #4B5563;
+	--vhd-line: #D9ECEC;
+	--vhd-heading: var(--font-heading, 'Outfit', sans-serif);
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	color: var(--vhd-ink);
+}
+.vhd *,
+.vhd *::before,
+.vhd *::after { box-sizing: border-box; }
+
+.vhd :where(h1, h2, h3, p, ul) { margin: 0; padding: 0; }
+.vhd :where(ul) { list-style: none; }
+.vhd :where(a) { text-decoration: none; color: inherit; }
+
+.vhd a:focus-visible,
+.vhd button:focus-visible {
+	outline: 3px solid var(--vhd-purple);
+	outline-offset: 3px;
+}
+.vhd .vhd-step a:focus-visible { outline-color: #FFFFFF; }
+
+/* --- Type ---------------------------------------------------------------- */
+.vhd .vhd-eyebrow {
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: 1.2px;
+	text-transform: uppercase;
+	color: var(--vhd-purple-ink);
+}
+.vhd .vhd-eyebrow--light { color: #E6DCF5; }
+.vhd .vhd-h2 {
+	font-family: var(--vhd-heading);
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: var(--vhd-navy);
+}
+.vhd .vhd-h3 {
+	font-family: var(--vhd-heading);
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--vhd-navy);
+}
+.vhd .vhd-link {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--vhd-teal-ink);
+}
+.vhd .vhd-link:hover { text-decoration: underline; }
+
+/* --- Buttons ------------------------------------------------------------- */
+.vhd .vhd-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 48px;
+	padding: 12px 22px;
+	border: 0;
+	border-radius: var(--radius-control, 6px);
+	font-family: inherit;
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.2;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background-color 0.15s ease;
+}
+.vhd .vhd-btn--purple { background: var(--vhd-purple); color: #FFFFFF; }
+.vhd .vhd-btn--purple:hover { background: var(--vhd-purple-ink); }
+.vhd .vhd-btn--white { background: #FFFFFF; color: var(--vhd-navy); }
+.vhd .vhd-btn--white:hover { background: var(--vhd-wash); }
+
+/* --- Greeting: the same light gradient as the spotlight heroes ------------ */
+.vhd .vhd-hello {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 32px 36px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: linear-gradient(180deg, var(--vhh-hs-from, #ECF5F5), var(--vhh-hs-to, #F6F9FA));
+}
+.vhd .vhd-hello__copy { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vhd .vhd-hello__title {
+	font-family: var(--vhd-heading);
+	font-size: 36px;
+	font-weight: 700;
+	line-height: 1.15;
+	color: var(--vhd-teal);
+	overflow-wrap: anywhere;
+}
+.vhd .vhd-hello__since { font-size: 15px; color: var(--vhd-muted); }
+
+/* --- Next step ----------------------------------------------------------- */
+.vhd .vhd-step {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 28px 36px;
+	border-radius: var(--radius-surface, 14px);
+	background: var(--vhd-purple);
+	color: #FFFFFF;
+}
+.vhd .vhd-step__copy { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vhd .vhd-step__title {
+	font-family: var(--vhd-heading);
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: #FFFFFF;
+}
+.vhd .vhd-step__text { font-size: 15px; line-height: 1.55; color: #F1EAFB; max-width: 62ch; }
+
+/* --- Blocks -------------------------------------------------------------- */
+.vhd .vhd-block { display: flex; flex-direction: column; gap: 16px; }
+
+/* --- Tools --------------------------------------------------------------- */
+.vhd .vhd-tools {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 20px;
+}
+.vhd .vhd-tools > li { display: flex; }
+.vhd .vhd-tool {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	overflow: hidden;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.vhd .vhd-tool:hover { border-color: var(--vhd-teal); box-shadow: 0 8px 24px rgba(10, 25, 41, 0.08); }
+.vhd .vhd-tool__img {
+	display: block;
+	width: 100%;
+	height: 120px;
+	object-fit: cover;
+}
+.vhd .vhd-tool__body {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex: 1;
+	padding: 18px 20px 20px;
+}
+.vhd .vhd-tool__title {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	font-family: var(--vhd-heading);
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--vhd-navy);
+}
+.vhd .vhd-tool__title .vhub-icon { flex: 0 0 auto; width: 22px; height: 22px; color: var(--vhd-teal); }
+.vhd .vhd-tool__status {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	font-size: 14px;
+	line-height: 1.45;
+	color: var(--vhd-muted);
+}
+.vhd .vhd-tool__status.is-done { color: var(--vhd-teal-ink); font-weight: 600; }
+.vhd .vhd-tool__status .vhub-icon { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; }
+.vhd .vhd-tool__cta {
+	margin-top: auto;
+	padding-top: 4px;
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--vhd-purple-ink);
+}
+
+/* --- Saved-item counts ----------------------------------------------------- */
+.vhd .vhd-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 20px;
+}
+.vhd .vhd-stats > li { display: flex; }
+.vhd .vhd-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+	padding: 20px 22px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+	transition: border-color 0.15s ease;
+}
+.vhd .vhd-stat:hover { border-color: var(--vhd-teal); }
+.vhd .vhd-stat__n {
+	font-family: var(--vhd-heading);
+	font-size: 34px;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--vhd-teal);
+}
+.vhd .vhd-stat__label { font-size: 14px; font-weight: 600; color: var(--vhd-ink); }
+
+/* --- Cards --------------------------------------------------------------- */
+.vhd .vhd-cols {
+	display: grid;
+	grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+	gap: 20px;
+	align-items: start;
+}
+.vhd .vhd-cols--one { grid-template-columns: minmax(0, 1fr); }
+.vhd .vhd-card {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 24px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+}
+.vhd .vhd-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+.vhd .vhd-badge {
+	padding: 4px 10px;
+	border-radius: var(--radius-pill, 999px);
+	background: var(--vhd-teal);
+	color: #FFFFFF;
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+.vhd .vhd-empty { font-size: 14px; color: var(--vhd-muted); }
+
+/* --- Article rows (square, like every post tile) -------------------------- */
+.vhd .vhd-posts { display: flex; flex-direction: column; gap: 14px; }
+.vhd .vhd-posts--row {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px;
+}
+.vhd .vhd-post { display: flex; align-items: flex-start; gap: 14px; }
+.vhd .vhd-post__img {
+	flex: 0 0 72px;
+	width: 72px;
+	height: 72px;
+	object-fit: cover;
+	border-radius: var(--radius-article, 0);
+	background: var(--vhd-wash);
+}
+.vhd .vhd-post__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vhd .vhd-post__cat {
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+	color: var(--vhd-purple-ink);
+}
+.vhd .vhd-post__title {
+	font-family: var(--vhd-heading);
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.35;
+	color: var(--vhd-navy);
+	overflow-wrap: anywhere;
+}
+.vhd .vhd-post:hover .vhd-post__title { color: var(--vhd-teal-ink); text-decoration: underline; }
+.vhd .vhd-post__date { font-size: 12px; color: var(--vhd-muted); }
+
+/* --- Messages ------------------------------------------------------------ */
+.vhd .vhd-msgs { display: flex; flex-direction: column; gap: 10px; }
+.vhd .vhd-msg {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 10px 12px;
+	border-left: 3px solid var(--vhd-line);
+	background: #F8FAFC;
+}
+.vhd .vhd-msg.is-unread { border-left-color: var(--vhd-teal); background: #F4FFFF; }
+.vhd .vhd-msg:hover { background: var(--vhd-wash); }
+.vhd .vhd-msg__title { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--vhd-navy); overflow-wrap: anywhere; }
+.vhd .vhd-msg.is-unread .vhd-msg__title { font-weight: 700; }
+.vhd .vhd-msg__meta { font-size: 12px; color: var(--vhd-muted); }
+
+/* --- Narrow screens ------------------------------------------------------ */
+@media (max-width: 1180px) {
+	.vhd .vhd-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+	.vhd .vhd-cols { grid-template-columns: minmax(0, 1fr); }
+	.vhd .vhd-posts--row { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+}
+@media (max-width: 640px) {
+	.vhd { gap: 20px; }
+	.vhd .vhd-hello,
+	.vhd .vhd-step { flex-direction: column; align-items: flex-start; padding: 22px 20px; }
+	.vhd .vhd-hello__title { font-size: 28px; }
+	.vhd .vhd-step__title { font-size: 21px; }
+	.vhd .vhd-btn { width: 100%; white-space: normal; }
+	.vhd .vhd-tools { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+	.vhd .vhd-tool { flex-direction: row; }
+	.vhd .vhd-tool__img { flex: 0 0 96px; width: 96px; height: auto; min-height: 100%; }
+	.vhd .vhd-tool__body { padding: 14px 16px; gap: 6px; }
+	.vhd .vhd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+	.vhd .vhd-stat { padding: 16px; }
+	.vhd .vhd-stat__n { font-size: 28px; }
+	.vhd .vhd-card { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.vhd .vhd-btn,
+	.vhd .vhd-tool,
+	.vhd .vhd-stat { transition: none; }
+}

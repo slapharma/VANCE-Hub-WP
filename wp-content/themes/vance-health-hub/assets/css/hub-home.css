@@ -1043,3 +1043,20 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) {
 	.vhub-btn { transition: none; }
 }
+
+/* --- Promo block (inc/promo-block.php) ----------------------------------
+   The same block as the VanceHealthHub home page. Its own styles are in
+   main.css (.vance-cat-promo); only the frame is set here, so the block
+   lines up with .vhub-wrap and has the same space above it as a section.
+   A promo with a band colour keeps its own padding: the colour needs it. */
+.vhub-promo { padding-top: 72px; }
+.vhub-promo > .vance-cat-promo:not([style*="background-color"]) { padding: 0; }
+.vhub-promo .vance-cat-promo > .container {
+	max-width: 1240px;
+	padding-left: 24px;
+	padding-right: 24px;
+}
+@media (max-width: 768px) {
+	.vhub-promo { padding-top: 48px; }
+	.vhub-promo .vance-cat-promo > .container { padding-left: 16px; padding-right: 16px; }
+}

@@ -141,6 +141,9 @@ get_header();
     // feature: the card goes when the tab does, and carries the tab's name.
     $dash_on    = 'vance_dashboard_feature_enabled';
     $dash_label = 'vance_dashboard_feature_label';
+    // VanceHubClub dashboard home (inc/hub-dashboard.php): opt-in, home tab only.
+    // It prints its own greeting, so the page heading below is skipped for it.
+    $vance_hub_dash = ( 'home' === $current_tab && function_exists( 'vance_hub_dashboard_active' ) && vance_hub_dashboard_active() );
 ?>
 
 <!-- DASHBOARD STYLES (Scoped) -->
@@ -508,6 +511,7 @@ get_header();
 
         <div class="dash-content">
             <?php // $tab_label is resolved once alongside the header breadcrumb above. ?>
+            <?php if ( ! $vance_hub_dash ) : ?>
             <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
                     <h1 style="font-family:'Outfit'; font-size:28px; color:<?php echo $theme_primary; ?>; margin:0 0 8px 0;"><?php echo esc_html($tab_label); ?></h1>
@@ -532,9 +536,14 @@ get_header();
                     <button type="button" data-vance-askai-open="new" class="btn-primary" style="display:inline-flex; align-items:center; background:<?php echo $theme_primary; ?>; color:white; border:none; padding:10px 20px; min-height:44px; border-radius:var(--radius-control, 6px); font-weight:600; font-size:14px; font-family:inherit; cursor:pointer;">+ New Chat</button>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
 
             <?php switch($current_tab) :
                 case 'home':
+                    if ( $vance_hub_dash ) {
+                        vance_hub_dashboard_render_home( $current_user );
+                        break;
+                    }
                     // Admin-broadcast messages: compute unread count + latest items
                     // for the Messages card below. We do NOT auto-mark-read here;
                     // marking only happens when the user opens the My Messages tab.

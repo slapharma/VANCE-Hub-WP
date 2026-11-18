@@ -25,6 +25,8 @@
  *   10 the rendered template with nothing saved (the data rule)
  *   11 the rendered template with real data, guest and member
  *   12 the rendered template: boundaries, unsafe and failing inputs
+ *   15 the promo block in front-page-hub.php, and the two Customizer switches
+ *      that the promo block and the member dashboard read
  *
  * A check whose label says what should happen and which fails on the current
  * code is a finding, not a broken check. The runner lists every failure.
@@ -1059,6 +1061,103 @@ check( 'empty: with no posts beyond the library, "More to read" is omitted', str
 arrange();
 $HTML = render_home( false );
 check( 'empty: nothing saved, neither block renders', strpos( $HTML, 'vhub-secs' ) === false && strpos( $HTML, 'vhub-more' ) === false );
+
+/* ---- 15. the promo block and the Customizer switches ----------------------- */
+
+// Stand-in for inc/promo-block.php: counts each call and prints PROMO_HTML.
+// Both globals default to nothing, so sections 10-12 render no promo at all.
+function vance_render_promo_home() {
+	$GLOBALS['PROMO_CALLS'] = ( $GLOBALS['PROMO_CALLS'] ?? 0 ) + 1;
+	echo $GLOBALS['PROMO_HTML'] ?? '';
+}
+
+// Stand-in for the Customizer manager: records what the register function asks for.
+class HubCustomizeFake {
+	public $sections = array();
+	public $settings = array();
+	public $controls = array();
+	public function add_section( $id, $args = array() ) { $this->sections[ $id ] = $args; }
+	public function add_setting( $id, $args = array() ) { $this->settings[ $id ] = $args; }
+	public function add_control( $id, $args = array() ) { $this->controls[ $id ] = $args; }
+}
+
+section( '15. The promo block on the Hub home' );
+
+$PROMO = '<p class="promo-body">PROMO-BODY</p>';
+
+arrange();
+$GLOBALS['PROMO_HTML']  = $PROMO;
+$GLOBALS['PROMO_CALLS'] = 0;
+$HTML = render_home( false );
+check( 'promo: shown by default, with the switch unset (guest)', strpos( $HTML, 'class="vhub-promo"' ) !== false && strpos( $HTML, 'PROMO-BODY' ) !== false );
+check( 'promo: the block is rendered exactly once per page view', $GLOBALS['PROMO_CALLS'] === 1 );
+
+arrange();
+$GLOBALS['PROMO_HTML']  = $PROMO;
+$GLOBALS['PROMO_CALLS'] = 0;
+$HTML = render_home( true );
+check( 'promo: shown to a member too', strpos( $HTML, 'class="vhub-promo"' ) !== false && strpos( $HTML, 'PROMO-BODY' ) !== false );
+
+arrange( array( 'vance_hub_show_promo' => false ) );
+$GLOBALS['PROMO_HTML']  = $PROMO;
+$GLOBALS['PROMO_CALLS'] = 0;
+$HTML = render_home( false );
+check( 'promo: switched off, the wrapper is absent', strpos( $HTML, 'vhub-promo' ) === false );
+check( 'promo: switched off, the block is not called at all', $GLOBALS['PROMO_CALLS'] === 0 && strpos( $HTML, 'PROMO-BODY' ) === false );
+
+arrange( array( 'vance_hub_show_promo' => '0' ) );
+$GLOBALS['PROMO_HTML'] = $PROMO;
+$HTML = render_home( false );
+check( 'promo: a saved "0" switches it off after the checkbox sanitiser', strpos( $HTML, 'vhub-promo' ) === false );
+
+// "0" is falsy in PHP, so it would pass even with the sanitiser removed. "off" is
+// truthy as a string and only the sanitiser turns it off.
+arrange( array( 'vance_hub_show_promo' => 'off' ) );
+$GLOBALS['PROMO_HTML'] = $PROMO;
+$HTML = render_home( false );
+check( 'promo: a saved "off" switches it off, which needs the checkbox sanitiser', strpos( $HTML, 'vhub-promo' ) === false );
+
+arrange( array( 'vance_hub_show_promo' => '1' ) );
+$GLOBALS['PROMO_HTML'] = $PROMO;
+$HTML = render_home( false );
+check( 'promo: a saved "1" switches it on', strpos( $HTML, 'PROMO-BODY' ) !== false );
+
+arrange();
+$GLOBALS['PROMO_HTML'] = '';
+$HTML = render_home( false );
+check( 'promo: an empty block prints no wrapper', strpos( $HTML, 'vhub-promo' ) === false );
+
+arrange();
+$GLOBALS['PROMO_HTML'] = " \n\t ";
+$HTML = render_home( false );
+check( 'promo: a block that is only whitespace prints no wrapper', strpos( $HTML, 'vhub-promo' ) === false );
+
+section( '15b. The promo and dashboard switches in the Customizer' );
+
+$WC = new HubCustomizeFake();
+vance_hub_customize_register( $WC );
+check( 'customize: vance_hub_show_promo is registered as a setting', isset( $WC->settings['vance_hub_show_promo'] ) );
+check( 'customize: vance_hub_show_promo defaults to on', $WC->settings['vance_hub_show_promo']['default'] === true );
+check( 'customize: vance_hub_show_promo is sanitised as a checkbox', $WC->settings['vance_hub_show_promo']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
+check( 'customize: the promo switch is a checkbox in the home layout section', $WC->controls['vance_hub_show_promo']['type'] === 'checkbox' && $WC->controls['vance_hub_show_promo']['section'] === 'vance_home_layout' );
+check( 'customize: vance_hub_show_dashboard is registered as a setting', isset( $WC->settings['vance_hub_show_dashboard'] ) );
+check( 'customize: vance_hub_show_dashboard defaults to off', $WC->settings['vance_hub_show_dashboard']['default'] === false );
+check( 'customize: vance_hub_show_dashboard is sanitised as a checkbox', $WC->settings['vance_hub_show_dashboard']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
+check( 'customize: the dashboard switch is a checkbox in the home layout section', $WC->controls['vance_hub_show_dashboard']['type'] === 'checkbox' && $WC->controls['vance_hub_show_dashboard']['section'] === 'vance_home_layout' );
+check( 'customize: the dashboard description gives the preview address the code reads', strpos( $WC->controls['vance_hub_show_dashboard']['description'], '?vhh_layout=hub' ) !== false );
+
+$DASH_SRC  = file_get_contents( $THEME . '/inc/hub-dashboard.php' );
+$FRONT_SRC = file_get_contents( $THEME . '/front-page-hub.php' );
+check( 'customize: the dashboard reads the same key and default it registers', strpos( $DASH_SRC, "vance_get_theme_mod( 'vance_hub_show_dashboard', false )" ) !== false );
+check( 'customize: the promo block reads the same key and default it registers', strpos( $FRONT_SRC, "vance_get_theme_mod( 'vance_hub_show_promo', true )" ) !== false );
+
+check( 'sanitize: "0" is off', vance_hub_sanitize_checkbox( '0' ) === false );
+check( 'sanitize: an empty string is off', vance_hub_sanitize_checkbox( '' ) === false );
+check( 'sanitize: "off" is off', vance_hub_sanitize_checkbox( 'off' ) === false );
+check( 'sanitize: "1" is on', vance_hub_sanitize_checkbox( '1' ) === true );
+check( 'sanitize: true is on', vance_hub_sanitize_checkbox( true ) === true );
+check( 'sanitize: false is off', vance_hub_sanitize_checkbox( false ) === false );
+check( 'sanitize: the integer 2 is off (only 1 means on)', vance_hub_sanitize_checkbox( 2 ) === false );
 
 /* ===================================================================== */
 echo "\n";
