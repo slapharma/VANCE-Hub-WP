@@ -131,6 +131,8 @@ require_once get_template_directory() . '/inc/category-hero.php';
 // Panel structure itself is admin-side; see docs/MEGA-MENU-SETUP.md (repo root).
 require_once get_template_directory() . '/inc/nav-mega.php';
 require_once get_template_directory() . '/inc/hub-layout.php';
+// VanceHubClub article layout: opt-in (Customizer, default off). Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-article.php';
 
 /**
  * Rebrand migration helper.
