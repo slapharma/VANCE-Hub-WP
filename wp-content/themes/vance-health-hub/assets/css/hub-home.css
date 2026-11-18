@@ -35,12 +35,15 @@
 .vhub *::before,
 .vhub *::after { box-sizing: border-box; }
 
-.vhub h1,
-.vhub h2,
-.vhub h3 { font-family: var(--vhub-heading); margin: 0; }
-.vhub p { margin: 0; }
-.vhub ul { list-style: none; margin: 0; padding: 0; }
-.vhub a { text-decoration: none; }
+/* Element resets. :where() keeps each at the weight of the single .vhub
+   class (0,1,0), and they come before every component rule, so any vhub-
+   class on the same element wins. Written as `.vhub ul` (0,1,1) the reset
+   beat one-class rules: `<ul class="vhub-wrap vhub-tools">` lost the wrap's
+   centring and side padding and the tiles' -56px pull onto the hero. */
+.vhub :where(h1, h2, h3, h4) { font-family: var(--vhub-heading); margin: 0; }
+.vhub :where(p) { margin: 0; }
+.vhub :where(ul) { list-style: none; margin: 0; padding: 0; }
+.vhub :where(a) { text-decoration: none; }
 
 /* Visible focus on every interactive element. Dark sections switch the ring
    to white so it stays visible. */
@@ -127,6 +130,14 @@
 .vhub-btn--white:hover { background: var(--vhub-wash); color: var(--vhub-navy); }
 .vhub-btn--block  { display: flex; width: 100%; }
 
+/* Text links with a trailing arrow are inline-flex for the 44px target. A
+   flex container drops the space before the arrow, so every one of them
+   gets the same 6px gap as .vhub-btn. */
+.vhub-textlink,
+.vhub-bar__link,
+.vhub-community__more,
+.vhub-sec__link { gap: 6px; }
+
 .vhub-textlink {
 	display: inline-flex;
 	align-items: center;
@@ -184,7 +195,10 @@
 
 /* ---- b. hero ------------------------------------------------------------ */
 
-.vhub-hero { background: var(--vhub-wash); }
+/* The classic spotlight hero's colours (main.css .vhh-hero-spotlight). The
+   two properties are set inline from the same theme mods by
+   front-page-hub.php; the fallbacks are the classic defaults. */
+.vhub-hero { background: linear-gradient(180deg, var(--vhh-hs-from, #ECF5F5) 0%, var(--vhh-hs-to, #F6F9FA) 100%); }
 .vhub-hero__inner {
 	display: flex;
 	flex-wrap: wrap;
@@ -336,11 +350,13 @@
 
 /* ---- c. tool tiles ------------------------------------------------------ */
 
+/* Four equal columns; two at tablet width (below), so a fourth tile never
+   wraps onto a row of its own. */
 .vhub-tools {
 	position: relative;
 	margin-top: -56px;
-	display: flex;
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 16px;
 }
 .vhub-tool {
@@ -486,7 +502,20 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	flex-direction: column;
 	gap: 28px;
 }
-.vhub-community__cards { display: flex; flex-wrap: wrap; gap: 16px; }
+.vhub-community__cards { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+/* With recipes: the quotes stack in the left column and the recipe card
+   spans both rows on the right, so a short quote is not stretched to the
+   recipe card's height. */
+.vhub-community__cards--recipes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-items: stretch;
+}
+.vhub-community__cards--recipes .vhub-community__card--recipes {
+	grid-column: 2;
+	grid-row: 1 / span 2;
+}
+.vhub-community__cards--recipes .vhub-community__card--quote { grid-column: 1; }
 .vhub-community__card {
 	flex: 1 1 330px;
 	min-width: 0;
@@ -496,9 +525,9 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	padding: 32px;
 	border-radius: var(--radius-surface, 14px);
 }
-.vhub-community__card--quote   { background: #1E293B; }
+.vhub-community__card--quote   { background: #1E293B; justify-content: center; }
 .vhub-community__card--recipes { background: var(--vhub-teal); }
-.vhub-quote { margin: 0; display: flex; flex-direction: column; gap: 16px; height: 100%; }
+.vhub-quote { margin: 0; display: flex; flex-direction: column; gap: 16px; }
 .vhub-quote__text { margin: 0; padding: 0; border: 0; }
 .vhub-quote__text p {
 	font-size: 18px;
@@ -506,7 +535,6 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	color: #FFFFFF;
 }
 .vhub-quote__by {
-	margin-top: auto;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -549,12 +577,16 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 
 /* ---- g. conditions ------------------------------------------------------ */
 
-.vhub-cond-grid { display: flex; flex-wrap: wrap; gap: 16px; }
-.vhub-cond-grid > li { flex: 1 1 250px; min-width: 0; display: flex; }
+/* Four equal columns, two at tablet width, one on a narrow phone. Grid rows
+   stretch every cell to the tallest one in the row. */
+.vhub-cond-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.vhub-cond-grid > li { min-width: 0; display: flex; }
 .vhub-cond-tile {
 	position: relative;
 	flex: 1;
-	height: 250px;
+	/* min-height, not height: the tile then stretches with its <li> to the
+	   row height, which the teal list tile sets when it is taller. */
+	min-height: 250px;
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
@@ -613,12 +645,16 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	color: #FFFFFF;
 }
 .vhub-cond-list__link:hover { color: #FFFFFF; text-decoration: underline; }
+/* Block, not flex: the label wraps in a narrow column, and the arrow must
+   follow the last word instead of standing apart at the right edge. The
+   padding keeps the target at 44px or more. */
 .vhub-cond-list__all {
 	margin-top: auto;
-	display: inline-flex;
-	align-items: center;
+	display: block;
 	min-height: 44px;
-	padding-top: 10px;
+	padding-top: 12px;
+	padding-bottom: 4px;
+	line-height: 1.4;
 	font-family: var(--vhub-heading);
 	font-weight: 700;
 	font-size: 16px;
@@ -723,9 +759,114 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 }
 .vhub-lib-item:hover .vhub-lib-item__title { color: var(--vhub-teal-hover); text-decoration: underline; }
 
+/* ---- h2. latest by section (article cards stay square) ------------------ */
+
+.vhub-secs { gap: 20px; }
+.vhub-secs__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 16px 32px;
+}
+.vhub-sec { min-width: 0; display: flex; flex-direction: column; }
+.vhub-sec__title {
+	padding-bottom: 6px;
+	border-bottom: 3px solid var(--vhub-teal);
+	font-size: 20px;
+	line-height: 1.2;
+	font-weight: 700;
+	color: var(--vhub-navy);
+}
+.vhub-sec__link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: var(--vhub-navy);
+}
+.vhub-sec__link:hover { color: var(--vhub-teal-hover); text-decoration: underline; }
+.vhub-sec__list > li + li { border-top: 1px solid #E5E7EB; }
+.vhub-sec-card {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	padding: 14px 0;
+	color: var(--vhub-navy);
+}
+.vhub-sec-card__img {
+	flex: 0 0 88px;
+	width: 88px;
+	height: 88px;
+	object-fit: cover;
+	border-radius: var(--radius-article, 0);
+	background: var(--vhub-wash);
+}
+.vhub-sec-card__body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.vhub-sec-card__title {
+	font-size: 16px;
+	line-height: 1.35;
+	font-weight: 600;
+	color: var(--vhub-navy);
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.vhub-sec-card:hover .vhub-sec-card__title { color: var(--vhub-teal-hover); text-decoration: underline; }
+.vhub-sec-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 6px;
+	font-size: 13px;
+	line-height: 1.4;
+	color: var(--vhub-muted);
+}
+
+/* ---- h3. more to read (article cards stay square) ------------------------ */
+
+.vhub-more { gap: 20px; }
+.vhub-more__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+}
+.vhub-more__grid > li { min-width: 0; display: flex; }
+.vhub-card {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	background: #FFFFFF;
+	border: 1px solid #E5E7EB;
+	border-radius: var(--radius-article, 0);
+	overflow: hidden;
+	color: var(--vhub-navy);
+}
+.vhub-card__media {
+	aspect-ratio: 16 / 10;
+	background: var(--vhub-wash);
+}
+.vhub-card__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.vhub-card__body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px 18px 20px;
+}
+.vhub-card__title {
+	font-size: 18px;
+	line-height: 1.3;
+	font-weight: 600;
+	color: var(--vhub-navy);
+}
+.vhub-card:hover .vhub-card__title { color: var(--vhub-teal-hover); text-decoration: underline; }
+
 /* ---- i. join band ------------------------------------------------------- */
 
-.vhub-join { background: var(--vhub-slate); margin-top: 80px; }
+.vhub-join { background: var(--vhub-slate); margin-top: 72px; }
 .vhub-join__inner {
 	display: flex;
 	flex-wrap: wrap;
@@ -791,6 +932,13 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 @media (max-width: 1024px) {
 	.vhub-hero__title { font-size: 48px; }
 	.vhub-h2 { font-size: 34px; }
+	.vhub-more__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.vhub-tools,
+	.vhub-cond-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+	.vhub-cond-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ==========================================================================
@@ -862,10 +1010,24 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-community__inner { padding-top: 40px; padding-bottom: 40px; gap: 20px; }
 	.vhub-community__card { padding: 20px; }
 	.vhub-community__card + .vhub-community__card { display: none; }
+	.vhub-community__cards--recipes { display: flex; }
 	.vhub-community__h3 { font-size: 24px; }
 
-	.vhub-cond-tile { height: 200px; }
+	.vhub-cond-tile { min-height: 200px; }
 	.vhub-cond-list { min-height: 0; }
+
+	/* Latest by section: the columns stack. */
+	.vhub-secs__grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+	/* Every section post stays visible here. A post hidden on a phone is still
+	   counted as shown, so it would then appear nowhere on the page. */
+	.vhub-sec-card__img { flex-basis: 76px; width: 76px; height: 76px; }
+
+	/* More to read: two columns, four cards, so the page does not run on. */
+	.vhub-more__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+	.vhub-more__grid > li:nth-child(n+5) { display: none; }
+	.vhub-card__body { padding: 12px 12px 14px; gap: 8px; }
+	.vhub-card__title { font-size: 15px; }
+	.vhub-card .vhub-tag { font-size: 11px; padding: 3px 7px; }
 
 	.vhub-feat { min-height: 260px; }
 	.vhub-feat__body { padding: 70px 20px 20px; }

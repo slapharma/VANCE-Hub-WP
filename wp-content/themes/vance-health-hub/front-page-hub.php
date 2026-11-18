@@ -72,7 +72,7 @@ $vhub_survey_n  = function_exists( 'vance_quiz_steps' ) ? count( vance_quiz_step
 <?php /* ---------------------------------------------------------------
  * b. Hero: headline, Ask VANCE-Ai, example chips, photo, survey starter.
  * ------------------------------------------------------------------ */ ?>
-<section class="vhub-hero" aria-labelledby="vhub-hero-title">
+<section class="vhub-hero" style="<?php echo esc_attr( vance_hub_hero_style( vance_get_theme_mod( 'vance_hero_spotlight_bg_from', '#ECF5F5' ), vance_get_theme_mod( 'vance_hero_spotlight_bg_to', '#F6F9FA' ) ) ); ?>" aria-labelledby="vhub-hero-title">
 	<div class="vhub-wrap vhub-hero__inner">
 		<div class="vhub-hero__copy">
 			<div class="vhub-hero__head"<?php if ( $vhub_hero_img ) : ?> style="--vhub-hero-photo: url('<?php echo esc_url( $vhub_hero_img ); ?>');"<?php endif; ?>>
@@ -233,7 +233,7 @@ if ( ! empty( $vhub_quotes ) ) :
 			<p class="vhub-pill vhub-pill--teal"><?php esc_html_e( 'The community', 'vance-health-hub' ); ?></p>
 			<h2 id="vhub-community-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( (string) vance_get_theme_mod( 'vance_testimonial_heading', 'What Our Community Says' ) ); ?></h2>
 		</div>
-		<ul class="vhub-community__cards">
+		<ul class="vhub-community__cards<?php echo empty( $vhub_recipes ) ? '' : ' vhub-community__cards--recipes'; ?>">
 			<?php foreach ( $vhub_quotes as $vhub_quote ) : ?>
 				<li class="vhub-community__card vhub-community__card--quote">
 					<figure class="vhub-quote">
@@ -320,6 +320,9 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
  *    from article to tool exists.
  * ------------------------------------------------------------------ */
 $vhub_posts = vance_hub_library_posts();
+// Every article already on the page. The blocks below skip these, so no post
+// appears twice.
+$vhub_shown = array_column( $vhub_posts, 'id' );
 if ( ! empty( $vhub_posts ) ) :
 	$vhub_feat = array_shift( $vhub_posts );
 	?>
@@ -330,8 +333,8 @@ if ( ! empty( $vhub_posts ) ) :
 	</div>
 	<div class="vhub-library__grid">
 		<a class="vhub-feat" href="<?php echo esc_url( $vhub_feat['url'] ); ?>">
-			<?php /* No description on the attachment: leave the photo out rather than emit alt="". The headline still names the link. */ ?>
-			<?php if ( '' !== $vhub_feat['img'] && '' !== $vhub_feat['alt'] ) : ?>
+			<?php /* The theme's convention (inc/thumbnail-alt.php): the attachment's own description, or alt="" when it has none. alt="" is right here because the headline inside this link names it. */ ?>
+			<?php if ( '' !== $vhub_feat['img'] ) : ?>
 				<img class="vhub-feat__img" src="<?php echo esc_url( $vhub_feat['img'] ); ?>" alt="<?php echo esc_attr( $vhub_feat['alt'] ); ?>" loading="lazy" decoding="async">
 			<?php endif; ?>
 			<span class="vhub-feat__body">
@@ -350,6 +353,88 @@ if ( ! empty( $vhub_posts ) ) :
 			</ul>
 		<?php endif; ?>
 	</div>
+</section>
+<?php endif; ?>
+
+<?php /* ---------------------------------------------------------------
+ * h2. Latest by section: one column per content section the site really
+ *     has (category term found, posts found), newest first, none repeated
+ *     from the library above. Off with "Hub: show Latest by section".
+ * ------------------------------------------------------------------ */
+$vhub_sections = vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_sections', true ) )
+	? vance_hub_section_columns( $vhub_shown, 3 )
+	: array();
+if ( ! empty( $vhub_sections ) ) : ?>
+<section class="vhub-wrap vhub-section vhub-secs" aria-labelledby="vhub-secs-title">
+	<div class="vhub-library__head">
+		<h2 id="vhub-secs-title" class="vhub-library__title"><?php esc_html_e( 'Latest by section', 'vance-health-hub' ); ?></h2>
+	</div>
+	<div class="vhub-secs__grid">
+		<?php foreach ( $vhub_sections as $vhub_sec ) : ?>
+			<div class="vhub-sec">
+				<h3 class="vhub-sec__title">
+					<?php if ( '' !== $vhub_sec['url'] ) : ?>
+						<a class="vhub-sec__link" href="<?php echo esc_url( $vhub_sec['url'] ); ?>"><?php echo esc_html( $vhub_sec['name'] ); ?> <span aria-hidden="true">&rarr;</span></a>
+					<?php else : ?>
+						<?php echo esc_html( $vhub_sec['name'] ); ?>
+					<?php endif; ?>
+				</h3>
+				<ul class="vhub-sec__list">
+					<?php foreach ( $vhub_sec['posts'] as $vhub_p ) : ?>
+						<li><a class="vhub-sec-card" href="<?php echo esc_url( $vhub_p['url'] ); ?>">
+							<?php if ( '' !== $vhub_p['img'] ) : ?>
+								<img class="vhub-sec-card__img" src="<?php echo esc_url( $vhub_p['img'] ); ?>" alt="<?php echo esc_attr( $vhub_p['alt'] ); ?>" width="96" height="96" loading="lazy" decoding="async">
+							<?php endif; ?>
+							<div class="vhub-sec-card__body">
+								<h4 class="vhub-sec-card__title"><?php echo esc_html( $vhub_p['title'] ); ?></h4>
+								<p class="vhub-sec-card__meta">
+									<?php if ( '' !== $vhub_p['date'] ) : ?><time datetime="<?php echo esc_attr( $vhub_p['iso'] ); ?>"><?php echo esc_html( $vhub_p['date'] ); ?></time><?php endif; ?>
+									<?php if ( $vhub_p['read'] > 0 ) : ?>
+										<?php if ( '' !== $vhub_p['date'] ) : ?><span aria-hidden="true">&middot;</span><?php endif; ?>
+										<span><?php
+											/* translators: %s: reading time in minutes. */
+											echo esc_html( sprintf( _n( '%s min read', '%s min read', $vhub_p['read'], 'vance-health-hub' ), number_format_i18n( $vhub_p['read'] ) ) );
+										?></span>
+									<?php endif; ?>
+								</p>
+							</div>
+						</a></li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		<?php endforeach; ?>
+	</div>
+</section>
+<?php endif; ?>
+
+<?php /* ---------------------------------------------------------------
+ * h3. More to read: up to six further recent posts not shown above.
+ *     Phones show the first four (hub-home.css). Off with
+ *     "Hub: show More to read".
+ * ------------------------------------------------------------------ */
+$vhub_more = vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_more', true ) )
+	? vance_hub_more_posts( $vhub_shown, 6 )
+	: array();
+if ( ! empty( $vhub_more ) ) : ?>
+<section class="vhub-wrap vhub-section vhub-more" aria-labelledby="vhub-more-title">
+	<div class="vhub-library__head">
+		<h2 id="vhub-more-title" class="vhub-library__title"><?php esc_html_e( 'More to read', 'vance-health-hub' ); ?></h2>
+	</div>
+	<ul class="vhub-more__grid">
+		<?php foreach ( $vhub_more as $vhub_p ) : ?>
+			<li><a class="vhub-card" href="<?php echo esc_url( $vhub_p['url'] ); ?>">
+				<div class="vhub-card__media">
+					<?php if ( '' !== $vhub_p['img'] ) : ?>
+						<img class="vhub-card__img" src="<?php echo esc_url( $vhub_p['img'] ); ?>" alt="<?php echo esc_attr( $vhub_p['alt'] ); ?>" loading="lazy" decoding="async">
+					<?php endif; ?>
+				</div>
+				<div class="vhub-card__body">
+					<?php if ( '' !== $vhub_p['cat'] ) : ?><span class="vhub-tag vhub-tag--purple"><?php echo esc_html( $vhub_p['cat'] ); ?></span><?php endif; ?>
+					<h3 class="vhub-card__title"><?php echo esc_html( $vhub_p['title'] ); ?></h3>
+				</div>
+			</a></li>
+		<?php endforeach; ?>
+	</ul>
 </section>
 <?php endif; ?>
 
