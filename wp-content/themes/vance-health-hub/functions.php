@@ -130,6 +130,7 @@ require_once get_template_directory() . '/inc/category-hero.php';
 // Max Mega Menu grid cell (icon tiles, CTA rail, live featured articles).
 // Panel structure itself is admin-side; see docs/MEGA-MENU-SETUP.md (repo root).
 require_once get_template_directory() . '/inc/nav-mega.php';
+require_once get_template_directory() . '/inc/hub-layout.php';
 
 /**
  * Rebrand migration helper.
