@@ -195,6 +195,69 @@ function vance_hub_split_conditions( $cards, $featured ) {
 	return array( $tiles, array_values( $by_slug ) );
 }
 
+/**
+ * Sanitize a Customizer checkbox to a real boolean.
+ *
+ * The Customizer posts '' or '1' for a checkbox; a stored mod can also be a
+ * boolean. Anything that is not clearly "on" is off.
+ *
+ * @param mixed $value Raw value.
+ * @return bool
+ */
+function vance_hub_sanitize_checkbox( $value ) {
+	if ( is_bool( $value ) ) {
+		return $value;
+	}
+	if ( is_int( $value ) ) {
+		return 1 === $value;
+	}
+	if ( is_string( $value ) ) {
+		return in_array( strtolower( trim( $value ) ), array( '1', 'true', 'on', 'yes' ), true );
+	}
+	return false;
+}
+
+/**
+ * The inline style that gives the hub hero the classic spotlight hero's
+ * colours. main.css paints .vhh-hero-spotlight with
+ * linear-gradient(var(--vhh-hs-from), var(--vhh-hs-to)), and
+ * inc/hero-spotlight.php sets those two properties inline on that element
+ * only, from the vance_hero_spotlight_bg_from / _bg_to theme mods. The hub
+ * hero reads the same two mods, so a colour the owner picks for the classic
+ * hero follows through here.
+ *
+ * A value that is not a hex colour falls back to the classic default, so a
+ * bad mod cannot inject CSS through the style attribute.
+ *
+ * @param mixed $from Top colour.
+ * @param mixed $to   Bottom colour.
+ * @return string
+ */
+function vance_hub_hero_style( $from, $to ) {
+	$hex  = '/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/';
+	$from = is_string( $from ) && preg_match( $hex, trim( $from ) ) ? trim( $from ) : '#ECF5F5';
+	$to   = is_string( $to ) && preg_match( $hex, trim( $to ) ) ? trim( $to ) : '#F6F9FA';
+	return '--vhh-hs-from: ' . $from . '; --vhh-hs-to: ' . $to . ';';
+}
+
+/**
+ * The top-level content sections the "Latest by section" block can show, in
+ * display order. These are the category slugs the section archives are built
+ * on (category-content-*.php, inc/category-hero.php,
+ * inc/article-schema-types.php). A slug with no term on the site is skipped
+ * when the block is built, so the list can be longer than the site.
+ *
+ * @return string[]
+ */
+function vance_hub_section_slugs() {
+	$slugs = apply_filters( 'vance_hub_section_slugs', array(
+		'content-gastro-living',
+		'content-health-news',
+		'content-clinical-reviews',
+	) );
+	return is_array( $slugs ) ? array_values( array_unique( array_filter( $slugs, 'is_string' ) ) ) : array();
+}
+
 /* =========================================================================
  * The switch
  * ====================================================================== */
@@ -295,6 +358,27 @@ function vance_hub_body_class( $classes ) {
 }
 add_filter( 'body_class', 'vance_hub_body_class' );
 
+/**
+ * Drop has-vance-swipecards on the hub home.
+ *
+ * vance_mobile_body_class() (functions.php) adds it on any front page when the
+ * swipe-card setting is on. The swipe cards upgrade the classic home's
+ * category-card grid, which the hub home does not have, so the class would
+ * describe something that is not on the page. No stylesheet or script keys
+ * off the class today; removing it keeps it that way if one is added later.
+ * Runs at priority 20, after the theme's filter.
+ *
+ * @param string[] $classes Body classes.
+ * @return string[]
+ */
+function vance_hub_body_class_cleanup( $classes ) {
+	if ( vance_hub_is_hub_home() ) {
+		$classes = array_values( array_diff( (array) $classes, array( 'has-vance-swipecards' ) ) );
+	}
+	return $classes;
+}
+add_filter( 'body_class', 'vance_hub_body_class_cleanup', 20 );
+
 /* =========================================================================
  * Customizer
  * ====================================================================== */
@@ -349,6 +433,28 @@ function vance_hub_customize_register( $wp_customize ) {
 		'description' => __( 'Leave empty to hide the Founding Member line. The line shows to logged-out visitors until the end of this date.', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'date',
+	) );
+
+	$wp_customize->add_setting( 'vance_hub_show_sections', array(
+		'default'           => true,
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_show_sections', array(
+		'label'       => __( 'Hub: show "Latest by section"', 'vance-health-hub' ),
+		'description' => __( 'One column per content section (Gastro Living, Health News, Clinical Reviews) with its newest articles. A section with no articles is left out.', 'vance-health-hub' ),
+		'section'     => $section,
+		'type'        => 'checkbox',
+	) );
+
+	$wp_customize->add_setting( 'vance_hub_show_more', array(
+		'default'           => true,
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_show_more', array(
+		'label'       => __( 'Hub: show "More to read"', 'vance-health-hub' ),
+		'description' => __( 'A grid of up to six more recent articles that are not already on the page.', 'vance-health-hub' ),
+		'section'     => $section,
+		'type'        => 'checkbox',
 	) );
 
 	for ( $i = 1; $i <= 4; $i++ ) {
@@ -708,9 +814,41 @@ function vance_hub_recent_recipes( $limit = 2 ) {
 }
 
 /**
+ * One article as the card fields the hub templates print. Everything is read
+ * from the post; nothing is made up. 'alt' is the attachment's own description
+ * or '' (see inc/thumbnail-alt.php); 'read' is the theme's word-count reading
+ * time, or 0 when that helper is not loaded.
+ *
+ * @param WP_Post $post     Post.
+ * @param string  $img_size Thumbnail size.
+ * @return array{id: int, title: string, url: string, cat: string, img: string, alt: string, date: string, iso: string, read: int}
+ */
+function vance_hub_post_card( $post, $img_size = 'large' ) {
+	$cat = '';
+	foreach ( (array) get_the_category( $post->ID ) as $term ) {
+		if ( 'uncategorized' !== $term->slug ) {
+			$cat = $term->name;
+			break;
+		}
+	}
+	$img = get_the_post_thumbnail_url( $post, $img_size );
+	return array(
+		'id'    => (int) $post->ID,
+		'title' => get_the_title( $post ),
+		'url'   => get_permalink( $post ),
+		'cat'   => wp_specialchars_decode( $cat ),
+		'img'   => $img ? $img : '',
+		'alt'   => function_exists( 'vance_thumbnail_alt' ) ? vance_thumbnail_alt( $post->ID ) : '',
+		'date'  => (string) get_the_date( '', $post ),
+		'iso'   => (string) get_the_date( 'c', $post ),
+		'read'  => function_exists( 'vance_get_read_time' ) ? (int) vance_get_read_time( $post->ID ) : 0,
+	);
+}
+
+/**
  * The newest articles for the library block: up to four published posts.
  *
- * @return array<int, array{title: string, url: string, cat: string, img: string, alt: string}>
+ * @return array<int, array> vance_hub_post_card() rows.
  */
 function vance_hub_library_posts() {
 	$query = new WP_Query( array(
@@ -720,23 +858,105 @@ function vance_hub_library_posts() {
 		'ignore_sticky_posts' => true,
 		'no_found_rows'       => true,
 	) );
+	vance_hub_prime_thumbnails( $query );
 	$out = array();
 	foreach ( $query->posts as $post ) {
-		$cat = '';
-		foreach ( (array) get_the_category( $post->ID ) as $term ) {
-			if ( 'uncategorized' !== $term->slug ) {
-				$cat = $term->name;
-				break;
-			}
+		$out[] = vance_hub_post_card( $post, 'large' );
+	}
+	return $out;
+}
+
+/**
+ * Load the featured images of a query's posts in one go.
+ *
+ * These helpers read $query->posts directly and never run the loop, so
+ * WordPress does not prime the attachment cache for them. Without this, each
+ * card costs its own attachment and attachment-meta lookups.
+ *
+ * @param WP_Query $query A finished post query.
+ */
+function vance_hub_prime_thumbnails( $query ) {
+	if ( function_exists( 'update_post_thumbnail_cache' ) && ! empty( $query->posts ) ) {
+		update_post_thumbnail_cache( $query );
+	}
+}
+
+/**
+ * The "Latest by section" columns: for each content section that really
+ * exists on the site, its newest posts that are not already on the page.
+ *
+ * A slug with no category term is skipped, and so is a section whose query
+ * returns nothing. The `cat` query argument includes child categories, so a
+ * Gastro Living article filed under one of its sub-categories counts.
+ *
+ * @param int[] $shown IDs already on the page. Updated with every post used.
+ * @param int   $per   Posts per section.
+ * @return array<int, array{name: string, url: string, slug: string, posts: array}>
+ */
+function vance_hub_section_columns( &$shown, $per = 3 ) {
+	$columns = array();
+	$per     = max( 1, (int) $per );
+	foreach ( vance_hub_section_slugs() as $slug ) {
+		$term = get_term_by( 'slug', $slug, 'category' );
+		if ( ! is_object( $term ) || empty( $term->term_id ) ) {
+			continue;
 		}
-		$img = get_the_post_thumbnail_url( $post, 'large' );
-		$out[] = array(
-			'title' => get_the_title( $post ),
-			'url'   => get_permalink( $post ),
-			'cat'   => wp_specialchars_decode( $cat ),
-			'img'   => $img ? $img : '',
-			'alt'   => function_exists( 'vance_thumbnail_alt' ) ? vance_thumbnail_alt( $post->ID ) : '',
+		$query = new WP_Query( array(
+			'post_type'           => 'post',
+			'post_status'         => 'publish',
+			'cat'                 => (int) $term->term_id,
+			'posts_per_page'      => $per,
+			'post__not_in'        => array_values( array_map( 'intval', $shown ) ),
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+		) );
+		vance_hub_prime_thumbnails( $query );
+		$posts = array();
+		foreach ( $query->posts as $post ) {
+			if ( in_array( (int) $post->ID, $shown, true ) ) {
+				continue;
+			}
+			$posts[] = vance_hub_post_card( $post, 'medium' );
+			$shown[] = (int) $post->ID;
+		}
+		if ( empty( $posts ) ) {
+			continue;
+		}
+		$link      = get_term_link( $term );
+		$columns[] = array(
+			'name'  => wp_specialchars_decode( (string) $term->name ),
+			'url'   => is_string( $link ) ? $link : '',
+			'slug'  => (string) $term->slug,
+			'posts' => $posts,
 		);
+	}
+	return $columns;
+}
+
+/**
+ * The "More to read" grid: recent posts that are not already on the page.
+ *
+ * @param int[] $shown IDs already on the page. Updated with every post used.
+ * @param int   $limit Maximum number of posts.
+ * @return array<int, array> vance_hub_post_card() rows.
+ */
+function vance_hub_more_posts( &$shown, $limit = 6 ) {
+	$query = new WP_Query( array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'posts_per_page'      => max( 1, (int) $limit ),
+		'post__not_in'        => array_values( array_map( 'intval', $shown ) ),
+		'ignore_sticky_posts' => true,
+		'no_found_rows'       => true,
+	) );
+	vance_hub_prime_thumbnails( $query );
+	$out = array();
+	foreach ( $query->posts as $post ) {
+		if ( in_array( (int) $post->ID, $shown, true ) ) {
+			continue;
+		}
+		$out[]   = vance_hub_post_card( $post, 'medium_large' );
+		$shown[] = (int) $post->ID;
 	}
 	return $out;
 }

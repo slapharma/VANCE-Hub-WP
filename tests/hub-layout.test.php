@@ -63,6 +63,11 @@ function reset_state() {
 	$GLOBALS['THUMB_ID']       = array();
 	$GLOBALS['RECIPE_CELLS']   = array();
 	$GLOBALS['SURVEY_STEPS']   = 0;
+	$GLOBALS['CAT_TERMS']      = array();
+	$GLOBALS['WP_QUERY_LOG']   = array();
+	$GLOBALS['THUMB_PRIMES']   = 0;
+	$GLOBALS['POSTS_BY_ID']    = array();
+	$GLOBALS['POST_DATES']     = array();
 	$_GET                      = array();
 }
 
@@ -199,16 +204,44 @@ function vance_gi_page_url( $slug ) { return 'https://example.test/gi/' . $slug 
 function vance_gi_hub_url() { return 'https://example.test/gastro-health-explained/'; }
 
 /* Post and term accessors. */
+/*
+ * WP_Query: posts come from QUERY_POSTS[post_type], or QUERY_POSTS['cat:<id>']
+ * when the query names a category (newest first, as listed). post__not_in is
+ * honoured as WordPress honours it, so a dedupe that relies on it is tested.
+ * Every query's arguments are logged.
+ */
 class WP_Query {
 	public $posts = array();
 	public function __construct( $args ) {
-		$type      = $args['post_type'];
-		$all       = isset( $GLOBALS['QUERY_POSTS'][ $type ] ) ? $GLOBALS['QUERY_POSTS'][ $type ] : array();
+		$GLOBALS['WP_QUERY_LOG'][] = $args;
+		$key = isset( $args['cat'] ) ? 'cat:' . $args['cat'] : $args['post_type'];
+		$all = isset( $GLOBALS['QUERY_POSTS'][ $key ] ) ? $GLOBALS['QUERY_POSTS'][ $key ] : array();
+		if ( ! empty( $args['post__not_in'] ) ) {
+			$skip = $args['post__not_in'];
+			$all  = array_values( array_filter( $all, function ( $p ) use ( $skip ) { return ! in_array( $p->ID, $skip ); } ) );
+		}
 		$this->posts = array_slice( $all, 0, (int) $args['posts_per_page'] );
 	}
 }
 function post_obj( $id, $title, $content = '' ) {
-	return (object) array( 'ID' => $id, 'post_title' => $title, 'post_content' => $content, 'post_type' => 'post' );
+	$post = (object) array( 'ID' => $id, 'post_title' => $title, 'post_content' => $content, 'post_type' => 'post' );
+	$GLOBALS['POSTS_BY_ID'][ $id ] = $post;
+	return $post;
+}
+function get_post_field( $field, $post_id ) {
+	return isset( $GLOBALS['POSTS_BY_ID'][ $post_id ] ) ? $GLOBALS['POSTS_BY_ID'][ $post_id ]->$field : '';
+}
+function strip_shortcodes( $text ) { return $text; }
+function get_the_date( $format = '', $post = null ) {
+	$ts = isset( $GLOBALS['POST_DATES'][ $post->ID ] ) ? $GLOBALS['POST_DATES'][ $post->ID ] : strtotime( '2026-11-10 09:00:00 UTC' );
+	return gmdate( '' === $format ? 'j F Y' : $format, $ts );
+}
+function get_term_by( $field, $value, $taxonomy ) {
+	return ( 'slug' === $field && 'category' === $taxonomy && isset( $GLOBALS['CAT_TERMS'][ $value ] ) ) ? $GLOBALS['CAT_TERMS'][ $value ] : false;
+}
+function get_term_link( $term ) { return 'https://example.test/category/' . $term->slug . '/'; }
+function cat_term( $id, $slug, $name ) {
+	return (object) array( 'term_id' => $id, 'slug' => $slug, 'name' => $name );
 }
 function get_the_title( $post ) { return $post->post_title; }
 function get_post_meta( $post_id, $key = '', $single = false ) {
@@ -217,6 +250,7 @@ function get_post_meta( $post_id, $key = '', $single = false ) {
 function get_post_thumbnail_id( $post_id ) {
 	return isset( $GLOBALS['THUMB_ID'][ $post_id ] ) ? $GLOBALS['THUMB_ID'][ $post_id ] : 0;
 }
+function update_post_thumbnail_cache( $query ) { $GLOBALS['THUMB_PRIMES']++; }
 function get_the_post_thumbnail_url( $post, $size = 'post-thumbnail' ) {
 	return isset( $GLOBALS['THUMB_URL'][ $post->ID ] ) ? $GLOBALS['THUMB_URL'][ $post->ID ] : false;
 }
@@ -246,6 +280,15 @@ if ( empty( $LIFT[0] ) ) {
 }
 eval( $LIFT[0] );
 
+// The real reading-time helper, lifted the same way, so the cards are tested
+// against the theme's own word-count rule rather than a copy.
+preg_match( '/function vance_get_read_time\( \$post_id \) \{.*?\r?\n\}\r?\n/s', $SRC, $LIFT_RT );
+if ( empty( $LIFT_RT[0] ) ) {
+	fwrite( STDERR, "could not lift vance_get_read_time() from functions.php\n" );
+	exit( 2 );
+}
+eval( $LIFT_RT[0] );
+
 /* ---- rendering -------------------------------------------------------------- */
 
 /** Render front-page-hub.php and return its output. Errors are recorded, not thrown past the runner. */
@@ -262,9 +305,29 @@ function render_home( $logged_in ) {
 	return ob_get_clean();
 }
 
-/** Every <img> tag whose alt attribute is missing or empty. */
-function imgs_without_alt( $html ) {
+/**
+ * Every <img> tag whose alt attribute is missing or empty.
+ *
+ * Article thumbnails follow the theme's convention (inc/thumbnail-alt.php):
+ * the attachment's description, or alt="" because the headline in the same
+ * link names it. Pass $article = false to check only the other images (hero,
+ * tools, conditions), which must always carry real alt text.
+ */
+function imgs_without_alt( $html, $article = true ) {
 	preg_match_all( '/<img\b(?![^>]*\salt="[^"]+")[^>]*>/', $html, $m );
+	if ( $article ) {
+		return $m[0];
+	}
+	return array_values( array_filter( $m[0], function ( $tag ) {
+		return ! preg_match( '/class="vhub-(feat|sec-card|card)__img"/', $tag );
+	} ) );
+}
+
+/** The HTML of the first <section> whose class list contains $class, or ''. */
+function section_html( $html, $class ) {
+	if ( ! preg_match( '/<section class="[^"]*\b' . preg_quote( $class, '/' ) . '\b[^"]*".*?<\/section>/s', $html, $m ) ) {
+		return '';
+	}
 	return $m[0];
 }
 
@@ -737,7 +800,9 @@ check( 'full guest: recent recipes render with their meal category', strpos( $HT
 check( 'full guest: a recipe with no category shows no meal label', substr_count( $HTML, 'vhub-recipe__meal' ) === 1 );
 check( 'full guest: the library feature article renders', strpos( $HTML, 'Feature article' ) !== false );
 check( 'full guest: the library shows at most four posts: one feature and three in the list', substr_count( $HTML, 'class="vhub-lib-item"' ) === 3 );
-check( 'full guest: the fifth library post is dropped', strpos( $HTML, 'Fifth article' ) === false );
+check( 'full guest: the fifth post is not in the library block', section_html( $HTML, 'vhub-library' ) !== '' && strpos( section_html( $HTML, 'vhub-library' ), 'Fifth article' ) === false );
+check( 'full guest: the fifth post goes to "More to read" instead', strpos( section_html( $HTML, 'vhub-more' ), 'Fifth article' ) !== false );
+check( 'full guest: the featured image keeps its own description as alt', strpos( $HTML, 'alt="A featured photo for the library"' ) !== false );
 check( 'full guest: a library category name is decoded once and escaped once', strpos( $HTML, 'Gastro Living &amp; More' ) !== false );
 check( 'full guest: the conditions copy counts the seven registry entries', strpos( $HTML, 'Plain-English guides to 7 gut conditions.' ) !== false );
 check( 'full guest: three featured conditions are photo tiles', substr_count( $HTML, 'class="vhub-cond-tile"' ) === 3 );
@@ -819,10 +884,181 @@ arrange();
 seed_full_home();
 unset( $GLOBALS['META'][9001] );   // the thumbnail stays; its alt text is removed
 $HTML = render_home( false );
-// The featured library image has a thumbnail but no alt text. The data rule
-// says every <img> carries a real, non-empty alt, so the template leaves the
-// photo out and the headline alone names the link.
-check( 'library: a featured image with no alt text is not rendered with alt=""', imgs_without_alt( $HTML ) === array() );
+// The featured library image has a thumbnail but no alt text. The theme's
+// convention (inc/thumbnail-alt.php) applies: the photo still renders, with
+// alt="", because the headline inside the same link names it.
+preg_match( '/<a class="vhub-feat"[^>]*>.*?<\/a>/s', $HTML, $FEAT );
+$FEAT = isset( $FEAT[0] ) ? $FEAT[0] : '';
+check( 'library: a featured image with no alt text is still rendered', strpos( $FEAT, '<img class="vhub-feat__img" src="https://example.test/wp-content/uploads/feature.jpg"' ) !== false );
+check( 'library: that image carries an alt attribute, and it is empty', preg_match( '/<img class="vhub-feat__img"[^>]*\salt=""/', $FEAT ) === 1 );
+check( 'library: the featured link still has an accessible name from its heading', preg_match( '/<h3 class="vhub-feat__title">Feature article<\/h3>/', $FEAT ) === 1 );
+check( 'library: every image that is not an article thumbnail still has a non-empty alt', imgs_without_alt( $HTML, false ) === array() );
+check( 'library: the non-article alt check is not vacuous (hero, tools and conditions images render)', preg_match_all( '/<img class="vhub-(hero|tool|cond-tile)__img"/', $HTML ) >= 5 );
+// Negative control: the non-article filter must still catch a missing alt.
+check( 'library: control: a tool image with an empty alt would be reported', imgs_without_alt( '<img class="vhub-tool__img" src="x" alt="">', false ) !== array() );
+
+arrange();
+seed_full_home();
+$GLOBALS['THUMB_URL'][701] = false;   // no thumbnail at all
+$HTML = render_home( false );
+check( 'library: a featured post with no thumbnail renders no <img> in the card', strpos( $HTML, 'vhub-feat__img' ) === false && strpos( $HTML, 'Feature article' ) !== false );
+
+/* ---- 13. checkbox, hero colours, body class cleanup, section slugs -------- */
+section( '13. Small helpers' );
+
+check( 'checkbox: true stays true', vance_hub_sanitize_checkbox( true ) === true );
+check( 'checkbox: false stays false', vance_hub_sanitize_checkbox( false ) === false );
+check( 'checkbox: "1" (what the Customizer posts) is true', vance_hub_sanitize_checkbox( '1' ) === true );
+check( 'checkbox: "" (an unticked box) is false', vance_hub_sanitize_checkbox( '' ) === false );
+check( 'checkbox: integer 1 is true, 0 is false', vance_hub_sanitize_checkbox( 1 ) === true && vance_hub_sanitize_checkbox( 0 ) === false );
+check( 'checkbox: "on" and " TRUE " are true', vance_hub_sanitize_checkbox( 'on' ) === true && vance_hub_sanitize_checkbox( ' TRUE ' ) === true );
+check( 'checkbox: "0", "no" and junk are false', vance_hub_sanitize_checkbox( '0' ) === false && vance_hub_sanitize_checkbox( 'no' ) === false && vance_hub_sanitize_checkbox( 'yes please' ) === false );
+check( 'checkbox: null and an array are false', vance_hub_sanitize_checkbox( null ) === false && vance_hub_sanitize_checkbox( array( '1' ) ) === false );
+
+check( 'hero style: the classic defaults', vance_hub_hero_style( '#ECF5F5', '#F6F9FA' ) === '--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA;' );
+check( 'hero style: an owner colour is passed through', vance_hub_hero_style( '#abc', '#112233' ) === '--vhh-hs-from: #abc; --vhh-hs-to: #112233;' );
+check( 'hero style: a CSS injection falls back to the default', vance_hub_hero_style( 'red;}body{display:none', '#F6F9FA' ) === '--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA;' );
+check( 'hero style: a non-string falls back to the default', vance_hub_hero_style( array(), null ) === '--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA;' );
+check( 'hero style: a hex with no # is not accepted', vance_hub_hero_style( 'ECF5F5', '#F6F9FA' ) === '--vhh-hs-from: #ECF5F5; --vhh-hs-to: #F6F9FA;' );
+
+arrange( array( 'vance_hero_spotlight_bg_from' => '#FFEEDD', 'vance_hero_spotlight_bg_to' => '"><script>' ) );
+$HTML = render_home( false );
+check( 'hero: the hub hero reads the classic hero colour mods', strpos( $HTML, '<section class="vhub-hero" style="--vhh-hs-from: #FFEEDD; --vhh-hs-to: #F6F9FA;"' ) !== false );
+check( 'hero: a bad colour mod does not reach the markup', strpos( $HTML, '<script>' ) === false );
+
+check( 'hook: body_class runs vance_hub_body_class_cleanup at priority 20, after the theme',
+	isset( $GLOBALS['HOOKS']['body_class'][20] ) && in_array( 'vance_hub_body_class_cleanup', $GLOBALS['HOOKS']['body_class'][20], true ) );
+arrange( array( 'vance_home_layout' => 'hub' ), true );
+check( 'body class: the hub home drops has-vance-swipecards and keeps the rest',
+	vance_hub_body_class_cleanup( array( 'home', 'has-vance-bottom-nav', 'has-vance-swipecards' ) ) === array( 'home', 'has-vance-bottom-nav' ) );
+arrange( array( 'vance_home_layout' => 'classic' ), true );
+check( 'body class: the classic home keeps has-vance-swipecards',
+	vance_hub_body_class_cleanup( array( 'home', 'has-vance-swipecards' ) ) === array( 'home', 'has-vance-swipecards' ) );
+
+check( 'slugs: the three content sections, in order', vance_hub_section_slugs() === array( 'content-gastro-living', 'content-health-news', 'content-clinical-reviews' ) );
+$GLOBALS['FILTER_RETURNS'] = array( 'vance_hub_section_slugs' => 'nope' );
+check( 'slugs: a filter returning a non-array gives no sections', vance_hub_section_slugs() === array() );
+$GLOBALS['FILTER_RETURNS'] = array( 'vance_hub_section_slugs' => array( 'a', 7, 'a', 'b' ) );
+check( 'slugs: non-strings and repeats from a filter are dropped', vance_hub_section_slugs() === array( 'a', 'b' ) );
+$GLOBALS['FILTER_RETURNS'] = array();
+
+/* ---- 14. Part B: Latest by section and More to read ----------------------- */
+section( '14. Latest by section, More to read' );
+
+/**
+ * Library 701-704. Gastro Living (term 11) re-lists 701 and has four more;
+ * Health News (term 12) re-lists 721, which Gastro Living already shows.
+ * Clinical Reviews has no term on this site. The recent list holds twelve.
+ */
+function seed_article_blocks() {
+	seed_full_home();
+	$GLOBALS['CAT_TERMS'] = array(
+		'content-gastro-living' => cat_term( 11, 'content-gastro-living', 'Gastro Living' ),
+		'content-health-news'   => cat_term( 12, 'content-health-news', 'Health News &amp; Notes' ),
+	);
+	$words = trim( str_repeat( 'word ', 401 ) );   // 401 words: 3 minutes at 200 wpm
+	$GLOBALS['QUERY_POSTS']['cat:11'] = array(
+		$GLOBALS['QUERY_POSTS']['post'][0],
+		post_obj( 721, 'Gut walk <script>alert(1)</script> & more', $words ),
+		post_obj( 722, 'Gastro two' ),
+		post_obj( 723, 'Gastro three' ),
+		post_obj( 724, 'Gastro four' ),
+	);
+	$GLOBALS['QUERY_POSTS']['cat:12'] = array(
+		$GLOBALS['POSTS_BY_ID'][721],
+		post_obj( 731, 'News one' ),
+		post_obj( 732, 'News two' ),
+	);
+	$GLOBALS['META'][731]['_oped_read_time'] = 7;
+	$GLOBALS['POST_DATES'][731] = strtotime( '2026-11-03 08:00:00 UTC' );
+	$GLOBALS['THUMB_URL'][722] = 'https://example.test/wp-content/uploads/g2.jpg';   // no alt text on purpose
+	$GLOBALS['THUMB_URL'][706] = 'https://example.test/wp-content/uploads/m6.jpg';
+	$GLOBALS['THUMB_ID'][706]  = 9006;
+	$GLOBALS['META'][9006]['_wp_attachment_image_alt'] = 'A bowl of soup';
+	$GLOBALS['CATS_BY_POST'][706] = array( (object) array( 'slug' => 'food', 'name' => 'Food &amp; Drink' ) );
+	$recent = array_slice( $GLOBALS['QUERY_POSTS']['post'], 0, 4 );
+	$recent[] = $GLOBALS['POSTS_BY_ID'][721];
+	$recent[] = $GLOBALS['POSTS_BY_ID'][731];
+	foreach ( array( 705, 706, 707, 708, 709, 710, 711 ) as $id ) {
+		$recent[] = isset( $GLOBALS['POSTS_BY_ID'][ $id ] ) ? $GLOBALS['POSTS_BY_ID'][ $id ] : post_obj( $id, 'Recent ' . $id );
+	}
+	$GLOBALS['QUERY_POSTS']['post'] = $recent;
+}
+
+arrange();
+seed_article_blocks();
+$HTML = render_home( false );
+$SECS = section_html( $HTML, 'vhub-secs' );
+$MORE = section_html( $HTML, 'vhub-more' );
+check( 'blocks: render without a PHP error', $RENDER_ERROR === '' );
+check( 'blocks: "Latest by section" renders', $SECS !== '' && strpos( $SECS, 'Latest by section' ) !== false );
+check( 'blocks: "More to read" renders', $MORE !== '' && strpos( $MORE, 'More to read' ) !== false );
+check( 'blocks: both sit after the library and before the join band',
+	strpos( $HTML, 'vhub-library' ) < strpos( $HTML, 'vhub-secs' ) && strpos( $HTML, 'vhub-secs' ) < strpos( $HTML, 'vhub-more' ) && strpos( $HTML, 'vhub-more' ) < strpos( $HTML, 'id="vhub-join"' ) );
+check( 'sections: two columns, for the two sections that exist', substr_count( $SECS, '<div class="vhub-sec">' ) === 2 );
+check( 'sections: a section whose term is missing is skipped (no Clinical Reviews)', strpos( $SECS, 'clinical' ) === false && strpos( $SECS, 'Clinical' ) === false );
+check( 'sections: the column heading links to the section archive', strpos( $SECS, 'href="https://example.test/category/content-gastro-living/"' ) !== false );
+check( 'sections: a term name is decoded once and escaped once', strpos( $SECS, 'Health News &amp; Notes' ) !== false && strpos( $SECS, '&amp;amp;' ) === false );
+preg_match_all( '/<div class="vhub-sec">.*?<\/ul>/s', $SECS, $COLS );
+check( 'sections: Gastro Living is capped at three posts', isset( $COLS[0][0] ) && substr_count( $COLS[0][0], 'class="vhub-sec-card"' ) === 3 );
+check( 'sections: Gastro Living skips the library post and keeps newest first',
+	isset( $COLS[0][0] ) && strpos( $COLS[0][0], '/p/701/' ) === false && strpos( $COLS[0][0], '/p/721/' ) < strpos( $COLS[0][0], '/p/723/' ) && strpos( $COLS[0][0], '/p/724/' ) === false );
+check( 'sections: Health News skips the post Gastro Living already shows', isset( $COLS[0][1] ) && strpos( $COLS[0][1], '/p/721/' ) === false && substr_count( $COLS[0][1], 'class="vhub-sec-card"' ) === 2 );
+check( 'sections: a title is escaped, so markup is text', strpos( $HTML, 'Gut walk &lt;script&gt;alert(1)&lt;/script&gt; &amp; more' ) !== false && strpos( $HTML, '<script>alert(1)' ) === false );
+check( 'sections: reading time comes from the word count (401 words is 3 min)', strpos( $COLS[0][0], '3 min read' ) !== false );
+check( 'sections: a set _oped_read_time wins over the word count', strpos( $COLS[0][1], '7 min read' ) !== false );
+check( 'sections: the date is real and machine-readable', strpos( $COLS[0][1], '<time datetime="2026-11-03T08:00:00+00:00">3 November 2026</time>' ) !== false );
+check( 'sections: no view count anywhere (that helper returns a random number)', stripos( $HTML, 'views' ) === false );
+check( 'sections: a thumbnail with no description renders with alt=""', preg_match( '/<img class="vhub-sec-card__img" src="https:\/\/example.test\/wp-content\/uploads\/g2.jpg" alt=""/', $SECS ) === 1 );
+check( 'sections: a post with no thumbnail renders no <img>', substr_count( $SECS, '<img' ) === 1 );
+check( 'more: capped at six', substr_count( $MORE, 'class="vhub-card"' ) === 6 );
+check( 'more: the seventh candidate is dropped', strpos( $MORE, '/p/711/' ) === false && strpos( $MORE, '/p/710/' ) !== false );
+check( 'more: a real category label is shown, decoded once', strpos( $MORE, '<span class="vhub-tag vhub-tag--purple">Food &amp; Drink</span>' ) !== false );
+check( 'more: a post with no category shows no label', substr_count( $MORE, '<span class="vhub-tag ' ) === 1 );
+check( 'more: the thumbnail keeps its own description', strpos( $MORE, 'alt="A bowl of soup"' ) !== false );
+// Dedupe across the featured card, the library list and both new blocks.
+preg_match_all( '#href="https://example\.test/p/(\d+)/"#', $HTML, $LINKS );
+$COUNTS_BY_ID = array_count_values( $LINKS[1] );
+check( 'dedupe: no article is linked twice on the page', ! empty( $COUNTS_BY_ID ) && max( $COUNTS_BY_ID ) === 1 );
+// Recipes (601, 602) share the /p/<id>/ stub permalink; articles are 700 and up.
+$ARTICLE_IDS = array_filter( array_keys( $COUNTS_BY_ID ), function ( $id ) { return (int) $id >= 700; } );
+check( 'dedupe: the check is not vacuous (4 + 3 + 2 + 6 = 15 distinct articles are linked)', count( $ARTICLE_IDS ) === 15 );
+check( 'dedupe: control: a page with a repeated link would fail the check', max( array_count_values( array( '1', '2', '1' ) ) ) === 2 );
+// The queries stay light: this is the home page.
+$POST_QUERIES = array_values( array_filter( $GLOBALS['WP_QUERY_LOG'], function ( $a ) { return 'post' === $a['post_type']; } ) );
+check( 'queries: four article queries run (library, two sections, more)', count( $POST_QUERIES ) === 4 );
+check( 'queries: every article query skips the row count and sticky posts', count( array_filter( $POST_QUERIES, function ( $a ) {
+	return ! empty( $a['no_found_rows'] ) && ! empty( $a['ignore_sticky_posts'] ) && $a['posts_per_page'] <= 6;
+} ) ) === 4 );
+check( 'queries: each article query primes its featured images in one go', $GLOBALS['THUMB_PRIMES'] === 4 );
+check( 'queries: the second section query excludes what the first one used', isset( $POST_QUERIES[2]['post__not_in'] ) && in_array( 721, $POST_QUERIES[2]['post__not_in'], true ) );
+check( 'blocks: every non-article image still has a non-empty alt', imgs_without_alt( $HTML, false ) === array() );
+
+arrange();
+seed_article_blocks();
+$GLOBALS['MODS']['vance_hub_show_sections'] = '';
+$HTML = render_home( false );
+check( 'toggle: "Latest by section" off hides the block', strpos( $HTML, 'vhub-secs' ) === false );
+check( 'toggle: with it off, no section query runs', count( array_filter( $GLOBALS['WP_QUERY_LOG'], function ( $a ) { return isset( $a['cat'] ); } ) ) === 0 );
+check( 'toggle: with it off, "More to read" picks up the next posts instead', strpos( section_html( $HTML, 'vhub-more' ), '/p/721/' ) !== false );
+
+arrange();
+seed_article_blocks();
+$GLOBALS['MODS']['vance_hub_show_more'] = false;
+$HTML = render_home( false );
+check( 'toggle: "More to read" off hides the block', strpos( $HTML, 'vhub-more' ) === false && strpos( $HTML, 'vhub-secs' ) !== false );
+
+arrange();
+seed_full_home();
+$GLOBALS['CAT_TERMS'] = array( 'content-gastro-living' => cat_term( 11, 'content-gastro-living', 'Gastro Living' ) );
+$GLOBALS['QUERY_POSTS']['post'] = array_slice( $GLOBALS['QUERY_POSTS']['post'], 0, 4 );
+$HTML = render_home( false );
+check( 'empty: a section term with no posts is skipped, and with no column the block is omitted', strpos( $HTML, 'vhub-secs' ) === false );
+check( 'empty: with no posts beyond the library, "More to read" is omitted', strpos( $HTML, 'vhub-more' ) === false );
+
+arrange();
+$HTML = render_home( false );
+check( 'empty: nothing saved, neither block renders', strpos( $HTML, 'vhub-secs' ) === false && strpos( $HTML, 'vhub-more' ) === false );
 
 /* ===================================================================== */
 echo "\n";
