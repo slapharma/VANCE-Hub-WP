@@ -712,6 +712,69 @@ function vance_hub_member_bar() {
 }
 
 /**
+ * Print the purple member bar: real counts, the Founding Member line, or
+ * nothing (see vance_hub_member_bar()).
+ *
+ * One function, two callers: the VanceHubClub header (every page) and
+ * front-page-hub.php (only when the hub header is not active, so the bar is
+ * printed once). The markup keeps the vhub- classes; hub-home.css styles them
+ * on the home page and hub-header.css styles them everywhere else.
+ *
+ * @param array $args {
+ *     Optional.
+ *     @type string $join_href Where "See what members get" points for visitors.
+ *                             The home page passes its own #vhub-join anchor;
+ *                             on any other page the sign-up page is the default.
+ * }
+ */
+function vance_hub_render_member_bar( $args = array() ) {
+	$bar       = vance_hub_member_bar();
+	$logged_in = is_user_logged_in();
+	$join_href = isset( $args['join_href'] ) && is_string( $args['join_href'] ) && '' !== $args['join_href']
+		? $args['join_href']
+		: home_url( '/login/?tab=signup' );
+
+	if ( 'counts' === $bar['mode'] ) :
+		?>
+	<div class="vhub-bar">
+		<div class="vhub-wrap vhub-bar__inner">
+			<p class="vhub-bar__text">
+				<strong><?php
+					/* translators: %s: number of registered members. */
+					echo esc_html( sprintf( _n( '%s member', '%s members', $bar['total'], 'vance-health-hub' ), number_format_i18n( $bar['total'] ) ) );
+				?></strong>
+				<?php if ( $bar['week'] > 0 ) : ?>
+					<span aria-hidden="true">&middot;</span>
+					<?php
+					/* translators: %s: number of members who joined in the last seven days. */
+					echo esc_html( sprintf( _n( '%s joined this week', '%s joined this week', $bar['week'], 'vance-health-hub' ), number_format_i18n( $bar['week'] ) ) );
+					?>
+				<?php endif; ?>
+			</p>
+			<?php if ( $logged_in ) : ?>
+				<a class="vhub-bar__link" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>"><?php esc_html_e( 'Go to My Hub', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+			<?php else : ?>
+				<a class="vhub-bar__link" href="<?php echo esc_url( $join_href ); ?>"><?php esc_html_e( 'See what members get', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+			<?php endif; ?>
+		</div>
+	</div>
+		<?php
+	elseif ( 'founding' === $bar['mode'] ) :
+		?>
+	<div class="vhub-bar">
+		<div class="vhub-wrap vhub-bar__inner">
+			<p class="vhub-bar__text"><?php
+				/* translators: %s: Founding Member deadline date. */
+				echo esc_html( sprintf( __( 'Join by %s and keep the Founding Member mark.', 'vance-health-hub' ), vance_hub_format_date( $bar['deadline'] ) ) );
+			?></p>
+			<a class="vhub-bar__link" href="<?php echo esc_url( $join_href ); ?>"><?php esc_html_e( 'See what members get', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+		</div>
+	</div>
+		<?php
+	endif;
+}
+
+/**
  * The "Inside the Hub this week" tiles from the Customizer. Empty by default.
  *
  * @return array
