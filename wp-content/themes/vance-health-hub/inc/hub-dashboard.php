@@ -225,7 +225,10 @@ function vance_hub_dashboard_active() {
  * Stylesheet, only on the dashboard page and only when the layout is active.
  */
 function vance_hub_dashboard_enqueue_assets() {
-	if ( ! is_page_template( 'page-dashboard.php' ) || ! is_user_logged_in() || ! vance_hub_dashboard_active() ) {
+	// The "dashboard" page has no assigned template (_wp_page_template is
+	// 'default'): WordPress resolves page-dashboard.php by its slug, so
+	// is_page_template() is false there. Test the slug too, as functions.php does.
+	if ( ! ( is_page( 'dashboard' ) || is_page_template( 'page-dashboard.php' ) ) || ! is_user_logged_in() || ! vance_hub_dashboard_active() ) {
 		return;
 	}
 	wp_enqueue_style(

@@ -392,8 +392,9 @@ function vance_hub_customize_register( $wp_customize ) {
 	$section = 'vance_home_layout';
 
 	$wp_customize->add_section( $section, array(
-		'title'       => __( 'Home layout (VanceHealthHub / VanceHubClub)', 'vance-health-hub' ),
-		'panel'       => 'vance_homepage_panel',
+		// Top level, not inside the Homepage panel: the section also holds the
+		// article and member dashboard switches.
+		'title'       => __( 'VanceHubClub', 'vance-health-hub' ),
 		'priority'    => 1,
 		'description' => __( 'VanceHealthHub is the current home page. VanceHubClub puts the free tools and the community first. Administrators can preview either one without saving: add ?vhh_layout=hub (VanceHubClub) or ?vhh_layout=classic (VanceHealthHub) to the home page address.', 'vance-health-hub' ),
 	) );

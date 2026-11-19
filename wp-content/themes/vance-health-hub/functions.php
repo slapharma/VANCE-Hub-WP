@@ -137,6 +137,8 @@ require_once get_template_directory() . '/inc/hub-article.php';
 require_once get_template_directory() . '/inc/hub-dashboard.php';
 // Its optional blocks (member number, results chart, weekly check-in), each default off.
 require_once get_template_directory() . '/inc/hub-dashboard-features.php';
+// One admin menu item for every VanceHubClub control. Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-admin.php';
 
 /**
  * Rebrand migration helper.
