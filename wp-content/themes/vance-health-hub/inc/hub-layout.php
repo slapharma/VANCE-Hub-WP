@@ -196,6 +196,57 @@ function vance_hub_split_conditions( $cards, $featured ) {
 }
 
 /**
+ * Home page tile overrides: the symptoms picture from each condition page
+ * (page-gi-condition.php, "Symptoms" row) and a shorter tile name.
+ *
+ * Only the home page uses this. The registry, the condition pages and the
+ * GI hub keep the full titles and their own photographs.
+ *
+ * @return array<string, array{image:string, alt:string, name?:string}> Keyed by slug.
+ */
+function vance_hub_condition_tile_overrides() {
+	return array(
+		'crohns-disease'       => array(
+			'image' => 'gi-health/conditions/symptoms-crohns.webp',
+			'alt'   => __( "Body silhouette showing common Crohn's symptoms", 'vance-health-hub' ),
+		),
+		'ulcerative-colitis'   => array(
+			'image' => 'gi-health/conditions/symptoms-uc.webp',
+			'alt'   => __( 'Body silhouette showing common UC symptoms', 'vance-health-hub' ),
+		),
+		'diverticular-disease' => array(
+			'image' => 'gi-health/conditions/symptoms-dd.webp',
+			'alt'   => __( 'Body silhouette showing common Diverticular Disease symptoms', 'vance-health-hub' ),
+			'name'  => __( 'Diverticular Disease', 'vance-health-hub' ),
+		),
+	);
+}
+
+/**
+ * What one home page condition tile shows: picture, alt text and name.
+ *
+ * The override picture is used only when its file exists; otherwise the
+ * registry photograph, otherwise no picture (the tile stays navy).
+ *
+ * @param array $card A vance_gi_condition_cards() row.
+ * @return array{img:string, alt:string, name:string}
+ */
+function vance_hub_condition_tile( $card ) {
+	$card  = is_array( $card ) ? $card : array();
+	$slug  = isset( $card['slug'] ) ? (string) $card['slug'] : '';
+	$over  = vance_hub_condition_tile_overrides();
+	$over  = isset( $over[ $slug ] ) ? $over[ $slug ] : array();
+	$name  = isset( $over['name'] ) ? $over['name'] : wp_specialchars_decode( isset( $card['title'] ) ? (string) $card['title'] : '' );
+	$img   = isset( $over['image'] ) ? vance_hub_img( $over['image'] ) : '';
+	$alt   = $img && isset( $over['alt'] ) ? $over['alt'] : '';
+	if ( '' === $img && ! empty( $card['image'] ) ) {
+		$img = vance_hub_img( 'gi-health/' . $card['image'] );
+		$alt = ( $img && isset( $card['alt'] ) ) ? (string) $card['alt'] : '';
+	}
+	return array( 'img' => $img, 'alt' => $alt, 'name' => $name );
+}
+
+/**
  * Sanitize a Customizer checkbox to a real boolean.
  *
  * The Customizer posts '' or '1' for a checkbox; a stored mod can also be a
