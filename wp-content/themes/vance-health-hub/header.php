@@ -27,6 +27,16 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
+<?php
+/*
+ * VanceHubClub header (inc/hub-header.php): when it is active it replaces the
+ * classic header below, markup and script. Everything above this point (<head>,
+ * wp_head(), wp_body_open()) is shared by both.
+ */
+if ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active() ) :
+    get_template_part( 'template-parts/header-hub' );
+else :
+?>
     <!-- Header -->
     <header class="site-header">
         <div class="container header-content">
@@ -207,3 +217,4 @@
         });
     });
     </script>
+<?php endif; // vance_hub_header_active() ?>

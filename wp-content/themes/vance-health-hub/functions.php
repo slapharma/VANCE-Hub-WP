@@ -137,6 +137,8 @@ require_once get_template_directory() . '/inc/hub-article.php';
 require_once get_template_directory() . '/inc/hub-dashboard.php';
 // Its optional blocks (member number, results chart, weekly check-in), each default off.
 require_once get_template_directory() . '/inc/hub-dashboard-features.php';
+// VanceHubClub site header: opt-in (Customizer, default off). Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-header.php';
 // One admin menu item for every VanceHubClub control. Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-admin.php';
 // VanceHubClub result page for the Gastro Health Survey: opt-in (Customizer, default off). Needs hub-layout.php.
@@ -3046,6 +3048,8 @@ function vance_auth_modal_shortcode( $atts ) {
     @media (max-width:480px){.vance-auth-modal{padding:28px 22px}}
     /* Hide site chrome only when the modal is rendered on the page */
     body:has(.vance-auth-overlay) .site-header,
+    body:has(.vance-auth-overlay) .vhh-header,
+    body:has(.vance-auth-overlay) .vhub-bar,
     body:has(.vance-auth-overlay) .site-footer,
     body:has(.vance-auth-overlay) header.header,
     body:has(.vance-auth-overlay) footer.footer,

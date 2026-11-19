@@ -40,6 +40,7 @@ function vance_hub_admin_switches() {
 		array( 'mod' => 'vance_hub_dash_checkin', 'default' => false, 'label' => __( 'Member dashboard: weekly check-in', 'vance-health-hub' ) ),
 		array( 'mod' => 'vance_hub_dashboard_tabs', 'default' => false, 'label' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ) ),
 		array( 'mod' => 'vance_hub_tool_result', 'default' => false, 'label' => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ) ),
+		array( 'mod' => 'vance_hub_header', 'default' => false, 'label' => __( 'Site header: VanceHubClub header', 'vance-health-hub' ) ),
 	);
 }
 

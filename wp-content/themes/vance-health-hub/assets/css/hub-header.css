@@ -1,0 +1,359 @@
+/* ==========================================================================
+   VanceHubClub site header (template-parts/header-hub.php)
+
+   Loaded only when the "Site header" switch is on, or an administrator previews
+   it with ?vhh_layout=hub. Every class is prefixed vhh-, except the member bar,
+   which keeps the vhub-bar classes it has on the home page.
+
+   Radii come from the token scale in main.css :root, with literal fallbacks.
+   The classic header (.site-header) is not rendered while this one is, so none
+   of its rules apply. Max Mega Menu is not involved: the navigation here is the
+   "VanceHubClub header menu" location, or a short list of real pages.
+
+   Desktop: one bar. Phone (below 768px): logo, one primary button, search and a
+   menu button; the menu button opens the navigation as a panel.
+   ========================================================================== */
+
+body.vhub-header {
+	--vhh-teal: #008080;
+	--vhh-teal-hover: #006666;
+	--vhh-teal-ink: #004C4C;
+	--vhh-wash: #DEF4F4;
+	--vhh-navy: #0A1929;
+	--vhh-purple: #6B489E;
+	--vhh-purple-ink: #5B3D8A;
+	--vhh-line: #D9ECEC;
+	--vhh-heading: var(--font-heading, 'Outfit', sans-serif);
+	--vhh-body: var(--font-main, 'Inter', system-ui, sans-serif);
+	/* The real height of this header (64px logo, 6px padding twice, 1px rule), so
+	   the sticky sub-navs that sit at top: var(--header-height) (.gi-cp-nav,
+	   .vug-subnav) and anchor offsets land under it, not under main.css's 80px. */
+	--header-height: 77px;
+}
+
+/* Sticky like the classic header (main.css .site-header), same z-index. The
+   member bar is the next sibling, not a child, so it scrolls away and only the
+   header sticks. */
+.vhh-header {
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+	background: #FFFFFF;
+	border-bottom: 1px solid var(--vhh-line, #D9ECEC);
+	font-family: var(--vhh-body, 'Inter', system-ui, sans-serif);
+}
+
+.vhh-header *,
+.vhh-header *::before,
+.vhh-header *::after { box-sizing: border-box; }
+
+.vhh-header__inner {
+	max-width: 1240px;
+	margin: 0 auto;
+	padding: 6px 24px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 36px;
+}
+
+/* ---- logo --------------------------------------------------------------- */
+
+.vhh-logo { display: flex; flex: 0 0 auto; }
+.vhh-logo img {
+	display: block;
+	width: 114px;
+	height: 64px;
+	object-fit: cover;
+}
+
+/* ---- navigation --------------------------------------------------------- */
+
+.vhh-nav { flex: 1 1 320px; min-width: 0; }
+
+.vhh-nav__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 30px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.vhh-nav__list > li { margin: 0; padding: 0; list-style: none; }
+
+.vhh-nav__list > li > a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 12px 0 9px;
+	border-bottom: 3px solid transparent;
+	font-family: var(--vhh-heading, 'Outfit', sans-serif);
+	font-weight: 600;
+	font-size: 15px;
+	letter-spacing: 0.6px;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--vhh-navy, #0A1929);
+}
+.vhh-nav__list > li > a:hover { color: var(--vhh-teal-hover, #006666); }
+.vhh-nav__list > li > a[aria-current="page"],
+.vhh-nav__list > li.current-menu-item > a {
+	color: var(--vhh-teal, #008080);
+	border-bottom-color: var(--vhh-teal, #008080);
+}
+
+.vhh-nav__extra { display: none; }
+
+/* ---- buttons ------------------------------------------------------------ */
+
+.vhh-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 44px;
+	padding: 10px 16px;
+	border: 1px solid transparent;
+	border-radius: var(--radius-control, 6px);
+	font-family: var(--vhh-body, 'Inter', system-ui, sans-serif);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: 0.4px;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.vhh-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
+
+.vhh-btn--teal { background: var(--vhh-teal, #008080); color: #FFFFFF; }
+.vhh-btn--teal:hover { background: var(--vhh-teal-hover, #006666); color: #FFFFFF; }
+
+.vhh-btn--outline {
+	background: #FFFFFF;
+	border-color: var(--vhh-teal, #008080);
+	color: var(--vhh-teal-hover, #006666);
+}
+.vhh-btn--outline:hover { background: var(--vhh-wash, #DEF4F4); color: var(--vhh-teal-ink, #004C4C); }
+
+.vhh-btn--purple { background: var(--vhh-purple, #6B489E); color: #FFFFFF; }
+.vhh-btn--purple:hover { background: var(--vhh-purple-ink, #5B3D8A); color: #FFFFFF; }
+
+.vhh-header a:focus-visible,
+.vhh-header button:focus-visible,
+.vhh-header input:focus-visible {
+	outline: 3px solid var(--vhh-purple, #6B489E);
+	outline-offset: 2px;
+}
+
+/* ---- right side --------------------------------------------------------- */
+
+.vhh-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-left: auto;
+}
+
+.vhh-menu-btn { display: none; }
+
+/* Tablet (768px to 999px): one row. Tighter gaps, and the VANCE-Ai button is
+   its icon only (the button keeps its aria-label). */
+@media (min-width: 768px) and (max-width: 999.98px) {
+	.vhh-header__inner { gap: 8px 16px; }
+	.vhh-nav { flex: 1 1 0; }
+	.vhh-nav__list { gap: 4px 18px; flex-wrap: nowrap; }
+	.vhh-nav__list > li > a { font-size: 14px; letter-spacing: 0.4px; }
+	.vhh-actions { gap: 6px; }
+	.vhh-actions .vhh-btn { padding-left: 12px; padding-right: 12px; }
+	.vhh-actions__ask span {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+	.vhh-actions__ask { min-width: 44px; padding-left: 0; padding-right: 0; }
+}
+
+/* Search: the classic block (main.css .vance-header-search). The field opens as
+   a bar under the toggle here, not over its neighbours, so it never covers a
+   button. */
+.vhh-search .vance-header-search__toggle {
+	width: 44px;
+	height: 44px;
+	border-radius: var(--radius-control, 6px);
+}
+
+@media (min-width: 768px) {
+	.vhh-search { position: relative; }
+	.vhh-search .vance-header-search__form {
+		top: 100%;
+		right: 0;
+		left: auto;
+		transform: none;
+		margin-top: 6px;
+		z-index: 70;
+	}
+	.vhh-search.is-open .vance-header-search__form { width: 280px; }
+	.vhh-search .vance-header-search__field {
+		height: 44px;
+		line-height: 44px;
+		border-right: 1.5px solid var(--primary-color, #008080);
+	}
+}
+
+/* ---- member bar (the same markup as the hub home) ------------------------
+   The bar is printed by the header, outside <main class="vhub">, so the custom
+   properties hub-home.css sets on .vhub do not reach it. Literal colours here. */
+
+body.vhub-header .vhub-bar {
+	background: var(--vhh-purple, #6B489E);
+	color: #FFFFFF;
+	font-family: var(--vhh-body, 'Inter', system-ui, sans-serif);
+}
+body.vhub-header .vhub-bar .vhub-wrap {
+	box-sizing: border-box;
+	max-width: 1240px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: 24px;
+	padding-right: 24px;
+}
+body.vhub-header .vhub-bar__inner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 16px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+body.vhub-header .vhub-bar__text { margin: 0; font-size: 14px; line-height: 1.4; }
+body.vhub-header .vhub-bar__text strong { font-weight: 700; }
+body.vhub-header .vhub-bar__link {
+	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 44px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #FFFFFF;
+	text-decoration: underline;
+}
+body.vhub-header .vhub-bar__link:hover { color: #FFFFFF; text-decoration-thickness: 2px; }
+body.vhub-header .vhub-bar a:focus-visible {
+	outline: 3px solid #FFFFFF;
+	outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Phone (below 768px)
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+	/* The classic header is position:fixed on a phone and mobile-base.css
+	   reserves 70px above the page for it. This header is in the flow. */
+	body.vhub-header:not(.dashboard-body):not(.no-header-offset) { padding-top: 0; }
+	/* 48px logo, 6px padding twice, 1px rule. */
+	body.vhub-header { --header-height: 61px; }
+
+	.vhh-header__inner {
+		padding: 6px 16px;
+		gap: 8px;
+	}
+	.vhh-logo { order: 1; }
+	.vhh-logo img { width: 86px; height: 48px; }
+
+	.vhh-actions { order: 2; margin-left: auto; gap: 4px; }
+	.vhh-actions__ask,
+	.vhh-actions__signin { display: none; }
+	.vhh-actions .vhh-btn--purple { padding: 10px 14px; }
+
+	.vhh-menu-btn {
+		order: 3;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		background: transparent;
+		border: 1px solid var(--vhh-line, #D9ECEC);
+		border-radius: var(--radius-control, 6px);
+		color: var(--vhh-navy, #0A1929);
+		cursor: pointer;
+	}
+	/* Shown only when JavaScript has run (the script in the template part adds
+	   vhh-js to <html>); without it the nav is already visible. */
+	html.vhh-js .vhh-menu-btn { display: inline-flex; }
+	.vhh-menu-btn__bars { display: block; width: 20px; }
+	.vhh-menu-btn__bars span {
+		display: block;
+		height: 2px;
+		margin: 4px 0;
+		background: currentColor;
+		border-radius: 2px;
+		transition: transform 0.2s, opacity 0.2s;
+	}
+	.vhh-header.is-open .vhh-menu-btn__bars span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+	.vhh-header.is-open .vhh-menu-btn__bars span:nth-child(2) { opacity: 0; }
+	.vhh-header.is-open .vhh-menu-btn__bars span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+	/* The navigation. With no JavaScript it stays visible under the bar. With
+	   JavaScript (class vhh-js) it is a panel that the menu button opens. */
+	.vhh-nav {
+		order: 4;
+		flex: 0 0 100%;
+		padding: 4px 0 12px;
+		border-top: 1px solid var(--vhh-line, #D9ECEC);
+	}
+	.vhh-nav__list { flex-direction: column; flex-wrap: nowrap; gap: 0; }
+	.vhh-nav__list > li > a {
+		display: flex;
+		width: 100%;
+		min-height: 48px;
+		padding: 12px 12px;
+		border-bottom: 1px solid var(--vhh-line, #D9ECEC);
+	}
+	.vhh-nav__list > li > a[aria-current="page"],
+	.vhh-nav__list > li.current-menu-item > a {
+		border-bottom-color: var(--vhh-line, #D9ECEC);
+		box-shadow: inset 3px 0 0 var(--vhh-teal, #008080);
+	}
+	.vhh-nav__extra {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 12px 12px 0;
+	}
+	.vhh-nav__extra .vhh-btn { flex: 1 1 140px; }
+
+	html.vhh-js .vhh-header .vhh-nav {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		padding: 4px 16px 16px;
+		background: #FFFFFF;
+		border-top: 0;
+		border-bottom: 1px solid var(--vhh-line, #D9ECEC);
+		box-shadow: 0 12px 24px rgba(10, 25, 41, 0.12);
+		max-height: calc(100vh - 120px);
+		overflow-y: auto;
+	}
+	html.vhh-js .vhh-header.is-open .vhh-nav { display: block; }
+
+	body.vhub-header .vhub-bar .vhub-wrap { padding-left: 16px; padding-right: 16px; }
+	body.vhub-header .vhub-bar__link { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.vhh-btn,
+	.vhh-menu-btn__bars span { transition: none; }
+}

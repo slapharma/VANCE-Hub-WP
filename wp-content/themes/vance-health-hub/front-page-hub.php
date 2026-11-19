@@ -33,41 +33,14 @@ $vhub_survey_n  = function_exists( 'vance_quiz_steps' ) ? count( vance_quiz_step
 
 <?php /* ---------------------------------------------------------------
  * a. Member bar. Real counts only, or the Founding Member line, or nothing.
+ *    When the VanceHubClub header is active it already printed the bar under
+ *    the header, so it is not printed a second time here.
  * ------------------------------------------------------------------ */ ?>
-<?php if ( 'counts' === $vhub_bar['mode'] ) : ?>
-	<div class="vhub-bar">
-		<div class="vhub-wrap vhub-bar__inner">
-			<p class="vhub-bar__text">
-				<strong><?php
-					/* translators: %s: number of registered members. */
-					echo esc_html( sprintf( _n( '%s member', '%s members', $vhub_bar['total'], 'vance-health-hub' ), number_format_i18n( $vhub_bar['total'] ) ) );
-				?></strong>
-				<?php if ( $vhub_bar['week'] > 0 ) : ?>
-					<span aria-hidden="true">&middot;</span>
-					<?php
-					/* translators: %s: number of members who joined in the last seven days. */
-					echo esc_html( sprintf( _n( '%s joined this week', '%s joined this week', $vhub_bar['week'], 'vance-health-hub' ), number_format_i18n( $vhub_bar['week'] ) ) );
-					?>
-				<?php endif; ?>
-			</p>
-			<?php if ( $vhub_logged_in ) : ?>
-				<a class="vhub-bar__link" href="<?php echo esc_url( $vhub_dashboard ); ?>"><?php esc_html_e( 'Go to My Hub', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-			<?php else : ?>
-				<a class="vhub-bar__link" href="#vhub-join"><?php esc_html_e( 'See what members get', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-			<?php endif; ?>
-		</div>
-	</div>
-<?php elseif ( 'founding' === $vhub_bar['mode'] ) : ?>
-	<div class="vhub-bar">
-		<div class="vhub-wrap vhub-bar__inner">
-			<p class="vhub-bar__text"><?php
-				/* translators: %s: Founding Member deadline date. */
-				echo esc_html( sprintf( __( 'Join by %s and keep the Founding Member mark.', 'vance-health-hub' ), vance_hub_format_date( $vhub_bar['deadline'] ) ) );
-			?></p>
-			<a class="vhub-bar__link" href="#vhub-join"><?php esc_html_e( 'See what members get', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-		</div>
-	</div>
-<?php endif; ?>
+<?php
+if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active() ) ) {
+	vance_hub_render_member_bar( array( 'join_href' => '#vhub-join' ) );
+}
+?>
 
 <?php /* ---------------------------------------------------------------
  * b. Hero: headline, Ask VANCE-Ai, example chips, photo, survey starter.
