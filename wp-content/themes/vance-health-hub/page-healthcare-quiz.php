@@ -539,6 +539,14 @@ $hq_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
             </div>
         </form>
     </div>
+
+    <?php
+    // VanceHubClub result page (inc/hub-tool-result.php). Prints nothing unless
+    // the Customizer switch is on or an administrator previews it.
+    if ( function_exists( 'vance_hub_tool_result_render' ) ) {
+        echo vance_hub_tool_result_render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+    }
+    ?>
 </div>
 
 <script>
