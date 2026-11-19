@@ -59,6 +59,13 @@ function is_page_template( $template ) {
 	return $GLOBALS['TEMPLATE'] === $template;
 }
 
+// is_page( $slug ): true when the page being viewed has that slug, whatever
+// template it uses. A page resolved to page-dashboard.php by slug has no
+// assigned template, so is_page_template() is false for it and is_page() is true.
+function is_page( $page = '' ) {
+	return $GLOBALS['SLUG'] === $page;
+}
+
 // WordPress returns '' for a meta key that was never written.
 function get_user_meta( $user_id, $key = '', $single = false ) {
 	return isset( $GLOBALS['USER_META'][ $user_id ][ $key ] ) ? $GLOBALS['USER_META'][ $user_id ][ $key ] : '';
@@ -106,6 +113,7 @@ function hd_arrange( array $mods = array(), array $caps = array(), array $get = 
 	arrange( $mods, false, $caps, $get );
 	$GLOBALS['LOGGED_IN']     = $logged_in;
 	$GLOBALS['TEMPLATE']      = '';
+	$GLOBALS['SLUG']          = '';
 	$GLOBALS['USER_META']     = array();
 	$GLOBALS['HISTORY']       = array();
 	$GLOBALS['HIST_CALLS']    = array();
@@ -777,6 +785,17 @@ vance_hub_dashboard_enqueue_assets();
 check( 'assets: enqueued on the dashboard page, logged in, active', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) );
 check( 'assets: the stylesheet URL points at hub-dashboard.css', $GLOBALS['ENQUEUED']['style:vance-hub-dashboard']['src'] === 'https://example.test/wp-content/themes/vance-health-hub/assets/css/hub-dashboard.css' );
 check( 'assets: the stylesheet depends on the main stylesheet', $GLOBALS['ENQUEUED']['style:vance-hub-dashboard']['deps'] === array( 'vance-main-style' ) );
+
+// The live page: slug 'dashboard', NO assigned template (is_page_template() false).
+hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), true );
+$GLOBALS['SLUG'] = 'dashboard';
+vance_hub_dashboard_enqueue_assets();
+check( 'assets: enqueued on the dashboard page matched by slug with no assigned template', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) );
+
+hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), true );
+$GLOBALS['SLUG'] = 'my-notes';
+vance_hub_dashboard_enqueue_assets();
+check( 'assets: not enqueued on another page matched by slug', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) === false );
 
 hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), false );
 $GLOBALS['TEMPLATE'] = 'page-dashboard.php';
