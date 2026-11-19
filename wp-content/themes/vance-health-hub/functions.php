@@ -139,6 +139,8 @@ require_once get_template_directory() . '/inc/hub-dashboard.php';
 require_once get_template_directory() . '/inc/hub-dashboard-features.php';
 // One admin menu item for every VanceHubClub control. Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-admin.php';
+// VanceHubClub result page for the Gastro Health Survey: opt-in (Customizer, default off). Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-tool-result.php';
 
 /**
  * Rebrand migration helper.

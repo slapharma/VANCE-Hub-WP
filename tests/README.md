@@ -66,6 +66,14 @@ cd tests && php hub-dashboard-features.test.php
 cd tests && php hub-admin.test.php
 ```
 
+```bash
+cd tests && php hub-tool-result.test.php
+```
+
+```bash
+cd tests && node hub-tool-result.test.js
+```
+
 All eight exit non-zero on failure. As of 2026-09-01 the first six were
 341 / 147 / 22 / 182 / 260 / 87 checks; `hero-mobile.test.php` added 80.
 `recipe-labels.test.php` is new and adds 48. **`hero-render.test.php` and
@@ -129,6 +137,8 @@ mutant proves they can fail. Every line must read `went RED`.
 | `hub-dashboard-tabs.test.php` | The second switch `vance_hub_dashboard_tabs` - the VanceHubClub look on every member-dashboard tab: `resolve()` and `active()` (needs the VanceHubClub dashboard too; the preview works); the `vhd-tabs` body class (dashboard page only, signed-in only); the stylesheet enqueue on a non-home tab and the cases where it must not load; `?vhh_layout=hub` kept in tab links for an administrator only; the member card (real data only, escaped, member number only when its own switch is on) and the Ask VANCE-Ai block; `page-dashboard.php` by static inspection (every new line guarded by the flag); a contract guard that compares form field names, element ids, AJAX actions and nonce names with the commit this work started from (with mutated copies that must fail); and that every CSS selector sits under `body.vhd-tabs`. The guard runs `git show`, so the repository must hold that commit |
 | `hub-dashboard-features.test.php` | `inc/hub-dashboard-features.php` - the three optional member-dashboard blocks (member number, results chart, weekly check-in): the pure helpers (member code make and valid, check-in answers, the six-day rule, chart series, chart SVG, number display); member-code storage (stored, absent, damaged, taken, lost race, user 0); the check-in POST handler (switch, nonce and the expired redirect, validation, consent, early, the save row, delete); the check-in store (history read, append, the 50-row cap); the render with escaping, the delete control and the flash messages; the switch gating in `vance_hub_dashboard_features_data()`; and that `weekly-check-in` is NOT in `vance_known_tool_slugs()`, which keeps the generic tool handlers closed to check-in rows |
 | `hub-admin.test.php` | `inc/hub-admin.php` - the read-only VanceHubClub admin screen under Vance Content Hub: each switch default checked against the real Customizer registrations of `hub-layout.php`, `hub-article.php` and `hub-dashboard-features.php` (and every switch mod a setting in section `vance_home_layout`); the status read (unsaved, saved true/false/'1'/''/0, a default-on switch saved off); the submenu (parent, capability, slug, callback, hook and priority 1000); the preview links (home always, article only when a published post exists, dashboard only when the page exists, `vhh_layout=hub` on each, a false permalink omits its link); the render (no output without `manage_options`, escaping of labels and URLs, On/Off against the status, the layout line against `vance_hub_saved_layout()`); and that section `vance_home_layout` has no `panel` key |
+| `hub-tool-result.test.php` | `inc/hub-tool-result.php` and its wiring - the opt-in VanceHubClub result page for the Gastro Health Survey: the switch and the `?vhh_layout=` preview (who may preview, array and hostile query values); the survey-page check, hooks, assets and Customizer control (default false); the field spec built from the REAL `vance_quiz_steps()` cut out of `functions.php`; the sign-up address with its return path; the next-step cards (a missing page leaves its card out); the markup for guest and member (the data rule: no invented question, no member figure, no email form, no chart, no privacy line, no PDF, no Community card, the Saved-to-My-Hub card only for a member and only with a dashboard page); escaping; the data gatherer (real pages only, Google only when `GOOGLE_CLIENT_ID` and the shortcode exist, `redirect_to` put back); and the wiring (template call, load order, survey IDs and save action kept, radius tokens, 44px buttons, print rule) |
+| `hub-tool-result.test.js` | The tile logic in `assets/js/hub-tool-result.js` (answers to "What you told us" tiles): no answer gives no tile, survey order, multi-answer, free text, display map, follow-up fields, leftover text ignored, markup stays text, and the save shape |
 
 ## Not harnesses — the hero photographs
 
