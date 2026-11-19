@@ -509,6 +509,17 @@ function vance_hub_customize_register( $wp_customize ) {
 		'type'        => 'checkbox',
 	) );
 
+	$wp_customize->add_setting( 'vance_hub_dashboard_tabs', array(
+		'default'           => false,
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_dashboard_tabs', array(
+		'label'       => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
+		'description' => __( 'Gives every other dashboard tab the VanceHubClub look: a navy side menu with a member card and an "Ask VANCE-Ai" block, and a new look for headings, cards and buttons. The tabs hold the same forms and data. It works only when the VanceHubClub home above is on, or in an administrator preview (?vhh_layout=hub).', 'vance-health-hub' ),
+		'section'     => $section,
+		'type'        => 'checkbox',
+	) );
+
 	$wp_customize->add_setting( 'vance_hub_show_sections', array(
 		'default'           => true,
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',

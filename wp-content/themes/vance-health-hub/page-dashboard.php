@@ -144,6 +144,13 @@ get_header();
     // VanceHubClub dashboard home (inc/hub-dashboard.php): opt-in, home tab only.
     // It prints its own greeting, so the page heading below is skipped for it.
     $vance_hub_dash = ( 'home' === $current_tab && function_exists( 'vance_hub_dashboard_active' ) && vance_hub_dashboard_active() );
+    // VanceHubClub look on every tab (second switch, same file): a restyle. When
+    // false, nothing below changes. $vance_tab_href keeps ?vhh_layout=hub on tab
+    // links while an administrator previews.
+    $vance_hub_tabs = ( function_exists( 'vance_hub_dashboard_tabs_active' ) && vance_hub_dashboard_tabs_active() );
+    $vance_tab_href = function ( $slug ) use ( $vance_hub_tabs ) {
+        return $vance_hub_tabs ? vance_hub_dashboard_tab_url( $slug ) : '?tab=' . $slug;
+    };
 ?>
 
 <!-- DASHBOARD STYLES (Scoped) -->
@@ -439,6 +446,8 @@ get_header();
             <button class="mobile-toggle" style="margin-left: auto; color: #0A1929;" onclick="toggleSidebar()">✕</button>
         </div>
 
+        <?php if ( $vance_hub_tabs ) { vance_hub_dashboard_tabs_render_member_card( $current_user ); } ?>
+
         <!-- Nav Items Loop -->
 
         <nav class="dash-nav">
@@ -452,13 +461,15 @@ get_header();
                         <div class="nav-label"><?php echo esc_html($section_heading); ?></div>
                     <?php endif; ?>
                     <?php foreach($items as $slug => $data): ?>
-                        <a href="?tab=<?php echo esc_attr($slug); ?>" class="nav-item <?php echo $current_tab === $slug ? 'active' : ''; ?>">
+                        <a href="<?php echo esc_attr( $vance_tab_href( $slug ) ); ?>" class="nav-item <?php echo $current_tab === $slug ? 'active' : ''; ?>">
                             <span style="width:20px;text-align:center;"><?php echo $data['icon']; ?></span> <?php echo esc_html($data['label']); ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
         </nav>
+
+        <?php if ( $vance_hub_tabs ) { vance_hub_dashboard_tabs_render_ask_block(); } ?>
     </aside>
 
     <!-- MAIN -->
@@ -484,7 +495,7 @@ get_header();
                             <?php if ( $is_dash_root ) : ?>
                                 <span class="dash-crumb-current" aria-current="page">My Dashboard</span>
                             <?php else : ?>
-                                <a href="?tab=home">My Dashboard</a>
+                                <a href="<?php echo esc_attr( $vance_tab_href( 'home' ) ); ?>">My Dashboard</a>
                                 <span class="dash-crumb-sep" aria-hidden="true">&rsaquo;</span>
                             <?php endif; ?>
                         </li>
@@ -512,8 +523,9 @@ get_header();
         <div class="dash-content">
             <?php // $tab_label is resolved once alongside the header breadcrumb above. ?>
             <?php if ( ! $vance_hub_dash ) : ?>
-            <div style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div<?php echo $vance_hub_tabs ? ' class="vhdt-head"' : ''; ?> style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
+                    <?php if ( $vance_hub_tabs ) { echo vance_hub_dashboard_tab_eyebrow_html(); } ?>
                     <h1 style="font-family:'Outfit'; font-size:28px; color:<?php echo $theme_primary; ?>; margin:0 0 8px 0;"><?php echo esc_html($tab_label); ?></h1>
                     <p style="color:#64748B; margin:0;">
                         <?php 
@@ -862,7 +874,7 @@ get_header();
                                                 Upload letters, test results and care plans, then ask VANCE-Ai about them.
                                             <?php endif; ?>
                                         </p>
-                                        <a href="?tab=documents" class="rl-btn" style="width:100%; justify-content:center; box-sizing:border-box;"><?php echo esc_html(sprintf('Go to %s', $dash_label('documents'))); ?></a>
+                                        <a href="<?php echo esc_attr( $vance_tab_href( 'documents' ) ); ?>" class="rl-btn" style="width:100%; justify-content:center; box-sizing:border-box;"><?php echo esc_html(sprintf('Go to %s', $dash_label('documents'))); ?></a>
                                     </div>
                                     <?php endif; ?>
                                 </div>

@@ -1,0 +1,281 @@
+/* ==========================================================================
+   VanceHubClub look on every member dashboard tab
+   (inc/hub-dashboard.php, "The VanceHubClub look on every other dashboard tab")
+
+   Loaded only on the dashboard page, and only when the switch "Member
+   dashboard: VanceHubClub look on every tab" is on and the VanceHubClub
+   dashboard is active. The same test adds the body class .vhd-tabs, and every
+   rule here sits under body.vhd-tabs, so the classic dashboard cannot be
+   reached from this file.
+
+   This is a restyle. The tabs keep their markup, forms and scripts.
+
+   Why the selectors are heavy: page-dashboard.php prints its own <style>
+   blocks inside the body, after this file, and many tab elements carry inline
+   style="" attributes. A rule here therefore needs a body.vhd-tabs ancestor
+   (0,1,1 or more) to beat the page's single-class rules, and !important only
+   where an inline style has to be overridden.
+
+   Radii come from the token scale in main.css :root, with literal fallbacks.
+   ========================================================================== */
+
+body.vhd-tabs {
+	--dash-primary: #008080;
+	--dash-sidebar: #0A1929;
+	--dash-border: #D9ECEC;
+	--vhdt-teal: #008080;
+	--vhdt-teal-ink: #006666;
+	--vhdt-wash: #DEF4F4;
+	--vhdt-navy: #0A1929;
+	--vhdt-navy-2: #13243A;
+	--vhdt-purple: #6B489E;
+	--vhdt-purple-ink: #5B3D8A;
+	--vhdt-ink: #1F2937;
+	--vhdt-heading: #0A3D3D;
+	--vhdt-line: #D9ECEC;
+	--vhdt-shadow: 0 8px 22px rgba(10, 25, 41, 0.08);
+	background-color: #F3FBFB;
+}
+
+/* --- Side menu: navy, teal active item ------------------------------------ */
+body.vhd-tabs .dash-sidebar {
+	background: var(--vhdt-navy);
+	border-right: 0;
+	gap: 18px;
+}
+/* The logo artwork is dark: it keeps a white band, as in the design. */
+body.vhd-tabs .sidebar-header {
+	background: #FFFFFF;
+	border-bottom: 1px solid var(--vhdt-line);
+	flex: 0 0 auto;
+}
+body.vhd-tabs .dash-nav {
+	padding: 0 16px;
+	flex: 1 1 auto;
+}
+body.vhd-tabs .nav-section { margin-bottom: 18px; }
+body.vhd-tabs .nav-label {
+	color: #AEDBDB;
+	opacity: 1;
+	font-weight: 700;
+	letter-spacing: 0.8px;
+	margin: 0 0 8px 14px;
+}
+body.vhd-tabs .nav-item {
+	min-height: 44px;
+	padding: 11px 14px;
+	color: #E2E8F0;
+	font-size: 15px;
+	font-weight: 500;
+	border-radius: var(--radius-control, 6px);
+	margin-bottom: 4px;
+}
+body.vhd-tabs .nav-item:hover {
+	background: rgba(255, 255, 255, 0.08);
+	color: #FFFFFF;
+}
+body.vhd-tabs .nav-item.active,
+body.vhd-tabs .nav-item.active:hover {
+	background: var(--vhdt-teal);
+	color: #FFFFFF;
+	font-weight: 600;
+}
+body.vhd-tabs .nav-item:focus-visible,
+body.vhd-tabs .vhdt-ask:focus-visible {
+	outline: 3px solid #FFFFFF;
+	outline-offset: 2px;
+}
+
+/* --- Member card ---------------------------------------------------------- */
+body.vhd-tabs .vhdt-member {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin: 0 16px;
+	padding: 16px;
+	background: var(--vhdt-navy-2);
+	border: 1px solid var(--vhdt-purple);
+	border-radius: var(--radius-surface, 14px);
+	flex: 0 0 auto;
+}
+body.vhd-tabs .vhdt-member__label {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+	color: #AEDBDB;
+}
+body.vhd-tabs .vhdt-member__name {
+	font-family: var(--font-heading, 'Outfit', sans-serif);
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: #FFFFFF;
+	overflow-wrap: anywhere;
+}
+body.vhd-tabs .vhdt-member__meta {
+	font-size: 13px;
+	color: #CBD5E1;
+}
+
+/* --- Ask VANCE-Ai --------------------------------------------------------- */
+body.vhd-tabs .vhdt-ask {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	min-height: 56px;
+	margin: auto 16px 24px;
+	padding: 16px;
+	border: 0;
+	border-radius: var(--radius-surface, 14px);
+	background: var(--vhdt-purple);
+	color: #FFFFFF;
+	font-family: inherit;
+	text-align: left;
+	cursor: pointer;
+	flex: 0 0 auto;
+	transition: background-color 0.15s ease;
+}
+body.vhd-tabs .vhdt-ask:hover { background: var(--vhdt-purple-ink); }
+body.vhd-tabs .vhdt-ask__title {
+	font-family: var(--font-heading, 'Outfit', sans-serif);
+	font-size: 17px;
+	font-weight: 700;
+}
+
+/* --- Content area --------------------------------------------------------- */
+body.vhd-tabs .dash-main {
+	background: #F3FBFB;
+	min-width: 0;
+}
+body.vhd-tabs .dash-header {
+	background: #FFFFFF;
+	border-bottom: 1px solid var(--vhdt-line);
+}
+body.vhd-tabs .dash-crumbs a:hover,
+body.vhd-tabs .dash-crumbs a:focus-visible { color: var(--vhdt-teal-ink); }
+body.vhd-tabs .dash-crumb-current { color: var(--vhdt-navy); }
+body.vhd-tabs .dash-content { min-width: 0; }
+
+/* --- Tab heading: eyebrow pill + Outfit 800 ------------------------------- */
+body.vhd-tabs .vhdt-eyebrow {
+	display: inline-block;
+	margin: 0 0 8px;
+	padding: 6px 12px;
+	background: var(--vhdt-purple);
+	border-radius: var(--radius-control, 6px);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+	color: #FFFFFF;
+}
+/* The heading has inline font, size and colour, so these need !important. */
+body.vhd-tabs .vhdt-head h1 {
+	font-family: var(--font-heading, 'Outfit', sans-serif) !important;
+	font-weight: 800 !important;
+	font-size: clamp(28px, 4vw, 40px) !important;
+	line-height: 1.1 !important;
+	color: var(--vhdt-heading) !important;
+	overflow-wrap: anywhere;
+}
+body.vhd-tabs .vhdt-head p { color: #374151 !important; }
+
+/* --- Cards: white, soft shadow, 6px teal top border ----------------------- */
+body.vhd-tabs .dash-card {
+	background: #FFFFFF;
+	border: 0;
+	border-top: 6px solid var(--vhdt-teal);
+	border-radius: var(--radius-surface, 14px);
+	box-shadow: var(--vhdt-shadow);
+}
+body.vhd-tabs .dash-card:hover {
+	box-shadow: var(--vhdt-shadow);
+	transform: none;
+}
+body.vhd-tabs .card-title {
+	font-weight: 700;
+	color: var(--vhdt-navy);
+}
+body.vhd-tabs .card-link { color: var(--vhdt-teal-ink); font-weight: 700; }
+body.vhd-tabs .card-link:hover { text-decoration: underline; }
+/* The classic list rule draws a dark separator. A light one reads on white. */
+body.vhd-tabs .list-item { border-bottom-color: var(--vhdt-line); }
+body.vhd-tabs .rl-reader__head,
+body.vhd-tabs .rl-reader__foot { border-color: var(--vhdt-line); }
+body.vhd-tabs .rl-reader__panel { border-radius: var(--radius-surface, 14px); }
+
+/* --- Buttons: teal primary, outlined-teal secondary ----------------------- */
+body.vhd-tabs .btn-primary,
+body.vhd-tabs .rl-btn--primary {
+	background: var(--vhdt-teal);
+	border-color: var(--vhdt-teal);
+	color: #FFFFFF;
+}
+body.vhd-tabs .btn-primary:hover,
+body.vhd-tabs .rl-btn--primary:hover {
+	background: #006666;
+	border-color: #006666;
+	color: #FFFFFF;
+}
+body.vhd-tabs .rl-btn:not(.rl-btn--primary):not(.rl-btn--text) {
+	background: #FFFFFF;
+	border-color: var(--vhdt-teal);
+	color: var(--vhdt-teal-ink);
+	font-weight: 600;
+}
+body.vhd-tabs .rl-btn:not(.rl-btn--primary):not(.rl-btn--text):hover {
+	background: var(--vhdt-wash);
+	border-color: var(--vhdt-teal);
+	color: #004C4C;
+}
+body.vhd-tabs .rl-btn,
+body.vhd-tabs .btn-primary {
+	min-height: 44px;
+}
+body.vhd-tabs .rl-btn:focus-visible,
+body.vhd-tabs .btn-primary:focus-visible {
+	outline: 3px solid var(--vhdt-purple);
+	outline-offset: 2px;
+}
+
+/* --- Fields --------------------------------------------------------------- */
+body.vhd-tabs .dash-content input:focus,
+body.vhd-tabs .dash-content textarea:focus,
+body.vhd-tabs .dash-content select:focus {
+	outline: 3px solid rgba(107, 72, 158, 0.35);
+	outline-offset: 1px;
+	border-color: var(--vhdt-teal);
+}
+
+/* --- Phones: 375px, no sideways scroll, 44px targets ----------------------- */
+body.vhd-tabs .mobile-toggle { min-width: 44px; min-height: 44px; }
+
+@media (max-width: 768px) {
+	body.vhd-tabs .dash-main {
+		width: 100%;
+		max-width: 100%;
+	}
+	body.vhd-tabs .dash-header { padding: 0 12px; }
+	body.vhd-tabs .dash-content { padding: 20px 16px 40px; }
+	body.vhd-tabs .mobile-toggle {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		margin-right: 4px;
+	}
+	/* The side menu is the existing slide-in drawer. Never wider than the screen. */
+	body.vhd-tabs .dash-sidebar { width: min(280px, 86vw); }
+	body.vhd-tabs .vhdt-head {
+		flex-direction: column;
+		align-items: flex-start !important;
+		gap: 16px;
+	}
+	body.vhd-tabs .dash-grid { grid-template-columns: minmax(0, 1fr); }
+	body.vhd-tabs .dash-card { padding: 20px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	body.vhd-tabs .vhdt-ask,
+	body.vhd-tabs .nav-item { transition: none; }
+}
