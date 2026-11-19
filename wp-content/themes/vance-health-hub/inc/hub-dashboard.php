@@ -241,6 +241,209 @@ function vance_hub_dashboard_enqueue_assets() {
 add_action( 'wp_enqueue_scripts', 'vance_hub_dashboard_enqueue_assets', 20 );
 
 /* =========================================================================
+ * The VanceHubClub look on every other dashboard tab
+ *
+ * A second, separate switch ("Member dashboard: VanceHubClub look on every
+ * tab", vance_hub_dashboard_tabs). It does nothing unless the VanceHubClub
+ * dashboard is also active, so ?vhh_layout=hub previews it without saving.
+ *
+ * It is a restyle. The tabs keep their markup, forms, AJAX calls and nonces.
+ * What it adds: a body class, one stylesheet (assets/css/hub-dashboard-tabs.css),
+ * a member card and an "Ask VANCE-Ai" block in the side menu, and a small
+ * eyebrow line above each tab heading. page-dashboard.php prints those three
+ * only when vance_hub_dashboard_tabs_active() is true.
+ * ====================================================================== */
+
+/**
+ * Decide whether the tab look is active.
+ *
+ * @param mixed $mod_on      Saved switch value, after the checkbox sanitiser.
+ * @param bool  $dash_active True when the VanceHubClub dashboard is active.
+ * @return bool
+ */
+function vance_hub_dashboard_tabs_resolve( $mod_on, $dash_active ) {
+	return true === $dash_active && ( true === $mod_on || 1 === $mod_on || '1' === $mod_on );
+}
+
+/**
+ * True when the VanceHubClub look applies to the dashboard tabs for this request.
+ *
+ * @return bool
+ */
+function vance_hub_dashboard_tabs_active() {
+	return vance_hub_dashboard_tabs_resolve(
+		vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_dashboard_tabs', false ) ),
+		vance_hub_dashboard_active()
+	);
+}
+
+/**
+ * True on the member dashboard page for a signed-in member. The page has no
+ * assigned template, so it is matched by slug as well as by template.
+ *
+ * @return bool
+ */
+function vance_hub_dashboard_is_page() {
+	return ( is_page( 'dashboard' ) || is_page_template( 'page-dashboard.php' ) ) && is_user_logged_in();
+}
+
+/**
+ * Stylesheet for the tab look. Same page test as the home stylesheet, plus the
+ * second switch. It loads after hub-dashboard.css (priority 21).
+ */
+function vance_hub_dashboard_tabs_enqueue_assets() {
+	if ( ! vance_hub_dashboard_is_page() || ! vance_hub_dashboard_tabs_active() ) {
+		return;
+	}
+	wp_enqueue_style(
+		'vance-hub-dashboard-tabs',
+		get_template_directory_uri() . '/assets/css/hub-dashboard-tabs.css',
+		array( 'vance-main-style' ),
+		@filemtime( get_template_directory() . '/assets/css/hub-dashboard-tabs.css' ) ?: '1.0.0'
+	);
+}
+add_action( 'wp_enqueue_scripts', 'vance_hub_dashboard_tabs_enqueue_assets', 21 );
+
+/**
+ * Body class that scopes every rule of hub-dashboard-tabs.css.
+ *
+ * @param string[] $classes Body classes.
+ * @return string[]
+ */
+function vance_hub_dashboard_tabs_body_class( $classes ) {
+	if ( vance_hub_dashboard_is_page() && vance_hub_dashboard_tabs_active() ) {
+		$classes[] = 'vhd-tabs';
+	}
+	return $classes;
+}
+add_filter( 'body_class', 'vance_hub_dashboard_tabs_body_class' );
+
+/**
+ * The administrator preview value that must follow a member through the tabs.
+ * Only 'hub' is carried: it is the one that turns the layout on. The query is
+ * read only for a user who may edit theme options, as in
+ * vance_hub_dashboard_active().
+ *
+ * @return string 'hub' or ''.
+ */
+function vance_hub_dashboard_preview_arg() {
+	if ( ! current_user_can( 'edit_theme_options' ) || ! isset( $_GET['vhh_layout'] ) || ! is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
+		return '';
+	}
+	return 'hub' === sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ) ? 'hub' : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+}
+
+/**
+ * The member card in the side menu. Only what the member's own account holds:
+ * the name, the join month, and the member number when its switch is on. No
+ * badge, streak or status word that no data stands behind.
+ *
+ * @param WP_User $user The logged-in member.
+ * @return array{name: string, since: string, code: string}
+ */
+function vance_hub_dashboard_member_card_data( $user ) {
+	$uid   = (int) $user->ID;
+	$first = (string) get_user_meta( $uid, 'first_name', true );
+	$last  = (string) get_user_meta( $uid, 'last_name', true );
+	$name  = trim( $first . ' ' . $last );
+	if ( '' === $name ) {
+		$name = trim( (string) $user->display_name );
+	}
+
+	// Same rule as vance_hub_dashboard_data(): a blank or zero registration date is no date.
+	$registered = trim( (string) $user->user_registered );
+	$joined     = '' === $registered ? false : strtotime( $registered . ' UTC' );
+	if ( false === $joined || $joined <= 0 ) {
+		$joined = 0;
+	}
+
+	$code = '';
+	if ( function_exists( 'vance_hub_dash_feature_on' ) && function_exists( 'vance_hub_member_code_for' ) && vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) ) {
+		$code = (string) vance_hub_member_code_for( $uid );
+	}
+
+	return array(
+		'name'  => $name,
+		'since' => $joined ? (string) wp_date( 'F Y', $joined ) : '',
+		'code'  => $code,
+	);
+}
+
+/**
+ * The member card as HTML. Empty when there is no name to show.
+ *
+ * @param array $card vance_hub_dashboard_member_card_data() result.
+ * @return string
+ */
+function vance_hub_dashboard_member_card_html( $card ) {
+	if ( empty( $card['name'] ) ) {
+		return '';
+	}
+	$html  = '<div class="vhdt-member">';
+	$html .= '<span class="vhdt-member__label">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</span>';
+	$html .= '<span class="vhdt-member__name">' . esc_html( $card['name'] ) . '</span>';
+	$line  = array();
+	if ( ! empty( $card['code'] ) ) {
+		/* translators: %s: the member's code. */
+		$line[] = sprintf( __( 'Member number %s', 'vance-health-hub' ), $card['code'] );
+	}
+	if ( ! empty( $card['since'] ) ) {
+		/* translators: %s: month and year the member joined. */
+		$line[] = sprintf( __( 'Member since %s', 'vance-health-hub' ), $card['since'] );
+	}
+	foreach ( $line as $text ) {
+		$html .= '<span class="vhdt-member__meta">' . esc_html( $text ) . '</span>';
+	}
+	return $html . '</div>';
+}
+
+/**
+ * The "Ask VANCE-Ai" block at the foot of the side menu. It opens the shared
+ * chat modal on a new conversation, the same hook the home block and the
+ * "New Chat" button use. Empty when the VANCE-Ai tab is switched off.
+ *
+ * @param bool $enabled True when the ai-chats dashboard tab is on.
+ * @return string
+ */
+function vance_hub_dashboard_ask_block_html( $enabled ) {
+	if ( ! $enabled ) {
+		return '';
+	}
+	return '<button type="button" class="vhdt-ask" data-vance-askai-open="new">'
+		. '<span class="vhdt-ask__title">' . esc_html__( 'Ask VANCE-Ai', 'vance-health-hub' ) . ' <span aria-hidden="true">&rarr;</span></span>'
+		. '</button>';
+}
+
+/**
+ * The small purple line above a tab heading.
+ *
+ * @return string
+ */
+function vance_hub_dashboard_tab_eyebrow_html() {
+	return '<p class="vhdt-eyebrow">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</p>';
+}
+
+/**
+ * Print the side-menu member card. Called from page-dashboard.php.
+ *
+ * @param WP_User $user The logged-in member.
+ */
+function vance_hub_dashboard_tabs_render_member_card( $user ) {
+	if ( ! ( $user instanceof WP_User ) || ! $user->exists() ) {
+		return;
+	}
+	echo vance_hub_dashboard_member_card_html( vance_hub_dashboard_member_card_data( $user ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in vance_hub_dashboard_member_card_html().
+}
+
+/**
+ * Print the side-menu "Ask VANCE-Ai" block. Called from page-dashboard.php.
+ */
+function vance_hub_dashboard_tabs_render_ask_block() {
+	$on = function_exists( 'vance_dashboard_feature_enabled' ) && vance_dashboard_feature_enabled( 'ai-chats' );
+	echo vance_hub_dashboard_ask_block_html( $on ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in vance_hub_dashboard_ask_block_html().
+}
+
+/* =========================================================================
  * Data
  * ====================================================================== */
 
@@ -252,7 +455,13 @@ add_action( 'wp_enqueue_scripts', 'vance_hub_dashboard_enqueue_assets', 20 );
  * @return string
  */
 function vance_hub_dashboard_tab_url( $slug ) {
-	return '?tab=' . rawurlencode( (string) $slug );
+	$url = '?tab=' . rawurlencode( (string) $slug );
+	// An administrator previewing with ?vhh_layout=hub keeps the preview on
+	// every click. Nobody else has the query, so nobody else sees it added.
+	if ( 'hub' === vance_hub_dashboard_preview_arg() ) {
+		$url .= '&vhh_layout=hub';
+	}
+	return $url;
 }
 
 /**
