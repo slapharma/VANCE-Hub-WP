@@ -7,8 +7,10 @@
  * the Customizer, and preview links for the three places the layout applies
  * (home page, an article, the member dashboard).
  *
- * The screen only READS. Every setting is still saved by the Customizer, so
- * there is one store and one sanitizer for each value.
+ * The switches section only READS. Every setting is still saved by the
+ * Customizer, so there is one store and one sanitizer for each value. The
+ * preview mode and share link boxes at the end come from inc/hub-preview.php,
+ * which owns their (nonce-protected) actions.
  *
  * Needs inc/hub-layout.php (vance_hub_saved_layout, vance_hub_sanitize_checkbox).
  *
@@ -160,12 +162,19 @@ function vance_hub_admin_render() {
 		</table>
 
 		<h2><?php esc_html_e( 'Preview', 'vance-health-hub' ); ?></h2>
-		<p><?php esc_html_e( 'These links show the VanceHubClub layout to you only. They do not change the site.', 'vance-health-hub' ); ?></p>
+		<p><?php esc_html_e( 'These links show the VanceHubClub layout on one page, to you only. They do not change the site. To see the layout on every page, use preview mode below. To show it to a colleague without a login, use a share link.', 'vance-health-hub' ); ?></p>
 		<p>
 			<?php foreach ( vance_hub_admin_preview_links() as $link ) : ?>
 				<a class="button" target="_blank" rel="noopener" href="<?php echo esc_url( $link['url'] ); ?>"><?php echo esc_html( $link['label'] ); ?></a>
 			<?php endforeach; ?>
 		</p>
+		<?php
+		// Preview mode and the share link (inc/hub-preview.php). Shown only to
+		// users with edit_theme_options.
+		if ( function_exists( 'vance_hub_preview_admin_box' ) ) {
+			vance_hub_preview_admin_box();
+		}
+		?>
 	</div>
 	<?php
 }

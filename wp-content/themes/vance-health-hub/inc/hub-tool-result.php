@@ -44,6 +44,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// The shared preview resolver (vance_hub_preview_query).
+require_once __DIR__ . '/hub-preview.php';
+
 /* =========================================================================
  * Pure helpers (no WordPress calls apart from escaping and translation)
  * ====================================================================== */
@@ -328,12 +331,8 @@ function vance_hub_tool_result_html( $d ) {
  * @return bool
  */
 function vance_hub_tool_result_active() {
-	$query    = '';
-	$can_read = current_user_can( 'edit_theme_options' );
-	if ( $can_read && isset( $_GET['vhh_layout'] ) && is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
-		$query = sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	}
-	return vance_hub_tool_result_resolve( vance_get_theme_mod( 'vance_hub_tool_result', false ), $query, '' !== $query && $can_read );
+	$query = vance_hub_preview_query();
+	return vance_hub_tool_result_resolve( vance_get_theme_mod( 'vance_hub_tool_result', false ), $query, '' !== $query );
 }
 
 /**
@@ -479,7 +478,7 @@ function vance_hub_tool_result_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_tool_result', array(
 		'label'       => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ),
-		'description' => __( 'Off: the survey ends as it does now. On: the end of the Gastro Health Survey shows a summary of the answers, a print button and next steps. Administrators can preview it without saving: add ?vhh_layout=hub to the survey address.', 'vance-health-hub' ),
+		'description' => __( 'Off: the survey ends as it does now. On: the end of the Gastro Health Survey shows a summary of the answers, a print button and next steps. Administrators can preview it without saving: add ?vhh_layout=hub to the survey address, or turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'checkbox',
 		'priority'    => 9,

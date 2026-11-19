@@ -130,6 +130,9 @@ require_once get_template_directory() . '/inc/category-hero.php';
 // Max Mega Menu grid cell (icon tiles, CTA rail, live featured articles).
 // Panel structure itself is admin-side; see docs/MEGA-MENU-SETUP.md (repo root).
 require_once get_template_directory() . '/inc/nav-mega.php';
+// VanceHubClub preview mode: the one resolver every vance_hub_*_active() reads
+// (admin ?vhh_layout=, the admin preview flag, the share link). Before hub-*.
+require_once get_template_directory() . '/inc/hub-preview.php';
 require_once get_template_directory() . '/inc/hub-layout.php';
 // VanceHubClub article layout: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-article.php';
