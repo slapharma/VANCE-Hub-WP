@@ -495,7 +495,8 @@ check( 'header: the wp-login style classic hooks are not reused (no .main-nav, n
 
 // Assets the markup relies on.
 $JS  = file_get_contents( $THEME . '/assets/js/hub-header.js' );
-$CSS = file_get_contents( $THEME . '/assets/css/hub-header.css' );
+// Normalise line endings: a Windows checkout (core.autocrlf) gives CRLF.
+$CSS = str_replace( "\r\n", "\n", file_get_contents( $THEME . '/assets/css/hub-header.css' ) );
 check( 'js: Escape closes the panel', strpos( $JS, "'Escape'" ) !== false );
 check( 'js: aria-expanded is kept in step', strpos( $JS, "setAttribute('aria-expanded'" ) !== false );
 check( 'css: no hard-coded border radius (the token scale is used)', preg_match( '/border-radius:\s*+(?!var\(|0\b|2px)/', $CSS ) === 0 );
