@@ -446,6 +446,9 @@ mark.vhh-mark--pulse {
 /* ---------------------------- image overlay ---------------------------- */
 
 .vhh-img-wrap { position: relative; display: inline-block; max-width: 100%; }
+/* Wrapper of an image the theme positions absolutely (card tiles, heroes):
+   it takes over the image's box so the image still fills its parent. */
+.vhh-img-wrap--fill { position: absolute; inset: 0; display: block; max-width: none; }
 .vhh-img-overlay {
 	position: absolute;
 	inset: 0;
