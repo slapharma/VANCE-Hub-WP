@@ -146,6 +146,11 @@ require_once get_template_directory() . '/inc/hub-header.php';
 require_once get_template_directory() . '/inc/hub-admin.php';
 // VanceHubClub result page for the Gastro Health Survey: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-tool-result.php';
+// VanceHubClub Community hub (/community/): opt-in (Customizer, default off). Needs hub-layout.php.
+// Data model, member actions and privacy hooks; the page markup; the moderation queue and poll editor.
+require_once get_template_directory() . '/inc/hub-community.php';
+require_once get_template_directory() . '/inc/hub-community-view.php';
+require_once get_template_directory() . '/inc/hub-community-admin.php';
 
 /**
  * Rebrand migration helper.

@@ -157,9 +157,10 @@ require_once $THEME . '/inc/hub-dashboard-features.php';
 require_once $THEME . '/inc/hub-tool-result.php';
 require_once $THEME . '/inc/hub-header.php';
 require_once $THEME . '/inc/hub-admin.php';
+require_once $THEME . '/inc/hub-community.php';
 
 /* Row order in vance_hub_admin_status(), as the tests index it. */
-// 0 promo, 1 sections, 2 more, 3 articles, 4 dashboard, 5 member no, 6 chart, 7 check-in, 8 tab look, 9 survey result, 10 site header.
+// 0 promo, 1 sections, 2 more, 3 articles, 4 dashboard, 5 member no, 6 chart, 7 check-in, 8 tab look, 9 survey result, 10 site header, 11 community hub.
 
 /** The On/Off text the screen prints for one switch label, or 'missing'. */
 function switch_cell( $html, $escaped_label ) {
@@ -191,13 +192,17 @@ vance_hub_article_customize_register( $WC );
 vance_hub_dash_features_customize( $WC );
 vance_hub_tool_result_customize_register( $WC );
 vance_hub_header_customize_register( $WC );
+vance_hub_community_customize_register( $WC );
 
 /* ---- 1. defaults equal the Customizer registrations ----------------------- */
 section( '1. Switch defaults against the Customizer registrations' );
 
 $ROWS = array_column( vance_hub_admin_switches(), 'default', 'mod' );
 
-check( 'switches: the screen lists exactly eleven switches', count( vance_hub_admin_switches() ) === 11 );
+check( 'switches: the screen lists exactly twelve switches', count( vance_hub_admin_switches() ) === 12 );
+check( 'defaults: vance_hub_community equals its registered default', isset( $ROWS['vance_hub_community'], $WC->settings['vance_hub_community']['default'] ) && $ROWS['vance_hub_community'] === $WC->settings['vance_hub_community']['default'] );
+check( 'defaults: vance_hub_community is off by default', isset( $ROWS['vance_hub_community'] ) && false === $ROWS['vance_hub_community'] );
+check( 'registered: vance_hub_community is a checkbox in section vance_home_layout', isset( $WC->settings['vance_hub_community'], $WC->controls['vance_hub_community'] ) && $WC->controls['vance_hub_community']['section'] === 'vance_home_layout' && $WC->controls['vance_hub_community']['type'] === 'checkbox' );
 check( 'defaults: vance_hub_dashboard_tabs equals its registered default', isset( $ROWS['vance_hub_dashboard_tabs'], $WC->settings['vance_hub_dashboard_tabs']['default'] ) && $ROWS['vance_hub_dashboard_tabs'] === $WC->settings['vance_hub_dashboard_tabs']['default'] );
 check( 'defaults: vance_hub_dashboard_tabs is off by default', isset( $ROWS['vance_hub_dashboard_tabs'] ) && false === $ROWS['vance_hub_dashboard_tabs'] );
 check( 'registered: vance_hub_dashboard_tabs is a checkbox in section vance_home_layout with the checkbox sanitiser', isset( $WC->settings['vance_hub_dashboard_tabs'], $WC->controls['vance_hub_dashboard_tabs'] ) && $WC->controls['vance_hub_dashboard_tabs']['section'] === 'vance_home_layout' && $WC->controls['vance_hub_dashboard_tabs']['type'] === 'checkbox' && $WC->settings['vance_hub_dashboard_tabs']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
@@ -229,10 +234,12 @@ section( '2. Status: saved values and defaults' );
 
 arrange_admin( array(), array() );
 $ST = vance_hub_admin_status();
-check( 'status: one row per switch', count( $ST ) === 11 );
+check( 'status: one row per switch', count( $ST ) === 12 );
 check( 'status: the tab-look switch is row 8 and reads Off by default', isset( $ST[8] ) && $ST[8]['label'] === 'Member dashboard: VanceHubClub look on every tab' && $ST[8]['on'] === false );
 check( 'status: the survey result switch is row 9 and reads Off by default', isset( $ST[9] ) && $ST[9]['label'] === 'Health Survey: VanceHubClub result page' && $ST[9]['on'] === false );
-check( 'status: the site header switch is the last row and reads Off by default', isset( $ST[10] ) && $ST[10]['label'] === 'Site header: VanceHubClub header' && $ST[10]['on'] === false );
+check( 'status: the site header switch is row 10 and reads Off by default', isset( $ST[10] ) && $ST[10]['label'] === 'Site header: VanceHubClub header' && $ST[10]['on'] === false );
+check( 'status: row 11 is "Community hub" and reads Off by default', isset( $ST[11] ) && $ST[11]['label'] === 'Community hub' && $ST[11]['on'] === false );
+check( 'status: the community switch is the last row', ! isset( $ST[12] ) && 11 === max( array_keys( $ST ) ) );
 check( 'status: row 0 is the promo switch, in display order', isset( $ST[0] ) && $ST[0]['label'] === 'Home page: promo block' );
 check( 'status: an unsaved default-true switch reads On', isset( $ST[0] ) && $ST[0]['on'] === true );
 check( 'status: an unsaved default-true section switch reads On', isset( $ST[1] ) && $ST[1]['on'] === true );
@@ -387,6 +394,11 @@ check( 'render: the article row reads On, as the status does', switch_cell( $OUT
 check( 'render: the sections row reads On by default, as the status does', switch_cell( $OUT, 'Home page: &quot;Latest by section&quot;' ) === 'On' && $ST[1]['on'] === true );
 check( 'render: the dashboard row reads Off by default, as the status does', switch_cell( $OUT, 'Member dashboard: VanceHubClub home' ) === 'Off' && $ST[4]['on'] === false );
 check( 'render: the member number row reads Off by default, as the status does', switch_cell( $OUT, 'Member dashboard: member number' ) === 'Off' && $ST[5]['on'] === false );
+check( 'render: the Community hub row reads Off by default, as the status does', switch_cell( $OUT, 'Community hub' ) === 'Off' && $ST[11]['on'] === false );
+
+arrange_admin( array( 'vance_hub_community' => true ), array( 'manage_options' => true ) );
+$OUT = render_screen();
+check( 'render: the Community hub row reads On once the switch is saved on', switch_cell( $OUT, 'Community hub' ) === 'On' );
 
 arrange_admin( array( 'vance_home_layout' => 'hub' ), array( 'manage_options' => true ) );
 $OUT = render_screen();

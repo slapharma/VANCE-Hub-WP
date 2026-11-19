@@ -25,7 +25,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The on/off switches, in display order.
  *
  * Each default MUST equal the default in the Customizer registration
- * (hub-layout.php, hub-article.php, hub-dashboard-features.php). A switch that
+ * (hub-layout.php, hub-article.php, hub-dashboard-features.php,
+ * hub-tool-result.php, hub-header.php, hub-community.php). A switch that
  * was never saved shows its default here, as it does on the site.
  *
  * @return array[] Rows of mod name, default and label.
@@ -43,6 +44,7 @@ function vance_hub_admin_switches() {
 		array( 'mod' => 'vance_hub_dashboard_tabs', 'default' => false, 'label' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ) ),
 		array( 'mod' => 'vance_hub_tool_result', 'default' => false, 'label' => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ) ),
 		array( 'mod' => 'vance_hub_header', 'default' => false, 'label' => __( 'Site header: VanceHubClub header', 'vance-health-hub' ) ),
+		array( 'mod' => 'vance_hub_community', 'default' => false, 'label' => __( 'Community hub', 'vance-health-hub' ) ),
 	);
 }
 

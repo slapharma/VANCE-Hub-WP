@@ -1,0 +1,23 @@
+/* VanceHubClub Community hub: admin queue and poll editor (inc/hub-community-admin.php). */
+
+.vcom-queue__table td { vertical-align: top; }
+.vcom-queue__date { color: #646970; font-size: 12px; }
+.vcom-queue__post { max-width: 520px; }
+.vcom-queue__context { display: block; color: #646970; font-size: 12px; margin-bottom: 4px; }
+.vcom-queue__text { margin: 4px 0; white-space: pre-line; overflow-wrap: anywhere; }
+.vcom-queue__flags { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.vcom-flag {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: var(--radius-control, 6px);
+	background: #F0F0F1;
+	font-size: 12px;
+	font-weight: 600;
+}
+.vcom-flag--product { background: #FCF0E3; color: #8A4B00; }
+.vcom-flag--report { background: #FCE8E8; color: #8A1F1F; }
+.vcom-queue__actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; }
+.vcom-queue__actions form { display: inline-flex; gap: 4px; align-items: center; margin: 0; }
+.vcom-queue__empty { margin-top: 16px; }
+.vcom-poll-admin__locked { padding: 8px 12px; background: #FCF9E8; border-left: 4px solid #DBA617; }
+.vcom-poll-admin__votes { margin-left: 8px; color: #646970; }
