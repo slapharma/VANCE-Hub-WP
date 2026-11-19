@@ -316,7 +316,135 @@
 .vhd .vhd-msg.is-unread .vhd-msg__title { font-weight: 700; }
 .vhd .vhd-msg__meta { font-size: 12px; color: var(--vhd-muted); }
 
+/* --- Optional blocks (inc/hub-dashboard-features.php) ---------------------- */
+.vhd .vhd-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+.vhd .vhd-small { font-size: 13px; line-height: 1.5; color: var(--vhd-muted); }
+.vhd .vhd-hello__code {
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.6px;
+	color: var(--vhd-navy);
+}
+.vhd .vhd-btn--outline {
+	background: #FFFFFF;
+	color: var(--vhd-navy);
+	border: 1px solid var(--vhd-muted);
+}
+.vhd .vhd-btn--outline:hover { background: #F8FAFC; }
+
+/* Chart: the line stretches with the card, the dots and strokes do not. */
+.vhd .vhd-chart { margin: 0; display: flex; flex-direction: column; gap: 6px; position: relative; }
+.vhd .vhd-chart__svg { display: block; width: 100%; height: 120px; overflow: visible; }
+.vhd .vhd-chart__axis { stroke: var(--vhd-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.vhd .vhd-chart__line {
+	fill: none;
+	stroke: var(--vhd-teal);
+	stroke-width: 2.5;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+	vector-effect: non-scaling-stroke;
+}
+.vhd .vhd-chart__dots {
+	fill: none;
+	stroke: var(--vhd-teal);
+	stroke-width: 9;
+	stroke-linecap: round;
+	vector-effect: non-scaling-stroke;
+}
+.vhd .vhd-chart__range {
+	display: flex;
+	justify-content: space-between;
+	font-size: 12px;
+	color: var(--vhd-muted);
+}
+.vhd .vhd-results__latest { font-size: 16px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-results__hint { font-size: 14px; color: var(--vhd-muted); }
+
+/* Weekly check-in */
+.vhd .vhd-flash {
+	padding: 10px 14px;
+	border-left: 3px solid var(--vhd-teal);
+	background: var(--vhd-wash);
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--vhd-teal-ink);
+}
+.vhd .vhd-flash--warn { border-left-color: #B45309; background: #FEF3C7; color: #7C2D12; }
+.vhd .vhd-checkin__form { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.vhd .vhd-checkin__scale,
+.vhd .vhd-checkin__done { font-size: 15px; color: var(--vhd-ink); }
+.vhd .vhd-checkin__q { margin: 0; padding: 0; border: 0; min-width: 0; width: 100%; }
+.vhd .vhd-checkin__q legend {
+	padding: 0;
+	margin-bottom: 10px;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--vhd-navy);
+}
+.vhd .vhd-checkin__opts { display: flex; flex-wrap: wrap; gap: 8px; position: relative; }
+.vhd .vhd-checkin__opts label {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 48px;
+	min-height: 48px;
+	border: 1px solid var(--vhd-muted);
+	border-radius: var(--radius-control, 6px);
+	background: #FFFFFF;
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--vhd-navy);
+	cursor: pointer;
+}
+.vhd .vhd-checkin__opts label:hover { background: var(--vhd-wash); }
+.vhd .vhd-checkin__opts input:checked + label {
+	background: var(--vhd-teal);
+	border-color: var(--vhd-teal);
+	color: #FFFFFF;
+}
+.vhd .vhd-checkin__opts input:focus-visible + label {
+	outline: 3px solid var(--vhd-purple);
+	outline-offset: 3px;
+}
+.vhd .vhd-checkin__consent {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--vhd-ink);
+}
+.vhd .vhd-checkin__consent input { flex: 0 0 auto; width: 20px; height: 20px; margin: 1px 0 0; }
+.vhd .vhd-checkin__trends {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px;
+	padding-top: 16px;
+	border-top: 1px solid var(--vhd-line);
+}
+/* space-between: the charts line up when one question wraps to two lines. */
+.vhd .vhd-checkin__trend { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; }
+.vhd .vhd-checkin__trend-q { font-size: 13px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-checkin__trend .vhd-chart__svg { height: 80px; }
+.vhd .vhd-checkin__manage { font-size: 14px; color: var(--vhd-muted); }
+.vhd .vhd-checkin__manage summary { cursor: pointer; font-weight: 700; color: var(--vhd-teal-ink); }
+.vhd .vhd-checkin__manage summary:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 3px; }
+.vhd .vhd-checkin__manage p { margin: 10px 0 12px; }
+
 /* --- Narrow screens ------------------------------------------------------ */
+@media (max-width: 900px) {
+	.vhd .vhd-checkin__trends { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 1180px) {
 	.vhd .vhd-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
