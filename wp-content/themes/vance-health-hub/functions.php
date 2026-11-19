@@ -135,6 +135,8 @@ require_once get_template_directory() . '/inc/hub-layout.php';
 require_once get_template_directory() . '/inc/hub-article.php';
 // VanceHubClub member dashboard home: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-dashboard.php';
+// Its optional blocks (member number, results chart, weekly check-in), each default off.
+require_once get_template_directory() . '/inc/hub-dashboard-features.php';
 
 /**
  * Rebrand migration helper.

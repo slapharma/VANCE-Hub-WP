@@ -6,6 +6,8 @@
  * (page-dashboard.php, `case 'home'`). The other dashboard tabs, the sidebar,
  * the AJAX handlers and every `_sla_*` meta key are untouched: this file only
  * READS member data, through the same keys and helpers the classic home reads.
+ * The optional blocks that write (member number, weekly check-in) are in
+ * inc/hub-dashboard-features.php.
  *
  * The switch is "Member dashboard: use the VanceHubClub home" in
  * Appearance -> Customize -> Home layout. It is off by default. Administrators
@@ -433,7 +435,12 @@ function vance_hub_dashboard_data( $user ) {
 		$fresh[] = vance_hub_post_card( $post, 'medium' );
 	}
 
-	return array(
+	// -- Optional blocks: member number, results chart, weekly check-in -------
+	$features = function_exists( 'vance_hub_dashboard_features_data' )
+		? vance_hub_dashboard_features_data( $user, $checks, isset( $tools_by_mod['nutrition'] ) ? $tools_by_mod['nutrition']['href'] : '' )
+		: array();
+
+	return $features + array(
 		'name'           => $first,
 		'since'          => $joined ? (string) wp_date( 'F Y', $joined ) : '',
 		'ask'            => $on( 'ai-chats' ),
@@ -501,6 +508,10 @@ function vance_hub_dashboard_home_html( $d ) {
 		/* translators: %s: month and year the member joined. */
 		$html .= '<p class="vhd-hello__since">' . esc_html( sprintf( __( 'Member since %s', 'vance-health-hub' ), $d['since'] ) ) . '</p>';
 	}
+	if ( ! empty( $d['member_code'] ) ) {
+		/* translators: %s: the member's code. */
+		$html .= '<p class="vhd-hello__code">' . esc_html( sprintf( __( 'Member number %s', 'vance-health-hub' ), $d['member_code'] ) ) . '</p>';
+	}
 	$html .= '</div>';
 	if ( ! empty( $d['ask'] ) ) {
 		// Opens the shared VANCE-Ai modal on a new conversation, the same hook
@@ -518,6 +529,11 @@ function vance_hub_dashboard_home_html( $d ) {
 		$html .= '<p class="vhd-step__text">' . esc_html( $step['text'] ) . '</p></div>';
 		$html .= '<a class="vhd-btn vhd-btn--white" href="' . esc_url( $step['href'] ) . '">' . esc_html( $step['cta'] ) . $arrow . '</a>';
 		$html .= '</section>';
+	}
+
+	// -- Weekly check-in (optional) ----------------------------------------
+	if ( ! empty( $d['checkin'] ) && function_exists( 'vance_hub_dashboard_checkin_html' ) ) {
+		$html .= vance_hub_dashboard_checkin_html( $d['checkin'] );
 	}
 
 	// -- Tools -------------------------------------------------------------
@@ -540,6 +556,11 @@ function vance_hub_dashboard_home_html( $d ) {
 			$html .= '</span></a></li>';
 		}
 		$html .= '</ul></section>';
+	}
+
+	// -- Results chart (optional) ------------------------------------------
+	if ( ! empty( $d['results'] ) && function_exists( 'vance_hub_dashboard_results_html' ) ) {
+		$html .= vance_hub_dashboard_results_html( $d['results'] );
 	}
 
 	// -- Saved-item counts ---------------------------------------------------
