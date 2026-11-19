@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       VHH Annotations
  * Description:       Highlight-and-comment annotations for Vance Medical Hub articles — text highlights, image-region comments, email review links, and a Claude Code export/to-do workflow.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Vance Medical
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'VHH_ANN_VERSION', '0.1.0' );
+define( 'VHH_ANN_VERSION', '0.1.1' );
 define( 'VHH_ANN_FILE', __FILE__ );
 define( 'VHH_ANN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VHH_ANN_URL', plugin_dir_url( __FILE__ ) );

@@ -24,7 +24,24 @@
  */
 (function () {
 	'use strict';
-	if ( ! window.VHH || ! window.VHH.cfg.settings.imageEnabled ) { return; }
+
+	/**
+	 * An image positioned absolute/fixed is out of flow: it fills a box that
+	 * its parent supplies (a card tile with `img { position:absolute;
+	 * inset:0; height:100% }`). The inline wrapper made by setup() would be a
+	 * 0-height box, and the image would fill that instead. Such an image needs
+	 * a wrapper that takes over its box (class vhh-img-wrap--fill).
+	 * Only `absolute`: a `fixed` image is placed against the viewport, and an
+	 * `absolute` wrapper would cover its whole ancestor instead.
+	 */
+	function shouldFill( computedPosition ) {
+		return computedPosition === 'absolute';
+	}
+	if ( typeof module !== 'undefined' && module.exports ) {
+		module.exports = { shouldFill: shouldFill };
+	}
+
+	if ( typeof window === 'undefined' || ! window.VHH || ! window.VHH.cfg.settings.imageEnabled ) { return; }
 
 	var VHH = window.VHH;
 	var cfg = VHH.cfg;
@@ -218,9 +235,34 @@
 
 	/* -------------------------------- init -------------------------------- */
 
+	/**
+	 * Match the wrapper to the image's position now. Run at setup and again on
+	 * resize: a theme rule can make an image absolute at one width only.
+	 */
+	function syncFill( wrap, img ) {
+		var imgStyle = getComputedStyle( img );
+		var fill = shouldFill( imgStyle.position );
+		wrap.classList.toggle( 'vhh-img-wrap--fill', fill );
+		wrap.style.zIndex = ( fill && imgStyle.zIndex !== 'auto' ) ? imgStyle.zIndex : '';
+	}
+
+	var fillQueued = false;
+	function syncAllFills() {
+		fillQueued = false;
+		overlays.forEach( function ( entry ) {
+			if ( entry.img && entry.wrap ) { syncFill( entry.wrap, entry.img ); }
+		} );
+	}
+	window.addEventListener( 'resize', function () {
+		if ( fillQueued ) { return; }
+		fillQueued = true;
+		window.requestAnimationFrame( syncAllFills );
+	} );
+
 	function setup( img ) {
 		if ( img.closest( '.vhh-img-wrap' ) ) { return; }
 		var wrap = el( 'span', 'vhh-img-wrap' );
+		syncFill( wrap, img );
 		img.parentNode.insertBefore( wrap, img );
 		wrap.appendChild( img );
 
@@ -230,6 +272,7 @@
 
 		var entry = {
 			img: img,
+			wrap: wrap,
 			overlay: overlay,
 			attachmentId: attachmentIdFor( img ),
 			src: baseSrc( img )
