@@ -601,6 +601,9 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	/* The symptoms pictures are 3:2 body figures on white: keep the head in
+	   view when a wide one-column tile crops top and bottom. */
+	object-position: center 30%;
 }
 .vhub-cond-tile__body {
 	position: relative;
@@ -608,7 +611,9 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	flex-direction: column;
 	gap: 6px;
 	padding: 60px 20px 20px;
-	background: linear-gradient(to top, rgba(10, 25, 41, 0.92), rgba(10, 25, 41, 0));
+	/* Dark for the lower 60%: the name stays readable over a white picture,
+	   also when it wraps to two lines. */
+	background: linear-gradient(to top, rgba(10, 25, 41, 0.92), rgba(10, 25, 41, 0.8) 60%, rgba(10, 25, 41, 0));
 }
 .vhub-cond-tile__name {
 	font-family: var(--vhub-heading);
@@ -630,9 +635,11 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	flex-direction: column;
 	gap: 4px;
 	min-height: 250px;
-	padding: 22px;
+	padding: 22px 14px;
 	background: var(--vhub-teal);
 	border-radius: var(--radius-surface, 14px);
+	/* A size container, so the links can scale with the column width. */
+	container-type: inline-size;
 }
 .vhub-cond-list__link {
 	display: flex;
@@ -641,7 +648,12 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	padding: 8px 0;
 	border-bottom: 1px solid #4DA6A6;
 	font-weight: 600;
-	font-size: 16px;
+	font-size: 15px;
+	/* Keep each name on one line. The longest, "Inflammatory Bowel Disease
+	   (IBD)", is 16.4 times the font size wide in Inter 600, so the size is
+	   the text width / 16.5, from 12px up to 15px. Browsers without container
+	   units keep 15px. */
+	font-size: clamp(12px, calc(100cqi / 16.5), 15px);
 	color: #FFFFFF;
 }
 .vhub-cond-list__link:hover { color: #FFFFFF; text-decoration: underline; }

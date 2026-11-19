@@ -306,15 +306,15 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 	</div>
 	<ul class="vhub-cond-grid">
 		<?php foreach ( $vhub_cond_tiles as $vhub_c ) :
-			$vhub_c_img = vance_hub_img( 'gi-health/' . $vhub_c['image'] );
+			$vhub_c_tile = vance_hub_condition_tile( $vhub_c );
 			?>
 			<li>
 				<a class="vhub-cond-tile" href="<?php echo esc_url( vance_gi_page_url( $vhub_c['slug'] ) ); ?>">
-					<?php if ( $vhub_c_img ) : ?>
-						<img class="vhub-cond-tile__img" src="<?php echo esc_url( $vhub_c_img ); ?>" alt="<?php echo esc_attr( $vhub_c['alt'] ); ?>" loading="lazy" decoding="async">
+					<?php if ( $vhub_c_tile['img'] ) : ?>
+						<img class="vhub-cond-tile__img" src="<?php echo esc_url( $vhub_c_tile['img'] ); ?>" alt="<?php echo esc_attr( $vhub_c_tile['alt'] ); ?>" loading="lazy" decoding="async">
 					<?php endif; ?>
 					<span class="vhub-cond-tile__body">
-						<span class="vhub-cond-tile__name"><?php echo esc_html( wp_specialchars_decode( $vhub_c['title'] ) ); ?></span>
+						<span class="vhub-cond-tile__name"><?php echo esc_html( $vhub_c_tile['name'] ); ?></span>
 						<span class="vhub-cond-tile__cta"><?php esc_html_e( 'Read the guide', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></span>
 					</span>
 				</a>

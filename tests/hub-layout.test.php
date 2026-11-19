@@ -1159,6 +1159,105 @@ check( 'sanitize: true is on', vance_hub_sanitize_checkbox( true ) === true );
 check( 'sanitize: false is off', vance_hub_sanitize_checkbox( false ) === false );
 check( 'sanitize: the integer 2 is off (only 1 means on)', vance_hub_sanitize_checkbox( 2 ) === false );
 
+/* ---- 16. home condition tiles: symptoms pictures, names, fallbacks --------- */
+section( '16. Home condition tiles (pure)' );
+
+$TILE_REG        = array_column( vance_gi_condition_cards(), null, 'slug' );
+$TILE_CDN        = 'https://example.test/wp-content/themes/vance-health-hub/assets/img/';
+$TILE_CROHN_NAME = "Crohn\u{2019}s Disease";
+
+arrange();
+$TILE_CD  = vance_hub_condition_tile( $TILE_REG['crohns-disease'] );
+$TILE_UC  = vance_hub_condition_tile( $TILE_REG['ulcerative-colitis'] );
+$TILE_DD  = vance_hub_condition_tile( $TILE_REG['diverticular-disease'] );
+$TILE_IBS = vance_hub_condition_tile( $TILE_REG['irritable-bowel-syndrome'] );
+
+check( "tile crohns: picture is the symptoms image from the conditions folder", strpos( $TILE_CD['img'], $TILE_CDN . 'gi-health/conditions/symptoms-crohns.webp?v=' ) === 0 );
+check( "tile crohns: alt is the Crohn's symptoms text", $TILE_CD['alt'] === "Body silhouette showing common Crohn's symptoms" );
+check( "tile crohns: name equals the decoded registry title", $TILE_CD['name'] === wp_specialchars_decode( $TILE_REG['crohns-disease']['title'] ) );
+check( "tile crohns: name is the typographic apostrophe form", $TILE_CD['name'] === $TILE_CROHN_NAME );
+
+check( "tile uc: picture is the symptoms image from the conditions folder", strpos( $TILE_UC['img'], $TILE_CDN . 'gi-health/conditions/symptoms-uc.webp?v=' ) === 0 );
+check( "tile uc: alt is the UC symptoms text", $TILE_UC['alt'] === 'Body silhouette showing common UC symptoms' );
+check( "tile uc: name equals the decoded registry title", $TILE_UC['name'] === wp_specialchars_decode( $TILE_REG['ulcerative-colitis']['title'] ) );
+check( "tile uc: name is the registry title with its abbreviation", $TILE_UC['name'] === 'Ulcerative Colitis (UC)' );
+
+check( "tile dd: picture is the symptoms image from the conditions folder", strpos( $TILE_DD['img'], $TILE_CDN . 'gi-health/conditions/symptoms-dd.webp?v=' ) === 0 );
+check( "tile dd: alt is the Diverticular Disease symptoms text", $TILE_DD['alt'] === 'Body silhouette showing common Diverticular Disease symptoms' );
+check( "tile dd: name is the short form", $TILE_DD['name'] === 'Diverticular Disease' );
+check( "tile dd: name has no Diverticulitis", strpos( $TILE_DD['name'], 'Diverticulitis' ) === false );
+check( "tile dd: name has no ampersand, encoded or decoded", strpos( $TILE_DD['name'], '&' ) === false );
+
+check( "tile ibs: name keeps the decoded registry title", $TILE_IBS['name'] === 'Irritable Bowel Syndrome (IBS)' );
+check( "tile ibs: picture is the registry photo when no override exists", strpos( $TILE_IBS['img'], $TILE_CDN . 'gi-health/ibs.webp?v=' ) === 0 );
+check( "tile ibs: alt is the registry alt", $TILE_IBS['alt'] === 'A man and his dog looking out across the water from a waterfront pier' );
+
+$TILE_AMP = vance_hub_condition_tile( array( 'slug' => 'made-up-condition', 'image' => '', 'alt' => '', 'title' => 'Diet &amp; Gut' ) );
+check( "tile: an unknown slug gets its title decoded once", $TILE_AMP['name'] === 'Diet & Gut' );
+
+check( "registry: the diverticular-disease title keeps its full name for the other pages", $TILE_REG['diverticular-disease']['title'] === 'Diverticular Disease &amp; Diverticulitis' );
+
+$TILE_JUNK = null;
+try { $TILE_JUNK = vance_hub_condition_tile( 'junk' ); } catch ( Throwable $e ) { $TILE_JUNK = 'threw: ' . $e->getMessage(); }
+check( "tile: a non-array card gives an empty tile and does not throw", $TILE_JUNK === array( 'img' => '', 'alt' => '', 'name' => '' ) );
+
+$TILE_NULL = null;
+try { $TILE_NULL = vance_hub_condition_tile( null ); } catch ( Throwable $e ) { $TILE_NULL = 'threw: ' . $e->getMessage(); }
+check( "tile: a null card gives an empty tile and does not throw", $TILE_NULL === array( 'img' => '', 'alt' => '', 'name' => '' ) );
+
+// Fallback: a theme root with only the registry photos for UC and DD. The
+// symptoms files and the Crohn's photo are absent, so the override is missing.
+$TILE_ROOT = sys_get_temp_dir() . '/vhh-hub-tiles-' . getmypid();
+@mkdir( $TILE_ROOT . '/assets/img/gi-health', 0777, true );
+file_put_contents( $TILE_ROOT . '/assets/img/gi-health/ulcerative-colitis.webp', '' );
+file_put_contents( $TILE_ROOT . '/assets/img/gi-health/diverticular-disease.webp', '' );
+register_shutdown_function( function () use ( $TILE_ROOT ) {
+	@unlink( $TILE_ROOT . '/assets/img/gi-health/ulcerative-colitis.webp' );
+	@unlink( $TILE_ROOT . '/assets/img/gi-health/diverticular-disease.webp' );
+	@rmdir( $TILE_ROOT . '/assets/img/gi-health' );
+	@rmdir( $TILE_ROOT . '/assets/img' );
+	@rmdir( $TILE_ROOT . '/assets' );
+	@rmdir( $TILE_ROOT );
+} );
+
+$GLOBALS['THEME_DIR'] = $TILE_ROOT;
+$TILE_FB_UC = vance_hub_condition_tile( $TILE_REG['ulcerative-colitis'] );
+$TILE_FB_DD = vance_hub_condition_tile( $TILE_REG['diverticular-disease'] );
+$TILE_FB_CD = vance_hub_condition_tile( $TILE_REG['crohns-disease'] );
+$GLOBALS['THEME_DIR'] = $THEME;
+
+check( "fallback uc: override missing, picture is the registry photo", strpos( $TILE_FB_UC['img'], $TILE_CDN . 'gi-health/ulcerative-colitis.webp?v=' ) === 0 );
+check( "fallback uc: the registry photo is not the symptoms picture", strpos( $TILE_FB_UC['img'], 'symptoms' ) === false );
+check( "fallback uc: alt is the registry alt for the card", $TILE_FB_UC['alt'] === 'Two women walking and talking together on a sunlit city street' );
+check( "fallback dd: picture is the registry photo for diverticular disease", strpos( $TILE_FB_DD['img'], $TILE_CDN . 'gi-health/diverticular-disease.webp?v=' ) === 0 );
+check( "fallback dd: alt is the registry alt for the card", $TILE_FB_DD['alt'] === 'A carer handing a glass of water to an older woman sitting on a sofa' );
+check( "fallback dd: name stays the short form when the photo falls back", $TILE_FB_DD['name'] === 'Diverticular Disease' );
+check( "fallback both missing: picture is empty, so the template prints no img", $TILE_FB_CD['img'] === '' );
+check( "fallback both missing: alt is empty", $TILE_FB_CD['alt'] === '' );
+check( "fallback both missing: name is still the decoded registry title", $TILE_FB_CD['name'] === $TILE_CROHN_NAME );
+
+section( '16b. Home condition tiles, rendered' );
+
+arrange();
+seed_full_home();
+$HTML  = render_home( false );
+$TILES = section_html( $HTML, 'vhub-conditions' );
+check( 'rendered: the conditions block renders without a PHP error', $RENDER_ERROR === '' && $TILES !== '' );
+check( 'rendered: the Crohn\'s tile shows the symptoms picture with its alt', preg_match( '/<img class="vhub-cond-tile__img" src="[^"]*gi-health\/conditions\/symptoms-crohns\.webp\?v=\d+" alt="Body silhouette showing common Crohn&#039;s symptoms"/', $TILES ) === 1 );
+check( 'rendered: the UC tile shows the symptoms picture with its alt', preg_match( '/<img class="vhub-cond-tile__img" src="[^"]*gi-health\/conditions\/symptoms-uc\.webp\?v=\d+" alt="Body silhouette showing common UC symptoms"/', $TILES ) === 1 );
+check( 'rendered: the diverticular tile shows the symptoms picture with its alt', preg_match( '/<img class="vhub-cond-tile__img" src="[^"]*gi-health\/conditions\/symptoms-dd\.webp\?v=\d+" alt="Body silhouette showing common Diverticular Disease symptoms"/', $TILES ) === 1 );
+check( 'rendered: exactly three tiles carry a symptoms picture', substr_count( $TILES, 'gi-health/conditions/symptoms-' ) === 3 );
+check( 'rendered: the diverticular tile name is the short form', strpos( $TILES, '<span class="vhub-cond-tile__name">Diverticular Disease</span>' ) !== false );
+check( 'rendered: no "Diverticulitis" in the conditions block', strpos( $TILES, 'Diverticulitis' ) === false );
+check( 'rendered: no "&amp;" in the conditions block', strpos( $TILES, '&amp;' ) === false );
+check( 'rendered: the Crohn\'s tile name is the typographic apostrophe form', strpos( $TILES, '<span class="vhub-cond-tile__name">' . $TILE_CROHN_NAME . '</span>' ) !== false );
+check( 'rendered: the teal list shows the other four conditions', substr_count( $TILES, 'class="vhub-cond-list__link"' ) === 4 );
+check( 'rendered: the list shows the full title for Inflammatory Bowel Disease', strpos( $TILES, '>Inflammatory Bowel Disease (IBD)</a>' ) !== false );
+check( 'rendered: the list shows the full title for Irritable Bowel Syndrome', strpos( $TILES, '>Irritable Bowel Syndrome (IBS)</a>' ) !== false );
+check( 'rendered: the list shows the full title for Microscopic Colitis', strpos( $TILES, '>Microscopic Colitis</a>' ) !== false );
+check( 'rendered: the list shows the full title for Colorectal Cancer', strpos( $TILES, '>Colorectal Cancer</a>' ) !== false );
+check( 'rendered: the list does not repeat Ulcerative Colitis from the tiles', strpos( $TILES, '>Ulcerative Colitis (UC)</a>' ) === false );
+
 /* ===================================================================== */
 echo "\n";
 if ( $FAIL ) {
