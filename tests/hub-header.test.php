@@ -58,6 +58,11 @@ function reset_state() {
 	$GLOBALS['DASH_SLUG']     = false;     // is_page( 'dashboard' )
 	$GLOBALS['DASH_TEMPLATE'] = false;     // is_page_template( 'page-dashboard.php' )
 	$GLOBALS['PAGE_LOOKUPS']  = 0;         // get_page_by_path() calls
+	$GLOBALS['PAGE_STATUS']   = array();   // slug => post_status; a page with no entry is published
+	$GLOBALS['COMMUNITY_ON']  = false;     // vance_hub_community_active()
+	$GLOBALS['PRIMARY_ASSIGNED'] = false;  // a menu is assigned to location primary-menu (the original menu)
+	$GLOBALS['PRIMARY_HTML']  = '';        // what wp_nav_menu() returns for primary-menu, before the filter
+	$GLOBALS['PRIMARY_ARGS']  = null;      // the arguments of the last wp_nav_menu( primary-menu ) call
 	if ( function_exists( 'vance_hub_header_existing_page_url' ) ) {
 		vance_hub_header_existing_page_url( '', '', true ); // empty the kept page lookups
 	}
@@ -115,11 +120,20 @@ function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $
 	$GLOBALS['ENQUEUED'][ 'script:' . $handle ] = array( 'src' => $src, 'deps' => $deps, 'in_footer' => $in_footer );
 }
 function register_nav_menu( $location, $description ) { $GLOBALS['REGISTERED_MENUS'][ $location ] = $description; }
-function has_nav_menu( $location ) { return 'vance-hub-primary' === $location && $GLOBALS['MENU_ASSIGNED']; }
+function has_nav_menu( $location ) {
+	if ( 'primary-menu' === $location ) { return (bool) $GLOBALS['PRIMARY_ASSIGNED']; }
+	return 'vance-hub-primary' === $location && $GLOBALS['MENU_ASSIGNED'];
+}
 function wp_nav_menu( $args = array() ) {
+	if ( 'primary-menu' === ( $args['theme_location'] ?? '' ) ) {
+		$GLOBALS['PRIMARY_ARGS'] = $args;
+		// WordPress passes the item markup through wp_nav_menu_items before it prints it.
+		return vance_hub_header_menu_community( $GLOBALS['PRIMARY_HTML'], (object) $args );
+	}
 	$GLOBALS['MENU_ARGS'] = $args;
 	return $GLOBALS['MENU_HTML'];
 }
+function vance_hub_community_active() { return (bool) $GLOBALS['COMMUNITY_ON']; }
 function get_transient( $key ) { return array_key_exists( $key, $GLOBALS['TRANSIENTS'] ) ? $GLOBALS['TRANSIENTS'][ $key ] : false; }
 function set_transient( $key, $value, $expiration = 0 ) { $GLOBALS['TRANSIENTS'][ $key ] = $value; return true; }
 class WP_User_Query {
@@ -141,7 +155,9 @@ function is_page( $page = '' ) { return 'dashboard' === $page && $GLOBALS['DASH_
 function is_page_template( $template = '' ) { return 'page-dashboard.php' === $template && $GLOBALS['DASH_TEMPLATE']; }
 function get_page_by_path( $slug ) {
 	$GLOBALS['PAGE_LOOKUPS']++;
-	return isset( $GLOBALS['PAGES'][ $slug ] ) ? (object) array( 'ID' => 1, 'slug' => $slug ) : null;
+	if ( ! isset( $GLOBALS['PAGES'][ $slug ] ) ) { return null; }
+	$status = $GLOBALS['PAGE_STATUS'][ $slug ] ?? 'publish';
+	return (object) array( 'ID' => 1, 'slug' => $slug, 'post_status' => $status );
 }
 function get_permalink( $post ) { return $GLOBALS['PAGES'][ $post->slug ]; }
 function add_query_arg( $key, $value, $url ) {
@@ -658,7 +674,264 @@ check( 'login: both sit inside the same selector list as .site-header (before .s
 
 $WC2 = new HeaderCustomizeFake();
 vance_hub_header_customize_register( $WC2 );
-check( 'customizer: the description says submenus are not shown', strpos( $WC2->controls['vance_hub_header']['description'] ?? '', 'Submenus are not shown' ) !== false );
+check( 'customizer: the description says the original primary menu is used', strpos( $WC2->controls['vance_hub_header']['description'] ?? '', 'original primary menu' ) !== false );
+check( 'customizer: and that a short club menu shows only its top level', strpos( $WC2->controls['vance_hub_header']['description'] ?? '', 'only its top level appears' ) !== false );
+
+/* ---- 12. the original primary menu: precedence, Max Mega Menu, Community ----------- */
+section( '12. The original primary menu: precedence, Mega Menu, Community' );
+
+$CLUB_HTML  = '<ul class="vhh-nav__list"><li><a href="https://example.test/custom/">Custom link</a></li></ul>';
+$PLAIN_HTML = '<ul class="vhh-nav__list"><li class="menu-item"><a href="https://example.test/about-us/">About</a></li></ul>';
+$MEGA_HTML  = '<div id="mega-menu-wrap-primary-menu" class="mega-menu-wrap"><ul id="mega-menu-primary-menu" class="mega-menu"><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-flyout"><a class="mega-menu-link" href="https://example.test/about-us/">About</a></li></ul></div>';
+$COMM_PLAIN = '<li class="menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community"><a href="https://example.test/community/">Community</a></li>';
+$COMM_MEGA  = '<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community"><a class="mega-menu-link" href="https://example.test/community/">Community</a></li>';
+
+// Precedence: club menu, then the original primary menu, then the real pages.
+arrange();
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['MENU_ASSIGNED']    = true;
+$GLOBALS['MENU_HTML']        = $CLUB_HTML;
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
+check( 'precedence: the VanceHubClub menu beats the original primary menu', vance_hub_header_nav_html() === $CLUB_HTML );
+check( 'precedence: the original primary menu is not asked for when the club menu is assigned', $GLOBALS['PRIMARY_ARGS'] === null );
+
+arrange();
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
+check( 'precedence: with no club menu, the original primary menu is printed', vance_hub_header_nav_html() === $PLAIN_HTML );
+check( 'precedence: the original menu is asked for at location primary-menu', ( $GLOBALS['PRIMARY_ARGS']['theme_location'] ?? '' ) === 'primary-menu' );
+check( 'precedence: the original menu has no depth limit (depth 0 is the whole tree)', ( $GLOBALS['PRIMARY_ARGS']['depth'] ?? 0 ) === 0 );
+check( 'precedence: the original menu is returned, not echoed, with the header list class', ( $GLOBALS['PRIMARY_ARGS']['echo'] ?? null ) === false && ( $GLOBALS['PRIMARY_ARGS']['menu_class'] ?? '' ) === 'vhh-nav__list' );
+check( 'precedence: the original menu has no container and no fallback markup', ( $GLOBALS['PRIMARY_ARGS']['container'] ?? null ) === false && ( $GLOBALS['PRIMARY_ARGS']['fallback_cb'] ?? null ) === false );
+check( 'precedence: the fallback list is not printed beside the original menu', strpos( vance_hub_header_nav_html(), 'Conditions' ) === false );
+
+arrange();
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = '';
+check( 'precedence: an original menu that prints nothing falls back to the real pages', strpos( vance_hub_header_nav_html(), '>Conditions</a>' ) !== false );
+
+arrange();
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = " \n\t ";
+check( 'precedence: an original menu that prints only whitespace falls back to the real pages', strpos( vance_hub_header_nav_html(), '>Conditions</a>' ) !== false );
+
+arrange();
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = null;
+check( 'precedence: an original menu that returns null falls back to the real pages', strpos( vance_hub_header_nav_html(), '>Conditions</a>' ) !== false );
+
+arrange();
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['MENU_ASSIGNED']    = true;
+$GLOBALS['MENU_HTML']        = '';
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
+check( 'precedence: an empty club menu does not hide the original menu', vance_hub_header_nav_html() === $PLAIN_HTML );
+
+// Max Mega Menu detection.
+check( 'mega: Max Mega Menu markup is detected', vance_hub_header_nav_is_mega( $MEGA_HTML ) === true );
+check( 'mega: a plain nested list is not Mega Menu', vance_hub_header_nav_is_mega( $PLAIN_HTML ) === false );
+check( 'mega: the club menu markup is not Mega Menu', vance_hub_header_nav_is_mega( $CLUB_HTML ) === false );
+check( 'mega: the fallback list is not Mega Menu', vance_hub_header_nav_is_mega( '<ul class="vhh-nav__list"><li class="vhh-nav__item"><a class="vhh-nav__link" href="https://example.test/tools-resources/">Tools</a></li></ul>' ) === false );
+check( 'mega: an empty string is not Mega Menu', vance_hub_header_nav_is_mega( '' ) === false );
+check( 'mega: null is not Mega Menu', vance_hub_header_nav_is_mega( null ) === false );
+check( 'mega: the item class without the wrap is not enough', vance_hub_header_nav_is_mega( '<li class="mega-menu-item">x</li>' ) === false );
+
+// The Community item: its gates.
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'community li: appears when the hub is on and the page is published', vance_hub_header_community_li( false ) === $COMM_PLAIN );
+
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = false;
+check( 'community li: none when the Community hub is off', vance_hub_header_community_li( false ) === '' );
+check( 'community li: none in Mega Menu form when the Community hub is off', vance_hub_header_community_li( true ) === '' );
+
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['PAGE_STATUS']  = array( 'community' => 'draft' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'community li: none when the community page is a draft', vance_hub_header_community_li( false ) === '' );
+
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['PAGE_STATUS']  = array( 'community' => 'private' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'community li: none when the community page is private', vance_hub_header_community_li( false ) === '' );
+
+arrange();
+$GLOBALS['PAGES']        = all_pages();
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'community li: none when there is no community page at all', vance_hub_header_community_li( false ) === '' );
+
+// Plain and Mega Menu classes.
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'classes: the plain item uses the menu-item classes', vance_hub_header_community_li( false ) === $COMM_PLAIN );
+check( 'classes: the Mega Menu item uses the plugin top-level classes and mega-menu-link', vance_hub_header_community_li( true ) === $COMM_MEGA );
+
+// Current marking.
+arrange( array(), array(), array(), '/community/' );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'current: on the community page the plain item is marked current', vance_hub_header_community_li( false ) === '<li class="menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community current-menu-item"><a href="https://example.test/community/" aria-current="page">Community</a></li>' );
+check( 'current: on the community page the Mega Menu item is marked current', vance_hub_header_community_li( true ) === '<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community mega-current-menu-item"><a class="mega-menu-link" href="https://example.test/community/" aria-current="page">Community</a></li>' );
+
+arrange( array(), array(), array(), '/community/thread-1/' );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'current: a page below Community marks it, as a page below Conditions does', strpos( vance_hub_header_community_li( false ), 'aria-current="page"' ) !== false );
+
+arrange( array(), array(), array(), '/community-guidelines/' );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'current: a path that only starts with the same letters is not current', strpos( vance_hub_header_community_li( false ), 'current' ) === false );
+
+arrange( array(), array(), array(), '/about-us/' );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'current: an unrelated page marks nothing', strpos( vance_hub_header_community_li( false ), 'current' ) === false );
+
+// Escaping.
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+$GLOBALS['I18N']         = array( 'Community' => '<b>Forum</b>' );
+$LI = vance_hub_header_community_li( false );
+check( 'escape: a label with markup is escaped, not printed', strpos( $LI, '<b>' ) === false && strpos( $LI, '>&lt;b&gt;Forum&lt;/b&gt;</a>' ) !== false );
+
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => '"><script>alert(1)</script>' );
+$GLOBALS['COMMUNITY_ON'] = true;
+$LI = vance_hub_header_community_li( false );
+check( 'escape: a page address with markup cannot break out of its href', strpos( $LI, '<script>' ) === false && strpos( $LI, 'href="&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"' ) !== false );
+
+arrange();
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'javascript:alert(1)' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'escape: a javascript: page address leaves an empty href and no scheme', vance_hub_header_community_li( false ) === '<li class="menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community"><a href="">Community</a></li>' );
+
+// The filter: gates and placement.
+check( 'filter: registered on wp_nav_menu_items at priority 10', isset( $GLOBALS['HOOKS']['wp_nav_menu_items'][10] ) && in_array( 'vance_hub_header_menu_community', $GLOBALS['HOOKS']['wp_nav_menu_items'][10], true ) );
+check( 'filter: declared with two accepted arguments (items and args)', strpos( file_get_contents( $THEME . '/inc/hub-header.php' ), "add_filter( 'wp_nav_menu_items', 'vance_hub_header_menu_community', 10, 2 );" ) !== false );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON']     = true;
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
+check( 'filter: with the header on, Community is added last to the original menu', vance_hub_header_nav_html() === $PLAIN_HTML . $COMM_PLAIN );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON']     = true;
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $MEGA_HTML;
+$SIGNIN_MEGA = '<li class="mega-menu-item mega-menu-item-type-custom mega-menu-item-object-custom mega-align-bottom-left mega-menu-flyout vhh-nav__phone-only"><a class="mega-menu-link" href="' . home_url( '/login/' ) . '">Sign in</a></li>';
+$GLOBALS['LOGGED_IN'] = false;
+check( 'filter: with Max Mega Menu, a visitor gets Community then the phone-only Sign in item', vance_hub_header_nav_html() === $MEGA_HTML . $COMM_MEGA . $SIGNIN_MEGA );
+$GLOBALS['LOGGED_IN'] = true;
+check( 'filter: with Max Mega Menu, a member gets Community and no Sign in item', vance_hub_header_nav_html() === $MEGA_HTML . $COMM_MEGA );
+$GLOBALS['LOGGED_IN'] = false;
+$GLOBALS['PRIMARY_HTML'] = $PLAIN_HTML;
+check( 'filter: a plain (non-mega) menu never gets the Sign in item', strpos( vance_hub_header_nav_html(), 'vhh-nav__phone-only' ) === false );
+
+// An editor already put Community in the primary menu: no second one.
+$GLOBALS['PRIMARY_HTML'] = $MEGA_HTML . '<li class="mega-menu-item"><a class="mega-menu-link" href="https://example.test/community/">Community</a></li>';
+$NAV_DUP = vance_hub_header_nav_html();
+check( 'filter: a menu that already links to /community/ gets no second Community item', substr_count( $NAV_DUP, 'href="https://example.test/community/"' ) === 1 && strpos( $NAV_DUP, 'vhh-nav__community' ) === false );
+check( 'filter: and still gets the Sign in item', strpos( $NAV_DUP, 'vhh-nav__phone-only' ) !== false );
+
+// A location with an empty menu: nothing is added, so the fallback list is used.
+check( 'filter: an empty item list is returned unchanged', vance_hub_header_menu_community( '', (object) array( 'theme_location' => 'primary-menu' ) ) === '' && vance_hub_header_menu_community( "  \n", (object) array( 'theme_location' => 'primary-menu' ) ) === "  \n" );
+$GLOBALS['LOGGED_IN'] = false;
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON']     = true;
+$GLOBALS['MENU_ASSIGNED']    = true;
+$GLOBALS['MENU_HTML']        = $CLUB_HTML;
+check( 'filter: the VanceHubClub menu never gets Community added', vance_hub_header_nav_html() === $CLUB_HTML );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'gate: the footer menu location is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'footer-menu' ) ) === $PLAIN_HTML );
+check( 'gate: the VanceHubClub menu location is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'vance-hub-primary' ) ) === $PLAIN_HTML );
+check( 'gate: an args object with no theme location is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array() ) === $PLAIN_HTML );
+check( 'gate: arguments given as an array are returned unchanged', vance_hub_header_menu_community( $PLAIN_HTML, array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
+check( 'gate: null arguments are returned unchanged', vance_hub_header_menu_community( $PLAIN_HTML, null ) === $PLAIN_HTML );
+check( 'gate: the original menu gets Community when the header is on', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML . $COMM_PLAIN );
+
+arrange( array( 'vance_hub_header' => false ) );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'gate: the classic header (hub header off) leaves the original menu unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = false;
+check( 'gate: with the Community hub off the original menu is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['PAGE_STATUS']  = array( 'community' => 'draft' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'gate: with the community page a draft the original menu is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
+
+arrange( array( 'vance_hub_header' => true ), array(), array(), '/' );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+$GLOBALS['DASH_SLUG']    = true;
+check( 'gate: on the member dashboard the original menu is unchanged (the classic header shows there)', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
+
+arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+$GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON'] = true;
+check( 'gate: an administrator preview turns the Community item on in the original menu', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML . $COMM_PLAIN );
+
+// The template: the header class and the phone menu button.
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
+$GLOBALS['COMMUNITY_ON']     = true;
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $MEGA_HTML;
+$HTML = render_part();
+check( 'template: with Max Mega Menu the header carries vhh-header--mega', strpos( $HTML, '<header class="vhh-header vhh-header--mega" id="vhh-header" data-vhh-header>' ) !== false );
+check( 'template: with Max Mega Menu no menu button is printed', strpos( $HTML, 'class="vhh-menu-btn"' ) === false );
+check( 'template: with Max Mega Menu the menu button bars are not printed either', strpos( $HTML, 'vhh-menu-btn__bars' ) === false );
+check( 'template: with Max Mega Menu nothing points at a menu button (no aria-controls)', strpos( $HTML, 'aria-controls="vhh-nav"' ) === false );
+check( 'template: with Max Mega Menu the nav keeps its id', strpos( $HTML, '<nav class="vhh-nav" id="vhh-nav"' ) !== false );
+check( 'template: with Max Mega Menu the Mega Menu items and Community sit inside the nav', ( $n = strpos( $HTML, '<nav class="vhh-nav" id="vhh-nav"' ) ) !== false && ( $m = strpos( $HTML, $MEGA_HTML . $COMM_MEGA ) ) !== false && $n < $m );
+check( 'header.php: with Max Mega Menu the page header carries the mega class too', strpos( render_header_php(), 'class="vhh-header vhh-header--mega"' ) !== false );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']         = all_pages();
+$GLOBALS['MENU_ASSIGNED'] = true;
+$GLOBALS['MENU_HTML']     = $CLUB_HTML;
+$HTML = render_part();
+check( 'template: a VanceHubClub menu leaves the header plain', strpos( $HTML, '<header class="vhh-header" id="vhh-header" data-vhh-header>' ) !== false );
+check( 'template: a VanceHubClub menu keeps the phone menu button', strpos( $HTML, '<button type="button" class="vhh-menu-btn" aria-expanded="false" aria-controls="vhh-nav" aria-label="Menu">' ) !== false );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES']            = all_pages();
+$GLOBALS['PRIMARY_ASSIGNED'] = true;
+$GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
+$HTML = render_part();
+check( 'template: an original menu without Max Mega Menu keeps the phone menu button', strpos( $HTML, '<header class="vhh-header" id="vhh-header" data-vhh-header>' ) !== false && strpos( $HTML, 'class="vhh-menu-btn"' ) !== false );
+
+arrange( array( 'vance_hub_header' => true ) );
+$GLOBALS['PAGES'] = all_pages();
+$HTML = render_part();
+check( 'template: the fallback list keeps the phone menu button', strpos( $HTML, '<header class="vhh-header" id="vhh-header" data-vhh-header>' ) !== false && strpos( $HTML, 'class="vhh-menu-btn"' ) !== false );
 
 /* ---- result ------------------------------------------------------------------------ */
 

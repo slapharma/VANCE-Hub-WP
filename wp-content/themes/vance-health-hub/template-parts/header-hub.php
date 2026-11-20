@@ -24,6 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $vhh_logged_in = is_user_logged_in();
 $vhh_nav       = vance_hub_header_nav_html();
+$vhh_mega      = vance_hub_header_nav_is_mega( $vhh_nav );
 $vhh_search    = is_search();
 $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>';
 ?>
@@ -31,7 +32,7 @@ $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
          closed from the first frame and the menu button shows only when it can
          work. Without JavaScript the nav stays visible and the button is hidden. */ ?>
 <script>document.documentElement.classList.add('vhh-js');</script>
-<header class="vhh-header" id="vhh-header" data-vhh-header>
+<header class="vhh-header<?php echo $vhh_mega ? ' vhh-header--mega' : ''; ?>" id="vhh-header" data-vhh-header>
 	<div class="vhh-header__inner">
 
 		<a class="vhh-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -78,9 +79,13 @@ $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 			</div>
 		</div>
 
+		<?php /* With the original menu (Max Mega Menu) the plugin's own hamburger and
+		         drawer are the phone menu, so this button is not printed. */ ?>
+		<?php if ( ! $vhh_mega ) : ?>
 		<button type="button" class="vhh-menu-btn" aria-expanded="false" aria-controls="vhh-nav" aria-label="<?php esc_attr_e( 'Menu', 'vance-health-hub' ); ?>">
 			<span class="vhh-menu-btn__bars" aria-hidden="true"><span></span><span></span><span></span></span>
 		</button>
+		<?php endif; ?>
 
 	</div>
 </header>
