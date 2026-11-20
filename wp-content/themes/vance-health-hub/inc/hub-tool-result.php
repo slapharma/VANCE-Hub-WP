@@ -332,7 +332,7 @@ function vance_hub_tool_result_html( $d ) {
  */
 function vance_hub_tool_result_active() {
 	$query = vance_hub_preview_query();
-	return vance_hub_tool_result_resolve( vance_get_theme_mod( 'vance_hub_tool_result', false ), $query, '' !== $query );
+	return vance_hub_tool_result_resolve( vance_hub_switch_on( 'vance_hub_tool_result' ), $query, '' !== $query );
 }
 
 /**
@@ -473,7 +473,7 @@ add_action( 'wp_enqueue_scripts', 'vance_hub_tool_result_enqueue', 20 );
  */
 function vance_hub_tool_result_customize_register( $wp_customize ) {
 	$wp_customize->add_setting( 'vance_hub_tool_result', array(
-		'default'           => false,
+		'default'           => vance_hub_switch_default( 'vance_hub_tool_result' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_tool_result', array(

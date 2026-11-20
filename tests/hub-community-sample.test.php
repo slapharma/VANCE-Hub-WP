@@ -471,7 +471,8 @@ function as_member_post( array $fields ) {
 	$_POST = array( 'nonce' => 'nonce-vance_community_nonce' ) + array_map( 'strval', $fields );
 }
 arrange( staff_caps(), 1 );
-$GLOBALS['WP']['mods'] = array( 'vance_hub_community' => true );
+// Community on needs the Home layout master switch on as well (PR #42).
+$GLOBALS['WP']['mods'] = array( 'vance_home_layout' => 'hub', 'vance_hub_community' => true );
 vance_community_sample_load( $NOW );
 $SQ  = sample_questions()[0];
 $SR  = vance_community_replies( $SQ->ID )[0];

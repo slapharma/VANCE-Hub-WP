@@ -77,7 +77,7 @@ function admin_caps() {
 	return array( 'vance_moderate_community' => true, 'edit_theme_options' => true, 'publish_pages' => true, 'manage_options' => true );
 }
 function on_mods() {
-	return array( 'vance_hub_community' => true );
+	return array( 'vance_home_layout' => 'hub', 'vance_hub_community' => true );
 }
 function cs_page( $slug, $status = 'publish' ) {
 	return wp_insert_post( array( 'post_type' => 'page', 'post_status' => $status, 'post_name' => $slug, 'post_title' => $slug ) );
@@ -175,10 +175,29 @@ check( 'writes: a member with the switch on is accepted', true === vance_communi
 arrange( array(), admin_caps(), 1 );
 check( 'writes: an administrator may write while the switch is off (the preview works end to end)', true === vance_community_writes_open() );
 
+// The master switch (Home layout) over the community part.
+arrange( array( 'vance_hub_community' => true ), array(), 5 );
+check( 'master: classic with the community box ticked refuses a member write', false === vance_community_writes_open() );
+arrange( array( 'vance_hub_community' => true ), admin_caps(), 1 );
+check( 'master: classic still lets an administrator write (edit_theme_options)', true === vance_community_writes_open() );
+arrange( array( 'vance_home_layout' => 'hub' ), array(), 5 );
+check( 'master: hub with the community box never saved accepts a member write (default on)', true === vance_community_writes_open() );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_community' => false ), array(), 5 );
+check( 'master: hub with the community box saved off refuses a member write', false === vance_community_writes_open() );
+
+arrange( array( 'vance_hub_community' => true ) );
+check( 'master: classic with the community box ticked is not live for a visitor', false === vance_hub_community_active() );
+arrange( array( 'vance_hub_community' => true ), admin_caps(), 1 );
+$_GET = array( 'vhh_layout' => 'hub' );
+check( 'master: classic with an admin ?vhh_layout=hub preview is live', true === vance_hub_community_active() );
+$_GET = array();
+arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master: hub with the community box never saved is live (default on)', true === vance_hub_community_active() );
+
 arrange();
 $WC = new CommunityCustomizeFake();
 vance_hub_community_customize_register( $WC );
-check( 'customizer: the setting vance_hub_community defaults to false', isset( $WC->settings['vance_hub_community'] ) && false === $WC->settings['vance_hub_community']['default'] );
+check( 'customizer: the setting vance_hub_community defaults to true', isset( $WC->settings['vance_hub_community'] ) && true === $WC->settings['vance_hub_community']['default'] );
 check( 'customizer: the setting is sanitised as a checkbox', isset( $WC->settings['vance_hub_community'] ) && 'vance_hub_sanitize_checkbox' === $WC->settings['vance_hub_community']['sanitize_callback'] );
 check( 'customizer: the control is a checkbox in section vance_home_layout', isset( $WC->controls['vance_hub_community'] ) && 'checkbox' === $WC->controls['vance_hub_community']['type'] && 'vance_home_layout' === $WC->controls['vance_hub_community']['section'] );
 check( 'customizer: the control is labelled Community hub', isset( $WC->controls['vance_hub_community'] ) && 'Community hub' === $WC->controls['vance_hub_community']['label'] );
@@ -307,6 +326,15 @@ check( 'page: switch off: no page is made', null === get_page_by_path( 'communit
 arrange( on_mods(), array(), 5 );
 vance_community_maybe_create_page();
 check( 'page: a member who cannot edit the theme does not make the page', null === get_page_by_path( 'community' ) );
+
+// The master switch (Home layout) over the community page.
+arrange( array( 'vance_hub_community' => true ), admin_caps(), 1 );
+vance_community_maybe_create_page();
+check( 'master: classic with the community box ticked makes no page, even for an administrator', null === get_page_by_path( 'community' ) );
+
+arrange( array( 'vance_home_layout' => 'hub' ), admin_caps(), 1 );
+vance_community_maybe_create_page();
+check( 'master: hub with the community box never saved makes the page (default on)', is_object( get_page_by_path( 'community' ) ) );
 
 /* ---- 3. types, capability, seeded spaces ------------------------------------ */
 section( '3. Types, capability and the seeded spaces' );

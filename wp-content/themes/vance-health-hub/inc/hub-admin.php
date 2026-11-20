@@ -24,41 +24,51 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The on/off switches, in display order.
  *
- * Each default MUST equal the default in the Customizer registration
- * (hub-layout.php, hub-article.php, hub-dashboard-features.php,
- * hub-tool-result.php, hub-header.php, hub-community.php). A switch that
+ * Each default comes from vance_hub_switch_default() (inc/hub-layout.php), the
+ * same function the Customizer registrations and the gates read. A switch that
  * was never saved shows its default here, as it does on the site.
  *
  * @return array[] Rows of mod name, default and label.
  */
 function vance_hub_admin_switches() {
-	return array(
-		array( 'mod' => 'vance_hub_show_promo', 'default' => true, 'label' => __( 'Home page: promo block', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_show_sections', 'default' => true, 'label' => __( 'Home page: "Latest by section"', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_show_more', 'default' => true, 'label' => __( 'Home page: "More to read"', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_articles', 'default' => false, 'label' => __( 'Article pages: VanceHubClub layout', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_show_dashboard', 'default' => false, 'label' => __( 'Member dashboard: VanceHubClub home', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_dash_member_no', 'default' => false, 'label' => __( 'Member dashboard: member number', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_dash_chart', 'default' => false, 'label' => __( 'Member dashboard: results chart', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_dash_checkin', 'default' => false, 'label' => __( 'Member dashboard: weekly check-in', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_dashboard_tabs', 'default' => false, 'label' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_tool_result', 'default' => false, 'label' => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_header', 'default' => false, 'label' => __( 'Site header: VanceHubClub header', 'vance-health-hub' ) ),
-		array( 'mod' => 'vance_hub_community', 'default' => false, 'label' => __( 'Community hub', 'vance-health-hub' ) ),
+	$rows = array(
+		'vance_hub_show_promo'     => __( 'Home page: promo block', 'vance-health-hub' ),
+		'vance_hub_show_sections'  => __( 'Home page: "Latest by section"', 'vance-health-hub' ),
+		'vance_hub_show_more'      => __( 'Home page: "More to read"', 'vance-health-hub' ),
+		'vance_hub_articles'       => __( 'Article pages: VanceHubClub layout', 'vance-health-hub' ),
+		'vance_hub_show_dashboard' => __( 'Member dashboard: VanceHubClub home', 'vance-health-hub' ),
+		'vance_hub_dash_member_no' => __( 'Member dashboard: member number', 'vance-health-hub' ),
+		'vance_hub_dash_chart'     => __( 'Member dashboard: results chart', 'vance-health-hub' ),
+		'vance_hub_dash_checkin'   => __( 'Member dashboard: weekly check-in', 'vance-health-hub' ),
+		'vance_hub_dashboard_tabs' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
+		'vance_hub_tool_result'    => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ),
+		'vance_hub_header'         => __( 'Site header: VanceHubClub header', 'vance-health-hub' ),
+		'vance_hub_community'      => __( 'Community hub', 'vance-health-hub' ),
 	);
+	$out = array();
+	foreach ( $rows as $mod => $label ) {
+		$out[] = array( 'mod' => $mod, 'default' => vance_hub_switch_default( $mod ), 'label' => $label );
+	}
+	return $out;
 }
 
 /**
- * The saved state of each switch.
+ * The state of each switch.
  *
- * @return array[] Rows of label and on (bool).
+ * 'on' is the part's own saved switch. 'live' is what the site does: the part
+ * is live only when the Home layout master switch is on as well.
+ *
+ * @return array[] Rows of label, on (bool) and live (bool).
  */
 function vance_hub_admin_status() {
-	$rows = array();
+	$master = vance_hub_master_on();
+	$rows   = array();
 	foreach ( vance_hub_admin_switches() as $switch ) {
+		$on     = (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $switch['mod'], $switch['default'] ) );
 		$rows[] = array(
 			'label' => $switch['label'],
-			'on'    => (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $switch['mod'], $switch['default'] ) ),
+			'on'    => $on,
+			'live'  => $master && $on,
 		);
 	}
 	return $rows;
@@ -144,8 +154,8 @@ function vance_hub_admin_render() {
 	<div class="wrap">
 		<h1><?php esc_html_e( 'VanceHubClub', 'vance-health-hub' ); ?></h1>
 		<p>
-			<?php esc_html_e( 'Site layout now:', 'vance-health-hub' ); ?>
-			<strong><?php echo esc_html( $is_hub ? __( 'VanceHubClub', 'vance-health-hub' ) : __( 'VanceHealthHub (classic)', 'vance-health-hub' ) ); ?></strong>
+			<?php esc_html_e( 'Master switch (Home layout):', 'vance-health-hub' ); ?>
+			<strong><?php echo esc_html( $is_hub ? __( 'VanceHubClub: on', 'vance-health-hub' ) : __( 'VanceHealthHub (classic): every VanceHubClub part is off', 'vance-health-hub' ) ); ?></strong>
 		</p>
 		<p>
 			<a class="button button-primary" href="<?php echo esc_url( vance_hub_admin_customizer_url() ); ?>"><?php esc_html_e( 'Change VanceHubClub settings', 'vance-health-hub' ); ?></a>
@@ -157,7 +167,15 @@ function vance_hub_admin_render() {
 			<?php foreach ( vance_hub_admin_status() as $row ) : ?>
 				<tr>
 					<td><?php echo esc_html( $row['label'] ); ?></td>
-					<td><strong><?php echo esc_html( $row['on'] ? __( 'On', 'vance-health-hub' ) : __( 'Off', 'vance-health-hub' ) ); ?></strong></td>
+					<td><strong><?php
+						if ( $row['live'] ) {
+							esc_html_e( 'On', 'vance-health-hub' );
+						} elseif ( $row['on'] ) {
+							esc_html_e( 'Off (master switch is off)', 'vance-health-hub' );
+						} else {
+							esc_html_e( 'Off', 'vance-health-hub' );
+						}
+					?></strong></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>

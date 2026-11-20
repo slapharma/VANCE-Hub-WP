@@ -303,19 +303,19 @@ section( '2. The decision from the request' );
 
 arrange();
 check( 'active: nothing saved, no query is classic', vance_hub_header_active() === false );
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 check( 'active: switch on is the hub header for a visitor', vance_hub_header_active() === true );
 arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 check( 'active: an administrator previews the hub header with the switch off', vance_hub_header_active() === true );
-arrange( array( 'vance_hub_header' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
 check( 'active: ?vhh_layout=classic forces the classic header for an administrator', vance_hub_header_active() === false );
 arrange( array( 'vance_hub_header' => false ), array(), array( 'vhh_layout' => 'hub' ) );
 check( 'active: a visitor with ?vhh_layout=hub still gets the classic header', vance_hub_header_active() === false );
-arrange( array( 'vance_hub_header' => true ), array(), array( 'vhh_layout' => 'classic' ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array(), array( 'vhh_layout' => 'classic' ) );
 check( 'active: a visitor with ?vhh_layout=classic still gets the hub header', vance_hub_header_active() === true );
 arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'HUB' ) );
 check( 'active: the preview value is read through sanitize_key (upper case works)', vance_hub_header_active() === true );
-arrange( array( 'vance_hub_header' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => array( 'classic' ) ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => array( 'classic' ) ) );
 $err = '';
 try { $res = vance_hub_header_active(); } catch ( Throwable $e ) { $res = null; $err = $e->getMessage(); }
 check( 'active: ?vhh_layout[]= does not throw (' . $err . ') and the switch decides', $res === true );
@@ -323,6 +323,16 @@ arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => tr
 check( 'active: an unknown preview value falls through to the switch', vance_hub_header_active() === false );
 arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => true ), array() );
 check( 'active: an administrator with no query gets the saved switch', vance_hub_header_active() === false );
+
+// The master switch (Home layout) over the header part.
+arrange( array( 'vance_hub_header' => true ) );
+check( 'master: classic with the header box ticked is off for a visitor', vance_hub_header_active() === false );
+arrange( array( 'vance_hub_header' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+check( 'master: classic with an admin ?vhh_layout=hub preview is on', vance_hub_header_active() === true );
+arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master: hub with the header box never saved is on (default on)', vance_hub_header_active() === true );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => false ) );
+check( 'master: hub with the header box saved off is off', vance_hub_header_active() === false );
 
 /* ---- 3. the hooks ------------------------------------------------------------ */
 section( '3. Hooks: menu location, assets, body class, Customizer' );
@@ -338,7 +348,7 @@ check( 'hooks: assets are enqueued on wp_enqueue_scripts', isset( $GLOBALS['HOOK
 arrange();
 vance_hub_header_enqueue_assets();
 check( 'assets: nothing is enqueued while the header is off', empty( $GLOBALS['ENQUEUED'] ) );
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 vance_hub_header_enqueue_assets();
 check( 'assets: the stylesheet is enqueued when the header is on', isset( $GLOBALS['ENQUEUED']['style:vance-hub-header'] ) );
 check( 'assets: the stylesheet depends on vance-main-style', ( $GLOBALS['ENQUEUED']['style:vance-hub-header']['deps'] ?? array() ) === array( 'vance-main-style' ) );
@@ -351,7 +361,7 @@ check( 'assets: an administrator preview enqueues them too', isset( $GLOBALS['EN
 check( 'hooks: the body class filter is registered', isset( $GLOBALS['HOOKS']['body_class'][10] ) && in_array( 'vance_hub_header_body_class', $GLOBALS['HOOKS']['body_class'][10], true ) );
 arrange();
 check( 'body class: no vhub-header while off', vance_hub_header_body_class( array( 'home' ) ) === array( 'home' ) );
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 check( 'body class: vhub-header is added when on, and the other classes stay', vance_hub_header_body_class( array( 'home' ) ) === array( 'home', 'vhub-header' ) );
 
 class HeaderCustomizeFake {
@@ -365,7 +375,7 @@ class HeaderCustomizeFake {
 $WC = new HeaderCustomizeFake();
 vance_hub_header_customize_register( $WC );
 check( 'customizer: the setting vance_hub_header is registered', isset( $WC->settings['vance_hub_header'] ) );
-check( 'customizer: the default is false', ( $WC->settings['vance_hub_header']['default'] ?? null ) === false );
+check( 'customizer: the default is true (the master switch decides whether it shows)', ( $WC->settings['vance_hub_header']['default'] ?? null ) === true );
 check( 'customizer: the sanitize callback is vance_hub_sanitize_checkbox', ( $WC->settings['vance_hub_header']['sanitize_callback'] ?? '' ) === 'vance_hub_sanitize_checkbox' );
 check( 'customizer: the control is a checkbox in section vance_home_layout', ( $WC->controls['vance_hub_header']['type'] ?? '' ) === 'checkbox' && ( $WC->controls['vance_hub_header']['section'] ?? '' ) === 'vance_home_layout' );
 check( 'customizer: the label is "Site header: use the VanceHubClub header"', ( $WC->controls['vance_hub_header']['label'] ?? '' ) === 'Site header: use the VanceHubClub header' );
@@ -529,7 +539,7 @@ check( 'css: the 44px touch target is set on the button and the menu button', su
 /* ---- 7. header.php ------------------------------------------------------------- */
 section( '7. header.php: hub header replaces the classic one, and only then' );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES'] = all_pages();
 $PAGE = render_header_php();
 check( 'header.php (on): the hub header is printed', strpos( $PAGE, 'class="vhh-header"' ) !== false );
@@ -550,7 +560,7 @@ arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => tr
 $PAGE = render_header_php();
 check( 'header.php (preview): an administrator with ?vhh_layout=hub sees the hub header', strpos( $PAGE, 'class="vhh-header"' ) !== false && strpos( $PAGE, 'class="site-header"' ) === false );
 
-arrange( array( 'vance_hub_header' => true ), array(), array( 'vhh_layout' => 'classic' ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array(), array( 'vhh_layout' => 'classic' ) );
 $PAGE = render_header_php();
 check( 'header.php: a visitor cannot force the classic header off the hub header', strpos( $PAGE, 'class="vhh-header"' ) !== false );
 
@@ -589,7 +599,7 @@ check( 'once: the page has one <header> and one <main>', count_of( $HOME, '<head
 check( 'once: the home content itself still renders after the bar', strpos( $HOME, 'id="vhub-hero-title"' ) !== false );
 
 // Counts, hub header OFF (classic header), hub home: the home prints it, inside <main>.
-arrange( array( 'vance_home_layout' => 'hub' ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => false ) );
 $GLOBALS['IS_FRONT']    = true;
 $GLOBALS['USERS_TOTAL'] = 1234;
 $GLOBALS['USERS_WEEK']  = 17;
@@ -614,7 +624,7 @@ $HOME = render_home();
 check( 'data rule: no members and no deadline prints no bar', count_of( $HOME, $BAR ) === 0 && strpos( $HOME, 'vhub-bar' ) === false );
 
 // Not the home page: the header prints the bar on every page.
-arrange( array( 'vance_hub_header' => true ), array(), array(), '/knowledgebase/' );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array(), array(), '/knowledgebase/' );
 $GLOBALS['USERS_TOTAL'] = 250;
 $GLOBALS['USERS_WEEK']  = 0;
 $GLOBALS['PAGES']       = all_pages();
@@ -625,7 +635,7 @@ check( 'every page: no "joined this week" text when the week figure is zero', st
 $GLOBALS['LOGGED_IN'] = true;
 $PAGE = render_header_php();
 check( 'every page: a member sees Go to My Hub in the bar and My Hub in the header', strpos( $PAGE, 'Go to My Hub' ) !== false && strpos( $PAGE, '>My Hub<' ) !== false );
-arrange( array( 'vance_hub_header' => true ), array(), array(), '/knowledgebase/' );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array(), array(), '/knowledgebase/' );
 $GLOBALS['USERS_TOTAL'] = 0;
 check( 'every page: with nothing real to show the header prints no bar', count_of( render_header_php(), 'vhub-bar' ) === 0 );
 arrange( array(), array(), array(), '/knowledgebase/' );
@@ -635,19 +645,19 @@ check( 'every page: with the switch off the header prints no bar', count_of( ren
 /* ---- 10. the dashboard keeps the classic header ------------------------------------- */
 section( '10. The member dashboard keeps the classic header' );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['DASH_SLUG'] = true;
 check( 'dashboard: matched by slug, the hub header is off even with the switch on', vance_hub_header_on_dashboard() === true && vance_hub_header_active() === false );
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['DASH_TEMPLATE'] = true;
 check( 'dashboard: matched by page template, the hub header is off', vance_hub_header_on_dashboard() === true && vance_hub_header_active() === false );
 arrange( array( 'vance_hub_header' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 $GLOBALS['DASH_SLUG'] = true;
 check( 'dashboard: an administrator preview does not turn it on either', vance_hub_header_active() === false );
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 check( 'dashboard: on any other page the switch still decides', vance_hub_header_on_dashboard() === false && vance_hub_header_active() === true );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['DASH_SLUG'] = true;
 $PAGE = render_header_php();
 check( 'dashboard: header.php prints the classic header (which page-dashboard.php hides)', strpos( $PAGE, 'class="site-header"' ) !== false );
@@ -840,14 +850,14 @@ check( 'escape: a javascript: page address leaves an empty href and no scheme', 
 check( 'filter: registered on wp_nav_menu_items at priority 10', isset( $GLOBALS['HOOKS']['wp_nav_menu_items'][10] ) && in_array( 'vance_hub_header_menu_community', $GLOBALS['HOOKS']['wp_nav_menu_items'][10], true ) );
 check( 'filter: declared with two accepted arguments (items and args)', strpos( file_get_contents( $THEME . '/inc/hub-header.php' ), "add_filter( 'wp_nav_menu_items', 'vance_hub_header_menu_community', 10, 2 );" ) !== false );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON']     = true;
 $GLOBALS['PRIMARY_ASSIGNED'] = true;
 $GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
 check( 'filter: with the header on, Community is added last to the original menu', vance_hub_header_nav_html() === $PLAIN_HTML . $COMM_PLAIN );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON']     = true;
 $GLOBALS['PRIMARY_ASSIGNED'] = true;
@@ -871,14 +881,14 @@ check( 'filter: and still gets the Sign in item', strpos( $NAV_DUP, 'vhh-nav__ph
 check( 'filter: an empty item list is returned unchanged', vance_hub_header_menu_community( '', (object) array( 'theme_location' => 'primary-menu' ) ) === '' && vance_hub_header_menu_community( "  \n", (object) array( 'theme_location' => 'primary-menu' ) ) === "  \n" );
 $GLOBALS['LOGGED_IN'] = false;
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON']     = true;
 $GLOBALS['MENU_ASSIGNED']    = true;
 $GLOBALS['MENU_HTML']        = $CLUB_HTML;
 check( 'filter: the VanceHubClub menu never gets Community added', vance_hub_header_nav_html() === $CLUB_HTML );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON'] = true;
 check( 'gate: the footer menu location is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'footer-menu' ) ) === $PLAIN_HTML );
@@ -893,18 +903,18 @@ $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.
 $GLOBALS['COMMUNITY_ON'] = true;
 check( 'gate: the classic header (hub header off) leaves the original menu unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON'] = false;
 check( 'gate: with the Community hub off the original menu is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['PAGE_STATUS']  = array( 'community' => 'draft' );
 $GLOBALS['COMMUNITY_ON'] = true;
 check( 'gate: with the community page a draft the original menu is unchanged', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML );
 
-arrange( array( 'vance_hub_header' => true ), array(), array(), '/' );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ), array(), array(), '/' );
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON'] = true;
 $GLOBALS['DASH_SLUG']    = true;
@@ -916,7 +926,7 @@ $GLOBALS['COMMUNITY_ON'] = true;
 check( 'gate: an administrator preview turns the Community item on in the original menu', vance_hub_header_menu_community( $PLAIN_HTML, (object) array( 'theme_location' => 'primary-menu' ) ) === $PLAIN_HTML . $COMM_PLAIN );
 
 // The template: the header class and the phone menu button.
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']            = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON']     = true;
 $GLOBALS['PRIMARY_ASSIGNED'] = true;
@@ -930,7 +940,7 @@ check( 'template: with Max Mega Menu the nav keeps its id', strpos( $HTML, '<nav
 check( 'template: with Max Mega Menu the Mega Menu items and Community sit inside the nav', ( $n = strpos( $HTML, '<nav class="vhh-nav" id="vhh-nav"' ) ) !== false && ( $m = strpos( $HTML, $MEGA_HTML . $COMM_MEGA ) ) !== false && $n < $m );
 check( 'header.php: with Max Mega Menu the page header carries the mega class too', strpos( render_header_php(), 'class="vhh-header vhh-header--mega"' ) !== false );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']         = all_pages();
 $GLOBALS['MENU_ASSIGNED'] = true;
 $GLOBALS['MENU_HTML']     = $CLUB_HTML;
@@ -938,14 +948,14 @@ $HTML = render_part();
 check( 'template: a VanceHubClub menu leaves the header plain', strpos( $HTML, '<header class="vhh-header" id="vhh-header" data-vhh-header>' ) !== false );
 check( 'template: a VanceHubClub menu keeps the phone menu button', strpos( $HTML, '<button type="button" class="vhh-menu-btn" aria-expanded="false" aria-controls="vhh-nav" aria-label="Menu">' ) !== false );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES']            = all_pages();
 $GLOBALS['PRIMARY_ASSIGNED'] = true;
 $GLOBALS['PRIMARY_HTML']     = $PLAIN_HTML;
 $HTML = render_part();
 check( 'template: an original menu without Max Mega Menu keeps the phone menu button', strpos( $HTML, '<header class="vhh-header" id="vhh-header" data-vhh-header>' ) !== false && strpos( $HTML, 'class="vhh-menu-btn"' ) !== false );
 
-arrange( array( 'vance_hub_header' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 $GLOBALS['PAGES'] = all_pages();
 $HTML = render_part();
 check( 'template: the fallback list keeps the phone menu button', strpos( $HTML, '<header class="vhh-header" id="vhh-header" data-vhh-header>' ) !== false && strpos( $HTML, 'class="vhh-menu-btn"' ) !== false );

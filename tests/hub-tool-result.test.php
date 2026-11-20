@@ -171,23 +171,33 @@ check( 'resolve: the query is case-insensitive for a previewer', true === vance_
 
 arrange();
 check( 'active: nothing saved, no query: off', false === vance_hub_tool_result_active() );
-arrange( array( 'vance_hub_tool_result' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_tool_result' => true ) );
 check( 'active: saved on: on for a visitor', true === vance_hub_tool_result_active() );
 arrange( array(), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 check( 'active: ?vhh_layout=hub by an administrator: on', true === vance_hub_tool_result_active() );
 arrange( array(), array(), array( 'vhh_layout' => 'hub' ) );
 check( 'active: ?vhh_layout=hub by a visitor is not read: off', false === vance_hub_tool_result_active() );
-arrange( array( 'vance_hub_tool_result' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_tool_result' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
 check( 'active: ?vhh_layout=classic by an administrator forces it off', false === vance_hub_tool_result_active() );
 arrange( array(), array( 'edit_theme_options' => true ), array( 'vhh_layout' => array( 'hub' ) ) );
 check( 'active: ?vhh_layout[]=hub (an array) does not throw and is ignored', false === vance_hub_tool_result_active() );
 arrange( array(), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub"><script>' ) );
 check( 'active: a hostile query value is ignored', false === vance_hub_tool_result_active() );
 
+// The master switch (Home layout) over the survey result page.
+arrange( array( 'vance_hub_tool_result' => true ) );
+check( 'master: classic with the result box ticked is off for a visitor', false === vance_hub_tool_result_active() );
+arrange( array( 'vance_hub_tool_result' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+check( 'master: classic with an admin ?vhh_layout=hub preview is on', true === vance_hub_tool_result_active() );
+arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master: hub with the result box never saved is on (default on)', true === vance_hub_tool_result_active() );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_tool_result' => false ) );
+check( 'master: hub with the result box saved off is off', false === vance_hub_tool_result_active() );
+
 /* ---- 2. survey page, hooks, assets, Customizer ----------------------------- */
 section( '2. Survey page, hooks, assets, Customizer' );
 
-arrange( array( 'vance_hub_tool_result' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_tool_result' => true ) );
 $GLOBALS['IS_SURVEY'] = false;
 vance_hub_tool_result_enqueue();
 check( 'enqueue: on but not the survey page: nothing enqueued', array() === $GLOBALS['ENQUEUED'] );
@@ -197,7 +207,7 @@ $GLOBALS['IS_SURVEY'] = true;
 vance_hub_tool_result_enqueue();
 check( 'enqueue: the survey page with the switch off: nothing enqueued', array() === $GLOBALS['ENQUEUED'] );
 
-arrange( array( 'vance_hub_tool_result' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_tool_result' => true ) );
 $GLOBALS['IS_SURVEY'] = true;
 vance_hub_tool_result_enqueue();
 $handles = array_column( $GLOBALS['ENQUEUED'], 1 );
@@ -211,7 +221,7 @@ check( 'hooks: customize_register is hooked after the section is made (priority 
 $WC = new ToolResultCustomizeFake();
 vance_hub_tool_result_customize_register( $WC );
 check( 'customizer: the setting vance_hub_tool_result exists', isset( $WC->settings['vance_hub_tool_result'] ) );
-check( 'customizer: default is false', isset( $WC->settings['vance_hub_tool_result'] ) && false === $WC->settings['vance_hub_tool_result']['default'] );
+check( 'customizer: default is true (the master switch decides whether it shows)', isset( $WC->settings['vance_hub_tool_result'] ) && true === $WC->settings['vance_hub_tool_result']['default'] );
 check( 'customizer: sanitized by vance_hub_sanitize_checkbox', isset( $WC->settings['vance_hub_tool_result'] ) && 'vance_hub_sanitize_checkbox' === $WC->settings['vance_hub_tool_result']['sanitize_callback'] );
 check( 'customizer: a checkbox in section vance_home_layout', isset( $WC->controls['vance_hub_tool_result'] ) && 'checkbox' === $WC->controls['vance_hub_tool_result']['type'] && 'vance_home_layout' === $WC->controls['vance_hub_tool_result']['section'] );
 check( 'customizer: the label is "Health Survey: VanceHubClub result page"', isset( $WC->controls['vance_hub_tool_result'] ) && 'Health Survey: VanceHubClub result page' === $WC->controls['vance_hub_tool_result']['label'] );
@@ -411,7 +421,7 @@ check( 'data: a member never runs the Google shortcode', 'untouched' === $GLOBAL
 
 arrange();
 check( 'render: with the switch off it returns an empty string', '' === vance_hub_tool_result_render() );
-arrange( array( 'vance_hub_tool_result' => true ) );
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_tool_result' => true ) );
 check( 'render: with the switch on it returns the block', has( vance_hub_tool_result_render(), 'id="vhub-tool-result"' ) );
 arrange( array(), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 check( 'render: an administrator\'s preview returns the block', has( vance_hub_tool_result_render(), 'id="vhub-tool-result"' ) );

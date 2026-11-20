@@ -162,9 +162,9 @@ require_once $THEME . '/inc/hub-community.php';
 /* Row order in vance_hub_admin_status(), as the tests index it. */
 // 0 promo, 1 sections, 2 more, 3 articles, 4 dashboard, 5 member no, 6 chart, 7 check-in, 8 tab look, 9 survey result, 10 site header, 11 community hub.
 
-/** The On/Off text the screen prints for one switch label, or 'missing'. */
+/** The full status text the screen prints for one switch label ("On", "Off", "Off (master switch is off)"), or 'missing'. */
 function switch_cell( $html, $escaped_label ) {
-	$pattern = '/<td>' . preg_quote( $escaped_label, '/' ) . '<\/td>\s*<td><strong>(On|Off)<\/strong><\/td>/';
+	$pattern = '/<td>' . preg_quote( $escaped_label, '/' ) . '<\/td>\s*<td><strong>([^<]*)<\/strong><\/td>/';
 	return preg_match( $pattern, $html, $m ) ? $m[1] : 'missing';
 }
 
@@ -201,10 +201,10 @@ $ROWS = array_column( vance_hub_admin_switches(), 'default', 'mod' );
 
 check( 'switches: the screen lists exactly twelve switches', count( vance_hub_admin_switches() ) === 12 );
 check( 'defaults: vance_hub_community equals its registered default', isset( $ROWS['vance_hub_community'], $WC->settings['vance_hub_community']['default'] ) && $ROWS['vance_hub_community'] === $WC->settings['vance_hub_community']['default'] );
-check( 'defaults: vance_hub_community is off by default', isset( $ROWS['vance_hub_community'] ) && false === $ROWS['vance_hub_community'] );
+check( 'defaults: vance_hub_community is on by default', isset( $ROWS['vance_hub_community'] ) && true === $ROWS['vance_hub_community'] );
 check( 'registered: vance_hub_community is a checkbox in section vance_home_layout', isset( $WC->settings['vance_hub_community'], $WC->controls['vance_hub_community'] ) && $WC->controls['vance_hub_community']['section'] === 'vance_home_layout' && $WC->controls['vance_hub_community']['type'] === 'checkbox' );
 check( 'defaults: vance_hub_dashboard_tabs equals its registered default', isset( $ROWS['vance_hub_dashboard_tabs'], $WC->settings['vance_hub_dashboard_tabs']['default'] ) && $ROWS['vance_hub_dashboard_tabs'] === $WC->settings['vance_hub_dashboard_tabs']['default'] );
-check( 'defaults: vance_hub_dashboard_tabs is off by default', isset( $ROWS['vance_hub_dashboard_tabs'] ) && false === $ROWS['vance_hub_dashboard_tabs'] );
+check( 'defaults: vance_hub_dashboard_tabs is on by default', isset( $ROWS['vance_hub_dashboard_tabs'] ) && true === $ROWS['vance_hub_dashboard_tabs'] );
 check( 'registered: vance_hub_dashboard_tabs is a checkbox in section vance_home_layout with the checkbox sanitiser', isset( $WC->settings['vance_hub_dashboard_tabs'], $WC->controls['vance_hub_dashboard_tabs'] ) && $WC->controls['vance_hub_dashboard_tabs']['section'] === 'vance_home_layout' && $WC->controls['vance_hub_dashboard_tabs']['type'] === 'checkbox' && $WC->settings['vance_hub_dashboard_tabs']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
 check( 'registered: vance_hub_dashboard_tabs has the agreed label', isset( $WC->controls['vance_hub_dashboard_tabs'] ) && $WC->controls['vance_hub_dashboard_tabs']['label'] === 'Member dashboard: VanceHubClub look on every tab' );
 check( 'defaults: vance_hub_tool_result equals its registered default', isset( $ROWS['vance_hub_tool_result'], $WC->settings['vance_hub_tool_result']['default'] ) && $ROWS['vance_hub_tool_result'] === $WC->settings['vance_hub_tool_result']['default'] );
@@ -235,16 +235,18 @@ section( '2. Status: saved values and defaults' );
 arrange_admin( array(), array() );
 $ST = vance_hub_admin_status();
 check( 'status: one row per switch', count( $ST ) === 12 );
-check( 'status: the tab-look switch is row 8 and reads Off by default', isset( $ST[8] ) && $ST[8]['label'] === 'Member dashboard: VanceHubClub look on every tab' && $ST[8]['on'] === false );
-check( 'status: the survey result switch is row 9 and reads Off by default', isset( $ST[9] ) && $ST[9]['label'] === 'Health Survey: VanceHubClub result page' && $ST[9]['on'] === false );
-check( 'status: the site header switch is row 10 and reads Off by default', isset( $ST[10] ) && $ST[10]['label'] === 'Site header: VanceHubClub header' && $ST[10]['on'] === false );
-check( 'status: row 11 is "Community hub" and reads Off by default', isset( $ST[11] ) && $ST[11]['label'] === 'Community hub' && $ST[11]['on'] === false );
+check( 'status: the tab-look switch is row 8 and is on by default', isset( $ST[8] ) && $ST[8]['label'] === 'Member dashboard: VanceHubClub look on every tab' && $ST[8]['on'] === true );
+check( 'status: the survey result switch is row 9 and is on by default', isset( $ST[9] ) && $ST[9]['label'] === 'Health Survey: VanceHubClub result page' && $ST[9]['on'] === true );
+check( 'status: the site header switch is row 10 and is on by default', isset( $ST[10] ) && $ST[10]['label'] === 'Site header: VanceHubClub header' && $ST[10]['on'] === true );
+check( 'status: row 11 is "Community hub" and is on by default', isset( $ST[11] ) && $ST[11]['label'] === 'Community hub' && $ST[11]['on'] === true );
+check( 'status: with the master switch classic, a default-on row is not live', isset( $ST[11] ) && $ST[11]['live'] === false );
 check( 'status: the community switch is the last row', ! isset( $ST[12] ) && 11 === max( array_keys( $ST ) ) );
 check( 'status: row 0 is the promo switch, in display order', isset( $ST[0] ) && $ST[0]['label'] === 'Home page: promo block' );
 check( 'status: an unsaved default-true switch reads On', isset( $ST[0] ) && $ST[0]['on'] === true );
 check( 'status: an unsaved default-true section switch reads On', isset( $ST[1] ) && $ST[1]['on'] === true );
-check( 'status: an unsaved default-false article switch reads Off', isset( $ST[3] ) && $ST[3]['on'] === false );
-check( 'status: an unsaved default-false dashboard switch reads Off', isset( $ST[4] ) && $ST[4]['on'] === false );
+check( 'status: an unsaved article switch reads On (its default is on)', isset( $ST[3] ) && $ST[3]['on'] === true );
+check( 'status: an unsaved dashboard switch reads On (its default is on)', isset( $ST[4] ) && $ST[4]['on'] === true );
+check( 'status: an unsaved check-in switch reads Off (health data, default off)', isset( $ST[7] ) && $ST[7]['on'] === false );
 
 arrange_admin( array( 'vance_hub_show_promo' => true ), array() );
 $ST = vance_hub_admin_status();
@@ -278,11 +280,11 @@ arrange_admin( array( 'vance_hub_show_promo' => 0 ), array() );
 $ST = vance_hub_admin_status();
 check( 'status: promo saved the integer 0 reads Off', isset( $ST[0] ) && $ST[0]['on'] === false );
 
-arrange_admin( array( 'vance_hub_articles' => '1' ), array() );
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => '1' ), array() );
 $ST = vance_hub_admin_status();
 check( 'status: articles saved "1" reads On (a default-false switch turned on)', isset( $ST[3] ) && $ST[3]['on'] === true );
 
-arrange_admin( array( 'vance_hub_show_dashboard' => true ), array() );
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array() );
 $ST = vance_hub_admin_status();
 check( 'status: dashboard saved true reads On', isset( $ST[4] ) && $ST[4]['on'] === true );
 
@@ -386,35 +388,36 @@ arrange_admin( array(), array( 'manage_options' => true ) );
 $OUT = render_screen();
 check( 'render: a user with manage_options gets the screen heading', strpos( $OUT, '<h1>VanceHubClub</h1>' ) !== false );
 
-arrange_admin( array( 'vance_hub_show_promo' => false, 'vance_hub_articles' => '1' ), array( 'manage_options' => true ) );
+arrange_admin( array( 'vance_hub_show_promo' => false, 'vance_home_layout' => 'hub', 'vance_hub_articles' => '1' ), array( 'manage_options' => true ) );
 $OUT = render_screen();
 $ST  = vance_hub_admin_status();
 check( 'render: the promo row reads Off, as the status does', switch_cell( $OUT, 'Home page: promo block' ) === 'Off' && $ST[0]['on'] === false );
 check( 'render: the article row reads On, as the status does', switch_cell( $OUT, 'Article pages: VanceHubClub layout' ) === 'On' && $ST[3]['on'] === true );
 check( 'render: the sections row reads On by default, as the status does', switch_cell( $OUT, 'Home page: &quot;Latest by section&quot;' ) === 'On' && $ST[1]['on'] === true );
-check( 'render: the dashboard row reads Off by default, as the status does', switch_cell( $OUT, 'Member dashboard: VanceHubClub home' ) === 'Off' && $ST[4]['on'] === false );
-check( 'render: the member number row reads Off by default, as the status does', switch_cell( $OUT, 'Member dashboard: member number' ) === 'Off' && $ST[5]['on'] === false );
-check( 'render: the Community hub row reads Off by default, as the status does', switch_cell( $OUT, 'Community hub' ) === 'Off' && $ST[11]['on'] === false );
+check( 'render: the dashboard row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Member dashboard: VanceHubClub home' ) === 'On' && $ST[4]['on'] === true );
+check( 'render: the member number row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Member dashboard: member number' ) === 'On' && $ST[5]['on'] === true );
+check( 'render: the Community hub row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Community hub' ) === 'On' && $ST[11]['on'] === true );
+check( 'render: the check-in row reads Off, its own default is off', switch_cell( $OUT, 'Member dashboard: weekly check-in' ) === 'Off' && $ST[7]['on'] === false );
 
-arrange_admin( array( 'vance_hub_community' => true ), array( 'manage_options' => true ) );
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_community' => true ), array( 'manage_options' => true ) );
 $OUT = render_screen();
 check( 'render: the Community hub row reads On once the switch is saved on', switch_cell( $OUT, 'Community hub' ) === 'On' );
 
 arrange_admin( array( 'vance_home_layout' => 'hub' ), array( 'manage_options' => true ) );
 $OUT = render_screen();
-check( 'render: the layout line says VanceHubClub when the saved layout is hub', strpos( $OUT, '<strong>VanceHubClub</strong>' ) !== false && vance_hub_saved_layout() === 'hub' );
+check( 'render: the master line says "VanceHubClub: on" when the saved layout is hub', strpos( $OUT, '<strong>VanceHubClub: on</strong>' ) !== false && vance_hub_saved_layout() === 'hub' );
 
 arrange_admin( array(), array( 'manage_options' => true ) );
 $OUT = render_screen();
-check( 'render: the layout line says classic when nothing is saved', strpos( $OUT, '<strong>VanceHealthHub (classic)</strong>' ) !== false && vance_hub_saved_layout() === 'classic' );
+check( 'render: the master line says every part is off when nothing is saved', strpos( $OUT, '<strong>VanceHealthHub (classic): every VanceHubClub part is off</strong>' ) !== false && vance_hub_saved_layout() === 'classic' );
 
 arrange_admin( array( 'vance_home_layout' => 'junk' ), array( 'manage_options' => true ) );
 $OUT = render_screen();
-check( 'render: a garbage saved layout shows classic, matching vance_hub_saved_layout()', strpos( $OUT, '<strong>VanceHealthHub (classic)</strong>' ) !== false && vance_hub_saved_layout() === 'classic' );
+check( 'render: a garbage saved layout shows the classic master line, matching vance_hub_saved_layout()', strpos( $OUT, '<strong>VanceHealthHub (classic): every VanceHubClub part is off</strong>' ) !== false && vance_hub_saved_layout() === 'classic' );
 
 arrange_admin( array( 'vance_home_layout' => 'HUB' ), array( 'manage_options' => true ) );
 $OUT = render_screen();
-check( 'render: a saved layout in upper case shows VanceHubClub, matching vance_hub_saved_layout()', strpos( $OUT, '<strong>VanceHubClub</strong>' ) !== false && vance_hub_saved_layout() === 'hub' );
+check( 'render: a saved layout in upper case shows "VanceHubClub: on", matching vance_hub_saved_layout()', strpos( $OUT, '<strong>VanceHubClub: on</strong>' ) !== false && vance_hub_saved_layout() === 'hub' );
 
 arrange_admin( array(), array( 'manage_options' => true ) );
 $GLOBALS['I18N']       = array( 'Newest article' => '<b>bold</b>' );
@@ -450,6 +453,53 @@ check( 'section: vance_home_layout is registered', isset( $WC->sections['vance_h
 check( 'section: vance_home_layout has no panel key', isset( $WC->sections['vance_home_layout'] ) && ! array_key_exists( 'panel', $WC->sections['vance_home_layout'] ) );
 check( 'section: vance_home_layout is titled VanceHubClub', isset( $WC->sections['vance_home_layout']['title'] ) && $WC->sections['vance_home_layout']['title'] === 'VanceHubClub' );
 check( 'section: the home layout radio is still in vance_home_layout', isset( $WC->controls['vance_home_layout']['section'] ) && $WC->controls['vance_home_layout']['section'] === 'vance_home_layout' );
+
+/* ---- 7. master switch: the live value and the three row texts ------------- */
+section( '7. Master switch: live values and row texts' );
+
+// Master classic: nothing is live, whatever each part says.
+arrange_admin( array(), array( 'manage_options' => true ) );
+$ST = vance_hub_admin_status();
+check( 'master classic, nothing saved: every row is not live', array_column( $ST, 'live' ) === array_fill( 0, 12, false ) );
+check( 'master classic, nothing saved: the article row is on by default but not live', $ST[3]['on'] === true && $ST[3]['live'] === false );
+
+arrange_admin( array( 'vance_hub_articles' => true, 'vance_hub_show_dashboard' => true ), array( 'manage_options' => true ) );
+$ST = vance_hub_admin_status();
+check( 'master classic, parts saved on: the article row is on but not live', $ST[3]['on'] === true && $ST[3]['live'] === false );
+check( 'master classic, parts saved on: the dashboard row is on but not live', $ST[4]['on'] === true && $ST[4]['live'] === false );
+
+// Master hub: a part is live when its own switch is on.
+arrange_admin( array( 'vance_home_layout' => 'hub' ), array( 'manage_options' => true ) );
+$ST = vance_hub_admin_status();
+check( 'master hub, nothing saved: default-on rows are live', $ST[0]['live'] === true && $ST[3]['live'] === true && $ST[11]['live'] === true );
+check( 'master hub, nothing saved: the check-in row is not live (its default is off)', $ST[7]['live'] === false );
+
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => false ), array( 'manage_options' => true ) );
+$ST = vance_hub_admin_status();
+check( 'master hub, article saved off: the article row is not live', $ST[3]['on'] === false && $ST[3]['live'] === false );
+check( 'master hub, article saved off: the dashboard row stays live', $ST[4]['live'] === true );
+
+// Live is always on AND master on. A part that is on has live equal to the master.
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_show_promo' => '0' ), array( 'manage_options' => true ) );
+$ST = vance_hub_admin_status();
+check( 'master hub, promo saved "0": the promo row reads not live and not on', $ST[0]['on'] === false && $ST[0]['live'] === false );
+
+// The three row texts on the screen.
+arrange_admin( array( 'vance_home_layout' => 'hub' ), array( 'manage_options' => true ) );
+$OUT = render_screen();
+check( 'row text: a live part reads "On" (master hub, unsaved default-on)', switch_cell( $OUT, 'Article pages: VanceHubClub layout' ) === 'On' );
+
+arrange_admin( array( 'vance_hub_articles' => true ), array( 'manage_options' => true ) );
+$OUT = render_screen();
+check( 'row text: a part on but under a classic master reads "Off (master switch is off)"', switch_cell( $OUT, 'Article pages: VanceHubClub layout' ) === 'Off (master switch is off)' );
+
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => '0' ), array( 'manage_options' => true ) );
+$OUT = render_screen();
+check( 'row text: a part saved off reads "Off" under a hub master', switch_cell( $OUT, 'Article pages: VanceHubClub layout' ) === 'Off' );
+
+arrange_admin( array( 'vance_hub_dash_checkin' => false ), array( 'manage_options' => true ) );
+$OUT = render_screen();
+check( 'row text: a part off under a classic master reads "Off", not the master text', switch_cell( $OUT, 'Member dashboard: weekly check-in' ) === 'Off' );
 
 /* ===================================================================== */
 echo "\n";
