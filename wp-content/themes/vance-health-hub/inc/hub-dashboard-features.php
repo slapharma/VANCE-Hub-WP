@@ -242,7 +242,16 @@ function vance_hub_dashboard_num( $n ) {
  * @return bool
  */
 function vance_hub_dash_feature_on( $name ) {
-	return (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $name, false ) );
+	// Under the Home layout master switch (inc/hub-layout.php). An
+	// administrator's preview does not wait for the master, as with the tab
+	// look (vance_hub_dashboard_tabs_active()): ?vhh_layout=hub (or preview mode)
+	// reads the feature's own switch alone, and ?vhh_layout=classic turns it off.
+	$query = function_exists( 'vance_hub_preview_query' ) ? vance_hub_preview_query() : '';
+	if ( '' !== $query ) {
+		return 'hub' === $query
+			&& (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $name, vance_hub_switch_default( $name ) ) );
+	}
+	return vance_hub_switch_on( $name );
 }
 
 /**
@@ -295,7 +304,7 @@ function vance_hub_dash_features_customize( $wp_customize ) {
 	);
 	foreach ( $switches as $name => $text ) {
 		$wp_customize->add_setting( $name, array(
-			'default'           => false,
+			'default'           => vance_hub_switch_default( $name ),
 			'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 		) );
 		$wp_customize->add_control( $name, array(

@@ -427,7 +427,7 @@ function vance_hub_article_active() {
 		return false;
 	}
 	$query = vance_hub_preview_query();
-	return vance_hub_article_resolve( vance_get_theme_mod( 'vance_hub_articles', false ), $query, '' !== $query );
+	return vance_hub_article_resolve( vance_hub_switch_on( 'vance_hub_articles' ), $query, '' !== $query );
 }
 
 /**
@@ -677,12 +677,12 @@ add_action( 'vance_article_sidebar_top', 'vance_hub_article_sidebar_top' );
  */
 function vance_hub_article_customize_register( $wp_customize ) {
 	$wp_customize->add_setting( 'vance_hub_articles', array(
-		'default'           => false,
+		'default'           => vance_hub_switch_default( 'vance_hub_articles' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_articles', array(
 		'label'       => __( 'Article pages: use the VanceHubClub layout', 'vance-health-hub' ),
-		'description' => __( 'Off: articles look as they do now. On: every article gets the VanceHubClub look, a "Try this now" tool prompt in the text and Ask VANCE-Ai and tool cards at the top of the sidebar. This is separate from the home layout above. Administrators can preview it on one article without saving: add ?vhh_layout=hub to the article address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
+		'description' => __( 'Off: articles look as they do now. On: every article gets the VanceHubClub look, a "Try this now" tool prompt in the text and Ask VANCE-Ai and tool cards at the top of the sidebar. It works only when the Home layout master switch is on VanceHubClub. Administrators can preview it on one article without saving: add ?vhh_layout=hub to the article address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'checkbox',
 		'priority'    => 9,

@@ -166,7 +166,7 @@ function vance_hub_header_active() {
 		return true;
 	}
 	$query = vance_hub_preview_query();
-	return vance_hub_header_resolve( vance_get_theme_mod( 'vance_hub_header', false ), $query, '' !== $query );
+	return vance_hub_header_resolve( vance_hub_switch_on( 'vance_hub_header' ), $query, '' !== $query );
 }
 
 /**
@@ -228,7 +228,7 @@ add_filter( 'body_class', 'vance_hub_header_body_class' );
  */
 function vance_hub_header_customize_register( $wp_customize ) {
 	$wp_customize->add_setting( 'vance_hub_header', array(
-		'default'           => false,
+		'default'           => vance_hub_switch_default( 'vance_hub_header' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_header', array(

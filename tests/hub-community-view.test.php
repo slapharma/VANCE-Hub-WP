@@ -67,7 +67,7 @@ function admin_caps() {
 	return array( 'vance_moderate_community' => true, 'edit_theme_options' => true, 'publish_pages' => true, 'manage_options' => true );
 }
 function on_mods() {
-	return array( 'vance_hub_community' => true );
+	return array( 'vance_home_layout' => 'hub', 'vance_hub_community' => true );
 }
 function cs_page( $slug, $status = 'publish' ) {
 	return wp_insert_post( array( 'post_type' => 'page', 'post_status' => $status, 'post_name' => $slug, 'post_title' => $slug ) );
@@ -411,7 +411,16 @@ $_GET = array();
 
 arrange( array(), admin_caps(), 1 );
 cs_user( 1, 'admin@example.test' );
-check( 'queue: with the switch off, the queue warns that visitors cannot see the page', has( queue_html(), 'The Community hub switch is off.' ) );
+check( 'queue: with the master switch classic, the queue warns that visitors cannot see the page', has( queue_html(), 'The Community hub is off (its own switch, or the Home layout master switch).' ) );
+
+// The master switch (Home layout) over the queue notice.
+arrange( array( 'vance_hub_community' => true ), admin_caps(), 1 );
+cs_user( 1, 'admin@example.test' );
+check( 'queue: master classic with the community box ticked still warns that the hub is off', has( queue_html(), 'The Community hub is off (its own switch, or the Home layout master switch).' ) );
+
+arrange( array( 'vance_home_layout' => 'hub' ), admin_caps(), 1 );
+cs_user( 1, 'admin@example.test' );
+check( 'queue: master hub with the community box never saved shows no off warning', false === strpos( queue_html(), 'The Community hub is off' ) );
 
 arrange( on_mods(), array(), 5 );
 member_setup();

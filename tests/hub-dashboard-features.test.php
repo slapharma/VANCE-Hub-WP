@@ -549,26 +549,26 @@ check( 'member code: a negative user id gives an empty string', vance_hub_member
 /* ===================================================================== */
 section( '6. Check-in POST handler: gating' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 check( 'control: a good save with the switch on redirects with vance_checkin=saved', fb_handle() === 'https://example.test/hub/?vance_checkin=saved' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 unset( $_POST['vance_hub_checkin_nonce'] );
 check( 'gating: no nonce field does nothing (no redirect)', fb_handle() === null );
 check( 'gating: no nonce field writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $_POST['vance_hub_checkin_nonce'] = array( 'nonce-vance_hub_checkin' );
 check( 'gating: an array nonce does nothing and does not fail', fb_handle() === null && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ), false );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ), false );
 fb_post_save();
 check( 'gating: a visitor who is not logged in does nothing', fb_handle() === null && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $_SERVER['REQUEST_METHOD'] = 'GET';
 check( 'gating: a GET request does nothing', fb_handle() === null && $GLOBALS['WRITES'] === array() );
@@ -588,30 +588,30 @@ check( 'gating: the switch off also blocks delete', fb_handle() === null && $GLO
 /* ===================================================================== */
 section( '6b. Check-in POST handler: a page left open (expired nonce)' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $_POST['vance_hub_checkin_nonce'] = 'forged';
 check( 'expired: a bad nonce redirects with vance_checkin=expired', fb_handle() === 'https://example.test/hub/?vance_checkin=expired' );
 check( 'expired: a bad nonce writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $_POST['vance_hub_checkin_nonce'] = 'nonce-vance_hub_other';
 check( 'expired: a nonce made for another action redirects with vance_checkin=expired', fb_handle() === 'https://example.test/hub/?vance_checkin=expired' );
 check( 'expired: a nonce made for another action writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $_POST['vance_hub_checkin_nonce'] = '';
 check( 'expired: an empty nonce redirects with vance_checkin=expired', fb_handle() === 'https://example.test/hub/?vance_checkin=expired' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), true );
 $_POST['vance_hub_checkin_nonce'] = 'forged';
 fb_handle();
 check( 'expired: a bad nonce writes no consent record', ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'] ) && ! isset( $GLOBALS['UMETA'][7]['_sla_consent_health'] ) );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
 fb_post_delete();
 $_POST['vance_hub_checkin_nonce'] = 'forged';
@@ -623,7 +623,7 @@ fb_post_save();
 $_POST['vance_hub_checkin_nonce'] = 'forged';
 check( 'expired: with the switch off a bad nonce does nothing (no redirect)', fb_handle() === null && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ), false );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ), false );
 fb_post_save();
 $_POST['vance_hub_checkin_nonce'] = 'forged';
 check( 'expired: a visitor who is not logged in with a bad nonce does nothing (no redirect)', fb_handle() === null && $GLOBALS['WRITES'] === array() );
@@ -631,48 +631,48 @@ check( 'expired: a visitor who is not logged in with a bad nonce does nothing (n
 /* ===================================================================== */
 section( '7. Check-in POST handler: validation and the 6-day rule' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '2', 'bowel' => '3' ) );
 check( 'invalid: a missing answer redirects with vance_checkin=invalid', fb_handle() === 'https://example.test/hub/?vance_checkin=invalid' );
 check( 'invalid: a missing answer writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '5', 'bowel' => '3', 'tired' => '1' ) );
 check( 'invalid: an answer of 5 gives invalid and writes nothing', fb_handle() === 'https://example.test/hub/?vance_checkin=invalid' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '-1', 'bowel' => '3', 'tired' => '1' ) );
 check( 'invalid: a negative answer gives invalid and writes nothing', fb_handle() === 'https://example.test/hub/?vance_checkin=invalid' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '1', 'bowel' => '3', 'tired' => '1' ), false );
 $_POST['vance_hub_checkin_do'] = 'drop';
 check( 'invalid: an unknown action gives invalid and writes nothing', fb_handle() === 'https://example.test/hub/?vance_checkin=invalid' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '2', 'bowel' => '3' ), false );
 check( 'invalid is checked before consent: bad answers and no consent give invalid', fb_handle() === 'https://example.test/hub/?vance_checkin=invalid' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), false );
 check( 'consent: good answers with no consent box redirect with vance_checkin=consent', fb_handle() === 'https://example.test/hub/?vance_checkin=consent' );
 check( 'consent: no consent writes nothing, not even the consent record', $GLOBALS['WRITES'] === array() );
 
 // The general health flag is set by a save in any tool, with other wording.
 // It must not stand in for the check-in agreement.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), false );
 check( 'consent: the general health flag alone does not count, the result is consent', fb_handle() === 'https://example.test/hub/?vance_checkin=consent' && $GLOBALS['WRITES'] === array() );
 
 // An agreement to old wording does not cover new wording.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['MODS']['vance_hub_checkin_consent'] = 'New wording.';
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), false );
 check( 'consent: changed wording asks again, the result is consent', fb_handle() === 'https://example.test/hub/?vance_checkin=consent' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['MODS']['vance_hub_checkin_consent'] = 'New wording.';
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), true );
@@ -685,18 +685,18 @@ check( 'consent_ok: other wording is false', vance_hub_checkin_consent_ok( '1', 
 check( 'consent_ok: empty stored wording is false, also against empty current wording', vance_hub_checkin_consent_ok( '1', '', '' ) === false );
 check( 'consent_ok: non-string stored wording is false', vance_hub_checkin_consent_ok( '1', array( 'A' ), 'A' ) === false );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
 check( 'early: a check-in 2 days ago redirects with vance_checkin=early', fb_handle() === 'https://example.test/hub/?vance_checkin=early' );
 check( 'early: a check-in 2 days ago writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 5 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
 check( 'early: a check-in 5 days ago is still early', fb_handle() === 'https://example.test/hub/?vance_checkin=early' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 7 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
 fb_consented();
@@ -705,7 +705,7 @@ check( 'due: a check-in 7 days ago lets the next one save', fb_handle() === 'htt
 /* ===================================================================== */
 section( '8. Check-in POST handler: the save, the consent record, delete' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), true );
 fb_handle();
 check( 'save: exactly one check-in row is stored for user 7', count( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] ) === 1 );
@@ -715,13 +715,13 @@ check( 'save: a new member gets the consent record once (flag, time, wording), t
 check( 'save: the consent flag is 1, the time is the stamped time, the wording is the wording shown', $GLOBALS['UMETA'][7]['_sla_consent_checkin'] === '1' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] === '2026-11-18 12:00:00' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] === vance_hub_checkin_consent_text() && '' !== vance_hub_checkin_consent_text() );
 check( 'save: the general health flag is not written', ! isset( $GLOBALS['UMETA'][7]['_sla_consent_health'] ) );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), false );
 fb_handle();
 check( 'save: a member who already consented gets no second consent record', $GLOBALS['WRITES'] === array( 'update_user_meta:_sla_weekly_check_in_history' ) && $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] === '2026-10-01 09:00:00' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 // Only the history write fails. The consent writes succeed first, so this goes
 // red if the consent record is not taken back after the failed save.
 $GLOBALS['UPDATE_FAILS'] = '_sla_weekly_check_in_history';
@@ -732,7 +732,7 @@ check( 'save: a failed history write stores no answers', ! isset( $GLOBALS['UMET
 
 // A member who withdrew has an old time and wording on record. A failed save
 // must put that record back as it was, not leave a new agreement.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_consent_checkin_at']   = '2026-09-01 08:00:00';
 $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] = 'Old "wording" C:\\x.';
 $GLOBALS['UPDATE_FAILS'] = '_sla_weekly_check_in_history';
@@ -741,7 +741,7 @@ fb_handle();
 check( 'save: a failed history write puts the old record back: no flag, old time, old wording', ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'] ) && isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'], $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] ) && $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] === '2026-09-01 08:00:00' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] === 'Old "wording" C:\\x.' );
 
 // The consent record cannot be stored: no answers may be stored.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UPDATE_FAILS'] = '_sla_consent_checkin_text';
 fb_post_save();
 check( 'save: a failed consent write gives failed', fb_handle() === 'https://example.test/hub/?vance_checkin=failed' );
@@ -749,23 +749,23 @@ check( 'save: a failed consent write stores no answers and attempts no history w
 check( 'save: a failed consent write leaves no flag', ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'] ) );
 
 // The form showed wording A. The wording in use at the save is B.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $GLOBALS['MODS']['vance_hub_checkin_consent'] = 'Wording B.';
 check( 'changed: a tick for other wording gives changed', fb_handle() === 'https://example.test/hub/?vance_checkin=changed' );
 check( 'changed: a tick for other wording writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 unset( $_POST['vhd_consent_ref'] );
 check( 'changed: a tick with no reference gives changed and writes nothing', fb_handle() === 'https://example.test/hub/?vance_checkin=changed' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
 $_POST['vhd_consent_ref'] = array( hash( 'sha256', vance_hub_checkin_consent_text() ) );
 check( 'changed: a reference sent as an array gives changed and writes nothing', fb_handle() === 'https://example.test/hub/?vance_checkin=changed' && $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), false );
 check( 'changed: a member with a valid agreement needs no reference', fb_handle() === 'https://example.test/hub/?vance_checkin=saved' );
@@ -774,7 +774,7 @@ check( 'consent_ref: the reference is the sha256 of the wording', vance_hub_chec
 check( 'consent_ref_ok: the right reference is true, another wording and non-strings are false', vance_hub_checkin_consent_ref_ok( 'A', hash( 'sha256', 'A' ) ) === true && vance_hub_checkin_consent_ref_ok( 'A', hash( 'sha256', 'B' ) ) === false && vance_hub_checkin_consent_ref_ok( 'A', null ) === false && vance_hub_checkin_consent_ref_ok( 'A', '' ) === false );
 
 // Delete that removes nothing: the member must not be told the answers are gone.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1 ) ) );
 $GLOBALS['DELETE_FAILS'] = '_sla_weekly_check_in_history';
@@ -785,7 +785,7 @@ check( 'checkin html: the kept and changed flashes are warning lines', strpos( v
 
 // The answers are deleted and the withdrawal fails: the member must not be told
 // that the agreement is withdrawn.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1 ) ) );
 $GLOBALS['DELETE_FAILS'] = '_sla_consent_checkin';
@@ -795,21 +795,21 @@ check( 'delete: a withdrawal that does not happen writes no withdrawal time', ! 
 
 // The time of the agreement cannot be stored: the record is not valid, so no
 // answers are stored and nothing of the new agreement stays.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UPDATE_FAILS'] = '_sla_consent_checkin_at';
 fb_post_save();
 check( 'save: a failed agreement-time write gives failed', fb_handle() === 'https://example.test/hub/?vance_checkin=failed' );
 check( 'save: a failed agreement-time write stores no answers, no flag and no wording', ! isset( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] ) && ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'] ) && ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] ) );
 
 // An older agreement time must not stand in for the new one.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] = '2026-09-01 08:00:00';
 $GLOBALS['UPDATE_FAILS'] = '_sla_consent_checkin_at';
 fb_post_save();
 check( 'save: an older agreement time does not pass as the new one', fb_handle() === 'https://example.test/hub/?vance_checkin=failed' && ! isset( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] ) );
 
 // Wording changed: flag 1 with old wording. A failed save puts all three back.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] = 'Old wording.';
 $GLOBALS['UPDATE_FAILS'] = '_sla_weekly_check_in_history';
@@ -818,7 +818,7 @@ fb_handle();
 check( 'save: after a wording change, a failed save puts the old flag, time and wording back', isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'], $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'], $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] ) && $GLOBALS['UMETA'][7]['_sla_consent_checkin'] === '1' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] === '2026-10-01 09:00:00' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] === 'Old wording.' );
 
 // A member with a valid agreement: a failed save touches no consent key.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['UPDATE_FAILS'] = '_sla_weekly_check_in_history';
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), false );
@@ -826,7 +826,7 @@ check( 'save: with a valid agreement, a failed save gives failed and writes only
 
 // Two requests at one time: the other one saved answers after this one
 // started. This one fails, and must not take back the agreement they rest on.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UPDATE_FAILS']      = '_sla_weekly_check_in_history';
 $GLOBALS['HISTORY_ON_FAILED'] = array( fb_row( time() + 5, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
 fb_post_save();
@@ -842,14 +842,14 @@ check( 'checkin html: the failed flash is a warning line with its text', strpos(
 // Consent wording with a backslash and quotes: stored as shown, so the member
 // is not asked again on the next view.
 $SLASHY = 'I agree (see C:\\hub\\terms and "the policy").';
-fb_arrange( array( 'vance_hub_dash_checkin' => true, 'vance_hub_checkin_consent' => $SLASHY ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true, 'vance_hub_checkin_consent' => $SLASHY ) );
 fb_post_save( array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), true );
 fb_handle();
 check( 'consent: wording with a backslash is stored exactly as shown', $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] === $SLASHY );
 check( 'consent: after that save the member is not asked again', vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin']['need_consent'] === false );
 
 // Delete by a member who agreed: the answers go and the agreement is withdrawn.
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1 ) ) );
 fb_post_delete();
@@ -858,7 +858,7 @@ check( 'delete: a consented member loses the history and the flag, and gets a wi
 check( 'delete: the withdrawal time is stamped, and the old time and wording stay as a record', $GLOBALS['UMETA'][7]['_sla_consent_checkin_withdrawn_at'] === '2026-11-18 12:00:00' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] === '2026-10-01 09:00:00' && $GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] !== '' );
 check( 'delete: after the withdrawal the member is asked to agree again', vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin']['need_consent'] === true );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1 ) ) );
 fb_post_delete();
 check( 'delete: the redirect says vance_checkin=deleted', fb_handle() === 'https://example.test/hub/?vance_checkin=deleted' );
@@ -886,21 +886,36 @@ $OFF_DEFAULT = vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'ht
 check( 'gating: with no switch saved at all, the result is the same empty shape', $OFF_DEFAULT === array( 'member_code' => '', 'results' => null, 'checkin' => null ) );
 check( 'gating: with no switch saved at all, nothing is written', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_member_no' => true ) );
+// The master switch (Home layout) over the three feature switches.
+fb_arrange( array( 'vance_hub_dash_member_no' => true, 'vance_hub_dash_chart' => true, 'vance_hub_dash_checkin' => true ) );
+check( 'master: classic with all three boxes ticked, member number is off', vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) === false );
+check( 'master: classic with all three boxes ticked, chart is off', vance_hub_dash_feature_on( 'vance_hub_dash_chart' ) === false );
+check( 'master: classic with all three boxes ticked, check-in is off', vance_hub_dash_feature_on( 'vance_hub_dash_checkin' ) === false );
+
+fb_arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master: hub with member number never saved is on (default on)', vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) === true );
+check( 'master: hub with chart never saved is on (default on)', vance_hub_dash_feature_on( 'vance_hub_dash_chart' ) === true );
+check( 'master: hub with check-in never saved is off (health data, default off)', vance_hub_dash_feature_on( 'vance_hub_dash_checkin' ) === false );
+
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => false, 'vance_hub_dash_checkin' => true ) );
+check( 'master: hub with member number saved off is off', vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) === false );
+check( 'master: hub with check-in saved on is on', vance_hub_dash_feature_on( 'vance_hub_dash_checkin' ) === true );
+
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => true, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => false ) );
 $ONLY_NO = vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'https://example.test/calc/' );
 check( 'gating: member number on alone gives a member code and nothing else', preg_match( '/^VHC-/', $ONLY_NO['member_code'] ) === 1 && $ONLY_NO['results'] === null && $ONLY_NO['checkin'] === null );
 check( 'gating: member number on alone reads no check-in history', ! in_array( '_sla_weekly_check_in_history', $GLOBALS['META_READS'], true ) );
 
-fb_arrange( array( 'vance_hub_dash_chart' => true ) );
-$ONLY_CHART = vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'https://example.test/calc/' );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => true, 'vance_hub_dash_checkin' => false ) );
+$ONLY_CHART =vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'https://example.test/calc/' );
 check( 'gating: chart on alone gives results and no member code or check-in', $ONLY_CHART['member_code'] === '' && is_array( $ONLY_CHART['results'] ) && $ONLY_CHART['checkin'] === null );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
-$ONLY_CHECKIN = vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'https://example.test/calc/' );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => true ) );
+$ONLY_CHECKIN =vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'https://example.test/calc/' );
 check( 'gating: check-in on alone gives checkin and no member code or results', $ONLY_CHECKIN['member_code'] === '' && $ONLY_CHECKIN['results'] === null && is_array( $ONLY_CHECKIN['checkin'] ) );
 
 // The data shape when the switches are on.
-fb_arrange( array( 'vance_hub_dash_chart' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_chart' => true ) );
 $T1 = strtotime( '2026-11-01 09:00:00 UTC' );
 $T2 = strtotime( '2026-11-05 09:00:00 UTC' );
 $TWO = array(
@@ -912,24 +927,24 @@ check( 'results: two scored checks give two points, oldest first, with dates', c
 check( 'results: the risk label is the one of the newest check', $RES['risk'] === 'Moderate risk' );
 check( 'results: the check-again link is kept', $RES['href'] === 'https://example.test/calc/' );
 
-fb_arrange( array( 'vance_hub_dash_chart' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_chart' => true ) );
 $NO_LABEL = vance_hub_dashboard_features_data( fb_user( 7 ), array(
 	fb_row( $T1, array( 'score' => 5, 'maxScore' => 8, 'riskLabel' => 'High risk' ) ),
 	fb_row( $T2, array( 'score' => 3, 'maxScore' => 8 ) ),
 ), 'https://example.test/calc/' )['results'];
 check( 'results: a newest check with no risk label gives an empty risk, not the older one', $NO_LABEL['risk'] === '' );
 
-fb_arrange( array( 'vance_hub_dash_chart' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_chart' => true ) );
 $ONE_SCORED = vance_hub_dashboard_features_data( fb_user( 7 ), array(
 	fb_row( $T1, array( 'score' => 5, 'maxScore' => 8 ) ),
 	fb_row( $T2, array( 'text' => 'old snapshot' ) ),
 ), 'https://example.test/calc/' )['results'];
 check( 'results: a text-only snapshot is not plotted, one scored check gives one point', is_array( $ONE_SCORED ) && count( $ONE_SCORED['points'] ) === 1 );
 
-fb_arrange( array( 'vance_hub_dash_chart' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_chart' => true ) );
 check( 'results: no scored checks at all gives results null', vance_hub_dashboard_features_data( fb_user( 7 ), array( fb_row( $T1, array( 'text' => 'x' ) ) ), '' )['results'] === null );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => true ) );
 $LAST_TS = $NOW - 2 * $DAY;
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $LAST_TS, array( 'pain' => 2, 'bowel' => 1, 'tired' => 0, 'kind' => 'check-in' ) ) );
 fb_consented();
@@ -940,30 +955,30 @@ check( 'checkin data: a consented member is not asked for consent again', $CI['n
 check( 'checkin data: the pain series has one point with the stored answer', count( $CI['series']['pain'] ) === 1 && $CI['series']['pain'][0]['value'] === 2.0 && $CI['series']['pain'][0]['max'] === 4.0 );
 check( 'checkin data: the check-in writes nothing', $GLOBALS['WRITES'] === array() );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $CI_NEW = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
 check( 'checkin data: a member with no history is due, with no last or next date and need_consent', $CI_NEW['due'] === true && $CI_NEW['last'] === '' && $CI_NEW['next'] === '' && $CI_NEW['need_consent'] === true && $CI_NEW['count'] === 0 );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
 check( 'checkin data: the general health flag alone still needs the check-in consent', vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin']['need_consent'] === true );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_consented();
 $GLOBALS['MODS']['vance_hub_checkin_consent'] = 'New wording.';
 check( 'checkin data: changed wording needs consent again', vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin']['need_consent'] === true );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true, 'vance_hub_checkin_q_pain' => '  Custom pain?  ', 'vance_hub_checkin_q_bowel' => '   ' ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true, 'vance_hub_checkin_q_pain' => '  Custom pain?  ', 'vance_hub_checkin_q_bowel' => '   ' ) );
 $CI_TEXT = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
 check( 'checkin data: a saved question wording is used, trimmed', $CI_TEXT['questions']['pain'] === 'Custom pain?' );
 check( 'checkin data: a blank saved wording falls back to the default', $CI_TEXT['questions']['bowel'] === 'How much did bowel symptoms trouble you this week?' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $_GET['vance_checkin'] = 'saved';
 $CI_FLASH = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
 check( 'checkin data: the flash is read from the query string', $CI_FLASH['flash'] === 'saved' );
 
-fb_arrange( array( 'vance_hub_dash_checkin' => true ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $_GET['vance_checkin'] = array( 'saved' );
 $CI_FLASH_ARR = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
 check( 'checkin data: an array flash in the query string is ignored', $CI_FLASH_ARR['flash'] === '' );
@@ -1155,7 +1170,7 @@ check( 'append: a failed write stores nothing', ! isset( $GLOBALS['UMETA'][7]['_
 /* ===================================================================== */
 section( '15. Check-in lock: one request per member at a time' );
 
-$ON   = array( 'vance_hub_dash_checkin' => true );
+$ON   = array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true );
 $ROW  = array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' );
 $SAVE = array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' );
 
@@ -1306,6 +1321,27 @@ $GLOBALS['ON_LOCK']  = function () use ( $ROW ) {
 fb_post_delete();
 check( 'save then delete: the delete gives deleted', fb_handle() === 'https://example.test/hub/?vance_checkin=deleted' );
 check( 'save then delete: the answers are gone and the agreement is withdrawn, with its time', ! isset( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] ) && ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'] ) && isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin_withdrawn_at'] ) && $GLOBALS['UMETA'][7]['_sla_consent_checkin_withdrawn_at'] === '2026-11-18 12:00:00' );
+
+/* ---- master switch and an administrator's preview ----------------------------- */
+section( 'master switch: an administrator preview of the feature switches' );
+// Master classic, both switches saved on, an administrator previews with ?vhh_layout=hub.
+fb_arrange( array( 'vance_home_layout' => 'classic', 'vance_hub_dash_member_no' => true, 'vance_hub_dash_checkin' => true ) );
+$GLOBALS['CAPS'] = array( 'edit_theme_options' => true );
+$_GET            = array( 'vhh_layout' => 'hub' );
+check( 'preview: master classic, ?vhh_layout=hub shows a feature saved on', true === vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) );
+check( 'preview: master classic, ?vhh_layout=hub shows the check-in saved on', true === vance_hub_dash_feature_on( 'vance_hub_dash_checkin' ) );
+$GLOBALS['MODS']['vance_hub_dash_member_no'] = false;
+check( 'preview: a feature saved off stays off in the preview', false === vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) );
+unset( $GLOBALS['MODS']['vance_hub_dash_checkin'] );
+check( 'preview: the check-in keeps its default of off in the preview', false === vance_hub_dash_feature_on( 'vance_hub_dash_checkin' ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_chart' => true ) );
+$GLOBALS['CAPS'] = array( 'edit_theme_options' => true );
+$_GET            = array( 'vhh_layout' => 'classic' );
+check( 'preview: master hub, ?vhh_layout=classic turns a feature off', false === vance_hub_dash_feature_on( 'vance_hub_dash_chart' ) );
+fb_arrange( array( 'vance_home_layout' => 'classic', 'vance_hub_dash_chart' => true ) );
+$_GET = array( 'vhh_layout' => 'hub' );
+check( 'preview: a visitor without edit_theme_options cannot preview a feature on', false === vance_hub_dash_feature_on( 'vance_hub_dash_chart' ) );
+$_GET = array();
 
 /* ===================================================================== */
 echo "\n";

@@ -324,7 +324,7 @@ function vance_hub_community_active() {
 	// first, then preview mode (admin toggle or share link), then nothing.
 	// Preview only shows the page; member writes still need the saved switch.
 	$query = vance_hub_preview_query();
-	return vance_hub_community_resolve( vance_get_theme_mod( 'vance_hub_community', false ), $query, '' !== $query );
+	return vance_hub_community_resolve( vance_hub_switch_on( 'vance_hub_community' ), $query, '' !== $query );
 }
 
 /**
@@ -335,7 +335,7 @@ function vance_hub_community_active() {
  * @return bool
  */
 function vance_community_writes_open() {
-	return vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_community', false ) ) || current_user_can( 'edit_theme_options' );
+	return vance_hub_switch_on( 'vance_hub_community' ) || current_user_can( 'edit_theme_options' );
 }
 
 /**
@@ -548,7 +548,7 @@ add_action( 'init', 'vance_community_seed_spaces', 20 );
  */
 function vance_hub_community_customize_register( $wp_customize ) {
 	$wp_customize->add_setting( 'vance_hub_community', array(
-		'default'           => false,
+		'default'           => vance_hub_switch_default( 'vance_hub_community' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_community', array(
@@ -567,7 +567,7 @@ add_action( 'customize_register', 'vance_hub_community_customize_register', 11 )
  * changed: the template is matched by slug as well, so it renders anyway.
  */
 function vance_community_maybe_create_page() {
-	if ( ! vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_community', false ) ) ) {
+	if ( ! vance_hub_switch_on( 'vance_hub_community' ) ) {
 		return;
 	}
 	if ( ! current_user_can( 'edit_theme_options' ) || ! current_user_can( 'publish_pages' ) ) {
