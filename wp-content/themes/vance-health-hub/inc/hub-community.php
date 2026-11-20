@@ -18,7 +18,7 @@
  *                    (approved), draft (rejected).
  *   vance_reply      comment_type on a vance_question. One level, no parent.
  *                    comment_approved 0 (waiting, reported, rejected) or 1.
- *   vance_space      Taxonomy, seven terms seeded once.
+ *   vance_space      Taxonomy, eight terms, each seeded once.
  *   vance_poll       CPT. Title is the question. Answers in post meta.
  *
  *   Post / comment meta:
@@ -67,7 +67,7 @@ function vance_community_cap() {
 }
 
 /**
- * The seven spaces, slug => label, in display order.
+ * The eight spaces, slug => label, in display order.
  *
  * The condition spaces are in priority order (inc/condition-priority.php).
  * The topic spaces keep their place after them.
@@ -76,13 +76,14 @@ function vance_community_cap() {
  */
 function vance_community_spaces() {
 	return vance_sort_conditions( array(
-		'ibd'                => __( 'IBD', 'vance-health-hub' ),
-		'ulcerative-colitis' => __( 'Ulcerative Colitis', 'vance-health-hub' ),
-		'crohns-disease'     => __( "Crohn's Disease", 'vance-health-hub' ),
-		'ibs'                => __( 'IBS', 'vance-health-hub' ),
-		'food-and-recipes'   => __( 'Food and recipes', 'vance-health-hub' ),
-		'work-and-travel'    => __( 'Work and travel', 'vance-health-hub' ),
-		'carers'             => __( 'Carers', 'vance-health-hub' ),
+		'ibd'                  => __( 'IBD', 'vance-health-hub' ),
+		'ulcerative-colitis'   => __( 'Ulcerative Colitis', 'vance-health-hub' ),
+		'crohns-disease'       => __( "Crohn's Disease", 'vance-health-hub' ),
+		'diverticular-disease' => __( 'Diverticular Disease', 'vance-health-hub' ),
+		'ibs'                  => __( 'IBS', 'vance-health-hub' ),
+		'food-and-recipes'     => __( 'Food and recipes', 'vance-health-hub' ),
+		'work-and-travel'      => __( 'Work and travel', 'vance-health-hub' ),
+		'carers'               => __( 'Carers', 'vance-health-hub' ),
 	) );
 }
 
@@ -513,30 +514,72 @@ add_action( 'init', 'vance_community_grant_caps', 11 );
 add_action( 'after_switch_theme', 'vance_community_grant_caps' );
 
 /**
- * Create the seven spaces once. A term that already exists is left as it is,
- * so a moderator's later rename survives. The flag is set only when every term
- * exists, so a failed insert is tried again on the next request.
+ * The spaces the first release seeded. A site whose seed flag is the old
+ * value 1 had all of these made, so they count as done.
+ *
+ * @return string[]
+ */
+function vance_community_first_spaces() {
+	return array( 'ibd', 'ulcerative-colitis', 'crohns-disease', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' );
+}
+
+/**
+ * Create each space once.
+ *
+ * The flag option holds the slugs already seeded. A space added to
+ * vance_community_spaces() later is made on the next request, and the spaces
+ * seeded before are not touched. A term that already exists is left as it is,
+ * so a moderator's later rename survives. A space a moderator deleted stays
+ * deleted, because its slug is in the list. A failed insert is not added to
+ * the list, so it is tried again on the next request.
  */
 function vance_community_seed_spaces() {
-	if ( get_option( 'vance_community_spaces_seeded' ) ) {
+	$stored = get_option( 'vance_community_spaces_seeded' );
+	if ( is_array( $stored ) ) {
+		$done = $stored;
+	} elseif ( $stored ) {
+		$done = vance_community_first_spaces(); // The old flag: 1.
+	} else {
+		$done = array();
+	}
+
+	$todo = array_diff( array_keys( vance_community_spaces() ), $done );
+	if ( ! $todo || ! taxonomy_exists( 'vance_space' ) ) {
 		return;
 	}
-	if ( ! taxonomy_exists( 'vance_space' ) ) {
-		return;
-	}
-	$ok = true;
-	foreach ( vance_community_spaces() as $slug => $label ) {
-		if ( term_exists( $slug, 'vance_space' ) ) {
-			continue;
+
+	// add_option() is atomic: only one request can create the lock row. So two
+	// requests that arrive together after a deploy cannot both insert the same
+	// term. The other request returns and tries again on its next request,
+	// where term_exists() finds the term. A lock older than a minute is from a
+	// request that died: delete it, then take it with the same atomic add.
+	$lock = 'vance_community_spaces_seed_lock';
+	if ( ! add_option( $lock, (string) time(), '', 'no' ) ) {
+		if ( time() - (int) get_option( $lock, 0 ) < MINUTE_IN_SECONDS ) {
+			return;
 		}
-		$res = wp_insert_term( $label, 'vance_space', array( 'slug' => $slug ) );
-		if ( is_wp_error( $res ) ) {
-			$ok = false;
+		delete_option( $lock );
+		if ( ! add_option( $lock, (string) time(), '', 'no' ) ) {
+			return;
 		}
 	}
-	if ( $ok ) {
-		update_option( 'vance_community_spaces_seeded', 1, false );
+
+	$spaces = vance_community_spaces();
+	foreach ( $todo as $slug ) {
+		if ( ! term_exists( $slug, 'vance_space' ) ) {
+			$res = wp_insert_term( $spaces[ $slug ], 'vance_space', array( 'slug' => $slug ) );
+			if ( is_wp_error( $res ) ) {
+				continue;
+			}
+		}
+		$done[] = $slug;
 	}
+
+	$done = array_values( array_unique( $done ) );
+	if ( $done !== $stored ) {
+		update_option( 'vance_community_spaces_seeded', $done, false );
+	}
+	delete_option( $lock );
 }
 add_action( 'init', 'vance_community_seed_spaces', 20 );
 
@@ -919,7 +962,7 @@ function vance_community_space_terms() {
 			unset( $by_slug[ $slug ] );
 		}
 	}
-	// A space a moderator added later goes after the seven.
+	// A space a moderator added later goes after the built-in spaces.
 	return $out + $by_slug;
 }
 

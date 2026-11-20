@@ -489,7 +489,7 @@ $QUEUE_EMPTY = queue_html();
 check( 'queue box: with no samples the queue screen offers Load sample data', has( $QUEUE_EMPTY, 'Load sample data' ) && ! has( $QUEUE_EMPTY, 'Remove sample data' ) );
 vance_community_sample_load( time() );
 $QUEUE_FULL = queue_html();
-check( 'queue box: with samples the queue screen says 20 and offers Remove', has( $QUEUE_FULL, 'Sample questions now: 20' ) && has( $QUEUE_FULL, 'Remove sample data' ) );
+check( 'queue box: with samples the queue screen says 22 and offers Remove', has( $QUEUE_FULL, 'Sample questions now: 22' ) && has( $QUEUE_FULL, 'Remove sample data' ) );
 
 arrange( on_mods(), array( 'vance_moderate_community' => true ), 2 );
 $QUEUE_ED = queue_html();

@@ -352,7 +352,7 @@ section( '8. Community spaces' );
 
 check( 'vance_community_spaces: condition spaces first (crohns, uc), then the rest in order',
     array_keys( vance_community_spaces() ),
-    array( 'crohns-disease', 'ulcerative-colitis', 'ibd', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' ) );
+    array( 'crohns-disease', 'ulcerative-colitis', 'diverticular-disease', 'ibd', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' ) );
 
 /* ===================================================================== */
 section( '9. Lobby chips: 4 + 3, sliced from the priority-ordered meta' );

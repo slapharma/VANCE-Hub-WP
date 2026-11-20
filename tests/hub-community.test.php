@@ -69,6 +69,26 @@ function arrange( array $mods = array(), array $caps = array(), $user = 0 ) {
 	vance_community_register_types();
 	vance_community_seed_spaces();
 }
+/** Resets the store and the types, but seeds no spaces. The seed-rule checks start from this. */
+function arrange_unseeded() {
+	cs_reset();
+	$GLOBALS['WP']['caps'] = admin_caps();
+	$GLOBALS['WP']['user'] = 1;
+	vance_community_register_types();
+}
+/** The eight space slugs, in no particular order. */
+function all_space_slugs() {
+	return array( 'crohns-disease', 'ulcerative-colitis', 'diverticular-disease', 'ibd', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' );
+}
+/** True when $got is an array that holds exactly the slugs in $want, in any order. */
+function same_slugs( $got, array $want ) {
+	if ( ! is_array( $got ) ) {
+		return false;
+	}
+	sort( $got );
+	sort( $want );
+	return $got === $want;
+}
 /** Changes the signed-in user without resetting the store. */
 function act_as( $user, array $caps ) {
 	$GLOBALS['WP']['user'] = (int) $user;
@@ -362,10 +382,10 @@ check( 'caps: subscribers are not given vance_moderate_community', false === get
 
 arrange();
 $SLUGS = array_keys( vance_community_space_terms() );
-check( 'spaces: the seven spaces exist after the seed, priority conditions first', array( 'crohns-disease', 'ulcerative-colitis', 'ibd', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' ) === $SLUGS );
-check( 'spaces: the seed sets its flag once every space exists', 1 === get_option( 'vance_community_spaces_seeded' ) );
+check( 'spaces: the eight spaces exist after the seed, priority conditions first', array( 'crohns-disease', 'ulcerative-colitis', 'diverticular-disease', 'ibd', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' ) === $SLUGS );
+check( 'spaces: the seed stores the eight slugs once every space exists', same_slugs( get_option( 'vance_community_spaces_seeded' ), all_space_slugs() ) );
 vance_community_seed_spaces();
-check( 'spaces: a second seed adds no spaces', 7 === count( get_terms( array( 'taxonomy' => 'vance_space' ) ) ) );
+check( 'spaces: a second seed adds no spaces', 8 === count( get_terms( array( 'taxonomy' => 'vance_space' ) ) ) );
 
 arrange();
 $GLOBALS['WP']['terms'][ get_term_by( 'slug', 'ibd', 'vance_space' )->term_id ]->name = 'IBD (renamed)';
@@ -376,7 +396,99 @@ check( 'spaces: a moderator rename survives a re-seed', 'IBD (renamed)' === get_
 arrange();
 wp_insert_term( 'Pharmacy', 'vance_space', array( 'slug' => 'pharmacy' ) );
 $KEYS = array_keys( vance_community_space_terms() );
-check( 'spaces: a space a moderator adds goes after the seven', 8 === count( $KEYS ) && 'pharmacy' === $KEYS[7] );
+check( 'spaces: a space a moderator adds goes after the eight', 9 === count( $KEYS ) && 'pharmacy' === $KEYS[8] );
+
+/* The seed flag holds the slugs already seeded. Each block below is one case of the seed rules. */
+arrange_unseeded();
+vance_community_seed_spaces();
+check( 'seed: a fresh site makes all eight spaces', 8 === count( get_terms( array( 'taxonomy' => 'vance_space' ) ) ) );
+check( 'seed: a fresh site stores the eight slugs', same_slugs( get_option( 'vance_community_spaces_seeded' ), all_space_slugs() ) );
+
+arrange_unseeded();
+vance_community_seed_spaces();
+$IBD_ID = get_term_by( 'slug', 'ibd', 'vance_space' )->term_id;
+$DIV_ID = get_term_by( 'slug', 'diverticular-disease', 'vance_space' )->term_id;
+unset( $GLOBALS['WP']['terms'][ $DIV_ID ] );
+update_option( 'vance_community_spaces_seeded', 1 );
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: a legacy flag of 1 makes only diverticular-disease (no other insert is tried)', array( 'diverticular-disease' ) === $GLOBALS['WP']['insert_term_calls'] );
+check( 'seed: a legacy flag keeps the seven existing spaces with their ids', $IBD_ID === get_term_by( 'slug', 'ibd', 'vance_space' )->term_id && 8 === count( get_terms( array( 'taxonomy' => 'vance_space' ) ) ) );
+check( 'seed: a legacy flag turns the option into the eight slugs', same_slugs( get_option( 'vance_community_spaces_seeded' ), all_space_slugs() ) );
+
+arrange_unseeded();
+vance_community_seed_spaces();
+$GLOBALS['WP']['option_writes']     = array();
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: a second run tries no insert', array() === $GLOBALS['WP']['insert_term_calls'] );
+check( 'seed: a second run does not write the option', array() === $GLOBALS['WP']['option_writes'] );
+
+arrange_unseeded();
+$GLOBALS['WP']['fail_insert_term'] = array( 'diverticular-disease' => true );
+vance_community_seed_spaces();
+$GLOBALS['WP']['option_writes']     = array();
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: a refused retry is tried again, and only that slug', array( 'diverticular-disease' ) === $GLOBALS['WP']['insert_term_calls'] );
+check( 'seed: a refused retry that changes nothing does not write the option', array() === $GLOBALS['WP']['option_writes'] );
+$GLOBALS['WP']['fail_insert_term'] = array();
+
+// The seed lock: two requests together must not both insert.
+arrange_unseeded();
+add_option( 'vance_community_spaces_seed_lock', (string) time() );
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed lock: while another request holds a fresh lock, nothing is inserted', array() === $GLOBALS['WP']['insert_term_calls'] );
+check( 'seed lock: and the other request\'s lock is left in place', array_key_exists( 'vance_community_spaces_seed_lock', $GLOBALS['WP']['options'] ) );
+
+arrange_unseeded();
+add_option( 'vance_community_spaces_seed_lock', (string) ( time() - 120 ) );
+vance_community_seed_spaces();
+check( 'seed lock: a lock older than a minute (a dead request) is taken over, and all eight are made', 8 === count( get_terms( array( 'taxonomy' => 'vance_space' ) ) ) );
+check( 'seed lock: the lock is released after the seed', ! array_key_exists( 'vance_community_spaces_seed_lock', $GLOBALS['WP']['options'] ) );
+
+arrange_unseeded();
+vance_community_seed_spaces();
+check( 'seed lock: a normal seed leaves no lock behind', ! array_key_exists( 'vance_community_spaces_seed_lock', $GLOBALS['WP']['options'] ) );
+
+arrange_unseeded();
+vance_community_seed_spaces();
+$CARER_ID = get_term_by( 'slug', 'carers', 'vance_space' )->term_id;
+unset( $GLOBALS['WP']['terms'][ $CARER_ID ] );
+update_option( 'vance_community_spaces_seeded', 1 );
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: a space a moderator deleted (legacy flag) is not made again', false === get_term_by( 'slug', 'carers', 'vance_space' ) && array() === $GLOBALS['WP']['insert_term_calls'] );
+check( 'seed: a space a moderator deleted (legacy flag) keeps its slug in the list', same_slugs( get_option( 'vance_community_spaces_seeded' ), all_space_slugs() ) );
+
+arrange_unseeded();
+vance_community_seed_spaces();
+$CARER_ID = get_term_by( 'slug', 'carers', 'vance_space' )->term_id;
+unset( $GLOBALS['WP']['terms'][ $CARER_ID ] );
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: a space a moderator deleted (stored list) is not made again', false === get_term_by( 'slug', 'carers', 'vance_space' ) && array() === $GLOBALS['WP']['insert_term_calls'] );
+
+arrange_unseeded();
+$GLOBALS['WP']['fail_insert_term'] = array( 'diverticular-disease' => true );
+vance_community_seed_spaces();
+check( 'seed: a refused insert makes no term for that slug', false === get_term_by( 'slug', 'diverticular-disease', 'vance_space' ) );
+check( 'seed: a refused insert leaves its slug out of the list, the other seven are in', same_slugs( get_option( 'vance_community_spaces_seeded' ), array_diff( all_space_slugs(), array( 'diverticular-disease' ) ) ) );
+$GLOBALS['WP']['fail_insert_term'] = array();
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: the next request retries the refused slug, and only that one', array( 'diverticular-disease' ) === $GLOBALS['WP']['insert_term_calls'] );
+check( 'seed: after the retry the list holds all eight slugs', same_slugs( get_option( 'vance_community_spaces_seeded' ), all_space_slugs() ) );
+
+arrange_unseeded();
+wp_insert_term( 'Diverticular (moderator)', 'vance_space', array( 'slug' => 'diverticular-disease' ) );
+$MOD_ID = get_term_by( 'slug', 'diverticular-disease', 'vance_space' )->term_id;
+$GLOBALS['WP']['insert_term_calls'] = array();
+vance_community_seed_spaces();
+check( 'seed: a term a moderator made under the slug is not inserted again', false === in_array( 'diverticular-disease', $GLOBALS['WP']['insert_term_calls'], true ) );
+check( 'seed: a term a moderator made under the slug keeps its id and its name', $MOD_ID === get_term_by( 'slug', 'diverticular-disease', 'vance_space' )->term_id && 'Diverticular (moderator)' === get_term_by( 'slug', 'diverticular-disease', 'vance_space' )->name );
+check( 'seed: a term a moderator made under the slug is recorded as seeded', same_slugs( get_option( 'vance_community_spaces_seeded' ), all_space_slugs() ) );
 
 /* ---- 4. member writes: hooks and refusals ---------------------------------- */
 section( '4. Member writes: hooks, and refusals for visitors, nonces and the switch' );
