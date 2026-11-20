@@ -27,7 +27,7 @@ $search_query  = isset($_GET['keyword'])      ? sanitize_text_field($_GET['keywo
 $sort          = isset($_GET['sort'])         ? sanitize_key($_GET['sort'])                                : '';
 
 // Only honour condition slugs the site actually defines.
-$conditions = array_values(array_intersect($conditions, array_keys(vance_gi_conditions())));
+$conditions = vance_sort_conditions(array_values(array_intersect($conditions, array_keys(vance_gi_conditions()))));
 
 $audience_tags = array('patient' => 'audience-patient', 'hcp' => 'audience-hcp');
 

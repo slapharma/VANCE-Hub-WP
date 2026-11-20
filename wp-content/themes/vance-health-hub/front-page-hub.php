@@ -266,7 +266,7 @@ $vhub_cards = function_exists( 'vance_gi_condition_cards' ) ? vance_gi_condition
 if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 	list( $vhub_cond_tiles, $vhub_cond_list ) = vance_hub_split_conditions(
 		$vhub_cards,
-		array( 'crohns-disease', 'ulcerative-colitis', 'diverticular-disease' )
+		vance_condition_priority()
 	);
 	?>
 <section class="vhub-wrap vhub-section vhub-conditions" aria-labelledby="vhub-conditions-title">

@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string[]
  */
 function vance_ai_gi_condition_slugs() {
-	return array(
+	return vance_sort_conditions( array(
 		'inflammatory-bowel-disease',
 		'crohns-disease',
 		'ulcerative-colitis',
@@ -43,7 +43,7 @@ function vance_ai_gi_condition_slugs() {
 		'irritable-bowel-syndrome',
 		'colorectal-cancer',
 		'diverticular-disease',
-	);
+	) );
 }
 
 /**

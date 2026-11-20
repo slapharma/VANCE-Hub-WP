@@ -173,13 +173,15 @@ function vance_customizer_structure_sections() {
 			'vance_gi_hub_cta'     => 'Hub: closing call to action',
 			'vance_gi_colours'     => 'Colours, all condition pages',
 			'vance_gi_shared'      => 'Last reviewed date, all condition pages',
-			'vance_gi_cond_ibd'    => 'Condition: IBD (Inflammatory Bowel Disease)',
-			'vance_gi_cond_uc'     => 'Condition: Ulcerative Colitis',
+			// Same order as vance_gi_conditions() (priority first).
+			// tests/condition-priority.test.php fails if the two drift.
 			'vance_gi_cond_crohns' => 'Condition: Crohn\'s Disease',
+			'vance_gi_cond_uc'     => 'Condition: Ulcerative Colitis',
+			'vance_gi_cond_div'    => 'Condition: Diverticular Disease',
+			'vance_gi_cond_ibd'    => 'Condition: IBD (Inflammatory Bowel Disease)',
 			'vance_gi_cond_mc'     => 'Condition: Microscopic Colitis',
 			'vance_gi_cond_ibs'    => 'Condition: IBS (Irritable Bowel Syndrome)',
 			'vance_gi_cond_crc'    => 'Condition: Colorectal Cancer',
-			'vance_gi_cond_div'    => 'Condition: Diverticular Disease',
 		),
 		'vance_tools_panel'            => array(
 			'vance_tools_hero'                       => 'Tools shelf: ' . $classic,

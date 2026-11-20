@@ -69,10 +69,13 @@ function vance_community_cap() {
 /**
  * The seven spaces, slug => label, in display order.
  *
+ * The condition spaces are in priority order (inc/condition-priority.php).
+ * The topic spaces keep their place after them.
+ *
  * @return array<string,string>
  */
 function vance_community_spaces() {
-	return array(
+	return vance_sort_conditions( array(
 		'ibd'                => __( 'IBD', 'vance-health-hub' ),
 		'ulcerative-colitis' => __( 'Ulcerative Colitis', 'vance-health-hub' ),
 		'crohns-disease'     => __( "Crohn's Disease", 'vance-health-hub' ),
@@ -80,7 +83,7 @@ function vance_community_spaces() {
 		'food-and-recipes'   => __( 'Food and recipes', 'vance-health-hub' ),
 		'work-and-travel'    => __( 'Work and travel', 'vance-health-hub' ),
 		'carers'             => __( 'Carers', 'vance-health-hub' ),
-	);
+	) );
 }
 
 /**

@@ -182,6 +182,7 @@ lift_function( $FN, 'vance_gi_condition_cards' );
 lift_function( $FN, 'vance_gi_page_url' );
 lift_function( $FN, 'vance_gi_hub_url' );
 
+require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/gi-hero.php';
 require_once $THEME . '/inc/legal-hero.php';
 require_once $THEME . '/inc/hero-spotlight.php';

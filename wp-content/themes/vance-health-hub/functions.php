@@ -7,6 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
 }
 
+// Condition priority — Crohn's, ulcerative colitis, diverticular disease first.
+// Loaded first because every condition registry below sorts through it.
+require_once get_template_directory() . '/inc/condition-priority.php';
 // AI Visibility System — drop-in file that makes the site discoverable to LLMs/agents.
 require_once get_template_directory() . '/ai-visibility.php';
 // Cross-page section renderers — defines vance_render_section_*() functions
@@ -231,9 +234,12 @@ function vance_get_read_time( $post_id ) {
  *         is bound to admin-saved values already in the database.
  *   `nav` is the data-cond attribute the sidebar icons are selected on
  *         (assets/css/gi-health.css).
+ *
+ * Returned in priority order (see inc/condition-priority.php): the literal
+ * below is only the order of the conditions outside the priority list.
  */
 function vance_gi_conditions() {
-    return array(
+    return vance_sort_conditions( array(
         'inflammatory-bowel-disease' => array( 'key' => 'ibd',    'nav' => 'ibd',          'label' => 'Inflammatory Bowel Disease' ),
         'ulcerative-colitis'         => array( 'key' => 'uc',     'nav' => 'uc',           'label' => 'Ulcerative Colitis' ),
         'crohns-disease'             => array( 'key' => 'crohns', 'nav' => 'crohns',       'label' => 'Crohn\'s Disease' ),
@@ -241,7 +247,7 @@ function vance_gi_conditions() {
         'irritable-bowel-syndrome'   => array( 'key' => 'ibs',    'nav' => 'ibs',          'label' => 'Irritable Bowel Syndrome' ),
         'colorectal-cancer'          => array( 'key' => 'crc',    'nav' => 'crc',          'label' => 'Colorectal Cancer' ),
         'diverticular-disease'       => array( 'key' => 'div',    'nav' => 'diverticular', 'label' => 'Diverticular Disease' ),
-    );
+    ) );
 }
 
 /**
@@ -255,10 +261,12 @@ function vance_gi_conditions() {
  *
  * Images live in /assets/img/gi-health/.
  *
+ * Returned in priority order, like vance_gi_conditions().
+ *
  * @return array<int, array{slug:string,image:string,alt:string,title:string,desc:string}>
  */
 function vance_gi_condition_cards() {
-    return array(
+    return vance_sort_conditions( array(
         array(
             'slug'  => 'inflammatory-bowel-disease',
             'image' => 'ibd.webp',
@@ -308,7 +316,7 @@ function vance_gi_condition_cards() {
             'title' => 'Diverticular Disease &amp; Diverticulitis',
             'desc'  => 'Small pouches that form in the wall of the colon, which can sometimes cause pain or become inflamed.',
         ),
-    );
+    ) );
 }
 
 /**

@@ -216,6 +216,7 @@ if ( ! function_exists( 'mb_strtoupper' ) ) {
 	}
 }
 
+require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-header.php';
 

@@ -112,19 +112,23 @@ const VANCE_GI_PURPLE_LINE = '#CDBEE8'; // chip border, on the white band
  *   intro    the hero lede. Carried across from page-gi-condition.php's
  *            $cond_defaults verbatim except where noted, so switching hero
  *            design cannot silently reword a clinical page.
- *   related  the three conditions this one is most often confused with, in the
- *            order they appear in the band. Never contains its own slug — a
- *            page is not sold back to itself.
+ *   related  the three conditions this one is most often confused with. Never
+ *            contains its own slug — a page is not sold back to itself. The
+ *            band shows them in priority order (vance_gi_hero_related_slugs()),
+ *            so the order written here only ranks the non-priority ones.
  *   focal    object-position for the photograph. The media box is roughly
  *            square while the assets are 3:2, so the crop is horizontal and
  *            the first number is the one that matters. Each was set by eye
  *            against the dissolve: a subject left of ~40% is feathered away.
  *            Admin-overridable per condition; see vance_gi_hero_photo().
  *
+ * Returned in priority order (inc/condition-priority.php). The lobby's chip
+ * rows are cut from this order, so the priority conditions lead row one.
+ *
  * @return array<string, array<string, mixed>>
  */
 function vance_gi_hero_meta() {
-	return array(
+	return vance_sort_conditions( array(
 		'inflammatory-bowel-disease' => array(
 			'eyebrow' => __( 'Inflammatory bowel disease', 'vance-health-hub' ),
 			'short'   => __( 'IBD', 'vance-health-hub' ), // the band on a phone
@@ -201,7 +205,7 @@ function vance_gi_hero_meta() {
 			'related' => array( 'irritable-bowel-syndrome', 'colorectal-cancer', 'inflammatory-bowel-disease' ),
 			'focal'   => '48% 26%',
 		),
-	);
+	) );
 }
 
 /**
@@ -238,12 +242,14 @@ function vance_gi_hero_slug_meta( $slug ) {
  * map. Returns an empty array for anything not in the set, so a caller can
  * fall back without a special case.
  *
+ * Priority conditions come first; the rest keep the order in `related`.
+ *
  * @param string $slug A page's post_name.
  * @return array<int, string>
  */
 function vance_gi_hero_related_slugs( $slug ) {
 	$m = vance_gi_hero_slug_meta( $slug );
-	return $m ? $m['related'] : array();
+	return $m ? vance_sort_conditions( $m['related'] ) : array();
 }
 
 /**

@@ -39,6 +39,7 @@ set_error_handler( function ( $no, $str, $file, $line ) {
 	throw new ErrorException( $str, 0, $no, $file, $line );
 } );
 
+require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-community.php';
 require_once $THEME . '/inc/hub-community-view.php';
