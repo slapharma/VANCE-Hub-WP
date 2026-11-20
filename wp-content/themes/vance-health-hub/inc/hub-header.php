@@ -233,7 +233,7 @@ function vance_hub_header_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_header', array(
 		'label'       => __( 'Site header: use the VanceHubClub header', 'vance-health-hub' ),
-		'description' => __( 'Replaces the header on every page with the VanceHubClub header: logo, a short menu, the VANCE-Ai button, Sign in and Join free (My Hub for members), and the purple member bar under it. Assign a menu to the "VanceHubClub header menu" location to choose the links; with no menu, the header lists the Tools, Conditions and Library pages that exist. Submenus are not shown: only the top level of the menu appears. Administrators can preview it without saving: add ?vhh_layout=hub to any page address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
+		'description' => __( 'Replaces the header on every page with the VanceHubClub header: logo, the menu, the VANCE-Ai button, Sign in and Join free (My Hub for members), and the purple member bar under it. The header shows the site\'s original primary menu, with its dropdowns, and adds Community while the Community hub is on. To use a different, short menu, assign one to the "VanceHubClub header menu" location: only its top level appears. With neither menu, the header lists the Tools, Conditions and Library pages that exist. Administrators can preview it without saving: add ?vhh_layout=hub to any page address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'checkbox',
 	) );
@@ -327,8 +327,12 @@ function vance_hub_header_current_url() {
 }
 
 /**
- * The header navigation as HTML: the assigned menu when there is one, else the
- * fallback list. Every label and URL is escaped.
+ * The header navigation as HTML, first match wins:
+ *   1. a menu assigned to the "VanceHubClub header menu" location (top level only);
+ *   2. the site's original primary menu, in full. Max Mega Menu renders it, with
+ *      its dropdowns and its phone drawer, as in the classic header;
+ *   3. the fallback list of real pages.
+ * Every label and URL is escaped.
  *
  * @return string
  */
@@ -347,6 +351,21 @@ function vance_hub_header_nav_html() {
 		}
 	}
 
+	if ( has_nav_menu( 'primary-menu' ) ) {
+		// No depth limit: Max Mega Menu needs the whole tree for its panels.
+		// Without the plugin, hub-header.css hides the nested lists.
+		$menu = wp_nav_menu( array(
+			'theme_location' => 'primary-menu',
+			'container'      => false,
+			'menu_class'     => 'vhh-nav__list',
+			'fallback_cb'    => false,
+			'echo'           => false,
+		) );
+		if ( is_string( $menu ) && '' !== trim( $menu ) ) {
+			return $menu;
+		}
+	}
+
 	$html = '';
 	foreach ( vance_hub_header_fallback_items() as $item ) {
 		$html .= '<li class="vhh-nav__item"><a class="vhh-nav__link" href="' . esc_url( $item['url'] ) . '"'
@@ -355,3 +374,90 @@ function vance_hub_header_nav_html() {
 	}
 	return '' === $html ? '' : '<ul class="vhh-nav__list">' . $html . '</ul>';
 }
+
+/**
+ * True when the header navigation HTML is Max Mega Menu's. The header then
+ * leaves the phone menu to the plugin's own drawer (hub-header.css,
+ * .vhh-header--mega).
+ *
+ * @param string $html Output of vance_hub_header_nav_html().
+ * @return bool
+ */
+function vance_hub_header_nav_is_mega( $html ) {
+	return false !== strpos( (string) $html, 'mega-menu-wrap' );
+}
+
+/**
+ * The Community item as one <li> for the original primary menu, or '' when the
+ * Community hub is off or its page is not published.
+ *
+ * With Max Mega Menu the item carries the plugin's top-level classes, so its
+ * generated stylesheet styles it like the other top-level links. The classes
+ * flag the item as a plain flyout with no children, so the plugin script adds
+ * no toggle to it.
+ *
+ * @param bool $mega True when the menu is Max Mega Menu's.
+ * @return string
+ */
+function vance_hub_header_community_li( $mega ) {
+	$added = vance_hub_header_add_community( array() );
+	if ( empty( $added[0]['url'] ) ) {
+		return '';
+	}
+	$marked  = vance_hub_header_mark_current( array( $added[0] ), vance_hub_header_current_url() );
+	$current = ! empty( $marked[0]['current'] );
+
+	if ( $mega ) {
+		$li_class = 'mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community' . ( $current ? ' mega-current-menu-item' : '' );
+		$a_class  = ' class="mega-menu-link"';
+	} else {
+		$li_class = 'menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community' . ( $current ? ' current-menu-item' : '' );
+		$a_class  = '';
+	}
+	return '<li class="' . esc_attr( $li_class ) . '"><a' . $a_class . ' href="' . esc_url( $added[0]['url'] ) . '"'
+		. ( $current ? ' aria-current="page"' : '' ) . '>'
+		. esc_html( $added[0]['label'] ) . '</a></li>';
+}
+
+/**
+ * Add Community as the last top-level item of the original primary menu, only
+ * inside the VanceHubClub header. The classic header and its menu stay as they
+ * are. Added at render time, never stored as a menu item, so turning the
+ * Community hub off removes it everywhere at once.
+ *
+ * Community is not added when the menu already links to the community page (an
+ * editor added it by hand), or when the menu has no items (the header then uses
+ * its fallback list).
+ *
+ * With Max Mega Menu, a visitor also gets a Sign in item that shows only in the
+ * phone drawer: the phone bar has no room for the Sign in button, and the
+ * drawer replaces the panel that held it.
+ *
+ * Priority 10, before the drawer-only items of inc/nav-mega.php (priority 20).
+ *
+ * @param string   $items Menu item markup.
+ * @param stdClass $args  wp_nav_menu() arguments.
+ * @return string
+ */
+function vance_hub_header_menu_community( $items, $args ) {
+	if ( ! is_object( $args ) || empty( $args->theme_location ) || 'primary-menu' !== $args->theme_location ) {
+		return $items;
+	}
+	if ( '' === trim( (string) $items ) || ! vance_hub_header_active() ) {
+		return $items;
+	}
+	$mega = false !== strpos( (string) $items, 'mega-menu-item' );
+
+	$community = vance_hub_header_community_li( $mega );
+	if ( '' !== $community && preg_match( '#href="' . preg_quote( esc_url( vance_hub_header_existing_page_url( 'community', '/community/' ) ), '#' ) . '"#', (string) $items ) ) {
+		$community = '';
+	}
+
+	$signin = '';
+	if ( $mega && ! is_user_logged_in() ) {
+		$signin = '<li class="mega-menu-item mega-menu-item-type-custom mega-menu-item-object-custom mega-align-bottom-left mega-menu-flyout vhh-nav__phone-only">'
+			. '<a class="mega-menu-link" href="' . esc_url( home_url( '/login/' ) ) . '">' . esc_html__( 'Sign in', 'vance-health-hub' ) . '</a></li>';
+	}
+	return $items . $community . $signin;
+}
+add_filter( 'wp_nav_menu_items', 'vance_hub_header_menu_community', 10, 2 );

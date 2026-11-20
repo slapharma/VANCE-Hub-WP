@@ -7,8 +7,10 @@
 
    Radii come from the token scale in main.css :root, with literal fallbacks.
    The classic header (.site-header) is not rendered while this one is, so none
-   of its rules apply. Max Mega Menu is not involved: the navigation here is the
-   "VanceHubClub header menu" location, or a short list of real pages.
+   of its rules apply. The navigation is the "VanceHubClub header menu"
+   location when a menu is assigned to it; else the site's original primary
+   menu, rendered by Max Mega Menu (see .vhh-header--mega at the end); else a
+   short list of real pages.
 
    Desktop: one bar. Phone (below 768px): logo, one primary button, search and a
    menu button; the menu button opens the navigation as a panel.
@@ -356,4 +358,84 @@ body.vhub-header .vhub-bar a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
 	.vhh-btn,
 	.vhh-menu-btn__bars span { transition: none; }
+}
+
+/* ==========================================================================
+   The original menu (.vhh-header--mega)
+
+   With no "VanceHubClub header menu" assigned, the header shows the site's
+   primary menu, which Max Mega Menu renders as in the classic header. The
+   plugin's generated stylesheet and the body.mega-menu-primary-menu rules in
+   main.css, nav-mega.css and mobile-base.css style it. These rules only fit it
+   into this header. The breakpoint is the plugin's (768px), not this file's.
+   ========================================================================== */
+
+/* Without the plugin the primary menu is a plain nested list: show only the
+   top level, as the header did before. */
+.vhh-nav__list .sub-menu { display: none; }
+
+@media (min-width: 769px) {
+	/* The mega panels sit at top: 100% of the nearest positioned ancestor. Make
+	   that the sticky header, so a panel opens under the whole bar, as it opens
+	   under .site-header in the classic header (nav-mega.css). */
+	.vhh-header--mega #mega-menu-wrap-primary-menu,
+	.vhh-header--mega #mega-menu-wrap-primary-menu #mega-menu-primary-menu,
+	.vhh-header--mega #mega-menu-wrap-primary-menu #mega-menu-primary-menu > li.mega-menu-megamenu {
+		position: static !important;
+	}
+	.vhh-header--mega .vhh-nav { flex: 1 1 auto; }
+
+	/* Sign in is in the bar here; its menu item is for the phone drawer only.
+	   !important: the plugin's generated stylesheet sets display on every
+	   top-level item with two IDs. */
+	.vhh-header--mega .vhh-nav__phone-only { display: none !important; }
+}
+
+/* Below 1200px the menu, the buttons and the search do not fit on one row, so
+   the menu takes its own full-width row under the logo and the buttons. */
+@media (min-width: 769px) and (max-width: 1199.98px) {
+	.vhh-header--mega .vhh-actions { order: 2; }
+	.vhh-header--mega .vhh-nav { order: 3; flex: 0 0 100%; }
+}
+
+@media (max-width: 768px) {
+	/* Phone: the plugin's hamburger sits at the right of the bar and opens its
+	   own drawer. The nav is not the panel of this header here. */
+	html.vhh-js .vhh-header.vhh-header--mega .vhh-nav,
+	.vhh-header.vhh-header--mega .vhh-nav {
+		display: block;
+		order: 3;
+		flex: 0 0 auto;
+		position: static;
+		padding: 0;
+		border: 0;
+		background: none;
+		box-shadow: none;
+		max-height: none;
+		overflow: visible;
+	}
+	.vhh-header--mega .vhh-nav__extra { display: none; }
+	/* At exactly 768px this file is in its wide layout, but the plugin shows its
+	   drawer, which has the Sign in item: do not show Sign in twice. */
+	.vhh-header--mega .vhh-actions__signin { display: none; }
+
+	/* The panel that held VANCE-Ai is gone, so its bar button comes back as an
+	   icon (the button keeps its aria-label). Sign in is a drawer item. */
+	.vhh-header--mega .vhh-actions__ask {
+		display: inline-flex;
+		min-width: 44px;
+		padding-left: 0;
+		padding-right: 0;
+	}
+	.vhh-header--mega .vhh-actions__ask span {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
 }
