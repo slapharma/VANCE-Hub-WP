@@ -430,6 +430,7 @@ $hq_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
                 <div class="options-grid">
                     <label class="option-item"><input type="checkbox" name="condition_type[]" value="Crohn's" style="display:none;"><div class="option-checkbox"></div><span class="option-text">Crohn's</span></label>
                     <label class="option-item"><input type="checkbox" name="condition_type[]" value="UC" style="display:none;"><div class="option-checkbox"></div><span class="option-text">UC</span></label>
+                    <label class="option-item"><input type="checkbox" name="condition_type[]" value="Diverticular disease" style="display:none;"><div class="option-checkbox"></div><span class="option-text">Diverticular disease</span></label>
                     <label class="option-item"><input type="checkbox" name="condition_type[]" value="IBS" style="display:none;"><div class="option-checkbox"></div><span class="option-text">IBS</span></label>
                     <label class="option-item"><input type="checkbox" name="condition_type[]" value="General gut health / wellness" style="display:none;"><div class="option-checkbox"></div><span class="option-text">General gut health / wellness</span></label>
                     <label class="option-item"><input type="checkbox" name="condition_type[]" value="Other" class="toggle-dep" data-target="#condition-other-text" style="display:none;"><div class="option-checkbox"></div><span class="option-text">Other</span></label>
