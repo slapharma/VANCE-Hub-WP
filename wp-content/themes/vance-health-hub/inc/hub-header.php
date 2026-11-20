@@ -17,8 +17,9 @@
  * The markup is in template-parts/header-hub.php, which header.php includes in
  * place of the classic <header class="site-header"> when the header is active.
  *
- * THE DATA RULE. A link is shown only when the page it points to exists. There
- * is no Community link: that page does not exist yet. The purple member bar
+ * THE DATA RULE. A link is shown only when the page it points to exists. The
+ * Community link is added only while the Community hub switch is on and the
+ * /community/ page exists (vance_hub_header_add_community()). The purple member bar
  * under the header comes from vance_hub_member_bar() (real counts, the
  * Founding Member line, or nothing).
  *
@@ -72,7 +73,8 @@ function vance_hub_header_resolve( $mod_value, $query_value, $can_preview ) {
  * The fallback navigation items, from the URLs of the pages that exist.
  *
  * An item whose URL is '' (its page does not exist) is left out, Tools included.
- * No Community item is ever built: that page does not exist yet.
+ * No Community item is built here: vance_hub_header_add_community() adds it,
+ * behind the Community hub switch.
  *
  * @param string $tools_url      URL for Tools, or ''.
  * @param string $conditions_url URL for Conditions, or ''.
@@ -157,6 +159,11 @@ function vance_hub_header_active() {
 	// the member bar would stay on screen and push the fixed sidebar down.
 	if ( vance_hub_header_on_dashboard() ) {
 		return false;
+	}
+	// The community page is a VanceHubClub page: it always uses the club header
+	// while the Community hub is on (inc/hub-community.php).
+	if ( function_exists( 'vance_community_on_page' ) && vance_community_on_page() ) {
+		return true;
 	}
 	$query = vance_hub_preview_query();
 	return vance_hub_header_resolve( vance_get_theme_mod( 'vance_hub_header', false ), $query, '' !== $query );
@@ -278,7 +285,35 @@ function vance_hub_header_fallback_items() {
 	foreach ( $items as $i => $item ) {
 		$items[ $i ]['label'] = $labels[ $item['label'] ];
 	}
+	$items = vance_hub_header_add_community( $items );
 	return vance_hub_header_mark_current( $items, vance_hub_header_current_url() );
+}
+
+/**
+ * Add the Community item after Tools, only while the Community hub is on
+ * (inc/hub-community.php) and the /community/ page exists. With the hub off,
+ * or without that file, the list is returned unchanged.
+ *
+ * @param array[] $items Rows of label and url.
+ * @return array[]
+ */
+function vance_hub_header_add_community( $items ) {
+	if ( ! function_exists( 'vance_hub_community_active' ) || ! vance_hub_community_active() ) {
+		return $items;
+	}
+	// Only a published page: a draft or private /community/ would give visitors a 404.
+	$page = get_page_by_path( 'community' );
+	if ( ! $page || ! isset( $page->post_status ) || 'publish' !== $page->post_status ) {
+		return $items;
+	}
+	$url = vance_hub_header_existing_page_url( 'community', '/community/' );
+	if ( '' === $url ) {
+		return $items;
+	}
+	$item = array( 'label' => __( 'Community', 'vance-health-hub' ), 'url' => $url );
+	$at   = ( isset( $items[0]['label'] ) && __( 'Tools', 'vance-health-hub' ) === $items[0]['label'] ) ? 1 : 0;
+	array_splice( $items, $at, 0, array( $item ) );
+	return $items;
 }
 
 /**
