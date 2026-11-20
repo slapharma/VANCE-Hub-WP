@@ -140,6 +140,52 @@
 }
 .vhd .vhd-step__text { font-size: 15px; line-height: 1.55; color: #F1EAFB; max-width: 62ch; }
 
+/* --- Top row: next step, Ask VANCE-Ai and the weekly check-in, side by side.
+       Each card stacks its copy over its button. Flex, not grid: a card that
+       wraps grows to the full width, so no card sits alone in half a row.
+       320px holds the five 0-4 check-in buttons on one line. Cards keep their
+       own height (flex-start): the check-in form is much taller than the
+       other two, and stretching them would push their buttons far down. --- */
+.vhd .vhd-top {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;
+	align-items: flex-start;
+}
+.vhd .vhd-top > * { flex: 1 1 320px; min-width: 0; }
+.vhd .vhd-top .vhd-checkin__opts label { flex: 1 1 0; min-width: 40px; }
+.vhd .vhd-top .vhd-step {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 18px;
+	padding: 24px;
+}
+.vhd .vhd-top .vhd-step__title { font-size: 21px; }
+.vhd .vhd-ask {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 24px;
+	border-radius: var(--radius-surface, 14px);
+	background: var(--vhd-teal);
+	color: #FFFFFF;
+}
+/* White text: the paler tints fall under 4.5:1 on #008080. */
+.vhd .vhd-ask .vhd-eyebrow--light { color: #FFFFFF; }
+.vhd .vhd-ask__title {
+	font-family: var(--vhd-heading);
+	font-size: 21px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: #FFFFFF;
+}
+.vhd .vhd-ask__text { font-size: 15px; line-height: 1.55; color: #FFFFFF; }
+.vhd .vhd-ask .vhd-btn { margin-top: 10px; }
+.vhd .vhd-ask button:focus-visible { outline-color: #FFFFFF; }
+/* The check-in in a column: its three trend charts stack. */
+.vhd .vhd-top .vhd-checkin__trends { grid-template-columns: minmax(0, 1fr); }
+
 /* --- Blocks -------------------------------------------------------------- */
 .vhd .vhd-block { display: flex; flex-direction: column; gap: 16px; }
 

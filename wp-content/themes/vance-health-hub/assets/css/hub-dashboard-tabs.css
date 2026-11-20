@@ -107,11 +107,11 @@ body.vhd-tabs .vhdt-member {
 	border-radius: var(--radius-surface, 14px);
 	flex: 0 0 auto;
 }
+/* "Welcome back Clifton": a sentence, so it is not set in capitals. */
 body.vhd-tabs .vhdt-member__label {
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 700;
-	letter-spacing: 0.8px;
-	text-transform: uppercase;
+	letter-spacing: 0.2px;
 	color: #AEDBDB;
 }
 body.vhd-tabs .vhdt-member__name {
