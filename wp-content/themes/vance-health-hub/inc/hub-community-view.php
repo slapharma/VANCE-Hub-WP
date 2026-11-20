@@ -152,7 +152,7 @@ function vance_community_report_html( $kind, $id, $member ) {
 function vance_community_reply_html( $reply, $member, $user_id ) {
 	$id   = (int) $reply->comment_ID;
 	$html = '<div class="vcom-reply" id="vcom-r-' . esc_attr( (string) $id ) . '" data-vcom-item>';
-	$html .= '<p class="vcom-reply__text"><strong>' . esc_html( vance_community_display_name( (int) $reply->user_id ) ) . '</strong> <span aria-hidden="true">&middot;</span> ' . esc_html( wp_strip_all_tags( (string) $reply->comment_content ) ) . '</p>';
+	$html .= '<p class="vcom-reply__text"><strong>' . esc_html( vance_community_author_name( 'reply', $id, (int) $reply->user_id ) ) . '</strong> <span aria-hidden="true">&middot;</span> ' . esc_html( wp_strip_all_tags( (string) $reply->comment_content ) ) . '</p>';
 	$count = vance_community_meta_rows( 'comment', $id, '_vance_community_helpful' );
 	$html .= '<div class="vcom-reply__actions">';
 	if ( $member ) {
@@ -177,7 +177,7 @@ function vance_community_reply_html( $reply, $member, $user_id ) {
  */
 function vance_community_card_html( $q, $member, $user_id ) {
 	$id     = (int) $q->ID;
-	$name   = vance_community_display_name( (int) $q->post_author );
+	$name   = vance_community_author_name( 'question', $id, (int) $q->post_author );
 	$space  = vance_community_question_space( $id );
 	$tone   = $space ? vance_community_space_tone( $space->slug ) : 'teal';
 	$text   = trim( wp_strip_all_tags( (string) $q->post_content ) );
@@ -552,7 +552,14 @@ function vance_community_render_page() {
 	if ( '' !== $current ) {
 		$args['tax_query'] = array( array( 'taxonomy' => 'vance_space', 'field' => 'slug', 'terms' => $current ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
 	}
-	$feed = new WP_Query( $args );
+	// Sample questions are for staff only. The clause is added here, after the
+	// filter, so no filter callback can take it away.
+	/**
+	 * Filters the feed query.
+	 *
+	 * @param array $args WP_Query arguments.
+	 */
+	$feed = new WP_Query( vance_community_sample_feed_args( (array) apply_filters( 'vance_community_feed_args', $args ) ) );
 
 	$html .= '<section class="vcom-feed" aria-label="' . esc_attr__( 'Questions', 'vance-health-hub' ) . '">';
 	if ( $feed->have_posts() ) {

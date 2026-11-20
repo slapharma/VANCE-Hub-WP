@@ -231,7 +231,7 @@ function vance_community_queue_rows( $state ) {
 			'title'   => $q->post_title,
 			'text'    => wp_strip_all_tags( (string) $q->post_content ),
 			'context' => '',
-			'member'  => vance_community_display_name( (int) $q->post_author ),
+			'member'  => vance_community_author_name( 'question', (int) $q->ID, (int) $q->post_author ),
 			'space'   => $space ? $space->name : '',
 			'product' => vance_community_names_product( $body ),
 			'reports' => vance_community_report_summary( 'post', $q->ID ),
@@ -257,7 +257,7 @@ function vance_community_queue_rows( $state ) {
 			'title'   => '',
 			'text'    => wp_strip_all_tags( (string) $r->comment_content ),
 			'context' => get_the_title( (int) $r->comment_post_ID ),
-			'member'  => vance_community_display_name( (int) $r->user_id ),
+			'member'  => vance_community_author_name( 'reply', (int) $r->comment_ID, (int) $r->user_id ),
 			'space'   => $space ? $space->name : '',
 			'product' => vance_community_names_product( (string) $r->comment_content ),
 			'reports' => vance_community_report_summary( 'comment', $r->comment_ID ),
@@ -341,6 +341,13 @@ function vance_community_queue_render() {
 		<?php endif; ?>
 
 		<p><?php esc_html_e( 'Members share experience. They do not give medical advice. Approve a post only when it follows the rules.', 'vance-health-hub' ); ?></p>
+
+		<?php
+		if ( function_exists( 'vance_community_sample_box_html' ) ) {
+			echo vance_community_sample_notice_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the builder.
+			echo vance_community_sample_box_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the builder.
+		}
+		?>
 
 		<nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'Queue tabs', 'vance-health-hub' ); ?>">
 			<?php foreach ( vance_community_queue_tabs() as $key => $label ) : ?>
