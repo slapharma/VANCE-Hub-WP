@@ -9319,7 +9319,7 @@ function vance_quiz_steps() {
             'type'     => 'checkbox',
             'layout'   => 'list',
             'opts'     => array(
-                "Crohn's", 'UC', 'IBS', 'General gut health / wellness',
+                "Crohn's", 'UC', 'Diverticular disease', 'IBS', 'General gut health / wellness',
                 array( 'v' => 'Other', 'textInput' => true, 'txtField' => 'condition_type_other' ),
             ),
         ),
