@@ -32,6 +32,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// The shared preview resolver (vance_hub_preview_query).
+require_once __DIR__ . '/hub-preview.php';
+
 /* =========================================================================
  * Pure helpers
  * ====================================================================== */
@@ -209,15 +212,11 @@ function vance_hub_dashboard_unread_count( $read_lists, $user_id ) {
  * @return bool
  */
 function vance_hub_dashboard_active() {
-	$query    = '';
-	$can_read = current_user_can( 'edit_theme_options' );
-	if ( $can_read && isset( $_GET['vhh_layout'] ) && is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
-		$query = sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	}
+	$query = vance_hub_preview_query();
 	return vance_hub_dashboard_resolve(
 		vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_dashboard', false ) ),
 		$query,
-		$can_read && '' !== $query
+		'' !== $query
 	);
 }
 
@@ -327,10 +326,9 @@ add_filter( 'body_class', 'vance_hub_dashboard_tabs_body_class' );
  * @return string 'hub' or ''.
  */
 function vance_hub_dashboard_preview_arg() {
-	if ( ! current_user_can( 'edit_theme_options' ) || ! isset( $_GET['vhh_layout'] ) || ! is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
-		return '';
-	}
-	return 'hub' === sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ) ? 'hub' : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	// Only the explicit query is carried. Preview mode (admin flag or share
+	// cookie) already holds on every page, so it needs nothing in the link.
+	return 'hub' === vance_hub_preview_explicit_query() ? 'hub' : '';
 }
 
 /**

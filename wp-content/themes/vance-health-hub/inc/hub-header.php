@@ -36,6 +36,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// The shared preview resolver (vance_hub_preview_query).
+require_once __DIR__ . '/hub-preview.php';
+
 /* =========================================================================
  * Pure helpers (no WordPress calls)
  * ====================================================================== */
@@ -155,12 +158,8 @@ function vance_hub_header_active() {
 	if ( vance_hub_header_on_dashboard() ) {
 		return false;
 	}
-	$query    = '';
-	$can_read = current_user_can( 'edit_theme_options' );
-	if ( $can_read && isset( $_GET['vhh_layout'] ) && is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
-		$query = sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	}
-	return vance_hub_header_resolve( vance_get_theme_mod( 'vance_hub_header', false ), $query, '' !== $query && $can_read );
+	$query = vance_hub_preview_query();
+	return vance_hub_header_resolve( vance_get_theme_mod( 'vance_hub_header', false ), $query, '' !== $query );
 }
 
 /**
@@ -227,7 +226,7 @@ function vance_hub_header_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_header', array(
 		'label'       => __( 'Site header: use the VanceHubClub header', 'vance-health-hub' ),
-		'description' => __( 'Replaces the header on every page with the VanceHubClub header: logo, a short menu, the VANCE-Ai button, Sign in and Join free (My Hub for members), and the purple member bar under it. Assign a menu to the "VanceHubClub header menu" location to choose the links; with no menu, the header lists the Tools, Conditions and Library pages that exist. Submenus are not shown: only the top level of the menu appears. Administrators can preview it without saving: add ?vhh_layout=hub to any page address.', 'vance-health-hub' ),
+		'description' => __( 'Replaces the header on every page with the VanceHubClub header: logo, a short menu, the VANCE-Ai button, Sign in and Join free (My Hub for members), and the purple member bar under it. Assign a menu to the "VanceHubClub header menu" location to choose the links; with no menu, the header lists the Tools, Conditions and Library pages that exist. Submenus are not shown: only the top level of the menu appears. Administrators can preview it without saving: add ?vhh_layout=hub to any page address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'checkbox',
 	) );

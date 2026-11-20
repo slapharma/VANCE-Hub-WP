@@ -40,6 +40,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// The shared preview resolver (vance_hub_preview_query).
+require_once __DIR__ . '/hub-preview.php';
+
 /* =========================================================================
  * Pure helpers (no WordPress calls apart from escaping and translation)
  * ====================================================================== */
@@ -423,12 +426,8 @@ function vance_hub_article_active() {
 	if ( ! is_singular( 'post' ) ) {
 		return false;
 	}
-	$query    = '';
-	$can_read = current_user_can( 'edit_theme_options' );
-	if ( $can_read && isset( $_GET['vhh_layout'] ) && is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
-		$query = sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	}
-	return vance_hub_article_resolve( vance_get_theme_mod( 'vance_hub_articles', false ), $query, '' !== $query && $can_read );
+	$query = vance_hub_preview_query();
+	return vance_hub_article_resolve( vance_get_theme_mod( 'vance_hub_articles', false ), $query, '' !== $query );
 }
 
 /**
@@ -683,7 +682,7 @@ function vance_hub_article_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_articles', array(
 		'label'       => __( 'Article pages: use the VanceHubClub layout', 'vance-health-hub' ),
-		'description' => __( 'Off: articles look as they do now. On: every article gets the VanceHubClub look, a "Try this now" tool prompt in the text and Ask VANCE-Ai and tool cards at the top of the sidebar. This is separate from the home layout above. Administrators can preview it on one article without saving: add ?vhh_layout=hub to the article address.', 'vance-health-hub' ),
+		'description' => __( 'Off: articles look as they do now. On: every article gets the VanceHubClub look, a "Try this now" tool prompt in the text and Ask VANCE-Ai and tool cards at the top of the sidebar. This is separate from the home layout above. Administrators can preview it on one article without saving: add ?vhh_layout=hub to the article address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'checkbox',
 		'priority'    => 9,

@@ -29,6 +29,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// The shared preview resolver (vance_hub_preview_query).
+require_once __DIR__ . '/hub-preview.php';
+
 /* =========================================================================
  * Pure helpers (no WordPress calls)
  * ====================================================================== */
@@ -328,16 +331,10 @@ function vance_hub_saved_layout() {
  * @return bool
  */
 function vance_hub_layout_active() {
-	$query = '';
-	// Only users who may preview have their query value read at all. The value
-	// must also be a string: ?vhh_layout[]= arrives as an array, and
-	// sanitize_key() throws a TypeError on one under PHP 8.
-	$can_read = current_user_can( 'edit_theme_options' );
-	if ( $can_read && isset( $_GET['vhh_layout'] ) && is_string( $_GET['vhh_layout'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview switch, capability-gated.
-		$query = sanitize_key( wp_unslash( $_GET['vhh_layout'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	}
-	$can_preview = '' !== $query && $can_read;
-	return 'hub' === vance_hub_resolve_layout( vance_get_theme_mod( 'vance_home_layout', 'classic' ), $query, $can_preview );
+	// vance_hub_preview_query() reads ?vhh_layout= only for users who may
+	// preview (and only as a string), then falls back to preview mode.
+	$query = vance_hub_preview_query();
+	return 'hub' === vance_hub_resolve_layout( vance_get_theme_mod( 'vance_home_layout', 'classic' ), $query, '' !== $query );
 }
 
 /**
@@ -447,7 +444,7 @@ function vance_hub_customize_register( $wp_customize ) {
 		// article and member dashboard switches.
 		'title'       => __( 'VanceHubClub', 'vance-health-hub' ),
 		'priority'    => 1,
-		'description' => __( 'VanceHealthHub is the current home page. VanceHubClub puts the free tools and the community first. Administrators can preview either one without saving: add ?vhh_layout=hub (VanceHubClub) or ?vhh_layout=classic (VanceHealthHub) to the home page address.', 'vance-health-hub' ),
+		'description' => __( 'VanceHealthHub is the current home page. VanceHubClub puts the free tools and the community first. Administrators can preview either one without saving: add ?vhh_layout=hub (VanceHubClub) or ?vhh_layout=classic (VanceHealthHub) to the home page address. To see the whole VanceHubClub layout on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 	) );
 
 	$wp_customize->add_setting( 'vance_home_layout', array(
@@ -504,7 +501,7 @@ function vance_hub_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_show_dashboard', array(
 		'label'       => __( 'Member dashboard: use the VanceHubClub home', 'vance-health-hub' ),
-		'description' => __( 'Replaces the first screen of the member dashboard with the VanceHubClub layout: a greeting, one next step, the free tools with the member\'s own progress, and the member\'s saved items. The other dashboard tabs do not change. Administrators can preview it without saving: add ?vhh_layout=hub to the dashboard address.', 'vance-health-hub' ),
+		'description' => __( 'Replaces the first screen of the member dashboard with the VanceHubClub layout: a greeting, one next step, the free tools with the member\'s own progress, and the member\'s saved items. The other dashboard tabs do not change. Administrators can preview it without saving: add ?vhh_layout=hub to the dashboard address, or turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'checkbox',
 	) );
@@ -515,7 +512,7 @@ function vance_hub_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_dashboard_tabs', array(
 		'label'       => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
-		'description' => __( 'Gives every other dashboard tab the VanceHubClub look: a navy side menu with a member card and an "Ask VANCE-Ai" block, and a new look for headings, cards and buttons. The tabs hold the same forms and data. It works only when the VanceHubClub home above is on, or in an administrator preview (?vhh_layout=hub).', 'vance-health-hub' ),
+		'description' => __( 'Gives every other dashboard tab the VanceHubClub look: a navy side menu with a member card and an "Ask VANCE-Ai" block, and a new look for headings, cards and buttons. The tabs hold the same forms and data. It works only when the VanceHubClub home above is on, or in an administrator preview (?vhh_layout=hub, or preview mode).', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'checkbox',
 	) );

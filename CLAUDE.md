@@ -529,6 +529,32 @@ ever missing. `inc/customizer-structure.php` is loaded right after
 every Customizer panel and section appears on screen, not what those panels
 contain. See "Customizer structure" below.
 
+### VanceHubClub preview mode — `inc/hub-preview.php`
+
+Required in `functions.php` before the `hub-*` files, and by each of them. Every
+`vance_hub_*_active()` asks `vance_hub_preview_query()` (`'hub'`, `'classic'` or
+`''`): an admin's `?vhh_layout=` wins, else preview mode gives `'hub'`, else the
+saved switches decide. Preview mode is on for:
+
+- **an admin** with the `_vance_hub_preview` user meta (VanceHubClub admin page or
+  "Club preview" in the admin bar, nonce + `edit_theme_options`);
+- **a share link** `/?vhh_preview=<token>` (option `vance_hub_preview_share`,
+  14 days). It sets the HttpOnly cookie `vance_hub_preview` = HMAC of the token.
+  The cookie is checked against the current token on every request, so "New
+  link" / "Turn sharing off" kills every cookie.
+
+Presentation only: no capability, no login bypass. Preview responses send
+`nocache_headers()`, `litespeed_control_set_nocache`, `X-Robots-Tag` and a
+`wp_robots` noindex. The state is decided on `init`; the test harnesses never
+fire it, so preview mode is off in them.
+
+**Cache caveat.** A page cache that serves a cached classic page bypasses PHP.
+The cookie is added through LSCWP's documented `litespeed_vary_curr_cookies`
+(X-LiteSpeed-Vary header on each response) and `litespeed_vary_cookies` (the
+`.htaccess` Cache-Vary rule, written only when LSCWP rewrites `.htaccess`, e.g.
+on a settings save). After deploy: purge every cache and re-save LSCWP settings.
+Not verified on the live server yet; Hostinger's own cache layer is untested.
+
 ## Customizer structure: one map decides where everything sits
 
 Panels, sections and controls are still registered where they always were:
