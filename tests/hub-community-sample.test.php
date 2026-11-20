@@ -8,7 +8,7 @@
  * is checked separately.
  *
  * WHAT IS COVERED
- *   1  the data: 20 questions, the space split, reply counts, text limits,
+ *   1  the data: 22 questions, the space split, reply counts, text limits,
  *      no product names, plain text only
  *   2  load: posts, replies, marker, names, state, spaces, counts, dates
  *   3  load is refused when sample data exists (idempotent)
@@ -116,10 +116,10 @@ foreach ( $DATA as $i => $row ) {
 		if ( '' === trim( $name ) || false !== strpos( $name, '@' ) || (int) $helpful < 0 ) { $BAD[] = "q$i r$n name or count"; }
 	}
 }
-check( 'data: 20 questions', 20 === count( $DATA ) );
-check( 'data: the space split is ibd 3, UC 3, Crohn\'s 3, IBS 4, food 3, work 2, carers 2', array( 'ibd' => 3, 'ulcerative-colitis' => 3, 'crohns-disease' => 3, 'ibs' => 4, 'food-and-recipes' => 3, 'work-and-travel' => 2, 'carers' => 2 ) == $BY );
+check( 'data: 22 questions', 22 === count( $DATA ) );
+check( 'data: the space split is ibd 3, UC 3, Crohn\'s 3, diverticular 2, IBS 4, food 3, work 2, carers 2', array( 'ibd' => 3, 'ulcerative-colitis' => 3, 'crohns-disease' => 3, 'diverticular-disease' => 2, 'ibs' => 4, 'food-and-recipes' => 3, 'work-and-travel' => 2, 'carers' => 2 ) == $BY );
 check( 'data: every space has at least one question', count( $BY ) === count( $SPACES ) );
-check( 'data: reply counts are 4,7,2,9,1,5,10,3,6,8,2,5,7,1,9,4,3,6,10,2', array( 4, 7, 2, 9, 1, 5, 10, 3, 6, 8, 2, 5, 7, 1, 9, 4, 3, 6, 10, 2 ) === $RCOUNT );
+check( 'data: reply counts are 4,7,2,9,1,5,10,3,6,4,3,8,2,5,7,1,9,4,3,6,10,2', array( 4, 7, 2, 9, 1, 5, 10, 3, 6, 4, 3, 8, 2, 5, 7, 1, 9, 4, 3, 6, 10, 2 ) === $RCOUNT );
 check( 'data: every count is between 1 and 10', min( $RCOUNT ) >= 1 && max( $RCOUNT ) <= 10 );
 check( 'data: every text is in the limits, plain, and names no product (' . implode( ', ', $BAD ) . ')', array() === $BAD );
 check( 'data: the product check can fail (negative control)', vance_community_text_names_product( 'I tried EPAVANCE', $TERMS ) );
@@ -133,9 +133,9 @@ $NOW = time();
 $MADE = vance_community_sample_load( $NOW );
 $QS   = sample_questions();
 $RS   = sample_replies();
-check( 'load: returns 20', 20 === $MADE );
-check( 'load: 20 sample questions exist', 20 === count( $QS ) && 20 === vance_community_sample_count() );
-check( 'load: 104 sample replies exist', array_sum( $RCOUNT ) === count( $RS ) && 104 === count( $RS ) );
+check( 'load: returns 22', 22 === $MADE );
+check( 'load: 22 sample questions exist', 22 === count( $QS ) && 22 === vance_community_sample_count() );
+check( 'load: 111 sample replies exist', array_sum( $RCOUNT ) === count( $RS ) && 111 === count( $RS ) );
 check( 'load: questions are published, with no author and the approved state', array() === array_filter( $QS, function ( $q ) {
 	return 'publish' !== $q->post_status || 0 !== (int) $q->post_author || 'approved' !== get_post_meta( $q->ID, '_vance_community_state', true );
 } ) );
@@ -171,13 +171,13 @@ section( '3. Load is refused when sample data exists' );
 
 $AGAIN = vance_community_sample_load( $NOW );
 check( 'refuse: a second load returns 0', 0 === $AGAIN );
-check( 'refuse: a second load adds nothing', 20 === count( sample_questions() ) && 104 === count( sample_replies() ) );
+check( 'refuse: a second load adds nothing', 22 === count( sample_questions() ) && 111 === count( sample_replies() ) );
 
 arrange( staff_caps(), 1 );
 vance_community_sample_load( $NOW );
 $ONE = sample_questions()[0];
 wp_update_post( array( 'ID' => $ONE->ID, 'post_status' => 'draft' ) );
-check( 'refuse: one rejected (draft) sample question still blocks a new load', 0 === vance_community_sample_load( $NOW ) && 20 === count( sample_questions() ) );
+check( 'refuse: one rejected (draft) sample question still blocks a new load', 0 === vance_community_sample_load( $NOW ) && 22 === count( sample_questions() ) );
 
 /* ===================================================================== */
 section( '4. Author name' );
@@ -210,10 +210,10 @@ $BASE  = array( 'post_type' => 'vance_question', 'post_status' => 'publish', 'po
 
 act_as( 1, staff_caps() );
 check( 'feed: staff args are unchanged', $BASE === vance_community_sample_feed_args( $BASE ) );
-check( 'feed: staff see 20 samples and the real question', 21 === count( get_posts( vance_community_sample_feed_args( $BASE ) ) ) );
+check( 'feed: staff see 22 samples and the real question', 23 === count( get_posts( vance_community_sample_feed_args( $BASE ) ) ) );
 
 act_as( 1, array( 'vance_moderate_community' => true ) );
-check( 'feed: an editor (moderation capability only) sees the samples', 21 === count( get_posts( vance_community_sample_feed_args( $BASE ) ) ) );
+check( 'feed: an editor (moderation capability only) sees the samples', 23 === count( get_posts( vance_community_sample_feed_args( $BASE ) ) ) );
 
 act_as( 5, array() );
 $MEM = get_posts( vance_community_sample_feed_args( $BASE ) );
@@ -242,13 +242,13 @@ $KEEP_R = cs_seed_reply( $KEEP_Q, 6, 'A real reply' );
 $SQ     = sample_questions()[3];
 $STAFF  = cs_seed_reply( $SQ->ID, 1, 'A staff reply on a sample question' );
 $GONE   = vance_community_sample_remove();
-check( 'remove: returns 20', 20 === $GONE );
+check( 'remove: returns 22', 22 === $GONE );
 check( 'remove: no sample question or reply is left', 0 === count( sample_questions() ) && 0 === count( sample_replies() ) && 0 === vance_community_sample_count() );
 check( 'remove: a real question and its real reply stay', isset( $GLOBALS['WP']['posts'][ $KEEP_Q ] ) && isset( $GLOBALS['WP']['comments'][ $KEEP_R ] ) );
 check( 'remove: a staff reply on a sample question goes with it (as the box says)', ! isset( $GLOBALS['WP']['comments'][ $STAFF ] ) );
 check( 'remove: no sample meta rows are left', array() === array_filter( array_merge( $GLOBALS['WP']['meta']['post'], $GLOBALS['WP']['meta']['comment'] ), function ( $m ) { return '_vance_community_sample' === $m['key']; } ) );
 check( 'remove: a second remove deletes nothing', 0 === vance_community_sample_remove() );
-check( 'remove: load works again after remove', 20 === vance_community_sample_load( $NOW ) );
+check( 'remove: load works again after remove', 22 === vance_community_sample_load( $NOW ) );
 
 /* ===================================================================== */
 section( '7. Admin handlers, box and notice' );
@@ -272,9 +272,9 @@ $_POST = array( '_wpnonce' => 'nonce-vance_community_sample_remove' );
 check( 'handler: a Remove nonce cannot run Load', null !== die_of( 'vance_community_sample_load_handler' ) && 0 === vance_community_sample_count() );
 $_POST = array( '_wpnonce' => 'nonce-vance_community_sample_load' );
 $TO = redirect_of( 'vance_community_sample_load_handler' );
-check( 'handler: load with the nonce loads 20 and says loaded', 20 === vance_community_sample_count() && false !== strpos( (string) $TO, 'vcom_sample=loaded' ) && false !== strpos( (string) $TO, 'page=vance-community-queue' ) );
+check( 'handler: load with the nonce loads 22 and says loaded', 22 === vance_community_sample_count() && false !== strpos( (string) $TO, 'vcom_sample=loaded' ) && false !== strpos( (string) $TO, 'page=vance-community-queue' ) );
 $TO = redirect_of( 'vance_community_sample_load_handler' );
-check( 'handler: a second load says exists and adds nothing', 20 === vance_community_sample_count() && false !== strpos( (string) $TO, 'vcom_sample=exists' ) );
+check( 'handler: a second load says exists and adds nothing', 22 === vance_community_sample_count() && false !== strpos( (string) $TO, 'vcom_sample=exists' ) );
 vance_community_sample_remove();
 $GLOBALS['WP']['fail_insert_post'] = true;
 $TO = redirect_of( 'vance_community_sample_load_handler' );
@@ -284,7 +284,7 @@ $_GET = array( 'vcom_sample' => 'failed' );
 check( 'notice: failed shows an error notice', false !== strpos( vance_community_sample_notice_html(), 'notice-error' ) );
 $_GET = array();
 vance_community_sample_load( $NOW );
-check( 'handler: a Load nonce cannot run Remove (DEFECT: one nonce served both)', null !== die_of( 'vance_community_sample_remove_handler' ) && 20 === vance_community_sample_count() );
+check( 'handler: a Load nonce cannot run Remove (DEFECT: one nonce served both)', null !== die_of( 'vance_community_sample_remove_handler' ) && 22 === vance_community_sample_count() );
 $_POST = array( '_wpnonce' => 'nonce-vance_community_sample_remove' );
 $TO = redirect_of( 'vance_community_sample_remove_handler' );
 check( 'handler: remove with the nonce removes all and says removed', 0 === vance_community_sample_count() && false !== strpos( (string) $TO, 'vcom_sample=removed' ) );
@@ -296,7 +296,7 @@ $BOX = vance_community_sample_box_html();
 check( 'box: with no samples it offers Load, with the nonce and the load action', false !== strpos( $BOX, 'Load sample data' ) && false !== strpos( $BOX, 'value="vance_community_sample_load"' ) && false !== strpos( $BOX, 'value="nonce-vance_community_sample_load"' ) && false === strpos( $BOX, 'Remove sample data' ) );
 vance_community_sample_load( $NOW );
 $BOX = vance_community_sample_box_html();
-check( 'box: with samples it offers Remove, says 20, and warns about staff replies', false !== strpos( $BOX, 'Remove sample data' ) && false !== strpos( $BOX, 'Sample questions now: 20' ) && false !== strpos( $BOX, 'replies that staff wrote' ) && false === strpos( $BOX, 'value="vance_community_sample_load"' ) );
+check( 'box: with samples it offers Remove, says 22, and warns about staff replies', false !== strpos( $BOX, 'Remove sample data' ) && false !== strpos( $BOX, 'Sample questions now: 22' ) && false !== strpos( $BOX, 'replies that staff wrote' ) && false === strpos( $BOX, 'value="vance_community_sample_load"' ) );
 act_as( 2, array( 'vance_moderate_community' => true ) );
 check( 'box: an editor without manage_options sees no box', '' === vance_community_sample_box_html() );
 
@@ -325,7 +325,7 @@ check( 'fail: every question insert refused: no sample question or reply is made
 arrange( staff_caps(), 1 );
 $GLOBALS['WP']['fail_insert_comment'] = true;
 $NOREP = vance_community_sample_load( $NOW );
-check( 'fail: every reply insert refused: the 20 questions still load', 20 === $NOREP && 20 === vance_community_sample_count() );
+check( 'fail: every reply insert refused: the 22 questions still load', 22 === $NOREP && 22 === vance_community_sample_count() );
 check( 'fail: every reply insert refused: no reply is made', 0 === count( sample_replies() ) );
 check( 'fail: after a partial load a second load is refused (remove first, no silent repair)', 0 === vance_community_sample_load( $NOW ) );
 
@@ -334,7 +334,7 @@ vance_community_sample_load( $NOW );
 $GLOBALS['WP']['fail_delete_post'] = true;
 $NOGO = vance_community_sample_remove();
 check( 'fail: every delete refused: remove returns 0', 0 === $NOGO );
-check( 'fail: every delete refused: all 20 questions and 104 replies stay', 20 === vance_community_sample_count() && 104 === count( sample_replies() ) );
+check( 'fail: every delete refused: all 22 questions and 111 replies stay', 22 === vance_community_sample_count() && 111 === count( sample_replies() ) );
 
 /* ===================================================================== */
 section( '9. Stored data matches the sample rows' );
@@ -373,7 +373,7 @@ $GLOBALS['WP']['caps'] = staff_caps();
 $GLOBALS['WP']['user'] = 1;
 vance_community_register_types();
 $NOSP = vance_community_sample_load( $NOW );
-check( 'load with no spaces seeded: the 20 questions still load', 20 === $NOSP );
+check( 'load with no spaces seeded: the 22 questions still load', 22 === $NOSP );
 check( 'load with no spaces seeded: no question is in a space', array() === array_filter( sample_questions(), function ( $q ) { return '' !== cs_space_of( $q->ID ); } ) );
 
 /* ===================================================================== */
@@ -388,7 +388,7 @@ wp_update_post( array( 'ID' => $TRASH, 'post_status' => 'trash' ) );
 $BLOG = wp_insert_post( array( 'post_type' => 'post', 'post_status' => 'publish', 'post_title' => 'A blog post' ) );
 update_post_meta( $BLOG, '_vance_community_sample', '1' );
 $GONE = vance_community_sample_remove();
-check( 'remove: counts draft and trashed sample questions too (20)', 20 === $GONE );
+check( 'remove: counts draft and trashed sample questions too (22)', 22 === $GONE );
 check( 'remove: a draft sample question goes', ! isset( $GLOBALS['WP']['posts'][ $DRAFT ] ) );
 check( 'remove: a trashed sample question goes', ! isset( $GLOBALS['WP']['posts'][ $TRASH ] ) );
 check( 'remove: a blog post carrying the same marker stays', isset( $GLOBALS['WP']['posts'][ $BLOG ] ) );
@@ -411,10 +411,10 @@ arrange( staff_caps(), 1 );
 vance_community_sample_load( $NOW );
 $_POST = array( '_wpnonce' => 'nonce-wrong' );
 $D = die_of( 'vance_community_sample_remove_handler' );
-check( 'handler: a bad nonce on remove is refused with 403 and removes nothing', $D && 403 === $D->status && 20 === vance_community_sample_count() );
+check( 'handler: a bad nonce on remove is refused with 403 and removes nothing', $D && 403 === $D->status && 22 === vance_community_sample_count() );
 $_POST = array();
 $D = die_of( 'vance_community_sample_remove_handler' );
-check( 'handler: a missing nonce on remove is refused and removes nothing', $D && 20 === vance_community_sample_count() );
+check( 'handler: a missing nonce on remove is refused and removes nothing', $D && 22 === vance_community_sample_count() );
 $_POST = array( '_wpnonce' => 'nonce-vance_community_sample_remove' );
 $TO = redirect_of( 'vance_community_sample_remove_handler' );
 check( 'handler: remove redirects to admin.php on the queue page, approved tab, with removed', 0 === strpos( (string) $TO, 'https://example.test/wp-admin/admin.php?' ) && false !== strpos( (string) $TO, 'tab=approved' ) && false !== strpos( (string) $TO, 'vcom_sample=removed' ) );
@@ -440,7 +440,7 @@ act_as( 5, array() );
 $PIPE_M = get_posts( vance_community_sample_feed_args( apply_filters( 'vance_community_feed_args', $PIPE_ARGS ) ) );
 check( 'pipeline: the feed hides the samples from a member', 1 === count( $PIPE_M ) && $REALP === $PIPE_M[0]->ID );
 act_as( 1, staff_caps() );
-check( 'pipeline: the feed keeps the samples for staff', 21 === count( get_posts( vance_community_sample_feed_args( apply_filters( 'vance_community_feed_args', $PIPE_ARGS ) ) ) ) );
+check( 'pipeline: the feed keeps the samples for staff', 23 === count( get_posts( vance_community_sample_feed_args( apply_filters( 'vance_community_feed_args', $PIPE_ARGS ) ) ) ) );
 unset( $GLOBALS['WP']['run_filters'] );
 
 /* ===================================================================== */
@@ -451,7 +451,7 @@ update_option( 'vance_community_sample_lock', (string) time() );
 check( 'lock: a fresh lock (another load running) refuses a load', 0 === vance_community_sample_load( $NOW ) && 0 === vance_community_sample_count() );
 check( 'lock: a refused load leaves the other load\'s lock in place', array_key_exists( 'vance_community_sample_lock', $GLOBALS['WP']['options'] ) );
 update_option( 'vance_community_sample_lock', (string) ( time() - 11 * MINUTE_IN_SECONDS ) );
-check( 'lock: a lock older than ten minutes (a dead load) is taken over', 20 === vance_community_sample_load( $NOW ) );
+check( 'lock: a lock older than ten minutes (a dead load) is taken over', 22 === vance_community_sample_load( $NOW ) );
 check( 'lock: the lock is gone after a load', ! array_key_exists( 'vance_community_sample_lock', $GLOBALS['WP']['options'] ) );
 check( 'lock: the lock is gone after a refused (exists) load', 0 === vance_community_sample_load( $NOW ) && ! array_key_exists( 'vance_community_sample_lock', $GLOBALS['WP']['options'] ) );
 vance_community_sample_remove();
@@ -538,7 +538,7 @@ check( 'boundary: exactly one sample question refuses a load and adds nothing', 
 
 arrange( staff_caps(), 1 );
 cs_seed_question( 0, 'approved', 'A real question, no marker' );
-check( 'boundary: a real question without the marker does not block the load', 20 === vance_community_sample_load( $NOW ) && 20 === vance_community_sample_count() );
+check( 'boundary: a real question without the marker does not block the load', 22 === vance_community_sample_load( $NOW ) && 22 === vance_community_sample_count() );
 
 /* ===================================================================== */
 echo "\n";

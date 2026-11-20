@@ -2,7 +2,7 @@
 /**
  * Community sample data for a team review.
  *
- * Twenty questions with replies across the seven spaces, so the team can see
+ * Twenty-two questions with replies across the eight spaces, so the team can see
  * the community page with real-looking content before members post. Only staff
  * (users with vance_community_cap(): administrators and editors) see these
  * posts. Visitors and members see only real posts.
@@ -137,6 +137,23 @@ function vance_community_sample_data() {
 				array( 'Gutsy_Gill', 4, "I sent a link to a good explainer page first, then we talked. It took the pressure off." ),
 				array( 'Mo', 3, "Choose a calm moment, not a night out. You want room to talk." ),
 				array( 'Rhys', 2, "Thanks, all. I will tell them this weekend, on a quiet night in." ),
+			),
+		),
+		array( 'diverticular-disease', 'Brian', 3, 9, "Just told I have diverticular disease. What helped you at the start?",
+			"I am 61 and the scan found it after a bad week of pain. The nurse gave me a leaflet, but I have lots of questions. What did you wish you knew at the start?",
+			array(
+				array( 'Pat', 7, "That I was not the only one. Two friends of mine turned out to have it too. That calmed me down a lot." ),
+				array( 'Fiona', 5, "Write your questions down before each appointment. I forgot half of mine the first time." ),
+				array( 'Dave', 6, "Ask your GP what to look out for, and when to call. Having a plan made me less anxious." ),
+				array( 'Brian', 1, "Thank you. I will make a list for my GP." ),
+			),
+		),
+		array( 'diverticular-disease', 'Pat', 10, 5, "Getting back to walking after a flare",
+			"I had diverticulitis last month and I am finally feeling more like me. I used to walk every day. How did you build back up?",
+			array(
+				array( 'Brian', 4, "Short walks round the block first. I added five minutes each week." ),
+				array( 'TeaAndToast', 3, "I joined a walking group. The slower pace was right for me, and the chat was a bonus." ),
+				array( 'Pat', 1, "A walking group is a good idea. There is one at my library." ),
 			),
 		),
 		array( 'ibs', 'Gemma', 1, 21, "Bloating by the end of the day. Anyone else?",
@@ -450,7 +467,7 @@ function vance_community_sample_box_html() {
 	$count = vance_community_sample_count();
 	$html  = '<div class="vcom-sample card" style="max-width:none;margin:16px 0;padding:12px 16px;">';
 	$html .= '<h2 style="margin-top:0;">' . esc_html__( 'Sample data for team review', 'vance-health-hub' ) . '</h2>';
-	$html .= '<p>' . esc_html__( 'Twenty sample questions with replies, across the seven spaces. Only administrators and editors see them on the community page. Visitors and members do not see them.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p>' . esc_html__( 'Twenty-two sample questions with replies, across the eight spaces. Only administrators and editors see them on the community page. Visitors and members do not see them.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p><strong>' . esc_html( sprintf(
 		/* translators: %s: number of sample questions. */
 		__( 'Sample questions now: %s', 'vance-health-hub' ),

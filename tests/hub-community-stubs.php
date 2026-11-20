@@ -304,6 +304,8 @@ function cs_reset() {
 		'menu'        => false,
 		'unparsed_sql' => array(),
 		'comment_queries' => array(),
+		'option_writes' => array(),
+		'insert_term_calls' => array(),
 	);
 	$GLOBALS['wp_query'] = new WP_Query();
 	$_POST               = array();
@@ -397,6 +399,7 @@ function get_option( $name, $default = false ) {
 	return array_key_exists( $name, $GLOBALS['WP']['options'] ) ? $GLOBALS['WP']['options'][ $name ] : $default;
 }
 function update_option( $name, $value, $autoload = null ) {
+	$GLOBALS['WP']['option_writes'][] = $name;
 	$GLOBALS['WP']['options'][ $name ] = $value;
 	return true;
 }
@@ -1004,6 +1007,10 @@ function cs_match_comments( $args ) {
 function is_wp_error( $thing ) { return $thing instanceof WP_Error; }
 function wp_insert_term( $name, $taxonomy, $args = array() ) {
 	$slug = isset( $args['slug'] ) ? $args['slug'] : sanitize_key( strtolower( str_replace( ' ', '-', $name ) ) );
+	$GLOBALS['WP']['insert_term_calls'][] = $slug;
+	if ( ! empty( $GLOBALS['WP']['fail_insert_term'][ $slug ] ) ) {
+		return new WP_Error( 'cs_fail', 'insert refused' );
+	}
 	if ( term_exists( $slug, $taxonomy ) ) {
 		return new WP_Error( 'term_exists', 'exists' );
 	}
