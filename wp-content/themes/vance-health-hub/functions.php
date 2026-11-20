@@ -151,6 +151,8 @@ require_once get_template_directory() . '/inc/hub-tool-result.php';
 require_once get_template_directory() . '/inc/hub-community.php';
 require_once get_template_directory() . '/inc/hub-community-view.php';
 require_once get_template_directory() . '/inc/hub-community-admin.php';
+// Sample questions and replies for a team review: staff only, loaded and removed from the Community queue.
+require_once get_template_directory() . '/inc/hub-community-sample.php';
 
 /**
  * Rebrand migration helper.

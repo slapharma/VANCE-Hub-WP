@@ -830,6 +830,59 @@ function vance_community_author_name( $kind, $id, $user_id ) {
 }
 
 /**
+ * The marker meta key of sample questions and replies
+ * (inc/hub-community-sample.php loads and removes them).
+ *
+ * @return string
+ */
+function vance_community_sample_key() {
+	return '_vance_community_sample';
+}
+
+/**
+ * True when a question is sample data and the viewer is not staff. Such a
+ * question is treated as if it does not exist: not in the feed, and closed to
+ * every member action. This lives here, not in the sample file, so the
+ * samples stay hidden even if that file is ever unloaded.
+ *
+ * @param int $question_id Question ID.
+ * @return bool
+ */
+function vance_community_sample_hidden( $question_id ) {
+	if ( current_user_can( vance_community_cap() ) ) {
+		return false;
+	}
+	return '1' === (string) get_post_meta( (int) $question_id, vance_community_sample_key(), true );
+}
+
+/**
+ * Keep sample questions out of the feed for everyone who is not staff. An
+ * existing meta_query goes in as one nested group, so its own relation (an OR
+ * included) can never join the sample clause with OR.
+ *
+ * @param array $args WP_Query arguments.
+ * @return array
+ */
+function vance_community_sample_feed_args( $args ) {
+	$args = (array) $args;
+	if ( current_user_can( vance_community_cap() ) ) {
+		return $args;
+	}
+	$query = array(
+		'relation' => 'AND',
+		array(
+			'key'     => vance_community_sample_key(),
+			'compare' => 'NOT EXISTS',
+		),
+	);
+	if ( ! empty( $args['meta_query'] ) && is_array( $args['meta_query'] ) ) {
+		$query[] = $args['meta_query'];
+	}
+	$args['meta_query'] = $query; // phpcs:ignore WordPress.DB.SlowDBQuery
+	return $args;
+}
+
+/**
  * The space term of a question, or null.
  *
  * @param int $post_id Question ID.
@@ -1311,7 +1364,7 @@ function vance_community_ajax_reply() {
 
 	$question_id = absint( vance_community_post_field( 'question' ) );
 	$question    = $question_id ? get_post( $question_id ) : null;
-	if ( ! $question || 'vance_question' !== $question->post_type || 'publish' !== $question->post_status ) {
+	if ( ! $question || 'vance_question' !== $question->post_type || 'publish' !== $question->post_status || vance_community_sample_hidden( $question_id ) ) {
 		wp_send_json_error( array( 'message' => __( 'This question is not open for replies.', 'vance-health-hub' ) ), 404 );
 	}
 
@@ -1381,7 +1434,7 @@ function vance_community_ajax_metoo() {
 	$user_id  = vance_community_ajax_guard();
 	$id       = absint( vance_community_post_field( 'id' ) );
 	$question = $id ? get_post( $id ) : null;
-	if ( ! $question || 'vance_question' !== $question->post_type || 'publish' !== $question->post_status ) {
+	if ( ! $question || 'vance_question' !== $question->post_type || 'publish' !== $question->post_status || vance_community_sample_hidden( $id ) ) {
 		wp_send_json_error( array( 'message' => __( 'This question is not available.', 'vance-health-hub' ) ), 404 );
 	}
 	wp_send_json_success( vance_community_toggle_row( 'post', $id, '_vance_community_metoo', $user_id ) );
@@ -1394,7 +1447,7 @@ function vance_community_ajax_helpful() {
 	$user_id = vance_community_ajax_guard();
 	$id      = absint( vance_community_post_field( 'id' ) );
 	$comment = $id ? get_comment( $id ) : null;
-	if ( ! $comment || 'vance_reply' !== $comment->comment_type || '1' !== (string) $comment->comment_approved ) {
+	if ( ! $comment || 'vance_reply' !== $comment->comment_type || '1' !== (string) $comment->comment_approved || vance_community_sample_hidden( (int) $comment->comment_post_ID ) ) {
 		wp_send_json_error( array( 'message' => __( 'This reply is not available.', 'vance-health-hub' ) ), 404 );
 	}
 	wp_send_json_success( vance_community_toggle_row( 'comment', $id, '_vance_community_helpful', $user_id ) );
@@ -1438,11 +1491,11 @@ function vance_community_ajax_report() {
 	}
 	if ( 'reply' === $kind ) {
 		$comment = $id ? get_comment( $id ) : null;
-		$ok      = $comment && 'vance_reply' === $comment->comment_type && '1' === (string) $comment->comment_approved;
+		$ok      = $comment && 'vance_reply' === $comment->comment_type && '1' === (string) $comment->comment_approved && ! vance_community_sample_hidden( (int) $comment->comment_post_ID );
 		$type    = 'comment';
 	} else {
 		$post = $id ? get_post( $id ) : null;
-		$ok   = $post && 'vance_question' === $post->post_type && 'publish' === $post->post_status;
+		$ok   = $post && 'vance_question' === $post->post_type && 'publish' === $post->post_status && ! vance_community_sample_hidden( $id );
 		$type = 'post';
 	}
 	if ( ! $ok ) {

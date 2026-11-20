@@ -342,6 +342,13 @@ function vance_community_queue_render() {
 
 		<p><?php esc_html_e( 'Members share experience. They do not give medical advice. Approve a post only when it follows the rules.', 'vance-health-hub' ); ?></p>
 
+		<?php
+		if ( function_exists( 'vance_community_sample_box_html' ) ) {
+			echo vance_community_sample_notice_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the builder.
+			echo vance_community_sample_box_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the builder.
+		}
+		?>
+
 		<nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'Queue tabs', 'vance-health-hub' ); ?>">
 			<?php foreach ( vance_community_queue_tabs() as $key => $label ) : ?>
 				<a class="nav-tab<?php echo $key === $tab ? ' nav-tab-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( 'tab', $key, $base ) ); ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>>

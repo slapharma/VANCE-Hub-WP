@@ -42,6 +42,10 @@ require_once $THEME . '/inc/hub-header.php';
 require_once $THEME . '/inc/hub-community.php';
 require_once $THEME . '/inc/hub-community-view.php';
 require_once $THEME . '/inc/hub-community-admin.php';
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+	define( 'HOUR_IN_SECONDS', 3600 );
+}
+require_once $THEME . '/inc/hub-community-sample.php';
 
 /* ---- helpers ------------------------------------------------------------------------ */
 
@@ -438,6 +442,49 @@ preg_match_all( '/outerHTML\s*=\s*([^;]+);/', $JS, $OUTER );
 check( 'wiring: the one outerHTML assignment takes the server-built poll block only', array( 'res.data.html' ) === $OUTER[1] );
 
 check( 'wiring: the template calls the renderer, inside the theme header and footer', has( $TPL, 'vance_community_render_page()' ) && has( $TPL, 'get_header()' ) && has( $TPL, 'get_footer()' ) );
+
+/* ---- 12. sample data: the feed, the names and the queue box, with the filters run ----------- */
+section( '12. Sample data: the feed, the names and the queue box (filters run)' );
+
+arrange( on_mods(), admin_caps(), 1 );
+vance_community_sample_load( time() );
+cs_seed_question( 0, 'approved', 'A real question in the feed', '', 0, 'ibd' );
+$GLOBALS['WP']['run_filters'] = true;
+$_GET = array( 'space' => 'carers' );
+$SAMPLE_STAFF = page_html();
+check( 'sample feed: staff see the carers sample questions', has( $SAMPLE_STAFF, 'How do I help my wife through a bad flare without fussing?' ) );
+check( 'sample feed: staff see the stored asker name on the card', has( $SAMPLE_STAFF, '<span class="vcom-card__name">Gaz</span>' ) );
+check( 'sample feed: staff see the stored reply name on the first reply', has( $SAMPLE_STAFF, '<strong>Beth</strong>' ) );
+
+arrange( on_mods(), array(), 5 );
+member_setup();
+vance_community_sample_load( time() );
+cs_seed_question( 0, 'approved', 'A real question in the feed', '', 0, 'ibd' );
+$GLOBALS['WP']['run_filters'] = true;
+$_GET = array( 'space' => 'carers' );
+$SAMPLE_MEM = page_html();
+check( 'sample feed: a member with the carers filter sees no sample question and no sample name', ! has( $SAMPLE_MEM, 'How do I help my wife' ) && ! has( $SAMPLE_MEM, 'Gaz' ) && has( $SAMPLE_MEM, 'No questions in this space yet' ) );
+
+arrange( on_mods(), array(), 0 );
+vance_community_sample_load( time() );
+cs_seed_question( 0, 'approved', 'A real question in the feed', '', 0, 'ibd' );
+$GLOBALS['WP']['run_filters'] = true;
+$_GET = array();
+$ALL_VIS = page_html();
+check( 'sample feed: a visitor sees the one real question and no sample question', 1 === card_count( $ALL_VIS ) && has( $ALL_VIS, 'A real question in the feed' ) && ! has( $ALL_VIS, 'How do I help my wife' ) );
+
+arrange( on_mods(), admin_caps(), 1 );
+$_GET = array();
+$QUEUE_EMPTY = queue_html();
+check( 'queue box: with no samples the queue screen offers Load sample data', has( $QUEUE_EMPTY, 'Load sample data' ) && ! has( $QUEUE_EMPTY, 'Remove sample data' ) );
+vance_community_sample_load( time() );
+$QUEUE_FULL = queue_html();
+check( 'queue box: with samples the queue screen says 20 and offers Remove', has( $QUEUE_FULL, 'Sample questions now: 20' ) && has( $QUEUE_FULL, 'Remove sample data' ) );
+
+arrange( on_mods(), array( 'vance_moderate_community' => true ), 2 );
+$QUEUE_ED = queue_html();
+check( 'queue box: an editor without manage_options sees no sample box', ! has( $QUEUE_ED, 'Sample data for team review' ) );
+unset( $GLOBALS['WP']['run_filters'] );
 
 /* ===================================================================== */
 echo "\n";

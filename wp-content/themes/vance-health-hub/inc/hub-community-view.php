@@ -552,13 +552,14 @@ function vance_community_render_page() {
 	if ( '' !== $current ) {
 		$args['tax_query'] = array( array( 'taxonomy' => 'vance_space', 'field' => 'slug', 'terms' => $current ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
 	}
+	// Sample questions are for staff only. The clause is added here, after the
+	// filter, so no filter callback can take it away.
 	/**
-	 * Filters the feed query. inc/hub-community-sample.php uses it to keep the
-	 * sample questions away from everyone but moderators.
+	 * Filters the feed query.
 	 *
 	 * @param array $args WP_Query arguments.
 	 */
-	$feed = new WP_Query( (array) apply_filters( 'vance_community_feed_args', $args ) );
+	$feed = new WP_Query( vance_community_sample_feed_args( (array) apply_filters( 'vance_community_feed_args', $args ) ) );
 
 	$html .= '<section class="vcom-feed" aria-label="' . esc_attr__( 'Questions', 'vance-health-hub' ) . '">';
 	if ( $feed->have_posts() ) {

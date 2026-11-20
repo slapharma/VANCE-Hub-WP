@@ -208,6 +208,14 @@ function update_post_thumbnail_cache( $query ) {}
 
 /* ---- load the code under test --------------------------------------------- */
 
+// No mbstring on this machine. This polyfill upper-cases ASCII and the one accented letter the label check uses,
+// so the expected value is the same here and on a server with mbstring. Where mbstring exists, the real function runs.
+if ( ! function_exists( 'mb_strtoupper' ) ) {
+	function mb_strtoupper( $s, $enc = 'UTF-8' ) {
+		return strtr( strtoupper( (string) $s ), array( chr( 0xC3 ) . chr( 0xA9 ) => chr( 0xC3 ) . chr( 0x89 ) ) );
+	}
+}
+
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-header.php';
 
@@ -684,7 +692,8 @@ $CLUB_HTML  = '<ul class="vhh-nav__list"><li><a href="https://example.test/custo
 $PLAIN_HTML = '<ul class="vhh-nav__list"><li class="menu-item"><a href="https://example.test/about-us/">About</a></li></ul>';
 $MEGA_HTML  = '<div id="mega-menu-wrap-primary-menu" class="mega-menu-wrap"><ul id="mega-menu-primary-menu" class="mega-menu"><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-flyout"><a class="mega-menu-link" href="https://example.test/about-us/">About</a></li></ul></div>';
 $COMM_PLAIN = '<li class="menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community"><a href="https://example.test/community/">Community</a></li>';
-$COMM_MEGA  = '<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community"><a class="mega-menu-link" href="https://example.test/community/">Community</a></li>';
+// The Mega Menu labels are typed in capitals (THE HUB, CONDITIONS), so Community is printed as COMMUNITY there.
+$COMM_MEGA  = '<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community"><a class="mega-menu-link" href="https://example.test/community/">COMMUNITY</a></li>';
 
 // Precedence: club menu, then the original primary menu, then the real pages.
 arrange();
@@ -783,7 +792,7 @@ arrange( array(), array(), array(), '/community/' );
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
 $GLOBALS['COMMUNITY_ON'] = true;
 check( 'current: on the community page the plain item is marked current', vance_hub_header_community_li( false ) === '<li class="menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community current-menu-item"><a href="https://example.test/community/" aria-current="page">Community</a></li>' );
-check( 'current: on the community page the Mega Menu item is marked current', vance_hub_header_community_li( true ) === '<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community mega-current-menu-item"><a class="mega-menu-link" href="https://example.test/community/" aria-current="page">Community</a></li>' );
+check( 'current: on the community page the Mega Menu item is marked current', vance_hub_header_community_li( true ) === '<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community mega-current-menu-item"><a class="mega-menu-link" href="https://example.test/community/" aria-current="page">COMMUNITY</a></li>' );
 
 arrange( array(), array(), array(), '/community/thread-1/' );
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => 'https://example.test/community/' );
@@ -807,6 +816,14 @@ $GLOBALS['COMMUNITY_ON'] = true;
 $GLOBALS['I18N']         = array( 'Community' => '<b>Forum</b>' );
 $LI = vance_hub_header_community_li( false );
 check( 'escape: a label with markup is escaped, not printed', strpos( $LI, '<b>' ) === false && strpos( $LI, '>&lt;b&gt;Forum&lt;/b&gt;</a>' ) !== false );
+$LI = vance_hub_header_community_li( true );
+check( 'escape: the upper-cased Mega Menu label is still escaped', stripos( $LI, '<b>' ) === false && strpos( $LI, '>&lt;B&gt;FORUM&lt;/B&gt;</a>' ) !== false );
+$GLOBALS['I18N']         = array( 'Community' => 'Communauté' );
+check( 'label: the Mega Menu label upper-cases accented letters too', strpos( vance_hub_header_community_li( true ), '>COMMUNAUTÉ</a>' ) !== false );
+$GLOBALS['I18N']         = array( 'Community' => 'Community forum' );
+check( 'label: the Mega Menu label upper-cases a multi-word label as a whole', strpos( vance_hub_header_community_li( true ), '>COMMUNITY FORUM</a>' ) !== false );
+$GLOBALS['I18N']         = array( 'Community' => 'Communauté' );
+check( 'label: the plain label keeps its case', strpos( vance_hub_header_community_li( false ), '>Communauté</a>' ) !== false );
 
 arrange();
 $GLOBALS['PAGES']        = all_pages() + array( 'community' => '"><script>alert(1)</script>' );

@@ -18,6 +18,8 @@
 
 define( 'ABSPATH', true );
 define( 'DAY_IN_SECONDS', 86400 );
+define( 'HOUR_IN_SECONDS', 3600 );
+define( 'MINUTE_IN_SECONDS', 60 );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'OBJECT', 'OBJECT' );
 date_default_timezone_set( 'UTC' );
@@ -398,6 +400,19 @@ function update_option( $name, $value, $autoload = null ) {
 	$GLOBALS['WP']['options'][ $name ] = $value;
 	return true;
 }
+/** As WordPress: false when the option already exists, so it works as a lock. */
+function add_option( $name, $value = '', $deprecated = '', $autoload = 'yes' ) {
+	if ( array_key_exists( $name, $GLOBALS['WP']['options'] ) ) {
+		return false;
+	}
+	$GLOBALS['WP']['options'][ $name ] = $value;
+	return true;
+}
+function delete_option( $name ) {
+	$had = array_key_exists( $name, $GLOBALS['WP']['options'] );
+	unset( $GLOBALS['WP']['options'][ $name ] );
+	return $had;
+}
 function vance_get_theme_mod( $key, $default = '' ) {
 	return array_key_exists( $key, $GLOBALS['WP']['mods'] ) ? $GLOBALS['WP']['mods'][ $key ] : $default;
 }
@@ -428,7 +443,23 @@ function add_action( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
 function add_filter( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
 	return add_action( $tag, $callback, $priority, $accepted_args );
 }
-function apply_filters( $tag, $value ) { return $value; }
+/**
+ * Returns $value unchanged, unless a test sets $GLOBALS['WP']['run_filters'].
+ * Then the callbacks added to $tag run in priority order, each given the value
+ * so far and the extra arguments, as WordPress does. Off by default, so the
+ * suites that do not set the flag see no change.
+ */
+function apply_filters( $tag, $value, ...$args ) {
+	if ( empty( $GLOBALS['WP']['run_filters'] ) || empty( $GLOBALS['WP']['hooks'][ $tag ] ) ) {
+		return $value;
+	}
+	$list = $GLOBALS['WP']['hooks'][ $tag ];
+	usort( $list, function ( $a, $b ) { return $a['priority'] - $b['priority']; } );
+	foreach ( $list as $h ) {
+		$value = call_user_func_array( $h['cb'], array_merge( array( $value ), $args ) );
+	}
+	return $value;
+}
 /** True when $callback is hooked to $tag. */
 function cs_hooked( $tag, $callback ) {
 	if ( empty( $GLOBALS['WP']['hooks'][ $tag ] ) ) {
@@ -697,6 +728,10 @@ function get_post_time( $format = 'U', $gmt = false, $post = null ) {
 	return $p ? strtotime( $p->post_date ) : 0;
 }
 function wp_insert_post( $args, $wp_error = false ) {
+	// Test switch, off by default: the insert fails the way a database error does.
+	if ( ! empty( $GLOBALS['WP']['fail_insert_post'] ) ) {
+		return new WP_Error( 'cs_fail', 'insert refused' );
+	}
 	$id  = cs_next_id();
 	$now = date( 'Y-m-d H:i:s', time() );
 	$p   = array_merge( array(
@@ -732,6 +767,10 @@ function wp_update_post( $args, $wp_error = false ) {
 	return $id;
 }
 function wp_delete_post( $id, $force = false ) {
+	// Test switch, off by default: the delete is refused, as WordPress returns false.
+	if ( ! empty( $GLOBALS['WP']['fail_delete_post'] ) ) {
+		return false;
+	}
 	$id = (int) $id;
 	if ( ! isset( $GLOBALS['WP']['posts'][ $id ] ) ) {
 		return false;
@@ -806,6 +845,11 @@ function cs_meta_query_ok( $type, $id, $mq ) {
 		if ( 'relation' === $k ) {
 			continue;
 		}
+		// A nested group (no key of its own) is evaluated as a meta_query, as WordPress does.
+		if ( is_array( $clause ) && ! isset( $clause['key'] ) ) {
+			$results[] = cs_meta_query_ok( $type, $id, $clause );
+			continue;
+		}
 		$exists = cs_has_meta( $type, $id, $clause['key'], isset( $clause['value'] ) ? $clause['value'] : null );
 		$results[] = ( isset( $clause['compare'] ) && 'NOT EXISTS' === $clause['compare'] )
 			? ! cs_has_meta( $type, $id, $clause['key'] )
@@ -857,6 +901,10 @@ function get_comment( $id ) {
 	return isset( $GLOBALS['WP']['comments'][ $id ] ) ? $GLOBALS['WP']['comments'][ $id ] : null;
 }
 function wp_insert_comment( $data ) {
+	// Test switch, off by default: the insert is refused, as WordPress returns false.
+	if ( ! empty( $GLOBALS['WP']['fail_insert_comment'] ) ) {
+		return false;
+	}
 	$id  = cs_next_id();
 	$now = date( 'Y-m-d H:i:s', time() );
 	$c   = array_merge( array(
