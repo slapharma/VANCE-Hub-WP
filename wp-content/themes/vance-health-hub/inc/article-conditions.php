@@ -178,7 +178,9 @@ function vance_article_conditions( $post_id ) {
 		}
 	}
 
-	$memo[ $post_id ] = array_keys( $picks );
+	// Priority order, so the chips and the `about` schema lead with a
+	// priority condition. The set itself is unchanged.
+	$memo[ $post_id ] = vance_sort_conditions( array_keys( $picks ) );
 
 	return $memo[ $post_id ];
 }
@@ -220,13 +222,16 @@ function vance_article_conditions_confident_cache( $post_id, $set = null ) {
  * being conservative about. The pill link and the `about` schema property
  * still use the looser vance_article_conditions() unchanged.
  *
+ * Priority order, so "More on ..." names a priority condition when the
+ * article is confidently about one.
+ *
  * @param int $post_id Post ID.
  * @return string[] Condition page slugs, possibly empty.
  */
 function vance_article_conditions_confident( $post_id ) {
 	vance_article_conditions( $post_id ); // Populates the confident cache as a side effect.
 	$confident = vance_article_conditions_confident_cache( (int) $post_id );
-	return $confident ?? array();
+	return vance_sort_conditions( $confident ?? array() );
 }
 
 /**

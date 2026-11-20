@@ -268,6 +268,30 @@ function vance_nav_icon_choices() {
    ========================================================================== */
 
 /**
+ * Put the priority condition tiles first in a nav tile grid.
+ *
+ * The tiles are stored in a widget's textarea in the database, so the
+ * CONDITIONS panel order is fixed at display time here, not by editing that
+ * text. A tile's condition is the last segment of its URL path. Tiles that are
+ * not priority conditions (the other conditions, the feature tile, any tile in
+ * another panel) keep their order after the priority ones.
+ *
+ * @param array $tiles Rows from VHH_Nav_Tiles_Widget::parse_tiles().
+ * @return array The same rows, reordered.
+ */
+function vance_nav_tiles_in_priority( array $tiles ) {
+	if ( ! function_exists( 'vance_sort_conditions' ) ) { return $tiles; }
+
+	$keyed = array();
+	foreach ( $tiles as $tile ) {
+		$path    = trim( (string) wp_parse_url( isset( $tile['url'] ) ? $tile['url'] : '', PHP_URL_PATH ), '/' );
+		$keyed[] = array( 'slug' => basename( $path ), 'tile' => $tile );
+	}
+
+	return array_column( vance_sort_conditions( $keyed ), 'tile' );
+}
+
+/**
  * A grid of icon tiles for a mega-menu panel.
  *
  * Tiles are entered one per line as pipe-delimited fields rather than through a
@@ -331,7 +355,9 @@ class VHH_Nav_Tiles_Widget extends WP_Widget {
 	}
 
 	public function widget( $args, $instance ) {
-		$tiles = $this->parse_tiles( isset( $instance['tiles'] ) ? $instance['tiles'] : '' );
+		$tiles = vance_nav_tiles_in_priority(
+			$this->parse_tiles( isset( $instance['tiles'] ) ? $instance['tiles'] : '' )
+		);
 		if ( empty( $tiles ) ) { return; }
 
 		$cols  = isset( $instance['cols'] ) ? max( 1, min( 4, (int) $instance['cols'] ) ) : 3;

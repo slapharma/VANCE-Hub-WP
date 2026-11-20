@@ -266,6 +266,7 @@ function get_the_category( $post_id ) {
 /* ---- load the code under test --------------------------------------------- */
 
 require_once $THEME . '/inc/thumbnail-alt.php';   // the real helper, not a copy
+require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
 
 /*

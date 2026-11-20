@@ -102,6 +102,7 @@ lift_function( $FN, 'vance_gi_condition_cards' );
 lift_function( $FN, 'vance_gi_page_url' );
 lift_function( $FN, 'vance_gi_hub_url' );
 
+require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/gi-hero.php';
 
 /*
@@ -242,12 +243,14 @@ foreach ( $SLUGS as $s ) {
     check( "$s: lobby cell says All seven", strpos( $band, 'All seven' ) !== false );
 }
 
-// The band order is the registry order, not whatever the loop happened to do.
+// The band order is priority first, then the registry order, not whatever
+// the loop happened to do. IBS's related list is mc, div, ibd: diverticular
+// disease is a priority condition, so it moves to the front.
 $h = body( render_cond( 'irritable-bowel-syndrome' ) );
 preg_match_all( '#__line-v">([^<]+)<#', $h, $vm );
-check( 'ibs: band lists mc, div, ibd then the lobby',
+check( 'ibs: band lists div, mc, ibd then the lobby',
     $vm[1],
-    array( 'Microscopic Colitis', 'Diverticular Disease', 'Inflammatory Bowel Disease', 'Gastro Health Explained' ) );
+    array( 'Diverticular Disease', 'Microscopic Colitis', 'Inflammatory Bowel Disease', 'Gastro Health Explained' ) );
 
 /* ===================================================================== */
 echo "\n=== 2. The related map is shared, and internally sound ===\n";
@@ -265,8 +268,23 @@ foreach ( $meta as $slug => $m ) {
         in_array( $slug, $m['related'], true ), false );
     check( "$slug: related has no duplicates",
         count( array_unique( $m['related'] ) ), 3 );
-    check( "$slug: related_slugs() agrees with meta",
-        vance_gi_hero_related_slugs( $slug ), $m['related'] );
+    check( "$slug: related_slugs() has the same members as meta",
+        array_values( array_diff( $m['related'], vance_gi_hero_related_slugs( $slug ) ) ), array() );
+}
+
+// Literal expectations, not the helper again: a check that runs both sides
+// through vance_sort_conditions() cannot catch a wrong priority order.
+$related_want = array(
+    'crohns-disease'             => array( 'ulcerative-colitis', 'inflammatory-bowel-disease', 'microscopic-colitis' ),
+    'ulcerative-colitis'         => array( 'crohns-disease', 'inflammatory-bowel-disease', 'microscopic-colitis' ),
+    'diverticular-disease'       => array( 'irritable-bowel-syndrome', 'colorectal-cancer', 'inflammatory-bowel-disease' ),
+    'inflammatory-bowel-disease' => array( 'crohns-disease', 'ulcerative-colitis', 'microscopic-colitis' ),
+    'microscopic-colitis'        => array( 'crohns-disease', 'ulcerative-colitis', 'irritable-bowel-syndrome' ),
+    'irritable-bowel-syndrome'   => array( 'diverticular-disease', 'microscopic-colitis', 'inflammatory-bowel-disease' ),
+    'colorectal-cancer'          => array( 'ulcerative-colitis', 'diverticular-disease', 'inflammatory-bowel-disease' ),
+);
+foreach ( $related_want as $slug => $want ) {
+    check( "$slug: related_slugs() is in priority order", vance_gi_hero_related_slugs( $slug ), $want );
 }
 
 check( 'related_slugs() is empty for a stranger', vance_gi_hero_related_slugs( 'not-a-condition' ), array() );

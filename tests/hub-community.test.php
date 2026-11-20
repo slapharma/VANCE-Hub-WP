@@ -42,6 +42,7 @@ set_error_handler( function ( $no, $str, $file, $line ) {
 	throw new ErrorException( $str, 0, $no, $file, $line );
 } );
 
+require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-header.php';
 require_once $THEME . '/inc/hub-community.php';
@@ -361,7 +362,7 @@ check( 'caps: subscribers are not given vance_moderate_community', false === get
 
 arrange();
 $SLUGS = array_keys( vance_community_space_terms() );
-check( 'spaces: the seven spaces exist after the seed, in the fixed order', array( 'ibd', 'ulcerative-colitis', 'crohns-disease', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' ) === $SLUGS );
+check( 'spaces: the seven spaces exist after the seed, priority conditions first', array( 'crohns-disease', 'ulcerative-colitis', 'ibd', 'ibs', 'food-and-recipes', 'work-and-travel', 'carers' ) === $SLUGS );
 check( 'spaces: the seed sets its flag once every space exists', 1 === get_option( 'vance_community_spaces_seeded' ) );
 vance_community_seed_spaces();
 check( 'spaces: a second seed adds no spaces', 7 === count( get_terms( array( 'taxonomy' => 'vance_space' ) ) ) );
