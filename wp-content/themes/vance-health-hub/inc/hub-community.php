@@ -816,6 +816,20 @@ function vance_community_display_name( $user_id ) {
 }
 
 /**
+ * The name shown on one question or reply. It is the author's display name;
+ * the filter lets the sample data (inc/hub-community-sample.php) show a stored
+ * name on a post that has no author account.
+ *
+ * @param string $kind    'question' or 'reply'.
+ * @param int    $id      Post or comment ID.
+ * @param int    $user_id Author's user ID (0 for none).
+ * @return string
+ */
+function vance_community_author_name( $kind, $id, $user_id ) {
+	return (string) apply_filters( 'vance_community_author_name', vance_community_display_name( (int) $user_id ), $kind, (int) $id, (int) $user_id );
+}
+
+/**
  * The space term of a question, or null.
  *
  * @param int $post_id Question ID.

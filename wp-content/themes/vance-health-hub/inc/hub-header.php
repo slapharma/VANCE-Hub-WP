@@ -407,16 +407,20 @@ function vance_hub_header_community_li( $mega ) {
 	$marked  = vance_hub_header_mark_current( array( $added[0] ), vance_hub_header_current_url() );
 	$current = ! empty( $marked[0]['current'] );
 
+	$label = (string) $added[0]['label'];
 	if ( $mega ) {
 		$li_class = 'mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-align-bottom-left mega-menu-flyout vhh-nav__community' . ( $current ? ' mega-current-menu-item' : '' );
 		$a_class  = ' class="mega-menu-link"';
+		// The original menu's labels are typed in capitals (THE HUB, CONDITIONS),
+		// with no text-transform, so Community is written the same way.
+		$label = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $label, 'UTF-8' ) : strtoupper( $label );
 	} else {
 		$li_class = 'menu-item menu-item-type-post_type menu-item-object-page vhh-nav__community' . ( $current ? ' current-menu-item' : '' );
 		$a_class  = '';
 	}
 	return '<li class="' . esc_attr( $li_class ) . '"><a' . $a_class . ' href="' . esc_url( $added[0]['url'] ) . '"'
 		. ( $current ? ' aria-current="page"' : '' ) . '>'
-		. esc_html( $added[0]['label'] ) . '</a></li>';
+		. esc_html( $label ) . '</a></li>';
 }
 
 /**
