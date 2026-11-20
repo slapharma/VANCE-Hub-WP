@@ -365,8 +365,17 @@ function vance_hub_dashboard_member_card_data( $user ) {
 		$code = (string) vance_hub_member_code_for( $uid );
 	}
 
+	// First word of the first name for the greeting, else of the full name.
+	$parts = preg_split( '/\s+/u', '' !== trim( $first ) ? trim( $first ) : $name );
+	$hi    = is_array( $parts ) && isset( $parts[0] ) ? (string) $parts[0] : '';
+	// An email address used as a display name is never a greeting.
+	if ( false !== strpos( $hi, '@' ) ) {
+		$hi = '';
+	}
+
 	return array(
 		'name'  => $name,
+		'first' => $hi,
 		'since' => $joined ? (string) wp_date( 'F Y', $joined ) : '',
 		'code'  => $code,
 	);
@@ -383,7 +392,11 @@ function vance_hub_dashboard_member_card_html( $card ) {
 		return '';
 	}
 	$html  = '<div class="vhdt-member">';
-	$html .= '<span class="vhdt-member__label">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</span>';
+	$label = ! empty( $card['first'] )
+		/* translators: %s: member's first name. */
+		? sprintf( __( 'Welcome back %s', 'vance-health-hub' ), $card['first'] )
+		: __( 'Welcome back', 'vance-health-hub' );
+	$html .= '<span class="vhdt-member__label">' . esc_html( $label ) . '</span>';
 	$html .= '<span class="vhdt-member__name">' . esc_html( $card['name'] ) . '</span>';
 	$line  = array();
 	if ( ! empty( $card['code'] ) ) {
@@ -715,40 +728,53 @@ function vance_hub_dashboard_home_html( $d ) {
 	$html  = '<div class="vhd">';
 
 	// -- Greeting ----------------------------------------------------------
-	$html .= '<section class="vhd-hello" aria-labelledby="vhd-hello-title"><div class="vhd-hello__copy">';
-	$html .= '<p class="vhd-eyebrow">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</p>';
 	/* translators: %s: member's first name. */
-	$html .= '<h1 id="vhd-hello-title" class="vhd-hello__title">' . esc_html( sprintf( __( 'Hello, %s', 'vance-health-hub' ), $d['name'] ) ) . '</h1>';
-	if ( '' !== $d['since'] ) {
-		/* translators: %s: month and year the member joined. */
-		$html .= '<p class="vhd-hello__since">' . esc_html( sprintf( __( 'Member since %s', 'vance-health-hub' ), $d['since'] ) ) . '</p>';
+	$hello = sprintf( __( 'Hello, %s', 'vance-health-hub' ), $d['name'] );
+	if ( ! empty( $d['menu_card'] ) ) {
+		// The side menu's member card already shows the name, the join month and
+		// the member number, so the page keeps only its heading, for screen readers.
+		$html .= '<h1 class="vhd-sr">' . esc_html( $hello ) . '</h1>';
+	} else {
+		$html .= '<section class="vhd-hello" aria-labelledby="vhd-hello-title"><div class="vhd-hello__copy">';
+		$html .= '<p class="vhd-eyebrow">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</p>';
+		$html .= '<h1 id="vhd-hello-title" class="vhd-hello__title">' . esc_html( $hello ) . '</h1>';
+		if ( '' !== $d['since'] ) {
+			/* translators: %s: month and year the member joined. */
+			$html .= '<p class="vhd-hello__since">' . esc_html( sprintf( __( 'Member since %s', 'vance-health-hub' ), $d['since'] ) ) . '</p>';
+		}
+		if ( ! empty( $d['member_code'] ) ) {
+			/* translators: %s: the member's code. */
+			$html .= '<p class="vhd-hello__code">' . esc_html( sprintf( __( 'Member number %s', 'vance-health-hub' ), $d['member_code'] ) ) . '</p>';
+		}
+		$html .= '</div></section>';
 	}
-	if ( ! empty( $d['member_code'] ) ) {
-		/* translators: %s: the member's code. */
-		$html .= '<p class="vhd-hello__code">' . esc_html( sprintf( __( 'Member number %s', 'vance-health-hub' ), $d['member_code'] ) ) . '</p>';
+
+	// -- Top row: next step, Ask VANCE-Ai, weekly check-in ------------------
+	$top = '';
+	if ( ! empty( $d['step'] ) ) {
+		$step = $d['step'];
+		$top .= '<section class="vhd-step" aria-labelledby="vhd-step-title"><div class="vhd-step__copy">';
+		$top .= '<p class="vhd-eyebrow vhd-eyebrow--light">' . esc_html__( 'Your next step', 'vance-health-hub' ) . '</p>';
+		$top .= '<h2 id="vhd-step-title" class="vhd-step__title">' . esc_html( $step['title'] ) . '</h2>';
+		$top .= '<p class="vhd-step__text">' . esc_html( $step['text'] ) . '</p></div>';
+		$top .= '<a class="vhd-btn vhd-btn--white" href="' . esc_url( $step['href'] ) . '">' . esc_html( $step['cta'] ) . $arrow . '</a>';
+		$top .= '</section>';
 	}
-	$html .= '</div>';
 	if ( ! empty( $d['ask'] ) ) {
 		// Opens the shared VANCE-Ai modal on a new conversation, the same hook
 		// the classic "New Chat" button uses.
-		$html .= '<button type="button" class="vhd-btn vhd-btn--purple" data-vance-askai-open="new">' . esc_html__( 'Ask VANCE-Ai', 'vance-health-hub' ) . $arrow . '</button>';
+		$top .= '<section class="vhd-ask" aria-labelledby="vhd-ask-title">';
+		$top .= '<p class="vhd-eyebrow vhd-eyebrow--light">' . esc_html__( 'VANCE-Ai', 'vance-health-hub' ) . '</p>';
+		$top .= '<h2 id="vhd-ask-title" class="vhd-ask__title">' . esc_html__( 'Need an answer now?', 'vance-health-hub' ) . '</h2>';
+		$top .= '<p class="vhd-ask__text">' . esc_html__( 'VANCE-Ai answers at any hour and shows its sources.', 'vance-health-hub' ) . '</p>';
+		$top .= '<button type="button" class="vhd-btn vhd-btn--white" data-vance-askai-open="new">' . esc_html__( 'Ask VANCE-Ai', 'vance-health-hub' ) . $arrow . '</button>';
+		$top .= '</section>';
 	}
-	$html .= '</section>';
-
-	// -- Next step ---------------------------------------------------------
-	if ( ! empty( $d['step'] ) ) {
-		$step  = $d['step'];
-		$html .= '<section class="vhd-step" aria-labelledby="vhd-step-title"><div class="vhd-step__copy">';
-		$html .= '<p class="vhd-eyebrow vhd-eyebrow--light">' . esc_html__( 'Your next step', 'vance-health-hub' ) . '</p>';
-		$html .= '<h2 id="vhd-step-title" class="vhd-step__title">' . esc_html( $step['title'] ) . '</h2>';
-		$html .= '<p class="vhd-step__text">' . esc_html( $step['text'] ) . '</p></div>';
-		$html .= '<a class="vhd-btn vhd-btn--white" href="' . esc_url( $step['href'] ) . '">' . esc_html( $step['cta'] ) . $arrow . '</a>';
-		$html .= '</section>';
-	}
-
-	// -- Weekly check-in (optional) ----------------------------------------
 	if ( ! empty( $d['checkin'] ) && function_exists( 'vance_hub_dashboard_checkin_html' ) ) {
-		$html .= vance_hub_dashboard_checkin_html( $d['checkin'] );
+		$top .= vance_hub_dashboard_checkin_html( $d['checkin'] );
+	}
+	if ( '' !== $top ) {
+		$html .= '<div class="vhd-top">' . $top . '</div>';
 	}
 
 	// -- Tools -------------------------------------------------------------
@@ -860,5 +886,11 @@ function vance_hub_dashboard_render_home( $user ) {
 	if ( ! ( $user instanceof WP_User ) || ! $user->exists() ) {
 		return;
 	}
-	echo vance_hub_dashboard_home_html( vance_hub_dashboard_data( $user ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is escaped in vance_hub_dashboard_home_html().
+	$data = vance_hub_dashboard_data( $user );
+	// The side menu shows the member card only with the VanceHubClub tab look,
+	// and only when the member has a name: without it the card prints nothing,
+	// so the page keeps its own greeting and member number.
+	$card              = vance_hub_dashboard_member_card_data( $user );
+	$data['menu_card'] = function_exists( 'vance_hub_dashboard_tabs_active' ) && vance_hub_dashboard_tabs_active() && '' !== $card['name'];
+	echo vance_hub_dashboard_home_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is escaped in vance_hub_dashboard_home_html().
 }

@@ -21,6 +21,7 @@
  *      layout, the empty messages line, the check mark, the render entry point
  *   5  the assets: enqueue conditions and the hook
  *   6  page-dashboard.php by static inspection
+ *   7  the greeting: side-menu heading or classic greeting, top-row order, member card first name and label
  *
  * The promo block and the Customizer switches are checked in
  * hub-layout.test.php (section 15), because front-page-hub.php is rendered there.
@@ -859,6 +860,157 @@ check( 'page: the home case checks the flag as its first statement', $CASE_HOME 
 check( 'page: the flagged branch renders the hub home directly after its check', $IF !== false && $CALL !== false && trim( substr( $PD, $IF + strlen( $IF_NEEDLE ), $CALL - $IF - strlen( $IF_NEEDLE ) ) ) === '' );
 check( 'page: the flagged branch breaks out of the switch', $CALL !== false && strpos( $PD, 'break;', $CALL ) !== false && strpos( $PD, 'break;', $CALL ) - $CALL < 100 );
 check( 'page: the classic home stays after the early break, unchanged', strpos( $PD, '// Admin-broadcast messages: compute unread count' ) > $CALL );
+
+/* ===================================================================== */
+section( '7. The greeting, the top row and the side-menu card' );
+
+// The check-in block is stubbed here. The real one lives in hub-dashboard-features.php
+// and has its own suite. The stub gives the top-row order something to find.
+define( 'HD_CHECKIN_STUB', '<section class="vhd-checkin-stub">Check-in</section>' );
+function vance_hub_dashboard_checkin_html( $c ) {
+	return HD_CHECKIN_STUB;
+}
+
+// Side-menu layout: the page keeps only a visually hidden h1.
+$MC = hd_view_empty();
+$MC['name']        = 'Ruth';
+$MC['since']       = 'March 2026';
+$MC['member_code'] = 'K7QM-4XZP';
+$MC['menu_card']   = true;
+$MH = vance_hub_dashboard_home_html( $MC );
+check( 'menu card: no greeting section, the side menu carries the member', strpos( $MH, 'vhd-hello' ) === false );
+check( 'menu card: the member number text is not printed on the page', strpos( $MH, 'K7QM-4XZP' ) === false );
+check( 'menu card: no member number line on the page', strpos( $MH, 'Member number' ) === false );
+check( 'menu card: no join line on the page', strpos( $MH, 'Member since' ) === false );
+check( 'menu card: the heading is a visually hidden h1 with the name', strpos( $MH, '<h1 class="vhd-sr">Hello, Ruth</h1>' ) !== false );
+check( 'menu card: exactly one h1 on the page', substr_count( $MH, '<h1' ) === 1 );
+check( 'menu card: no My Hub eyebrow on the page', strpos( $MH, 'My Hub' ) === false );
+
+// Classic layout: the greeting keeps its own eyebrow, date and member number.
+$CL = hd_view_empty();
+$CL['name']        = 'Ruth';
+$CL['since']       = 'March 2026';
+$CL['member_code'] = 'K7QM-4XZP';
+$CL['ask']         = true;
+$CL['menu_card']   = false;
+$CH = vance_hub_dashboard_home_html( $CL );
+check( 'classic: the greeting section is kept', strpos( $CH, '<section class="vhd-hello" aria-labelledby="vhd-hello-title">' ) !== false );
+check( 'classic: the visible h1 keeps its id and class', strpos( $CH, '<h1 id="vhd-hello-title" class="vhd-hello__title">Hello, Ruth</h1>' ) !== false );
+check( 'classic: the eyebrow shows', strpos( $CH, '<p class="vhd-eyebrow">My Hub</p>' ) !== false );
+check( 'classic: the join line shows', strpos( $CH, '<p class="vhd-hello__since">Member since March 2026</p>' ) !== false );
+check( 'classic: the member number line shows', strpos( $CH, '<p class="vhd-hello__code">Member number K7QM-4XZP</p>' ) !== false );
+check( 'classic: no screen-reader heading', strpos( $CH, 'vhd-sr' ) === false );
+check( 'classic: exactly one h1 on the page', substr_count( $CH, '<h1' ) === 1 );
+$CH_CLOSE = strpos( $CH, '</section>' );
+$CH_ASK   = strpos( $CH, 'data-vance-askai-open' );
+check( 'classic: the Ask button sits after the greeting section closes, not inside it', $CH_CLOSE !== false && $CH_ASK !== false && $CH_ASK > $CH_CLOSE );
+check( 'classic: exactly one Ask button', substr_count( $CH, 'data-vance-askai-open' ) === 1 );
+
+// Top row: next step, then Ask, then check-in, all in one wrapper.
+$TP = hd_view_empty();
+$TP['step']    = hd_step( 'Do the survey', 'https://example.test/survey/' );
+$TP['ask']     = true;
+$TP['checkin'] = array( 'questions' => array() );
+$TH = vance_hub_dashboard_home_html( $TP );
+$P_TOP  = strpos( $TH, '<div class="vhd-top">' );
+$P_STEP = strpos( $TH, 'class="vhd-step"' );
+$P_ASK  = strpos( $TH, 'class="vhd-ask"' );
+$P_CHK  = strpos( $TH, HD_CHECKIN_STUB );
+check( 'top: the wrapper opens before the next step', $P_TOP !== false && $P_STEP !== false && $P_TOP < $P_STEP );
+check( 'top: the next step comes before the Ask block', $P_STEP !== false && $P_ASK !== false && $P_STEP < $P_ASK );
+check( 'top: the Ask block comes before the check-in', $P_ASK !== false && $P_CHK !== false && $P_ASK < $P_CHK );
+check( 'top: the check-in is the last thing in the wrapper', $P_CHK !== false && substr( $TH, $P_CHK + strlen( HD_CHECKIN_STUB ), 6 ) === '</div>' );
+
+// Top row absent: no wrapper, no Ask block.
+$NO = vance_hub_dashboard_home_html( hd_view_empty() );
+check( 'top: no wrapper when step, Ask and check-in are all absent', strpos( $NO, 'vhd-top' ) === false );
+check( 'top: no Ask block when Ask is off', strpos( $NO, 'class="vhd-ask"' ) === false && strpos( $NO, 'data-vance-askai-open' ) === false );
+
+// Ask on its own gets the wrapper, and shows on the side-menu layout too.
+$AO = hd_view_empty();
+$AO['ask'] = true;
+$AH = vance_hub_dashboard_home_html( $AO );
+check( 'ask: the Ask block shows when Ask is on', strpos( $AH, '<section class="vhd-ask" aria-labelledby="vhd-ask-title">' ) !== false && strpos( $AH, 'data-vance-askai-open="new"' ) !== false );
+check( 'ask: the Ask block is wrapped in vhd-top on its own', strpos( $AH, '<div class="vhd-top"><section class="vhd-ask"' ) !== false );
+$AM = $AO;
+$AM['menu_card'] = true;
+check( 'ask: still shown on the side-menu layout', strpos( vance_hub_dashboard_home_html( $AM ), 'data-vance-askai-open="new"' ) !== false );
+
+// Check-in on its own gets the wrapper.
+$CO = hd_view_empty();
+$CO['checkin'] = array( 'questions' => array() );
+check( 'top: a check-in alone gets the wrapper', strpos( vance_hub_dashboard_home_html( $CO ), '<div class="vhd-top">' . HD_CHECKIN_STUB ) !== false );
+
+// Member card: the first word of the first name.
+hd_arrange();
+$GLOBALS['USER_META'][7] = array( 'first_name' => 'Mary Ann', 'last_name' => 'Smith' );
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, 'mary.a', '2024-03-05 10:00:00' ) );
+check( 'first: the first word of a two-word first name', $CD['first'] === 'Mary' );
+check( 'first: the full name is still both words and the surname', $CD['name'] === 'Mary Ann Smith' );
+
+hd_arrange();
+$GLOBALS['USER_META'][7] = array( 'first_name' => 'Ruth', 'last_name' => 'Adams' );
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, 'ruth.a', '2024-03-05 10:00:00' ) );
+check( 'first: a one-word first name is itself', $CD['first'] === 'Ruth' );
+
+hd_arrange();
+$GLOBALS['USER_META'][7] = array( 'first_name' => '   Ruth', 'last_name' => 'Adams' );
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, 'ruth.a', '2024-03-05 10:00:00' ) );
+check( 'first: leading spaces in the first name are ignored', $CD['first'] === 'Ruth' );
+
+hd_arrange();
+$GLOBALS['USER_META'][7] = array( 'first_name' => 'Zoë' );
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, 'zoe.b', '2024-03-05 10:00:00' ) );
+check( 'first: a non-ASCII first name keeps its letters', $CD['first'] === 'Zoë' );
+
+hd_arrange();
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, 'Dana Lee', '2024-03-05 10:00:00' ) );
+check( 'first: no first name falls back to the first word of the display name', $CD['first'] === 'Dana' );
+check( 'first: the display name is the full name in that case', $CD['name'] === 'Dana Lee' );
+
+hd_arrange();
+$GLOBALS['USER_META'][7] = array( 'first_name' => '   ' );
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, 'Dana Lee', '2024-03-05 10:00:00' ) );
+check( 'first: a first name of only spaces falls back to the display name', $CD['first'] === 'Dana' );
+
+hd_arrange();
+$CD = vance_hub_dashboard_member_card_data( hd_user( 7, '', '2024-03-05 10:00:00' ) );
+check( 'first: no name at all gives an empty first word', $CD['first'] === '' );
+check( 'first: no name at all gives an empty name', $CD['name'] === '' );
+
+// Member card: the label.
+$LB = vance_hub_dashboard_member_card_html( array( 'name' => 'Mary Ann Smith', 'first' => 'Mary', 'since' => '', 'code' => '' ) );
+check( 'label: reads Welcome back with the first name', strpos( $LB, '<span class="vhdt-member__label">Welcome back Mary</span>' ) !== false );
+
+$LE = vance_hub_dashboard_member_card_html( array( 'name' => 'Mary Ann Smith', 'first' => '', 'since' => '', 'code' => '' ) );
+check( 'label: reads Welcome back alone when there is no first name', strpos( $LE, '<span class="vhdt-member__label">Welcome back</span>' ) !== false );
+check( 'label: the old My Hub label is gone from the card', strpos( $LB, 'My Hub' ) === false && strpos( $LE, 'My Hub' ) === false );
+
+$LX = vance_hub_dashboard_member_card_html( array( 'name' => 'Mary', 'first' => '<i>Mary</i>', 'since' => '', 'code' => '' ) );
+check( 'label: a first name with markup is escaped', strpos( $LX, '<i>' ) === false && strpos( $LX, 'Welcome back &lt;i&gt;Mary&lt;/i&gt;' ) !== false );
+
+check( 'card: no card at all when there is no name, even with a first name', vance_hub_dashboard_member_card_html( array( 'name' => '', 'first' => 'Mary', 'since' => '', 'code' => '' ) ) === '' );
+
+// Render entry: the side-menu layout follows the tab look AND a name.
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true ) );
+$GLOBALS['USER_META'][7] = array( 'first_name' => 'Ruth', 'last_name' => 'Adams' );
+$RH = hd_render( hd_user( 7, 'ruth.a', '2024-03-05 10:00:00' ) );
+check( 'render: tab look on and a named member gives the side-menu heading', strpos( $RH, '<h1 class="vhd-sr">Hello, Ruth</h1>' ) !== false );
+check( 'render: tab look on and a named member drops the greeting section', strpos( $RH, 'vhd-hello' ) === false );
+
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => false ) );
+$GLOBALS['USER_META'][7] = array( 'first_name' => 'Ruth', 'last_name' => 'Adams' );
+$RH2 = hd_render( hd_user( 7, 'ruth.a', '2024-03-05 10:00:00' ) );
+check( 'render: tab look off keeps the classic greeting for a named member', strpos( $RH2, '<section class="vhd-hello"' ) !== false && strpos( $RH2, 'vhd-sr' ) === false );
+
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true ) );
+$RH3 = hd_render( hd_user( 8, '', '2024-03-05 10:00:00' ) );
+check( 'render: tab look on but a member with no name keeps the classic greeting', strpos( $RH3, '<section class="vhd-hello"' ) !== false && strpos( $RH3, 'vhd-sr' ) === false );
+
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
+$GLOBALS['USER_META'][7] = array( 'first_name' => 'Ruth', 'last_name' => 'Adams' );
+$RH4 = hd_render( hd_user( 7, 'ruth.a', '2024-03-05 10:00:00' ) );
+check( 'render: an administrator classic preview keeps the classic greeting', strpos( $RH4, '<section class="vhd-hello"' ) !== false && strpos( $RH4, 'vhd-sr' ) === false );
 
 /* ===================================================================== */
 echo "\n";
