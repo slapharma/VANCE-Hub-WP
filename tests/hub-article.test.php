@@ -171,18 +171,18 @@ $_GET = array( 'vhh_layout' => 'HUB' );
 check( 'active: admin preview value is case-insensitive', vance_hub_article_active() === true );
 
 a_reset();
-$GLOBALS['MODS'] = array( 'vance_hub_articles' => true );
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => true );
 $GLOBALS['CAPS'] = array( 'edit_theme_options' => true );
 $_GET = array( 'vhh_layout' => 'classic' );
 check( 'active: admin ?vhh_layout=classic forces it off with the box ticked', vance_hub_article_active() === false );
 
 a_reset();
-$GLOBALS['MODS'] = array( 'vance_hub_articles' => true );
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => true );
 $_GET = array( 'vhh_layout' => 'classic' );
 check( 'active: a visitor\'s ?vhh_layout=classic cannot switch it off', vance_hub_article_active() === true );
 
 a_reset();
-$GLOBALS['MODS'] = array( 'vance_hub_articles' => '1' );
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => '1' );
 check( 'active: the ticked box turns it on for a visitor', vance_hub_article_active() === true );
 $GLOBALS['A']['singular_post'] = false;
 check( 'active: never on a page that is not a single article', vance_hub_article_active() === false );
@@ -204,6 +204,31 @@ vance_hub_article_enqueue_assets();
 check( 'inert: no stylesheet or script is enqueued', $GLOBALS['ENQUEUED'] === array() );
 
 /* ===================================================================== */
+section( '1b. Master switch (Home layout) over the article part' );
+
+// Master classic: the part is off even when its own box is ticked.
+a_reset();
+$GLOBALS['MODS'] = array( 'vance_hub_articles' => true );
+check( 'master: classic with the article box ticked is off for a visitor', vance_hub_article_active() === false );
+
+// Master classic: the admin preview still turns the part on.
+a_reset();
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'classic', 'vance_hub_articles' => true );
+$GLOBALS['CAPS'] = array( 'edit_theme_options' => true );
+$_GET = array( 'vhh_layout' => 'hub' );
+check( 'master: classic with an admin ?vhh_layout=hub preview is on', vance_hub_article_active() === true );
+
+// Master hub: a part never saved is on, because its default is on.
+a_reset();
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub' );
+check( 'master: hub with the article box never saved is on', vance_hub_article_active() === true );
+
+// Master hub: a part saved off is off.
+a_reset();
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => false );
+check( 'master: hub with the article box saved off is off', vance_hub_article_active() === false );
+
+/* ===================================================================== */
 section( '2. Hooks, assets, body class, Customizer' );
 
 $hooked = function ( $tag, $cb, $prio ) {
@@ -216,7 +241,7 @@ check( 'hook: assets at 20', $hooked( 'wp_enqueue_scripts', 'vance_hub_article_e
 check( 'hook: Customizer at 11, after the Home layout section exists', $hooked( 'customize_register', 'vance_hub_article_customize_register', 11 ) );
 
 a_reset();
-$GLOBALS['MODS'] = array( 'vance_hub_articles' => true );
+$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => true );
 vance_hub_article_enqueue_assets();
 $st = isset( $GLOBALS['ENQUEUED']['style:vance-hub-article'] ) ? $GLOBALS['ENQUEUED']['style:vance-hub-article'] : null;
 check( 'assets: hub-article.css enqueued when on', $st && substr( $st['src'], -strlen( '/assets/css/hub-article.css' ) ) === '/assets/css/hub-article.css' );
@@ -235,7 +260,7 @@ class A_Customize {
 $cz = new A_Customize();
 vance_hub_article_customize_register( $cz );
 check( 'customizer: setting vance_hub_articles exists', isset( $cz->settings['vance_hub_articles'] ) );
-check( 'customizer: default is OFF', isset( $cz->settings['vance_hub_articles'] ) && false === $cz->settings['vance_hub_articles']['default'] );
+check( 'customizer: default is ON (the master switch decides whether it shows)', isset( $cz->settings['vance_hub_articles'] ) && true === $cz->settings['vance_hub_articles']['default'] );
 check( 'customizer: sanitised as a checkbox', isset( $cz->settings['vance_hub_articles'] ) && 'vance_hub_sanitize_checkbox' === $cz->settings['vance_hub_articles']['sanitize_callback'] );
 check( 'customizer: a checkbox in the Home layout section', isset( $cz->controls['vance_hub_articles'] ) && 'vance_home_layout' === $cz->controls['vance_hub_articles']['section'] && 'checkbox' === $cz->controls['vance_hub_articles']['type'] );
 check( 'customizer: the label names articles and VanceHubClub', isset( $cz->controls['vance_hub_articles'] ) && false !== stripos( $cz->controls['vance_hub_articles']['label'], 'article' ) && false !== strpos( $cz->controls['vance_hub_articles']['label'], 'VanceHubClub' ) );
@@ -347,7 +372,7 @@ section( '5. The the_content filter and its guards' );
 /** Arrange a request where the filter should run: mod on, single article, main loop. */
 function a_live() {
 	a_reset();
-	$GLOBALS['MODS'] = array( 'vance_hub_articles' => true );
+	$GLOBALS['MODS'] = array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => true );
 	$GLOBALS['SURVEY_STEPS'] = 9;
 	$GLOBALS['RECIPE_CELLS'] = array( array( 'key' => 'grid', 'value' => '90', 'label' => 'Recipes', 'href' => '' ) );
 }

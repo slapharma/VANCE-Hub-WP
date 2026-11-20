@@ -231,7 +231,7 @@ check( 'resolve: visitor query "hub" is ignored (no capability)', vance_hub_dash
 check( 'resolve: visitor query "classic" is ignored (no capability)', vance_hub_dashboard_resolve( true, 'classic', false ) === true );
 
 // vance_hub_dashboard_active(): the request, read through the capability gate.
-hd_arrange( array( 'vance_hub_show_dashboard' => true ) );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ) );
 check( 'active: saved on, nothing in the request, is on', vance_hub_dashboard_active() === true );
 
 hd_arrange( array( 'vance_hub_show_dashboard' => false ) );
@@ -243,13 +243,13 @@ check( 'active: nothing saved at all (mod unset) is off', vance_hub_dashboard_ac
 hd_arrange( array( 'vance_hub_show_dashboard' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 check( 'active: administrator preview ?vhh_layout=hub switches it on', vance_hub_dashboard_active() === true );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
 check( 'active: administrator preview ?vhh_layout=classic switches it off', vance_hub_dashboard_active() === false );
 
 hd_arrange( array( 'vance_hub_show_dashboard' => false ), array(), array( 'vhh_layout' => 'hub' ) );
 check( 'active: visitor cannot preview with ?vhh_layout=hub', vance_hub_dashboard_active() === false );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array( 'vhh_layout' => 'classic' ) );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array(), array( 'vhh_layout' => 'classic' ) );
 check( 'active: visitor cannot preview with ?vhh_layout=classic', vance_hub_dashboard_active() === true );
 
 hd_arrange( array( 'vance_hub_show_dashboard' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'HUB' ) );
@@ -258,7 +258,7 @@ check( 'active: preview value is sanitised, HUB is hub', vance_hub_dashboard_act
 hd_arrange( array( 'vance_hub_show_dashboard' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub<script>' ) );
 check( 'active: preview value with markup is sanitised to an unknown key, so the saved mod decides', vance_hub_dashboard_active() === false );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => array( 'hub' ) ) );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => array( 'hub' ) ) );
 check( 'active: an array preview value is ignored, not a fatal, and the saved mod decides', vance_hub_dashboard_active() === true );
 
 hd_arrange( array( 'vance_hub_show_dashboard' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => '' ) );
@@ -267,8 +267,21 @@ check( 'active: an empty preview value is ignored, the saved mod decides', vance
 hd_arrange( array( 'vance_hub_show_dashboard' => '0' ), array(), array() );
 check( 'active: a saved "0" string is off after the checkbox sanitiser', vance_hub_dashboard_active() === false );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => '1' ), array(), array() );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => '1' ), array(), array() );
 check( 'active: a saved "1" string is on after the checkbox sanitiser', vance_hub_dashboard_active() === true );
+
+// The master switch (Home layout) over the dashboard part.
+hd_arrange( array( 'vance_hub_show_dashboard' => true ) );
+check( 'master: classic with the dashboard box ticked is off', vance_hub_dashboard_active() === false );
+
+hd_arrange( array( 'vance_hub_show_dashboard' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+check( 'master: classic with an admin ?vhh_layout=hub preview is on', vance_hub_dashboard_active() === true );
+
+hd_arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master: hub with the dashboard box never saved is on (default on)', vance_hub_dashboard_active() === true );
+
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => false ) );
+check( 'master: hub with the dashboard box saved off is off', vance_hub_dashboard_active() === false );
 
 /* ===================================================================== */
 section( '2. Pure helpers' );
@@ -779,7 +792,7 @@ section( '5. Assets and hook' );
 
 check( 'hook: wp_enqueue_scripts runs the stylesheet at priority 20', isset( $GLOBALS['HOOKS']['wp_enqueue_scripts'][20] ) && in_array( 'vance_hub_dashboard_enqueue_assets', $GLOBALS['HOOKS']['wp_enqueue_scripts'][20], true ) );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), true );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array(), array(), true );
 $GLOBALS['TEMPLATE'] = 'page-dashboard.php';
 vance_hub_dashboard_enqueue_assets();
 check( 'assets: enqueued on the dashboard page, logged in, active', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) );
@@ -787,22 +800,22 @@ check( 'assets: the stylesheet URL points at hub-dashboard.css', $GLOBALS['ENQUE
 check( 'assets: the stylesheet depends on the main stylesheet', $GLOBALS['ENQUEUED']['style:vance-hub-dashboard']['deps'] === array( 'vance-main-style' ) );
 
 // The live page: slug 'dashboard', NO assigned template (is_page_template() false).
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), true );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array(), array(), true );
 $GLOBALS['SLUG'] = 'dashboard';
 vance_hub_dashboard_enqueue_assets();
 check( 'assets: enqueued on the dashboard page matched by slug with no assigned template', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), true );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array(), array(), true );
 $GLOBALS['SLUG'] = 'my-notes';
 vance_hub_dashboard_enqueue_assets();
 check( 'assets: not enqueued on another page matched by slug', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) === false );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), false );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array(), array(), false );
 $GLOBALS['TEMPLATE'] = 'page-dashboard.php';
 vance_hub_dashboard_enqueue_assets();
 check( 'assets: not enqueued for a visitor who is logged out', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) === false );
 
-hd_arrange( array( 'vance_hub_show_dashboard' => true ), array(), array(), true );
+hd_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array(), array(), true );
 $GLOBALS['TEMPLATE'] = 'page-my-notes.php';
 vance_hub_dashboard_enqueue_assets();
 check( 'assets: not enqueued on another page template', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) === false );

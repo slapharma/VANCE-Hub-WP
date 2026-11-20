@@ -326,6 +326,49 @@ function vance_hub_saved_layout() {
 }
 
 /**
+ * The master switch: true when the saved Home layout is VanceHubClub.
+ *
+ * "Home layout" turns every VanceHubClub part on and off together. With it on,
+ * each part follows its own switch, so an administrator can turn single parts
+ * off. With it off, every part is off, whatever its own switch says.
+ * An administrator's preview (?vhh_layout=, preview mode, share link) is
+ * applied by each part's resolver and is not changed by this.
+ *
+ * @return bool
+ */
+function vance_hub_master_on() {
+	return 'hub' === vance_hub_saved_layout();
+}
+
+/**
+ * Default of each part's own switch. A part that was never saved is on, so
+ * the master switch turns everything on. The weekly check-in is the one
+ * exception: its answers are health data, and its wording and the privacy
+ * policy must be approved before it shows.
+ *
+ * This is the ONE place for these defaults: the Customizer registrations, the
+ * VanceHubClub admin page and the gates all read it.
+ *
+ * @param string $mod Theme mod name.
+ * @return bool
+ */
+function vance_hub_switch_default( $mod ) {
+	return 'vance_hub_dash_checkin' !== $mod;
+}
+
+/**
+ * A part's saved state under the master switch: the master is on AND the
+ * part's own switch is on.
+ *
+ * @param string $mod Theme mod name.
+ * @return bool
+ */
+function vance_hub_switch_on( $mod ) {
+	return vance_hub_master_on()
+		&& (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $mod, vance_hub_switch_default( $mod ) ) );
+}
+
+/**
  * True when the hub home layout is active for this request.
  *
  * @return bool
@@ -452,9 +495,10 @@ function vance_hub_customize_register( $wp_customize ) {
 		'sanitize_callback' => 'vance_hub_sanitize_layout',
 	) );
 	$wp_customize->add_control( 'vance_home_layout', array(
-		'label'   => __( 'Home layout', 'vance-health-hub' ),
-		'section' => $section,
-		'type'    => 'radio',
+		'label'       => __( 'Home layout (master switch)', 'vance-health-hub' ),
+		'description' => __( 'This switch turns all of VanceHubClub on or off: the home page, the header, article pages, the member dashboard, the Health Survey result page and the Community hub. With VanceHubClub selected, every part below is on unless you turn it off. With VanceHealthHub selected, every part is off.', 'vance-health-hub' ),
+		'section'     => $section,
+		'type'        => 'radio',
 		'choices' => array(
 			'classic' => __( 'VanceHealthHub (current home page)', 'vance-health-hub' ),
 			'hub'     => __( 'VanceHubClub (tools and community first)', 'vance-health-hub' ),
@@ -496,7 +540,7 @@ function vance_hub_customize_register( $wp_customize ) {
 	) );
 
 	$wp_customize->add_setting( 'vance_hub_show_dashboard', array(
-		'default'           => false,
+		'default'           => vance_hub_switch_default( 'vance_hub_show_dashboard' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_show_dashboard', array(
@@ -507,7 +551,7 @@ function vance_hub_customize_register( $wp_customize ) {
 	) );
 
 	$wp_customize->add_setting( 'vance_hub_dashboard_tabs', array(
-		'default'           => false,
+		'default'           => vance_hub_switch_default( 'vance_hub_dashboard_tabs' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_dashboard_tabs', array(

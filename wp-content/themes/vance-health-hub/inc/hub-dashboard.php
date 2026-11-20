@@ -214,7 +214,7 @@ function vance_hub_dashboard_unread_count( $read_lists, $user_id ) {
 function vance_hub_dashboard_active() {
 	$query = vance_hub_preview_query();
 	return vance_hub_dashboard_resolve(
-		vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_dashboard', false ) ),
+		vance_hub_switch_on( 'vance_hub_show_dashboard' ),
 		$query,
 		'' !== $query
 	);
@@ -270,8 +270,13 @@ function vance_hub_dashboard_tabs_resolve( $mod_on, $dash_active ) {
  * @return bool
  */
 function vance_hub_dashboard_tabs_active() {
+	// An administrator's preview does not wait for the master switch: it reads
+	// the part's own switch alone. The part's own switch still counts, and the
+	// dashboard flag still decides: ?vhh_layout=classic makes it false.
+	$mod = 'vance_hub_dashboard_tabs';
+	$own = (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $mod, vance_hub_switch_default( $mod ) ) );
 	return vance_hub_dashboard_tabs_resolve(
-		vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_dashboard_tabs', false ) ),
+		'' !== vance_hub_preview_query() ? $own : vance_hub_switch_on( $mod ),
 		vance_hub_dashboard_active()
 	);
 }

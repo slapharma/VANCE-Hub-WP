@@ -329,8 +329,8 @@ function vance_community_queue_render() {
 	?>
 	<div class="wrap vcom-queue">
 		<h1><?php esc_html_e( 'Community queue', 'vance-health-hub' ); ?></h1>
-		<?php if ( ! vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_community', false ) ) ) : ?>
-			<div class="notice notice-info"><p><?php esc_html_e( 'The Community hub switch is off. Visitors and members cannot see the community page.', 'vance-health-hub' ); ?></p></div>
+		<?php if ( ! vance_hub_switch_on( 'vance_hub_community' ) ) : ?>
+			<div class="notice notice-info"><p><?php esc_html_e( 'The Community hub is off (its own switch, or the Home layout master switch). Visitors and members cannot see the community page.', 'vance-health-hub' ); ?></p></div>
 		<?php endif; ?>
 		<?php if ( 'approved' === $notice ) : ?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Approved. The post shows on the community page.', 'vance-health-hub' ); ?></p></div>

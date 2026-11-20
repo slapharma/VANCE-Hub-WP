@@ -108,7 +108,7 @@ function check( $label, $cond ) {
 }
 function section( $t ) { echo "\n-- $t\n"; }
 
-$ON  = array( 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true );
+$ON  = array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true );
 
 /* ===================================================================== */
 section( '1. The switch' );
@@ -129,35 +129,50 @@ check( 'resolve: a truthy non-bool dashboard flag is not enough', vance_hub_dash
 ht_arrange( $ON );
 check( 'active: both switches saved on is on', vance_hub_dashboard_tabs_active() === true );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => true ) );
-check( 'active: the tab switch never saved is off', vance_hub_dashboard_tabs_active() === false );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ) );
+check( 'active: the tab switch never saved is on (its default is on)', vance_hub_dashboard_tabs_active() === true );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => false ) );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => false ) );
 check( 'active: the tab switch saved off is off', vance_hub_dashboard_tabs_active() === false );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_hub_dashboard_tabs' => true ) );
+ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_home_layout' => 'hub', 'vance_hub_dashboard_tabs' => true ) );
 check( 'active: tab switch on but the VanceHubClub dashboard off is off', vance_hub_dashboard_tabs_active() === false );
 
-ht_arrange( array( 'vance_hub_dashboard_tabs' => true ) );
-check( 'active: tab switch on, dashboard switch never saved, is off', vance_hub_dashboard_tabs_active() === false );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dashboard_tabs' => true ) );
+check( 'active: tab switch on, dashboard switch never saved (default on), is on', vance_hub_dashboard_tabs_active() === true );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_hub_dashboard_tabs' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_home_layout' => 'hub', 'vance_hub_dashboard_tabs' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 check( 'active: an administrator preview of the dashboard turns the tab look on', vance_hub_dashboard_tabs_active() === true );
 
 ht_arrange( $ON, array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'classic' ) );
 check( 'active: an administrator classic preview turns the tab look off', vance_hub_dashboard_tabs_active() === false );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_hub_dashboard_tabs' => true ), array(), array( 'vhh_layout' => 'hub' ) );
+ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_home_layout' => 'hub', 'vance_hub_dashboard_tabs' => true ), array(), array( 'vhh_layout' => 'hub' ) );
 check( 'active: a visitor cannot preview it with ?vhh_layout=hub', vance_hub_dashboard_tabs_active() === false );
 
 ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_hub_dashboard_tabs' => false ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
 check( 'active: a preview does not switch on a tab switch that is off', vance_hub_dashboard_tabs_active() === false );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => '1' ) );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => '1' ) );
 check( 'active: a saved "1" string is on after the checkbox sanitiser', vance_hub_dashboard_tabs_active() === true );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => '0' ) );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => '0' ) );
 check( 'active: a saved "0" string is off after the checkbox sanitiser', vance_hub_dashboard_tabs_active() === false );
+
+// The master switch (Home layout) over the tab look.
+ht_arrange( array( 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true ) );
+check( 'master: classic with both boxes ticked is off for a visitor', vance_hub_dashboard_tabs_active() === false );
+
+// Expected to FAIL on the current theme: under an admin preview the dashboard is on,
+// but the tab look reads its saved switch through the master, which is classic here.
+ht_arrange( array( 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+check( 'master: classic with an admin ?vhh_layout=hub preview turns the tab look on', vance_hub_dashboard_tabs_active() === true );
+
+ht_arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master: hub with the tab switch never saved is on (default on)', vance_hub_dashboard_tabs_active() === true );
+
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => false ) );
+check( 'master: hub with the tab switch saved off is off', vance_hub_dashboard_tabs_active() === false );
 
 /* ===================================================================== */
 section( '2. The body class' );
@@ -172,10 +187,10 @@ check( 'class: the existing body classes are kept', in_array( 'page', $C, true )
 ht_arrange( $ON, array(), array( 'tab' => 'notes' ) );
 check( 'class: added on a non-home tab', in_array( 'vhd-tabs', vance_hub_dashboard_tabs_body_class( array() ), true ) );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => true ) );
-check( 'class: absent when the tab switch is off', ! in_array( 'vhd-tabs', vance_hub_dashboard_tabs_body_class( array( 'page' ) ), true ) );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => false ) );
+check( 'class: absent when the tab switch is off',! in_array( 'vhd-tabs', vance_hub_dashboard_tabs_body_class( array( 'page' ) ), true ) );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_hub_dashboard_tabs' => true ) );
+ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_home_layout' => 'hub', 'vance_hub_dashboard_tabs' => true ) );
 check( 'class: absent when the tab switch is on but the dashboard layout is not', ! in_array( 'vhd-tabs', vance_hub_dashboard_tabs_body_class( array( 'page' ) ), true ) );
 
 ht_arrange( $ON );
@@ -204,13 +219,13 @@ check( 'assets: it depends on the main stylesheet', isset( $GLOBALS['ENQUEUED'][
 check( 'assets: the home stylesheet still loads next to it on that tab', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) );
 check( 'assets: the stylesheet file exists in the theme', is_file( $THEME . '/assets/css/hub-dashboard-tabs.css' ) );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => true ) );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true, 'vance_hub_dashboard_tabs' => false ) );
 vance_hub_dashboard_enqueue_assets();
 vance_hub_dashboard_tabs_enqueue_assets();
-check( 'assets: switch off loads no tab stylesheet', ! array_key_exists( 'style:vance-hub-dashboard-tabs', $GLOBALS['ENQUEUED'] ) );
+check( 'assets: switch off loads no tab stylesheet',! array_key_exists( 'style:vance-hub-dashboard-tabs', $GLOBALS['ENQUEUED'] ) );
 check( 'assets: switch off still loads the home stylesheet, as before', array_key_exists( 'style:vance-hub-dashboard', $GLOBALS['ENQUEUED'] ) );
 
-ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_hub_dashboard_tabs' => true ) );
+ht_arrange( array( 'vance_hub_show_dashboard' => false, 'vance_home_layout' => 'hub', 'vance_hub_dashboard_tabs' => true ) );
 vance_hub_dashboard_tabs_enqueue_assets();
 check( 'assets: tab switch on but dashboard layout off loads nothing', $GLOBALS['ENQUEUED'] === array() );
 
@@ -257,7 +272,7 @@ check( 'preview: the slug is still URL-encoded', vance_hub_dashboard_tab_url( 'a
 /* ===================================================================== */
 section( '5. The member card and the Ask block' );
 
-ht_arrange( array( 'vance_hub_dash_member_no' => true ) );
+ht_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => true ) );
 $GLOBALS['USER_META'][5] = array( 'first_name' => 'Ruth', 'last_name' => 'Adams' );
 $U = ht_user( 5, 'ruth.a', '2026-03-09 10:00:00' );
 $D = vance_hub_dashboard_member_card_data( $U );

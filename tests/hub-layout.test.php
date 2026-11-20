@@ -1141,14 +1141,15 @@ check( 'customize: vance_hub_show_promo defaults to on', $WC->settings['vance_hu
 check( 'customize: vance_hub_show_promo is sanitised as a checkbox', $WC->settings['vance_hub_show_promo']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
 check( 'customize: the promo switch is a checkbox in the home layout section', $WC->controls['vance_hub_show_promo']['type'] === 'checkbox' && $WC->controls['vance_hub_show_promo']['section'] === 'vance_home_layout' );
 check( 'customize: vance_hub_show_dashboard is registered as a setting', isset( $WC->settings['vance_hub_show_dashboard'] ) );
-check( 'customize: vance_hub_show_dashboard defaults to off', $WC->settings['vance_hub_show_dashboard']['default'] === false );
+check( 'customize: vance_hub_show_dashboard defaults to on (its switch default)', $WC->settings['vance_hub_show_dashboard']['default'] === true );
 check( 'customize: vance_hub_show_dashboard is sanitised as a checkbox', $WC->settings['vance_hub_show_dashboard']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
 check( 'customize: the dashboard switch is a checkbox in the home layout section', $WC->controls['vance_hub_show_dashboard']['type'] === 'checkbox' && $WC->controls['vance_hub_show_dashboard']['section'] === 'vance_home_layout' );
 check( 'customize: the dashboard description gives the preview address the code reads', strpos( $WC->controls['vance_hub_show_dashboard']['description'], '?vhh_layout=hub' ) !== false );
 
 $DASH_SRC  = file_get_contents( $THEME . '/inc/hub-dashboard.php' );
 $FRONT_SRC = file_get_contents( $THEME . '/front-page-hub.php' );
-check( 'customize: the dashboard reads the same key and default it registers', strpos( $DASH_SRC, "vance_get_theme_mod( 'vance_hub_show_dashboard', false )" ) !== false );
+check( 'customize: the dashboard gate reads the same key through the master switch', strpos( $DASH_SRC, "vance_hub_switch_on( 'vance_hub_show_dashboard' )" ) !== false );
+check( 'customize: the registered dashboard default is the one switch default', vance_hub_switch_default( 'vance_hub_show_dashboard' ) === $WC->settings['vance_hub_show_dashboard']['default'] );
 check( 'customize: the promo block reads the same key and default it registers', strpos( $FRONT_SRC, "vance_get_theme_mod( 'vance_hub_show_promo', true )" ) !== false );
 
 check( 'sanitize: "0" is off', vance_hub_sanitize_checkbox( '0' ) === false );
@@ -1257,6 +1258,85 @@ check( 'rendered: the list shows the full title for Irritable Bowel Syndrome', s
 check( 'rendered: the list shows the full title for Microscopic Colitis', strpos( $TILES, '>Microscopic Colitis</a>' ) !== false );
 check( 'rendered: the list shows the full title for Colorectal Cancer', strpos( $TILES, '>Colorectal Cancer</a>' ) !== false );
 check( 'rendered: the list does not repeat Ulcerative Colitis from the tiles', strpos( $TILES, '>Ulcerative Colitis (UC)</a>' ) === false );
+
+/* ===================================================================== */
+section( '17. Master switch: Home layout turns every VanceHubClub part on or off' );
+
+// The defaults the gates fall back to. Every part is on unless it is the check-in.
+check( 'master: the default of the article part is on', vance_hub_switch_default( 'vance_hub_articles' ) === true );
+check( 'master: the default of the dashboard part is on', vance_hub_switch_default( 'vance_hub_show_dashboard' ) === true );
+check( 'master: the default of the check-in part is off (health data)', vance_hub_switch_default( 'vance_hub_dash_checkin' ) === false );
+
+// Nothing saved: the master is classic.
+arrange();
+check( 'master: nothing saved, the master is off', vance_hub_master_on() === false );
+
+// Master classic: every part is off, even with its own box ticked.
+arrange( array(
+	'vance_hub_articles'       => true,
+	'vance_hub_show_dashboard' => true,
+	'vance_hub_dashboard_tabs' => true,
+	'vance_hub_dash_member_no' => true,
+	'vance_hub_dash_chart'     => true,
+	'vance_hub_dash_checkin'   => true,
+	'vance_hub_tool_result'    => true,
+	'vance_hub_header'         => true,
+	'vance_hub_community'      => true,
+) );
+check( 'master classic: the article part is off', vance_hub_switch_on( 'vance_hub_articles' ) === false );
+check( 'master classic: the dashboard part is off', vance_hub_switch_on( 'vance_hub_show_dashboard' ) === false );
+check( 'master classic: the tab look is off', vance_hub_switch_on( 'vance_hub_dashboard_tabs' ) === false );
+check( 'master classic: the member number is off', vance_hub_switch_on( 'vance_hub_dash_member_no' ) === false );
+check( 'master classic: the results chart is off', vance_hub_switch_on( 'vance_hub_dash_chart' ) === false );
+check( 'master classic: the check-in is off', vance_hub_switch_on( 'vance_hub_dash_checkin' ) === false );
+check( 'master classic: the survey result page is off', vance_hub_switch_on( 'vance_hub_tool_result' ) === false );
+check( 'master classic: the header is off', vance_hub_switch_on( 'vance_hub_header' ) === false );
+check( 'master classic: the community hub is off', vance_hub_switch_on( 'vance_hub_community' ) === false );
+
+// Master classic: the switch does not read the admin preview. Each part's own resolver
+// applies the preview, so the switch stays off here.
+arrange( array( 'vance_hub_articles' => true ), array( 'edit_theme_options' => true ), array( 'vhh_layout' => 'hub' ) );
+check( 'master classic: the switch ignores an admin ?vhh_layout=hub (the resolver applies it)', vance_hub_switch_on( 'vance_hub_articles' ) === false );
+
+// Master hub, nothing saved: every part is on, except the check-in.
+arrange( array( 'vance_home_layout' => 'hub' ) );
+check( 'master hub, unsaved: the master is on', vance_hub_master_on() === true );
+check( 'master hub, unsaved: the article part is on', vance_hub_switch_on( 'vance_hub_articles' ) === true );
+check( 'master hub, unsaved: the dashboard part is on', vance_hub_switch_on( 'vance_hub_show_dashboard' ) === true );
+check( 'master hub, unsaved: the tab look is on', vance_hub_switch_on( 'vance_hub_dashboard_tabs' ) === true );
+check( 'master hub, unsaved: the member number is on', vance_hub_switch_on( 'vance_hub_dash_member_no' ) === true );
+check( 'master hub, unsaved: the results chart is on', vance_hub_switch_on( 'vance_hub_dash_chart' ) === true );
+check( 'master hub, unsaved: the check-in is off (its default)', vance_hub_switch_on( 'vance_hub_dash_checkin' ) === false );
+check( 'master hub, unsaved: the survey result page is on', vance_hub_switch_on( 'vance_hub_tool_result' ) === true );
+check( 'master hub, unsaved: the header is on', vance_hub_switch_on( 'vance_hub_header' ) === true );
+check( 'master hub, unsaved: the community hub is on', vance_hub_switch_on( 'vance_hub_community' ) === true );
+
+// Master hub, every part saved off: every part is off.
+arrange( array(
+	'vance_home_layout'        => 'hub',
+	'vance_hub_articles'       => false,
+	'vance_hub_show_dashboard' => false,
+	'vance_hub_dashboard_tabs' => false,
+	'vance_hub_dash_member_no' => false,
+	'vance_hub_dash_chart'     => false,
+	'vance_hub_dash_checkin'   => false,
+	'vance_hub_tool_result'    => false,
+	'vance_hub_header'         => false,
+	'vance_hub_community'      => false,
+) );
+check( 'master hub, saved off: the article part is off', vance_hub_switch_on( 'vance_hub_articles' ) === false );
+check( 'master hub, saved off: the dashboard part is off', vance_hub_switch_on( 'vance_hub_show_dashboard' ) === false );
+check( 'master hub, saved off: the tab look is off', vance_hub_switch_on( 'vance_hub_dashboard_tabs' ) === false );
+check( 'master hub, saved off: the member number is off', vance_hub_switch_on( 'vance_hub_dash_member_no' ) === false );
+check( 'master hub, saved off: the results chart is off', vance_hub_switch_on( 'vance_hub_dash_chart' ) === false );
+check( 'master hub, saved off: the check-in is off', vance_hub_switch_on( 'vance_hub_dash_checkin' ) === false );
+check( 'master hub, saved off: the survey result page is off', vance_hub_switch_on( 'vance_hub_tool_result' ) === false );
+check( 'master hub, saved off: the header is off', vance_hub_switch_on( 'vance_hub_header' ) === false );
+check( 'master hub, saved off: the community hub is off', vance_hub_switch_on( 'vance_hub_community' ) === false );
+
+// Master hub, check-in saved on: the check-in follows its own saved switch.
+arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
+check( 'master hub, check-in saved on: the check-in is on', vance_hub_switch_on( 'vance_hub_dash_checkin' ) === true );
 
 /* ===================================================================== */
 echo "\n";
