@@ -38,10 +38,18 @@ body.vhd-tabs {
 }
 
 /* --- Side menu: navy, teal active item ------------------------------------ */
+/* The spacing in this menu is tight on purpose: the whole menu must fit a
+   900px-tall window without its own scrollbar. overflow-y: auto from
+   page-dashboard.php stays as the fallback for shorter windows. */
 body.vhd-tabs .dash-sidebar {
 	background: var(--vhdt-navy);
 	border-right: 0;
-	gap: 18px;
+	gap: 12px;
+}
+/* The menu is fixed and starts under the WordPress admin bar, so 100vh puts
+   its bottom (the Ask VANCE-Ai button) below the window. */
+body.vhd-tabs.admin-bar .dash-sidebar {
+	height: calc(100vh - var(--wp-admin--admin-bar--height, 32px));
 }
 /* The logo artwork is dark: it keeps a white band, as in the design. */
 body.vhd-tabs .sidebar-header {
@@ -53,22 +61,23 @@ body.vhd-tabs .dash-nav {
 	padding: 0 16px;
 	flex: 1 1 auto;
 }
-body.vhd-tabs .nav-section { margin-bottom: 18px; }
+body.vhd-tabs .nav-section { margin-bottom: 12px; }
+body.vhd-tabs .nav-section:last-child { margin-bottom: 0; }
 body.vhd-tabs .nav-label {
 	color: #AEDBDB;
 	opacity: 1;
 	font-weight: 700;
 	letter-spacing: 0.8px;
-	margin: 0 0 8px 14px;
+	margin: 0 0 6px 14px;
 }
 body.vhd-tabs .nav-item {
-	min-height: 44px;
-	padding: 11px 14px;
+	min-height: 40px;
+	padding: 9px 14px;
 	color: #E2E8F0;
 	font-size: 15px;
 	font-weight: 500;
 	border-radius: var(--radius-control, 6px);
-	margin-bottom: 4px;
+	margin-bottom: 2px;
 }
 body.vhd-tabs .nav-item:hover {
 	background: rgba(255, 255, 255, 0.08);
@@ -90,9 +99,9 @@ body.vhd-tabs .vhdt-ask:focus-visible {
 body.vhd-tabs .vhdt-member {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 4px;
 	margin: 0 16px;
-	padding: 16px;
+	padding: 12px 14px;
 	background: var(--vhdt-navy-2);
 	border: 1px solid var(--vhdt-purple);
 	border-radius: var(--radius-surface, 14px);
@@ -113,8 +122,9 @@ body.vhd-tabs .vhdt-member__name {
 	color: #FFFFFF;
 	overflow-wrap: anywhere;
 }
+/* 12px keeps "Member number VHC-XXXXXX" on one line in the 260px menu. */
 body.vhd-tabs .vhdt-member__meta {
-	font-size: 13px;
+	font-size: 12px;
 	color: #CBD5E1;
 }
 
@@ -123,9 +133,9 @@ body.vhd-tabs .vhdt-ask {
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	min-height: 56px;
-	margin: auto 16px 24px;
-	padding: 16px;
+	min-height: 48px;
+	margin: auto 16px 16px;
+	padding: 12px 16px;
 	border: 0;
 	border-radius: var(--radius-surface, 14px);
 	background: var(--vhdt-purple);
@@ -266,6 +276,8 @@ body.vhd-tabs .mobile-toggle { min-width: 44px; min-height: 44px; }
 	}
 	/* The side menu is the existing slide-in drawer. Never wider than the screen. */
 	body.vhd-tabs .dash-sidebar { width: min(280px, 86vw); }
+	/* The drawer has the height to spare: keep the 44px touch rows here. */
+	body.vhd-tabs .nav-item { min-height: 44px; padding: 11px 14px; }
 	body.vhd-tabs .vhdt-head {
 		flex-direction: column;
 		align-items: flex-start !important;
