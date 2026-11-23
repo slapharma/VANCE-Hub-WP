@@ -957,7 +957,9 @@ function vance_hub_testimonials( $limit = 2 ) {
 		);
 	}
 
-	if ( empty( $items ) ) {
+	// Top up from the inline Customizer quotes when the post type holds fewer
+	// than the block needs, so the block stays full as posts are added.
+	if ( count( $items ) < $limit ) {
 		for ( $i = 1; $i <= 3 && count( $items ) < $limit; $i++ ) {
 			$quote = trim( (string) vance_get_theme_mod( "vance_testimonial_inline_{$i}_quote", '' ) );
 			if ( '' === $quote ) {
@@ -978,7 +980,7 @@ function vance_hub_testimonials( $limit = 2 ) {
  * The newest published recipes, each with its first meal category.
  *
  * @param int $limit Number of recipes.
- * @return array<int, array{title: string, url: string, meal: string}>
+ * @return array<int, array{title: string, url: string, meal: string, img: string, alt: string}>
  */
 function vance_hub_recent_recipes( $limit = 2 ) {
 	$query = new WP_Query( array(
@@ -993,10 +995,13 @@ function vance_hub_recent_recipes( $limit = 2 ) {
 	foreach ( $query->posts as $post ) {
 		$terms = get_the_terms( $post, 'vance_recipe_cat' );
 		$meal  = ( is_array( $terms ) && ! empty( $terms ) ) ? $terms[0]->name : '';
+		$img   = get_the_post_thumbnail_url( $post, 'thumbnail' );
 		$out[] = array(
 			'title' => get_the_title( $post ),
 			'url'   => get_permalink( $post ),
 			'meal'  => $meal,
+			'img'   => $img ? $img : '',
+			'alt'   => function_exists( 'vance_thumbnail_alt' ) ? vance_thumbnail_alt( $post->ID ) : '',
 		);
 	}
 	return $out;
@@ -1031,6 +1036,9 @@ function vance_hub_post_card( $post, $img_size = 'large' ) {
 		'date'  => (string) get_the_date( '', $post ),
 		'iso'   => (string) get_the_date( 'c', $post ),
 		'read'  => function_exists( 'vance_get_read_time' ) ? (int) vance_get_read_time( $post->ID ) : 0,
+		// Stored meta only. vance_get_view_count() seeds a random figure and writes it
+		// on first read, which a page render must not do.
+		'views' => (int) get_post_meta( $post->ID, '_vance_view_count', true ),
 	);
 }
 

@@ -196,7 +196,7 @@ if ( ! empty( $vhub_tiles ) ) : ?>
  *    "members made this" data exists, so those parts are not built. With no
  *    quotes, the whole block is omitted.
  * ------------------------------------------------------------------ */
-$vhub_quotes = vance_hub_testimonials( 2 );
+$vhub_quotes = vance_hub_testimonials( 4 );
 if ( ! empty( $vhub_quotes ) ) :
 	$vhub_recipes = vance_hub_recent_recipes( 2 );
 	?>
@@ -221,18 +221,26 @@ if ( ! empty( $vhub_quotes ) ) :
 				</li>
 			<?php endforeach; ?>
 			<?php if ( ! empty( $vhub_recipes ) ) : ?>
-				<li class="vhub-community__card vhub-community__card--recipes">
+				<li class="vhub-community__card vhub-community__card--recipes" style="grid-row: 1 / span <?php echo (int) max( 1, count( $vhub_quotes ) ); ?>;">
 					<p class="vhub-community__eyebrow"><?php esc_html_e( 'New in the recipe hub', 'vance-health-hub' ); ?></p>
 					<h3 class="vhub-community__h3"><?php esc_html_e( 'Recently added recipes', 'vance-health-hub' ); ?></h3>
 					<ul class="vhub-recipe-list">
 						<?php foreach ( $vhub_recipes as $vhub_recipe ) : ?>
 							<li><a class="vhub-recipe" href="<?php echo esc_url( $vhub_recipe['url'] ); ?>">
-								<span class="vhub-recipe__name"><?php echo esc_html( $vhub_recipe['title'] ); ?></span>
-								<?php if ( '' !== $vhub_recipe['meal'] ) : ?><span class="vhub-recipe__meal"><?php echo esc_html( $vhub_recipe['meal'] ); ?></span><?php endif; ?>
+								<?php if ( '' !== $vhub_recipe['img'] ) : ?>
+									<img class="vhub-recipe__img" src="<?php echo esc_url( $vhub_recipe['img'] ); ?>" alt="<?php echo esc_attr( $vhub_recipe['alt'] ); ?>" width="72" height="72" loading="lazy" decoding="async">
+								<?php endif; ?>
+								<span class="vhub-recipe__text">
+									<span class="vhub-recipe__name"><?php echo esc_html( $vhub_recipe['title'] ); ?></span>
+									<?php if ( '' !== $vhub_recipe['meal'] ) : ?><span class="vhub-recipe__meal"><?php echo esc_html( $vhub_recipe['meal'] ); ?></span><?php endif; ?>
+								</span>
 							</a></li>
 						<?php endforeach; ?>
 					</ul>
-					<a class="vhub-community__more" href="<?php echo esc_url( vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' ) ); ?>"><?php esc_html_e( 'Browse the recipes', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+					<div class="vhub-community__actions">
+						<a class="vhub-community__btn" href="<?php echo esc_url( vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' ) ); ?>"><?php esc_html_e( 'Build a gastro supportive meal plan', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+						<a class="vhub-community__more" href="<?php echo esc_url( vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' ) ); ?>"><?php esc_html_e( 'Browse the recipes', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+					</div>
 				</li>
 			<?php endif; ?>
 		</ul>
@@ -418,6 +426,13 @@ if ( ! empty( $vhub_more ) ) : ?>
 				<div class="vhub-card__media">
 					<?php if ( '' !== $vhub_p['img'] ) : ?>
 						<img class="vhub-card__img" src="<?php echo esc_url( $vhub_p['img'] ); ?>" alt="<?php echo esc_attr( $vhub_p['alt'] ); ?>" loading="lazy" decoding="async">
+					<?php endif; ?>
+				</div>
+				<div class="vhub-card__meta">
+					<time datetime="<?php echo esc_attr( $vhub_p['iso'] ); ?>"><?php echo esc_html( $vhub_p['date'] ); ?></time>
+					<?php if ( $vhub_p['views'] > 0 ) : ?>
+						<span aria-hidden="true">&middot;</span>
+						<span><?php echo esc_html( sprintf( /* translators: %s: formatted view count */ _n( '%s read', '%s reads', $vhub_p['views'], 'vance-health-hub' ), number_format_i18n( $vhub_p['views'] ) ) ); ?></span>
 					<?php endif; ?>
 				</div>
 				<div class="vhub-card__body">
