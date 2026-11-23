@@ -513,7 +513,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 }
 .vhub-community__cards--recipes .vhub-community__card--recipes {
 	grid-column: 2;
-	grid-row: 1 / span 2;
+	grid-row: 1 / span 4;
 }
 .vhub-community__cards--recipes .vhub-community__card--quote { grid-column: 1; }
 .vhub-community__card {
@@ -553,14 +553,24 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 .vhub-recipe-list { display: flex; flex-direction: column; gap: 10px; }
 .vhub-recipe {
 	display: flex;
-	flex-direction: column;
-	gap: 4px;
+	flex-direction: row;
+	align-items: center;
+	gap: 14px;
 	min-height: 44px;
-	padding: 16px;
+	padding: 12px;
 	background: #FFFFFF;
 	border-radius: var(--radius-field, 10px);
 	--vhub-focus: var(--vhub-purple);
 }
+.vhub-recipe__img {
+	flex: none;
+	width: 72px;
+	height: 72px;
+	object-fit: cover;
+	border-radius: var(--radius-control, 6px);
+	background: var(--vhub-wash);
+}
+.vhub-recipe__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .vhub-recipe__name { font-weight: 600; font-size: 16px; color: var(--vhub-navy); }
 .vhub-recipe__meal { font-size: 14px; color: var(--vhub-muted); }
 .vhub-recipe:hover .vhub-recipe__name { text-decoration: underline; }
@@ -574,6 +584,26 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	color: #FFFFFF;
 }
 .vhub-community__more:hover { color: #FFFFFF; text-decoration: underline; }
+.vhub-community__actions {
+	margin-top: auto;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 20px;
+}
+.vhub-community__actions .vhub-community__more { margin-top: 0; }
+.vhub-community__btn {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 10px 18px;
+	background: #FFFFFF;
+	color: var(--vhub-navy);
+	font-weight: 700;
+	font-size: 16px;
+	border-radius: var(--radius-control, 6px);
+}
+.vhub-community__btn:hover { background: var(--vhub-wash); text-decoration: underline; }
 
 /* ---- g. conditions ------------------------------------------------------ */
 
@@ -861,6 +891,17 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	height: 100%;
 	object-fit: cover;
 }
+.vhub-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 18px;
+	background: var(--vhub-wash);
+	font-size: 13px;
+	line-height: 1.3;
+	color: var(--vhub-muted);
+}
 .vhub-card__body {
 	flex: 1;
 	display: flex;
@@ -869,7 +910,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	padding: 16px 18px 20px;
 }
 .vhub-card__title {
-	font-size: 18px;
+	font-size: 16px;
 	line-height: 1.3;
 	font-weight: 600;
 	color: var(--vhub-navy);
@@ -1017,13 +1058,12 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-h2 { font-size: 28px; }
 	.vhub-lead { font-size: 16px; }
 
-	/* Community: one card only. */
+	/* Community: one quote, then the recipe card (it carries the meal plan CTA). */
 	.vhub-community { margin-top: 48px; }
 	.vhub-community__inner { padding-top: 40px; padding-bottom: 40px; gap: 20px; }
 	.vhub-community__card { padding: 20px; }
-	.vhub-community__card + .vhub-community__card { display: none; }
-	.vhub-community__cards--recipes { display: flex; }
-	.vhub-community__h3 { font-size: 24px; }
+	.vhub-community__card--quote + .vhub-community__card--quote { display: none; }
+	.vhub-community__cards--recipes { display: flex; }	.vhub-community__h3 { font-size: 24px; }
 
 	.vhub-cond-tile { min-height: 200px; }
 	.vhub-cond-list { min-height: 0; }
@@ -1038,7 +1078,8 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-more__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 	.vhub-more__grid > li:nth-child(n+5) { display: none; }
 	.vhub-card__body { padding: 12px 12px 14px; gap: 8px; }
-	.vhub-card__title { font-size: 15px; }
+	.vhub-card__title { font-size: 13px; }
+	.vhub-card__meta { padding: 6px 12px; font-size: 12px; }
 	.vhub-card .vhub-tag { font-size: 11px; padding: 3px 7px; }
 
 	.vhub-feat { min-height: 260px; }
