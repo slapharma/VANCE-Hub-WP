@@ -1898,7 +1898,7 @@ function vance_askai_script_data() {
         'defaultLevel'  => 'knowledgeable',
         'title'         => __( 'VANCE-Ai', 'vance-health-hub' ),
         'subtitle'      => __( 'Answers from the Vance Medical Hub library', 'vance-health-hub' ),
-        'placeholder'   => __( 'Ask about IBD, gut health or nutrition…', 'vance-health-hub' ),
+        'placeholder'   => __( 'Ask about gut health, digestive conditions or nutrition…', 'vance-health-hub' ),
         'intro'         => __( 'Ask a question and I will answer using articles published on this hub, with links to the ones I used.', 'vance-health-hub' ),
         'introTitle'    => $intro_title,
         'introSubtitle' => $intro_subtitle,
@@ -1913,8 +1913,8 @@ function vance_askai_script_data() {
         'disclaimer'    => wp_kses_post( $disclaimer ),
         // Kept short: they sit on a single row under the intro line.
         'suggestions'   => array(
-            __( 'What is IBD?', 'vance-health-hub' ),
-            __( 'Diet and IBD symptoms', 'vance-health-hub' ),
+            __( 'What is diverticular disease?', 'vance-health-hub' ),
+            __( 'Diet and gut symptoms', 'vance-health-hub' ),
             __( 'Crohn\'s vs colitis', 'vance-health-hub' ),
         ),
         'i18n'          => array(
