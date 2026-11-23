@@ -117,7 +117,7 @@ while ( have_posts() ) :
 						<p style="margin:14px 4px 0;font-size:11px;color:#64748b;line-height:1.6;"><?php echo $credit_line; // phpcs:ignore -- pre-escaped in vance_recipe_credit_line_html(). ?></p>
 					<?php endif; ?>
 
-					<a href="<?php echo esc_url( home_url( '/gastro-meal-planner/#recipes' ) ); ?>" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:16px;background:#fff;color:var(--primary-color);font-weight:700;font-size:14px;padding:12px 16px;border-radius:var(--radius-control, 6px);border:1px solid var(--primary-color);text-decoration:none;">
+					<a href="<?php echo esc_url( home_url( '/gastro-meal-planner/#recipes' ) ); ?>" class="vance-rs-return-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:16px;padding:12px 16px;border-radius:var(--radius-control, 6px);text-decoration:none;">
 						&larr; Return to Recipe List
 					</a>
 
@@ -244,6 +244,13 @@ while ( have_posts() ) :
 	</main>
 
 	<style>
+	/* #8e7dbe/#e4def4 match the existing purple used on the medical
+	   disclaimer box further down this page, rather than inventing a new
+	   purple for one button. Needs a real stylesheet rule (not inline style)
+	   because :hover has no inline-style equivalent. Text and hover fill are
+	   darker than the border so both states pass WCAG AA (5.5:1 and 7.2:1). */
+	.vance-rs-return-btn { background:#e4def4; color:#5d4b9a; border:1px solid #8e7dbe; }
+	.vance-rs-return-btn:hover { background:#5d4b9a; color:#fff; }
 	.vance-rs-modal { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(10,25,41,0.72); }
 	.vance-rs-modal.is-open { display:flex; }
 	.vance-rs-modal-panel { background:#fff; border-radius:var(--radius-surface, 14px); width:100%; max-width:640px; max-height:80vh; overflow-y:auto; padding:22px; }

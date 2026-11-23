@@ -106,9 +106,11 @@ while ( have_posts() ) :
     <?php
     // =========================================================================
     // ARTICLE HEADER BAR (all-screens redesign)
-    // Key meta (category · date · read time · author) + the Save action, placed
-    // directly under the hero so it's at the top on every device. The Save
-    // button also has a slim sticky companion that follows the reader.
+    // Key meta (category · date · read time · author), placed directly under
+    // the hero so it's at the top on every device. Save Article, the
+    // sub-category chips and the tag chips moved out of this bar and into the
+    // sidebar; the Save button keeps a slim sticky companion that follows the
+    // reader, and that bar is still triggered by this header scrolling away.
     // =========================================================================
     $va_logged_in = is_user_logged_in();
     $va_is_saved  = ( $va_logged_in && function_exists( 'vance_is_bookmarked' ) ) ? vance_is_bookmarked() : false;
@@ -138,16 +140,23 @@ while ( have_posts() ) :
         .va-article-meta .va-sep { color:#cbd5e1; }
         .va-article-meta .va-author { display:inline-flex; align-items:center; gap:8px; color:#334155; font-weight:600; }
         .va-article-meta .va-author img { width:26px; height:26px; border-radius:50%; }
-        .va-article-meta .va-tt-chip { display:inline-block; padding:4px 10px; border-radius:var(--radius-control, 6px); font-size:12px; font-weight:600; text-decoration:none; line-height:1.4; transition:filter .15s ease, background .15s ease, color .15s ease, border-color .15s ease; }
-        .va-article-meta .va-tt-chip--cat { color:#fff; }
-        .va-article-meta .va-tt-chip--cat:hover { filter:brightness(0.92); color:#fff; }
-        .va-article-meta .va-tt-chip--tag { background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; font-weight:500; }
-        .va-article-meta .va-tt-chip--tag:hover { background:var(--primary-color, #008080); color:#fff; border-color:var(--primary-color, #008080); }
+        /* Sub-category + tag chips. They used to sit in the header bar above;
+           they now live in the sidebar's Topics & Tags card, so the selectors
+           are scoped to that card rather than to .va-article-meta. */
+        .va-tt-list { display:flex; flex-wrap:wrap; gap:8px; }
+        .va-tt-chip { display:inline-block; padding:4px 10px; border-radius:var(--radius-control, 6px); font-size:12px; font-weight:600; text-decoration:none; line-height:1.4; transition:filter .15s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+        .va-tt-chip--cat { color:#fff; }
+        .va-tt-chip--cat:hover { filter:brightness(0.92); color:#fff; }
+        .va-tt-chip--tag { background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; font-weight:500; }
+        .va-tt-chip--tag:hover { background:var(--primary-color, #008080); color:#fff; border-color:var(--primary-color, #008080); }
         .vance-save-btn { display:inline-flex; align-items:center; gap:8px; background:var(--primary-color,#008080); color:#fff; border:none; border-radius:var(--radius-control, 6px); padding:12px 20px; font-weight:700; font-size:15px; line-height:1; cursor:pointer; white-space:nowrap; transition:background .2s, transform .1s, opacity .2s; }
         .vance-save-btn.is-saved { background:#10B981; }
         .vance-save-btn:hover { filter:brightness(0.96); }
         .vance-save-btn:active { transform:scale(.97); }
         .vance-save-btn .va-save-icon { font-size:18px; }
+        /* In the Share This Article card the Save button is the card's own
+           full-width action, sitting above the share icons. */
+        .oped-share-section .va-save-main { display:flex; width:100%; justify-content:center; margin-bottom:14px; }
 
         /* Slim sticky Save bar — revealed once the header scrolls out of view. */
         .va-sticky-save { position:fixed; top:0; left:0; right:0; z-index:997; background:#fff; border-bottom:1px solid #2f4f6f; box-shadow:0 2px 12px rgba(15,23,42,.08); transform:translateY(-100%); transition:transform .25s ease; }
@@ -160,7 +169,6 @@ while ( have_posts() ) :
             .va-sticky-save { top:70px; } /* sit below the fixed mobile site header */
             .va-article-header .container { gap:12px; }
             .va-article-meta { font-size:13px; gap:8px; width:100%; }
-            .va-save-main { width:100%; justify-content:center; }
         }
         @media (prefers-reduced-motion: reduce) { .va-sticky-save { transition:none; } }
     </style>
@@ -184,20 +192,9 @@ while ( have_posts() ) :
                     <?php echo get_avatar( get_the_author_meta( 'ID' ), 26 ); ?>
                     <span><?php the_author(); ?></span>
                 </span>
-                <?php if ( ! empty( $va_sub_categories ) || ! empty( $va_post_tags ) ) : ?>
-                    <span class="va-sep" aria-hidden="true">·</span>
-                    <?php foreach ( $va_sub_categories as $va_sc ) : ?>
-                        <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>;"><?php echo esc_html( $va_sc->name ); ?></a>
-                    <?php endforeach; ?>
-                    <?php foreach ( $va_post_tags as $va_t ) : ?>
-                        <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag">#<?php echo esc_html( $va_t->name ); ?></a>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                <?php // Sub-category and tag chips live in the sidebar's Topics & Tags card. ?>
             </div>
-            <button class="vance-save-btn va-save-main<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
-                <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
-                <span class="va-save-text"><?php echo $va_is_saved ? 'Saved' : 'Save Article'; ?></span>
-            </button>
+            <?php // Save Article lives in the sidebar's Share This Article card. ?>
         </div>
     </section>
     <?php endif; ?>
@@ -437,7 +434,7 @@ while ( have_posts() ) :
                 <aside class="oped-sidebar">
 <?php do_action( 'vance_article_sidebar_top' ); // Flush left on purpose: indentation before the tag would be output on every article. ?>
 
-                    <?php // Save button relocated to the article header bar at the top (all-screens redesign). ?>
+                    <?php // Save Article lives in the Share This Article card below; the header bar keeps only the meta line. ?>
 
                     <?php
                     // Sibling handout links, moved here from the hero's white
@@ -571,6 +568,18 @@ while ( have_posts() ) :
                     <!-- Share Section -->
                     <div class="oped-sidebar-block oped-share-section">
                         <h4>Share This Article</h4>
+                        <?php
+                        // Save Article sits at the top of this card. Patient
+                        // Downloads companion posts have no Save button at all
+                        // (the handout PDF is the thing to keep, not a
+                        // bookmark), the same $vpd_is_download_post gate the
+                        // header bar and the sticky bar use.
+                        if ( ! $vpd_is_download_post ) : ?>
+                            <button class="vance-save-btn va-save-main<?php echo $va_is_saved ? ' is-saved' : ''; ?>" aria-pressed="<?php echo $va_is_saved ? 'true' : 'false'; ?>" <?php echo $va_btn_attrs; ?>>
+                                <span class="va-save-icon" aria-hidden="true"><?php echo $va_is_saved ? '★' : '☆'; ?></span>
+                                <span class="va-save-text"><?php echo $va_is_saved ? 'Saved' : 'Save Article'; ?></span>
+                            </button>
+                        <?php endif; ?>
                         <div class="oped-share-buttons">
                             <a href="https://twitter.com/intent/tweet?url=<?php echo urlencode( get_permalink() ); ?>&text=<?php echo urlencode( get_the_title() ); ?>" 
                                target="_blank" class="oped-share-btn oped-share-twitter" aria-label="Share on Twitter">
@@ -601,6 +610,31 @@ while ( have_posts() ) :
                             </button>
                         </div>
                     </div>
+
+                    <?php
+                    // Topics & Tags — the sub-category and tag chips that used
+                    // to run along the article header bar. Both lists are built
+                    // above; the card renders only if at least one has entries,
+                    // and Patient Downloads companion posts skip it with the
+                    // rest of the article meta.
+                    if ( ! $vpd_is_download_post && ( ! empty( $va_sub_categories ) || ! empty( $va_post_tags ) ) ) : ?>
+                        <div class="oped-sidebar-block oped-topics-tags">
+                            <h4>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                                <?php esc_html_e( 'Topics & Tags', 'vance-health-hub' ); ?>
+                            </h4>
+                            <div class="oped-sidebar-content">
+                                <div class="va-tt-list">
+                                    <?php foreach ( $va_sub_categories as $va_sc ) : ?>
+                                        <a href="<?php echo esc_url( get_category_link( $va_sc->term_id ) ); ?>" class="va-tt-chip va-tt-chip--cat" style="background: <?php echo esc_attr( vance_post_eyebrow_color( get_the_ID() ) ); ?>;"><?php echo esc_html( $va_sc->name ); ?></a>
+                                    <?php endforeach; ?>
+                                    <?php foreach ( $va_post_tags as $va_t ) : ?>
+                                        <a href="<?php echo esc_url( get_tag_link( $va_t->term_id ) ); ?>" class="va-tt-chip va-tt-chip--tag">#<?php echo esc_html( $va_t->name ); ?></a>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- VANCE-Ai: opens the shared chat (assets/js/vance-askai.js),
                          which is enqueued site-wide, so this needs no extra assets. -->
