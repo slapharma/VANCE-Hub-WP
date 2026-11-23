@@ -9,7 +9,7 @@ get_header();
 // Get customizer settings
 $hero_bg = vance_get_theme_mod('vance_askai_hero_bg', get_template_directory_uri() . '/assets/img/patient_hero.png');
 $hero_title = vance_get_theme_mod('vance_askai_hero_title', 'VANCE-Ai');
-$hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Ask anything about IBD, clinical nutrition and gastrointestinal health. Every answer is drawn from articles published on the Vance Medical Hub, with links to the sources used.');
+$hero_subtitle = vance_get_theme_mod('vance_askai_hero_subtitle', 'Ask anything about gastrointestinal health, disease management and clinical nutrition. Every answer is drawn from articles published on the Vance Medical Hub, with links to the sources used.');
 $hero_badge = vance_get_theme_mod('vance_askai_hero_badge', 'Information Assistant');
 $askai_overlay = max(0, min(100, absint(vance_get_theme_mod('vance_askai_hero_overlay', 85)))) / 100;
 $askai_overlay_bottom = min(1, $askai_overlay + 0.05);
@@ -19,7 +19,7 @@ $agent_data = array(
     'name' => 'VANCE-Ai',
     'icon' => '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
     'color' => '#008080',
-    'description' => 'Your Vance Medical Hub assistant. Ask anything about IBD, gut health, or clinical nutrition.',
+    'description' => 'Your Vance Medical Hub assistant. Ask anything about gut health, digestive conditions or clinical nutrition.',
     'training' => 'Answers are grounded in the articles published on this hub.',
     'abilities' => 'Evidence-based analysis, research synthesis, and clinical protocol insights.',
     'limitations' => 'Informational only. Not medical advice.',
@@ -242,7 +242,7 @@ $askai_spotlight = function_exists( 'vance_page_hero_spotlight_active' )
         </main>
 
         <div style="text-align: left; margin-top: 32px; color: #64748b; font-size: 13px; max-width: 800px; margin-left: auto; margin-right: auto; padding: 20px; background: white; border-radius: var(--radius-surface, 14px); border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <p style="margin: 0; line-height: 1.65;"><strong>How to use this tool.</strong> Vance AI gives general information about gastrointestinal health, IBD and clinical nutrition. It is an automated assistant: it can be wrong or out of date, it does not know your personal medical history, and it does not provide a diagnosis, prescription or treatment plan. It is not a substitute for advice from your own health team and must not be used for urgent or emergency needs. If you feel unwell or think you may have a medical emergency, call 999 or NHS 111 now. Please do not enter information that identifies you, conversations may be processed by a third-party AI provider and stored to improve the service. By using this tool you accept that it is for general information only.</p>
+            <p style="margin: 0; line-height: 1.65;"><strong>How to use this tool.</strong> Vance AI gives general information about gastrointestinal health, digestive disease management and clinical nutrition. It is an automated assistant: it can be wrong or out of date, it does not know your personal medical history, and it does not provide a diagnosis, prescription or treatment plan. It is not a substitute for advice from your own health team and must not be used for urgent or emergency needs. If you feel unwell or think you may have a medical emergency, call 999 or NHS 111 now. Please do not enter information that identifies you, conversations may be processed by a third-party AI provider and stored to improve the service. By using this tool you accept that it is for general information only.</p>
         </div>
     </div>
 </div>
