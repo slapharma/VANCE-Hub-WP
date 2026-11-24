@@ -26,7 +26,7 @@ function vance_discount_register_cpt() {
 			'labels'             => array(
 				'name'               => __( 'Discounts', 'vance-health-hub' ),
 				'singular_name'      => __( 'Discount', 'vance-health-hub' ),
-				'menu_name'          => __( 'IBD Discounts', 'vance-health-hub' ),
+				'menu_name'          => __( 'Gastro Discounts', 'vance-health-hub' ),
 				'add_new'            => __( 'Add Scheme', 'vance-health-hub' ),
 				'add_new_item'       => __( 'Add New Scheme', 'vance-health-hub' ),
 				'edit_item'          => __( 'Edit Scheme', 'vance-health-hub' ),
@@ -40,12 +40,11 @@ function vance_discount_register_cpt() {
 			'public'             => true,
 			'publicly_queryable' => true,
 			'show_ui'            => true,
-			'show_in_menu'       => true,
+			// No top-level menu: inc/admin-menu-content.php adds this screen to the VanceHealthHub menu.
+			'show_in_menu'       => false,
 			'show_in_nav_menus'  => false,
 			'show_in_admin_bar'  => false,
 			'show_in_rest'       => false, // Classic editor + hand-coded meta boxes, no ACF — matches vance_recipe.
-			'menu_icon'          => 'dashicons-tickets-alt',
-			'menu_position'      => 26,
 			'supports'           => array( 'title', 'editor' ), // Editor field unused on the card/single but kept for an admin-only long-form note; not rendered front-end.
 			'has_archive'        => false, // /ibd-discounts/ is a Page template, not a CPT archive — plan §5.
 			'rewrite'            => array( 'slug' => 'ibd-discount', 'with_front' => false ),

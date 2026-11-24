@@ -40,12 +40,11 @@ function vance_recipe_register_cpt() {
 			'public'             => true,
 			'publicly_queryable' => VANCE_RECIPE_PUBLIC,
 			'show_ui'            => true,
-			'show_in_menu'       => true,
+			// No top-level menu: inc/admin-menu-content.php adds this screen to the VanceHealthHub menu.
+			'show_in_menu'       => false,
 			'show_in_nav_menus'  => false,
 			'show_in_admin_bar'  => false,
 			'show_in_rest'       => false, // Classic editor + hand-coded meta boxes, no ACF.
-			'menu_icon'          => 'dashicons-carrot',
-			'menu_position'      => 25,
 			// 'comments' added 2026-09-10. It only makes the Discussion box and
 			// the per-post comment_status available — whether a given recipe
 			// actually accepts comments is still that post's own setting, and
