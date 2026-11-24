@@ -889,11 +889,12 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
-	padding: 8px 18px;
+	gap: 0 6px;
+	min-height: 0;
+	padding: 6px 18px;
 	background: var(--vhub-wash);
 	font-size: 13px;
-	line-height: 1.3;
+	line-height: 1.2;
 	color: var(--vhub-muted);
 }
 .vhub-card__body {
@@ -1073,7 +1074,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-more__grid > li:nth-child(n+5) { display: none; }
 	.vhub-card__body { padding: 12px 12px 14px; gap: 8px; }
 	.vhub-card__title { font-size: 13px; }
-	.vhub-card__meta { padding: 6px 12px; font-size: 12px; }
+	.vhub-card__meta { padding: 5px 12px; font-size: 12px; }
 	.vhub-card .vhub-tag { font-size: 11px; padding: 3px 7px; }
 
 	.vhub-feat { min-height: 260px; }
