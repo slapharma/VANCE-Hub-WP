@@ -43,7 +43,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 ?>
 
 <?php /* ---------------------------------------------------------------
- * b. Hero: headline, Ask VANCE-Ai, example chips, photo, survey starter.
+ * b. Hero: headline, Ask VANCE-Ai, photo, survey starter. Fact band follows it.
  * ------------------------------------------------------------------ */ ?>
 <section class="vhub-hero" style="<?php echo esc_attr( vance_hub_hero_style( vance_get_theme_mod( 'vance_hero_spotlight_bg_from', '#ECF5F5' ), vance_get_theme_mod( 'vance_hero_spotlight_bg_to', '#F6F9FA' ) ) ); ?>" aria-labelledby="vhub-hero-title">
 	<div class="vhub-wrap vhub-hero__inner">
@@ -52,7 +52,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Free Gastro Health Community.', 'vance-health-hub' ); ?></p>
 				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php esc_html_e( 'What do you need help with', 'vance-health-hub' ); ?> <span class="vhub-hero__accent"><?php esc_html_e( 'today?', 'vance-health-hub' ); ?></span></h1>
 			</div>
-			<p class="vhub-hero__sub"><?php esc_html_e( 'Take a short gut health survey, plan your meals and get plain answers from VANCE-Ai.', 'vance-health-hub' ); ?></p>
+			<p class="vhub-hero__sub"><?php esc_html_e( 'Take a short gut health survey, plan meals, read the science and get plain answers from our VANCE-Ai.', 'vance-health-hub' ); ?></p>
 
 			<?php
 			/* The input has no name on purpose: Ask AI takes no query parameter,
@@ -67,18 +67,6 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 					<input id="vhub-ask-input" class="vhub-ask__input" type="text" autocomplete="off" placeholder="<?php esc_attr_e( 'For example: what can I eat during a flare?', 'vance-health-hub' ); ?>">
 					<button class="vhub-ask__btn" type="submit"><?php esc_html_e( 'Ask', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></button>
 				</div>
-				<ul class="vhub-chips" aria-label="<?php esc_attr_e( 'Example questions', 'vance-health-hub' ); ?>">
-					<?php
-					$vhub_examples = array(
-						__( 'What is IBD?', 'vance-health-hub' ),
-						__( 'Diet and IBD symptoms', 'vance-health-hub' ),
-						__( "Crohn's vs colitis", 'vance-health-hub' ),
-					);
-					foreach ( $vhub_examples as $vhub_q ) :
-						?>
-						<li><a class="vhub-chip" href="<?php echo esc_url( $vhub_askai_url ); ?>" data-vhub-ask="<?php echo esc_attr( $vhub_q ); ?>"><?php echo esc_html( $vhub_q ); ?></a></li>
-					<?php endforeach; ?>
-				</ul>
 			</form>
 		</div>
 
@@ -106,6 +94,26 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 </section>
 
 <?php /* ---------------------------------------------------------------
+ * d. Fact band. Three static facts, each checked against the code.
+ * ------------------------------------------------------------------ */ ?>
+<div class="vhub-wrap vhub-facts-wrap">
+	<ul class="vhub-facts">
+		<li class="vhub-fact">
+			<span class="vhub-fact__icon"><?php echo vance_hub_icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Free Forever', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Every tool available 24/7', 'vance-health-hub' ); ?></span></span>
+		</li>
+		<li class="vhub-fact">
+			<span class="vhub-fact__icon vhub-fact__icon--purple"><?php echo vance_hub_icon( 'person' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Activity driven', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Save searches, answers and results.', 'vance-health-hub' ); ?></span></span>
+		</li>
+		<li class="vhub-fact">
+			<span class="vhub-fact__icon"><?php echo vance_hub_icon( 'book' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Verified Science', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Every clinical source referenced.', 'vance-health-hub' ); ?></span></span>
+		</li>
+	</ul>
+</div>
+
+<?php /* ---------------------------------------------------------------
  * c. Four tool tiles. Real URLs; the recipe count is live.
  * ------------------------------------------------------------------ */ ?>
 <section class="vhub-tools-section" aria-labelledby="vhub-tools-title">
@@ -128,26 +136,6 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 		<?php endforeach; ?>
 	</ul>
 </section>
-
-<?php /* ---------------------------------------------------------------
- * d. Fact band. Three static facts, each checked against the code.
- * ------------------------------------------------------------------ */ ?>
-<div class="vhub-wrap vhub-facts-wrap">
-	<ul class="vhub-facts">
-		<li class="vhub-fact">
-			<span class="vhub-fact__icon"><?php echo vance_hub_icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Free to use', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Every tool, for everyone', 'vance-health-hub' ); ?></span></span>
-		</li>
-		<li class="vhub-fact">
-			<span class="vhub-fact__icon vhub-fact__icon--purple"><?php echo vance_hub_icon( 'person' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span class="vhub-fact__text"><strong><?php esc_html_e( 'No account to start', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Join to save your answers and results', 'vance-health-hub' ); ?></span></span>
-		</li>
-		<li class="vhub-fact">
-			<span class="vhub-fact__icon"><?php echo vance_hub_icon( 'book' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Sources shown', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'VANCE-Ai links the articles it uses', 'vance-health-hub' ); ?></span></span>
-		</li>
-	</ul>
-</div>
 
 <?php /* ---------------------------------------------------------------
  * e. Inside the Hub this week. Customizer tiles only; empty by default.
@@ -205,7 +193,7 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 		<h2 id="vhub-conditions-title" class="vhub-h2"><?php esc_html_e( 'Start with your condition', 'vance-health-hub' ); ?></h2>
 		<p class="vhub-lead"><?php
 			/* translators: %s: number of gut conditions with a guide. */
-			echo esc_html( sprintf( _n( 'A plain-English guide to %s gut condition.', 'Plain-English guides to %s gut conditions.', count( $vhub_cards ), 'vance-health-hub' ), number_format_i18n( count( $vhub_cards ) ) ) );
+			echo esc_html( sprintf( _n( 'An easy-to-follow guide to %s common gut condition.', 'Easy-to-follow guides to %s common gut conditions.', count( $vhub_cards ), 'vance-health-hub' ), number_format_i18n( count( $vhub_cards ) ) ) );
 		?></p>
 	</div>
 	<ul class="vhub-cond-grid">

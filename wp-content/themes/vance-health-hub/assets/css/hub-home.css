@@ -212,7 +212,7 @@
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 22px;
+	gap: 28px;
 }
 .vhub-hero__head {
 	display: flex;
@@ -354,7 +354,6 @@
    wraps onto a row of its own. */
 .vhub-tools {
 	position: relative;
-	margin-top: -56px;
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 16px;
@@ -415,7 +414,10 @@
 
 /* ---- d. fact band ------------------------------------------------------- */
 
-.vhub-facts-wrap { padding-top: 32px; }
+/* The band now follows the hero and overlaps its bottom edge; the tool tiles
+   below it start clear of it with generous space. */
+.vhub-facts-wrap { position: relative; margin-top: -56px; }
+.vhub-tools-section { padding-top: 72px; }
 .vhub-facts {
 	display: flex;
 	flex-wrap: wrap;
@@ -1060,7 +1062,8 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-tool--nutrition .vhub-tool__body .vhub-icon { color: #AEDBDB; }
 	.vhub-tool__title { font-size: 17px; line-height: 1.2; }
 
-	.vhub-facts-wrap { padding-top: 20px; }
+	.vhub-facts-wrap { margin-top: 0; padding-top: 20px; }
+	.vhub-tools-section { padding-top: 24px; }
 	.vhub-fact { padding: 14px 16px; }
 	.vhub-fact + .vhub-fact { border-left: 0; border-top: 1px solid var(--vhub-line); }
 

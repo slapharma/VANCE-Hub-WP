@@ -861,19 +861,19 @@ function vance_hub_tools() {
 
 	$survey_desc = $survey_n > 0
 		/* translators: %s: number of survey questions. */
-		? sprintf( _n( 'Gastro Health Survey: %s short question. The Hub then shows what fits you.', 'Gastro Health Survey: %s short questions. The Hub then shows what fits you.', $survey_n, 'vance-health-hub' ), number_format_i18n( $survey_n ) )
-		: __( 'Gastro Health Survey. The Hub then shows what fits you.', 'vance-health-hub' );
+		? sprintf( _n( 'Answer %s short question and get guides, tools and recipes picked for you.', 'Answer %s short questions and get guides, tools and recipes picked for you.', $survey_n, 'vance-health-hub' ), number_format_i18n( $survey_n ) )
+		: __( 'Answer a few short questions and get guides, tools and recipes picked for you.', 'vance-health-hub' );
 
 	$recipe_desc = $recipes_n > 0
 		/* translators: %s: number of published recipes. */
-		? sprintf( _n( '%s gut-friendly recipe. Build a weekly meal plan.', '%s gut-friendly recipes. Build a weekly meal plan.', $recipes_n, 'vance-health-hub' ), $recipes_label )
-		: __( 'Gut-friendly recipes. Build a weekly meal plan.', 'vance-health-hub' );
+		? sprintf( _n( 'Choose from %s gut-friendly recipe and leave with a weekly meal plan.', 'Choose from %s gut-friendly recipes and leave with a weekly meal plan.', $recipes_n, 'vance-health-hub' ), $recipes_label )
+		: __( 'Choose from gut-friendly recipes and leave with a weekly meal plan.', 'vance-health-hub' );
 
 	return array(
 		array(
 			'mod'   => 'survey',
 			'icon'  => 'clipboard',
-			'title' => __( 'Find what fits me', 'vance-health-hub' ),
+			'title' => __( 'Start here...', 'vance-health-hub' ),
 			'desc'  => $survey_desc,
 			'cta'   => __( 'Start the survey', 'vance-health-hub' ),
 			'href'  => vance_hub_page_url( 'gastro-health-survey', '/gastro-health-survey/' ),
@@ -881,9 +881,19 @@ function vance_hub_tools() {
 			'alt'   => __( 'Two women walking and talking together on a sunlit city street', 'vance-health-hub' ),
 		),
 		array(
+			'mod'   => 'nutrition',
+			'icon'  => 'gauge',
+			'title' => __( 'Are you eating right?', 'vance-health-hub' ),
+			'desc'  => __( 'A short check that shows your malnutrition risk, so you know what to raise with your care team.', 'vance-health-hub' ),
+			'cta'   => __( 'Start the check', 'vance-health-hub' ),
+			'href'  => vance_hub_page_url( 'malnutrition-calculator', '/malnutrition-calculator/' ),
+			'img'   => vance_hub_img( 'about/healthy-nutrition-food.jpg' ),
+			'alt'   => __( 'Bowls of oats, sauerkraut, kimchi, yoghurt and beans beside artichokes, mushrooms, garlic and dragon fruit', 'vance-health-hub' ),
+		),
+		array(
 			'mod'   => 'recipes',
 			'icon'  => 'fork',
-			'title' => __( 'Plan what to eat', 'vance-health-hub' ),
+			'title' => __( 'Not sure what to cook?', 'vance-health-hub' ),
 			'desc'  => $recipe_desc,
 			'cta'   => __( 'Build my week', 'vance-health-hub' ),
 			'href'  => vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' ),
@@ -891,20 +901,10 @@ function vance_hub_tools() {
 			'alt'   => __( 'A woman in an apron chops vegetables at a kitchen counter', 'vance-health-hub' ),
 		),
 		array(
-			'mod'   => 'nutrition',
-			'icon'  => 'gauge',
-			'title' => __( 'Check my nutrition risk', 'vance-health-hub' ),
-			'desc'  => (string) vance_get_theme_mod( 'vance_tool_malnutrition_name', 'IBD Malnutrition Calculator' ) . '. ' . __( 'A short check with a clear result.', 'vance-health-hub' ),
-			'cta'   => __( 'Start the check', 'vance-health-hub' ),
-			'href'  => vance_hub_page_url( 'malnutrition-calculator', '/malnutrition-calculator/' ),
-			'img'   => vance_hub_img( 'about/healthy-nutrition-food.jpg' ),
-			'alt'   => __( 'Bowls of oats, sauerkraut, kimchi, yoghurt and beans beside artichokes, mushrooms, garlic and dragon fruit', 'vance-health-hub' ),
-		),
-		array(
 			'mod'   => 'discounts',
 			'icon'  => 'tag',
-			'title' => __( 'Find discounts and access', 'vance-health-hub' ),
-			'desc'  => __( 'UK schemes for toilet access, travel and benefits.', 'vance-health-hub' ),
+			'title' => __( 'Discounts & benefits', 'vance-health-hub' ),
+			'desc'  => __( 'See the UK schemes for toilet access, travel and benefits, and what you can apply for.', 'vance-health-hub' ),
 			'cta'   => __( 'See the schemes', 'vance-health-hub' ),
 			'href'  => vance_hub_page_url( 'ibd-discounts', '/ibd-discounts/' ),
 			'img'   => vance_hub_img( 'gi-health/lobby-walk.webp' ),
