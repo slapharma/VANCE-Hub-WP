@@ -904,6 +904,16 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	line-height: 1.2;
 	color: var(--vhub-muted);
 }
+/* Date left, read time dead centre, read count right. The dots are only
+   separators for the old inline layout, so they are hidden here. */
+.vhub-card__meta {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+}
+.vhub-card__meta > [aria-hidden="true"] { display: none; }
+.vhub-card__date { grid-column: 1; justify-self: start; }
+.vhub-card__read { grid-column: 2; justify-self: center; }
+.vhub-card__views { grid-column: 3; justify-self: end; }
 .vhub-card__body {
 	flex: 1;
 	display: flex;

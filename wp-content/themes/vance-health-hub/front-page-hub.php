@@ -451,14 +451,14 @@ if ( ! empty( $vhub_more ) ) : ?>
 					<?php endif; ?>
 				</div>
 				<div class="vhub-card__meta">
-					<time datetime="<?php echo esc_attr( $vhub_p['iso'] ); ?>"><?php echo esc_html( $vhub_p['date'] ); ?></time>
+					<time class="vhub-card__date" datetime="<?php echo esc_attr( $vhub_p['iso'] ); ?>"><?php echo esc_html( $vhub_p['date'] ); ?></time>
 					<?php if ( ! empty( $vhub_p['read'] ) ) : ?>
 						<span aria-hidden="true">&middot;</span>
-						<span><?php echo esc_html( sprintf( /* translators: %s: minutes to read */ __( '%s min read', 'vance-health-hub' ), number_format_i18n( $vhub_p['read'] ) ) ); ?></span>
+						<span class="vhub-card__read"><?php echo esc_html( sprintf( /* translators: %s: minutes to read */ __( '%s min read', 'vance-health-hub' ), number_format_i18n( $vhub_p['read'] ) ) ); ?></span>
 					<?php endif; ?>
 					<?php if ( $vhub_p['views'] > 0 ) : ?>
 						<span aria-hidden="true">&middot;</span>
-						<span><?php echo esc_html( sprintf( /* translators: %s: formatted view count */ _n( '%s read', '%s reads', $vhub_p['views'], 'vance-health-hub' ), number_format_i18n( $vhub_p['views'] ) ) ); ?></span>
+						<span class="vhub-card__views"><?php echo esc_html( sprintf( /* translators: %s: formatted view count */ _n( '%s read', '%s reads', $vhub_p['views'], 'vance-health-hub' ), number_format_i18n( $vhub_p['views'] ) ) ); ?></span>
 					<?php endif; ?>
 				</div>
 				<div class="vhub-card__body">
