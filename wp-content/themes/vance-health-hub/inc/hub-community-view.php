@@ -529,13 +529,15 @@ function vance_community_render_page() {
 
 	// -- Space chips ----------------------------------------------------------
 	if ( $spaces ) {
-		$html .= '<nav class="vcom-wrap vcom-spaces" aria-label="' . esc_attr__( 'Community spaces', 'vance-health-hub' ) . '">';
-		$html .= '<a class="vcom-space' . ( '' === $current ? ' is-current' : '' ) . '" href="' . esc_url( vance_community_feed_url( '' ) ) . '"' . ( '' === $current ? ' aria-current="page"' : '' ) . '>' . esc_html__( 'All spaces', 'vance-health-hub' ) . '</a>';
+		// Plain links, so the filter works with no JS. hub-community.js swaps the
+		// feed in place on click (data-vcom-space), so the page does not jump.
+		$html .= '<nav class="vcom-wrap vcom-spaces" aria-label="' . esc_attr__( 'Community spaces', 'vance-health-hub' ) . '" data-vcom-spaces><div class="vcom-spaces__track">';
+		$html .= '<a class="vcom-space' . ( '' === $current ? ' is-current' : '' ) . '" href="' . esc_url( vance_community_feed_url( '' ) ) . '" data-vcom-space=""' . ( '' === $current ? ' aria-current="page"' : '' ) . '>' . esc_html__( 'All spaces', 'vance-health-hub' ) . '</a>';
 		foreach ( $spaces as $slug => $term ) {
 			$on    = $slug === $current;
-			$html .= '<a class="vcom-space' . ( $on ? ' is-current' : '' ) . '" href="' . esc_url( vance_community_feed_url( $slug ) ) . '"' . ( $on ? ' aria-current="page"' : '' ) . '>' . esc_html( $term->name ) . '</a>';
+			$html .= '<a class="vcom-space' . ( $on ? ' is-current' : '' ) . '" href="' . esc_url( vance_community_feed_url( $slug ) ) . '" data-vcom-space="' . esc_attr( $slug ) . '"' . ( $on ? ' aria-current="page"' : '' ) . '>' . esc_html( $term->name ) . '</a>';
 		}
-		$html .= '</nav>';
+		$html .= '</div></nav>';
 	}
 
 	$html .= '<div class="vcom-wrap vcom-main">';
@@ -561,7 +563,7 @@ function vance_community_render_page() {
 	 */
 	$feed = new WP_Query( vance_community_sample_feed_args( (array) apply_filters( 'vance_community_feed_args', $args ) ) );
 
-	$html .= '<section class="vcom-feed" aria-label="' . esc_attr__( 'Questions', 'vance-health-hub' ) . '">';
+	$html .= '<section class="vcom-feed" id="vcom-feed" aria-label="' . esc_attr__( 'Questions', 'vance-health-hub' ) . '" data-vcom-feed>';
 	if ( $feed->have_posts() ) {
 		foreach ( $feed->posts as $q ) {
 			$html .= vance_community_card_html( $q, $member, $user_id );
