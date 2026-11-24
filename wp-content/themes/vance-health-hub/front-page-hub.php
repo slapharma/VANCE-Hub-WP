@@ -190,7 +190,7 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 	?>
 <section class="vhub-wrap vhub-section vhub-conditions" aria-labelledby="vhub-conditions-title">
 	<div class="vhub-section__intro">
-		<h2 id="vhub-conditions-title" class="vhub-h2"><?php esc_html_e( 'Start with your condition', 'vance-health-hub' ); ?></h2>
+		<h2 id="vhub-conditions-title" class="vhub-h2"><?php esc_html_e( 'Recently diagnosed? Learn about your condition', 'vance-health-hub' ); ?></h2>
 		<p class="vhub-lead"><?php
 			/* translators: %s: number of gut conditions with a guide. */
 			echo esc_html( sprintf( _n( 'An easy-to-follow guide to %s common gut condition.', 'Easy-to-follow guides to %s common gut conditions.', count( $vhub_cards ), 'vance-health-hub' ), number_format_i18n( count( $vhub_cards ) ) ) );
