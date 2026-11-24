@@ -1864,7 +1864,7 @@
 					'<div class="vance-askai-intro__col">' +
 						'<div class="vance-askai-intro__logo">' + logo + '</div>' +
 						'<h2 class="vance-askai-intro__title" id="vance-askai-intro-title">' +
-							escapeHtml(CFG.introTitle || 'Demystify Your Health Journey') +
+							escapeHtml(CFG.introTitle || 'Demystify Your Gastro Health Journey') +
 							'<span class="vance-askai-intro__title-spark" aria-hidden="true">' + ICON.spark + '</span>' +
 						'</h2>' +
 						(CFG.introSubtitle ? '<p class="vance-askai-intro__subtitle">' + escapeHtml(CFG.introSubtitle) + '</p>' : '') +

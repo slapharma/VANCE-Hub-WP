@@ -983,14 +983,48 @@ function vance_hub_testimonials( $limit = 2 ) {
  * @return array<int, array{title: string, url: string, meal: string, img: string, alt: string}>
  */
 function vance_hub_recent_recipes( $limit = 2 ) {
-	$query = new WP_Query( array(
-		'post_type'      => 'vance_recipe',
-		'post_status'    => 'publish',
+	return vance_hub_recipe_rows( array(
 		'posts_per_page' => $limit,
 		'orderby'        => 'date',
 		'order'          => 'DESC',
-		'no_found_rows'  => true,
 	) );
+}
+
+/**
+ * The most-viewed published recipes. Real counts only: recipe pages are counted
+ * by vance_track_post_view() under _vance_recipe_views (never seeded), and a recipe with no recorded
+ * view is not listed, so this is empty until the counts exist.
+ *
+ * @param int $limit Number of recipes.
+ * @return array Same rows as vance_hub_recent_recipes().
+ */
+function vance_hub_popular_recipes( $limit = 2 ) {
+	return vance_hub_recipe_rows( array(
+		'posts_per_page' => $limit,
+		'meta_query'     => array(
+			'views' => array(
+				'key'     => '_vance_recipe_views',
+				'value'   => 0,
+				'compare' => '>',
+				'type'    => 'NUMERIC',
+			),
+		),
+		'orderby'        => array( 'views' => 'DESC', 'date' => 'DESC' ),
+	) );
+}
+
+/**
+ * Recipe query args to the card rows the community block prints.
+ *
+ * @param array $args WP_Query args (merged over the recipe defaults).
+ * @return array<int, array{title: string, url: string, meal: string, img: string, alt: string}>
+ */
+function vance_hub_recipe_rows( $args ) {
+	$query = new WP_Query( array_merge( array(
+		'post_type'     => 'vance_recipe',
+		'post_status'   => 'publish',
+		'no_found_rows' => true,
+	), $args ) );
 	$out = array();
 	foreach ( $query->posts as $post ) {
 		$terms = get_the_terms( $post, 'vance_recipe_cat' );

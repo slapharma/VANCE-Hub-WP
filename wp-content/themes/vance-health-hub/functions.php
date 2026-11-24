@@ -1189,7 +1189,7 @@ function vance_track_post_view() {
     if ( is_admin() || is_feed() || is_preview() ) {
         return;
     }
-    if ( ! is_singular( 'post' ) ) {
+    if ( ! is_singular( array( 'post', 'vance_recipe' ) ) ) {
         return;
     }
     $post_id = get_queried_object_id();
@@ -1204,8 +1204,15 @@ function vance_track_post_view() {
     if ( ! empty( $_COOKIE[ $cookie ] ) ) {
         return;
     }
-    $current = vance_get_view_count( $post_id );
-    update_post_meta( $post_id, '_vance_view_count', $current + 1 );
+    // Recipes count under their own key, which nothing seeds. The shared
+    // _vance_view_count key gets a random baseline from vance_get_view_count()
+    // (search and archive cards call it), which would put invented numbers
+    // behind "Most Popular Recipes".
+    if ( 'vance_recipe' === get_post_type( $post_id ) ) {
+        update_post_meta( $post_id, '_vance_recipe_views', (int) get_post_meta( $post_id, '_vance_recipe_views', true ) + 1 );
+    } else {
+        update_post_meta( $post_id, '_vance_view_count', vance_get_view_count( $post_id ) + 1 );
+    }
     if ( ! headers_sent() ) {
         setcookie( $cookie, '1', time() + HOUR_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN );
     }
@@ -1802,7 +1809,7 @@ function vance_askai_script_data() {
     // Your Health Journey" mockup, so a fresh install (or any field saved empty)
     // still renders the intended design.
     $intro_defaults = array(
-        'title'    => __( 'Demystify Your Health Journey', 'vance-health-hub' ),
+        'title'    => __( 'Demystify Your Gastro Health Journey', 'vance-health-hub' ),
         'subtitle' => __( 'VANCE-Ai helps you understand complex medical terms instantly as you read.', 'vance-health-hub' ),
         'feat1_t'  => __( 'Highlight to explain', 'vance-health-hub' ),
         'feat1_d'  => __( 'Get clear, instant explanations for any medical term.', 'vance-health-hub' ),
@@ -6315,7 +6322,7 @@ function vance_customize_register( $wp_customize ) {
     ) ) );
 
     $wp_customize->add_setting( 'vance_askai_intro_title', array(
-        'default'           => 'Demystify Your Health Journey',
+        'default'           => 'Demystify Your Gastro Health Journey',
         'sanitize_callback' => 'sanitize_text_field',
     ) );
     $wp_customize->add_control( 'vance_askai_intro_title', array(

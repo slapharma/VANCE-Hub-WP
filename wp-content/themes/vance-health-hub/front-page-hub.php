@@ -49,10 +49,10 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 	<div class="vhub-wrap vhub-hero__inner">
 		<div class="vhub-hero__copy">
 			<div class="vhub-hero__head"<?php if ( $vhub_hero_img ) : ?> style="--vhub-hero-photo: url('<?php echo esc_url( $vhub_hero_img ); ?>');"<?php endif; ?>>
-				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Free tools. No account needed.', 'vance-health-hub' ); ?></p>
+				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Free Gastro Health Community.', 'vance-health-hub' ); ?></p>
 				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php esc_html_e( 'What do you need help with', 'vance-health-hub' ); ?> <span class="vhub-hero__accent"><?php esc_html_e( 'today?', 'vance-health-hub' ); ?></span></h1>
 			</div>
-			<p class="vhub-hero__sub"><?php esc_html_e( 'Take a short health survey, plan your meals and get plain answers from VANCE-Ai.', 'vance-health-hub' ); ?></p>
+			<p class="vhub-hero__sub"><?php esc_html_e( 'Take a short gut health survey, plan your meals and get plain answers from VANCE-Ai.', 'vance-health-hub' ); ?></p>
 
 			<?php
 			/* The input has no name on purpose: Ask AI takes no query parameter,
@@ -191,83 +191,6 @@ if ( ! empty( $vhub_tiles ) ) : ?>
 <?php endif; ?>
 
 <?php /* ---------------------------------------------------------------
- * f. Community block: real community quotes (the classic home page's
- *    testimonial source) plus the newest real recipes. No forum, poll or
- *    "members made this" data exists, so those parts are not built. With no
- *    quotes, the whole block is omitted.
- * ------------------------------------------------------------------ */
-$vhub_quotes = vance_hub_testimonials( 4 );
-if ( ! empty( $vhub_quotes ) ) :
-	$vhub_recipes = vance_hub_recent_recipes( 2 );
-	?>
-<section class="vhub-community" aria-labelledby="vhub-community-title">
-	<div class="vhub-wrap vhub-community__inner">
-		<div class="vhub-section__intro">
-			<p class="vhub-pill vhub-pill--teal"><?php esc_html_e( 'The community', 'vance-health-hub' ); ?></p>
-			<h2 id="vhub-community-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( (string) vance_get_theme_mod( 'vance_testimonial_heading', 'What Our Community Says' ) ); ?></h2>
-		</div>
-		<ul class="vhub-community__cards<?php echo empty( $vhub_recipes ) ? '' : ' vhub-community__cards--recipes'; ?>">
-			<?php foreach ( $vhub_quotes as $vhub_quote ) : ?>
-				<li class="vhub-community__card vhub-community__card--quote">
-					<figure class="vhub-quote">
-						<blockquote class="vhub-quote__text"><p><?php echo esc_html( $vhub_quote['quote'] ); ?></p></blockquote>
-						<?php if ( '' !== $vhub_quote['name'] || '' !== $vhub_quote['role'] ) : ?>
-							<figcaption class="vhub-quote__by">
-								<?php if ( '' !== $vhub_quote['name'] ) : ?><strong><?php echo esc_html( $vhub_quote['name'] ); ?></strong><?php endif; ?>
-								<?php if ( '' !== $vhub_quote['role'] ) : ?><span><?php echo esc_html( $vhub_quote['role'] ); ?></span><?php endif; ?>
-							</figcaption>
-						<?php endif; ?>
-					</figure>
-				</li>
-			<?php endforeach; ?>
-			<?php if ( ! empty( $vhub_recipes ) ) : ?>
-				<li class="vhub-community__card vhub-community__card--recipes" style="grid-row: 1 / span <?php echo (int) max( 1, count( $vhub_quotes ) ); ?>;">
-					<p class="vhub-community__eyebrow"><?php esc_html_e( 'New in the recipe hub', 'vance-health-hub' ); ?></p>
-					<h3 class="vhub-community__h3"><?php esc_html_e( 'Recently added recipes', 'vance-health-hub' ); ?></h3>
-					<ul class="vhub-recipe-list">
-						<?php foreach ( $vhub_recipes as $vhub_recipe ) : ?>
-							<li><a class="vhub-recipe" href="<?php echo esc_url( $vhub_recipe['url'] ); ?>">
-								<?php if ( '' !== $vhub_recipe['img'] ) : ?>
-									<img class="vhub-recipe__img" src="<?php echo esc_url( $vhub_recipe['img'] ); ?>" alt="<?php echo esc_attr( $vhub_recipe['alt'] ); ?>" width="72" height="72" loading="lazy" decoding="async">
-								<?php endif; ?>
-								<span class="vhub-recipe__text">
-									<span class="vhub-recipe__name"><?php echo esc_html( $vhub_recipe['title'] ); ?></span>
-									<?php if ( '' !== $vhub_recipe['meal'] ) : ?><span class="vhub-recipe__meal"><?php echo esc_html( $vhub_recipe['meal'] ); ?></span><?php endif; ?>
-								</span>
-							</a></li>
-						<?php endforeach; ?>
-					</ul>
-					<div class="vhub-community__actions">
-						<a class="vhub-community__btn" href="<?php echo esc_url( vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' ) ); ?>"><?php esc_html_e( 'Build a gastro supportive meal plan', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-						<a class="vhub-community__more" href="<?php echo esc_url( vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' ) ); ?>"><?php esc_html_e( 'Browse the recipes', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-					</div>
-				</li>
-			<?php endif; ?>
-		</ul>
-	</div>
-</section>
-<?php endif; ?>
-
-<?php /* ---------------------------------------------------------------
- * f2. Promo block: the same Customizer-driven block the VanceHealthHub home
- *     page shows (inc/promo-block.php, "Promo Block" settings). It prints
- *     nothing when its own "show" setting is off, so the output is buffered
- *     and the wrapper renders only when there is a block to wrap. Off for
- *     this layout alone with "Hub: show the promo block".
- * ------------------------------------------------------------------ */
-$vhub_promo = '';
-if ( function_exists( 'vance_render_promo_home' ) && vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_promo', true ) ) ) {
-	ob_start();
-	vance_render_promo_home();
-	$vhub_promo = trim( (string) ob_get_clean() );
-}
-if ( '' !== $vhub_promo ) : ?>
-<div class="vhub-promo">
-	<?php echo $vhub_promo; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by vance_render_promo_block(). ?>
-</div>
-<?php endif; ?>
-
-<?php /* ---------------------------------------------------------------
  * g. Conditions: photo tiles and a list, from the real registry.
  * ------------------------------------------------------------------ */
 $vhub_cards = function_exists( 'vance_gi_condition_cards' ) ? vance_gi_condition_cards() : array();
@@ -314,6 +237,104 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 	</ul>
 </section>
 <?php endif; ?>
+
+<?php /* ---------------------------------------------------------------
+ * f. Community block: real community quotes (the classic home page's
+ *    testimonial source) plus the newest real recipes. No forum, poll or
+ *    "members made this" data exists, so those parts are not built. With no
+ *    quotes, the whole block is omitted.
+ * ------------------------------------------------------------------ */
+$vhub_quotes = vance_hub_testimonials( 4 );
+if ( ! empty( $vhub_quotes ) ) :
+	$vhub_recipe_groups = array_filter( array(
+		array(
+			'eyebrow' => __( 'New in the recipe hub', 'vance-health-hub' ),
+			'title'   => __( 'Recently Added Recipes', 'vance-health-hub' ),
+			'items'   => vance_hub_recent_recipes( 2 ),
+		),
+		array(
+			'eyebrow' => __( 'Most read', 'vance-health-hub' ),
+			'title'   => __( 'Most Popular Recipes', 'vance-health-hub' ),
+			'items'   => vance_hub_popular_recipes( 2 ),
+		),
+	), function ( $vhub_g ) {
+		return ! empty( $vhub_g['items'] );
+	} );
+	$vhub_meal_url = vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' );
+	?>
+<section class="vhub-community" aria-labelledby="vhub-community-title">
+	<div class="vhub-wrap vhub-community__inner">
+		<div class="vhub-section__intro">
+			<p class="vhub-pill vhub-pill--teal"><?php esc_html_e( 'The Gastro Community', 'vance-health-hub' ); ?></p>
+			<h2 id="vhub-community-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( (string) vance_get_theme_mod( 'vance_testimonial_heading', 'What Our Community Says' ) ); ?></h2>
+		</div>
+		<div class="vhub-community__cols<?php echo empty( $vhub_recipe_groups ) ? '' : ' vhub-community__cols--recipes'; ?>">
+			<ul class="vhub-community__cards">
+				<?php foreach ( $vhub_quotes as $vhub_quote ) : ?>
+					<li class="vhub-community__card vhub-community__card--quote">
+						<figure class="vhub-quote">
+							<blockquote class="vhub-quote__text"><p><?php echo esc_html( $vhub_quote['quote'] ); ?></p></blockquote>
+							<?php if ( '' !== $vhub_quote['name'] || '' !== $vhub_quote['role'] ) : ?>
+								<figcaption class="vhub-quote__by">
+									<?php if ( '' !== $vhub_quote['name'] ) : ?><strong><?php echo esc_html( $vhub_quote['name'] ); ?></strong><?php endif; ?>
+									<?php if ( '' !== $vhub_quote['role'] ) : ?><span><?php echo esc_html( $vhub_quote['role'] ); ?></span><?php endif; ?>
+								</figcaption>
+							<?php endif; ?>
+						</figure>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+			<?php if ( ! empty( $vhub_recipe_groups ) ) : ?>
+				<div class="vhub-community__recipes">
+					<?php foreach ( $vhub_recipe_groups as $vhub_group ) : ?>
+						<section class="vhub-community__card vhub-community__card--recipes">
+							<p class="vhub-community__eyebrow"><?php echo esc_html( $vhub_group['eyebrow'] ); ?></p>
+							<h3 class="vhub-community__h3"><?php echo esc_html( $vhub_group['title'] ); ?></h3>
+							<ul class="vhub-recipe-list">
+								<?php foreach ( $vhub_group['items'] as $vhub_recipe ) : ?>
+									<li><a class="vhub-recipe" href="<?php echo esc_url( $vhub_recipe['url'] ); ?>">
+										<?php if ( '' !== $vhub_recipe['img'] ) : ?>
+											<img class="vhub-recipe__img" src="<?php echo esc_url( $vhub_recipe['img'] ); ?>" alt="<?php echo esc_attr( $vhub_recipe['alt'] ); ?>" width="72" height="72" loading="lazy" decoding="async">
+										<?php endif; ?>
+										<span class="vhub-recipe__text">
+											<span class="vhub-recipe__name"><?php echo esc_html( $vhub_recipe['title'] ); ?></span>
+											<?php if ( '' !== $vhub_recipe['meal'] ) : ?><span class="vhub-recipe__meal"><?php echo esc_html( $vhub_recipe['meal'] ); ?></span><?php endif; ?>
+										</span>
+									</a></li>
+								<?php endforeach; ?>
+							</ul>
+						</section>
+					<?php endforeach; ?>
+					<div class="vhub-community__actions">
+						<a class="vhub-community__btn" href="<?php echo esc_url( $vhub_meal_url ); ?>"><?php esc_html_e( 'Build a gastro supportive meal plan', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+						<a class="vhub-community__more" href="<?php echo esc_url( $vhub_meal_url ); ?>"><?php esc_html_e( 'Browse the recipes', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
+	</div>
+</section>
+<?php endif; ?>
+
+<?php /* ---------------------------------------------------------------
+ * f2. Promo block: the same Customizer-driven block the VanceHealthHub home
+ *     page shows (inc/promo-block.php, "Promo Block" settings). It prints
+ *     nothing when its own "show" setting is off, so the output is buffered
+ *     and the wrapper renders only when there is a block to wrap. Off for
+ *     this layout alone with "Hub: show the promo block".
+ * ------------------------------------------------------------------ */
+$vhub_promo = '';
+if ( function_exists( 'vance_render_promo_home' ) && vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_promo', true ) ) ) {
+	ob_start();
+	vance_render_promo_home();
+	$vhub_promo = trim( (string) ob_get_clean() );
+}
+if ( '' !== $vhub_promo ) : ?>
+<div class="vhub-promo">
+	<?php echo $vhub_promo; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by vance_render_promo_block(). ?>
+</div>
+<?php endif; ?>
+
 
 <?php /* ---------------------------------------------------------------
  * h. Library: the newest real articles. No "Goes with" lines: no mapping

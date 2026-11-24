@@ -502,46 +502,42 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	flex-direction: column;
 	gap: 28px;
 }
-.vhub-community__cards { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
-/* With recipes: the quotes stack in the left column and the recipe card
-   spans both rows on the right, so a short quote is not stretched to the
-   recipe card's height. */
-.vhub-community__cards--recipes {
+.vhub-community__cards { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.vhub-community__cols { display: flex; flex-direction: column; gap: 16px; }
+/* With recipes: compact quotes on the left, the two recipe cards stacked on the right. */
+.vhub-community__cols--recipes {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: stretch;
+	align-items: start;
 }
-.vhub-community__cards--recipes .vhub-community__card--recipes {
-	grid-column: 2;
-	grid-row: 1 / span 4;
-}
-.vhub-community__cards--recipes .vhub-community__card--quote { grid-column: 1; }
+.vhub-community__recipes { display: flex; flex-direction: column; gap: 16px; }
 .vhub-community__card {
-	flex: 1 1 330px;
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
-	padding: 32px;
+	padding: 28px;
 	border-radius: var(--radius-surface, 14px);
 }
-.vhub-community__card--quote   { background: #1E293B; justify-content: center; }
-.vhub-community__card--recipes { background: var(--vhub-teal); }
-.vhub-quote { margin: 0; display: flex; flex-direction: column; gap: 16px; }
+.vhub-community__card--quote   { background: #1E293B; justify-content: center; gap: 0; padding: 14px 20px; }
+.vhub-community__card--recipes { background: var(--vhub-teal); gap: 10px; padding: 22px 24px; }
+.vhub-quote { margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .vhub-quote__text { margin: 0; padding: 0; border: 0; }
 .vhub-quote__text p {
-	font-size: 18px;
-	line-height: 1.55;
+	font-size: 15px;
+	line-height: 1.45;
 	color: #FFFFFF;
 }
 .vhub-quote__by {
 	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	font-size: 14px;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 2px 8px;
+	font-size: 13px;
 	color: #CBD5E1;
 }
-.vhub-quote__by strong { font-size: 16px; color: #FFFFFF; }
+.vhub-quote__by strong { font-size: 14px; color: #FFFFFF; }
 .vhub-community__eyebrow {
 	font-size: 13px;
 	font-weight: 600;
@@ -549,7 +545,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	text-transform: uppercase;
 	color: #FFFFFF;
 }
-.vhub-community__h3 { font-size: 30px; line-height: 1.15; font-weight: 700; color: #FFFFFF; }
+.vhub-community__h3 { font-size: 24px; line-height: 1.15; font-weight: 700; color: #FFFFFF; }
 .vhub-recipe-list { display: flex; flex-direction: column; gap: 10px; }
 .vhub-recipe {
 	display: flex;
@@ -585,6 +581,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 }
 .vhub-community__more:hover { color: #FFFFFF; text-decoration: underline; }
 .vhub-community__actions {
+	padding-top: 4px;
 	margin-top: auto;
 	display: flex;
 	flex-wrap: wrap;
@@ -1058,12 +1055,13 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-h2 { font-size: 28px; }
 	.vhub-lead { font-size: 16px; }
 
-	/* Community: one quote, then the recipe card (it carries the meal plan CTA). */
+	/* Community: compact quotes stacked, then the recipe cards (they carry the meal plan CTA). */
 	.vhub-community { margin-top: 48px; }
 	.vhub-community__inner { padding-top: 40px; padding-bottom: 40px; gap: 20px; }
 	.vhub-community__card { padding: 20px; }
-	.vhub-community__card--quote + .vhub-community__card--quote { display: none; }
-	.vhub-community__cards--recipes { display: flex; }	.vhub-community__h3 { font-size: 24px; }
+	.vhub-community__card--quote { padding: 14px 16px; }
+	.vhub-community__cols--recipes { display: flex; }
+	.vhub-community__h3 { font-size: 22px; }
 
 	.vhub-cond-tile { min-height: 200px; }
 	.vhub-cond-list { min-height: 0; }
