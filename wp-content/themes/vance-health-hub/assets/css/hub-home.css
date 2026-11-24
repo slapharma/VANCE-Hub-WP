@@ -496,99 +496,21 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 
 .vhub-community { background: var(--vhub-navy); margin-top: 72px; }
 .vhub-community__inner {
-	padding-top: 72px;
-	padding-bottom: 72px;
+	padding-top: 48px;
+	padding-bottom: 48px;
 	display: flex;
 	flex-direction: column;
-	gap: 28px;
+	gap: 20px;
 }
-.vhub-community__cards { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.vhub-community__cols { display: flex; flex-direction: column; gap: 16px; }
-/* With recipes: compact quotes on the left, the two recipe cards stacked on the right. */
-.vhub-community__cols--recipes {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: start;
-}
-.vhub-community__recipes { display: flex; flex-direction: column; gap: 16px; }
-.vhub-community__card {
-	min-width: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-	padding: 28px;
-	border-radius: var(--radius-surface, 14px);
-}
-.vhub-community__card--quote   { background: #1E293B; justify-content: center; gap: 0; padding: 14px 20px; }
-.vhub-community__card--recipes { background: var(--vhub-teal); gap: 10px; padding: 22px 24px; }
-.vhub-quote { margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.vhub-quote__text { margin: 0; padding: 0; border: 0; }
-.vhub-quote__text p {
-	font-size: 15px;
-	line-height: 1.45;
-	color: #FFFFFF;
-}
-.vhub-quote__by {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 2px 8px;
-	font-size: 13px;
-	color: #CBD5E1;
-}
-.vhub-quote__by strong { font-size: 14px; color: #FFFFFF; }
-.vhub-community__eyebrow {
-	font-size: 13px;
-	font-weight: 600;
-	letter-spacing: 0.6px;
-	text-transform: uppercase;
-	color: #FFFFFF;
-}
-.vhub-community__h3 { font-size: 24px; line-height: 1.15; font-weight: 700; color: #FFFFFF; }
-.vhub-recipe-list { display: flex; flex-direction: column; gap: 10px; }
-.vhub-recipe {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 14px;
-	min-height: 44px;
-	padding: 12px;
-	background: #FFFFFF;
-	border-radius: var(--radius-field, 10px);
-	--vhub-focus: var(--vhub-purple);
-}
-.vhub-recipe__img {
-	flex: none;
-	width: 72px;
-	height: 72px;
-	object-fit: cover;
-	border-radius: var(--radius-control, 6px);
-	background: var(--vhub-wash);
-}
-.vhub-recipe__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.vhub-recipe__name { font-weight: 600; font-size: 16px; color: var(--vhub-navy); }
-.vhub-recipe__meal { font-size: 14px; color: var(--vhub-muted); }
-.vhub-recipe:hover .vhub-recipe__name { text-decoration: underline; }
-.vhub-community__more {
-	margin-top: auto;
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	font-weight: 600;
-	font-size: 16px;
-	color: #FFFFFF;
-}
-.vhub-community__more:hover { color: #FFFFFF; text-decoration: underline; }
-.vhub-community__actions {
-	padding-top: 4px;
-	margin-top: auto;
+/* Heading on the left, the two recipe actions on the right: one row. */
+.vhub-community__head {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px 20px;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px 32px;
 }
-.vhub-community__actions .vhub-community__more { margin-top: 0; }
+.vhub-community__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
 .vhub-community__btn {
 	display: inline-flex;
 	align-items: center;
@@ -601,6 +523,81 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	border-radius: var(--radius-control, 6px);
 }
 .vhub-community__btn:hover { background: var(--vhub-wash); text-decoration: underline; }
+.vhub-community__more {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	font-weight: 600;
+	font-size: 16px;
+	color: #FFFFFF;
+}
+.vhub-community__more:hover { color: #FFFFFF; text-decoration: underline; }
+/* Row 2: the quotes, four across. */
+.vhub-community__cards {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.vhub-community__card {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--radius-surface, 14px);
+}
+.vhub-community__card--quote { background: #1E293B; padding: 16px 18px; }
+.vhub-quote { margin: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+.vhub-quote__text { margin: 0; padding: 0; border: 0; }
+.vhub-quote__text p { font-size: 15px; line-height: 1.45; color: #FFFFFF; }
+.vhub-quote__by {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 2px 8px;
+	font-size: 13px;
+	color: #CBD5E1;
+}
+.vhub-quote__by strong { font-size: 14px; color: #FFFFFF; }
+/* Row 3: one teal band, two recipe lists side by side. */
+.vhub-community__recipes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px 32px;
+	padding: 20px 24px;
+	background: var(--vhub-teal);
+	border-radius: var(--radius-surface, 14px);
+}
+.vhub-community__group { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.vhub-community__h3 { font-size: 18px; line-height: 1.2; font-weight: 700; color: #FFFFFF; }
+.vhub-recipe-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.vhub-recipe {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 12px;
+	min-height: 44px;
+	padding: 8px;
+	background: #FFFFFF;
+	border-radius: var(--radius-field, 10px);
+	--vhub-focus: var(--vhub-purple);
+}
+.vhub-recipe__img {
+	flex: none;
+	width: 56px;
+	height: 56px;
+	object-fit: cover;
+	border-radius: var(--radius-control, 6px);
+	background: var(--vhub-wash);
+}
+.vhub-recipe__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vhub-recipe__name { font-weight: 600; font-size: 15px; color: var(--vhub-navy); }
+.vhub-recipe__meal { font-size: 13px; color: var(--vhub-muted); }
+.vhub-recipe:hover .vhub-recipe__name { text-decoration: underline; }
+@media (max-width: 1023px) {
+	.vhub-community__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* ---- g. conditions ------------------------------------------------------ */
 
@@ -1055,13 +1052,12 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-h2 { font-size: 28px; }
 	.vhub-lead { font-size: 16px; }
 
-	/* Community: compact quotes stacked, then the recipe cards (they carry the meal plan CTA). */
+	/* Community: heading, then quotes in one column, then the recipe lists stacked. */
 	.vhub-community { margin-top: 48px; }
-	.vhub-community__inner { padding-top: 40px; padding-bottom: 40px; gap: 20px; }
-	.vhub-community__card { padding: 20px; }
-	.vhub-community__card--quote { padding: 14px 16px; }
-	.vhub-community__cols--recipes { display: flex; }
-	.vhub-community__h3 { font-size: 22px; }
+	.vhub-community__inner { padding-top: 32px; padding-bottom: 32px; gap: 16px; }
+	.vhub-community__cards { grid-template-columns: 1fr; }
+	.vhub-community__recipes { grid-template-columns: 1fr; padding: 16px; }
+	.vhub-community__btn { width: 100%; justify-content: center; }
 
 	.vhub-cond-tile { min-height: 200px; }
 	.vhub-cond-list { min-height: 0; }

@@ -264,54 +264,55 @@ if ( ! empty( $vhub_quotes ) ) :
 	?>
 <section class="vhub-community" aria-labelledby="vhub-community-title">
 	<div class="vhub-wrap vhub-community__inner">
-		<div class="vhub-section__intro">
-			<p class="vhub-pill vhub-pill--teal"><?php esc_html_e( 'The Gastro Community', 'vance-health-hub' ); ?></p>
-			<h2 id="vhub-community-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( (string) vance_get_theme_mod( 'vance_testimonial_heading', 'What Our Community Says' ) ); ?></h2>
-		</div>
-		<div class="vhub-community__cols<?php echo empty( $vhub_recipe_groups ) ? '' : ' vhub-community__cols--recipes'; ?>">
-			<ul class="vhub-community__cards">
-				<?php foreach ( $vhub_quotes as $vhub_quote ) : ?>
-					<li class="vhub-community__card vhub-community__card--quote">
-						<figure class="vhub-quote">
-							<blockquote class="vhub-quote__text"><p><?php echo esc_html( $vhub_quote['quote'] ); ?></p></blockquote>
-							<?php if ( '' !== $vhub_quote['name'] || '' !== $vhub_quote['role'] ) : ?>
-								<figcaption class="vhub-quote__by">
-									<?php if ( '' !== $vhub_quote['name'] ) : ?><strong><?php echo esc_html( $vhub_quote['name'] ); ?></strong><?php endif; ?>
-									<?php if ( '' !== $vhub_quote['role'] ) : ?><span><?php echo esc_html( $vhub_quote['role'] ); ?></span><?php endif; ?>
-								</figcaption>
-							<?php endif; ?>
-						</figure>
-					</li>
-				<?php endforeach; ?>
-			</ul>
+		<div class="vhub-community__head">
+			<div class="vhub-section__intro">
+				<p class="vhub-pill vhub-pill--teal"><?php esc_html_e( 'The Gastro Community', 'vance-health-hub' ); ?></p>
+				<h2 id="vhub-community-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( (string) vance_get_theme_mod( 'vance_testimonial_heading', 'What Our Community Says' ) ); ?></h2>
+			</div>
 			<?php if ( ! empty( $vhub_recipe_groups ) ) : ?>
-				<div class="vhub-community__recipes">
-					<?php foreach ( $vhub_recipe_groups as $vhub_group ) : ?>
-						<section class="vhub-community__card vhub-community__card--recipes">
-							<p class="vhub-community__eyebrow"><?php echo esc_html( $vhub_group['eyebrow'] ); ?></p>
-							<h3 class="vhub-community__h3"><?php echo esc_html( $vhub_group['title'] ); ?></h3>
-							<ul class="vhub-recipe-list">
-								<?php foreach ( $vhub_group['items'] as $vhub_recipe ) : ?>
-									<li><a class="vhub-recipe" href="<?php echo esc_url( $vhub_recipe['url'] ); ?>">
-										<?php if ( '' !== $vhub_recipe['img'] ) : ?>
-											<img class="vhub-recipe__img" src="<?php echo esc_url( $vhub_recipe['img'] ); ?>" alt="<?php echo esc_attr( $vhub_recipe['alt'] ); ?>" width="72" height="72" loading="lazy" decoding="async">
-										<?php endif; ?>
-										<span class="vhub-recipe__text">
-											<span class="vhub-recipe__name"><?php echo esc_html( $vhub_recipe['title'] ); ?></span>
-											<?php if ( '' !== $vhub_recipe['meal'] ) : ?><span class="vhub-recipe__meal"><?php echo esc_html( $vhub_recipe['meal'] ); ?></span><?php endif; ?>
-										</span>
-									</a></li>
-								<?php endforeach; ?>
-							</ul>
-						</section>
-					<?php endforeach; ?>
-					<div class="vhub-community__actions">
-						<a class="vhub-community__btn" href="<?php echo esc_url( $vhub_meal_url ); ?>"><?php esc_html_e( 'Build a gastro supportive meal plan', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-						<a class="vhub-community__more" href="<?php echo esc_url( $vhub_meal_url ); ?>"><?php esc_html_e( 'Browse the recipes', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
-					</div>
+				<div class="vhub-community__actions">
+					<a class="vhub-community__btn" href="<?php echo esc_url( $vhub_meal_url ); ?>"><?php esc_html_e( 'Build a gastro supportive meal plan', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+					<a class="vhub-community__more" href="<?php echo esc_url( $vhub_meal_url ); ?>"><?php esc_html_e( 'Browse the recipes', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
 				</div>
 			<?php endif; ?>
 		</div>
+		<ul class="vhub-community__cards">
+			<?php foreach ( $vhub_quotes as $vhub_quote ) : ?>
+				<li class="vhub-community__card vhub-community__card--quote">
+					<figure class="vhub-quote">
+						<blockquote class="vhub-quote__text"><p><?php echo esc_html( $vhub_quote['quote'] ); ?></p></blockquote>
+						<?php if ( '' !== $vhub_quote['name'] || '' !== $vhub_quote['role'] ) : ?>
+							<figcaption class="vhub-quote__by">
+								<?php if ( '' !== $vhub_quote['name'] ) : ?><strong><?php echo esc_html( $vhub_quote['name'] ); ?></strong><?php endif; ?>
+								<?php if ( '' !== $vhub_quote['role'] ) : ?><span><?php echo esc_html( $vhub_quote['role'] ); ?></span><?php endif; ?>
+							</figcaption>
+						<?php endif; ?>
+					</figure>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+		<?php if ( ! empty( $vhub_recipe_groups ) ) : ?>
+			<div class="vhub-community__recipes">
+				<?php foreach ( $vhub_recipe_groups as $vhub_group ) : ?>
+					<section class="vhub-community__group">
+						<h3 class="vhub-community__h3"><?php echo esc_html( $vhub_group['title'] ); ?></h3>
+						<ul class="vhub-recipe-list">
+							<?php foreach ( $vhub_group['items'] as $vhub_recipe ) : ?>
+								<li><a class="vhub-recipe" href="<?php echo esc_url( $vhub_recipe['url'] ); ?>">
+									<?php if ( '' !== $vhub_recipe['img'] ) : ?>
+										<img class="vhub-recipe__img" src="<?php echo esc_url( $vhub_recipe['img'] ); ?>" alt="<?php echo esc_attr( $vhub_recipe['alt'] ); ?>" width="56" height="56" loading="lazy" decoding="async">
+									<?php endif; ?>
+									<span class="vhub-recipe__text">
+										<span class="vhub-recipe__name"><?php echo esc_html( $vhub_recipe['title'] ); ?></span>
+										<?php if ( '' !== $vhub_recipe['meal'] ) : ?><span class="vhub-recipe__meal"><?php echo esc_html( $vhub_recipe['meal'] ); ?></span><?php endif; ?>
+									</span>
+								</a></li>
+							<?php endforeach; ?>
+						</ul>
+					</section>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
 	</div>
 </section>
 <?php endif; ?>
