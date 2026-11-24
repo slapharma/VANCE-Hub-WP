@@ -555,6 +555,54 @@ The cookie is added through LSCWP's documented `litespeed_vary_curr_cookies`
 on a settings save). After deploy: purge every cache and re-save LSCWP settings.
 Not verified on the live server yet; Hostinger's own cache layer is untested.
 
+### Flare plan — `inc/hub-flare-plan.php`
+
+A member's own plan for a flare. It shows as a card on the VanceHubClub dashboard
+home (rendered by `inc/hub-dashboard.php`, data from `vance_hub_dashboard_features_data()`
+in `inc/hub-dashboard-features.php`). The member writes three answers: early signs,
+what they do first, and who they contact. Each answer holds up to 1000 characters.
+The member can edit, print and delete the plan. The fourth section, "When to get
+urgent help", is fixed text that an administrator enters.
+
+This is health data. The card records the member's own words and gives no advice.
+
+- **Switch:** `vance_hub_dash_flare_plan`. Default OFF, set in `vance_hub_switch_default()`
+  (`inc/hub-layout.php`). The comment there says health-data cards stay off until the
+  privacy policy covers them. Turn it on only after the policy covers the plan.
+- **Urgent help text:** theme mod `vance_hub_flare_plan_urgent`, set in Customize under
+  `vance_home_layout`. It has no default. While it is empty the card does not show and
+  a save is refused. Do not write this text as an agent. A clinician must write or
+  approve it, and the site has no named medical reviewer (see Outstanding work, item 1).
+- **Storage:** `_sla_flare_plan` holds `{updated, signs, actions, contacts}`. The
+  agreement uses the check-in key pattern with base `flare_plan`:
+  `_sla_consent_flare_plan` ('1' while the member agrees), `_sla_consent_flare_plan_at`,
+  `_sla_consent_flare_plan_text` (the wording agreed to), and
+  `_sla_consent_flare_plan_withdrawn_at` (set on delete). Never rename these keys
+  (constraint 2).
+- **Shared helpers:** `vance_hub_checkin_consent_keys()`, `vance_hub_checkin_consent_snapshot()`,
+  `vance_hub_checkin_consent_restore()` and `vance_hub_checkin_consent_record()` take a
+  `$base` argument. The plan passes `'flare_plan'`. The plan also reuses
+  `vance_hub_checkin_consent_ok()`, the consent reference helpers and
+  `vance_hub_checkin_lock()` from `inc/hub-dashboard-features.php`. The lock is one per
+  member, so a plan save and a check-in save never run at the same time.
+- **Not a generic tool:** the plan is not in `vance_known_tool_slugs()`
+  (`inc/dashboard-functions.php`). That list opens the generic save handlers. The plan
+  is written only by `vance_hub_flare_plan_handle_post()`, after validation.
+- **Form:** posts to the dashboard page. Nonce action `vance_hub_flare_plan`, field
+  `vance_hub_flare_nonce`. Field `vance_hub_flare_do` is `save` or `delete`. Answers are
+  in `vhd_flare[signs]`, `vhd_flare[actions]` and `vhd_flare[contacts]`. The handler
+  redirects with `?vance_flare=<code>`, and that code picks the message.
+- **Delete:** removes the plan and withdraws the agreement. The agreement time and
+  wording stay as a record.
+- **Privacy:** registered with the WordPress personal data tools under `vance-flare-plan`.
+  The exporter writes the plan and the agreement record. The eraser removes the plan and
+  every key listed above.
+- **Print:** the print layout is CSS only (`@media print` in `assets/css/hub-dashboard.css`).
+  The Print button stays hidden until `assets/js/hub-flare-plan.js` shows it, so a
+  page with no script shows no button that does nothing.
+- **Tests:** `tests/hub-flare-plan.test.php`. Run `cd tests; php hub-flare-plan.test.php`.
+  It exits 1 when any check fails.
+
 ## Customizer structure: one map decides where everything sits
 
 Panels, sections and controls are still registered where they always were:

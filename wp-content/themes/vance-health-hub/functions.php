@@ -143,6 +143,8 @@ require_once get_template_directory() . '/inc/hub-article.php';
 require_once get_template_directory() . '/inc/hub-dashboard.php';
 // Its optional blocks (member number, results chart, weekly check-in), each default off.
 require_once get_template_directory() . '/inc/hub-dashboard-features.php';
+// The flare plan card. Reuses the consent and lock helpers above, so it comes after.
+require_once get_template_directory() . '/inc/hub-flare-plan.php';
 // VanceHubClub site header: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-header.php';
 // One admin menu item for every VanceHubClub control. Needs hub-layout.php.
