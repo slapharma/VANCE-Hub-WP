@@ -49,7 +49,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 	<div class="vhub-wrap vhub-hero__inner">
 		<div class="vhub-hero__copy">
 			<div class="vhub-hero__head"<?php if ( $vhub_hero_img ) : ?> style="--vhub-hero-photo: url('<?php echo esc_url( $vhub_hero_img ); ?>');"<?php endif; ?>>
-				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Free Gastro Health Community.', 'vance-health-hub' ); ?></p>
+				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Your Gastro Health Community', 'vance-health-hub' ); ?></p>
 				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php esc_html_e( 'What do you need help with', 'vance-health-hub' ); ?> <span class="vhub-hero__accent"><?php esc_html_e( 'today?', 'vance-health-hub' ); ?></span></h1>
 			</div>
 			<p class="vhub-hero__sub"><?php esc_html_e( 'Take a short gut health survey, plan meals, read the science and get plain answers from our VANCE-Ai.', 'vance-health-hub' ); ?></p>
@@ -190,7 +190,7 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 	?>
 <section class="vhub-wrap vhub-section vhub-conditions" aria-labelledby="vhub-conditions-title">
 	<div class="vhub-section__intro">
-		<h2 id="vhub-conditions-title" class="vhub-h2"><?php esc_html_e( 'Start with your condition', 'vance-health-hub' ); ?></h2>
+		<h2 id="vhub-conditions-title" class="vhub-h2"><?php esc_html_e( 'Recently diagnosed? Learn about your condition', 'vance-health-hub' ); ?></h2>
 		<p class="vhub-lead"><?php
 			/* translators: %s: number of gut conditions with a guide. */
 			echo esc_html( sprintf( _n( 'An easy-to-follow guide to %s common gut condition.', 'Easy-to-follow guides to %s common gut conditions.', count( $vhub_cards ), 'vance-health-hub' ), number_format_i18n( count( $vhub_cards ) ) ) );
