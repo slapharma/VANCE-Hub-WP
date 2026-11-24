@@ -876,10 +876,15 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	color: var(--vhub-navy);
 }
 .vhub-card__media {
+	position: relative;
+	flex: none;
 	aspect-ratio: 16 / 10;
+	overflow: hidden;
 	background: var(--vhub-wash);
 }
 .vhub-card__img {
+	position: absolute;
+	inset: 0;
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -889,6 +894,8 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
+	align-content: center;
+	flex: none;
 	gap: 0 6px;
 	min-height: 0;
 	padding: 6px 18px;
