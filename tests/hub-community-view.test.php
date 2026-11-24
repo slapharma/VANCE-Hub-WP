@@ -321,7 +321,10 @@ cs_seed_question( 6, 'approved', 'IBD question here', '', 0, 'ibd' );
 $_GET = array( 'space' => 'carers' );
 $HS = page_html();
 check( 'feed: a space filter shows only that space', has( $HS, 'Carers question here' ) && ! has( $HS, 'IBD question here' ) );
-check( 'feed: the chosen space chip is marked as the current one', has( $HS, 'class="vcom-space is-current" href="https://example.test/community/?space=carers" aria-current="page"' ) );
+check( 'feed: the chosen space chip is marked as the current one', has( $HS, 'class="vcom-space is-current" href="https://example.test/community/?space=carers" data-vcom-space="carers" aria-current="page"' ) );
+check( 'feed: every space chip carries its slug for the in-place swap', has( $HS, 'class="vcom-space" href="https://example.test/community/" data-vcom-space=""' ) );
+check( 'feed: the feed section is the swap target', has( $HS, 'id="vcom-feed"' ) && has( $HS, 'data-vcom-feed' ) );
+check( 'feed: only one chip is current', 1 === substr_count( $HS, 'aria-current="page"' ) );
 
 $_GET = array( 'space' => 'nonsense' );
 $HU = page_html();
@@ -448,6 +451,8 @@ check( 'wiring: the script sends the nonce as the field "nonce", the field the s
 
 preg_match_all( '/innerHTML\s*=\s*([^;]+);/', $JS, $INNER );
 check( 'wiring: the script assigns innerHTML only with the empty string (server text goes in with textContent)', array( "''" ) === $INNER[1] );
+check( 'wiring: the space tabs swap only the fetched feed section, by the same hook the server prints', has( $JS, "doc.querySelector('[data-vcom-feed]')" ) && has( $JS, "root.querySelector('[data-vcom-feed]')" ) && has( $JS, 'document.adoptNode(fresh.firstChild)' ) );
+check( 'wiring: the space tabs run for visitors too (before the member check)', strpos( $JS, 'initSpaceTabs();' ) < strpos( $JS, 'if (!config.member' ) );
 preg_match_all( '/outerHTML\s*=\s*([^;]+);/', $JS, $OUTER );
 check( 'wiring: the one outerHTML assignment takes the server-built poll block only', array( 'res.data.html' ) === $OUTER[1] );
 
