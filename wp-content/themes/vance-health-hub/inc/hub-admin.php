@@ -2,7 +2,7 @@
 /**
  * VanceHubClub admin menu: one place for every VanceHubClub control.
  *
- * Adds "VanceHubClub" under the VanceHealthHub admin menu. The screen shows
+ * Adds "Vance Club Layout" under the VanceHealthHub admin menu. The screen shows
  * the state of each switch, one link that opens the VanceHubClub section of
  * the Customizer, and preview links for the three places the layout applies
  * (home page, an article, the member dashboard).
@@ -133,8 +133,8 @@ function vance_hub_admin_preview_links() {
 function vance_hub_admin_menu() {
 	add_submenu_page(
 		'vance-content-hub',
-		__( 'VanceHubClub', 'vance-health-hub' ),
-		__( 'VanceHubClub', 'vance-health-hub' ),
+		__( 'Vance Club Layout', 'vance-health-hub' ),
+		__( 'Vance Club Layout', 'vance-health-hub' ),
 		'manage_options',
 		'vance-hub-club',
 		'vance_hub_admin_render'
@@ -152,7 +152,7 @@ function vance_hub_admin_render() {
 	$is_hub = 'hub' === vance_hub_saved_layout();
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'VanceHubClub', 'vance-health-hub' ); ?></h1>
+		<h1><?php esc_html_e( 'Vance Club Layout', 'vance-health-hub' ); ?></h1>
 		<p>
 			<?php esc_html_e( 'Master switch (Home layout):', 'vance-health-hub' ); ?>
 			<strong><?php echo esc_html( $is_hub ? __( 'VanceHubClub: on', 'vance-health-hub' ) : __( 'VanceHealthHub (classic): every VanceHubClub part is off', 'vance-health-hub' ) ); ?></strong>

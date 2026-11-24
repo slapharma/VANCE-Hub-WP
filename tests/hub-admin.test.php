@@ -308,8 +308,8 @@ check( 'menu: the capability is manage_options', isset( $MENU['capability'] ) &&
 check( 'menu: the slug is vance-hub-club', isset( $MENU['menu_slug'] ) && $MENU['menu_slug'] === 'vance-hub-club' );
 check( 'menu: the callback is vance_hub_admin_render', isset( $MENU['callback'] ) && $MENU['callback'] === 'vance_hub_admin_render' );
 check( 'menu: the callback is a function that exists', isset( $MENU['callback'] ) && function_exists( $MENU['callback'] ) );
-check( 'menu: the menu title is VanceHubClub', isset( $MENU['menu_title'] ) && $MENU['menu_title'] === 'VanceHubClub' );
-check( 'menu: the page title is VanceHubClub', isset( $MENU['page_title'] ) && $MENU['page_title'] === 'VanceHubClub' );
+check( 'menu: the menu title is Vance Club Layout', isset( $MENU['menu_title'] ) && $MENU['menu_title'] === 'Vance Club Layout' );
+check( 'menu: the page title is Vance Club Layout', isset( $MENU['page_title'] ) && $MENU['page_title'] === 'Vance Club Layout' );
 check( 'menu: vance_hub_admin_menu is hooked to admin_menu at priority 1000', isset( $GLOBALS['HOOKS']['admin_menu'][1000] ) && in_array( 'vance_hub_admin_menu', $GLOBALS['HOOKS']['admin_menu'][1000], true ) );
 check( 'menu: the hook is not at priority 999, where the parent menu is added', ! isset( $GLOBALS['HOOKS']['admin_menu'][999] ) );
 
@@ -386,7 +386,7 @@ check( 'render: a user who can edit the theme but not manage_options gets no out
 
 arrange_admin( array(), array( 'manage_options' => true ) );
 $OUT = render_screen();
-check( 'render: a user with manage_options gets the screen heading', strpos( $OUT, '<h1>VanceHubClub</h1>' ) !== false );
+check( 'render: a user with manage_options gets the screen heading', strpos( $OUT, '<h1>Vance Club Layout</h1>' ) !== false );
 
 arrange_admin( array( 'vance_hub_show_promo' => false, 'vance_home_layout' => 'hub', 'vance_hub_articles' => '1' ), array( 'manage_options' => true ) );
 $OUT = render_screen();

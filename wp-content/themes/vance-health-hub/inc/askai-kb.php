@@ -50,9 +50,10 @@ function vance_kb_register() {
 			),
 			'public'          => false,           // Never served on the front end.
 			'show_ui'         => true,
-			'show_in_menu'    => true,
-			'menu_position'   => 26,
-			'menu_icon'       => 'dashicons-book-alt',
+			// No top-level menu: inc/admin-menu-content.php adds this screen to the VanceHealthHub menu.
+			'show_in_menu'    => false,
+			// Core takes the admin bar default from show_in_menu. Keep the "New" item.
+			'show_in_admin_bar' => true,
 			'supports'        => array( 'title', 'editor', 'page-attributes', 'revisions' ),
 			'capability_type' => 'post',
 			'has_archive'     => false,
