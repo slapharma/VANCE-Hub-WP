@@ -534,7 +534,7 @@ check( 'sidebar: tools card renders', false !== strpos( $S, 'vhub-acard--tools' 
 preg_match_all( '/<a class="vhub-atool vhub-atool--([a-z]+)" href="([^"]+)"/', $S, $tm );
 check( 'sidebar: two tools, mapped first then discounts', $tm[1] === array( 'survey', 'discounts' ) );
 check( 'sidebar: real tool URLs', $tm[2] === array( 'https://example.test/gastro-health-survey/', 'https://example.test/ibd-discounts/' ) );
-check( 'sidebar: tool rows use the tile wording (live survey count)', false !== strpos( $S, 'Gastro Health Survey: 9 short questions. The Hub then shows what fits you.' ) );
+check( 'sidebar: tool rows use the tile wording (live survey count)', false !== strpos( $S, 'Gastro Self-Assessment: 9 short questions. The Hub then shows what fits you.' ) );
 check( 'sidebar: no line repeats the prompt\'s wording', false === strpos( $S, 'points you to the guides' ) && false === strpos( $S, 'Not sure where to start?' ) );
 check( 'sidebar: every image has real alt text', ! preg_match( '/<img(?![^>]*\salt="[^"]{5,}")[^>]*>/', $S ) );
 check( 'sidebar: tiles card absent with no tiles saved', false === strpos( $S, 'vhub-acard--tiles' ) );

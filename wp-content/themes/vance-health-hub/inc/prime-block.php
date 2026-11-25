@@ -910,7 +910,7 @@ function vance_render_prime_block_home1() {
 		'icon_bg'             => vance_get_theme_mod( 'vance_pwc_icon_bg_color', '#0A1929' ),
 		'cards'               => array(
 			array(
-				'title'         => vance_get_theme_mod( 'vance_hquiz_tile_title', 'Gastro Health Survey' ),
+				'title'         => vance_get_theme_mod( 'vance_hquiz_tile_title', 'Gastro Self-Assessment' ),
 				'desc'          => vance_get_theme_mod( 'vance_hquiz_tile_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.' ),
 				'eyebrow'       => vance_get_theme_mod( 'vance_hquiz_tile_extra', 'Find your starting point' ),
 				'image'         => vance_get_theme_mod( 'vance_hquiz_tile_image' ),
@@ -974,7 +974,7 @@ function vance_prime_block_vals_for_prefix( $prefix, $wrap_id, array $defaults =
 		'icon_bg'             => vance_get_theme_mod( $prefix . 'icon_bg_color', '#0A1929' ),
 		'cards'               => array(
 			array(
-				'title'         => vance_get_theme_mod( $prefix . 'card1_title', 'Gastro Health Survey' ),
+				'title'         => vance_get_theme_mod( $prefix . 'card1_title', 'Gastro Self-Assessment' ),
 				'desc'          => vance_get_theme_mod( $prefix . 'card1_desc',  'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.' ),
 				'eyebrow'       => vance_get_theme_mod( $prefix . 'card1_extra', 'Find your starting point' ),
 				'image'         => vance_get_theme_mod( $prefix . 'card1_image' ),

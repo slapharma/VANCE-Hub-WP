@@ -1,5 +1,5 @@
 /**
- * VanceHubClub result page for the Gastro Health Survey (inc/hub-tool-result.php).
+ * VanceHubClub result page for the Gastro Self-Assessment (inc/hub-tool-result.php).
  *
  * The survey template shows #results-screen at the last step. This script
  * watches for that, reads the answers from #health-quiz-form, builds the

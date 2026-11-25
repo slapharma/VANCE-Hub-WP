@@ -549,7 +549,7 @@ function vance_hub_dashboard_data( $user ) {
 	}
 	$steps = array(
 		'survey'  => array(
-			'title' => __( 'Do the Gastro Health Survey', 'vance-health-hub' ),
+			'title' => __( 'Do the Gastro Self-Assessment', 'vance-health-hub' ),
 			'text'  => __( 'Your answers go into your Health Profile. The Hub then shows what fits you.', 'vance-health-hub' ),
 			'cta'   => __( 'Start the survey', 'vance-health-hub' ),
 			'href'  => isset( $tools_by_mod['survey'] ) ? $tools_by_mod['survey']['href'] : '',

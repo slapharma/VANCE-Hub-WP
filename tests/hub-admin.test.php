@@ -236,7 +236,7 @@ arrange_admin( array(), array() );
 $ST = vance_hub_admin_status();
 check( 'status: one row per switch', count( $ST ) === 13 );
 check( 'status: the tab-look switch is row 9 and is on by default', isset( $ST[9] ) && $ST[9]['label'] === 'Member dashboard: VanceHubClub look on every tab' && $ST[9]['on'] === true );
-check( 'status: the survey result switch is row 10 and is on by default', isset( $ST[10] ) && $ST[10]['label'] === 'Health Survey: VanceHubClub result page' && $ST[10]['on'] === true );
+check( 'status: the survey result switch is row 10 and is on by default', isset( $ST[10] ) && $ST[10]['label'] === 'Self-Assessment: VanceHubClub result page' && $ST[10]['on'] === true );
 check( 'status: the site header switch is row 11 and is on by default', isset( $ST[11] ) && $ST[11]['label'] === 'Site header: VanceHubClub header' && $ST[11]['on'] === true );
 check( 'status: row 12 is "Community hub" and is on by default', isset( $ST[12] ) && $ST[12]['label'] === 'Community hub' && $ST[12]['on'] === true );
 check( 'status: with the master switch classic, a default-on row is not live', isset( $ST[12] ) && $ST[12]['live'] === false );

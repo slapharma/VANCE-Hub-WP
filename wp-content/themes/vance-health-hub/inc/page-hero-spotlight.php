@@ -180,7 +180,7 @@ function vance_page_hero_spotlight_config( $page ) {
 		 * left-hand side, which is the edge the band dissolves.
 		 */
 		'hquiz' => array(
-			'name'         => __( 'Gastro Health Survey', 'vance-health-hub' ),
+			'name'         => __( 'Gastro Self-Assessment', 'vance-health-hub' ),
 			'short_name'   => __( 'Survey', 'vance-health-hub' ),
 			'panel'        => 'vance_hquiz_panel',
 			'section'      => 'vance_hquiz_hero_spotlight',
@@ -192,7 +192,7 @@ function vance_page_hero_spotlight_config( $page ) {
 			'legacy_title' => 'vance_hquiz_hero_title',
 			'legacy_desc'  => 'vance_hquiz_hero_subtitle',
 			'legacy_tag_default'   => 'Self-Assessment',
-			'legacy_title_default' => 'Gastro Health Survey',
+			'legacy_title_default' => 'Gastro Self-Assessment',
 			'legacy_desc_default'  => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Answers are private, get an instant summary you can share with your clinician.',
 			// Was gi-health/ibs.webp -- also the IBS condition page's photograph,
 			// taken because it was the best-lit asset available rather than the
@@ -1200,10 +1200,10 @@ function vance_page_hero_spotlight_tools( $page ) {
 			'slug'     => 'gastro-health-survey',
 			'path'     => '/gastro-health-survey/',
 			'name_key' => 'vance_hquiz_hero_title',
-			'name_def' => 'Gastro Health Survey',
+			'name_def' => 'Gastro Self-Assessment',
 			'tag_key'  => 'vance_hquiz_hero_badge',
 			'tag_def'  => 'Self-Assessment',
-			'short'    => __( 'Health Survey', 'vance-health-hub' ),
+			'short'    => __( 'Self-Assessment', 'vance-health-hub' ),
 		),
 		'recipes' => array(
 			'icon'     => 'bowl',
@@ -1291,7 +1291,7 @@ function vance_page_hero_spotlight_start() {
 		array( 'chat', __( 'Ask a question', 'vance-health-hub' ),
 			__( 'VANCE-Ai', 'vance-health-hub' ), 'ask-ai', '/ask-ai/', '' ),
 		array( 'clipboard', __( 'Self-assessment', 'vance-health-hub' ),
-			__( 'Gastro Health Survey', 'vance-health-hub' ), 'gastro-health-survey', '/gastro-health-survey/', __( 'Survey', 'vance-health-hub' ) ),
+			__( 'Gastro Self-Assessment', 'vance-health-hub' ), 'gastro-health-survey', '/gastro-health-survey/', __( 'Survey', 'vance-health-hub' ) ),
 		array( 'mail', __( 'Still stuck', 'vance-health-hub' ),
 			__( 'Contact us', 'vance-health-hub' ), 'contact-us', '/contact-us/', __( 'Contact', 'vance-health-hub' ) ),
 	);
@@ -1945,7 +1945,7 @@ function vance_page_hero_spotlight_customize( $wp_customize ) {
 			// key; an entry short of a key is what broke the last three.
 			'toggle'     => '',
 			'section'    => 'The hero on the &ldquo;page not found&rdquo; screen. It has no classic alternative and no toggle &mdash; this is the only design the 404 has. Its wording is set in inc/page-hero-spotlight.php rather than here, because the 404 has never had Customizer copy; colours, buttons, the card and the photograph are all editable below. Leave Photograph empty to keep the teal motif.',
-			'slot_label' => 'Sits above the white band. The band itself lists Free Health Tools, VANCE-Ai, the Gastro Health Survey and Contact us, all resolved by page slug so a renamed page keeps its link.',
+			'slot_label' => 'Sits above the white band. The band itself lists Free Health Tools, VANCE-Ai, the Gastro Self-Assessment and Contact us, all resolved by page slug so a renamed page keeps its link.',
 		),
 	);
 

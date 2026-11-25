@@ -497,7 +497,7 @@ function vance_hub_customize_register( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_home_layout', array(
 		'label'       => __( 'Home layout (master switch)', 'vance-health-hub' ),
-		'description' => __( 'This switch turns all of VanceHubClub on or off: the home page, the header, article pages, the member dashboard, the Health Survey result page and the Community hub. With VanceHubClub selected, every part below is on unless you turn it off. With VanceHealthHub selected, every part is off.', 'vance-health-hub' ),
+		'description' => __( 'This switch turns all of VanceHubClub on or off: the home page, the header, article pages, the member dashboard, the Self-Assessment result page and the Community hub. With VanceHubClub selected, every part below is on unless you turn it off. With VanceHealthHub selected, every part is off.', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'radio',
 		'choices' => array(
