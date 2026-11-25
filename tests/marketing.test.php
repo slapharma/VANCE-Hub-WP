@@ -185,6 +185,47 @@ foreach ( array( 'page-community-rules.php', 'page-ibs-tools.php', 'page-waitlis
 	check( 'template file exists: ' . $f, is_file( $THEME . '/' . $f ) );
 }
 
+/* ---- 8. the templates, rendered logged out ------------------------------------------------------------ */
+section( '8. Rendered as a visitor: content, links, robots' );
+function get_header() {}
+function get_footer() {}
+function have_posts() { return false; }
+function the_post() {}
+function get_the_content() { return ''; }
+function esc_html_e( $s ) { echo htmlspecialchars( $s, ENT_QUOTES ); }
+function esc_html__( $s ) { return htmlspecialchars( $s, ENT_QUOTES ); }
+function esc_html( $s ) { return htmlspecialchars( $s, ENT_QUOTES ); }
+function esc_url( $s ) { return htmlspecialchars( $s, ENT_QUOTES ); }
+function current_user_can() { return false; }
+function render_template( $file ) {
+	global $THEME;
+	ob_start();
+	include $THEME . '/' . $file;
+	return ob_get_clean();
+}
+$_GET = array( 'utm_source' => 'instagram', 'utm_medium' => 'bio' );
+$tools_html = render_template( 'page-ibs-tools.php' );
+check( 'render ibs-tools: a heading and the three tools by name', false !== strpos( $tools_html, '<h1>' ) && false !== strpos( $tools_html, 'VANCE-Ai' ) && false !== strpos( $tools_html, 'Gastro Meal Planner' ) && false !== strpos( $tools_html, 'Gastro Self-Assessment' ) );
+check( 'render ibs-tools: three links, each exact slug, each with the utm tags', 3 === preg_match_all( '#href="https://example.test/(ask-ai|gastro-meal-planner|gastro-health-survey)/\?utm_source=instagram&amp;utm_medium=bio"#', $tools_html ) );
+check( 'render ibs-tools: the page names NHS 111 and 999', false !== strpos( $tools_html, 'NHS 111' ) && false !== strpos( $tools_html, '999' ) );
+check( 'render ibs-tools: no waitlist link, no sign-up form', false === strpos( $tools_html, 'waitlist' ) && false === strpos( $tools_html, '<form' ) );
+check( 'render ibs-tools: no cure, heal or prevent promise, and "treat" only in a denial', ! preg_match( '/\b(cure|heal|prevent|relieve)\b/i', $tools_html ) && 1 === substr_count( strtolower( $tools_html ), 'treat' ) && false !== strpos( $tools_html, 'do not diagnose or treat' ) );
+$_GET = array();
+$rules_html = render_template( 'page-community-rules.php' );
+foreach ( array( 'Privacy', 'Names and nicknames', 'Reporting a post', 'Complaints', 'Moderation', 'Medical information and misinformation', 'DRAFT for review', 'NHS 111', '999', 'not an emergency service', 'not always anonymity' ) as $needle ) {
+	check( 'render rules: contains "' . $needle . '"', false !== strpos( $rules_html, $needle ) );
+}
+$wl_html = render_template( 'page-waitlist.php' );
+check( 'render waitlist: the consent wording is on the page', false !== strpos( $wl_html, htmlspecialchars( vance_waitlist_consent_text(), ENT_QUOTES ) ) );
+check( 'render waitlist: the draft banner is hidden from a visitor', false === strpos( $wl_html, 'Editors only' ) );
+check( 'render waitlist: says it is not an order and asks no health question', false !== strpos( $wl_html, 'not an order' ) && false !== strpos( $wl_html, 'will not ask about your health' ) );
+if ( getenv( 'MARKETING_RENDER_DIR' ) ) {
+	$css = file_get_contents( $THEME . '/assets/css/marketing-pages.css' );
+	foreach ( array( 'ibs-tools' => $tools_html, 'community-rules' => $rules_html, 'waitlist' => $wl_html ) as $name => $body ) {
+		file_put_contents( getenv( 'MARKETING_RENDER_DIR' ) . '/' . $name . '.html', '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:sans-serif}' . $css . '</style>' . $body );
+	}
+}
+
 /* ---- result -------------------------------------------------------------------------------------------- */
 if ( $GLOBALS['FAILS'] ) {
 	echo count( $GLOBALS['FAILS'] ) . " FAILED of " . ( $GLOBALS['PASS'] + count( $GLOBALS['FAILS'] ) ) . ":\n";

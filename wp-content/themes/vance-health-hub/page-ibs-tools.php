@@ -17,7 +17,7 @@ get_header();
 <main id="main-content" class="vmp">
 	<div class="vmp__wrap">
 		<h1><?php esc_html_e( 'Free tools for life with IBS', 'vance-health-hub' ); ?></h1>
-		<p class="vmp__lead"><?php esc_html_e( 'Pick one. Each tool is free and you do not need an account to use it.', 'vance-health-hub' ); ?></p>
+		<p class="vmp__lead"><?php esc_html_e( 'Pick one. Each tool is free to use.', 'vance-health-hub' ); ?></p>
 
 		<div class="vmp__tools">
 			<?php foreach ( vance_marketing_tools() as $vmp_tool ) : ?>
