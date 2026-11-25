@@ -771,7 +771,6 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 		'member_code' => '',
 		'results'     => null,
 		'checkin'     => null,
-		'flare_plan'  => null,
 	);
 
 	if ( vance_hub_dash_feature_on( 'vance_hub_dash_member_no' ) ) {
@@ -829,11 +828,7 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 		);
 	}
 
-	// Null when the switch is off or the urgent help text is empty.
-	if ( function_exists( 'vance_hub_flare_plan_data' ) ) {
-		$out['flare_plan'] = vance_hub_flare_plan_data( $uid );
-	}
-
+	// The flare plan is not here: it lives in the Health Profile tab (page-dashboard.php).
 	return $out;
 }
 

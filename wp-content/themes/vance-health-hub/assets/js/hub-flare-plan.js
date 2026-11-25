@@ -25,7 +25,9 @@
 	// so the CSS can drop the rest of the page and print no blank pages.
 	function markPrint() {
 		var card = document.querySelector( '.vhd-flare' );
-		if ( ! card ) {
+		// Not when the card is in a hidden panel (another sub-tab is open): the
+		// member prints the page they see.
+		if ( ! card || card.closest( '[hidden]' ) ) {
 			return;
 		}
 		document.documentElement.classList.add( 'vhd-printing' );

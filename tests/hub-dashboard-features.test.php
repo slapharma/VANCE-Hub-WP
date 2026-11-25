@@ -883,7 +883,7 @@ check( 'gating: all three off makes no member code lookup and reads no user meta
 
 fb_arrange();
 $OFF_DEFAULT = vance_hub_dashboard_features_data( fb_user( 7 ), $CHECKS_ALL, 'https://example.test/calc/' );
-check( 'gating: with no switch saved at all, the result is the same empty shape', $OFF_DEFAULT === array( 'member_code' => '', 'results' => null, 'checkin' => null, 'flare_plan' => null ) );
+check( 'gating: with no switch saved at all, the result is the same empty shape', $OFF_DEFAULT === array( 'member_code' => '', 'results' => null, 'checkin' => null ) );
 check( 'gating: with no switch saved at all, nothing is written', $GLOBALS['WRITES'] === array() );
 
 // The master switch (Home layout) over the three feature switches.

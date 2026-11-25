@@ -787,11 +787,6 @@ function vance_hub_dashboard_home_html( $d ) {
 		$html .= '<div class="vhd-top">' . $top . '</div>';
 	}
 
-	// -- Flare plan: full width, after the top row ---------------------------
-	if ( ! empty( $d['flare_plan'] ) && function_exists( 'vance_hub_flare_plan_html' ) ) {
-		$html .= vance_hub_flare_plan_html( $d['flare_plan'] );
-	}
-
 	// -- Tools -------------------------------------------------------------
 	if ( ! empty( $d['tools'] ) ) {
 		$html .= '<section class="vhd-block" aria-labelledby="vhd-tools-title">';

@@ -557,15 +557,36 @@ Not verified on the live server yet; Hostinger's own cache layer is untested.
 
 ### Flare plan — `inc/hub-flare-plan.php`
 
-A member's own plan for a flare. It shows as a card on the VanceHubClub dashboard
-home (rendered by `inc/hub-dashboard.php`, data from `vance_hub_dashboard_features_data()`
-in `inc/hub-dashboard-features.php`). The member writes three answers: early signs,
+A member's own plan for a flare. It shows as the "My flare plan" card in the Health Profile
+tab of the VanceHubClub dashboard, on the "Flare plan" sub-tab. `page-dashboard.php`
+(`case 'health-profile'`) calls `vance_hub_flare_plan_data()` for the current member and
+prints the card with `vance_hub_flare_plan_html()`. The card is not in the dashboard home
+render (`inc/hub-dashboard.php`) and not in `vance_hub_dashboard_features_data()`
+(`inc/hub-dashboard-features.php`). The member writes three answers: early signs,
 what they do first, and who they contact. Each answer holds up to 1000 characters.
 The member can edit, print and delete the plan. The fourth section, "When to get
 urgent help", is fixed text that an administrator enters.
 
 This is health data. The card records the member's own words and gives no advice.
 
+- **Health Profile sub-tabs:** the Health Profile tab (`?tab=health-profile`) shows three
+  plain links, `My profile` (`hsub=profile`), `Screening results` (`hsub=screening`) and
+  `Flare plan` (`hsub=flare`). `page-dashboard.php` builds them with `add_query_arg()`, so
+  they work with no script. The `Flare plan` link appears only when `vance_hub_flare_plan_data()`
+  returns data.
+- **Panels:** all three panels stay in the page. A panel that is not open has the `hidden`
+  attribute, and `.hp-panel[hidden] { display: none !important; }` in
+  `assets/css/hub-dashboard.css` hides it. The bar is `nav.vhd-subtabs`. Its styles are at the
+  end of that file, and the bar is hidden when printing.
+- **Which panel opens:** `hsub` picks the open panel. A missing or unknown value opens
+  `profile`. With no `hsub`, a `vance_flare` code in the URL opens `flare`. An explicit `hsub`
+  wins over the code.
+- **Hub layout off:** the bar and the hidden panels need `vance_hub_dashboard_active()`. When
+  it is false, every section shows, with no bar. The flare card does not show, because the
+  data is fetched only when the hub dashboard is active.
+- **After a save or delete:** the forms post to the current URL (`action=""`). The handler
+  redirects to that URL with `vance_flare` set to the result code, so `tab` and `hsub` stay as
+  they were. If `hsub` was not in the URL, the code still opens the Flare plan panel.
 - **Switch:** `vance_hub_dash_flare_plan`. Default OFF, set in `vance_hub_switch_default()`
   (`inc/hub-layout.php`). The comment there says health-data cards stay off until the
   privacy policy covers them. Turn it on only after the policy covers the plan.
@@ -588,7 +609,7 @@ This is health data. The card records the member's own words and gives no advice
 - **Not a generic tool:** the plan is not in `vance_known_tool_slugs()`
   (`inc/dashboard-functions.php`). That list opens the generic save handlers. The plan
   is written only by `vance_hub_flare_plan_handle_post()`, after validation.
-- **Form:** posts to the dashboard page. Nonce action `vance_hub_flare_plan`, field
+- **Form:** posts to the page it is on (`action=""`), which is the Health Profile tab. Nonce action `vance_hub_flare_plan`, field
   `vance_hub_flare_nonce`. Field `vance_hub_flare_do` is `save` or `delete`. Answers are
   in `vhd_flare[signs]`, `vhd_flare[actions]` and `vhd_flare[contacts]`. The handler
   redirects with `?vance_flare=<code>`, and that code picks the message.
@@ -597,11 +618,14 @@ This is health data. The card records the member's own words and gives no advice
 - **Privacy:** registered with the WordPress personal data tools under `vance-flare-plan`.
   The exporter writes the plan and the agreement record. The eraser removes the plan and
   every key listed above.
-- **Print:** the print layout is CSS only (`@media print` in `assets/css/hub-dashboard.css`).
-  The Print button stays hidden until `assets/js/hub-flare-plan.js` shows it, so a
-  page with no script shows no button that does nothing.
+- **Print:** `@media print` in `assets/css/hub-dashboard.css` shows the card and hides the rest
+  of the page. `assets/js/hub-flare-plan.js` marks the card's ancestors on `beforeprint` and
+  clears the marks on `afterprint`, so the CSS can drop the rest. The same script shows the
+  Print button, which stays hidden until it runs, so a page with no script shows no button
+  that does nothing.
 - **Tests:** `tests/hub-flare-plan.test.php`. Run `cd tests; php hub-flare-plan.test.php`.
-  It exits 1 when any check fails.
+  It exits 1 when any check fails. The Health Profile tab is checked by reading
+  `page-dashboard.php` as text, not by rendering it.
 
 ## Customizer structure: one map decides where everything sits
 
