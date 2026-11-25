@@ -55,7 +55,7 @@
         text-decoration: none;
         color: #64748b;
         font-family: inherit;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.1;
         -webkit-tap-highlight-color: transparent;
         transition: color 0.15s ease;
@@ -203,7 +203,7 @@
         right: 8px;
         bottom: 8px;
         z-index: 999;
-        padding: 12px 12px 12px 16px;
+        padding: 12px 4px 12px 16px;
         padding-bottom: calc(12px + env(safe-area-inset-bottom));
         background: #0A1929;
         color: #ffffff;
@@ -238,7 +238,7 @@
     .vance-sticky-cta .vsc-btn {
         flex: 0 0 auto;
         white-space: nowrap;
-        min-height: 40px;
+        min-height: 44px;
         padding: 10px 16px;
         font-size: 14px;
     }
@@ -248,8 +248,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
         padding: 0;
         background: transparent;
         border: none;
