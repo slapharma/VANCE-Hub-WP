@@ -489,7 +489,8 @@ function vance_community_ask_html( $member, $user_id, $spaces, $current ) {
 }
 
 /**
- * The whole page body.
+ * The public benefits page a visitor sees at /community/. Static text and the
+ * join and sign-in links only: it reads nothing from the member store.
  *
  * @return string
  */
@@ -518,7 +519,9 @@ function vance_community_public_html() {
 	$html .= '<p>' . esc_html__( 'Discussions and member profiles are only for signed-in members. Search engines do not list this page.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p>' . esc_html__( 'A moderator reads every post before it shows.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p>' . esc_html__( 'You can post with your first name or a nickname. A nickname is not always anonymity: other members may still recognise you from what you write. Share only what you are happy for others to read.', 'vance-health-hub' ) . '</p>';
-	$html .= '<a class="vcom-link" href="' . esc_url( $rules ) . '">' . esc_html__( 'Read the community rules', 'vance-health-hub' ) . $arrow . '</a>';
+	if ( '' !== $rules ) {
+		$html .= '<a class="vcom-link" href="' . esc_url( $rules ) . '">' . esc_html__( 'Read the community rules', 'vance-health-hub' ) . $arrow . '</a>';
+	}
 	$html .= '</section>';
 
 	$html .= '<section class="vcom-box" aria-labelledby="vcom-b3">';
@@ -530,7 +533,8 @@ function vance_community_public_html() {
 }
 
 /**
- * Address of the community rules page.
+ * Address of the community rules page, or '' while that page is not published
+ * (so a visitor is never sent to a 404).
  *
  * @return string
  */
@@ -542,7 +546,7 @@ function vance_community_rules_url() {
 			return $url;
 		}
 	}
-	return home_url( '/community-rules/' );
+	return '';
 }
 
 /**

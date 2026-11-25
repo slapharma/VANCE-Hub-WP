@@ -135,7 +135,9 @@ check( 'visitor: no card, no feed, no member name', 0 === card_count( $HV ) && !
 check( 'visitor: the store is not asked for replies at all', 0 === count( $GLOBALS['WP']['comment_queries'] ) );
 check( 'visitor: the page says a nickname is not always anonymity', has( $HV, 'A nickname is not always anonymity' ) );
 check( 'visitor: the page names NHS 111 and 999 and says it is not an emergency service', has( $HV, 'NHS 111' ) && has( $HV, '999' ) && has( $HV, 'not an emergency service' ) );
-check( 'visitor: the page links to the community rules', has( $HV, '/community-rules/' ) );
+check( 'visitor: with the rules page unpublished there is no rules link (it would be a 404)', ! has( $HV, '/community-rules/' ) );
+cs_page( 'community-rules' );
+check( 'visitor: once the rules page is published the page links to it', has( page_html(), 'Read the community rules' ) );
 check( 'visitor: join and sign-in links are offered', has( $HV, 'href="https://example.test/login/?tab=signup' ) && has( $HV, 'Sign in' ) );
 check( 'visitor: no member control, no config, no nonce, no ajax address', ! has( $HV, 'data-vcom' ) && ! has( $HV, 'nonce' ) && ! has( $HV, 'admin-ajax' ) && ! has( $HV, '<textarea' ) && ! has( $HV, '<form' ) );
 check( 'visitor: the render is the same for a visitor whatever the data (control: a member sees the question)', true );

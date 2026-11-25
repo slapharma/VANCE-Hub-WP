@@ -62,7 +62,8 @@ function vance_marketing_page_exists( $slug ) {
 		$found = get_posts( array(
 			'post_type'      => 'page',
 			'name'           => $name,
-			'post_status'    => 'any',
+			// 'any' leaves the bin out, so list every status, trash included.
+			'post_status'    => array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ),
 			'posts_per_page' => 1,
 			'fields'         => 'ids',
 			'no_found_rows'  => true,

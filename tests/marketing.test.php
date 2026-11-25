@@ -37,11 +37,15 @@ function home_url( $p = '' ) { return 'https://example.test' . $p; }
 function add_query_arg( $args, $url ) { return $url . '?' . http_build_query( $args ); }
 function wp_send_json_success( $d = null, $s = 200 ) { throw new JsonReply( true, $d, $s ); }
 function wp_send_json_error( $d = null, $s = 400 ) { throw new JsonReply( false, $d, $s ); }
+$GLOBALS['CRM_EXISTING'] = array();
 function FluentCrmApi() {
 	return new class() {
 		public function createOrUpdate( $data ) { $GLOBALS['CRM'][] = $data; return true; }
+		public function getContact( $email ) { return in_array( strtolower( $email ), $GLOBALS['CRM_EXISTING'], true ) ? (object) array( 'email' => $email ) : null; }
 	};
 }
+$GLOBALS['GET_POSTS_ARGS'] = array();
+function get_posts( $args ) { $GLOBALS['GET_POSTS_ARGS'][] = $args; return array(); }
 
 require $THEME . '/inc/attribution.php';
 require $THEME . '/inc/marketing-pages.php';
@@ -121,11 +125,38 @@ check( 'link: with no tags the link is the bare path', 'https://example.test/ask
 section( '5. The waitlist asks for consent and for no health information' );
 $r = waitlist_call( $good );
 check( 'waitlist: a good request succeeds', $r && $r->ok );
-check( 'waitlist: the consent is recorded with the wording, the version and a time', 1 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) && $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['text'] === vance_waitlist_consent_text() && 'draft-1' === $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['version'] && ! empty( $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['at'] ) );
+check( 'waitlist: the consent is recorded with the version id (not the text), a time and confirmed=false', 1 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) && empty( $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['text'] ) && false === $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['confirmed'] && 'draft-1' === $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['version'] && ! empty( $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['at'] ) );
 check( 'waitlist: the CRM contact is pending and tagged for the waitlist', 1 === count( $GLOBALS['CRM'] ) && 'pending' === $GLOBALS['CRM'][0]['status'] && in_array( 'waitlist-b-vance', $GLOBALS['CRM'][0]['tags'], true ) );
 $crm_text = json_encode( $GLOBALS['CRM'][0] );
 check( 'waitlist: the contact is NOT added to a newsletter list or tag', false === stripos( $crm_text, 'newsletter' ) && false === stripos( $crm_text, 'Members' ) && false === stripos( $crm_text, 'marketing-opt-in' ) );
 check( 'waitlist: the contact holds no health field', array( 'email', 'first_name', 'status', 'tags', 'lists', 'source' ) === array_keys( $GLOBALS['CRM'][0] ) );
+
+/* existing contact: not touched */
+$n = count( $GLOBALS['CRM'] );
+$GLOBALS['CRM_EXISTING'] = array( 'member@example.test' );
+$ex = $good; $ex['email'] = 'member@example.test';
+$r = waitlist_call( $ex );
+check( 'waitlist: an address that is already a CRM contact is NOT updated, listed or tagged', $r && $r->ok && $n === count( $GLOBALS['CRM'] ) );
+check( 'waitlist: the local consent record is still written for that address', 2 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) );
+$r = waitlist_call( $good );
+check( 'waitlist: the same address twice keeps one row (no growth)', 2 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) );
+$forged = array( 'utm_source' => 'zzz-random' );
+$_COOKIE = array( 'vance_utm' => http_build_query( $forged ) );
+$f = $good; $f['email'] = 'forged@example.test';
+$n = count( $GLOBALS['CRM'] );
+waitlist_call( $f );
+check( 'waitlist: a forged source cookie does not create a CRM tag', $n + 1 === count( $GLOBALS['CRM'] ) && array( 'waitlist-b-vance' ) === $GLOBALS['CRM'][ $n ]['tags'] );
+$_COOKIE = array( 'vance_utm' => 'utm_source=tiktok' );
+$f['email'] = 'known@example.test';
+waitlist_call( $f );
+check( 'waitlist: a known source (tiktok) becomes a tag (control)', in_array( 'utm-tiktok', $GLOBALS['CRM'][ $n + 1 ]['tags'], true ) );
+$_COOKIE = array();
+$GLOBALS['OPTIONS']['vance_waitlist_consents'] = array_fill( 0, vance_waitlist_max_records(), array( 'email' => 'x@example.test', 'at' => '', 'version' => 'v', 'source' => '', 'confirmed' => false ) );
+$f['email'] = 'overflow@example.test';
+$r = waitlist_call( $f );
+check( 'waitlist: past the cap a new address is refused with 503', $r && ! $r->ok && 503 === $r->status );
+$GLOBALS['OPTIONS']['vance_waitlist_consents'] = array();
+waitlist_call( $good ); // put the first address back for the checks below
 
 $before = count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] );
 $bad = $good; unset( $bad['consent'] );
@@ -181,6 +212,9 @@ section( '7. The page registry' );
 $pages = vance_marketing_pages();
 check( 'registry: the four pages', array( 'community', 'community-rules', 'ibs-tools', 'waitlist' ) === array_keys( $pages ) );
 check( 'registry: the waitlist and the rules are made as drafts, the others published', 'draft' === $pages['waitlist']['status'] && 'draft' === $pages['community-rules']['status'] && 'publish' === $pages['ibs-tools']['status'] && 'publish' === $pages['community']['status'] );
+vance_marketing_page_exists( 'waitlist' );
+$last = end( $GLOBALS['GET_POSTS_ARGS'] );
+check( 'page exists check: looks in the bin (trash is in the statuses asked for)', in_array( 'trash', (array) $last['post_status'], true ) && 'any' !== $last['post_status'] );
 foreach ( array( 'page-community-rules.php', 'page-ibs-tools.php', 'page-waitlist.php' ) as $f ) {
 	check( 'template file exists: ' . $f, is_file( $THEME . '/' . $f ) );
 }

@@ -36,7 +36,29 @@ function vance_waitlist_consent_text() {
  * @return string
  */
 function vance_waitlist_consent_version() {
+	// Each stored row holds only this id. When the wording changes, raise the id
+	// and KEEP the old wording in version control, as the evidence for old rows.
 	return 'draft-1';
+}
+
+/**
+ * The most consent rows kept. A request past this is refused.
+ *
+ * @return int
+ */
+function vance_waitlist_max_records() {
+	return 5000;
+}
+
+/**
+ * True for a source label that may become a CRM tag. Others are not tagged, so
+ * a forged cookie cannot create new tags.
+ *
+ * @param string $source Cleaned source label.
+ * @return bool
+ */
+function vance_waitlist_known_source( $source ) {
+	return in_array( $source, array( 'instagram', 'tiktok', 'youtube', 'facebook', 'email' ), true );
 }
 
 /**
@@ -70,41 +92,68 @@ function vance_waitlist_signup_ajax() {
 		$source = $current['utm_source'];
 	}
 
-	// Evidence of consent, kept whether or not FluentCRM is active.
-	$records = get_option( 'vance_waitlist_consents', array() );
+	// Evidence of consent, kept whether or not FluentCRM is active. One row for
+	// each address (a repeat updates it), the wording held as a version id, and
+	// the list capped, so a flood of requests cannot grow the option without limit.
+	// "confirmed" stays false: nobody has proved they own the address.
+	$crm_state = 'none';
+	$records   = get_option( 'vance_waitlist_consents', array() );
 	if ( ! is_array( $records ) ) {
 		$records = array();
 	}
-	$records[] = array(
-		'email'   => $email,
-		'at'      => gmdate( 'c' ),
-		'version' => vance_waitlist_consent_version(),
-		'text'    => vance_waitlist_consent_text(),
-		'source'  => $source,
+	$row = array(
+		'email'     => $email,
+		'at'        => gmdate( 'c' ),
+		'version'   => vance_waitlist_consent_version(),
+		'source'    => $source,
+		'confirmed' => false,
 	);
-	update_option( 'vance_waitlist_consents', $records, false );
-
-	// FluentCRM: a new contact is "pending" (double opt-in). An existing contact
-	// is not forced to a new status, so a newsletter subscriber stays as they are.
-	if ( function_exists( 'FluentCrmApi' ) ) {
-		$tags = array( 'waitlist-b-vance' );
-		if ( '' !== $source ) {
-			$tags[] = 'utm-' . $source;
-		}
-		try {
-			FluentCrmApi( 'contacts' )->createOrUpdate( array(
-				'email'      => $email,
-				'first_name' => $first,
-				'status'     => 'pending',
-				'tags'       => $tags,
-				'lists'      => array( 'B-Vance Waitlist' ),
-				'source'     => 'waitlist',
-			) );
-		} catch ( \Throwable $e ) {
-			// The consent record above is kept. A CRM fault must not show the person an error.
-			unset( $e );
+	$found = false;
+	foreach ( $records as $i => $existing_row ) {
+		if ( isset( $existing_row['email'] ) && 0 === strcasecmp( $existing_row['email'], $email ) ) {
+			$records[ $i ] = $row;
+			$found         = true;
+			break;
 		}
 	}
+	if ( ! $found ) {
+		if ( count( $records ) >= vance_waitlist_max_records() ) {
+			wp_send_json_error( array( 'message' => __( 'The list is busy. Please try again later.', 'vance-health-hub' ) ), 503 );
+		}
+		$records[] = $row;
+	}
+	update_option( 'vance_waitlist_consents', $records, false );
+
+	// FluentCRM. A NEW address becomes a "pending" contact (double opt-in). An
+	// address that is already a contact is NOT touched: its status is not changed
+	// and it is not added to the waitlist list or tag from here, because nobody
+	// has proved they own it. Such a person is added by hand after they confirm.
+	if ( function_exists( 'FluentCrmApi' ) ) {
+		try {
+			$contacts = FluentCrmApi( 'contacts' );
+			if ( ! $contacts->getContact( $email ) ) {
+				$tags = array( 'waitlist-b-vance' );
+				if ( '' !== $source && vance_waitlist_known_source( $source ) ) {
+					$tags[] = 'utm-' . $source;
+				}
+				$contacts->createOrUpdate( array(
+					'email'      => $email,
+					'first_name' => $first,
+					'status'     => 'pending',
+					'tags'       => $tags,
+					'lists'      => array( 'B-Vance Waitlist' ),
+					'source'     => 'waitlist',
+				) );
+				$crm_state = 'pending';
+			} else {
+				$crm_state = 'existing-not-attached';
+			}
+		} catch ( \Throwable $e ) {
+			// The consent record above is kept. The person sees no error. We log it.
+			error_log( 'vance waitlist: FluentCRM call failed: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
+	}
+	unset( $crm_state );
 
 	// The same answer for a new and an existing address.
 	wp_send_json_success( array( 'message' => __( 'Thank you. If this address is new to us, we will email you to confirm it.', 'vance-health-hub' ) ) );
@@ -131,7 +180,7 @@ function vance_waitlist_export( $email, $page = 1 ) {
 				'item_id'     => 'vance-waitlist-' . md5( $row['at'] . $row['email'] ),
 				'data'        => array(
 					array( 'name' => __( 'Agreed at', 'vance-health-hub' ), 'value' => (string) $row['at'] ),
-					array( 'name' => __( 'Wording agreed to', 'vance-health-hub' ), 'value' => (string) $row['text'] ),
+					array( 'name' => __( 'Wording version agreed to', 'vance-health-hub' ), 'value' => (string) $row['version'] ),
 					array( 'name' => __( 'Source', 'vance-health-hub' ), 'value' => (string) $row['source'] ),
 				),
 			);
