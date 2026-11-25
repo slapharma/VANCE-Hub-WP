@@ -353,7 +353,8 @@ function vance_hub_master_on() {
  * @return bool
  */
 function vance_hub_switch_default( $mod ) {
-	return 'vance_hub_dash_checkin' !== $mod;
+	// Health-data cards stay off until the privacy policy covers them.
+	return ! in_array( $mod, array( 'vance_hub_dash_checkin', 'vance_hub_dash_flare_plan' ), true );
 }
 
 /**

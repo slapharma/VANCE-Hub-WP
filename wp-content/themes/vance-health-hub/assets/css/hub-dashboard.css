@@ -519,3 +519,82 @@
 	.vhd .vhd-tool,
 	.vhd .vhd-stat { transition: none; }
 }
+
+/* Flare plan */
+.vhd .vhd-flare { margin-top: 24px; }
+.vhd .vhd-flare__form { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.vhd .vhd-flare__field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.vhd .vhd-flare__label { font-size: 15px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__hint { margin: 0; font-size: 13px; color: var(--vhd-muted); }
+.vhd .vhd-flare__input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 10px 12px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-field, 10px);
+	font: inherit;
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--vhd-ink);
+	background: #FFFFFF;
+	resize: vertical;
+}
+.vhd .vhd-flare__input:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 2px; }
+.vhd .vhd-flare__consent {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--vhd-ink);
+}
+.vhd .vhd-flare__consent input { flex: 0 0 auto; width: 20px; height: 20px; margin: 1px 0 0; }
+.vhd .vhd-flare__plan { display: flex; flex-direction: column; gap: 14px; }
+.vhd .vhd-flare__sec p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--vhd-ink); overflow-wrap: anywhere; }
+.vhd .vhd-flare__h { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__urgent {
+	padding: 14px 16px;
+	border-left: 3px solid #B45309;
+	border-radius: var(--radius-control, 6px);
+	background: #FEF3C7;
+}
+.vhd .vhd-flare__urgent p { color: #7C2D12; }
+.vhd .vhd-flare__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.vhd .vhd-flare__edit,
+.vhd .vhd-flare__manage { font-size: 14px; color: var(--vhd-muted); }
+.vhd .vhd-flare__edit summary,
+.vhd .vhd-flare__manage summary { cursor: pointer; font-weight: 700; color: var(--vhd-teal-ink); }
+.vhd .vhd-flare__edit summary:focus-visible,
+.vhd .vhd-flare__manage summary:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 3px; }
+.vhd .vhd-flare__edit form,
+.vhd .vhd-flare__manage p { margin: 12px 0; }
+.vhd .vhd-flare__print[hidden] { display: none; }
+
+/* Print: the flare plan card only. */
+@media print {
+	body * { visibility: hidden; }
+	.vhd .vhd-flare,
+	.vhd .vhd-flare * { visibility: visible; }
+	.vhd .vhd-flare {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		margin: 0;
+		border: 0;
+		padding: 0;
+	}
+	.vhd .vhd-flare__actions,
+	.vhd .vhd-flare__edit,
+	.vhd .vhd-flare__manage,
+	.vhd .vhd-flash { display: none; }
+	.vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }
+	.vhd .vhd-flare__urgent p { color: #000000; }
+}
+
+/* Print: hub-flare-plan.js marks the card's ancestors, so the rest of the page
+   takes no space and the printout has no blank pages. */
+@media print {
+	.vhd-print-path > *:not(.vhd-print-path):not(.vhd-flare) { display: none !important; }
+	html.vhd-printing .vhd .vhd-flare { position: static; }
+}
