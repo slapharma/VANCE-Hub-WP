@@ -493,9 +493,71 @@ function vance_community_ask_html( $member, $user_id, $spaces, $current ) {
  *
  * @return string
  */
+function vance_community_public_html() {
+	$arrow = vance_community_arrow();
+	$rules = vance_community_rules_url();
+
+	$html  = '<div class="vcom vcom--public" id="vcom">';
+	$html .= '<section class="vcom-hero" aria-labelledby="vcom-title"><div class="vcom-wrap vcom-hero__in"><div class="vcom-hero__copy">';
+	$html .= '<p class="vcom-pill">' . esc_html__( 'THE COMMUNITY', 'vance-health-hub' ) . '</p>';
+	$html .= '<h1 class="vcom-hero__title" id="vcom-title">' . esc_html__( 'Some things are easier to talk about with people who', 'vance-health-hub' ) . ' <span>' . esc_html__( 'get it', 'vance-health-hub' ) . '</span></h1>';
+	$html .= '<p class="vcom-hero__lead">' . esc_html__( 'A private, moderated space for people living with digestive conditions to share experiences and connect. Free membership. Join at your own pace.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p class="vcom-ask__signin"><a class="vcom-btn vcom-btn--purple" href="' . esc_url( vance_community_join_url() ) . '">' . esc_html__( 'Join free', 'vance-health-hub' ) . $arrow . '</a> ' . esc_html__( 'Already a member?', 'vance-health-hub' ) . ' <a href="' . esc_url( vance_community_signin_url() ) . '">' . esc_html__( 'Sign in', 'vance-health-hub' ) . '</a></p>';
+	$html .= '</div></div></section>';
+
+	$html .= '<div class="vcom-wrap vcom-main">';
+	$html .= '<section class="vcom-box" aria-labelledby="vcom-b1">';
+	$html .= '<h2 class="vcom-eyebrow vcom-eyebrow--purple" id="vcom-b1">' . esc_html__( 'WHAT YOU GET', 'vance-health-hub' ) . '</h2>';
+	$html .= '<p>' . esc_html__( 'Membership is free.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p>' . esc_html__( 'Read first. Post when you feel ready. You choose how much to share, and when.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p>' . esc_html__( 'Members share experience. They do not give medical advice.', 'vance-health-hub' ) . '</p>';
+	$html .= '</section>';
+
+	$html .= '<section class="vcom-box" aria-labelledby="vcom-b2">';
+	$html .= '<h2 class="vcom-eyebrow vcom-eyebrow--purple" id="vcom-b2">' . esc_html__( 'PRIVATE AND MODERATED', 'vance-health-hub' ) . '</h2>';
+	$html .= '<p>' . esc_html__( 'Discussions and member profiles are only for signed-in members. Search engines do not list this page.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p>' . esc_html__( 'A moderator reads every post before it shows.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p>' . esc_html__( 'You can post with your first name or a nickname. A nickname is not always anonymity: other members may still recognise you from what you write. Share only what you are happy for others to read.', 'vance-health-hub' ) . '</p>';
+	$html .= '<a class="vcom-link" href="' . esc_url( $rules ) . '">' . esc_html__( 'Read the community rules', 'vance-health-hub' ) . $arrow . '</a>';
+	$html .= '</section>';
+
+	$html .= '<section class="vcom-box" aria-labelledby="vcom-b3">';
+	$html .= '<h2 class="vcom-eyebrow vcom-eyebrow--purple" id="vcom-b3">' . esc_html__( 'IF YOU NEED HELP NOW', 'vance-health-hub' ) . '</h2>';
+	$html .= '<p>' . esc_html__( 'The Community is not an emergency service. For urgent medical advice, call NHS 111. In an emergency, call 999.', 'vance-health-hub' ) . '</p>';
+	$html .= '</section>';
+	$html .= '</div></div>';
+	return $html;
+}
+
+/**
+ * Address of the community rules page.
+ *
+ * @return string
+ */
+function vance_community_rules_url() {
+	$rules = get_page_by_path( 'community-rules' );
+	if ( $rules && 'publish' === $rules->post_status ) {
+		$url = get_permalink( $rules );
+		if ( is_string( $url ) && '' !== $url ) {
+			return $url;
+		}
+	}
+	return home_url( '/community-rules/' );
+}
+
+/**
+ * The /community/ page.
+ *
+ * @return string
+ */
 function vance_community_render_page() {
 	if ( ! vance_hub_community_active() ) {
 		return '';
+	}
+	// The Community is private. A visitor sees the benefits page only: no
+	// question, reply, name, count or poll is read from the store for them.
+	if ( ! is_user_logged_in() ) {
+		return vance_community_public_html();
 	}
 	$member  = is_user_logged_in();
 	$user_id = $member ? get_current_user_id() : 0;
