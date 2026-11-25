@@ -489,6 +489,8 @@
 		state.pending = true;
 		persistState();
 		render();
+		// Measurement: a start, with no question text (assets/js/vance-events.js).
+		if (window.vanceTrack) { window.vanceTrack('ask_ai', 'start'); }
 
 		request({
 			messages: state.messages,
@@ -501,6 +503,7 @@
 			if (reply) {
 				state.messages.push({ role: 'assistant', content: reply });
 				persistState();
+				if (window.vanceTrack) { window.vanceTrack('ask_ai', 'complete'); }
 				startReveal(state.messages.length - 1);
 			} else {
 				state.error = (CFG.i18n && CFG.i18n.empty) || 'No answer came back. Please try again.';
