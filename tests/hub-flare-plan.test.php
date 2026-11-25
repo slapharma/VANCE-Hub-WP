@@ -4,7 +4,7 @@
  * inc/hub-flare-plan.php, and the three places it shares code with the rest of
  * the dashboard: the $base parameter of the agreement helpers in
  * inc/hub-dashboard-features.php, the default-off switch in inc/hub-layout.php,
- * and the data block of vance_hub_dashboard_features_data().
+ * and the Health Profile tab in page-dashboard.php (read as text) that hosts the card.
  *
  * Same shape as hub-dashboard-features.test.php. The stub block of hub-layout.test.php
  * is evaluated first, so both suites share one set of WordPress fakes. The stubs
@@ -704,11 +704,28 @@ check( 'data: the flash message comes from vance_flare in the URL', is_array( $D
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => false, 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ) );
 $F = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' );
-check( 'wiring: the features data carries the flare plan view when on', is_array( $F ) && is_array( $F['flare_plan'] ?? null ) && ( $F['flare_plan']['urgent'] ?? null ) === 'Call the clinic.' );
+check( 'wiring: the home features data does not carry the flare plan (it is in the Health Profile tab)', is_array( $F ) && ! array_key_exists( 'flare_plan', $F ) );
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => false ) );
 $F = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' );
-check( 'wiring: the features data carries null for the flare plan when off', is_array( $F ) && array_key_exists( 'flare_plan', $F ) && $F['flare_plan'] === null );
+check( 'wiring: the home features data has no flare plan key when the switch is off either', is_array( $F ) && ! array_key_exists( 'flare_plan', $F ) );
+
+// The Health Profile tab hosts the card. Static inspection of page-dashboard.php:
+// the tab is a template, so these check the source, not a render.
+$PD = file_get_contents( $THEME . '/page-dashboard.php' );
+$HP = preg_match( '/case \'health-profile\':\r?\n(.*?)\r?\n\s+case \'my-recipes\':\r?\n/s', $PD, $HPM ) ? $HPM[1] : '';
+check( 'tab: the Health Profile case holds the flare plan card', '' !== $HP && false !== strpos( $HP, 'vance_hub_flare_plan_html( $hp_flare )' ) );
+check( 'tab: the flare data comes from vance_hub_flare_plan_data() for the current user', false !== strpos( $HP, 'vance_hub_flare_plan_data( $current_user->ID )' ) );
+check( 'tab: the sub-tab links use ?hsub= and the sub-tab is read with sanitize_key', false !== strpos( $HP, "'hsub' => \$hp_slug" ) && false !== strpos( $HP, "sanitize_key( wp_unslash( \$_GET['hsub'] ) )" ) );
+check( 'tab: three panels, one each for profile, screening and flare plan', 1 === substr_count( $HP, "\$hp_hide( 'profile' )" ) && 1 === substr_count( $HP, "\$hp_hide( 'screening' )" ) && 1 === substr_count( $HP, "\$hp_hide( 'flare' )" ) );
+check( 'tab: the flare sub-tab shows only when the card can show', false !== strpos( $HP, "\$hp_subs['flare']" ) && false !== strpos( $HP, '! empty( $hp_flare )' ) );
+check( 'tab: sub-tabs and the hidden panels need the hub dashboard (the stylesheet)', false !== strpos( $HP, 'vance_hub_dashboard_active()' ) );
+$HOME = file_get_contents( $THEME . '/inc/hub-dashboard.php' );
+$JS  = file_get_contents( $THEME . '/assets/js/hub-flare-plan.js' );
+$CSS = file_get_contents( $THEME . '/assets/css/hub-dashboard.css' );
+check( 'print: the script does not mark a card that sits in a hidden panel', false !== strpos( $JS, "card.closest( '[hidden]' )" ) );
+check( 'print: the card-only print rules apply only under html.vhd-printing', false !== strpos( $CSS, 'html.vhd-printing body * { visibility: hidden; }' ) && 0 === preg_match( '/^\tbody \* \{ visibility: hidden/m', $CSS ) );
+check( 'home: the hub dashboard home no longer prints the flare plan card', false === strpos( $HOME, 'vance_hub_flare_plan_html' ) && false === strpos( $HOME, "'flare_plan'" ) );
 
 /* ===================================================================== */
 section( '10. render: escaping, states, controls, flash messages' );

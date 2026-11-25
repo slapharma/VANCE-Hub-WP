@@ -2,8 +2,8 @@
 /**
  * VanceHubClub member dashboard: the flare plan.
  *
- * One personal plan for each member, shown as a card on the dashboard home
- * (inc/hub-dashboard.php). The member writes three answers in their own words,
+ * One personal plan for each member, shown as a card in the "Flare plan"
+ * sub-tab of the Health Profile tab (page-dashboard.php). The member writes three answers in their own words,
  * can change them, print them and delete them. The fourth section, "When to get
  * urgent help", is fixed text that an administrator enters in Customize.
  *
@@ -199,7 +199,7 @@ function vance_hub_flare_plan_customize( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_dash_flare_plan', array(
 		'label'       => __( 'Member dashboard: show the flare plan', 'vance-health-hub' ),
-		'description' => __( 'A card where the member writes their own plan for a flare. It is health data: turn it on only when the privacy policy covers it, and the urgent help text below is set. It shows only on the VanceHubClub dashboard home.', 'vance-health-hub' ),
+		'description' => __( 'A card where the member writes their own plan for a flare. It is health data: turn it on only when the privacy policy covers it, and the urgent help text below is set. It shows only in the Health Profile tab of the member dashboard (sub-tab "Flare plan"), and only when the VanceHubClub dashboard is on.', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'checkbox',
 	) );
@@ -575,7 +575,7 @@ function vance_hub_flare_plan_fields_html( $plan, $id ) {
 /**
  * The flare plan card.
  *
- * @param array|null $f 'flare_plan' from vance_hub_dashboard_features_data().
+ * @param array|null $f vance_hub_flare_plan_data() result.
  * @return string
  */
 function vance_hub_flare_plan_html( $f ) {

@@ -1069,6 +1069,41 @@ get_header();
                     $quiz_fields = vance_quiz_field_labels();
                     $quiz_steps  = array_keys( $quiz_fields );
                     ?>
+                    <?php
+                    // Sub-tabs of this tab. They are plain links with ?hsub=, so they
+                    // work with no script. They need the hub dashboard stylesheet:
+                    // with the hub layout off, every section shows, as before.
+                    $hp_tabs_on = function_exists( 'vance_hub_dashboard_active' ) && vance_hub_dashboard_active();
+                    $hp_flare   = $hp_tabs_on && function_exists( 'vance_hub_flare_plan_data' ) ? vance_hub_flare_plan_data( $current_user->ID ) : null;
+                    $hp_subs    = array(
+                        'profile'   => __( 'My profile', 'vance-health-hub' ),
+                        'screening' => __( 'Screening results', 'vance-health-hub' ),
+                    );
+                    if ( ! empty( $hp_flare ) ) {
+                        $hp_subs['flare'] = __( 'Flare plan', 'vance-health-hub' );
+                    }
+                    $hp_sub = isset( $_GET['hsub'] ) && is_string( $_GET['hsub'] ) ? sanitize_key( wp_unslash( $_GET['hsub'] ) ) : '';
+                    if ( '' === $hp_sub && ! empty( $hp_flare['flash'] ) ) {
+                        // Back from a save or delete of the flare plan.
+                        $hp_sub = 'flare';
+                    }
+                    if ( ! isset( $hp_subs[ $hp_sub ] ) ) {
+                        $hp_sub = 'profile';
+                    }
+                    // A panel is hidden only when the tabs are on and it is not the open one.
+                    $hp_hide = function ( $slug ) use ( $hp_tabs_on, $hp_sub ) {
+                        return $hp_tabs_on && $slug !== $hp_sub ? ' hidden' : '';
+                    };
+                    if ( $hp_tabs_on ) : ?>
+                    <div class="vhd">
+                        <nav class="vhd-subtabs" aria-label="<?php esc_attr_e( 'Health sections', 'vance-health-hub' ); ?>">
+                            <?php foreach ( $hp_subs as $hp_slug => $hp_text ) : ?>
+                                <a class="vhd-subtabs__link<?php echo $hp_slug === $hp_sub ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'tab' => 'health-profile', 'hsub' => $hp_slug ), get_permalink() ) ); ?>"<?php echo $hp_slug === $hp_sub ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $hp_text ); ?></a>
+                            <?php endforeach; ?>
+                        </nav>
+                    </div>
+                    <?php endif; ?>
+                    <div class="hp-panel"<?php echo $hp_hide( 'profile' ); ?>>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
                         <!-- Quiz Results Section -->
                         <div class="dash-card">
@@ -1194,6 +1229,8 @@ get_header();
                             </div>
                         </div>
                     </div>
+                    </div>
+                    <div class="hp-panel"<?php echo $hp_hide( 'screening' ); ?>>
 
                     <!-- Malnutrition screening history -->
                     <div class="dash-card vance-mc-card" style="margin-top:32px;">
@@ -1294,6 +1331,12 @@ get_header();
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your health team.</p>
                         <?php endif; ?>
                     </div>
+                    </div>
+                    <?php if ( ! empty( $hp_flare ) ) : ?>
+                    <div class="hp-panel vhd"<?php echo $hp_hide( 'flare' ); ?>>
+                        <?php echo vance_hub_flare_plan_html( $hp_flare ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is escaped inside. ?>
+                    </div>
+                    <?php endif; ?>
 
                     <?php if (!empty($malnutrition_history)): ?>
                     <style>

@@ -572,10 +572,10 @@
 
 /* Print: the flare plan card only. */
 @media print {
-	body * { visibility: hidden; }
-	.vhd .vhd-flare,
-	.vhd .vhd-flare * { visibility: visible; }
-	.vhd .vhd-flare {
+	html.vhd-printing body * { visibility: hidden; }
+	html.vhd-printing .vhd .vhd-flare,
+	html.vhd-printing .vhd .vhd-flare * { visibility: visible; }
+	html.vhd-printing .vhd .vhd-flare {
 		position: absolute;
 		left: 0;
 		top: 0;
@@ -584,12 +584,12 @@
 		border: 0;
 		padding: 0;
 	}
-	.vhd .vhd-flare__actions,
-	.vhd .vhd-flare__edit,
-	.vhd .vhd-flare__manage,
-	.vhd .vhd-flash { display: none; }
-	.vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }
-	.vhd .vhd-flare__urgent p { color: #000000; }
+	html.vhd-printing .vhd .vhd-flare__actions,
+	html.vhd-printing .vhd .vhd-flare__edit,
+	html.vhd-printing .vhd .vhd-flare__manage,
+	html.vhd-printing .vhd .vhd-flash { display: none; }
+	html.vhd-printing .vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }
+	html.vhd-printing .vhd .vhd-flare__urgent p { color: #000000; }
 }
 
 /* Print: hub-flare-plan.js marks the card's ancestors, so the rest of the page
@@ -598,3 +598,36 @@
 	.vhd-print-path > *:not(.vhd-print-path):not(.vhd-flare) { display: none !important; }
 	html.vhd-printing .vhd .vhd-flare { position: static; }
 }
+
+/* Health Profile tab: horizontal sub-tabs, and the panels they switch between. */
+.hp-panel[hidden] { display: none !important; }
+.vhd .vhd-subtabs {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 8px;
+	margin: 0 0 24px;
+	padding: 0 0 2px;
+	border-bottom: 1px solid var(--vhd-line);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+.vhd .vhd-subtabs__link {
+	flex: 0 0 auto;
+	padding: 10px 16px;
+	border-radius: var(--radius-control, 6px) var(--radius-control, 6px) 0 0;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--vhd-muted);
+	text-decoration: none;
+	border-bottom: 3px solid transparent;
+	white-space: nowrap;
+}
+.vhd .vhd-subtabs__link:hover { background: var(--vhd-wash); color: var(--vhd-teal-ink); }
+.vhd .vhd-subtabs__link.is-active { color: var(--vhd-teal-ink); border-bottom-color: var(--vhd-teal); }
+.vhd .vhd-subtabs__link:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 2px; }
+@media print {
+	.vhd .vhd-subtabs { display: none; }
+}
+
+/* The card is the first thing in its Health Profile panel: no extra top gap. */
+.hp-panel > .vhd-flare { margin-top: 0; }
