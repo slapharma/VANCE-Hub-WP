@@ -107,6 +107,7 @@ function clear_request() {
 	$GLOBALS['REDIRECTS']        = array();
 	$GLOBALS['DIES']             = array();
 	$GLOBALS['NOCACHE_CALLS']    = 0;
+	$GLOBALS['COOKIE_WRITES']    = array();
 	$GLOBALS['DO_ACTIONS']       = array();
 	$GLOBALS['ENQUEUED']         = array();
 	$GLOBALS['REGISTERED']       = array();
@@ -332,6 +333,21 @@ set_error_handler( function ( $no, $str, $file, $line ) {
 
 /* ---- load the code under test, as functions.php does, in the same order ----- */
 
+// Records every cookie write. The real function (guarded by function_exists in
+// the theme) calls setcookie(), which PHP CLI cannot show. The static checks
+// below read the real one.
+$GLOBALS['COOKIE_WRITES'] = array();
+function vance_hub_preview_send_cookie( $name, $value, $expires ) {
+	$GLOBALS['COOKIE_WRITES'][] = array( 'name' => $name, 'value' => $value, 'expires' => (int) $expires );
+}
+function cookie_write( $name ) {
+	foreach ( $GLOBALS['COOKIE_WRITES'] as $w ) {
+		if ( $w['name'] === $name ) {
+			return $w;
+		}
+	}
+	return null;
+}
 require_once $THEME . '/inc/hub-preview.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-article.php';
@@ -654,8 +670,12 @@ check( 'static: the cookie check body was found (guards the next checks against 
 check( 'static: the cookie check compares with hash_equals()', strpos( $COOKIE_OK, 'hash_equals(' ) !== false );
 check( 'static: the cookie check does not compare the cookie with ===', strpos( $COOKIE_OK, '=== $cookie' ) === false && strpos( $COOKIE_OK, '$cookie ===' ) === false );
 check( 'static: the token check compares with hash_equals()', strpos( $TOKEN_OK, 'hash_equals(' ) !== false );
-check( 'static: the boot writes the HMAC to the cookie, never the token', strpos( $BOOT, 'vance_hub_preview_set_cookie( vance_hub_preview_cookie_value(' ) !== false );
-check( 'static: the cookie is HttpOnly and SameSite=Lax', strpos( $SETCOOKIE, "'httponly' => true" ) !== false && strpos( $SETCOOKIE, "'samesite' => 'Lax'" ) !== false );
+check( 'static: the boot writes the HMAC to the cookie, never the token', preg_match( '/vance_hub_preview_set_cookie\(\s*vance_hub_preview_cookie_value\(/', $BOOT ) === 1 );
+preg_match( '/function vance_hub_preview_send_cookie\(.*?\r?\n\t\}\r?\n/s', $PREVIEW_SRC, $SC_M );
+$SENDCOOKIE = $SC_M[0] ?? '';
+check( 'static: the cookie writer was found and calls setcookie()', strpos( $SENDCOOKIE, 'setcookie(' ) !== false );
+check( 'static: the cookie is HttpOnly and SameSite=Lax', strpos( $SENDCOOKIE, "'httponly' => true" ) !== false && strpos( $SENDCOOKIE, "'samesite' => 'Lax'" ) !== false );
+check( 'static: set_cookie writes through the writer for both cookie names', substr_count( $SETCOOKIE, 'vance_hub_preview_send_cookie(' ) === 2 && strpos( $SETCOOKIE, 'vance_hub_preview_vary_cookie_name()' ) !== false );
 
 /* ---- 4. the redirect after landing stays on this site ------------------------ */
 section( '4. The redirect after landing: same site, no open redirect' );
@@ -907,6 +927,78 @@ check( 'hook: the admin flag toggle is hooked to admin-post under its action nam
 $HDR = code_only( $PREVIEW_FILE );
 check( 'static: the X-Robots-Tag header is sent with noindex, nofollow (headers are not observable in CLI)', strpos( $HDR, "header( 'X-Robots-Tag: noindex, nofollow', true )" ) !== false );
 check( 'static: the nocache path calls nocache_headers() (headers are not observable in CLI)', strpos( function_body( $HDR, 'vance_hub_preview_nocache' ), 'nocache_headers()' ) !== false );
+
+/* ---- 7b. the cache-key cookie (LiteSpeed _lscache_vary* prefix) ---------------- */
+section( '7b. The cache-key cookie: set, healed and cleared with the share cookie' );
+
+function expected_vary( $token ) { return substr( hash_hmac( 'sha256', 'vance-hub-preview-vary|' . $token, SALT ), 0, 16 ); }
+function vary_cookie() { return '_lscache_vary_vhh'; }
+
+check( 'vary cookie: the name is _lscache_vary_vhh', vance_hub_preview_vary_cookie_name() === '_lscache_vary_vhh' );
+check( 'vary cookie: the name starts with _lscache_vary (the server varies on that prefix by itself)', strpos( vance_hub_preview_vary_cookie_name(), '_lscache_vary' ) === 0 );
+check( 'vary cookie: the name is not LSCWP\'s own _lscache_vary (LSCWP reads and rewrites that one)', vance_hub_preview_vary_cookie_name() !== '_lscache_vary' );
+check( 'vary cookie: the share cookie keeps its name and value (existing cookies stay valid)', vance_hub_preview_cookie_name() === 'vance_hub_preview' && vance_hub_preview_cookie_value( TOK, SALT ) === hash_hmac( 'sha256', 'vance-hub-preview|' . TOK, SALT ) );
+check( 'vary cookie: the value is 16 hex characters and differs per token', preg_match( '/^[0-9a-f]{16}$/', expected_vary( TOK ) ) === 1 && vance_hub_preview_vary_value( TOK, SALT ) === expected_vary( TOK ) && vance_hub_preview_vary_value( TOK, SALT ) !== vance_hub_preview_vary_value( TOK2, SALT ) );
+check( 'vary cookie: the value does not contain the token or the share cookie value', strpos( expected_vary( TOK ), TOK ) === false && expected_vary( TOK ) !== substr( expected_cookie( TOK ), 0, 16 ) );
+
+reset_all(); share_live();
+set_uri( '/?vhh_preview=' . TOK );
+$_GET['vhh_preview'] = TOK;
+run_boot();
+$W_MAIN = cookie_write( 'vance_hub_preview' );
+$W_VARY = cookie_write( vary_cookie() );
+check( 'landing: writes the share cookie with the HMAC', $W_MAIN !== null && $W_MAIN['value'] === expected_cookie( TOK ) );
+check( 'landing: writes the cache-key cookie with the token-derived value', $W_VARY !== null && $W_VARY['value'] === expected_vary( TOK ) );
+check( 'landing: both cookies expire when the link expires', $W_MAIN !== null && $W_VARY !== null && $W_MAIN['expires'] === $W_VARY['expires'] && $W_VARY['expires'] === $GLOBALS['OPT']['vance_hub_preview_share']['expires'] );
+check( 'landing: exactly two cookies are written', count( $GLOBALS['COOKIE_WRITES'] ) === 2 );
+
+reset_all(); share_live();
+$_GET['vhh_preview'] = 'WRONG';
+set_uri( '/?vhh_preview=WRONG' );
+run_boot();
+check( 'bad token: writes no cookie of either name', $GLOBALS['COOKIE_WRITES'] === array() );
+
+reset_all(); share_live(); run_boot();
+check( 'public visitor: no cookie written, response stays cacheable (no cache fragmentation)', $GLOBALS['COOKIE_WRITES'] === array() && $GLOBALS['NOCACHE_CALLS'] === 0 && vance_hub_preview_mode() === '' );
+
+reset_all(); share_live(); share_visitor_cookie(); $_COOKIE[ vary_cookie() ] = expected_vary( TOK ); run_boot();
+check( 'holder with both cookies: preview on, nothing rewritten', vance_hub_preview_mode() === 'share' && $GLOBALS['COOKIE_WRITES'] === array() );
+
+reset_all(); share_live(); share_visitor_cookie(); run_boot();
+$W_MAIN = cookie_write( 'vance_hub_preview' );
+$W_VARY = cookie_write( vary_cookie() );
+check( 'holder of an old link (share cookie only): preview on, and the cache-key cookie is given', vance_hub_preview_mode() === 'share' && $W_VARY !== null && $W_VARY['value'] === expected_vary( TOK ) && $W_MAIN !== null && $W_MAIN['value'] === expected_cookie( TOK ) );
+
+reset_all(); share_live( TOK2 ); $_COOKIE['vance_hub_preview'] = expected_cookie( TOK2 ); $_COOKIE[ vary_cookie() ] = expected_vary( TOK ); run_boot();
+check( 'new-token share cookie with an old-token cache-key cookie: preview on, cache-key cookie rewritten to the new value', vance_hub_preview_mode() === 'share' && ( cookie_write( vary_cookie() )['value'] ?? '' ) === expected_vary( TOK2 ) );
+
+reset_all(); share_live( TOK2 ); share_visitor_cookie(); $_COOKIE[ vary_cookie() ] = expected_vary( TOK ); run_boot();
+check( 'rotation: old share cookie and old cache-key cookie are both cleared, preview off, response not cached', vance_hub_preview_mode() === '' && ( cookie_write( 'vance_hub_preview' )['value'] ?? 'x' ) === '' && ( cookie_write( vary_cookie() )['value'] ?? 'x' ) === '' && $GLOBALS['NOCACHE_CALLS'] === 1 );
+
+reset_all(); share_live(); $_COOKIE[ vary_cookie() ] = 'forged-value'; run_boot();
+check( 'lone or forged cache-key cookie: preview stays off, both cookies cleared, response not cached', vance_hub_preview_mode() === '' && ( cookie_write( vary_cookie() )['value'] ?? 'x' ) === '' && $GLOBALS['NOCACHE_CALLS'] === 1 );
+
+reset_all(); share_live(); $_COOKIE['vance_hub_preview'] = expected_cookie( TOK ); $_COOKIE[ vary_cookie() ] = expected_vary( TOK );
+unset( $GLOBALS['OPT']['vance_hub_preview_share'] ); run_boot();
+check( 'sharing off: both cookies are cleared and the response is not cached', vance_hub_preview_mode() === '' && ( cookie_write( vary_cookie() )['value'] ?? 'x' ) === '' && $GLOBALS['NOCACHE_CALLS'] === 1 );
+
+reset_all(); share_live(); $_COOKIE['vance_hub_preview'] = 'bad'; $_SERVER['REQUEST_METHOD'] = 'POST'; run_boot();
+check( 'POST with a dead cookie: nothing is written (GET only)', $GLOBALS['COOKIE_WRITES'] === array() );
+
+reset_all(); share_live(); share_visitor_cookie(); $_COOKIE[ vary_cookie() ] = expected_vary( TOK );
+set_uri( '/knowledge/?vhh_preview_exit=1' ); $_GET['vhh_preview_exit'] = '1';
+$LOC = run_boot();
+check( 'exit: clears both cookies, then redirects without the argument', $LOC === '/knowledge/' && ( cookie_write( 'vance_hub_preview' )['value'] ?? 'x' ) === '' && ( cookie_write( vary_cookie() )['value'] ?? 'x' ) === '' );
+
+reset_all(); share_live(); $_COOKIE[ vary_cookie() ] = expected_vary( TOK );
+set_uri( '/?vhh_preview_exit=1' ); $_GET['vhh_preview_exit'] = '1';
+$LOC = run_boot();
+check( 'exit: a visitor with only the cache-key cookie can still exit', $LOC === '/' && ( cookie_write( vary_cookie() )['value'] ?? 'x' ) === '' );
+
+reset_all(); as_admin(); admin_flag_on(); run_boot();
+check( 'admin flag: writes no cookie (the admin is logged in, so LSCWP already keeps the page private)', $GLOBALS['COOKIE_WRITES'] === array() && vance_hub_preview_mode() === 'admin' );
+
+check( 'static: the vary cookie check uses hash_equals()', strpos( function_body( $PREVIEW_SRC, 'vance_hub_preview_vary_ok' ), 'hash_equals(' ) !== false );
 
 /* ---- 8. the admin box, the admin bar, the banner ----------------------------- */
 section( '8. Admin box, admin bar and banner: who sees the token' );

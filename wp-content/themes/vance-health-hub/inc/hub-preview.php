@@ -27,9 +27,12 @@
  * own, whatever this file says.
  *
  * Every preview response is sent with nocache headers, LiteSpeed nocache and
- * noindex. The cookie is also added to the LiteSpeed Cache vary list, so a
- * page cache does not serve a cached classic page to a cookie holder (or a
- * preview page to anyone). See the "Cache" block below for what that needs.
+ * noindex, so a preview page is never stored. A second cookie,
+ * `_lscache_vary_vhh`, is set and cleared together with the share cookie. The
+ * LiteSpeed server adds every `_lscache_vary*` cookie to the cache key by
+ * itself, so a cookie holder never matches the public cached classic page, and
+ * nobody else is affected. No .htaccess rule and no LSCWP setting is needed.
+ * See vance_hub_preview_vary_cookie_name() and the "Cache" block below.
  *
  * The state is decided once per request, on `init` (vance_hub_preview_boot).
  * Until then, and in the test harnesses that never fire `init`, preview mode
@@ -59,6 +62,22 @@ function vance_hub_preview_option() {
 /** Name of the share cookie. Also the name given to LiteSpeed Cache as a vary cookie. */
 function vance_hub_preview_cookie_name() {
 	return 'vance_hub_preview';
+}
+
+/**
+ * Name of the cache-key cookie, set next to the share cookie.
+ *
+ * LiteSpeed's server treats every cookie whose name starts with `_lscache_vary`
+ * as a vary cookie and adds its value to the cache key of EVERY page, with no
+ * .htaccess rule and no per-URL learning (docs.litespeedtech.com/lscache/devguide/advanced/,
+ * "Vary Cookies" tip). A visitor who holds this cookie therefore never matches
+ * the public cached copy. The custom `vance_hub_preview` name has no such
+ * built-in: it only varies a URL after a cacheable response for that URL has
+ * carried `X-LiteSpeed-Vary: cookie=...`, or after an .htaccess Cache-Vary rule.
+ * The name is not LSCWP's own `_lscache_vary`, which LSCWP reads and rewrites.
+ */
+function vance_hub_preview_vary_cookie_name() {
+	return '_lscache_vary_vhh';
 }
 
 /** Days a new share link lives. */
@@ -121,6 +140,32 @@ function vance_hub_preview_share_live( $share, $now ) {
  */
 function vance_hub_preview_cookie_value( $token, $key ) {
 	return hash_hmac( 'sha256', 'vance-hub-preview|' . $token, $key );
+}
+
+/**
+ * The value of the cache-key cookie for a token. Derived from the token with a
+ * different label from the share cookie, so it differs per link.
+ *
+ * @param string $token Share token.
+ * @param string $key   Secret key (wp_salt()).
+ * @return string 16 hex characters.
+ */
+function vance_hub_preview_vary_value( $token, $key ) {
+	return substr( hash_hmac( 'sha256', 'vance-hub-preview-vary|' . $token, $key ), 0, 16 );
+}
+
+/**
+ * True when a cache-key cookie value matches the live token.
+ *
+ * @param mixed  $vary  Cookie value from the request.
+ * @param array  $share Clean share.
+ * @param int    $now   Unix time.
+ * @param string $key   Secret key.
+ * @return bool
+ */
+function vance_hub_preview_vary_ok( $vary, $share, $now, $key ) {
+	return is_string( $vary ) && vance_hub_preview_share_live( $share, $now )
+		&& hash_equals( vance_hub_preview_vary_value( $share['token'], $key ), $vary );
 }
 
 /**
@@ -239,27 +284,44 @@ function vance_hub_preview_admin_flag() {
 }
 
 /**
- * Set or clear the share cookie.
+ * Set or clear the share cookie AND the cache-key cookie, always together.
+ * Both are HttpOnly, SameSite=Lax and expire at the same time.
  *
- * @param string $value   Cookie value; '' clears it.
- * @param int    $expires Unix time.
+ * @param string $value      Share cookie value; '' clears both cookies.
+ * @param int    $expires    Unix time.
+ * @param string $vary_value Cache-key cookie value (ignored when clearing).
  */
-function vance_hub_preview_set_cookie( $value, $expires ) {
+function vance_hub_preview_set_cookie( $value, $expires, $vary_value = '' ) {
 	if ( headers_sent() ) {
 		return;
 	}
-	setcookie(
-		vance_hub_preview_cookie_name(),
-		$value,
-		array(
-			'expires'  => '' === $value ? time() - YEAR_IN_SECONDS : (int) $expires,
-			'path'     => ( defined( 'COOKIEPATH' ) && COOKIEPATH ) ? COOKIEPATH : '/',
-			'domain'   => ( defined( 'COOKIE_DOMAIN' ) && COOKIE_DOMAIN ) ? COOKIE_DOMAIN : '',
-			'secure'   => is_ssl(),
-			'httponly' => true,
-			'samesite' => 'Lax',
-		)
-	);
+	vance_hub_preview_send_cookie( vance_hub_preview_cookie_name(), $value, $expires );
+	vance_hub_preview_send_cookie( vance_hub_preview_vary_cookie_name(), '' === $value ? '' : $vary_value, $expires );
+}
+
+if ( ! function_exists( 'vance_hub_preview_send_cookie' ) ) {
+	/**
+	 * Write one cookie. A separate function so a test can record the writes:
+	 * PHP CLI keeps no header list.
+	 *
+	 * @param string $name    Cookie name.
+	 * @param string $value   Value; '' clears it.
+	 * @param int    $expires Unix time.
+	 */
+	function vance_hub_preview_send_cookie( $name, $value, $expires ) {
+		setcookie(
+			$name,
+			$value,
+			array(
+				'expires'  => '' === $value ? time() - YEAR_IN_SECONDS : (int) $expires,
+				'path'     => ( defined( 'COOKIEPATH' ) && COOKIEPATH ) ? COOKIEPATH : '/',
+				'domain'   => ( defined( 'COOKIE_DOMAIN' ) && COOKIE_DOMAIN ) ? COOKIE_DOMAIN : '',
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Lax',
+			)
+		);
+	}
 }
 
 /** Mark this response as not cacheable anywhere. */
@@ -298,9 +360,12 @@ function vance_hub_preview_boot() {
 	$front_get = ! is_admin() && ! wp_doing_ajax() && ! wp_doing_cron()
 		&& isset( $_SERVER['REQUEST_METHOD'] ) && 'GET' === $_SERVER['REQUEST_METHOD'];
 	$cookie_name = vance_hub_preview_cookie_name();
-	$has_cookie  = isset( $_COOKIE[ $cookie_name ] );
+	$vary_name   = vance_hub_preview_vary_cookie_name();
+	// Either cookie means "this visitor is in, or was in, preview". The cache-key
+	// cookie can be left alone (the share cookie expired or was cleared first).
+	$has_cookie  = isset( $_COOKIE[ $cookie_name ] ) || isset( $_COOKIE[ $vary_name ] );
 
-	// Share visitor's "Exit preview": clear the cookie, then drop the argument.
+	// Share visitor's "Exit preview": clear the cookies, then drop the argument.
 	if ( $front_get && $has_cookie && isset( $_GET['vhh_preview_exit'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only clears the visitor's own preview cookie.
 		vance_hub_preview_set_cookie( '', 0 );
 		vance_hub_preview_redirect( vance_hub_preview_current_path( array( 'vhh_preview_exit' ) ) );
@@ -312,7 +377,11 @@ function vance_hub_preview_boot() {
 		$share = vance_hub_preview_share();
 		$given = is_string( $_GET['vhh_preview'] ) ? wp_unslash( $_GET['vhh_preview'] ) : null; // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- compared with hash_equals only.
 		if ( vance_hub_preview_token_ok( $given, $share, time() ) ) {
-			vance_hub_preview_set_cookie( vance_hub_preview_cookie_value( $share['token'], vance_hub_preview_key() ), $share['expires'] );
+			vance_hub_preview_set_cookie(
+				vance_hub_preview_cookie_value( $share['token'], vance_hub_preview_key() ),
+				$share['expires'],
+				vance_hub_preview_vary_value( $share['token'], vance_hub_preview_key() )
+			);
 			vance_hub_preview_redirect( vance_hub_preview_current_path( array( 'vhh_preview' ) ) );
 		}
 	}
@@ -329,13 +398,28 @@ function vance_hub_preview_boot() {
 	}
 
 	if ( $has_cookie ) {
-		$cookie = $_COOKIE[ $cookie_name ]; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared with hash_equals only.
-		if ( vance_hub_preview_cookie_ok( $cookie, vance_hub_preview_share(), time(), vance_hub_preview_key() ) ) {
+		$share  = vance_hub_preview_share();
+		$cookie = $_COOKIE[ $cookie_name ] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared with hash_equals only.
+		$vary   = $_COOKIE[ $vary_name ] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared with hash_equals only.
+		if ( vance_hub_preview_cookie_ok( $cookie, $share, time(), vance_hub_preview_key() ) ) {
 			vance_hub_preview_mode( 'share' );
+			// Self-heal: a holder of the share cookie whose cache-key cookie is
+			// missing or stale (a link opened before the key cookie existed) gets it
+			// back. Without it the server picks the public cached copy and this
+			// code never runs.
+			if ( $front_get && ! vance_hub_preview_vary_ok( $vary, $share, time(), vance_hub_preview_key() ) ) {
+				vance_hub_preview_set_cookie(
+					$cookie,
+					$share['expires'],
+					vance_hub_preview_vary_value( $share['token'], vance_hub_preview_key() )
+				);
+			}
 			return;
 		}
-		// A dead cookie (rotated, turned off, expired): clear it, so the visitor
-		// goes back to the public cache bucket. Not cached itself.
+		// A dead cookie (rotated, turned off, expired, or a lone or forged
+		// cache-key cookie): clear both, so the visitor goes back to the public
+		// cache bucket. The response is not cached, so a forged key value never
+		// fills a cache entry.
 		if ( $front_get ) {
 			vance_hub_preview_set_cookie( '', 0 );
 			vance_hub_preview_nocache();
@@ -380,7 +464,11 @@ function vance_hub_preview_robots( $robots ) {
 add_filter( 'wp_robots', 'vance_hub_preview_robots', 99 );
 
 /**
- * Add the share cookie to LiteSpeed Cache's vary list.
+ * Add the share cookie to LiteSpeed Cache's vary list. A second line of
+ * defence only: the `_lscache_vary_vhh` cookie (see above) is what keeps a
+ * holder off the public copy. The X-LiteSpeed-Vary header works per URL and only
+ * after a cacheable response for that URL carried it; the Cache-Vary rule needs
+ * LSCWP to rewrite .htaccess. Neither is guaranteed after a deploy.
  *
  * Two filters, both documented in the LSCWP API reference
  * (docs.litespeedtech.com/lscache/lscwp/api/, "Vary"):
