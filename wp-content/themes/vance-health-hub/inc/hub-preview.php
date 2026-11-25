@@ -612,6 +612,11 @@ function vance_hub_preview_enqueue() {
 		. 'border-radius:var(--radius-control,6px);text-decoration:none;font-weight:600}'
 		. '.vhh-preview-bar__exit:hover,.vhh-preview-bar__exit:focus{background:#006666;color:#FFFFFF}'
 		. '.vhh-preview-bar__exit:focus-visible{outline:2px solid #DEF4F4;outline-offset:2px}'
+		// On a phone the bar goes above the bottom nav, on one line.
+		. '@media (max-width:767.98px){.vhh-preview-bar{flex-wrap:nowrap;width:calc(100% - 32px);box-sizing:border-box;'
+		. 'padding:8px 12px;font-size:13px;text-align:left;justify-content:space-between}'
+		. '.vhh-preview-bar__exit{flex:none;padding:13px 12px;white-space:nowrap}'
+		. 'body.has-vance-bottom-nav .vhh-preview-bar{bottom:calc(64px + env(safe-area-inset-bottom))}}'
 		. '@media print{.vhh-preview-bar{display:none}}'
 	);
 }

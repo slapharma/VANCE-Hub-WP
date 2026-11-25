@@ -2082,9 +2082,15 @@ body.home .hero {
        density saving. */
     .footer-col-toggle {
         cursor: pointer;
+        box-sizing: border-box;
         padding: 12px 0;
-        min-height: 44px;
+        min-height: 48px;
     }
+    /* A closed menu is one 48px row. The heading margin and the grid gap
+       apply only when the menu is open or is not an accordion. */
+    .footer-col.js-ready h4 { margin-bottom: 0; }
+    .footer-col.js-ready.is-open h4 { margin-bottom: 12px; }
+    .footer-col.js-ready + .footer-col.js-ready { margin-top: -16px; }
     .footer-col-chevron {
         display: block;
         flex-shrink: 0;

@@ -9604,6 +9604,10 @@ function vance_mobile_stickycta_active() {
     if ( is_page( 'dashboard' ) || is_page_template( 'page-dashboard.php' ) ) {
         return false;
     }
+    // The bar asks the visitor to join. A member has joined already.
+    if ( is_user_logged_in() ) {
+        return false;
+    }
     return true;
 }
 

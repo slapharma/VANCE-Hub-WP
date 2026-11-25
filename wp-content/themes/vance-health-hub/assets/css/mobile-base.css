@@ -321,6 +321,16 @@ body.mega-menu-primary-menu .mobile-menu-toggle {
     body.mega-menu-primary-menu .mega-menu-toggle {
         background: transparent !important;
     }
+    /* The plugin draws a 32px button. This adds 6px of tap area on each side
+       and does not change the drawing. */
+    body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated {
+        position: relative;
+    }
+    body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated::before {
+        content: "";
+        position: absolute;
+        inset: -6px;
+    }
     body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated-inner,
     body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated-inner::before,
     body.mega-menu-primary-menu .mega-menu-toggle .mega-toggle-animated-inner::after {
