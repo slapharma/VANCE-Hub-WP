@@ -201,8 +201,9 @@ function vance_hub_data_erase( $uid, $slug ) {
 	if ( ! empty( $group['attachments'] ) ) {
 		$done = array();
 		$left = array();
-		// Up to three passes: an upload that finishes while this runs adds a row,
-		// and the next pass deletes that file too.
+		// Up to three passes. The uploads and the single delete in user-documents.php
+		// take the same lock, so a row should not appear while this runs. The extra
+		// passes are a second safety for a request that did not take the lock.
 		for ( $pass = 0; $pass < 3; $pass++ ) {
 			$docs    = get_user_meta( $uid, '_sla_profile_docs', true );
 			$changed = false;
