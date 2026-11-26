@@ -80,15 +80,20 @@ function vance_split_doi_punctuation( $doi ) {
  * @return string
  */
 function vance_linkify_dois_in_text( $text ) {
-	$pattern = '~(?:https?://(?:dx\.)?doi\.org/)?10\.\d{4,9}/[^\s<>"\'&]+~';
+	$pattern = '~(?:https?://(?:dx\.)?doi\.org/)?10\.\d{4,9}/(?:[^\s<>"\'&]++|&\#215;)++~';
 
-	return preg_replace_callback(
+	$linked = preg_replace_callback(
 		$pattern,
 		static function ( $matches ) {
-			list( $shown, $trail ) = vance_split_doi_punctuation( $matches[0] );
+			// wptexturize (priority 10) turns a digit-x-digit run into a
+			// multiplication sign, so 10.2174/1570159x1466 reaches this filter
+			// as 1570159&#215;1466. Restore the letter before building the link.
+			$matched = str_replace( '&#215;', 'x', $matches[0] );
+
+			list( $shown, $trail ) = vance_split_doi_punctuation( $matched );
 
 			if ( ! preg_match( '~(10\.\d{4,9}/.+)$~', $shown, $found ) ) {
-				return $matches[0];
+				return $matched;
 			}
 
 			return sprintf(
@@ -100,6 +105,9 @@ function vance_linkify_dois_in_text( $text ) {
 		},
 		$text
 	);
+
+	// A regex failure returns null; keep the original text rather than drop it.
+	return null === $linked ? $text : $linked;
 }
 
 /**
