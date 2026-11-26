@@ -221,3 +221,35 @@ function vance_meta_description_length( $description ) {
 	return ( '' === $fit || $fit === $plain ) ? $description : $fit;
 }
 add_filter( 'aioseo_description', 'vance_meta_description_length', 100001 );
+
+/**
+ * Print a description where AIOSEO prints none.
+ *
+ * AIOSEO skips the aioseo_description filter, and the whole tag, when a page has
+ * no description of its own (the 35 /ibd-discount/ pages, for example). On those
+ * single pages this builds one from the excerpt or body, fitted to 110-160.
+ */
+function vance_meta_description_fallback() {
+	if ( ! is_singular() || ! function_exists( 'aioseo' ) ) {
+		return;
+	}
+	try {
+		$existing = aioseo()->meta->description->getDescription();
+	} catch ( \Throwable $e ) {
+		return;
+	}
+	if ( is_string( $existing ) && '' !== trim( $existing ) ) {
+		return;
+	}
+	$post = get_queried_object();
+	if ( ! ( $post instanceof WP_Post ) || post_password_required( $post ) ) {
+		return;
+	}
+	$raw = '' !== trim( (string) $post->post_excerpt ) ? $post->post_excerpt : $post->post_content;
+	$fit = vance_meta_fit_description( '', wp_strip_all_tags( strip_shortcodes( $raw ) ) );
+	if ( '' === $fit ) {
+		return;
+	}
+	printf( "<meta name=\"description\" content=\"%s\" />\n", esc_attr( $fit ) );
+}
+add_action( 'wp_head', 'vance_meta_description_fallback', 99 );
