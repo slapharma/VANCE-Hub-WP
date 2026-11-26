@@ -466,22 +466,24 @@ function vance_hub_tool_result_enqueue() {
 add_action( 'wp_enqueue_scripts', 'vance_hub_tool_result_enqueue', 20 );
 
 /**
- * The Customizer switch, in the VanceHubClub section (registered by
- * inc/hub-layout.php, which this file loads after).
+ * The Customizer switch, in section 4 of the VanceHubClub panel
+ * (inc/hub-layout.php names the sections and the switch labels; this file
+ * loads after it).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.
  */
 function vance_hub_tool_result_customize_register( $wp_customize ) {
+	$switch = vance_hub_customizer_switch( 'vance_hub_tool_result' );
 	$wp_customize->add_setting( 'vance_hub_tool_result', array(
 		'default'           => vance_hub_switch_default( 'vance_hub_tool_result' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_tool_result', array(
-		'label'       => __( 'Self-Assessment: VanceHubClub result page', 'vance-health-hub' ),
-		'description' => __( 'Off: the survey ends as it does now. On: the end of the Gastro Self-Assessment shows a summary of the answers, a print button and next steps. Administrators can preview it without saving: add ?vhh_layout=hub to the survey address, or turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
-		'section'     => 'vance_home_layout',
+		'label'       => $switch['label'],
+		'description' => __( 'Off: the Gastro Self-Assessment ends as it does in the classic layout. On: the end of the survey shows a summary of the answers, a print button and next steps.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
-		'priority'    => 9,
+		'priority'    => 20,
 	) );
 }
 add_action( 'customize_register', 'vance_hub_tool_result_customize_register', 11 );

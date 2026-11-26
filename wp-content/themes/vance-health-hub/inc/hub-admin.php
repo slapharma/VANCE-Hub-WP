@@ -3,8 +3,8 @@
  * VanceHubClub admin menu: one place for every VanceHubClub control.
  *
  * Adds "Vance Club Layout" under the VanceHealthHub admin menu. The screen shows
- * the state of each switch, one link that opens the VanceHubClub section of
- * the Customizer, and preview links for the three places the layout applies
+ * the state of each switch in the same groups as the VanceHubClub panel of
+ * the Customizer, a link to each of those sections, and preview links for the three places the layout applies
  * (home page, an article, the member dashboard).
  *
  * The switches section only READS. Every setting is still saved by the
@@ -24,31 +24,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The on/off switches, in display order.
  *
+ * The order, the section and the label of each switch come from
+ * vance_hub_customizer_switches() (inc/hub-layout.php), which the Customizer
+ * registrations also read. This screen and the Customizer thus show the same
+ * words in the same order.
+ *
  * Each default comes from vance_hub_switch_default() (inc/hub-layout.php), the
  * same function the Customizer registrations and the gates read. A switch that
  * was never saved shows its default here, as it does on the site.
  *
- * @return array[] Rows of mod name, default and label.
+ * @return array[] Rows of mod name, default, label and section id.
  */
 function vance_hub_admin_switches() {
-	$rows = array(
-		'vance_hub_show_promo'     => __( 'Home page: promo block', 'vance-health-hub' ),
-		'vance_hub_show_sections'  => __( 'Home page: "Latest by section"', 'vance-health-hub' ),
-		'vance_hub_show_more'      => __( 'Home page: "More to read"', 'vance-health-hub' ),
-		'vance_hub_articles'       => __( 'Article pages: VanceHubClub layout', 'vance-health-hub' ),
-		'vance_hub_show_dashboard' => __( 'Member dashboard: VanceHubClub home', 'vance-health-hub' ),
-		'vance_hub_dash_member_no' => __( 'Member dashboard: member number', 'vance-health-hub' ),
-		'vance_hub_dash_chart'     => __( 'Member dashboard: results chart', 'vance-health-hub' ),
-		'vance_hub_dash_checkin'   => __( 'Member dashboard: daily check-in', 'vance-health-hub' ),
-		'vance_hub_dash_flare_plan' => __( 'Member dashboard: flare plan', 'vance-health-hub' ),
-		'vance_hub_dashboard_tabs' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
-		'vance_hub_tool_result'    => __( 'Self-Assessment: VanceHubClub result page', 'vance-health-hub' ),
-		'vance_hub_header'         => __( 'Site header: VanceHubClub header', 'vance-health-hub' ),
-		'vance_hub_community'      => __( 'Community hub', 'vance-health-hub' ),
-	);
 	$out = array();
-	foreach ( $rows as $mod => $label ) {
-		$out[] = array( 'mod' => $mod, 'default' => vance_hub_switch_default( $mod ), 'label' => $label );
+	foreach ( vance_hub_customizer_switches() as $mod => $switch ) {
+		$out[] = array(
+			'mod'     => $mod,
+			'default' => vance_hub_switch_default( $mod ),
+			'label'   => $switch['label'],
+			'section' => $switch['section'],
+		);
 	}
 	return $out;
 }
@@ -57,9 +52,9 @@ function vance_hub_admin_switches() {
  * The state of each switch.
  *
  * 'on' is the part's own saved switch. 'live' is what the site does: the part
- * is live only when the Home layout master switch is on as well.
+ * is live only when the Site layout master switch is on as well.
  *
- * @return array[] Rows of label, on (bool) and live (bool).
+ * @return array[] Rows of label, section id, on (bool) and live (bool).
  */
 function vance_hub_admin_status() {
 	$master = vance_hub_master_on();
@@ -67,21 +62,54 @@ function vance_hub_admin_status() {
 	foreach ( vance_hub_admin_switches() as $switch ) {
 		$on     = (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( $switch['mod'], $switch['default'] ) );
 		$rows[] = array(
-			'label' => $switch['label'],
-			'on'    => $on,
-			'live'  => $master && $on,
+			'label'   => $switch['label'],
+			'section' => $switch['section'],
+			'on'      => $on,
+			'live'    => $master && $on,
 		);
 	}
 	return $rows;
 }
 
 /**
- * Address of the VanceHubClub section in the Customizer.
+ * The switch states in groups, one group for each Customizer section that
+ * has a switch.
+ *
+ * @return array[] Section id => title and rows (rows as in vance_hub_admin_status()).
+ */
+function vance_hub_admin_status_groups() {
+	$sections = vance_hub_customizer_sections();
+	$groups   = array();
+	foreach ( vance_hub_admin_status() as $row ) {
+		$id = $row['section'];
+		if ( ! isset( $groups[ $id ] ) ) {
+			$groups[ $id ] = array(
+				'title' => isset( $sections[ $id ] ) ? $sections[ $id ]['title'] : '',
+				'rows'  => array(),
+			);
+		}
+		$groups[ $id ]['rows'][] = $row;
+	}
+	return $groups;
+}
+
+/**
+ * Address of the VanceHubClub panel in the Customizer.
  *
  * @return string
  */
 function vance_hub_admin_customizer_url() {
-	return add_query_arg( array( 'autofocus[section]' => 'vance_home_layout' ), admin_url( 'customize.php' ) );
+	return add_query_arg( array( 'autofocus[panel]' => VANCE_HUB_CUSTOMIZER_PANEL ), admin_url( 'customize.php' ) );
+}
+
+/**
+ * Address of one section of the VanceHubClub panel in the Customizer.
+ *
+ * @param string $section Section id.
+ * @return string
+ */
+function vance_hub_admin_section_url( $section ) {
+	return add_query_arg( array( 'autofocus[section]' => $section ), admin_url( 'customize.php' ) );
 }
 
 /**
@@ -155,32 +183,40 @@ function vance_hub_admin_render() {
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Vance Club Layout', 'vance-health-hub' ); ?></h1>
 		<p>
-			<?php esc_html_e( 'Master switch (Home layout):', 'vance-health-hub' ); ?>
+			<?php esc_html_e( 'Master switch (Site layout):', 'vance-health-hub' ); ?>
 			<strong><?php echo esc_html( $is_hub ? __( 'VanceHubClub: on', 'vance-health-hub' ) : __( 'VanceHealthHub (classic): every VanceHubClub part is off', 'vance-health-hub' ) ); ?></strong>
+			<a href="<?php echo esc_url( vance_hub_admin_section_url( 'vance_home_layout' ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
 		</p>
 		<p>
 			<a class="button button-primary" href="<?php echo esc_url( vance_hub_admin_customizer_url() ); ?>"><?php esc_html_e( 'Change VanceHubClub settings', 'vance-health-hub' ); ?></a>
 		</p>
 
 		<h2><?php esc_html_e( 'Switches', 'vance-health-hub' ); ?></h2>
-		<table class="widefat striped" style="max-width:640px">
-			<tbody>
-			<?php foreach ( vance_hub_admin_status() as $row ) : ?>
-				<tr>
-					<td><?php echo esc_html( $row['label'] ); ?></td>
-					<td><strong><?php
-						if ( $row['live'] ) {
-							esc_html_e( 'On', 'vance-health-hub' );
-						} elseif ( $row['on'] ) {
-							esc_html_e( 'Off (master switch is off)', 'vance-health-hub' );
-						} else {
-							esc_html_e( 'Off', 'vance-health-hub' );
-						}
-					?></strong></td>
-				</tr>
-			<?php endforeach; ?>
-			</tbody>
-		</table>
+		<p><?php esc_html_e( 'The groups and the names are the same as in the Customizer (VanceHubClub panel).', 'vance-health-hub' ); ?></p>
+		<?php foreach ( vance_hub_admin_status_groups() as $section_id => $group ) : ?>
+			<h3>
+				<?php echo esc_html( $group['title'] ); ?>
+				<a style="font-weight:400;font-size:13px;margin-left:8px" href="<?php echo esc_url( vance_hub_admin_section_url( $section_id ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
+			</h3>
+			<table class="widefat striped" style="max-width:640px">
+				<tbody>
+				<?php foreach ( $group['rows'] as $row ) : ?>
+					<tr>
+						<td><?php echo esc_html( $row['label'] ); ?></td>
+						<td><strong><?php
+							if ( $row['live'] ) {
+								esc_html_e( 'On', 'vance-health-hub' );
+							} elseif ( $row['on'] ) {
+								esc_html_e( 'Off (master switch is off)', 'vance-health-hub' );
+							} else {
+								esc_html_e( 'Off', 'vance-health-hub' );
+							}
+						?></strong></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endforeach; ?>
 
 		<h2><?php esc_html_e( 'Preview', 'vance-health-hub' ); ?></h2>
 		<p><?php esc_html_e( 'These links show the VanceHubClub layout on one page, to you only. They do not change the site. To see the layout on every page, use preview mode below. To show it to a colleague without a login, use a share link.', 'vance-health-hub' ); ?></p>

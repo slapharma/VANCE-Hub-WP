@@ -670,22 +670,23 @@ add_action( 'vance_article_sidebar_top', 'vance_hub_article_sidebar_top' );
  * ====================================================================== */
 
 /**
- * The article-layout checkbox, in the existing "Home layout" section.
- * Priority 9 puts it above the section's other controls (all at 10).
+ * The article-layout checkbox, in section 4 of the VanceHubClub panel
+ * (inc/hub-layout.php names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.
  */
 function vance_hub_article_customize_register( $wp_customize ) {
+	$switch = vance_hub_customizer_switch( 'vance_hub_articles' );
 	$wp_customize->add_setting( 'vance_hub_articles', array(
 		'default'           => vance_hub_switch_default( 'vance_hub_articles' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_articles', array(
-		'label'       => __( 'Article pages: use the VanceHubClub layout', 'vance-health-hub' ),
-		'description' => __( 'Off: articles look as they do now. On: every article gets the VanceHubClub look, a "Try this now" tool prompt in the text and Ask VANCE-Ai and tool cards at the top of the sidebar. It works only when the Home layout master switch is on VanceHubClub. Administrators can preview it on one article without saving: add ?vhh_layout=hub to the article address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
-		'section'     => 'vance_home_layout',
+		'label'       => $switch['label'],
+		'description' => __( 'Off: articles keep the classic look. On: each article gets the VanceHubClub look, a "Try this now" tool prompt in the text, and Ask VANCE-Ai and tool cards at the top of the sidebar.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
-		'priority'    => 9,
+		'priority'    => 10,
 	) );
 }
 add_action( 'customize_register', 'vance_hub_article_customize_register', 11 );

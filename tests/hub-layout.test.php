@@ -1074,9 +1074,11 @@ function vance_render_promo_home() {
 
 // Stand-in for the Customizer manager: records what the register function asks for.
 class HubCustomizeFake {
+	public $panels   = array();
 	public $sections = array();
 	public $settings = array();
 	public $controls = array();
+	public function add_panel( $id, $args = array() ) { $this->panels[ $id ] = $args; }
 	public function add_section( $id, $args = array() ) { $this->sections[ $id ] = $args; }
 	public function add_setting( $id, $args = array() ) { $this->settings[ $id ] = $args; }
 	public function add_control( $id, $args = array() ) { $this->controls[ $id ] = $args; }
@@ -1140,12 +1142,12 @@ vance_hub_customize_register( $WC );
 check( 'customize: vance_hub_show_promo is registered as a setting', isset( $WC->settings['vance_hub_show_promo'] ) );
 check( 'customize: vance_hub_show_promo defaults to on', $WC->settings['vance_hub_show_promo']['default'] === true );
 check( 'customize: vance_hub_show_promo is sanitised as a checkbox', $WC->settings['vance_hub_show_promo']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
-check( 'customize: the promo switch is a checkbox in the home layout section', $WC->controls['vance_hub_show_promo']['type'] === 'checkbox' && $WC->controls['vance_hub_show_promo']['section'] === 'vance_home_layout' );
+check( 'customize: the promo switch is a checkbox in section 2 (vance_hub_sec_home)', $WC->controls['vance_hub_show_promo']['type'] === 'checkbox' && $WC->controls['vance_hub_show_promo']['section'] === 'vance_hub_sec_home' );
 check( 'customize: vance_hub_show_dashboard is registered as a setting', isset( $WC->settings['vance_hub_show_dashboard'] ) );
 check( 'customize: vance_hub_show_dashboard defaults to on (its switch default)', $WC->settings['vance_hub_show_dashboard']['default'] === true );
 check( 'customize: vance_hub_show_dashboard is sanitised as a checkbox', $WC->settings['vance_hub_show_dashboard']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
-check( 'customize: the dashboard switch is a checkbox in the home layout section', $WC->controls['vance_hub_show_dashboard']['type'] === 'checkbox' && $WC->controls['vance_hub_show_dashboard']['section'] === 'vance_home_layout' );
-check( 'customize: the dashboard description gives the preview address the code reads', strpos( $WC->controls['vance_hub_show_dashboard']['description'], '?vhh_layout=hub' ) !== false );
+check( 'customize: the dashboard switch is a checkbox in section 5 (vance_hub_sec_dashboard)', $WC->controls['vance_hub_show_dashboard']['type'] === 'checkbox' && $WC->controls['vance_hub_show_dashboard']['section'] === 'vance_hub_sec_dashboard' );
+check( 'customize: the panel description gives the preview address the code reads', isset( $WC->panels['vance_hub_panel']['description'] ) && strpos( $WC->panels['vance_hub_panel']['description'], '?vhh_layout=hub' ) !== false );
 
 $DASH_SRC  = file_get_contents( $THEME . '/inc/hub-dashboard.php' );
 $FRONT_SRC = file_get_contents( $THEME . '/front-page-hub.php' );

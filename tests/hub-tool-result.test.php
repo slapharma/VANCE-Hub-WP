@@ -119,8 +119,10 @@ require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-tool-result.php';
 
 class ToolResultCustomizeFake {
+	public $panels   = array();
 	public $settings = array();
 	public $controls = array();
+	public function add_panel( $id, $args = array() ) { $this->panels[ $id ] = $args; }
 	public function add_setting( $id, $args = array() ) { $this->settings[ $id ] = $args; }
 	public function add_control( $id, $args = array() ) { $this->controls[ $id ] = $args; }
 }
@@ -223,8 +225,8 @@ vance_hub_tool_result_customize_register( $WC );
 check( 'customizer: the setting vance_hub_tool_result exists', isset( $WC->settings['vance_hub_tool_result'] ) );
 check( 'customizer: default is true (the master switch decides whether it shows)', isset( $WC->settings['vance_hub_tool_result'] ) && true === $WC->settings['vance_hub_tool_result']['default'] );
 check( 'customizer: sanitized by vance_hub_sanitize_checkbox', isset( $WC->settings['vance_hub_tool_result'] ) && 'vance_hub_sanitize_checkbox' === $WC->settings['vance_hub_tool_result']['sanitize_callback'] );
-check( 'customizer: a checkbox in section vance_home_layout', isset( $WC->controls['vance_hub_tool_result'] ) && 'checkbox' === $WC->controls['vance_hub_tool_result']['type'] && 'vance_home_layout' === $WC->controls['vance_hub_tool_result']['section'] );
-check( 'customizer: the label is "Self-Assessment: VanceHubClub result page"', isset( $WC->controls['vance_hub_tool_result'] ) && 'Self-Assessment: VanceHubClub result page' === $WC->controls['vance_hub_tool_result']['label'] );
+check( 'customizer: a checkbox in section vance_hub_sec_pages', isset( $WC->controls['vance_hub_tool_result'] ) && 'checkbox' === $WC->controls['vance_hub_tool_result']['type'] && 'vance_hub_sec_pages' === $WC->controls['vance_hub_tool_result']['section'] );
+check( 'customizer: the label is "Show the Self-Assessment result page"', isset( $WC->controls['vance_hub_tool_result'] ) && 'Show the Self-Assessment result page' === $WC->controls['vance_hub_tool_result']['label'] );
 
 /* ---- 3. field spec from the real questions ----------------------------------- */
 section( '3. Field spec from the real survey questions' );

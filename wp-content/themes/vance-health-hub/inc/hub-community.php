@@ -588,19 +588,21 @@ add_action( 'init', 'vance_community_seed_spaces', 20 );
  * ====================================================================== */
 
 /**
- * The Customizer switch, in the VanceHubClub section.
+ * The Customizer switch, in section 6 of the VanceHubClub panel
+ * (inc/hub-layout.php names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.
  */
 function vance_hub_community_customize_register( $wp_customize ) {
+	$switch = vance_hub_customizer_switch( 'vance_hub_community' );
 	$wp_customize->add_setting( 'vance_hub_community', array(
 		'default'           => vance_hub_switch_default( 'vance_hub_community' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_community', array(
-		'label'       => __( 'Community hub', 'vance-health-hub' ),
-		'description' => __( 'Off: /community/ shows "page not found" and the header has no Community link. On: members ask questions, reply, vote in the weekly poll and report posts. A moderator approves every post first (VanceHealthHub > Community queue). When you switch it on, the theme makes the /community/ page if no page has that address. Administrators can preview it without saving: add ?vhh_layout=hub to the /community/ address.', 'vance-health-hub' ),
-		'section'     => 'vance_home_layout',
+		'label'       => $switch['label'],
+		'description' => __( 'Off: /community/ shows "page not found" and the header has no Community link. On: members ask questions, reply, vote in the weekly poll and report posts. A moderator approves each post first (VanceHealthHub > Community queue). When you turn it on, the theme makes the /community/ page if no page has that address.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
 		'priority'    => 10,
 	) );

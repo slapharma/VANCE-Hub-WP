@@ -304,56 +304,67 @@ function vance_hub_checkin_text_defaults() {
 }
 
 /**
- * Customizer controls for the three features.
+ * Customizer controls for the three features: the member number and the
+ * results chart in section 5 of the VanceHubClub panel, and the daily
+ * check-in in section 7 (inc/hub-layout.php names the sections and the
+ * switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer.
  */
 function vance_hub_dash_features_customize( $wp_customize ) {
-	$section  = 'vance_home_layout';
+	// Setting id => description and priority in its section.
 	$switches = array(
 		'vance_hub_dash_member_no' => array(
-			__( 'Member dashboard: show the member number', 'vance-health-hub' ),
-			__( 'A random code for each member (for example VHC-7K2M9Q), made the first time the member opens the dashboard. It does not show how many members the Hub has.', 'vance-health-hub' ),
+			__( 'A random code for each member (for example VHC-7K2M9Q). The Hub makes it the first time the member opens the dashboard. It does not show how many members the Hub has. It shows on the dashboard home above.', 'vance-health-hub' ),
+			30,
 		),
 		'vance_hub_dash_chart'     => array(
-			__( 'Member dashboard: show the results chart', 'vance-health-hub' ),
-			__( 'A chart of the member\'s saved nutrition risk checks. It shows with two or more saved scores. With one, the member sees that result.', 'vance-health-hub' ),
+			__( 'A chart of the member\'s saved nutrition risk checks. It shows with two or more saved scores. With one score, the member sees that result. It shows on the dashboard home above.', 'vance-health-hub' ),
+			40,
 		),
 		'vance_hub_dash_checkin'   => array(
-			__( 'Member dashboard: show the daily check-in', 'vance-health-hub' ),
-			__( 'Three symptom questions, each on a scale from 0 to 4. The answers are health data: get the wording and the privacy policy approved before you turn this on.', 'vance-health-hub' ),
+			__( 'Three symptom questions, each on a scale from 0 to 4. The check-in shows on the VanceHubClub dashboard home and in the Health Profile tab. It needs the dashboard home (section 5).', 'vance-health-hub' ),
+			10,
 		),
 	);
 	foreach ( $switches as $name => $text ) {
+		$switch = vance_hub_customizer_switch( $name );
 		$wp_customize->add_setting( $name, array(
 			'default'           => vance_hub_switch_default( $name ),
 			'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 		) );
 		$wp_customize->add_control( $name, array(
-			'label'       => $text[0],
-			'description' => $text[1] . ' ' . __( 'It shows only on the VanceHubClub dashboard home.', 'vance-health-hub' ),
-			'section'     => $section,
+			'label'       => $switch['label'],
+			'description' => $text[0],
+			'section'     => $switch['section'],
 			'type'        => 'checkbox',
+			'priority'    => $text[1],
 		) );
 	}
 
-	$labels = array(
-		'vance_hub_checkin_q_pain'  => __( 'Check-in: question 1 (pain)', 'vance-health-hub' ),
-		'vance_hub_checkin_q_bowel' => __( 'Check-in: question 2 (bowel symptoms)', 'vance-health-hub' ),
-		'vance_hub_checkin_q_tired' => __( 'Check-in: question 3 (tiredness)', 'vance-health-hub' ),
-		'vance_hub_checkin_consent' => __( 'Check-in: consent text', 'vance-health-hub' ),
-		'vance_hub_checkin_note'    => __( 'Check-in: note below the form', 'vance-health-hub' ),
+	$keep    = __( 'Keep the subject of the question the same: saved answers stay with their question. Leave empty to use the default.', 'vance-health-hub' );
+	$default = __( 'Leave empty to use the default.', 'vance-health-hub' );
+	// Setting id => label and description. The order is the order on screen.
+	$texts = array(
+		'vance_hub_checkin_q_pain'  => array( __( 'Question 1: pain', 'vance-health-hub' ), $keep ),
+		'vance_hub_checkin_q_bowel' => array( __( 'Question 2: bowel symptoms', 'vance-health-hub' ), $keep ),
+		'vance_hub_checkin_q_tired' => array( __( 'Question 3: tiredness', 'vance-health-hub' ), $keep ),
+		'vance_hub_checkin_consent' => array( __( 'Consent text', 'vance-health-hub' ), $default ),
+		'vance_hub_checkin_note'    => array( __( 'Note below the form', 'vance-health-hub' ), $default ),
 	);
-	foreach ( vance_hub_checkin_text_defaults() as $name => $default ) {
+	$priority = 10;
+	foreach ( vance_hub_checkin_text_defaults() as $name => $default_text ) {
+		$priority += 10;
 		$wp_customize->add_setting( $name, array(
-			'default'           => $default,
+			'default'           => $default_text,
 			'sanitize_callback' => 'sanitize_text_field',
 		) );
 		$wp_customize->add_control( $name, array(
-			'label'       => $labels[ $name ],
-			'description' => __( 'Keep the subject of each question the same: saved answers stay with their question. Leave empty to use the default.', 'vance-health-hub' ),
-			'section'     => $section,
+			'label'       => $texts[ $name ][0],
+			'description' => $texts[ $name ][1],
+			'section'     => 'vance_hub_sec_checkin',
 			'type'        => 'text',
+			'priority'    => $priority,
 		) );
 	}
 }

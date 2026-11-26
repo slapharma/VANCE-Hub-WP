@@ -222,20 +222,23 @@ add_filter( 'body_class', 'vance_hub_header_body_class' );
  * ====================================================================== */
 
 /**
- * Register the header switch in the VanceHubClub section.
+ * Register the header switch in section 3 of the VanceHubClub panel
+ * (inc/hub-layout.php names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.
  */
 function vance_hub_header_customize_register( $wp_customize ) {
+	$switch = vance_hub_customizer_switch( 'vance_hub_header' );
 	$wp_customize->add_setting( 'vance_hub_header', array(
 		'default'           => vance_hub_switch_default( 'vance_hub_header' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_header', array(
-		'label'       => __( 'Site header: use the VanceHubClub header', 'vance-health-hub' ),
-		'description' => __( 'Replaces the header on every page with the VanceHubClub header: logo, the menu, the VANCE-Ai button, Sign in and Join free (My Hub for members), and the purple member bar under it. The header shows the site\'s original primary menu, with its dropdowns, and adds Community while the Community hub is on. To use a different, short menu, assign one to the "VanceHubClub header menu" location: only its top level appears. With neither menu, the header lists the Tools, Conditions and Library pages that exist. Administrators can preview it without saving: add ?vhh_layout=hub to any page address. To see it on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
-		'section'     => 'vance_home_layout',
+		'label'       => $switch['label'],
+		'description' => __( 'On: every page gets the VanceHubClub header: the logo, the menu, the VANCE-Ai button, Sign in and Join free (My Hub for members), and the purple member bar. The header shows the site\'s original primary menu with its dropdowns. It adds Community while the Community hub is on. To use a short menu, assign a menu to the "VanceHubClub header menu" location: only its top level appears. With no menu, the header lists the Tools, Conditions and Library pages that exist.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
+		'priority'    => 10,
 	) );
 }
 add_action( 'customize_register', 'vance_hub_header_customize_register' );

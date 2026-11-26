@@ -85,6 +85,10 @@ function vance_customizer_structure_panels() {
  * ten. A null title keeps the registered one. Sections not listed are left
  * exactly as registered, which is how the dynamic families and the dashboard
  * features keep their place.
+ *
+ * The VanceHubClub panel (vance_hub_panel) is not in this map on purpose. Its
+ * sections, their titles and their order are named in one place,
+ * vance_hub_customizer_sections() in inc/hub-layout.php.
  */
 function vance_customizer_structure_sections() {
 	$classic   = 'Hero (classic) + design switch';
