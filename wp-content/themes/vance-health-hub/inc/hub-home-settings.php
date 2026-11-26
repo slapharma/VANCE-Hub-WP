@@ -9,7 +9,10 @@
  *     control, setting vance_hub_block_order);
  *   - how many articles, recipes and quotes each block shows (five numbers);
  *   - the wording of the hero, the Self-Assessment card, the three facts and the
- *     Join block (22 texts). An empty text always means the default wording.
+ *     Join block (22 texts). An empty text always means the default wording;
+ *   - the four tool cards: which tool each slot shows (or none), and an
+ *     optional title, text, button, link and image for each slot
+ *     (vance_hub_home_tools()).
  *
  * The registries and readers are pure where they can be (they call only
  * vance_get_theme_mod and the sanitiser helpers), so tests can call them.
@@ -404,6 +407,152 @@ function vance_hub_home_text( $mod ) {
 }
 
 /* =========================================================================
+ * Tool cards
+ * ====================================================================== */
+
+/**
+ * The tools a card slot can show, and the "hide" choice.
+ *
+ * The keys of the first four are the 'mod' values of vance_hub_tools().
+ *
+ * @return string[] Pick => label.
+ */
+function vance_hub_tool_picks() {
+	return array(
+		'survey'    => __( 'Self-Assessment', 'vance-health-hub' ),
+		'nutrition' => __( 'Nutrition check', 'vance-health-hub' ),
+		'recipes'   => __( 'Meal planner', 'vance-health-hub' ),
+		'discounts' => __( 'Discounts and benefits', 'vance-health-hub' ),
+		'none'      => __( 'Hide this card', 'vance-health-hub' ),
+	);
+}
+
+/**
+ * The tool that a slot shows when nothing is saved: today's order.
+ *
+ * @param int $slot Slot number, 1 to 4.
+ * @return string A pick. 'none' for a slot that does not exist.
+ */
+function vance_hub_tool_pick_default( $slot ) {
+	$defaults = array(
+		1 => 'survey',
+		2 => 'nutrition',
+		3 => 'recipes',
+		4 => 'discounts',
+	);
+	return isset( $defaults[ (int) $slot ] ) ? $defaults[ (int) $slot ] : 'none';
+}
+
+/**
+ * Sanitise the pick of one card slot.
+ *
+ * WordPress passes the setting object as the second argument, so one function
+ * serves all four settings: it reads the slot from the setting id
+ * (vance_hub_tool_{slot}_pick). A plain id string works too.
+ *
+ * @param mixed                       $value   Raw value.
+ * @param WP_Customize_Setting|string $setting The setting, or its id.
+ * @return string A known pick. An unknown value gives the default of the slot,
+ *                or 'none' when the slot cannot be read from the id.
+ */
+function vance_hub_sanitize_tool_pick( $value, $setting = '' ) {
+	$value = is_string( $value ) ? trim( $value ) : '';
+	if ( array_key_exists( $value, vance_hub_tool_picks() ) ) {
+		return $value;
+	}
+	$id = is_object( $setting ) && isset( $setting->id ) ? (string) $setting->id : (string) $setting;
+	if ( preg_match( '/^vance_hub_tool_([1-4])_pick$/', $id, $m ) ) {
+		return vance_hub_tool_pick_default( (int) $m[1] );
+	}
+	return 'none';
+}
+
+/**
+ * Put the slot settings on the standard cards. Pure: no theme mod is read.
+ *
+ * Each slot gives at most one card, in slot order. A slot whose pick is 'none'
+ * (or is not a standard tool) gives no card. Otherwise the slot starts from the
+ * standard card of its tool and then applies its own values:
+ *
+ *   - a non-empty title, text or button replaces title, desc or cta;
+ *   - a non-empty link replaces href;
+ *   - an image id whose attachment has a URL replaces img, and alt becomes the
+ *     alt text of that attachment. The standard alt describes another picture,
+ *     so it is never kept with a custom image. An empty alt is correct when the
+ *     media library has none. When the attachment has no URL, the standard
+ *     image and alt stay.
+ *
+ * The same tool may sit in two slots. Nothing is removed as a duplicate.
+ *
+ * @param array[] $standard Cards in the shape of vance_hub_tools().
+ * @param array[] $slots    One array per slot, in slot order, with the keys
+ *                          pick, title, text, button, link and image.
+ * @return array[] Cards to print, in the shape of vance_hub_tools().
+ */
+function vance_hub_home_tools_apply( $standard, $slots ) {
+	$by_mod = array();
+	foreach ( $standard as $card ) {
+		if ( isset( $card['mod'] ) ) {
+			$by_mod[ $card['mod'] ] = $card;
+		}
+	}
+
+	$cards = array();
+	foreach ( $slots as $slot ) {
+		$pick = isset( $slot['pick'] ) ? $slot['pick'] : 'none';
+		if ( ! is_string( $pick ) || ! isset( $by_mod[ $pick ] ) ) {
+			continue;
+		}
+		$card = $by_mod[ $pick ];
+
+		foreach ( array( 'title' => 'title', 'text' => 'desc', 'button' => 'cta', 'link' => 'href' ) as $key => $field ) {
+			$value = isset( $slot[ $key ] ) && is_string( $slot[ $key ] ) ? trim( $slot[ $key ] ) : '';
+			if ( '' !== $value ) {
+				$card[ $field ] = $value;
+			}
+		}
+
+		$image = isset( $slot['image'] ) ? max( 0, (int) $slot['image'] ) : 0;
+		if ( $image > 0 ) {
+			$url = wp_get_attachment_image_url( $image, 'large' );
+			if ( is_string( $url ) && '' !== $url ) {
+				$card['img'] = $url;
+				$card['alt'] = trim( (string) get_post_meta( $image, '_wp_attachment_image_alt', true ) );
+			}
+		}
+
+		$cards[] = $card;
+	}
+	return $cards;
+}
+
+/**
+ * The tool cards the home page prints, in slot order.
+ *
+ * With nothing saved this equals vance_hub_tools(). Only the home page calls
+ * this: the article sidebar and the dashboard keep reading vance_hub_tools().
+ *
+ * @return array[] Cards in the shape of vance_hub_tools(). Empty when every
+ *                 slot is hidden.
+ */
+function vance_hub_home_tools() {
+	$slots = array();
+	for ( $i = 1; $i <= 4; $i++ ) {
+		$pick_id = "vance_hub_tool_{$i}_pick";
+		$slot    = array(
+			'pick' => vance_hub_sanitize_tool_pick( vance_get_theme_mod( $pick_id, vance_hub_tool_pick_default( $i ) ), $pick_id ),
+		);
+		foreach ( array( 'title', 'text', 'button', 'link' ) as $key ) {
+			$saved        = vance_get_theme_mod( "vance_hub_tool_{$i}_{$key}", '' );
+			$slot[ $key ] = is_string( $saved ) ? trim( $saved ) : '';
+		}
+		$slot['image'] = max( 0, (int) vance_get_theme_mod( "vance_hub_tool_{$i}_image", 0 ) );
+		$slots[]       = $slot;
+	}
+	return vance_hub_home_tools_apply( vance_hub_tools(), $slots );
+}
+
+/* =========================================================================
  * Customizer
  * ====================================================================== */
 
@@ -499,6 +648,69 @@ function vance_hub_home_customize_register( $wp_customize ) {
 			'type'        => $row['type'],
 			'priority'    => $priority,
 		) );
+	}
+
+	// The four tool cards. Six controls each: priorities 10 to 15 for card 1,
+	// 20 to 25 for card 2, and so on.
+	$tools_section = 'vance_hub_sec_home_tools';
+	for ( $i = 1; $i <= 4; $i++ ) {
+		$base = $i * 10;
+
+		$wp_customize->add_setting( "vance_hub_tool_{$i}_pick", array(
+			'default'           => vance_hub_tool_pick_default( $i ),
+			'sanitize_callback' => 'vance_hub_sanitize_tool_pick',
+		) );
+		$wp_customize->add_control( "vance_hub_tool_{$i}_pick", array(
+			/* translators: %d: card number, 1 to 4. */
+			'label'       => sprintf( __( 'Card %d: tool', 'vance-health-hub' ), $i ),
+			'description' => __( 'An empty field below uses the standard wording of the selected tool. The standard text of the Self-Assessment and of the meal planner shows live numbers.', 'vance-health-hub' ),
+			'section'     => $tools_section,
+			'type'        => 'select',
+			'priority'    => $base,
+			'choices'     => vance_hub_tool_picks(),
+		) );
+
+		/* translators: %d: card number, 1 to 4. Each label below. */
+		$fields = array(
+			'title'  => array( __( 'Card %d: title', 'vance-health-hub' ), 'text', 'sanitize_text_field' ),
+			'text'   => array( __( 'Card %d: text', 'vance-health-hub' ), 'textarea', 'sanitize_textarea_field' ),
+			'button' => array( __( 'Card %d: button', 'vance-health-hub' ), 'text', 'sanitize_text_field' ),
+			'link'   => array( __( 'Card %d: link', 'vance-health-hub' ), 'url', 'esc_url_raw' ),
+		);
+		$offset = 0;
+		foreach ( $fields as $key => $field ) {
+			$offset++;
+			$wp_customize->add_setting( "vance_hub_tool_{$i}_{$key}", array(
+				'default'           => '',
+				'sanitize_callback' => $field[2],
+			) );
+			$wp_customize->add_control( "vance_hub_tool_{$i}_{$key}", array(
+				'label'    => sprintf( $field[0], $i ),
+				'section'  => $tools_section,
+				'type'     => $field[1],
+				'priority' => $base + $offset,
+			) );
+		}
+
+		$wp_customize->add_setting( "vance_hub_tool_{$i}_image", array(
+			'default'           => 0,
+			'sanitize_callback' => 'absint',
+		) );
+		$image_args = array(
+			/* translators: %d: card number, 1 to 4. */
+			'label'    => sprintf( __( 'Card %d: image', 'vance-health-hub' ), $i ),
+			'section'  => $tools_section,
+			'priority' => $base + 5,
+		);
+		if ( class_exists( 'WP_Customize_Media_Control' ) ) {
+			$image_args['mime_type'] = 'image';
+			$wp_customize->add_control( new WP_Customize_Media_Control( $wp_customize, "vance_hub_tool_{$i}_image", $image_args ) );
+		} else {
+			// No core media control (a test): a plain number control, so the
+			// setting still has a control.
+			$image_args['type'] = 'number';
+			$wp_customize->add_control( "vance_hub_tool_{$i}_image", $image_args );
+		}
 	}
 }
 add_action( 'customize_register', 'vance_hub_home_customize_register' );

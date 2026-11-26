@@ -273,6 +273,9 @@ function esc_attr_e( $text, $domain = '' ) { echo esc_attr( $text ); }
 function __( $text, $domain = '' ) { return $text; }
 function wp_json_encode( $value ) { return json_encode( $value ); }
 function wp_date( $format, $timestamp = null ) { return gmdate( $format, null === $timestamp ? time() : (int) $timestamp ); }
+// The admin screen prints a go-live line (inc/hub-golive.php), which needs the site zone.
+function wp_timezone() { return new DateTimeZone( 'UTC' ); }
+function wp_timezone_string() { return 'UTC'; }
 
 function is_admin() { return (bool) $GLOBALS['IS_ADMIN']; }
 function wp_doing_ajax() { return (bool) $GLOBALS['DOING_AJAX']; }
@@ -351,6 +354,7 @@ function cookie_write( $name ) {
 require_once $THEME . '/inc/hub-preview.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
+require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard.php';
 require_once $THEME . '/inc/hub-header.php';

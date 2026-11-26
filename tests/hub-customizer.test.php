@@ -60,6 +60,7 @@ function current_user_can( $cap ) { return false; }
 function vance_get_theme_mod( $key, $default = '' ) {
 	return array_key_exists( $key, $GLOBALS['MODS'] ) ? $GLOBALS['MODS'][ $key ] : $default;
 }
+function wp_timezone_string() { return 'Europe/London'; } // The go-live control names the site zone.
 function add_action( $tag, $callback, $priority = 10, $accepted_args = 1 ) { return true; }
 function add_filter( $tag, $callback, $priority = 10, $accepted_args = 1 ) { return true; }
 function add_submenu_page( $parent, $page_title, $menu_title, $capability, $menu_slug, $callback = '', $position = null ) {
@@ -109,6 +110,7 @@ class SuiteCustomizeFake {
 
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
+require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
 require_once $THEME . '/inc/hub-tool-result.php';
@@ -134,6 +136,7 @@ function suite_section_order( $manager, $section ) {
 $M = new SuiteCustomizeFake();
 vance_hub_customize_register( $M );
 vance_hub_home_customize_register( $M );
+vance_hub_golive_customize_register( $M );
 vance_hub_article_customize_register( $M );
 vance_hub_dash_features_customize( $M );
 vance_hub_tool_result_customize_register( $M );
@@ -221,6 +224,20 @@ $NEW_SETTINGS = array(
 	'vance_hub_text_member_button' => array( 'Go to My Hub', 'sanitize_text_field', 'vance_hub_sec_home_text' ),
 );
 
+// The 25 later settings: the 24 tool card settings (4 slots x 6) and the go-live date.
+// Same shape as the tables above. Written out by slot, on purpose: a default or a
+// sanitiser changed in the code must fail this table.
+$TOOL_SETTINGS = array();
+foreach ( array( 1 => 'survey', 2 => 'nutrition', 3 => 'recipes', 4 => 'discounts' ) as $slot => $pick ) {
+	$TOOL_SETTINGS[ "vance_hub_tool_{$slot}_pick" ]   = array( $pick, 'vance_hub_sanitize_tool_pick', 'vance_hub_sec_home_tools' );
+	$TOOL_SETTINGS[ "vance_hub_tool_{$slot}_title" ]  = array( '', 'sanitize_text_field', 'vance_hub_sec_home_tools' );
+	$TOOL_SETTINGS[ "vance_hub_tool_{$slot}_text" ]   = array( '', 'sanitize_textarea_field', 'vance_hub_sec_home_tools' );
+	$TOOL_SETTINGS[ "vance_hub_tool_{$slot}_button" ] = array( '', 'sanitize_text_field', 'vance_hub_sec_home_tools' );
+	$TOOL_SETTINGS[ "vance_hub_tool_{$slot}_link" ]   = array( '', 'esc_url_raw', 'vance_hub_sec_home_tools' );
+	$TOOL_SETTINGS[ "vance_hub_tool_{$slot}_image" ]  = array( 0, 'absint', 'vance_hub_sec_home_tools' );
+}
+$TOOL_SETTINGS['vance_hub_golive_at'] = array( '', 'vance_hub_sanitize_datetime', 'vance_home_layout' );
+
 $SECTION_IDS = array(
 	'vance_home_layout',
 	'vance_hub_sec_home',
@@ -237,7 +254,7 @@ $SECTION_IDS = array(
 
 // Section id => control ids in on-screen order.
 $ORDER = array(
-	'vance_home_layout'       => array( 'vance_home_layout' ),
+	'vance_home_layout'       => array( 'vance_home_layout', 'vance_hub_golive_at' ),
 	'vance_hub_sec_home'      => array(
 		'vance_hub_block_order', 'vance_hub_count_sections', 'vance_hub_count_more', 'vance_hub_count_library', 'vance_hub_count_recipes', 'vance_hub_count_quotes',
 	),
@@ -248,8 +265,13 @@ $ORDER = array(
 		'vance_hub_text_join_pill', 'vance_hub_text_join_title', 'vance_hub_text_join_text', 'vance_hub_text_join_card', 'vance_hub_text_join_button',
 		'vance_hub_text_member_title', 'vance_hub_text_member_text', 'vance_hub_text_member_button',
 	),
-	// Registered, but no control yet: the tool cards are built after the blocks and texts.
-	'vance_hub_sec_home_tools' => array(),
+	// Four cards, six controls each: tool, title, text, button, link, image.
+	'vance_hub_sec_home_tools' => array(
+		'vance_hub_tool_1_pick', 'vance_hub_tool_1_title', 'vance_hub_tool_1_text', 'vance_hub_tool_1_button', 'vance_hub_tool_1_link', 'vance_hub_tool_1_image',
+		'vance_hub_tool_2_pick', 'vance_hub_tool_2_title', 'vance_hub_tool_2_text', 'vance_hub_tool_2_button', 'vance_hub_tool_2_link', 'vance_hub_tool_2_image',
+		'vance_hub_tool_3_pick', 'vance_hub_tool_3_title', 'vance_hub_tool_3_text', 'vance_hub_tool_3_button', 'vance_hub_tool_3_link', 'vance_hub_tool_3_image',
+		'vance_hub_tool_4_pick', 'vance_hub_tool_4_title', 'vance_hub_tool_4_text', 'vance_hub_tool_4_button', 'vance_hub_tool_4_link', 'vance_hub_tool_4_image',
+	),
 	'vance_hub_sec_home_tiles' => array(
 		'vance_hub_tile_1_badge', 'vance_hub_tile_1_title', 'vance_hub_tile_1_text', 'vance_hub_tile_1_link',
 		'vance_hub_tile_2_badge', 'vance_hub_tile_2_title', 'vance_hub_tile_2_text', 'vance_hub_tile_2_link',
@@ -298,11 +320,11 @@ $EXP = array_keys( $SETTINGS );
 sort( $IDS );
 sort( $EXP );
 check( 'settings: the agreed table holds exactly forty original ids', count( $SETTINGS ) === 40 );
-check( 'settings: the registered ids are exactly the original forty plus the 28 new ones (68)', count( $M->settings ) === 68 );
+check( 'settings: the registered ids are exactly the original forty plus the 28 new ones plus the 25 tool card and go-live ones (93)', count( $M->settings ) === 93 );
 check( 'settings: the original forty are all still registered', array_diff( $EXP, $IDS ) === array() );
-$EXP_ALL = array_merge( $EXP, array_keys( $NEW_SETTINGS ) );
+$EXP_ALL = array_merge( $EXP, array_keys( $NEW_SETTINGS ), array_keys( $TOOL_SETTINGS ) );
 sort( $EXP_ALL );
-check( 'settings: the registered ids are exactly the original forty plus the agreed 28', $IDS === $EXP_ALL && count( $NEW_SETTINGS ) === 28 );
+check( 'settings: the registered ids are exactly the original forty plus the agreed 28 plus the agreed 25', $IDS === $EXP_ALL && count( $NEW_SETTINGS ) === 28 && count( $TOOL_SETTINGS ) === 25 );
 
 foreach ( $SETTINGS as $id => $row ) {
 	check( "setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
@@ -312,6 +334,11 @@ foreach ( $SETTINGS as $id => $row ) {
 foreach ( $NEW_SETTINGS as $id => $row ) {
 	check( "new setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
 	check( "new setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
+}
+
+foreach ( $TOOL_SETTINGS as $id => $row ) {
+	check( "tool/go-live setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
+	check( "tool/go-live setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
 }
 
 check( 'settings: the check-in texts equal vance_hub_checkin_text_defaults()', vance_hub_checkin_text_defaults()['vance_hub_checkin_note'] === $M->settings['vance_hub_checkin_note']['default'] && vance_hub_checkin_text_defaults()['vance_hub_checkin_q_pain'] === $M->settings['vance_hub_checkin_q_pain']['default'] );
@@ -346,10 +373,10 @@ check( 'sections: every section has a one-sentence description', count( array_fi
 section( '3. Controls: sections, priorities and on-screen order' );
 
 $CONTROL_SECTIONS = array_column( $M->controls, 'section' );
-check( 'controls: 65 controls are registered (the original 40, minus the three retired switches, plus 28 new)', count( $M->controls ) === 65 );
+check( 'controls: 90 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live)', count( $M->controls ) === 90 );
 check( 'controls: every control sits in one of the eleven sections', array_diff( $CONTROL_SECTIONS, $SECTION_IDS ) === array() );
-check( 'controls: only the tool cards section is empty (ten of eleven sections hold controls)', count( array_count_values( $CONTROL_SECTIONS ) ) === 10 && ! in_array( 'vance_hub_sec_home_tools', $CONTROL_SECTIONS, true ) );
-check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 65 );
+check( 'controls: no section is empty (all eleven sections hold controls)', count( array_count_values( $CONTROL_SECTIONS ) ) === 11 && array_diff( $SECTION_IDS, $CONTROL_SECTIONS ) === array() );
+check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 90 );
 
 $DISTINCT_OK = true;
 foreach ( $SECTION_IDS as $sid ) {
@@ -371,11 +398,17 @@ foreach ( $SETTINGS as $id => $row ) {
 foreach ( $NEW_SETTINGS as $id => $row ) {
 	check( "section: new control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
 }
+foreach ( $TOOL_SETTINGS as $id => $row ) {
+	check( "section: tool/go-live control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
+}
 
-check( 'order: section 1 holds the master switch only', suite_section_order( $M, 'vance_home_layout' ) === $ORDER['vance_home_layout'] );
+check( 'order: section 1 holds the master switch, then the go-live date (priorities 10 and 20)', suite_section_order( $M, 'vance_home_layout' ) === $ORDER['vance_home_layout'] && $M->controls['vance_home_layout']['priority'] === 10 && $M->controls['vance_hub_golive_at']['priority'] === 20 );
 check( 'order: section 2 runs the block order, then the five counts', suite_section_order( $M, 'vance_hub_sec_home' ) === $ORDER['vance_hub_sec_home'] );
 check( 'order: section 3 runs hero, survey card, facts, visitor join, member join texts', suite_section_order( $M, 'vance_hub_sec_home_text' ) === $ORDER['vance_hub_sec_home_text'] );
-check( 'order: section 4 (tool cards) holds no control yet', suite_section_order( $M, 'vance_hub_sec_home_tools' ) === $ORDER['vance_hub_sec_home_tools'] );
+check( 'order: section 4 (tool cards) runs cards 1 to 4 (tool, title, text, button, link, image)', suite_section_order( $M, 'vance_hub_sec_home_tools' ) === $ORDER['vance_hub_sec_home_tools'] );
+$TOOL_PRIORITIES = array();
+foreach ( $ORDER['vance_hub_sec_home_tools'] as $id ) { $TOOL_PRIORITIES[] = $M->controls[ $id ]['priority']; }
+check( 'order: the card priorities are 10 to 15, 20 to 25, 30 to 35 and 40 to 45', $TOOL_PRIORITIES === array( 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 40, 41, 42, 43, 44, 45 ) );
 check( 'order: section 5 runs tiles 1 to 4 (badge, title, text, link)', suite_section_order( $M, 'vance_hub_sec_home_tiles' ) === $ORDER['vance_hub_sec_home_tiles'] );
 check( 'order: section 6 runs header, member total, founding deadline', suite_section_order( $M, 'vance_hub_sec_header' ) === $ORDER['vance_hub_sec_header'] );
 check( 'order: section 7 runs articles, then the survey result page', suite_section_order( $M, 'vance_hub_sec_pages' ) === $ORDER['vance_hub_sec_pages'] );
@@ -470,7 +503,7 @@ check( 'numbers: the master switch description names sections 2 to 11 and sectio
 check( 'numbers: the check-in description names the dashboard section by its number (8)', strpos( $M->controls['vance_hub_dash_checkin']['description'], '(section 8)' ) !== false );
 check( 'numbers: the flare plan description names the dashboard section by its number (8)', strpos( $M->controls['vance_hub_dash_flare_plan']['description'], '(section 8)' ) !== false );
 
-$HOME_SRC = file_get_contents( $THEME . '/inc/hub-layout.php' ) . file_get_contents( $THEME . '/inc/hub-dashboard-features.php' ) . file_get_contents( $THEME . '/inc/hub-flare-plan.php' );
+$HOME_SRC = file_get_contents( $THEME . '/inc/hub-layout.php' ) . file_get_contents( $THEME . '/inc/hub-dashboard-features.php' ) . file_get_contents( $THEME . '/inc/hub-flare-plan.php' ) . file_get_contents( $THEME . '/inc/hub-golive.php' ) . file_get_contents( $THEME . '/inc/hub-home-settings.php' );
 check( 'numbers: no hub description holds a literal "section N" (all use %d / %1$d)', ! preg_match( '/__\(\s*\'[^\']*\b[Ss]ections? \d/', $HOME_SRC ) );
 
 // Block registry.
@@ -574,6 +607,36 @@ foreach ( $TEXTS as $mod => $row ) {
 }
 check( 'texts: the first control of each of the five groups says where the text shows (a second sentence)', count( array_filter( array_keys( $TEXTS ), function ( $mod ) use ( $M ) { return $M->controls[ $mod ]['description'] !== 'Leave empty to use the default.'; } ) ) === 5 );
 check( 'texts: text control priorities are unique and rise with the registry', array_map( function ( $mod ) use ( $M ) { return $M->controls[ $mod ]['priority']; }, array_keys( $TEXTS ) ) === range( 10, 220, 10 ) );
+
+section( '9. Tool cards and the go-live date: controls and sanitisers' );
+
+check( 'tools: the pick choices are the four tools and "Hide this card"', vance_hub_tool_picks() === array( 'survey' => 'Self-Assessment', 'nutrition' => 'Nutrition check', 'recipes' => 'Meal planner', 'discounts' => 'Discounts and benefits', 'none' => 'Hide this card' ) );
+foreach ( array( 1, 2, 3, 4 ) as $slot ) {
+	$pick = $M->controls[ "vance_hub_tool_{$slot}_pick" ];
+	check( "tools: card $slot pick is a select with the five choices", 'select' === $pick['type'] && $pick['choices'] === vance_hub_tool_picks() );
+	check( "tools: card $slot pick is labelled \"Card $slot: tool\"", $pick['label'] === "Card $slot: tool" );
+	check( "tools: card $slot pick has the standard-wording description with the live-numbers sentence", false !== strpos( $pick['description'], 'An empty field below uses the standard wording of the selected tool.' ) && false !== strpos( $pick['description'], 'live numbers' ) );
+	foreach ( array( 'title' => 'text', 'text' => 'textarea', 'button' => 'text', 'link' => 'url' ) as $key => $type ) {
+		$c = $M->controls[ "vance_hub_tool_{$slot}_{$key}" ];
+		check( "tools: card $slot $key is a $type control labelled \"Card $slot: $key\" with no description", $type === $c['type'] && "Card $slot: $key" === $c['label'] && ! isset( $c['description'] ) );
+	}
+	$image = $M->controls[ "vance_hub_tool_{$slot}_image" ];
+	check( "tools: card $slot image is labelled \"Card $slot: image\" and, with no core media control, a number control", "Card $slot: image" === $image['label'] && 'number' === $image['type'] && ! class_exists( 'WP_Customize_Media_Control' ) );
+}
+
+check( 'pick sanitiser: a known pick stays', vance_hub_sanitize_tool_pick( 'recipes', 'vance_hub_tool_1_pick' ) === 'recipes' && vance_hub_sanitize_tool_pick( 'none', 'vance_hub_tool_2_pick' ) === 'none' );
+check( 'pick sanitiser: an unknown value gives the default of the slot, read from a setting object', vance_hub_sanitize_tool_pick( 'bogus', (object) array( 'id' => 'vance_hub_tool_3_pick' ) ) === 'recipes' && vance_hub_sanitize_tool_pick( '', (object) array( 'id' => 'vance_hub_tool_4_pick' ) ) === 'discounts' );
+check( 'pick sanitiser: an unknown value gives the default of the slot, read from a plain id', vance_hub_sanitize_tool_pick( 'bogus', 'vance_hub_tool_1_pick' ) === 'survey' && vance_hub_sanitize_tool_pick( array( 'survey' ), 'vance_hub_tool_2_pick' ) === 'nutrition' );
+check( 'pick sanitiser: an id that is not a card slot gives "none" for an unknown value', vance_hub_sanitize_tool_pick( 'bogus', 'vance_hub_tool_5_pick' ) === 'none' && vance_hub_sanitize_tool_pick( 'bogus' ) === 'none' );
+check( 'pick sanitiser: surrounding spaces are trimmed, but the case is not changed', vance_hub_sanitize_tool_pick( ' survey ', 'vance_hub_tool_4_pick' ) === 'survey' && vance_hub_sanitize_tool_pick( 'Survey', 'vance_hub_tool_4_pick' ) === 'discounts' );
+
+$GO = $M->controls['vance_hub_golive_at'];
+check( 'go-live: the control is a datetime-local input labelled "Go-live date and time" in section vance_home_layout', 'datetime-local' === $GO['type'] && 'Go-live date and time' === $GO['label'] && 'vance_home_layout' === $GO['section'] );
+check( 'go-live: the description names the site time zone', false !== strpos( $GO['description'], '(Europe/London)' ) );
+check( 'go-live: the description names the check-in and flare plan sections by number (10 and 11)', false !== strpos( $GO['description'], 'sections 10 and 11' ) );
+check( 'go-live: the description says the field becomes empty, and that empty means no change', false !== strpos( $GO['description'], 'this field then becomes empty' ) && false !== strpos( $GO['description'], 'Leave this field empty for no planned change.' ) );
+check( 'go-live: the description warns about the page cache', false !== strpos( $GO['description'], 'page cache' ) );
+check( 'go-live: the layout control points to the go-live field', false !== strpos( $M->controls['vance_home_layout']['description'], 'use the go-live field below' ) );
 
 /* ===================================================================== */
 echo "\n";

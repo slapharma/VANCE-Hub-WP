@@ -151,11 +151,14 @@ foreach ( vance_hub_block_order() as $vhub_block ) {
 		 * c. Four tool tiles. Real URLs; the recipe count is live.
 		 * ------------------------------------------------------------ */
 		case 'tools':
-			?>
+			// Up to four cards, set in the Customizer. Every card hidden: no block.
+			$vhub_tool_cards = vance_hub_home_tools();
+			if ( ! empty( $vhub_tool_cards ) ) :
+				?>
 <section class="vhub-tools-section" aria-labelledby="vhub-tools-title">
 	<h2 id="vhub-tools-title" class="screen-reader-text vhub-sr"><?php esc_html_e( 'Free tools', 'vance-health-hub' ); ?></h2>
 	<ul class="vhub-wrap vhub-tools">
-		<?php foreach ( vance_hub_tools() as $vhub_tool ) : ?>
+		<?php foreach ( $vhub_tool_cards as $vhub_tool ) : ?>
 			<li class="vhub-tool vhub-tool--<?php echo esc_attr( $vhub_tool['mod'] ); ?>">
 				<a class="vhub-tool__link" href="<?php echo esc_url( $vhub_tool['href'] ); ?>">
 					<?php if ( $vhub_tool['img'] ) : ?>
@@ -174,6 +177,7 @@ foreach ( vance_hub_block_order() as $vhub_block ) {
 </section>
 
 <?php
+			endif;
 			break;
 
 		/* ---------------------------------------------------------------

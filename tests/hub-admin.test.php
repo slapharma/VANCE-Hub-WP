@@ -142,6 +142,20 @@ function get_permalink( $post = 0 ) {
 	return array_key_exists( $id, $GLOBALS['PERMALINKS'] ) ? $GLOBALS['PERMALINKS'][ $id ] : false;
 }
 
+// The go-live line of the screen (inc/hub-golive.php) needs the site zone and the date formats.
+// The site zone is Europe/London, a zone that is not UTC, so a wrong zone shows.
+function wp_timezone() { return new DateTimeZone( 'Europe/London' ); }
+function wp_timezone_string() { return 'Europe/London'; }
+function get_option( $key, $default = false ) {
+	$options = array( 'date_format' => 'j F Y', 'time_format' => 'H:i' );
+	return array_key_exists( $key, $options ) ? $options[ $key ] : $default;
+}
+function wp_date( $format, $timestamp = null, $timezone = null ) {
+	$date = new DateTimeImmutable( '@' . ( null === $timestamp ? time() : (int) $timestamp ) );
+	return $date->setTimezone( $timezone instanceof DateTimeZone ? $timezone : wp_timezone() )->format( $format );
+}
+function is_customize_preview() { return false; }
+
 /** Stand-in for WP_Customize_Manager: records what each register function adds. */
 class HubAdminCustomizeFake {
 	public $panels   = array();
@@ -158,6 +172,7 @@ class HubAdminCustomizeFake {
 
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
+require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
 require_once $THEME . '/inc/hub-tool-result.php';
@@ -528,6 +543,47 @@ check( 'row text: a part saved off reads "Off" under a hub master', switch_cell(
 arrange_admin( array( 'vance_hub_dash_checkin' => false ), array( 'manage_options' => true ) );
 $OUT = render_screen();
 check( 'row text: a part off under a classic master reads "Off", not the master text', switch_cell( $OUT, 'Show the daily check-in' ) === 'Off' );
+
+section( '8. The go-live line' );
+
+$CAN = array( 'manage_options' => true );
+
+arrange_admin( array(), $CAN );
+$OUT = render_screen();
+check( 'go-live: no date and no record prints no go-live line', false === strpos( $OUT, 'Go-live' ) && false === strpos( $OUT, 'went live' ) );
+check( 'go-live: the helper gives state none and an empty text with nothing saved', vance_hub_admin_golive() === array( 'state' => 'none', 'text' => '' ) );
+
+arrange_admin( array( 'vance_hub_golive_at' => '2099-07-01T09:30' ), $CAN );
+$OUT = render_screen();
+check( 'go-live: a future date prints "planned for" with the date, the time and the zone name', false !== strpos( $OUT, 'Go-live: planned for 1 July 2099 09:30 (Europe/London).' ) );
+check( 'go-live: the planned line has a Change link to section vance_home_layout', 1 === preg_match( '/Europe\/London\)\.\s*<a href="[^"]*autofocus%5Bsection%5D=vance_home_layout">Change<\/a>/', $OUT ) );
+check( 'go-live: the planned line sits after the master switch line and before the settings button', strpos( $OUT, 'Master switch' ) < strpos( $OUT, 'Go-live:' ) && strpos( $OUT, 'Go-live:' ) < strpos( $OUT, 'Change VanceHubClub settings' ) );
+
+arrange_admin( array( 'vance_hub_golive_at' => '2099-01-15T09:30' ), $CAN );
+check( 'go-live: a winter date shows the same wall-clock time (no summer hour added)', vance_hub_admin_golive( 0 )['text'] === 'Go-live: planned for 15 January 2099 09:30 (Europe/London).' );
+check( 'go-live: the helper takes "now": a date that has passed at that time gives state none', vance_hub_admin_golive( gmmktime( 10, 0, 0, 1, 15, 2099 ) )['state'] === 'none' );
+check( 'go-live: the helper takes "now": the same date, one minute earlier, gives state planned', vance_hub_admin_golive( gmmktime( 9, 29, 0, 1, 15, 2099 ) )['state'] === 'planned' );
+
+arrange_admin( array( 'vance_hub_golive_at' => '2020-07-01T09:30' ), $CAN );
+$OUT = render_screen();
+check( 'go-live: a date in the past, with the layout still classic, prints nothing', false === strpos( $OUT, 'Go-live' ) && false === strpos( $OUT, 'went live' ) );
+
+arrange_admin( array( 'vance_hub_golive_at' => '2099-07-01T09:30', 'vance_home_layout' => 'hub' ), $CAN );
+$OUT = render_screen();
+check( 'go-live: a future date with the layout already hub prints no planned line', false === strpos( $OUT, 'Go-live' ) );
+
+arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_golive_done_at' => gmmktime( 8, 30, 0, 7, 1, 2026 ) ), $CAN );
+$OUT = render_screen();
+check( 'go-live: layout hub and a record print "went live by schedule" in the site zone (08:30 UTC is 09:30 in London)', false !== strpos( $OUT, 'VanceHubClub went live by schedule on 1 July 2026 09:30.' ) );
+check( 'go-live: the went-live line has no Change link', 1 === preg_match( '/went live by schedule on [^<]*\.\s*<\/p>/', $OUT ) );
+
+arrange_admin( array( 'vance_home_layout' => 'classic', 'vance_hub_golive_done_at' => gmmktime( 8, 30, 0, 7, 1, 2026 ) ), $CAN );
+$OUT = render_screen();
+check( 'go-live: a record with the layout back on classic prints nothing', false === strpos( $OUT, 'went live' ) );
+
+arrange_admin( array( 'vance_home_layout' => 'hub' ), $CAN );
+$OUT = render_screen();
+check( 'go-live: layout hub with no record prints nothing (a manual switch is not a scheduled one)', false === strpos( $OUT, 'went live' ) );
 
 /* ===================================================================== */
 echo "\n";

@@ -252,6 +252,10 @@ function get_the_title( $post ) { return $post->post_title; }
 function get_post_meta( $post_id, $key = '', $single = false ) {
 	return isset( $GLOBALS['META'][ $post_id ][ $key ] ) ? $GLOBALS['META'][ $post_id ][ $key ] : '';
 }
+// The tool card slots (vance_hub_home_tools): the URL of a chosen attachment, or false.
+function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) {
+	return isset( $GLOBALS['ATTACH_URL'][ $id ] ) ? $GLOBALS['ATTACH_URL'][ $id ] : false;
+}
 function get_post_thumbnail_id( $post_id ) {
 	return isset( $GLOBALS['THUMB_ID'][ $post_id ] ) ? $GLOBALS['THUMB_ID'][ $post_id ] : 0;
 }
@@ -1204,6 +1208,121 @@ check( 'sanitize: "1" is on', vance_hub_sanitize_checkbox( '1' ) === true );
 check( 'sanitize: true is on', vance_hub_sanitize_checkbox( true ) === true );
 check( 'sanitize: false is off', vance_hub_sanitize_checkbox( false ) === false );
 check( 'sanitize: the integer 2 is off (only 1 means on)', vance_hub_sanitize_checkbox( 2 ) === false );
+
+/* ---- 15c. tool cards: slots, overrides, hidden ---------------------------- */
+section( '15c. Tool cards on the Hub home' );
+
+/** The mod keys of the tool tiles in a rendered page, in print order. */
+function tool_order( $html ) {
+	preg_match_all( '/<li class="vhub-tool vhub-tool--([a-z]+)">/', $html, $m );
+	return $m[1];
+}
+
+$STANDARD = array(
+	array( 'mod' => 'survey', 'icon' => 'clipboard', 'title' => 'S title', 'desc' => 'S desc', 'cta' => 'S cta', 'href' => 'https://example.test/s/', 'img' => 'https://example.test/s.jpg', 'alt' => 'S alt' ),
+	array( 'mod' => 'nutrition', 'icon' => 'gauge', 'title' => 'N title', 'desc' => 'N desc', 'cta' => 'N cta', 'href' => 'https://example.test/n/', 'img' => 'https://example.test/n.jpg', 'alt' => 'N alt' ),
+	array( 'mod' => 'recipes', 'icon' => 'fork', 'title' => 'R title', 'desc' => 'R desc', 'cta' => 'R cta', 'href' => 'https://example.test/r/', 'img' => '', 'alt' => 'R alt' ),
+	array( 'mod' => 'discounts', 'icon' => 'tag', 'title' => 'D title', 'desc' => 'D desc', 'cta' => 'D cta', 'href' => 'https://example.test/d/', 'img' => 'https://example.test/d.jpg', 'alt' => 'D alt' ),
+);
+$EMPTY_SLOT = array( 'title' => '', 'text' => '', 'button' => '', 'link' => '', 'image' => 0 );
+$DEFAULT_SLOTS = array(
+	array_merge( array( 'pick' => 'survey' ), $EMPTY_SLOT ),
+	array_merge( array( 'pick' => 'nutrition' ), $EMPTY_SLOT ),
+	array_merge( array( 'pick' => 'recipes' ), $EMPTY_SLOT ),
+	array_merge( array( 'pick' => 'discounts' ), $EMPTY_SLOT ),
+);
+$GLOBALS['ATTACH_URL'] = array( 41 => 'https://example.test/uploads/custom-large.jpg', 42 => 'https://example.test/uploads/no-alt-large.jpg' );
+$GLOBALS['META']       = array( 41 => array( '_wp_attachment_image_alt' => "  A custom picture \n" ), 42 => array( '_wp_attachment_image_alt' => '' ) );
+
+check( 'tools pure: nothing set gives the standard cards, same order and values', vance_hub_home_tools_apply( $STANDARD, $DEFAULT_SLOTS ) === $STANDARD );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[1]['pick'] = 'none';
+check( 'tools pure: a "none" slot gives no card, and the others keep their order', array_column( vance_hub_home_tools_apply( $STANDARD, $SLOTS ), 'mod' ) === array( 'survey', 'recipes', 'discounts' ) );
+$SLOTS = $DEFAULT_SLOTS;
+foreach ( $SLOTS as $i => $s ) { $SLOTS[ $i ]['pick'] = 'none'; }
+check( 'tools pure: four "none" slots give an empty list', vance_hub_home_tools_apply( $STANDARD, $SLOTS ) === array() );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['pick'] = 'discounts';
+$SLOTS[3]['pick'] = 'discounts';
+check( 'tools pure: the same tool in two slots gives two cards (no de-duplication)', array_column( vance_hub_home_tools_apply( $STANDARD, $SLOTS ), 'mod' ) === array( 'discounts', 'nutrition', 'recipes', 'discounts' ) );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['pick'] = 'bogus';
+$SLOTS[1]['pick'] = null;
+check( 'tools pure: an unknown or non-string pick gives no card', array_column( vance_hub_home_tools_apply( $STANDARD, $SLOTS ), 'mod' ) === array( 'recipes', 'discounts' ) );
+
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['title']  = '  My title ';
+$SLOTS[0]['text']   = 'My text';
+$SLOTS[0]['button'] = 'My button';
+$SLOTS[0]['link']   = 'https://example.test/mine/';
+$CARDS = vance_hub_home_tools_apply( $STANDARD, $SLOTS );
+check( 'tools pure: a title, text, button and link replace title, desc, cta and href (title trimmed)', $CARDS[0]['title'] === 'My title' && $CARDS[0]['desc'] === 'My text' && $CARDS[0]['cta'] === 'My button' && $CARDS[0]['href'] === 'https://example.test/mine/' );
+check( 'tools pure: the image, alt, icon and mod of that card are the standard ones', $CARDS[0]['img'] === 'https://example.test/s.jpg' && $CARDS[0]['alt'] === 'S alt' && $CARDS[0]['icon'] === 'clipboard' && $CARDS[0]['mod'] === 'survey' );
+check( 'tools pure: the other cards are untouched', array_slice( $CARDS, 1 ) === array_slice( $STANDARD, 1 ) );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[1]['title'] = '   ';
+$SLOTS[1]['text']  = "\n";
+check( 'tools pure: a title or text of only spaces keeps the standard wording', vance_hub_home_tools_apply( $STANDARD, $SLOTS ) === $STANDARD );
+
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['image'] = 41;
+$CARDS = vance_hub_home_tools_apply( $STANDARD, $SLOTS );
+check( 'tools pure: a custom image replaces img and takes the attachment URL', $CARDS[0]['img'] === 'https://example.test/uploads/custom-large.jpg' );
+check( 'tools pure: a custom image takes the alt text of the attachment, trimmed, never the standard alt', $CARDS[0]['alt'] === 'A custom picture' && $CARDS[0]['alt'] !== 'S alt' );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['image'] = 42;
+$CARDS = vance_hub_home_tools_apply( $STANDARD, $SLOTS );
+check( 'tools pure: a custom image with no alt in the media library gets an empty alt, not the standard alt', $CARDS[0]['img'] === 'https://example.test/uploads/no-alt-large.jpg' && $CARDS[0]['alt'] === '' );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['image'] = 99;
+check( 'tools pure: an attachment that gives no URL keeps the standard image and alt', vance_hub_home_tools_apply( $STANDARD, $SLOTS ) === $STANDARD );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[2]['image'] = 41;
+check( 'tools pure: a custom image on a card with no standard image sets both img and alt', vance_hub_home_tools_apply( $STANDARD, $SLOTS )[2]['img'] === 'https://example.test/uploads/custom-large.jpg' );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['image'] = -41;
+check( 'tools pure: a negative image id is treated as no image', vance_hub_home_tools_apply( $STANDARD, $SLOTS ) === $STANDARD );
+$SLOTS = $DEFAULT_SLOTS;
+$SLOTS[0]['pick'] = 'recipes';
+$SLOTS[2]['pick'] = 'recipes';
+$SLOTS[2]['title'] = 'Second recipes';
+$CARDS = vance_hub_home_tools_apply( $STANDARD, $SLOTS );
+check( 'tools pure: two slots with the same tool keep their own overrides', $CARDS[0]['title'] === 'R title' && $CARDS[2]['title'] === 'Second recipes' );
+
+// The reader and the template.
+arrange();
+check( 'tools: with nothing saved, vance_hub_home_tools() equals vance_hub_tools() exactly', vance_hub_home_tools() === vance_hub_tools() && 4 === count( vance_hub_tools() ) );
+$HTML = render_home( false );
+check( 'tools: with nothing saved the page prints the four tiles in today\'s order', tool_order( $HTML ) === array( 'survey', 'nutrition', 'recipes', 'discounts' ) );
+
+arrange( array( 'vance_hub_tool_1_pick' => 'none', 'vance_hub_tool_3_pick' => 'none' ) );
+$HTML = render_home( false );
+check( 'tools: two slots hidden print two tiles, in slot order', tool_order( $HTML ) === array( 'nutrition', 'discounts' ) );
+
+arrange( array( 'vance_hub_tool_1_pick' => 'none', 'vance_hub_tool_2_pick' => 'none', 'vance_hub_tool_3_pick' => 'none', 'vance_hub_tool_4_pick' => 'none' ) );
+$HTML = render_home( false );
+check( 'tools: four hidden slots print no tools section, no heading and no list', strpos( $HTML, 'vhub-tools-section' ) === false && strpos( $HTML, 'vhub-tools-title' ) === false && strpos( $HTML, 'class="vhub-wrap vhub-tools"' ) === false && strpos( $HTML, 'Free tools' ) === false );
+check( 'tools: with the tools block empty, the other blocks still print', strpos( $HTML, 'vhub-hero' ) !== false && strpos( $HTML, 'id="vhub-join"' ) !== false && '' === $RENDER_ERROR );
+
+arrange( array( 'vance_hub_tool_2_pick' => 'survey', 'vance_hub_tool_2_title' => 'A <b>new</b> title', 'vance_hub_tool_1_link' => 'https://example.test/own/', 'vance_hub_tool_4_image' => 41 ) );
+$GLOBALS['META'] = array( 41 => array( '_wp_attachment_image_alt' => 'A custom picture' ) ); // arrange() clears the meta.
+$HTML = render_home( false );
+check( 'tools: the same tool in two slots prints two tiles', tool_order( $HTML ) === array( 'survey', 'survey', 'recipes', 'discounts' ) );
+check( 'tools: a saved title is printed, escaped', strpos( $HTML, 'A &lt;b&gt;new&lt;/b&gt; title' ) !== false && strpos( $HTML, '<b>new</b>' ) === false );
+check( 'tools: a saved link is the tile address', strpos( $HTML, '<a class="vhub-tool__link" href="https://example.test/own/">' ) !== false );
+check( 'tools: a custom image prints with the attachment alt, not the standard alt of the discounts tile', strpos( $HTML, 'src="https://example.test/uploads/custom-large.jpg" alt="A custom picture"' ) !== false && strpos( $HTML, 'Two people walking side by side' ) === false );
+check( 'tools: a tile with no custom image keeps its standard image and alt', strpos( $HTML, 'Bowls of oats' ) === false && strpos( $HTML, 'A woman in an apron' ) !== false );
+
+arrange( array( 'vance_hub_tool_1_pick' => 'bogus', 'vance_hub_tool_2_pick' => 12, 'vance_hub_tool_3_image' => 'abc', 'vance_hub_tool_4_title' => array( 'x' ) ) );
+check( 'tools: unreadable saved values fall back to the slot default (pick), to no image and to the standard title', vance_hub_home_tools() === vance_hub_tools() );
+
+arrange( array( 'vance_hub_tool_1_title' => 'Changed', 'vance_hub_tool_2_pick' => 'none' ) );
+$STD = vance_hub_tools();
+check( 'tools: vance_hub_tools() (used by the article sidebar and the dashboard) ignores the card settings', array_column( $STD, 'mod' ) === array( 'survey', 'nutrition', 'recipes', 'discounts' ) && 'Changed' !== $STD[0]['title'] );
+check( 'tools: only the home template reads vance_hub_home_tools()', 1 === preg_match( '/vance_hub_home_tools\(\)/', file_get_contents( $THEME . '/front-page-hub.php' ) ) && false === strpos( file_get_contents( $THEME . '/inc/hub-article.php' ) . file_get_contents( $THEME . '/inc/hub-dashboard.php' ), 'vance_hub_home_tools' ) );
+
+unset( $GLOBALS['ATTACH_URL'] );
+$GLOBALS['META'] = array();
 
 /* ---- 16. home condition tiles: symptoms pictures, names, fallbacks --------- */
 section( '16. Home condition tiles (pure)' );
