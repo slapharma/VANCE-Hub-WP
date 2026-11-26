@@ -1503,6 +1503,403 @@ arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true )
 check( 'master hub, check-in saved on: the check-in is on', vance_hub_switch_on( 'vance_hub_dash_checkin' ) === true );
 
 /* ===================================================================== */
+/* The checks below were added to find what the builders' own tests did not
+ * prove: block order rendered, hidden blocks and their queries, the join link,
+ * every text mod, the counts at their limits, and more tool-card cases.
+ * ===================================================================== */
+
+/** Posts 701 to 720 are article posts; the ids are in order. */
+function posts_range( $first, $last ) {
+	return array_map( function ( $id ) { return post_obj( $id, 'Article ' . $id ); }, range( $first, $last ) );
+}
+
+/**
+ * Every block has real data: tiles, five quotes, recipes in two lists, three
+ * articles in two categories and in the library, and the promo block.
+ *
+ * Article ids 701 to 720 are the "post" list. Category 11 (Gastro Living) holds
+ * 705 to 708 and category 12 (Health News) holds 709 to 712. Ids 701 to 704 are
+ * the library. With the three "Latest by section" slugs (the third has no term),
+ * the sections take 705, 706, 707 and 709, 710, 711. "More to read" takes what
+ * is left in "post" order.
+ */
+function seed_blocks_home() {
+	$GLOBALS['MODS'] = array(
+		'vance_hub_founding_deadline' => '2026-12-01',
+		'vance_hub_tile_1_title'      => 'Live Q&A',
+		'vance_hub_tile_1_text'       => 'Ask the panel',
+		'vance_hub_tile_2_title'      => 'Second tile',
+		'vance_hub_tile_2_link'       => 'https://example.test/second/',
+	);
+	$GLOBALS['USERS_TOTAL']  = 1234;
+	$GLOBALS['USERS_WEEK']   = 17;
+	$GLOBALS['SURVEY_STEPS'] = 9;
+	$GLOBALS['RECIPE_CELLS'] = array( array( 'key' => 'grid', 'value' => '1,091', 'label' => 'Recipes', 'href' => '' ) );
+	$GLOBALS['PROMO_HTML']   = '<p class="promo-body">PROMO-BODY</p>';
+	$GLOBALS['PROMO_CALLS']  = 0;
+
+	$ARTICLES = posts_range( 701, 720 );
+	$GLOBALS['QUERY_POSTS']['post']   = $ARTICLES;
+	$GLOBALS['QUERY_POSTS']['cat:11'] = array_slice( $ARTICLES, 4, 4 ); // 705 to 708
+	$GLOBALS['QUERY_POSTS']['cat:12'] = array_slice( $ARTICLES, 8, 4 ); // 709 to 712
+	$GLOBALS['CAT_TERMS']['content-gastro-living'] = cat_term( 11, 'content-gastro-living', 'Gastro Living' );
+	$GLOBALS['CAT_TERMS']['content-health-news']   = cat_term( 12, 'content-health-news', 'Health News' );
+
+	$GLOBALS['QUERY_POSTS']['testimonial'] = array(
+		post_obj( 501, 'Quote A', '<p>Quote one.</p>' ),
+		post_obj( 502, 'Quote B', '<p>Quote two.</p>' ),
+		post_obj( 503, 'Quote C', '<p>Quote three.</p>' ),
+		post_obj( 504, 'Quote D', '<p>Quote four.</p>' ),
+		post_obj( 505, 'Quote E', '<p>Quote five.</p>' ),
+	);
+	$GLOBALS['QUERY_POSTS']['vance_recipe']         = array( post_obj( 601, 'Recipe 1' ), post_obj( 602, 'Recipe 2' ), post_obj( 603, 'Recipe 3' ), post_obj( 604, 'Recipe 4' ) );
+	$GLOBALS['QUERY_POSTS']['vance_recipe:popular'] = array( post_obj( 605, 'Popular 1' ), post_obj( 606, 'Popular 2' ), post_obj( 607, 'Popular 3' ), post_obj( 608, 'Popular 4' ) );
+}
+
+/**
+ * The same data as seed_blocks_home(), with enough articles for the largest
+ * count: category 11 holds 701 to 712 and category 12 holds 713 to 720.
+ */
+function seed_counts_home() {
+	seed_blocks_home();
+	$ARTICLES = posts_range( 701, 720 );
+	$GLOBALS['QUERY_POSTS']['post']   = $ARTICLES;
+	$GLOBALS['QUERY_POSTS']['cat:11'] = array_slice( $ARTICLES, 0, 12 );
+	$GLOBALS['QUERY_POSTS']['cat:12'] = array_slice( $ARTICLES, 12, 8 );
+}
+
+/** The blocks that print, in the order they appear in the HTML. */
+function block_order_in( $html, $marks ) {
+	$at = array();
+	foreach ( $marks as $block => $mark ) {
+		$pos = strpos( $html, $mark );
+		if ( false !== $pos ) {
+			$at[ $block ] = $pos;
+		}
+	}
+	asort( $at );
+	return array_keys( $at );
+}
+
+/** The article ids linked from one block of the page, in order. */
+function block_article_ids( $html, $class ) {
+	preg_match_all( '/example\.test\/p\/(\d+)\//', section_html( $html, $class ), $m );
+	return array_map( 'intval', $m[1] );
+}
+
+/** How many logged WP_Query calls match the predicate. */
+function count_queries( $match ) {
+	$n = 0;
+	foreach ( $GLOBALS['WP_QUERY_LOG'] as $args ) {
+		if ( $match( $args ) ) {
+			$n++;
+		}
+	}
+	return $n;
+}
+
+/** posts_per_page of every logged query, in the order the page ran them. */
+function query_limits() {
+	return array_column( $GLOBALS['WP_QUERY_LOG'], 'posts_per_page' );
+}
+
+/** The first markup of each movable block. A block is on the page when its mark is. */
+$BLOCK_MARK = array(
+	'tools'      => 'class="vhub-tools-section"',
+	'inside'     => 'class="vhub-wrap vhub-section vhub-inside"',
+	'conditions' => 'class="vhub-wrap vhub-section vhub-conditions"',
+	'community'  => '<section class="vhub-community"',
+	'promo'      => '<div class="vhub-promo">',
+	'library'    => 'class="vhub-wrap vhub-section vhub-library"',
+	'sections'   => 'class="vhub-wrap vhub-section vhub-secs"',
+	'more'       => 'class="vhub-wrap vhub-section vhub-more"',
+	'join'       => 'id="vhub-join"',
+);
+/** Markup that only one block prints. None of it may appear when that block is hidden. */
+$BLOCK_EXTRA = array(
+	'tools'      => 'vhub-tool--',
+	'inside'     => 'vhub-member-tile',
+	'conditions' => 'vhub-cond-tile',
+	'community'  => 'vhub-quote',
+	'promo'      => 'PROMO-BODY',
+	'library'    => 'vhub-feat',
+	'sections'   => 'vhub-sec-card',
+	'more'       => 'vhub-card__',
+	'join'       => 'vhub-join',
+);
+
+/* ---- 18. block order, rendered -------------------------------------------- */
+section( '18. Block order, rendered' );
+
+/*
+ * Each row: the saved order, the blocks that must print in that order, and the
+ * article ids each article block must hold. The ids follow from seed_blocks_home().
+ */
+$LIB_IDS = array( 701, 702, 703, 704 );
+$SEC_IDS = array( 705, 706, 707, 709, 710, 711 );
+$MORE_IDS = array( 708, 712, 713, 714, 715, 716 );
+$ORDER_ROWS = array(
+	'reversed'          => array( 'order' => 'join,more,sections,library,promo,community,conditions,inside,tools', 'expect' => array( 'join', 'more', 'sections', 'library', 'promo', 'community', 'conditions', 'inside', 'tools' ), 'lib' => $LIB_IDS, 'sec' => $SEC_IDS, 'more' => $MORE_IDS ),
+	'more before library' => array( 'order' => 'more,library,tools,inside,conditions,sections,community,promo,join', 'expect' => array( 'more', 'library', 'tools', 'inside', 'conditions', 'sections', 'community', 'promo', 'join' ), 'lib' => $LIB_IDS, 'sec' => $SEC_IDS, 'more' => $MORE_IDS ),
+	'sections first'    => array( 'order' => 'sections,tools,join,library,more,conditions,inside,community,promo', 'expect' => array( 'sections', 'tools', 'join', 'library', 'more', 'conditions', 'inside', 'community', 'promo' ), 'lib' => $LIB_IDS, 'sec' => $SEC_IDS, 'more' => $MORE_IDS ),
+	'library hidden'    => array( 'order' => 'tools,inside,sections,more,join', 'expect' => array( 'tools', 'inside', 'sections', 'more', 'join' ), 'lib' => array(), 'sec' => $SEC_IDS, 'more' => array( 701, 702, 703, 704, 708, 712 ) ),
+	'sections hidden'   => array( 'order' => 'library,more,join', 'expect' => array( 'library', 'more', 'join' ), 'lib' => $LIB_IDS, 'sec' => array(), 'more' => array( 705, 706, 707, 708, 709, 710 ) ),
+	'unknown and repeated ids' => array( 'order' => 'bogus,join,join,tools,nope', 'expect' => array( 'join', 'tools' ), 'lib' => array(), 'sec' => array(), 'more' => array() ),
+	'the default order' => array( 'order' => 'tools,inside,conditions,community,promo,library,sections,more,join', 'expect' => array( 'tools', 'inside', 'conditions', 'community', 'promo', 'library', 'sections', 'more', 'join' ), 'lib' => $LIB_IDS, 'sec' => $SEC_IDS, 'more' => $MORE_IDS ),
+);
+
+foreach ( $ORDER_ROWS as $ROW_NAME => $ROW ) {
+	arrange();
+	seed_blocks_home();
+	$GLOBALS['MODS']['vance_hub_block_order'] = $ROW['order'];
+	$H = render_home( false );
+	check( "order $ROW_NAME: renders without a PHP error", '' === $RENDER_ERROR );
+	check( "order $ROW_NAME: the blocks print in exactly the saved order", block_order_in( $H, $BLOCK_MARK ) === $ROW['expect'] );
+	check( "order $ROW_NAME: exactly one h1", substr_count( $H, '<h1' ) === 1 );
+	check( "order $ROW_NAME: the hero comes first, then the facts, then the first block", strpos( $H, '<section class="vhub-hero"' ) < strpos( $H, '<ul class="vhub-facts">' ) && strpos( $H, '<ul class="vhub-facts">' ) < strpos( $H, $BLOCK_MARK[ $ROW['expect'][0] ] ) );
+	check( "order $ROW_NAME: the library holds the expected articles", block_article_ids( $H, 'vhub-library' ) === $ROW['lib'] );
+	check( "order $ROW_NAME: the latest-by-section columns hold the expected articles", block_article_ids( $H, 'vhub-secs' ) === $ROW['sec'] );
+	check( "order $ROW_NAME: more to read holds the expected articles", block_article_ids( $H, 'vhub-more' ) === $ROW['more'] );
+	check( "order $ROW_NAME: no article is in two of library, sections and more", array_intersect( $ROW['lib'], $ROW['sec'] ) === array() && array_intersect( $ROW['lib'], $ROW['more'] ) === array() && array_intersect( $ROW['sec'], $ROW['more'] ) === array() );
+	foreach ( array_diff( array_keys( $BLOCK_MARK ), $ROW['expect'] ) as $HIDDEN ) {
+		check( "order $ROW_NAME: hidden $HIDDEN prints none of its markup", strpos( $H, $BLOCK_MARK[ $HIDDEN ] ) === false && strpos( $H, $BLOCK_EXTRA[ $HIDDEN ] ) === false );
+	}
+}
+
+// An order saved as the empty string: the hero and the facts, and no movable block.
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = '';
+$H = render_home( false );
+check( 'order empty: renders without a PHP error', '' === $RENDER_ERROR );
+check( 'order empty: the hero and the facts still print', strpos( $H, '<section class="vhub-hero"' ) !== false && strpos( $H, '<ul class="vhub-facts">' ) !== false );
+check( 'order empty: exactly one h1', substr_count( $H, '<h1' ) === 1 );
+foreach ( $BLOCK_MARK as $EMPTY_BLOCK => $EMPTY_MARK ) {
+	check( "order empty: $EMPTY_BLOCK prints none of its markup", strpos( $H, $EMPTY_MARK ) === false && strpos( $H, $BLOCK_EXTRA[ $EMPTY_BLOCK ] ) === false );
+}
+
+/* ---- 19. hidden blocks run no query --------------------------------------- */
+section( '19. Hidden blocks run no query' );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'tools,inside,conditions,promo,join';
+$H = render_home( false );
+check( 'no queries: with only non-article blocks on, no article query runs', count_queries( function ( $a ) { return 'post' === $a['post_type']; } ) === 0 );
+check( 'no queries: with community off, no testimonial query runs', count_queries( function ( $a ) { return 'testimonial' === $a['post_type']; } ) === 0 );
+check( 'no queries: with community off, no recipe query runs', count_queries( function ( $a ) { return 'vance_recipe' === $a['post_type']; } ) === 0 );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'library,more,join';
+$H = render_home( false );
+check( 'no queries: sections hidden runs no category query', count_queries( function ( $a ) { return isset( $a['cat'] ); } ) === 0 );
+check( 'no queries: library and more each run exactly one query', count_queries( function ( $a ) { return 'post' === $a['post_type'] && ! isset( $a['cat'] ) && ! isset( $a['post__not_in'] ); } ) === 1 && count_queries( function ( $a ) { return isset( $a['post__not_in'] ) && ! isset( $a['cat'] ); } ) === 1 );
+check( 'sections hidden: "More to read" shows the posts the sections would have taken (705, 706, 707, 709, 710)', block_article_ids( $H, 'vhub-more' ) === array( 705, 706, 707, 708, 709, 710 ) && array_intersect( array( 705, 706, 707, 709, 710 ), block_article_ids( $H, 'vhub-more' ) ) === array( 705, 706, 707, 709, 710 ) );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'tools,sections,more,join';
+$H = render_home( false );
+check( 'library hidden: no library query runs, and the sections still run theirs', count_queries( function ( $a ) { return 'post' === $a['post_type'] && ! isset( $a['cat'] ) && ! isset( $a['post__not_in'] ); } ) === 0 && count_queries( function ( $a ) { return isset( $a['cat'] ); } ) === 2 );
+check( 'library hidden: the articles the library would have shown go to the sections and more', block_article_ids( $H, 'vhub-more' ) === array( 701, 702, 703, 704, 708, 712 ) );
+
+/* ---- 20. the join link, rendered ------------------------------------------ */
+section( '20. The join link, rendered' );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'join,tools';
+$H = render_home( false );
+check( 'join on, guest: the member bar links to the #vhub-join anchor (one link)', substr_count( $H, 'href="#vhub-join"' ) === 1 );
+check( 'join on, guest: the id vhub-join exists exactly once', substr_count( $H, 'id="vhub-join"' ) === 1 );
+check( 'join on, guest: the sign-up button of the Join block goes to the sign-up page', strpos( $H, 'href="https://example.test/login/?tab=signup" data-vhub-join' ) !== false );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'tools,more';
+$H = render_home( false );
+check( 'join off, guest: no element links to #vhub-join, the member bar included', substr_count( $H, '#vhub-join' ) === 0 );
+check( 'join off, guest: the member bar link goes to the sign-up page', substr_count( $H, 'href="https://example.test/login/?tab=signup"' ) === 1 );
+check( 'join off, guest: no Join block markup prints', strpos( $H, 'vhub-join' ) === false );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'tools,more';
+$H = render_home( true );
+check( 'join off, member: no element links to #vhub-join', substr_count( $H, '#vhub-join' ) === 0 );
+check( 'join off, member: the member bar links to the dashboard', strpos( $H, 'href="https://example.test/dashboard/"' ) !== false );
+
+arrange();
+seed_blocks_home();
+$GLOBALS['MODS']['vance_hub_block_order'] = 'join,tools';
+$H = render_home( true );
+check( 'join on, member: no element links to #vhub-join (the member bar links to the dashboard)', substr_count( $H, '#vhub-join' ) === 0 );
+// The member variant of the Join block has no id, so for a signed-in member the
+// function returns the sign-up address, and no link on the page points at #vhub-join.
+check( 'join on, member: vance_hub_join_href() is not the #vhub-join anchor, and no link on the page points at it', vance_hub_join_href() !== '#vhub-join' && strpos( $H, 'href="#vhub-join"' ) === false );
+
+/* ---- 21. texts, rendered: each of the 22 mods ----------------------------- */
+section( '21. Texts, rendered: each of the 22 mods' );
+
+$NOTE_TEXT = 'This is not a diagnosis.';
+$MARKUP    = '<script>alert(1)</script> "quoted" & <b>x</b>';
+foreach ( vance_hub_home_text_defaults() as $TMOD => $TROW ) {
+	// Member texts print for a signed-in member. Every other text prints for a visitor.
+	$AS_MEMBER = 'join_member' === $TROW['group'];
+	$TOKEN     = 'Saved wording for ' . $TMOD;
+
+	arrange( array( 'vance_hub_block_order' => 'join', $TMOD => $TOKEN ) );
+	$H = render_home( $AS_MEMBER );
+	check( "text $TMOD: a saved value is printed", strpos( $H, $TOKEN ) !== false );
+	// The needle starts with ">" so it matches the start of an element's text. A bare
+	// substring would match the hero sub-text, which also contains "Gastro Self-Assessment".
+	check( "text $TMOD: the default is not printed once a value is saved", strpos( $H, '>' . esc_html( $TROW['default'] ) ) === false );
+	check( "text $TMOD: the fixed note still prints", strpos( $H, $NOTE_TEXT ) !== false );
+
+	arrange( array( 'vance_hub_block_order' => 'join', $TMOD => " \t  " ) );
+	$H = render_home( $AS_MEMBER );
+	check( "text $TMOD: spaces only give the default", strpos( $H, '>' . esc_html( $TROW['default'] ) ) !== false );
+
+	arrange( array( 'vance_hub_block_order' => 'join', $TMOD => $MARKUP ) );
+	$H = render_home( $AS_MEMBER );
+	check( "text $TMOD: markup is escaped in the page", strpos( $H, esc_html( $MARKUP ) ) !== false );
+	check( "text $TMOD: markup never reaches the page raw", strpos( $H, '<script>alert(1)</script>' ) === false && strpos( $H, '<b>x</b>' ) === false );
+}
+
+/* ---- 22. counts, rendered: the limits and the values around them ---------- */
+section( '22. Counts, rendered: minimum, maximum, below, above, not a number' );
+
+/** One page with one block on and one count set. */
+function render_with_count( $mod, $value, $order ) {
+	arrange();
+	seed_counts_home();
+	$GLOBALS['MODS']['vance_hub_block_order'] = $order;
+	$GLOBALS['MODS'][ $mod ]                  = $value;
+	return render_home( false );
+}
+
+// Latest by section: two columns. The default is 3, the range 1 to 6.
+$H = render_with_count( 'vance_hub_count_sections', 1, 'sections' );
+check( 'count sections, minimum 1: one card in each of two columns', substr_count( $H, 'class="vhub-sec-card"' ) === 2 && query_limits() === array( 1, 1 ) );
+$H = render_with_count( 'vance_hub_count_sections', 6, 'sections' );
+check( 'count sections, maximum 6: six cards in each of two columns (12), each column asks for 6', substr_count( $H, 'class="vhub-sec-card"' ) === 12 && query_limits() === array( 6, 6 ) );
+$H = render_with_count( 'vance_hub_count_sections', 0, 'sections' );
+check( 'count sections, below the minimum (0): the minimum, 1 each (2 cards)', substr_count( $H, 'class="vhub-sec-card"' ) === 2 && query_limits() === array( 1, 1 ) );
+$H = render_with_count( 'vance_hub_count_sections', 7, 'sections' );
+check( 'count sections, above the maximum (7): the maximum, 6 each (12 cards)', substr_count( $H, 'class="vhub-sec-card"' ) === 12 && query_limits() === array( 6, 6 ) );
+$H = render_with_count( 'vance_hub_count_sections', 'abc', 'sections' );
+check( 'count sections, not a number: the default, 3 each (6 cards)', substr_count( $H, 'class="vhub-sec-card"' ) === 6 && query_limits() === array( 3, 3 ) );
+
+// More to read: one list. The default is 6, the range 3 to 12.
+$H = render_with_count( 'vance_hub_count_more', 3, 'more' );
+check( 'count more, minimum 3: three cards, the query asks for 3', substr_count( $H, 'class="vhub-card"' ) === 3 && query_limits() === array( 3 ) );
+$H = render_with_count( 'vance_hub_count_more', 12, 'more' );
+check( 'count more, maximum 12: twelve cards, the query asks for 12', substr_count( $H, 'class="vhub-card"' ) === 12 && query_limits() === array( 12 ) );
+$H = render_with_count( 'vance_hub_count_more', 2, 'more' );
+check( 'count more, below the minimum (2): three cards', substr_count( $H, 'class="vhub-card"' ) === 3 && query_limits() === array( 3 ) );
+$H = render_with_count( 'vance_hub_count_more', 13, 'more' );
+check( 'count more, above the maximum (13): twelve cards', substr_count( $H, 'class="vhub-card"' ) === 12 && query_limits() === array( 12 ) );
+$H = render_with_count( 'vance_hub_count_more', 'abc', 'more' );
+check( 'count more, not a number: the default, six cards', substr_count( $H, 'class="vhub-card"' ) === 6 && query_limits() === array( 6 ) );
+
+// From the library: one feature and a list, so the total is the count. Range 2 to 7.
+$H = render_with_count( 'vance_hub_count_library', 2, 'library' );
+check( 'count library, minimum 2: one feature and one list item (two articles), the query asks for 2', substr_count( $H, 'class="vhub-feat"' ) + substr_count( $H, 'class="vhub-lib-item"' ) === 2 && query_limits() === array( 2 ) );
+$H = render_with_count( 'vance_hub_count_library', 7, 'library' );
+check( 'count library, maximum 7: seven articles, the query asks for 7', substr_count( $H, 'class="vhub-feat"' ) + substr_count( $H, 'class="vhub-lib-item"' ) === 7 && query_limits() === array( 7 ) );
+$H = render_with_count( 'vance_hub_count_library', 1, 'library' );
+check( 'count library, below the minimum (1): two articles', substr_count( $H, 'class="vhub-feat"' ) + substr_count( $H, 'class="vhub-lib-item"' ) === 2 && query_limits() === array( 2 ) );
+$H = render_with_count( 'vance_hub_count_library', 8, 'library' );
+check( 'count library, above the maximum (8): seven articles', substr_count( $H, 'class="vhub-feat"' ) + substr_count( $H, 'class="vhub-lib-item"' ) === 7 && query_limits() === array( 7 ) );
+$H = render_with_count( 'vance_hub_count_library', 'abc', 'library' );
+check( 'count library, not a number: the default, four articles', substr_count( $H, 'class="vhub-feat"' ) + substr_count( $H, 'class="vhub-lib-item"' ) === 4 && query_limits() === array( 4 ) );
+
+// Recipes: two lists (recently added, most popular). Range 1 to 4. The quotes query runs first.
+$H = render_with_count( 'vance_hub_count_recipes', 1, 'community' );
+check( 'count recipes, minimum 1: one recipe in each list (two), each query asks for 1', substr_count( $H, 'class="vhub-recipe"' ) === 2 && query_limits() === array( 4, 1, 1 ) );
+$H = render_with_count( 'vance_hub_count_recipes', 4, 'community' );
+check( 'count recipes, maximum 4: four in each list (eight), each query asks for 4', substr_count( $H, 'class="vhub-recipe"' ) === 8 && query_limits() === array( 4, 4, 4 ) );
+$H = render_with_count( 'vance_hub_count_recipes', 0, 'community' );
+check( 'count recipes, below the minimum (0): one in each list (two)', substr_count( $H, 'class="vhub-recipe"' ) === 2 && query_limits() === array( 4, 1, 1 ) );
+$H = render_with_count( 'vance_hub_count_recipes', 5, 'community' );
+check( 'count recipes, above the maximum (5): four in each list (eight)', substr_count( $H, 'class="vhub-recipe"' ) === 8 && query_limits() === array( 4, 4, 4 ) );
+$H = render_with_count( 'vance_hub_count_recipes', 'abc', 'community' );
+check( 'count recipes, not a number: the default, two in each list (four)', substr_count( $H, 'class="vhub-recipe"' ) === 4 && query_limits() === array( 4, 2, 2 ) );
+
+// Community quotes: range 1 to 4, default 4. The quotes query runs first.
+$H = render_with_count( 'vance_hub_count_quotes', 1, 'community' );
+check( 'count quotes, minimum 1: one quote, the query asks for 1', substr_count( $H, 'vhub-community__card--quote' ) === 1 && query_limits() === array( 1, 2, 2 ) );
+$H = render_with_count( 'vance_hub_count_quotes', 4, 'community' );
+check( 'count quotes, maximum 4: four quotes, the query asks for 4', substr_count( $H, 'vhub-community__card--quote' ) === 4 && query_limits() === array( 4, 2, 2 ) );
+$H = render_with_count( 'vance_hub_count_quotes', 0, 'community' );
+check( 'count quotes, below the minimum (0): one quote', substr_count( $H, 'vhub-community__card--quote' ) === 1 && query_limits() === array( 1, 2, 2 ) );
+$H = render_with_count( 'vance_hub_count_quotes', 9, 'community' );
+check( 'count quotes, above the maximum (9): four quotes', substr_count( $H, 'vhub-community__card--quote' ) === 4 && query_limits() === array( 4, 2, 2 ) );
+$H = render_with_count( 'vance_hub_count_quotes', 'abc', 'community' );
+check( 'count quotes, not a number: the default, four quotes', substr_count( $H, 'vhub-community__card--quote' ) === 4 && query_limits() === array( 4, 2, 2 ) );
+
+/* ---- 23. tool cards, rendered: the cases the earlier checks did not cover -- */
+section( '23. Tool cards, rendered: more cases' );
+
+arrange( array( 'vance_hub_tool_2_pick' => 'none' ) );
+$GLOBALS['ATTACH_URL'] = array( 41 => 'https://example.test/uploads/custom-large.jpg', 42 => 'https://example.test/uploads/no-alt-large.jpg' );
+$GLOBALS['META']       = array( 41 => array( '_wp_attachment_image_alt' => 'A custom picture' ), 42 => array( '_wp_attachment_image_alt' => '' ) );
+$H = render_home( false );
+check( 'tools: one hidden slot (card 2) prints three tiles, in slot order', tool_order( $H ) === array( 'survey', 'recipes', 'discounts' ) );
+
+arrange( array( 'vance_hub_tool_1_link' => 'https://example.test/own/?a=1&b="2"' ) );
+$H = render_home( false );
+check( 'tools: a link with an ampersand and quotes is escaped in the href', strpos( $H, 'href="https://example.test/own/?a=1&amp;b=&quot;2&quot;"' ) !== false );
+
+arrange( array( 'vance_hub_tool_3_text' => '<i>Bold</i> text' ) );
+$H = render_home( false );
+check( 'tools: a card text with markup is escaped, not raw', strpos( $H, '&lt;i&gt;Bold&lt;/i&gt; text' ) !== false && strpos( $H, '<i>Bold' ) === false );
+
+arrange( array( 'vance_hub_tool_4_button' => 'Go "now" & <b>' ) );
+$H = render_home( false );
+check( 'tools: a card button with markup is escaped, not raw', strpos( $H, 'Go &quot;now&quot; &amp; &lt;b&gt;' ) !== false && strpos( $H, '<b>' ) === false );
+
+arrange( array( 'vance_hub_tool_2_image' => 42 ) );
+$GLOBALS['ATTACH_URL'] = array( 42 => 'https://example.test/uploads/no-alt-large.jpg' );
+$GLOBALS['META']       = array( 42 => array( '_wp_attachment_image_alt' => '' ) );
+$H = render_home( false );
+check( 'tools: a custom image with no media alt prints src with alt="" (the attribute is present)', strpos( $H, 'src="https://example.test/uploads/no-alt-large.jpg" alt=""' ) !== false );
+check( 'tools: that image does not carry the standard alt of the card', strpos( $H, 'Bowls of oats' ) === false );
+
+arrange( array( 'vance_hub_tool_1_image' => 99 ) );
+$GLOBALS['ATTACH_URL'] = array();
+$GLOBALS['META']       = array();
+$H = render_home( false );
+check( 'tools: an image id that does not resolve keeps the standard alt and image', strpos( $H, 'alt="Two women walking and talking together on a sunlit city street"' ) !== false && strpos( $H, 'src="https://example.test/wp-content/themes/vance-health-hub/assets/img/gi-health/ulcerative-colitis.webp' ) !== false );
+
+arrange();
+$STANDARD_CARDS = vance_hub_tools();
+arrange( array(
+	'vance_hub_tool_1_pick'   => 'none',
+	'vance_hub_tool_2_title'  => 'Changed title',
+	'vance_hub_tool_2_text'   => 'Changed text',
+	'vance_hub_tool_2_button' => 'Changed button',
+	'vance_hub_tool_2_link'   => 'https://example.test/changed/',
+	'vance_hub_tool_3_image'  => 41,
+	'vance_hub_tool_4_pick'   => 'none',
+) );
+$GLOBALS['ATTACH_URL'] = array( 41 => 'https://example.test/uploads/custom-large.jpg' );
+check( 'tools: vance_hub_tools() returns the same four standard cards whatever the tool settings say', vance_hub_tools() === $STANDARD_CARDS && 4 === count( vance_hub_tools() ) );
+unset( $GLOBALS['ATTACH_URL'] );
+$GLOBALS['META'] = array();
+
+/* ---- 24. the rendered page never prints a bare placeholder ----------------- */
+section( '24. The rendered page: no unfilled placeholder with each count at its limit' );
+
+$H = render_with_count( 'vance_hub_count_more', 3, 'more' );
+check( 'placeholders: a count at its minimum leaves no %d or %s in the page', strpos( $H, '%d' ) === false && strpos( $H, '%s' ) === false );
+$H = render_with_count( 'vance_hub_count_recipes', 4, 'community' );
+check( 'placeholders: a count at its maximum leaves no %d or %s in the page', strpos( $H, '%d' ) === false && strpos( $H, '%s' ) === false );
+
+
+
+/* ===================================================================== */
 echo "\n";
 if ( $FAIL ) {
 	echo count( $FAIL ) . " FAILED of " . ( $PASS + count( $FAIL ) ) . ":\n";

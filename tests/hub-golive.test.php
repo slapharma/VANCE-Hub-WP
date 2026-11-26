@@ -292,6 +292,77 @@ vance_hub_golive_reschedule();
 check( 'reschedule: a value that is not a date clears the old event and plans none', $GLOBALS['CRON'] === array( array( 'clear', 'vance_hub_golive_event' ) ) );
 check( 'reschedule: it writes no theme mod and fires no action', $GLOBALS['WRITES'] === array() && $GLOBALS['ACTIONS'] === array() );
 
+/* ---- 6. Added checks: exact times, invalid values, the full write list, DST ---- */
+section( '6. Exact times, invalid values, the full write list, daylight saving' );
+
+reset_state();
+$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => '2099-01-15T09:30' );
+vance_hub_golive_reschedule();
+check( 'reschedule, winter: the event is planned for 09:30 UTC (London is on GMT in January)', $GLOBALS['CRON'] === array( array( 'clear', 'vance_hub_golive_event' ), array( 'schedule', 'vance_hub_golive_event', gmmktime( 9, 30, 0, 1, 15, 2099 ) ) ) );
+
+reset_state();
+$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => '2099-07-01T09:30' );
+vance_hub_golive_reschedule();
+check( 'reschedule, summer: the event is planned for exactly 08:30 UTC (09:30 BST)', $GLOBALS['CRON'] === array( array( 'clear', 'vance_hub_golive_event' ), array( 'schedule', 'vance_hub_golive_event', gmmktime( 8, 30, 0, 7, 1, 2099 ) ) ) );
+
+// Invalid saved values: the run decides none, writes nothing, fires nothing, and keeps the saved value.
+foreach ( array( '2026-02-31T10:00', '2020-01-01T25:00', 'yesterday', '2020-01-01 00:00' ) as $BAD ) {
+	reset_state();
+	$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => $BAD, 'vance_home_layout' => 'classic' );
+	$R               = vance_hub_golive_run();
+	check( "run, invalid '$BAD': decides none, writes nothing, fires nothing, keeps the saved value", 'none' === $R && $GLOBALS['WRITES'] === array() && $GLOBALS['ACTIONS'] === array() && $GLOBALS['MODS']['vance_hub_golive_at'] === $BAD );
+}
+
+// The layout is already hub, and the date is past: clear, with no done time and no purge.
+reset_state();
+$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => $PAST, 'vance_home_layout' => 'hub' );
+$R               = vance_hub_golive_run();
+check( 'run, hub and a past date: decides clear and removes only the date', 'clear' === $R && writes() === array( 'remove:vance_hub_golive_at' ) );
+check( 'run, hub and a past date: no done time is saved and no purge fires', ! array_key_exists( 'vance_hub_golive_done_at', $GLOBALS['MODS'] ) && $GLOBALS['ACTIONS'] === array() );
+
+// The full write list of a switch. Every other saved mod must come out unchanged.
+reset_state();
+$GLOBALS['MODS'] = array(
+	'vance_hub_golive_at'         => '2020-01-01T00:00',
+	'vance_home_layout'           => 'classic',
+	'vance_hub_header'            => false,
+	'vance_hub_block_order'       => 'tools,join',
+	'vance_hub_text_hero_title'   => 'Kept wording',
+	'vance_hub_dash_checkin'      => true,
+	'vance_hub_dash_flare_plan'   => false,
+	'vance_hub_count_more'        => 9,
+);
+$BEFORE_MODS = $GLOBALS['MODS'];
+$R           = vance_hub_golive_run();
+$AFTER_MODS  = $GLOBALS['MODS'];
+$DONE_AT     = $AFTER_MODS['vance_hub_golive_done_at'] ?? null;
+check( 'run, switch with other mods saved: the done time is an integer', 'switch' === $R && is_int( $DONE_AT ) );
+unset( $AFTER_MODS['vance_hub_golive_done_at'] );
+$EXPECT_MODS = $BEFORE_MODS;
+unset( $EXPECT_MODS['vance_hub_golive_at'] );
+$EXPECT_MODS['vance_home_layout'] = 'hub';
+ksort( $AFTER_MODS );
+ksort( $EXPECT_MODS );
+check( 'run, switch: the only changes are the layout, the removed date and the done time; every other mod is unchanged', $AFTER_MODS === $EXPECT_MODS );
+
+// Daylight saving. 01:30 on 29 March 2026 does not exist in London (the clocks go from 01:00 to 02:00).
+// 01:30 on 25 October 2026 happens twice. Neither may throw, and each must give a timestamp.
+check( 'dst: the skipped local time gives a timestamp, 01:30 UTC', vance_hub_golive_timestamp( '2026-03-29T01:30', $LONDON ) === gmmktime( 1, 30, 0, 3, 29, 2026 ) );
+check( 'dst: the repeated local time gives a positive timestamp (one of its two instants)', vance_hub_golive_timestamp( '2026-10-25T01:30', $LONDON ) > 0 );
+check( 'dst: the skipped local time switches at its instant, not a second before', vance_hub_golive_decide( '2026-03-29T01:30', gmmktime( 1, 30, 0, 3, 29, 2026 ) - 1, $LONDON, 'classic' ) === 'wait' && vance_hub_golive_decide( '2026-03-29T01:30', gmmktime( 1, 30, 0, 3, 29, 2026 ), $LONDON, 'classic' ) === 'switch' );
+reset_state();
+$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => '2026-03-29T01:30', 'vance_home_layout' => 'classic' );
+$R               = vance_hub_golive_run();
+check( 'dst: a run with the skipped local time does not throw and switches (the date is in the past)', 'switch' === $R && 'hub' === $GLOBALS['MODS']['vance_home_layout'] );
+reset_state();
+$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => '2026-10-25T01:30', 'vance_home_layout' => 'classic' );
+$R               = vance_hub_golive_run();
+check( 'dst: a run with the repeated local time does not throw and switches (the date is in the past)', 'switch' === $R && 'hub' === $GLOBALS['MODS']['vance_home_layout'] );
+reset_state();
+$GLOBALS['MODS'] = array( 'vance_hub_golive_at' => '2099-10-25T01:30' );
+vance_hub_golive_reschedule();
+check( 'dst: the repeated local time is planned as a single event', count( $GLOBALS['CRON'] ) === 2 && is_int( $GLOBALS['CRON'][1][2] ) && $GLOBALS['CRON'][1][2] > 0 );
+
 /* ===================================================================== */
 echo "\n";
 if ( $FAIL ) {

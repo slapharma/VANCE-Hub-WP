@@ -150,13 +150,15 @@ function vance_hub_block_on( $id ) {
 /**
  * Where "See what members get" and the other join links point.
  *
- * The Join block when it prints, else the sign-up page. A link to an anchor
- * that is not on the page would go nowhere.
+ * The #vhub-join anchor only when the Join block prints AND the visitor is not
+ * signed in, because only the visitor variant of the Join block has that id
+ * (the member variant has none). In every other case: the sign-up address. So
+ * this never returns an anchor that is not on the page.
  *
  * @return string
  */
 function vance_hub_join_href() {
-	return vance_hub_block_on( 'join' ) ? '#vhub-join' : home_url( '/login/?tab=signup' );
+	return ( vance_hub_block_on( 'join' ) && ! is_user_logged_in() ) ? '#vhub-join' : home_url( '/login/?tab=signup' );
 }
 
 /* =========================================================================

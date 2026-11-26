@@ -585,6 +585,22 @@ arrange_admin( array( 'vance_home_layout' => 'hub' ), $CAN );
 $OUT = render_screen();
 check( 'go-live: layout hub with no record prints nothing (a manual switch is not a scheduled one)', false === strpos( $OUT, 'went live' ) );
 
+// Invalid saved dates print no go-live line, on the screen or from the helper.
+arrange_admin( array( 'vance_hub_golive_at' => 'garbage' ), $CAN );
+$OUT = render_screen();
+check( 'go-live: a saved value that is not a date prints no go-live line', false === strpos( $OUT, 'Go-live' ) && false === strpos( $OUT, 'went live' ) );
+check( 'go-live: a saved value that is not a date gives state none from the helper', vance_hub_admin_golive( 0 ) === array( 'state' => 'none', 'text' => '' ) );
+
+arrange_admin( array( 'vance_hub_golive_at' => '2026-02-31T10:00' ), $CAN );
+$OUT = render_screen();
+check( 'go-live: an impossible date (31 February) prints no go-live line', false === strpos( $OUT, 'Go-live' ) );
+
+// Home page blocks: unknown and repeated ids are dropped, and the rest are listed once, in order.
+arrange_admin( array( 'vance_hub_block_order' => 'bogus,join,join,tools,nope' ), $CAN );
+$OUT = render_screen();
+check( 'blocks line: unknown and repeated ids are dropped, the two blocks left are listed in saved order', strpos( $OUT, '<strong>Join block, Tools</strong>' ) !== false );
+check( 'blocks line: the seven blocks not printed are listed once each as hidden', strpos( $OUT, '(hidden: Inside the Hub, Conditions, Community and recipes, Promo block, From the library, Latest by section, More to read)' ) !== false );
+
 /* ===================================================================== */
 echo "\n";
 if ( $FAIL ) {

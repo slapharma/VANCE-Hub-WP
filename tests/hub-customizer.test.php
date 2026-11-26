@@ -57,6 +57,7 @@ function esc_url( $url ) { return htmlspecialchars( (string) $url, ENT_QUOTES, '
 function esc_html_e( $text, $domain = '' ) { echo esc_html( $text ); }
 function esc_attr_e( $text, $domain = '' ) { echo esc_attr( $text ); }
 function current_user_can( $cap ) { return false; }
+function is_user_logged_in() { return ! empty( $GLOBALS['LOGGED_IN'] ); }
 function vance_get_theme_mod( $key, $default = '' ) {
 	return array_key_exists( $key, $GLOBALS['MODS'] ) ? $GLOBALS['MODS'][ $key ] : $default;
 }
@@ -538,7 +539,10 @@ check( 'order: vance_hub_block_on() follows the list', vance_hub_block_on( 'tool
 $GLOBALS['MODS'] = array( 'vance_hub_block_order' => 'tools,more' );
 check( 'join link: with the Join block off it is the sign-up page', vance_hub_join_href() === 'https://example.test/login/?tab=signup' );
 $GLOBALS['MODS'] = array();
-check( 'join link: with the Join block on it is the anchor', vance_hub_join_href() === '#vhub-join' );
+check( 'join link: with the Join block on it is the anchor for a visitor', vance_hub_join_href() === '#vhub-join' );
+$GLOBALS['LOGGED_IN'] = true;
+check( 'join link: with the Join block on, a signed-in member gets the sign-up page (the member variant has no id)', vance_hub_join_href() === 'https://example.test/login/?tab=signup' );
+$GLOBALS['LOGGED_IN'] = false;
 
 // The registered default of the block order is the "never saved" order, so the
 // control and the Customizer preview agree with the live page.
@@ -607,6 +611,15 @@ foreach ( $TEXTS as $mod => $row ) {
 }
 check( 'texts: the first control of each of the five groups says where the text shows (a second sentence)', count( array_filter( array_keys( $TEXTS ), function ( $mod ) use ( $M ) { return $M->controls[ $mod ]['description'] !== 'Leave empty to use the default.'; } ) ) === 5 );
 check( 'texts: text control priorities are unique and rise with the registry', array_map( function ( $mod ) use ( $M ) { return $M->controls[ $mod ]['priority']; }, array_keys( $TEXTS ) ) === range( 10, 220, 10 ) );
+
+// Added checks: the edges of the block-order and count sanitisers.
+check( 'sanitise order: a capital letter is not a block id, so that id is dropped', vance_hub_sanitize_block_order( 'Tools,join' ) === 'join' );
+check( 'sanitise order: empty entries between commas are dropped', vance_hub_sanitize_block_order( 'tools, ,join,' ) === 'tools,join' );
+check( 'sanitise order: only unknown ids gives the empty string (every block hidden)', vance_hub_sanitize_block_order( 'nope,promo2' ) === '' );
+check( 'count: a decimal number is read as its whole part (5.9 is 5)', vance_hub_sanitize_count( '5.9', 'vance_hub_count_library' ) === 5 );
+check( 'count: a number in exponent form is clamped to the maximum (1e3 is 6 for sections)', vance_hub_sanitize_count( '1e3', 'vance_hub_count_sections' ) === 6 );
+check( 'count: text that starts with a number is not a number, so the default (5abc is 6 for more)', vance_hub_sanitize_count( '5abc', 'vance_hub_count_more' ) === 6 );
+check( 'count: the boolean true is not a number, so the default (2 for recipes)', vance_hub_sanitize_count( true, 'vance_hub_count_recipes' ) === 2 );
 
 section( '9. Tool cards and the go-live date: controls and sanitisers' );
 
