@@ -393,12 +393,12 @@ $_GET = array();
 
 arrange( array(), admin_caps(), 1 );
 cs_user( 1, 'admin@example.test' );
-check( 'queue: with the master switch classic, the queue warns that visitors cannot see the page', has( queue_html(), 'The Community hub is off (its own switch, or the Home layout master switch).' ) );
+check( 'queue: with the master switch classic, the queue warns that visitors cannot see the page', has( queue_html(), 'The Community hub is off (its own switch, or the Site layout master switch).' ) );
 
-// The master switch (Home layout) over the queue notice.
+// The master switch (Site layout) over the queue notice.
 arrange( array( 'vance_hub_community' => true ), admin_caps(), 1 );
 cs_user( 1, 'admin@example.test' );
-check( 'queue: master classic with the community box ticked still warns that the hub is off', has( queue_html(), 'The Community hub is off (its own switch, or the Home layout master switch).' ) );
+check( 'queue: master classic with the community box ticked still warns that the hub is off', has( queue_html(), 'The Community hub is off (its own switch, or the Site layout master switch).' ) );
 
 arrange( array( 'vance_home_layout' => 'hub' ), admin_caps(), 1 );
 cs_user( 1, 'admin@example.test' );

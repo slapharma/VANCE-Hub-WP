@@ -252,8 +252,10 @@ check( 'assets: the hub home script (Ask form handler) is enqueued in the footer
 check( 'body class: vhub-article added when on', in_array( 'vhub-article', vance_hub_article_body_class( array( 'single' ) ), true ) );
 
 class A_Customize {
+	public $panels   = array();
 	public $settings = array();
 	public $controls = array();
+	public function add_panel( $id, $args ) { $this->panels[ $id ] = $args; }
 	public function add_setting( $id, $args ) { $this->settings[ $id ] = $args; }
 	public function add_control( $id, $args ) { $this->controls[ $id ] = $args; }
 }
@@ -262,7 +264,7 @@ vance_hub_article_customize_register( $cz );
 check( 'customizer: setting vance_hub_articles exists', isset( $cz->settings['vance_hub_articles'] ) );
 check( 'customizer: default is ON (the master switch decides whether it shows)', isset( $cz->settings['vance_hub_articles'] ) && true === $cz->settings['vance_hub_articles']['default'] );
 check( 'customizer: sanitised as a checkbox', isset( $cz->settings['vance_hub_articles'] ) && 'vance_hub_sanitize_checkbox' === $cz->settings['vance_hub_articles']['sanitize_callback'] );
-check( 'customizer: a checkbox in the Home layout section', isset( $cz->controls['vance_hub_articles'] ) && 'vance_home_layout' === $cz->controls['vance_hub_articles']['section'] && 'checkbox' === $cz->controls['vance_hub_articles']['type'] );
+check( 'customizer: a checkbox in section 4 (vance_hub_sec_pages)', isset( $cz->controls['vance_hub_articles'] ) && 'vance_hub_sec_pages' === $cz->controls['vance_hub_articles']['section'] && 'checkbox' === $cz->controls['vance_hub_articles']['type'] );
 check( 'customizer: the label names articles and VanceHubClub', isset( $cz->controls['vance_hub_articles'] ) && false !== stripos( $cz->controls['vance_hub_articles']['label'], 'article' ) && false !== strpos( $cz->controls['vance_hub_articles']['label'], 'VanceHubClub' ) );
 
 /* ===================================================================== */

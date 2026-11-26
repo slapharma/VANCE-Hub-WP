@@ -2031,7 +2031,7 @@ $GLOBALS['UMETA'][7]['_sla_consent_flare_plan_at']           = '2026-10-01 09:00
 $GLOBALS['UMETA'][7]['_sla_consent_flare_plan_withdrawn_at'] = '2026-10-15 08:00:00';
 $NAMES31 = array_column( vance_hub_flare_plan_export( 'ruth@example.test' )['data'][0]['data'] ?? array(), 'name' );
 check( 'export: the withdrawal time is shown when the flag is not set (positive control)', in_array( 'Withdrawn on', $NAMES31, true ) );
-check( 'customizer text: the urgent text description has the new sentence and not the old claim', false !== strpos( $FP_SRC, 'Turning the switch off stops new plans and changes. A member who has a saved plan can still see, print and delete it.' ) && false === strpos( $FP_SRC, 'members cannot delete a plan while it is hidden' ) );
+check( 'customizer text: the urgent text description has the new sentence and not the old claim', false !== strpos( $FP_SRC, 'Saved plans are not erased: a member who has a saved plan can still see, print and delete it.' ) && false === stripos( $FP_SRC, 'members cannot delete a plan while it is hidden' ) );
 
 /* ===================================================================== */
 section( '32. the text cleaner: what the member types is stored as typed' );

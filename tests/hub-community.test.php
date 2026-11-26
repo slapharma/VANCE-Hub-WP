@@ -148,8 +148,10 @@ function has_str( $hay, $needle ) { return false !== strpos( (string) $hay, $nee
 
 /** Customizer stand-in: records what the register function adds. */
 class CommunityCustomizeFake {
+	public $panels   = array();
 	public $settings = array();
 	public $controls = array();
+	public function add_panel( $id, $args = array() ) { $this->panels[ $id ] = $args; }
 	public function add_setting( $id, $args = array() ) { $this->settings[ $id ] = $args; }
 	public function add_control( $id, $args = array() ) { $this->controls[ $id ] = $args; }
 }
@@ -220,8 +222,8 @@ $WC = new CommunityCustomizeFake();
 vance_hub_community_customize_register( $WC );
 check( 'customizer: the setting vance_hub_community defaults to true', isset( $WC->settings['vance_hub_community'] ) && true === $WC->settings['vance_hub_community']['default'] );
 check( 'customizer: the setting is sanitised as a checkbox', isset( $WC->settings['vance_hub_community'] ) && 'vance_hub_sanitize_checkbox' === $WC->settings['vance_hub_community']['sanitize_callback'] );
-check( 'customizer: the control is a checkbox in section vance_home_layout', isset( $WC->controls['vance_hub_community'] ) && 'checkbox' === $WC->controls['vance_hub_community']['type'] && 'vance_home_layout' === $WC->controls['vance_hub_community']['section'] );
-check( 'customizer: the control is labelled Community hub', isset( $WC->controls['vance_hub_community'] ) && 'Community hub' === $WC->controls['vance_hub_community']['label'] );
+check( 'customizer: the control is a checkbox in section vance_hub_sec_community', isset( $WC->controls['vance_hub_community'] ) && 'checkbox' === $WC->controls['vance_hub_community']['type'] && 'vance_hub_sec_community' === $WC->controls['vance_hub_community']['section'] );
+check( 'customizer: the control is labelled "Turn on the Community hub"', isset( $WC->controls['vance_hub_community'] ) && 'Turn on the Community hub' === $WC->controls['vance_hub_community']['label'] );
 check( 'customizer: the register function runs after the section is made (priority 11)', in_array( array( 'cb' => 'vance_hub_community_customize_register', 'priority' => 11 ), $GLOBALS['WP']['hooks']['customize_register'], true ) );
 
 /* ---- 2. the page gate, the page, the header --------------------------------- */

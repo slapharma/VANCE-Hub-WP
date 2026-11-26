@@ -367,21 +367,25 @@ function vance_hub_flare_plan_consent_text() {
 }
 
 /**
- * Customizer controls: the switch and the three texts.
+ * Customizer controls: the switch and the three texts, in section 8 of the
+ * VanceHubClub panel (inc/hub-layout.php names the sections and the switch
+ * labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer.
  */
 function vance_hub_flare_plan_customize( $wp_customize ) {
-	$section = 'vance_home_layout';
+	$switch  = vance_hub_customizer_switch( 'vance_hub_dash_flare_plan' );
+	$section = $switch['section'];
 	$wp_customize->add_setting( 'vance_hub_dash_flare_plan', array(
 		'default'           => vance_hub_switch_default( 'vance_hub_dash_flare_plan' ),
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_dash_flare_plan', array(
-		'label'       => __( 'Member dashboard: show the flare plan', 'vance-health-hub' ),
-		'description' => __( 'A card where the member writes their own plan for a flare. It is health data: turn it on only when the privacy policy covers it, and the urgent help text below is set. It shows only in the Health Profile tab of the member dashboard (sub-tab "Flare plan"), and only when the VanceHubClub dashboard is on.', 'vance-health-hub' ),
+		'label'       => $switch['label'],
+		'description' => __( 'A card where the member writes their own plan for a flare. It shows in the Health Profile tab of the member dashboard (sub-tab "Flare plan"). It needs the dashboard home (section 5) and the urgent help text below.', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'checkbox',
+		'priority'    => 10,
 	) );
 
 	$wp_customize->add_setting( 'vance_hub_flare_plan_urgent', array(
@@ -389,17 +393,20 @@ function vance_hub_flare_plan_customize( $wp_customize ) {
 		'sanitize_callback' => 'sanitize_textarea_field',
 	) );
 	$wp_customize->add_control( 'vance_hub_flare_plan_urgent', array(
-		'label'       => __( 'Flare plan: "When to get urgent help" text', 'vance-health-hub' ),
-		'description' => __( 'Fixed text that every member sees on their plan. A clinician must write or approve it. The card does not show while this is empty. Turning the switch off stops new plans and changes. A member who has a saved plan can still see, print and delete it.', 'vance-health-hub' ),
+		'label'       => __( 'Urgent help text (a clinician must approve it)', 'vance-health-hub' ),
+		'description' => __( 'Fixed text below "When to get urgent help" that each member sees on their plan. A clinician must write or approve it. New plans and changes stop while this is empty or the switch is off. Saved plans are not erased: a member who has a saved plan can still see, print and delete it. For an erasure request, you can also use the WordPress privacy tools (Tools > Erase Personal Data).', 'vance-health-hub' ),
 		'section'     => $section,
 		'type'        => 'textarea',
+		'priority'    => 20,
 	) );
 
 	$labels = array(
-		'vance_hub_flare_plan_consent' => __( 'Flare plan: consent text', 'vance-health-hub' ),
-		'vance_hub_flare_plan_note'    => __( 'Flare plan: note below the plan', 'vance-health-hub' ),
+		'vance_hub_flare_plan_consent' => __( 'Consent text', 'vance-health-hub' ),
+		'vance_hub_flare_plan_note'    => __( 'Note below the plan', 'vance-health-hub' ),
 	);
+	$priority = 20;
 	foreach ( vance_hub_flare_plan_text_defaults() as $name => $default ) {
+		$priority += 10;
 		$wp_customize->add_setting( $name, array(
 			'default'           => $default,
 			'sanitize_callback' => 'sanitize_text_field',
@@ -409,6 +416,7 @@ function vance_hub_flare_plan_customize( $wp_customize ) {
 			'description' => __( 'Leave empty to use the default.', 'vance-health-hub' ),
 			'section'     => $section,
 			'type'        => 'text',
+			'priority'    => $priority,
 		) );
 	}
 }

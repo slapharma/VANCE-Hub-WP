@@ -465,8 +465,10 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   discarding `_wp_attachment_image_alt` again — see `inc/thumbnail-alt.php`.
 - **`og:image` is present on every page**, falling back to
   `assets/img/og-default.jpg` where AIOSEO has none.
-- **The Customizer shows 24 theme panels**, grouped Site / Home / Content /
-  Section / Pages / Members / Website Functions. No panel called "Hero
+- **The Customizer shows 25 theme panels.** The VanceHubClub panel comes first and
+  has eight numbered sections, from "1. On or off" to "8. Flare plan (health data)".
+  The other 24 are grouped Site / Home / Content / Section / Pages / Members /
+  Website Functions. No panel called "Hero
   Overlays" or "Advanced" — those are the old names; see "Customizer
   structure" above.
 
@@ -602,8 +604,9 @@ This is health data. The card records the member's own words and gives no advice
   privacy policy covers them. Turn it on only after the policy covers the plan. The
   flare log, the quick check and the appointment sheet all sit inside this card, so the
   same switch turns them off too. The switch does not hide the "Manage my data" tab.
-- **Urgent help text:** theme mod `vance_hub_flare_plan_urgent`, set in Customize under
-  `vance_home_layout`. It has no default. While it is empty the card does not show and
+- **Urgent help text:** theme mod `vance_hub_flare_plan_urgent`, set in Customize in
+  section 8, "8. Flare plan (health data)" (section id `vance_hub_sec_flare`), of the
+  VanceHubClub panel. It has no default. While it is empty the card does not show and
   a save is refused. Do not write this text as an agent. A clinician must write or
   approve it, and the site has no named medical reviewer (see Outstanding work, item 1).
 - **Storage:** `_sla_flare_plan` holds `{updated, signs, actions, contacts}`. The flare
@@ -746,7 +749,8 @@ a priority band:
 | Members | 60 |
 | Website Functions | 70 |
 
-That's 24 theme panels in total.
+The map names 24 theme panels. The VanceHubClub panel is not in the map, so the
+Customizer has 25 theme panels in total. See "VanceHubClub panel" below.
 
 To move, rename or reorder a section, edit the map in this file, not the
 `add_section()` call at its point of registration; the map wins regardless of
@@ -791,6 +795,47 @@ control classes when `WP_Customize_Control` exists at theme load time, so the
 before firing `do_action('customize_register')`. This is a known trap, not a
 recipe: the scripts that did this were session scratch files, not anything
 kept in the repo.
+
+### VanceHubClub panel (`vance_hub_panel`)
+
+The VanceHubClub panel is not in the structure map. Its id is the constant
+`VANCE_HUB_CUSTOMIZER_PANEL`. It sits at priority 1, above the seven silos.
+
+The sections and the 13 switch labels are named in one place: `vance_hub_customizer_sections()`
+and `vance_hub_customizer_switches()` in `inc/hub-layout.php`. The Vance Club Layout admin
+screen (`inc/hub-admin.php`) reads the same two lists, so the screen and the Customizer use the
+same words.
+
+| Section priority | Section id | Title |
+|---|---|---|
+| 10 | `vance_home_layout` | 1. On or off |
+| 20 | `vance_hub_sec_home` | 2. Home page |
+| 30 | `vance_hub_sec_header` | 3. Header and member bar |
+| 40 | `vance_hub_sec_pages` | 4. Articles and Self-Assessment |
+| 50 | `vance_hub_sec_dashboard` | 5. Member dashboard |
+| 60 | `vance_hub_sec_community` | 6. Community |
+| 70 | `vance_hub_sec_checkin` | 7. Daily check-in (health data) |
+| 80 | `vance_hub_sec_flare` | 8. Flare plan (health data) |
+
+Section 1 keeps the id `vance_home_layout`, which is also the id of the master setting.
+
+Rules for this panel:
+
+- Never change a setting id. A renamed id orphans the value a user already saved.
+- To move, rename or retitle a section, or to move or relabel a switch, edit
+  `inc/hub-layout.php`. Do not edit the structure map for this panel. Other controls set
+  their own section in the file that registers them. For example, the flare controls are
+  registered in `vance_hub_flare_plan_customize()` in `inc/hub-flare-plan.php`.
+- `inc/customizer-structure.php` does not manage this panel. Its clean-up step at the end
+  still runs over every `vance_` section and panel, and it removes one that has no controls
+  or no sections.
+- One control has an `active_callback`: `vance_hub_customizer_dashboard_home_on()`, on
+  "Use the VanceHubClub look on every tab" (`vance_hub_dashboard_tabs`). The control shows
+  only while "Use the VanceHubClub dashboard home" (`vance_hub_show_dashboard`) is on. With no
+  such setting, the control shows.
+
+**Tests:** `php tests/hub-customizer.test.php`. It needs no WordPress. It exits 1 when any
+check fails.
 
 ## Local-only helpers (in `LOCAL/`, gitignored)
 - `vance_rebrand.py` — text rebrand transformer (round 1)
