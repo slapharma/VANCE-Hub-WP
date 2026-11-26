@@ -1,9 +1,11 @@
 /**
- * Flare plan card: print, the step-by-step builder, and "How am I today?".
+ * Flare plan card: print, the step-by-step builder, "How am I today?", the
+ * character counters, and focus on load.
  *
- * Every part is an enhancement. The print buttons and the quick check are hidden
- * in the markup and shown here, so with no script the member never sees a
- * control that does nothing. With no script the plan form shows all its boxes.
+ * Every part is an enhancement. The print buttons, the quick check and the
+ * counters are hidden in the markup and shown here, so with no script the member
+ * never sees a control that does nothing. With no script the plan form shows all
+ * its boxes.
  *
  * Print: the layout is CSS (@media print in hub-dashboard.css). Before printing
  * this script marks the part to print and every ancestor of it, so the CSS can
@@ -94,11 +96,11 @@
 		var next     = el( 'button', 'vhd-btn vhd-btn--purple', form.getAttribute( 'data-next-text' ) || 'Next' );
 		back.type = 'button';
 		next.type = 'button';
-		label.setAttribute( 'aria-live', 'polite' );
 		nav.appendChild( back );
 		nav.appendChild( next );
 		form.insertBefore( label, steps[ 0 ] );
-		form.appendChild( nav );
+		// Back and Next sit before the last step, so the Save button comes after them in the DOM.
+		form.insertBefore( nav, steps[ total - 1 ] );
 
 		label.tabIndex = -1;
 
@@ -111,9 +113,8 @@
 			next.hidden = current === total - 1;
 			if ( moved ) {
 				// Keep keyboard focus on the page: the button that was clicked may
-				// be hidden now. Go to the first field of the step, else to the label.
-				var focus = steps[ current ].querySelector( 'textarea, input:not([type="hidden"]), button' ) || label;
-				focus.focus();
+				// be hidden now. Focus goes to the step label.
+				label.focus();
 			}
 		}
 
@@ -146,19 +147,47 @@
 		}
 		box.hidden = false;
 
+		// A slider counts as moved once the member changes it. Compare needs all three.
+		var moved      = {};
+		var movedCount = 0;
+
+		function updateButton() {
+			button.disabled = movedCount < sliders.length;
+		}
+		updateButton();
+
 		Array.prototype.forEach.call( sliders, function ( slider ) {
+			var key = slider.getAttribute( 'data-vhd-q' );
 			var out = box.querySelector( 'output[for="' + slider.id + '"]' );
-			slider.addEventListener( 'input', function () {
+			function touched() {
 				if ( out ) {
 					out.textContent = slider.value;
+				}
+				slider.setAttribute( 'aria-valuetext', ( config.valuetext || '%s of 4' ).replace( '%s', slider.value ) );
+				if ( ! moved[ key ] ) {
+					moved[ key ] = true;
+					movedCount++;
+					updateButton();
+				}
+			}
+			// 'input' does not fire when the member taps or presses a key and the
+			// value stays at 0. A tap or a key press on the slider is also an answer.
+			[ 'input', 'change', 'pointerup' ].forEach( function ( type ) {
+				slider.addEventListener( type, touched );
+			} );
+			// Only the keys that set a slider value count. Tab moves the focus to the
+			// next slider and must not mark it as answered.
+			slider.addEventListener( 'keydown', function ( e ) {
+				var keys = [ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown' ];
+				if ( keys.indexOf( e.key ) !== -1 ) {
+					touched();
 				}
 			} );
 		} );
 
 		button.addEventListener( 'click', function () {
-			var today  = {};
-			var higher = [];
-			var line   = [];
+			var today = {};
+			var line  = [];
 			Array.prototype.forEach.call( sliders, function ( slider ) {
 				var key = slider.getAttribute( 'data-vhd-q' );
 				today[ key ] = parseInt( slider.value, 10 ) || 0;
@@ -167,21 +196,15 @@
 			while ( result.firstChild ) {
 				result.removeChild( result.firstChild );
 			}
-			result.appendChild( el( 'p', '', ( config.today || 'Today' ) + ': ' + line.join( ', ' ) + '.' ) );
+			result.appendChild( el( 'p', '', ( config.today || 'Today' ) + ': ' + line.join( ', ' ) ) );
 
 			var last = config.last_v;
 			if ( last ) {
 				var lastLine = [];
 				Object.keys( today ).forEach( function ( key ) {
 					lastLine.push( ( labels[ key ] || key ) + ' ' + last[ key ] );
-					if ( today[ key ] > last[ key ] ) {
-						higher.push( labels[ key ] || key );
-					}
 				} );
-				result.appendChild( el( 'p', '', ( config.last || '%s' ).replace( '%s', config.last_at || '' ) + ': ' + lastLine.join( ', ' ) + '.' ) );
-				result.appendChild( el( 'p', '', higher.length ? ( config.higher || '%s' ).replace( '%s', higher.join( ', ' ) ) : ( config.same || '' ) ) );
-			} else if ( config.nolast ) {
-				result.appendChild( el( 'p', '', config.nolast ) );
+				result.appendChild( el( 'p', '', ( config.last || '%s' ).replace( '%s', config.last_at || '' ) + ': ' + lastLine.join( ', ' ) ) );
 			}
 			result.appendChild( el( 'p', 'vhd-flare__quick-follow', config.follow || '' ) );
 
@@ -194,13 +217,59 @@
 					plan.scrollIntoView( { behavior: calm ? 'auto' : 'smooth', block: 'nearest' } );
 				}
 			}
+			// Focus last, so the result stays in view after the plan is shown.
+			result.focus();
 		} );
+	}
+
+	/* ---- character counters --------------------------------------------- */
+
+	function initCount( counter ) {
+		var target = document.getElementById( counter.getAttribute( 'data-count-for' ) || '' );
+		if ( ! target ) {
+			return;
+		}
+		var max      = counter.getAttribute( 'data-count-max' ) || '';
+		var template = counter.getAttribute( 'data-count-text' ) || '%d of %d characters';
+
+		function show() {
+			// Count code points, as the server does, so one emoji counts once.
+			var n = Array.from( target.value ).length;
+			counter.textContent = template.replace( '%d', String( n ) ).replace( '%d', max );
+		}
+
+		counter.hidden = false;
+		target.addEventListener( 'input', show );
+		show();
+	}
+
+	/* ---- focus on load -------------------------------------------------- */
+
+	function initFlash() {
+		var flash = document.getElementById( 'vhd-flare-flash' );
+		if ( ! flash ) {
+			return;
+		}
+		flash.focus();
+		if ( flash.scrollIntoView ) {
+			flash.scrollIntoView( { block: 'center' } );
+		}
+	}
+
+	function initSubtabs() {
+		var active = document.querySelector( '.vhd-subtabs .is-active' );
+		if ( active && active.scrollIntoView ) {
+			active.scrollIntoView( { inline: 'center', block: 'nearest' } );
+		}
 	}
 
 	function init() {
 		initPrint();
 		Array.prototype.forEach.call( document.querySelectorAll( 'form[data-vhd-wizard]' ), initWizard );
 		Array.prototype.forEach.call( document.querySelectorAll( '[data-vhd-flare-quick]' ), initQuick );
+		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__count[data-count-for]' ), initCount );
+		initFlash();
+		initSubtabs();
 	}
 
 	window.addEventListener( 'beforeprint', markPrint );

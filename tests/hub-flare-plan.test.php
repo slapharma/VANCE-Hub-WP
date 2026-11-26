@@ -43,7 +43,19 @@
  *  25  delete order: the flare log goes before the plan; a failed log delete keeps the plan
  *  26  static: the step builder moves focus after Back and Next
  *  27  no-cache: the negative cases and the hook (static)
- *  28  no-cache: the positive case, LAST in the file because it defines DONOTCACHEPAGE
+ *  28  no-cache: the positive case. It defines DONOTCACHEPAGE (section 27 also does now, for the read-only card)
+ *  29  one delete function (delete_all), handler codes deleted/partial/kept, Manage my data
+ *  30  result message: #vhd-flare fragment, card id, alert and status roles
+ *  31  gates: can(), delete with the switch off, read-only card, eraser lock, exporter
+ *  32  text cleaner: <, >, &, %41, backslash survive
+ *  33  over-length text refused (toolong)
+ *  34  the draft: kept after a refused request, shown once
+ *  35  a failed write changes nothing; the log keeps 50 entries
+ *  36  sheet and quick check read each store through its own gate
+ *  37  remove one log entry
+ *  38  telephone links
+ *  39  edge cases: multibyte at the limit through the handler, control-only text, draft per member,
+ *      row ids, telephone positives and negatives, pattern gate, escaped output
  *
  * Checks that fail on the current code are findings. They are listed in the report,
  * not hidden: a failure names the behaviour the code should have.
@@ -195,6 +207,18 @@ function update_user_meta( $user_id, $key, $value, $prev = '' ) {
 	if ( true === $GLOBALS['UPDATE_FAILS'] || $key === $GLOBALS['UPDATE_FAILS'] ) {
 		return false;
 	}
+	// UPDATE_FAILS_ONCE: this key fails once, then writes work again.
+	if ( ! empty( $GLOBALS['UPDATE_FAILS_ONCE'] ) && $key === $GLOBALS['UPDATE_FAILS_ONCE'] ) {
+		$GLOBALS['UPDATE_FAILS_ONCE'] = '';
+		return false;
+	}
+	// CORRUPT_ONCE: the next write of this key stores damaged data (and reports true), as a
+	// store that lies would. The read-back then differs from what was sent.
+	if ( ! empty( $GLOBALS['CORRUPT_ONCE'] ) && $key === $GLOBALS['CORRUPT_ONCE'] ) {
+		$GLOBALS['CORRUPT_ONCE']              = '';
+		$GLOBALS['UMETA'][ $user_id ][ $key ] = array( 'corrupt' => true );
+		return true;
+	}
 	$GLOBALS['UMETA'][ $user_id ][ $key ] = is_string( $value ) ? stripslashes( $value ) : $value;
 	return true;
 }
@@ -211,6 +235,18 @@ function delete_user_meta( $user_id, $key, $value = '' ) {
 	}
 	unset( $GLOBALS['UMETA'][ $user_id ][ $key ] );
 	return true;
+}
+
+// Transients (for the draft): the shared stubs of hub-layout.test.php already define
+// set_transient(), get_transient() and delete_transient(). They keep the values in
+// $GLOBALS['TRANSIENTS'] and the lifetimes in $GLOBALS['SET_TRANSIENTS'].
+// As WordPress does for UTF-8 text: invalid UTF-8 gives an empty string.
+// home_url() comes from the shared stub block: 'https://example.test' . $path.
+function wp_parse_url( $url, $component = -1 ) {
+	return parse_url( (string) $url, $component );
+}
+function wp_check_invalid_utf8( $text, $strip = false ) {
+	return 1 === preg_match( '//u', (string) $text ) ? (string) $text : '';
 }
 
 // The assertion helpers. hub-layout.test.php defines the same pair after the stub block.
@@ -239,6 +275,8 @@ function wp_date( $format, $timestamp = null, $timezone = null ) {
 require_once $THEME . '/inc/hub-dashboard.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
 require_once $THEME . '/inc/hub-flare-plan.php';
+// The "Manage my data" delete: section 29 checks that it uses the flare plan's own delete.
+require_once $THEME . '/inc/hub-data-manage.php';
 
 /* ---- helpers ------------------------------------------------------------------ */
 
@@ -258,8 +296,12 @@ function fb_arrange( array $mods = array(), $logged_in = true, $uid = 7 ) {
 	$GLOBALS['CURRENT_UID']    = $uid;
 	$GLOBALS['CURRENT_URL']    = 'https://example.test/hub/';
 	$GLOBALS['UMETA']          = array();
+	$GLOBALS['TRANSIENTS']     = array();
+	$GLOBALS['SET_TRANSIENTS'] = array();
 	$GLOBALS['WRITES']         = array();
 	$GLOBALS['UPDATE_FAILS']   = false;
+	$GLOBALS['UPDATE_FAILS_ONCE'] = '';
+	$GLOBALS['CORRUPT_ONCE']   = '';
 	$GLOBALS['DELETE_FAILS']   = '';
 	$GLOBALS['SEQ']            = array();
 	$GLOBALS['STALE']          = array();
@@ -271,6 +313,24 @@ function fb_arrange( array $mods = array(), $logged_in = true, $uid = 7 ) {
 	$_GET                      = array();
 	$_POST                     = array();
 	$_SERVER['REQUEST_METHOD'] = 'POST';
+	unset( $_SERVER['HTTP_SEC_FETCH_SITE'], $_SERVER['HTTP_ORIGIN'], $_SERVER['HTTP_REFERER'] );
+	if ( ! empty( $GLOBALS['OPEN_GATES'] ) ) {
+		fb_open_gates( $uid );
+	}
+}
+
+/**
+ * Open the gates the quick check and the appointment sheet read through: the check-in
+ * switch and the check-in agreement for the wording in use, and the general health
+ * agreement. fb_arrange() calls it while $GLOBALS['OPEN_GATES'] is true (sections 18 to 23,
+ * which test the data and not the gates). Section 31 tests each gate closed.
+ */
+function fb_open_gates( $uid = 7 ) {
+	$GLOBALS['MODS']['vance_hub_dash_checkin']              = true;
+	$GLOBALS['UMETA'][ $uid ]['_sla_consent_checkin']      = '1';
+	$GLOBALS['UMETA'][ $uid ]['_sla_consent_checkin_at']   = '2026-10-01 09:00:00';
+	$GLOBALS['UMETA'][ $uid ]['_sla_consent_checkin_text'] = vance_hub_checkin_consent_text();
+	$GLOBALS['UMETA'][ $uid ]['_sla_consent_health']       = '1';
 }
 
 /** A valid save: three answers, and the consent box ticked when $consent is true. */
@@ -317,12 +377,19 @@ function fb_meta( $key ) {
 	return $GLOBALS['UMETA'][7][ $key ] ?? null;
 }
 
-/** Run the flare POST handler. Returns the redirect URL, or null when it did not redirect. */
+/**
+ * Run the flare POST handler. Returns the redirect URL, or null when it did not redirect.
+ * Every redirect now ends in #vhd-flare. The fragment is cut off here, so the many checks
+ * that compare the URL read as before. The raw URL is in $GLOBALS['REDIRECT_RAW']; section 30
+ * checks the fragment on it.
+ */
 function fb_handle() {
+	$GLOBALS['REDIRECT_RAW'] = null;
 	try {
 		vance_hub_flare_plan_handle_post();
 	} catch ( RedirectStop $stop ) {
-		return $stop->url;
+		$GLOBALS['REDIRECT_RAW'] = $stop->url;
+		return preg_replace( '/#vhd-flare$/', '', $stop->url );
 	}
 	return null;
 }
@@ -409,18 +476,28 @@ check( 'clean: a string instead of an array gives null', vance_hub_flare_plan_cl
 check( 'clean: null gives null', vance_hub_flare_plan_clean( null ) === null );
 check( 'clean: three empty answers give null', vance_hub_flare_plan_clean( array( 'signs' => '', 'actions' => '', 'contacts' => '' ) ) === null );
 check( 'clean: whitespace-only answers give null', vance_hub_flare_plan_clean( array( 'signs' => " \t ", 'actions' => "\n\n", 'contacts' => '   ' ) ) === null );
-check( 'clean: an answer that is only an empty tag gives null', vance_hub_flare_plan_clean( array( 'signs' => '<b></b>', 'actions' => '', 'contacts' => '' ) ) === null );
+// CHANGED (spec A): tags are no longer stripped, so an empty tag is text the member typed.
+check( 'clean: an answer that is only an empty tag is kept as typed (no tag stripping)', ( vance_hub_flare_plan_clean( array( 'signs' => '<b></b>', 'actions' => '', 'contacts' => '' ) )['signs'] ?? null ) === '<b></b>' );
 check( 'clean: one character is kept, the other two come back as empty strings', vance_hub_flare_plan_clean( array( 'signs' => 'a' ) ) === array( 'signs' => 'a', 'actions' => '', 'contacts' => '' ) );
 check( 'clean: a missing answer key comes back as an empty string', vance_hub_flare_plan_clean( array( 'contacts' => 'Nurse' ) ) === array( 'signs' => '', 'actions' => '', 'contacts' => 'Nurse' ) );
 
 check( 'limit: exactly 1000 characters are kept whole', strlen( vance_hub_flare_plan_clean( array( 'signs' => str_repeat( 'a', 1000 ) ) )['signs'] ?? '' ) === 1000 );
-check( 'limit: 1001 characters are cut to 1000', strlen( vance_hub_flare_plan_clean( array( 'signs' => str_repeat( 'a', 1001 ) ) )['signs'] ?? '' ) === 1000 );
-check( 'limit: 1001 accented characters are cut to 1000 characters, not bytes', preg_match_all( '/./su', vance_hub_flare_plan_clean( array( 'signs' => str_repeat( 'é', 1001 ) ) )['signs'] ?? '' ) === 1000 );
-check( 'limit: 1001 emoji are cut to 1000 characters, not bytes', preg_match_all( '/./su', vance_hub_flare_plan_clean( array( 'signs' => str_repeat( '😀', 1001 ) ) )['signs'] ?? '' ) === 1000 );
+// CHANGED (spec B): clean() no longer cuts. An over-length answer is kept whole, and
+// vance_hub_flare_plan_too_long() reports it, so the handler can refuse it.
+check( 'limit: 1001 characters are not cut by clean(), and too_long() says so', strlen( vance_hub_flare_plan_clean( array( 'signs' => str_repeat( 'a', 1001 ) ) )['signs'] ?? '' ) === 1001 && vance_hub_flare_plan_too_long( vance_hub_flare_plan_clean( array( 'signs' => str_repeat( 'a', 1001 ) ) ) ) === true );
+check( 'limit: 1000 characters are not too long', vance_hub_flare_plan_too_long( vance_hub_flare_plan_clean( array( 'signs' => str_repeat( 'a', 1000 ) ) ) ) === false );
+check( 'limit: 1001 accented characters are too long, counted in characters not bytes', vance_hub_flare_plan_too_long( array( 'signs' => str_repeat( 'é', 1001 ) ) ) === true && vance_hub_flare_plan_too_long( array( 'signs' => str_repeat( 'é', 1000 ) ) ) === false );
+check( 'limit: 1001 emoji are too long, 1000 emoji are not', vance_hub_flare_plan_too_long( array( 'signs' => str_repeat( '😀', 1001 ) ) ) === true && vance_hub_flare_plan_too_long( array( 'signs' => str_repeat( '😀', 1000 ) ) ) === false );
+check( 'limit: too_long() looks at every answer, and ignores a value that is not an array', vance_hub_flare_plan_too_long( array( 'signs' => 'a', 'actions' => 'b', 'contacts' => str_repeat( 'c', 1001 ) ) ) === true && vance_hub_flare_plan_too_long( 'x' ) === false );
 check( 'limit: a cut through 3-byte characters leaves valid UTF-8', preg_match( '//u', vance_hub_flare_plan_clean( array( 'signs' => str_repeat( '€', 1001 ) ) )['signs'] ?? '' ) === 1 );
 
-check( 'tags: markup tags are removed and the text is kept', ( vance_hub_flare_plan_clean( array( 'signs' => '<b>bold</b> <a href="https://example.test">link</a>' ) )['signs'] ?? null ) === 'bold link' );
-check( 'tags: a script block is removed with its content', ( vance_hub_flare_plan_clean( array( 'signs' => 'before<script>alert(1)</script>after' ) )['signs'] ?? null ) === 'beforeafter' );
+// CHANGED (spec A): the cleaner strips no tags. Every output is escaped, so the text is stored as typed.
+check( 'tags: markup typed by the member is stored as typed, not stripped', ( vance_hub_flare_plan_clean( array( 'signs' => '<b>bold</b> <a href="https://example.test">link</a>' ) )['signs'] ?? null ) === '<b>bold</b> <a href="https://example.test">link</a>' );
+check( 'tags: a script block typed by the member is stored as typed (it is escaped on output)', ( vance_hub_flare_plan_clean( array( 'signs' => 'before<script>alert(1)</script>after' ) )['signs'] ?? null ) === 'before<script>alert(1)</script>after' );
+check( 'clean text: "<", ">", "&" and "%41" survive', vance_hub_flare_plan_clean_text( 'a < b > c & d %41' ) === 'a < b > c & d %41' );
+check( 'clean text: control characters go, LF and TAB stay, CRLF becomes LF, the ends are trimmed', vance_hub_flare_plan_clean_text( "  a\x00b\x07c\td\r\ne\rf\x7f  " ) === "abc\td\ne\nf" );
+check( 'clean text: invalid UTF-8 gives an empty string', vance_hub_flare_plan_clean_text( "ab\xff\xfe" ) === '' );
+check( 'clean text: a non-string gives an empty string, a number is cast', vance_hub_flare_plan_clean_text( array( 'x' ) ) === '' && vance_hub_flare_plan_clean_text( 12 ) === '12' );
 check( 'line breaks: CRLF and CR become LF', ( vance_hub_flare_plan_clean( array( 'signs' => "one\r\ntwo\rthree" ) )['signs'] ?? null ) === "one\ntwo\nthree" );
 check( 'line breaks: a blank line between two lines is kept', ( vance_hub_flare_plan_clean( array( 'signs' => "one\n\ntwo" ) )['signs'] ?? null ) === "one\n\ntwo" );
 check( 'slashes: a posted double backslash arrives as one backslash', ( vance_hub_flare_plan_clean( array( 'signs' => 'a\\\\b' ) )['signs'] ?? null ) === 'a\\b' );
@@ -506,18 +583,20 @@ check( 'gating: a visitor who is not logged in does nothing', fb_handle() === nu
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ) );
 fb_post_save();
-check( 'gating: the switch unset (default off) does nothing, even for a good save', fb_handle() === null && $GLOBALS['WRITES'] === array() );
+// CHANGED (spec F): the switch off no longer makes the handler return silently. A save redirects with failed.
+check( 'gating: the switch unset (default off) refuses a good save with failed, and writes nothing', fb_handle() === 'https://example.test/hub/?vance_flare=failed' && $GLOBALS['WRITES'] === array() );
 
 fb_arrange( array( 'vance_home_layout' => 'classic', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ) );
 fb_post_save();
-check( 'gating: the Home layout master switch off blocks a good save', fb_handle() === null && $GLOBALS['WRITES'] === array() );
+check( 'gating: the Home layout master switch off blocks a good save (failed, nothing written)', fb_handle() === 'https://example.test/hub/?vance_flare=failed' && $GLOBALS['WRITES'] === array() );
 
 fb_arrange( $FP_ON );
 fb_stored_plan();
 fb_consented();
 fb_post_delete();
 $GLOBALS['MODS']['vance_hub_dash_flare_plan'] = false;
-check( 'gating: the switch off also blocks delete, and the plan stays', fb_handle() === null && $GLOBALS['WRITES'] === array() && fb_meta( '_sla_flare_plan' ) !== null );
+// CHANGED (spec F): a member can always delete. The switch off no longer blocks delete.
+check( 'gating: the switch off still deletes the plan (deleted), and withdraws the agreement', fb_handle() === 'https://example.test/hub/?vance_flare=deleted' && fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null );
 
 fb_arrange( $FP_ON );
 fb_post_save();
@@ -578,8 +657,13 @@ check( 'invalid is checked before consent: blank answers and no consent give inv
 
 fb_arrange( $FP_ON );
 fb_post_save( array( 'signs' => str_repeat( 'a', 1200 ), 'actions' => '', 'contacts' => '' ) );
-fb_handle();
-check( 'limit: a save keeps at most 1000 characters of an answer', strlen( fb_meta( '_sla_flare_plan' )['signs'] ?? '' ) === 1000 );
+// CHANGED (spec B): an over-length answer is refused with toolong, never cut.
+check( 'limit: a save of 1200 characters is refused with toolong', fb_handle() === 'https://example.test/hub/?vance_flare=toolong' );
+check( 'limit: a refused save stores no plan and no agreement', fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => str_repeat( 'a', 1000 ), 'actions' => '', 'contacts' => '' ) );
+check( 'limit: a save of exactly 1000 characters is stored whole', fb_handle() === 'https://example.test/hub/?vance_flare=saved' && strlen( fb_meta( '_sla_flare_plan' )['signs'] ?? '' ) === 1000 );
 
 fb_arrange( $FP_ON );
 fb_post_save();
@@ -694,7 +778,8 @@ fb_stored_plan();
 fb_consented();
 $GLOBALS['DELETE_FAILS'] = '_sla_consent_flare_plan';
 fb_post_delete();
-check( 'delete read-back: an agreement that is still active gives kept, not deleted', fb_handle() === 'https://example.test/hub/?vance_flare=kept' );
+// CHANGED (spec D): the plan was deleted and the agreement stayed, so part of the data is gone: partial, not kept.
+check( 'delete read-back: an agreement that is still active, with the plan deleted, gives partial', fb_handle() === 'https://example.test/hub/?vance_flare=partial' );
 check( 'delete read-back: the agreement is still active and no withdrawal time is written', fb_meta( '_sla_consent_flare_plan' ) === '1' && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === null );
 
 /* ===================================================================== */
@@ -746,7 +831,7 @@ check( 'data: a whitespace-only urgent text gives null', vance_hub_flare_plan_da
 
 fb_arrange( $FP_ON );
 $D = vance_hub_flare_plan_data( 7 );
-check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash' ) );
+check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
 check( 'data: no saved plan gives plan null and an empty date', is_array( $D ) && $D['plan'] === null && $D['updated'] === '' );
 check( 'data: no agreement on record asks for consent', is_array( $D ) && $D['need_consent'] === true );
 check( 'data: the urgent text is the one the administrator set', is_array( $D ) && $D['urgent'] === 'Call the clinic on 0800 000 000 if you have blood in your stool.' );
@@ -1058,14 +1143,16 @@ fb_stored_plan();
 fb_consented();
 $GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
 check( 'action: an end gives flare_ended', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, "  Rest\r\nfluids <b>x</b>  " ) === 'flare_ended' );
-check( 'action: an end closes the open row with today, and what helped is sanitised', fb_meta( '_sla_flare_log' ) === array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '2026-11-18', 'helped' => "Rest\nfluids x" ) ) );
+// CHANGED (spec A): the text is cleaned (CRLF, control characters, trim) but no tag is stripped.
+check( 'action: an end closes the open row with today, and what helped is cleaned, with its tags kept as typed', fb_meta( '_sla_flare_log' ) === array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '2026-11-18', 'helped' => "Rest\nfluids <b>x</b>" ) ) );
 
 fb_arrange( $FP_ON );
 fb_stored_plan();
 fb_consented();
 $GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
-vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, str_repeat( 'h', 600 ) );
-check( 'action: what helped is kept to 500 characters', strlen( fb_meta( '_sla_flare_log' )[0]['helped'] ?? '' ) === 500 );
+// CHANGED (spec B): over-length text is refused with toolong, never cut.
+check( 'action: what helped of 600 characters is refused with toolong and writes nothing', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, str_repeat( 'h', 600 ) ) === 'toolong' && $GLOBALS['WRITES'] === array() && ( fb_meta( '_sla_flare_log' )[0]['end'] ?? null ) === '' );
+check( 'action: what helped of exactly 500 characters is kept whole', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, str_repeat( 'h', 500 ) ) === 'flare_ended' && strlen( fb_meta( '_sla_flare_log' )[0]['helped'] ?? '' ) === 500 );
 
 fb_arrange( $FP_ON );
 fb_stored_plan();
@@ -1112,7 +1199,7 @@ fb_consented();
 $GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
 fb_post_flare( 'flare_end', "  Rest\r\n<i>warm</i>  " );
 check( 'handler end: redirects with vance_flare=flare_ended', fb_handle() === 'https://example.test/hub/?vance_flare=flare_ended' );
-check( 'handler end: the open flare is closed, with what helped sanitised', ( fb_meta( '_sla_flare_log' )[0]['helped'] ?? null ) === "Rest\nwarm" && ( fb_meta( '_sla_flare_log' )[0]['start'] ?? null ) === '2026-11-16' );
+check( 'handler end: the open flare is closed, with what helped cleaned (tags kept as typed)', ( fb_meta( '_sla_flare_log' )[0]['helped'] ?? null ) === "Rest\n<i>warm</i>" &&( fb_meta( '_sla_flare_log' )[0]['start'] ?? null ) === '2026-11-16' );
 check( 'handler end: the end is not before the start', ( fb_meta( '_sla_flare_log' )[0]['end'] ?? '' ) >= '2026-11-16' );
 check( 'handler end: the lock is released last, once', fb_seq_locked_once() );
 
@@ -1144,7 +1231,8 @@ fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_flare_plan_urgent' =
 fb_stored_plan();
 fb_consented();
 fb_post_flare( 'flare_start' );
-check( 'handler flare: the switch off blocks a start, and nothing is written or locked', fb_handle() === null && $GLOBALS['WRITES'] === array() && $GLOBALS['LOCK_SQL'] === array() );
+// CHANGED (spec F): the switch off redirects with failed instead of returning silently.
+check( 'handler flare: the switch off blocks a start (failed), and nothing is written or locked', fb_handle() === 'https://example.test/hub/?vance_flare=failed' && $GLOBALS['WRITES'] === array() && $GLOBALS['LOCK_SQL'] === array() );
 
 fb_arrange( $FP_ON );
 fb_stored_plan();
@@ -1226,7 +1314,8 @@ $V_OPEN = vance_hub_flare_log_view( $LOG_OPEN, $LOG_NOW );
 check( 'log view: an open flare gives its start label and its days so far, 16 to 18 Nov is 3', ( $V_OPEN['open']['start'] ?? null ) === '16 Nov 2026' && ( $V_OPEN['open']['days'] ?? null ) === 3 && ( $V_OPEN['open']['end'] ?? null ) === '' );
 
 $V_CLOSED = vance_hub_flare_log_view( array( $LOG_OK ), $LOG_NOW );
-check( 'log view: a closed row gives its start and end labels, its days and what helped', $V_CLOSED['rows'] === array( array( 'start' => '1 Nov 2026', 'end' => '3 Nov 2026', 'days' => 3, 'helped' => 'Rest' ) ) && $V_CLOSED['open'] === null );
+// CHANGED (spec H): each row of the view also carries its id, for the "Remove this entry" form.
+check( 'log view: a closed row gives its id, start and end labels, its days and what helped', $V_CLOSED['rows'] === array( array( 'id' => 'a1', 'start' => '1 Nov 2026', 'end' => '3 Nov 2026', 'days' => 3, 'helped' => 'Rest' ) ) && $V_CLOSED['open'] === null );
 
 $SEVEN = array_map( function ( $i ) {
 	return array( 'id' => 'r' . $i, 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => 'h' . $i );
@@ -1237,6 +1326,8 @@ check( 'log view: the five shown are the five newest, in stored order', ( $V_SEV
 
 /* ===================================================================== */
 section( '18. quick check data: the last saved check-in' );
+
+$GLOBALS['OPEN_GATES'] = true;
 
 fb_arrange( $FP_ON );
 check( 'quick: no check-in history gives null', vance_hub_flare_plan_quick_data( 7 ) === null );
@@ -1303,7 +1394,8 @@ $GLOBALS['UMETA'][7]['_sla_malnutrition_calculator_history'] = array(
 	array( 'id' => 'm2', 'ts' => strtotime( '2026-11-14 10:00:00 UTC' ), 'payload' => array( 'score' => 3, 'maxScore' => 8, 'riskLabel' => 'Medium risk' ) ),
 );
 $S_SCREEN = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
-check( 'sheet: the newest nutrition screening gives its date, score, maximum and risk', $S_SCREEN['screening'] === array( 'date' => '14 Nov 2026', 'score' => '3', 'max' => '8', 'risk' => 'Medium risk' ) );
+// CHANGED (spec G): the risk label is no longer on the sheet. Score, maximum and date stay.
+check( 'sheet: the newest nutrition screening gives its date, score and maximum, and no risk label', $S_SCREEN['screening'] === array( 'date' => '14 Nov 2026', 'score' => '3', 'max' => '8' ) );
 
 fb_arrange( $FP_ON );
 $S_FL = vance_hub_flare_sheet_data( 7, $PLAN_X, $LOG_OPEN, $LOG_NOW );
@@ -1314,13 +1406,14 @@ section( '20. render: progress bar, quick check, flare log, builder, print butto
 
 $PROG = array( 'done' => 2, 'total' => 4, 'pct' => 50, 'missing' => array( 'contacts' ), 'stale' => false, 'months' => 0 );
 $H_PROG = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'progress' => $PROG ) ) );
-check( 'progress: the bar is a progressbar with its value and maximum', strpos( $H_PROG, 'role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="2"' ) !== false );
-check( 'progress: the bar fill width is the percentage as a number', strpos( $H_PROG, '<span style="width:50%"></span>' ) !== false );
+check( 'progress: the bar is a progressbar with 2 of 3 sections written', strpos( $H_PROG, 'role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="2"' ) !== false );
+check( 'progress: the bar fill width is 2 of 3 as a percentage (67)', strpos( $H_PROG, '<span style="width:67%"></span>' ) !== false );
+check( 'progress: the text reads "2 of 3 sections written"', strpos( $H_PROG, '>2 of 3 sections written</p>' ) !== false );
 check( 'progress: a missing section is named in a hint', strpos( $H_PROG, '<li>Add: Who I contact</li>' ) !== false );
 check( 'progress: a fresh review gives no review hint', strpos( $H_PROG, 'You last changed your plan' ) === false );
 
 $H_STALE = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'progress' => array( 'done' => 3, 'total' => 4, 'pct' => 75, 'missing' => array(), 'stale' => true, 'months' => 7 ) ) ) );
-check( 'progress: an old review gives a hint with the months', strpos( $H_STALE, 'You last changed your plan 7 months ago. Check that it is still right.' ) !== false );
+check( 'progress: an old review gives its own paragraph, not a list item', strpos( $H_STALE, '<p class="vhd-flare__review">You last changed this plan more than 6 months ago. Check that it is still correct.</p>' ) !== false && strpos( $H_STALE, '<li>You last changed' ) === false );
 check( 'progress: no progress bar is drawn without progress data', strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026' ) ) ), 'role="progressbar"' ) === false );
 
 $H_Q = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'quick' => array( 'date' => '18 Nov 2026', 'pain' => 1, 'bowel' => 3, 'tired' => 2 ) ) ) );
@@ -1387,7 +1480,8 @@ check( 'sheet: the heading, the prepared line and the next appointment show', st
 check( 'sheet: the questions, the medication and the plan answers show', strpos( $H_SHEET, '<p>Can I eat oats?</p>' ) !== false && strpos( $H_SHEET, '<p>Iron tablets</p>' ) !== false );
 check( 'sheet: a flare line gives dates, days and what helped', strpos( $H_SHEET, '1 Nov 2026 to 3 Nov 2026 (3 days) - what helped: Rest' ) !== false );
 check( 'sheet: a check-in row gives the date and the three numbers', strpos( $H_SHEET, '<td>18 Nov 2026</td><td>1</td><td>3</td><td>2</td>' ) !== false );
-check( 'sheet: the screening line gives score, maximum, date and risk', strpos( $H_SHEET, 'Score 3 of 8, on 14 Nov 2026. Medium risk.' ) !== false );
+// CHANGED (spec G): the fixture still holds a 'risk' key. The sheet must not print it.
+check( 'sheet: the screening line gives score, maximum and date, and never the risk label', strpos( $H_SHEET, 'Score 3 of 8, on 14 Nov 2026.' ) !== false && strpos( $H_SHEET, 'Medium risk' ) === false );
 
 $SHEET_XSS = array(
 	'prepared'    => '18 Nov 2026',
@@ -1524,6 +1618,8 @@ check( 'static: negative control, a wp_date call without the UTC zone is not mat
 /* ===================================================================== */
 section( '24. render: consent needed or given, the log forms and the Edit my plan box' );
 
+$GLOBALS['OPEN_GATES'] = false;
+
 fb_arrange( $FP_ON );
 $P24 = array( 'updated' => $OLD_TS, 'signs' => 'Tight belly', 'actions' => 'Fluids', 'contacts' => 'Nurse' );
 
@@ -1587,9 +1683,9 @@ check( 'delete log retry: the withdrawal time is written', fb_meta( '_sla_consen
 /* ===================================================================== */
 section( '26. static: the step builder moves focus after Back and Next' );
 
-check( 'focus: a step change moves focus inside the moved branch', preg_match( '/if \( moved \) \{[^}]*focus\.focus\(\);/', $JS ) === 1 );
+check( 'focus: a step change moves focus to the step label', preg_match( '/if \( moved \) \{[^}]*label\.focus\(\);/', $JS ) === 1 );
 check( 'focus: the step label can take focus with tabIndex -1', strpos( $JS, 'label.tabIndex = -1;' ) !== false );
-check( 'focus: negative control, a focus call after the moved branch is not matched', preg_match( '/if \( moved \) \{[^}]*focus\.focus\(\);/', "if ( moved ) {\n\tvar x = 1;\n}\nfocus.focus();" ) === 0 );
+check( 'focus: negative control, a label focus call after the moved branch is not matched', preg_match( '/if \( moved \) \{[^}]*label\.focus\(\);/', "if ( moved ) {\n\tvar x = 1;\n}\nlabel.focus();" ) === 0 );
 
 /* ===================================================================== */
 section( '27. no-cache: the negative cases and the hook (the positive case is section 28)' );
@@ -1618,15 +1714,17 @@ fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => 
 $GLOBALS['PAGE_SLUG']     = 'dashboard';
 $GLOBALS['NOCACHE_CALLS'] = 0;
 vance_hub_flare_plan_no_cache();
-check( 'no-cache, plan not available (no urgent text): DONOTCACHEPAGE is not defined', ! defined( 'DONOTCACHEPAGE' ) );
-check( 'no-cache, plan not available (no urgent text): no no-cache headers are sent', 0 === $GLOBALS['NOCACHE_CALLS'] );
+// CHANGED (spec F): the read-only card shows the plan when the card is not available, so the
+// no-cache flag no longer depends on available(). This is the first positive case: it defines
+// DONOTCACHEPAGE, so no negative check may come after it.
+check( 'no-cache, plan not available (no urgent text), logged in, dashboard: the headers are sent once', 1 === $GLOBALS['NOCACHE_CALLS'] );
+check( 'no-cache, plan not available (no urgent text): DONOTCACHEPAGE is defined as true', defined( 'DONOTCACHEPAGE' ) && true === constant( 'DONOTCACHEPAGE' ) );
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => false, 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ), true );
 $GLOBALS['PAGE_SLUG']     = 'dashboard';
 $GLOBALS['NOCACHE_CALLS'] = 0;
 vance_hub_flare_plan_no_cache();
-check( 'no-cache, plan not available (switch off): DONOTCACHEPAGE is not defined', ! defined( 'DONOTCACHEPAGE' ) );
-check( 'no-cache, plan not available (switch off): no no-cache headers are sent', 0 === $GLOBALS['NOCACHE_CALLS'] );
+check( 'no-cache, plan not available (switch off), logged in, dashboard: the headers are sent once', 1 === $GLOBALS['NOCACHE_CALLS'] );
 
 // Static: the hook. Another priority would run it after other template_redirect callbacks.
 check( 'hook: the no-cache check is added on template_redirect at priority 1', strpos( $FP_SRC, "add_action( 'template_redirect', 'vance_hub_flare_plan_no_cache', 1 );" ) !== false );
@@ -1643,6 +1741,891 @@ $GLOBALS['NOCACHE_CALLS'] = 0;
 vance_hub_flare_plan_no_cache();
 check( 'no-cache, dashboard, logged in, card on: DONOTCACHEPAGE is defined as true', defined( 'DONOTCACHEPAGE' ) && true === constant( 'DONOTCACHEPAGE' ) );
 check( 'no-cache, dashboard, logged in, card on: the no-cache headers are sent once', 1 === $GLOBALS['NOCACHE_CALLS'] );
+
+/* ===================================================================== */
+// Sections 29 to 38 cover the Phase 1 hardening. They do not depend on DONOTCACHEPAGE.
+
+/** User 7 with a plan, the agreement, an open flare and a kept draft. Call after fb_arrange(). */
+function fb_seed_all() {
+	fb_stored_plan();
+	fb_consented();
+	$GLOBALS['UMETA'][7]['_sla_flare_log']        = array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '', 'helped' => '' ) );
+	$GLOBALS['TRANSIENTS']['vance_flare_draft_7'] = array( 'do' => 'save', 'answers' => array( 'signs' => 'typed', 'actions' => '', 'contacts' => '' ), 'helped' => '' );
+}
+
+/** A remove-one-entry request with the right nonce. */
+function fb_post_remove( $row ) {
+	$_POST = array(
+		'vance_hub_flare_nonce' => 'nonce-vance_hub_flare_plan',
+		'vance_hub_flare_do'    => 'flare_remove',
+		'vhd_flare_row'         => $row,
+	);
+}
+
+/** How many times a write event is in WRITES. */
+function fb_write_count( $event ) {
+	return count( array_keys( $GLOBALS['WRITES'], $event, true ) );
+}
+
+$LOG_TWO = array(
+	array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '', 'helped' => '' ),
+	array( 'id' => 'a1', 'start' => '2026-11-01', 'end' => '2026-11-03', 'helped' => 'Rest' ),
+);
+
+/* ===================================================================== */
+section( '29. one delete function, one order: delete_all(), the handler codes, Manage my data' );
+
+fb_arrange( $FP_ON );
+fb_seed_all();
+$R29 = vance_hub_flare_plan_delete_all( 7 );
+check( 'delete_all: with all three parts stored, every flag and ok are true', $R29 === array( 'log' => true, 'plan' => true, 'consent' => true, 'ok' => true ) );
+check( 'delete_all: the log, the plan, the agreement flag are gone, the withdrawal time is written', fb_meta( '_sla_flare_log' ) === null && fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === '2026-11-18 12:00:00' );
+check( 'delete_all: the old agreement time and wording stay as a record', fb_meta( '_sla_consent_flare_plan_at' ) === '2026-10-01 09:00:00' && fb_meta( '_sla_consent_flare_plan_text' ) === vance_hub_flare_plan_consent_text() );
+check( 'delete_all: the draft is deleted', ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+$I29 = array( fb_seq_index( 'write:_sla_flare_log' ), fb_seq_index( 'write:_sla_flare_plan' ), fb_seq_index( 'write:_sla_consent_flare_plan' ), fb_seq_index( 'write:_sla_consent_flare_plan_withdrawn_at' ) );
+check( 'delete_all: the order is log, plan, agreement flag, withdrawal time', $I29[0] >= 0 && $I29[0] < $I29[1] && $I29[1] < $I29[2] && $I29[2] < $I29[3] );
+
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+$R29 = vance_hub_flare_plan_delete_all( 7 );
+check( 'delete_all: a log that stays gives false for log, plan, consent and ok', $R29 === array( 'log' => false, 'plan' => false, 'consent' => false, 'ok' => false ) );
+check( 'delete_all: it stops at the log: the plan and the agreement are not touched', fb_meta( '_sla_flare_plan' ) !== null && fb_meta( '_sla_consent_flare_plan' ) === '1' && ! in_array( 'delete_user_meta:_sla_flare_plan', $GLOBALS['WRITES'], true ) && ! in_array( 'delete_user_meta:_sla_consent_flare_plan', $GLOBALS['WRITES'], true ) );
+check( 'delete_all: the draft is deleted even when a part stays', ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_plan';
+$R29 = vance_hub_flare_plan_delete_all( 7 );
+check( 'delete_all: a plan that stays: the log is gone, the plan and the agreement are not', $R29 === array( 'log' => true, 'plan' => false, 'consent' => false, 'ok' => false ) && fb_meta( '_sla_flare_log' ) === null && fb_meta( '_sla_consent_flare_plan' ) === '1' );
+
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['DELETE_FAILS'] = '_sla_consent_flare_plan';
+$R29 = vance_hub_flare_plan_delete_all( 7 );
+check( 'delete_all: an agreement flag that stays: log and plan gone, consent false, ok false', $R29 === array( 'log' => true, 'plan' => true, 'consent' => false, 'ok' => false ) && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === null );
+
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '', 'helped' => '' ) );
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+$R29 = vance_hub_flare_plan_delete_all( 7 );
+check( 'delete_all: a part the run did not reach, and that was never stored, reads as absent', $R29 === array( 'log' => false, 'plan' => true, 'consent' => true, 'ok' => false ) );
+
+fb_arrange( $FP_ON );
+check( 'delete_all: user 0 gives all false and writes nothing', vance_hub_flare_plan_delete_all( 0 ) === array( 'log' => false, 'plan' => false, 'consent' => false, 'ok' => false ) && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+check( 'delete_all: with nothing stored, ok is true and no withdrawal time is written', vance_hub_flare_plan_delete_all( 7 )['ok'] === true && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === null );
+
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['UPDATE_FAILS_ONCE'] = '_sla_consent_flare_plan_withdrawn_at';
+vance_hub_flare_plan_delete_all( 7 );
+check( 'withdrawal time: one failed write is retried once, and the time is stored', fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === '2026-11-18 12:00:00' && 2 === fb_write_count( 'update_user_meta:_sla_consent_flare_plan_withdrawn_at' ) );
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['UPDATE_FAILS'] = '_sla_consent_flare_plan_withdrawn_at';
+$R29 = vance_hub_flare_plan_delete_all( 7 );
+check( 'withdrawal time: two failed writes stop at two tries, and the data is still reported deleted', 2 === fb_write_count( 'update_user_meta:_sla_consent_flare_plan_withdrawn_at' ) && $R29['ok'] === true );
+
+fb_arrange( $FP_ON );
+fb_seed_all();
+fb_post_delete();
+check( 'handler delete: all parts gone gives deleted', fb_handle() === 'https://example.test/hub/?vance_flare=deleted' && fb_meta( '_sla_flare_log' ) === null && fb_meta( '_sla_flare_plan' ) === null );
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_plan';
+fb_post_delete();
+check( 'handler delete: the log goes and the plan stays gives partial', fb_handle() === 'https://example.test/hub/?vance_flare=partial' && fb_meta( '_sla_flare_log' ) === null && fb_meta( '_sla_flare_plan' ) !== null );
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+fb_post_delete();
+check( 'handler delete: nothing deleted (the log stays first) gives kept', fb_handle() === 'https://example.test/hub/?vance_flare=kept' && fb_meta( '_sla_flare_plan' ) !== null );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_plan';
+fb_post_delete();
+check( 'handler delete: only a plan stored and it stays gives kept, not partial', fb_handle() === 'https://example.test/hub/?vance_flare=kept' );
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['LOCK_RESULT'] = '0';
+fb_post_delete();
+check( 'handler delete: no lock gives kept, deletes nothing, and still deletes the draft', fb_handle() === 'https://example.test/hub/?vance_flare=kept' && fb_meta( '_sla_flare_plan' ) !== null && fb_meta( '_sla_flare_log' ) !== null && ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+foreach ( array( 'partial' => 'Part of your data is deleted', 'kept' => 'Not completed' ) as $code29 => $text29 ) {
+	$h29 = vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => $code29 ) ) );
+	check( "message: $code29 is a warning with its own text", false !== strpos( $h29, $text29 ) && false !== strpos( $h29, 'vhd-flash--warn' ) );
+}
+check( 'message: partial says that part of the data was deleted and asks to try again', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'partial' ) ) ), 'Part of your data is deleted. Part of it is still stored. Try again to delete the rest.' ) );
+
+// Manage my data: the flare group uses the same function.
+fb_arrange( $FP_ON );
+fb_seed_all();
+check( 'manage data: the flare group delete reports true', vance_hub_data_erase( 7, 'flare' ) === true );
+check( 'manage data: it deleted the log, the plan and the agreement flag, and withdrew the agreement', fb_meta( '_sla_flare_log' ) === null && fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === '2026-11-18 12:00:00' );
+check( 'manage data: it used the plan order (log, plan, agreement) and deleted the draft', fb_seq_index( 'write:_sla_flare_log' ) < fb_seq_index( 'write:_sla_flare_plan' ) && fb_seq_index( 'write:_sla_flare_plan' ) < fb_seq_index( 'write:_sla_consent_flare_plan' ) && ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_plan';
+check( 'manage data: a plan that stays makes the group delete report false', vance_hub_data_erase( 7, 'flare' ) === false && fb_meta( '_sla_flare_plan' ) !== null && fb_meta( '_sla_consent_flare_plan' ) === '1' );
+$DM_SRC = file_get_contents( $THEME . '/inc/hub-data-manage.php' );
+preg_match( '/function vance_hub_data_handle_post\(\) \{.*?\r?\n\}\r?\n/s', $DM_SRC, $DM_HANDLER );
+$DM_H = $DM_HANDLER[0] ?? '';
+check( 'manage data: the member lock is taken before the group delete runs and freed after it', '' !== $DM_H && strpos( $DM_H, 'vance_hub_checkin_lock' ) < strpos( $DM_H, 'vance_hub_data_erase' ) && strpos( $DM_H, 'vance_hub_data_erase' ) < strpos( $DM_H, 'vance_hub_checkin_unlock' ) );
+check( 'manage data: negative control, an unlock that comes first is not matched by the same order test', ! ( strpos( "unlock lock erase", 'lock' ) < strpos( "unlock lock erase", 'erase' ) && strpos( "unlock lock erase", 'unlock' ) > strpos( "unlock lock erase", 'erase' ) ) );
+
+/* ===================================================================== */
+section( '30. result message: the fragment, the card id, the alert and status roles' );
+
+fb_arrange( $FP_ON );
+fb_post_save();
+fb_handle();
+check( 'fragment: a saved redirect ends in #vhd-flare', $GLOBALS['REDIRECT_RAW'] === 'https://example.test/hub/?vance_flare=saved#vhd-flare' );
+fb_arrange( $FP_ON );
+fb_post_save();
+$_POST['vance_hub_flare_nonce'] = 'forged';
+fb_handle();
+check( 'fragment: an expired redirect ends in #vhd-flare', $GLOBALS['REDIRECT_RAW'] === 'https://example.test/hub/?vance_flare=expired#vhd-flare' );
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => '', 'actions' => '', 'contacts' => '' ) );
+fb_handle();
+check( 'fragment: an invalid redirect ends in #vhd-flare', $GLOBALS['REDIRECT_RAW'] === 'https://example.test/hub/?vance_flare=invalid#vhd-flare' );
+fb_arrange( $FP_ON );
+fb_post_flare( 'flare_stop' );
+fb_handle();
+check( 'fragment: an unknown action redirect ends in #vhd-flare', $GLOBALS['REDIRECT_RAW'] === 'https://example.test/hub/?vance_flare=invalid#vhd-flare' );
+fb_arrange( $FP_ON );
+fb_seed_all();
+$GLOBALS['LOCK_RESULT'] = '0';
+fb_post_delete();
+fb_handle();
+check( 'fragment: a kept redirect ends in #vhd-flare', $GLOBALS['REDIRECT_RAW'] === 'https://example.test/hub/?vance_flare=kept#vhd-flare' );
+
+$H30 = vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'saved' ) ) );
+check( 'card: the card root is the section with id vhd-flare', 0 === strpos( $H30, '<section id="vhd-flare" class="vhd-card vhd-flare"' ) );
+check( 'card: id vhd-flare appears once', 1 === substr_count( $H30, 'id="vhd-flare"' ) );
+$ROLE_OK = true;
+foreach ( vance_hub_flare_plan_success_codes() as $code30 ) {
+	$h30 = vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => $code30 ) ) );
+	if ( false === strpos( $h30, 'id="vhd-flare-flash" tabindex="-1" role="status">' ) || false !== strpos( $h30, 'vhd-flash--warn' ) || false !== strpos( $h30, 'role="alert"' ) ) {
+		$ROLE_OK = false;
+	}
+}
+check( 'roles: every success code has a message with role status, tabindex -1 and id vhd-flare-flash, and no warning class', $ROLE_OK && count( vance_hub_flare_plan_success_codes() ) === 6 );
+$ROLE_OK = true;
+foreach ( vance_hub_flare_plan_error_codes() as $code30 ) {
+	$h30 = vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => $code30 ) ) );
+	if ( false === strpos( $h30, 'id="vhd-flare-flash" tabindex="-1" role="alert">' ) || false === strpos( $h30, 'vhd-flash--warn' ) || false !== strpos( $h30, 'role="status"' ) ) {
+		$ROLE_OK = false;
+	}
+}
+check( 'roles: every error code has a message with role alert, tabindex -1 and id vhd-flare-flash, and the warning class', $ROLE_OK && count( vance_hub_flare_plan_error_codes() ) === 11 );
+check( 'roles: negative control, an unknown code has no flash element', false === strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'nonsense' ) ) ), 'vhd-flare-flash' ) );
+check( 'message: the toolong text', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'toolong' ) ) ), 'Not saved. A text is too long. Make it shorter, then save again.' ) );
+check( 'message: the flare_removed text', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'flare_removed' ) ) ), 'The entry is removed.' ) );
+check( 'message: the trimmed text names the number from the function', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'flare_started_trimmed' ) ) ), 'Your flare is recorded. The log keeps 50 entries, so the oldest entry was removed.' ) );
+
+/* ===================================================================== */
+section( '31. gates: can(), delete with the switch off, the read-only card, the eraser lock, the exporter' );
+
+fb_arrange( $FP_ON );
+check( 'can: view, save and log follow available() when it is true', vance_hub_flare_plan_can( 'view' ) && vance_hub_flare_plan_can( 'save' ) && vance_hub_flare_plan_can( 'log' ) );
+check( 'can: delete is true for a logged-in member', vance_hub_flare_plan_can( 'delete' ) === true );
+check( 'can: an unknown value is false', vance_hub_flare_plan_can( 'rename' ) === false && vance_hub_flare_plan_can( '' ) === false );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ) );
+check( 'can: the switch off closes view, save and log, and leaves delete open', ! vance_hub_flare_plan_can( 'view' ) && ! vance_hub_flare_plan_can( 'save' ) && ! vance_hub_flare_plan_can( 'log' ) && vance_hub_flare_plan_can( 'delete' ) );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => '' ) );
+check( 'can: an empty urgent text closes view, save and log, and leaves delete open', ! vance_hub_flare_plan_can( 'view' ) && ! vance_hub_flare_plan_can( 'save' ) && ! vance_hub_flare_plan_can( 'log' ) && vance_hub_flare_plan_can( 'delete' ) );
+fb_arrange( $FP_ON, false );
+check( 'can: delete needs a logged-in member', vance_hub_flare_plan_can( 'delete' ) === false );
+
+// With the switch off: delete and flare_remove work, everything else is refused with failed.
+$OFF = array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => false, 'vance_hub_flare_plan_urgent' => 'Call the clinic.' );
+fb_arrange( $OFF );
+fb_seed_all();
+fb_post_remove( 'o' );
+check( 'switch off: flare_remove still works', fb_handle() === 'https://example.test/hub/?vance_flare=flare_removed' && fb_meta( '_sla_flare_log' ) === null );
+fb_arrange( $OFF );
+fb_seed_all();
+fb_post_delete();
+check( 'switch off: delete still works', fb_handle() === 'https://example.test/hub/?vance_flare=deleted' && fb_meta( '_sla_flare_plan' ) === null );
+foreach ( array( 'save', 'flare_start', 'flare_end' ) as $do31 ) {
+	fb_arrange( $OFF );
+	fb_seed_all();
+	unset( $GLOBALS['UMETA'][7]['_sla_flare_log'] );
+	if ( 'save' === $do31 ) {
+		fb_post_save();
+	} else {
+		fb_post_flare( $do31 );
+	}
+	check( "switch off: $do31 redirects with failed, writes nothing, takes no lock", fb_handle() === 'https://example.test/hub/?vance_flare=failed' && $GLOBALS['WRITES'] === array() && $GLOBALS['LOCK_SQL'] === array() );
+}
+fb_arrange( $OFF );
+fb_post_flare( 'flare_stop' );
+check( 'switch off: an unknown action still gives invalid', fb_handle() === 'https://example.test/hub/?vance_flare=invalid' );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => '' ) );
+fb_seed_all();
+fb_post_delete();
+check( 'urgent text empty: delete still works', fb_handle() === 'https://example.test/hub/?vance_flare=deleted' && fb_meta( '_sla_flare_plan' ) === null );
+
+// The read-only card.
+fb_arrange( $OFF );
+fb_stored_plan();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+$RO = vance_hub_flare_plan_data( 7 );
+check( 'read-only data: the switch off with a stored plan gives the data with readonly true', is_array( $RO ) && $RO['readonly'] === true && ( $RO['plan']['signs'] ?? null ) === 'Tight belly' );
+check( 'read-only data: progress, quick, sheet and draft are null, need_consent is false', is_array( $RO ) && $RO['progress'] === null && $RO['quick'] === null && $RO['sheet'] === null && $RO['draft'] === null && $RO['need_consent'] === false );
+check( 'read-only data: it carries the date, the urgent text, the log view, the nonce and the flash', is_array( $RO ) && $RO['updated'] === '10 Nov 2026' && $RO['urgent'] === 'Call the clinic.' && ( $RO['log']['count'] ?? null ) === 2 && $RO['nonce'] === 'nonce-vance_hub_flare_plan' && $RO['flash'] === '' );
+check( 'read-only data: it has the same keys as the full view', is_array( $RO ) && array_keys( $RO ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
+fb_arrange( $OFF );
+check( 'read-only data: the switch off with no stored plan gives null', vance_hub_flare_plan_data( 7 ) === null );
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => '' ) );
+fb_stored_plan();
+$RO2 = vance_hub_flare_plan_data( 7 );
+check( 'read-only data: an empty urgent text with a stored plan gives readonly true and urgent empty', is_array( $RO2 ) && $RO2['readonly'] === true && $RO2['urgent'] === '' );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+check( 'read-only data: with the card available readonly is false', ( vance_hub_flare_plan_data( 7 )['readonly'] ?? null ) === false );
+
+$LOG_VIEW_RO = vance_hub_flare_log_view( $LOG_TWO, $LOG_NOW );
+$H_RO = vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'urgent' => '', 'log' => $LOG_VIEW_RO ) ) );
+check( 'read-only html: it shows the line that editing is turned off', false !== strpos( $H_RO, 'Editing is turned off. You can still print or delete your plan.' ) );
+check( 'read-only html: it shows the plan answers, the print button and the delete control', false !== strpos( $H_RO, '<p>Tight belly</p>' ) && false !== strpos( $H_RO, 'data-vhd-flare-print="plan" hidden>' ) && false !== strpos( $H_RO, 'name="vance_hub_flare_do" value="delete"' ) );
+check( 'read-only html: no form, no builder, no wizard, no save button, no edit box', false === strpos( $H_RO, 'name="vhd_flare[' ) && false === strpos( $H_RO, 'data-vhd-wizard' ) && false === strpos( $H_RO, 'Save my plan' ) && false === strpos( $H_RO, 'vhd-flare__edit' ) );
+check( 'read-only html: no quick check, no progress bar, no appointment sheet', false === strpos( $H_RO, 'data-vhd-flare-quick' ) && false === strpos( $H_RO, 'role="progressbar"' ) && false === strpos( $H_RO, 'vhd-flare__sheetbox' ) && false === strpos( $H_RO, 'Appointment sheet' ) );
+check( 'read-only html: the log history shows with no start or end control', false !== strpos( $H_RO, 'vhd-flare__history' ) && false === strpos( $H_RO, 'value="flare_start"' ) && false === strpos( $H_RO, 'value="flare_end"' ) && false === strpos( $H_RO, 'vhd_flare_helped' ) );
+check( 'read-only html: an empty urgent text shows no urgent box', false === strpos( $H_RO, 'vhd-flare__urgent' ) && false === strpos( $H_RO, 'When to get urgent help' ) );
+$H_RO2 = vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'urgent' => 'Call the clinic.' ) ) );
+check( 'read-only html: a set urgent text shows the urgent box', false !== strpos( $H_RO2, 'vhd-flare__urgent' ) && false !== strpos( $H_RO2, 'Call the clinic.' ) );
+check( 'read-only html: negative control, the normal card has the forms the read-only card lacks', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026' ) ) ), 'name="vhd_flare[' ) );
+
+// The eraser: lock, draft.
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_seed_all();
+$GLOBALS['LOCK_RESULT'] = '0';
+$ERA31 = vance_hub_flare_plan_erase( 'ruth@example.test' );
+check( 'eraser lock: no lock gives items_retained, one message and nothing removed', $ERA31['items_retained'] === true && $ERA31['items_removed'] === false && count( $ERA31['messages'] ) === 1 && $ERA31['done'] === true );
+check( 'eraser lock: no lock deletes nothing and releases no lock', $GLOBALS['WRITES'] === array() && fb_meta( '_sla_flare_plan' ) !== null && $GLOBALS['UNLOCK_SQL'] === array() );
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_seed_all();
+$ERA31 = vance_hub_flare_plan_erase( 'ruth@example.test' );
+check( 'eraser lock: with the lock it takes one lock, deletes, and releases it last', $ERA31['items_removed'] === true && $ERA31['items_retained'] === false && fb_seq_locked_once() && fb_seq_index( 'lock' ) === 0 );
+check( 'eraser lock: the lock is taken before the first read of the member data', fb_seq_index( 'lock' ) < fb_seq_index( 'read:_sla_consent_flare_plan' ) );
+check( 'eraser: the draft is deleted with the data', ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) && fb_meta( '_sla_flare_log' ) === null );
+
+// The exporter: no "Withdrawn on" while the agreement is in force.
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan_withdrawn_at'] = '2026-10-15 08:00:00';
+$EXP31 = vance_hub_flare_plan_export( 'ruth@example.test' );
+$NAMES31 = array_column( $EXP31['data'][0]['data'] ?? array(), 'name' );
+check( 'export: an old withdrawal time is not shown while the agreement flag is set', ! in_array( 'Withdrawn on', $NAMES31, true ) && in_array( 'Agreed on', $NAMES31, true ) );
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_stored_plan();
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan_at']           = '2026-10-01 09:00:00';
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan_withdrawn_at'] = '2026-10-15 08:00:00';
+$NAMES31 = array_column( vance_hub_flare_plan_export( 'ruth@example.test' )['data'][0]['data'] ?? array(), 'name' );
+check( 'export: the withdrawal time is shown when the flag is not set (positive control)', in_array( 'Withdrawn on', $NAMES31, true ) );
+check( 'customizer text: the urgent text description has the new sentence and not the old claim', false !== strpos( $FP_SRC, 'Turning the switch off stops new plans and changes. A member who has a saved plan can still see, print and delete it.' ) && false === strpos( $FP_SRC, 'members cannot delete a plan while it is hidden' ) );
+
+/* ===================================================================== */
+section( '32. the text cleaner: what the member types is stored as typed' );
+
+$TYPED = "a < b > c & d %41 C:\\\\Clinic <b>x</b>";
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => $TYPED, 'actions' => 'x', 'contacts' => 'y' ) );
+check( 'round trip: a save of <, >, &, %41, a backslash and a tag redirects with saved', fb_handle() === 'https://example.test/hub/?vance_flare=saved' );
+check( 'round trip: the stored answer equals what was typed (one backslash)', ( fb_meta( '_sla_flare_plan' )['signs'] ?? null ) === 'a < b > c & d %41 C:\\Clinic <b>x</b>' );
+$H32 = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => vance_hub_flare_plan_get( 7 ), 'updated' => '18 Nov 2026' ) ) );
+check( 'round trip: shown on screen the text is escaped and the percent code is unchanged', false !== strpos( $H32, 'a &lt; b &gt; c &amp; d %41 C:\\Clinic &lt;b&gt;x&lt;/b&gt;' ) && false === strpos( $H32, '<b>x</b>' ) );
+check( 'round trip: in the edit box the text is escaped for a textarea', false !== strpos( $H32, '>a &lt; b &gt; c &amp; d %41 C:\\Clinic &lt;b&gt;x&lt;/b&gt;</textarea>' ) );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+fb_post_flare( 'flare_end', 'x < y & z %41 C:\\\\Clinic' );
+fb_handle();
+check( 'round trip: what helped keeps <, &, %41 and a backslash', ( fb_meta( '_sla_flare_log' )[0]['helped'] ?? null ) === 'x < y & z %41 C:\\Clinic' );
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => "a\x00b\x07c", 'actions' => '', 'contacts' => '' ) );
+fb_handle();
+check( 'round trip: control characters in a save are removed', ( fb_meta( '_sla_flare_plan' )['signs'] ?? null ) === 'abc' );
+check( 'sanitise: running it twice changes nothing (it removes no backslash)', vance_hub_flare_plan_sanitise( vance_hub_flare_plan_sanitise( array( 'signs' => 'a\\b <x> &' ) ) ) === array( 'signs' => 'a\\b <x> &', 'actions' => '', 'contacts' => '' ) );
+$FP_SRC = file_get_contents( $THEME . '/inc/hub-flare-plan.php' );
+check( 'static: the plan sanitiser and the log text no longer call sanitize_textarea_field', false === strpos( preg_replace( '/\/\*.*?\*\//s', '', $FP_SRC ), 'sanitize_textarea_field( $' ) );
+
+/* ===================================================================== */
+section( '33. over-length text is refused, not cut' );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => str_repeat( 'a', 1001 ), 'actions' => 'x', 'contacts' => 'y' ) );
+check( 'toolong: 1001 characters redirect with toolong', fb_handle() === 'https://example.test/hub/?vance_flare=toolong' );
+check( 'toolong: no plan, no agreement key and no write at all', fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+fb_consented();
+fb_stored_plan();
+fb_post_save( array( 'signs' => str_repeat( 'é', 1001 ), 'actions' => '', 'contacts' => '' ), false );
+$BEFORE33 = fb_meta( '_sla_flare_plan' );
+check( 'toolong: an edit of 1001 accented characters is refused and the old plan stays', fb_handle() === 'https://example.test/hub/?vance_flare=toolong' && fb_meta( '_sla_flare_plan' ) === $BEFORE33 );
+fb_arrange( $FP_ON );
+check( 'toolong: write() refuses a 1001-character answer and writes nothing', vance_hub_flare_plan_write( 7, array( 'signs' => str_repeat( 'a', 1001 ) ), $OLD_TS ) === false && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+fb_post_flare( 'flare_end', str_repeat( 'h', 501 ) );
+check( 'toolong: an end with 501 characters redirects with toolong', fb_handle() === 'https://example.test/hub/?vance_flare=toolong' );
+check( 'toolong: the flare stays open and nothing is written', ( fb_meta( '_sla_flare_log' )[0]['end'] ?? null ) === '' && $GLOBALS['WRITES'] === array() );
+check( 'toolong: the log read side keeps its cut (defensive)', strlen( vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-01', 'end' => '', 'helped' => str_repeat( 'h', 600 ) ) ) )[0]['helped'] ?? '' ) === 500 );
+
+/* ===================================================================== */
+section( '34. the draft: kept after a refused request, shown once' );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => 'Tight belly', 'actions' => '', 'contacts' => '' ), false );
+fb_handle();
+$DRAFT34 = $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ?? null;
+check( 'draft: a save refused for consent keeps the typed text', ( $DRAFT34['do'] ?? null ) === 'save' && ( $DRAFT34['answers']['signs'] ?? null ) === 'Tight belly' && ( $DRAFT34['helped'] ?? null ) === '' );
+check( 'draft: it lives 10 minutes (600 seconds)', ( $GLOBALS['SET_TRANSIENTS']['vance_flare_draft_7'] ?? null ) === 600 );
+check( 'draft: the key is vance_flare_draft_<uid>', vance_hub_flare_plan_draft_key( 7 ) === 'vance_flare_draft_7' );
+$_GET['vance_flare'] = 'consent';
+$D34 = vance_hub_flare_plan_data( 7 );
+check( 'draft: data() with an error flash gives the draft', ( $D34['draft']['answers']['signs'] ?? null ) === 'Tight belly' );
+check( 'draft: it is gone after it was taken once', ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) && vance_hub_flare_plan_data( 7 )['draft'] === null );
+
+fb_arrange( $FP_ON );
+$GLOBALS['TRANSIENTS']['vance_flare_draft_7'] = array( 'do' => 'save', 'answers' => array( 'signs' => 'kept', 'actions' => '', 'contacts' => '' ), 'helped' => '' );
+check( 'draft: with no flash data() gives null and does not take the draft', vance_hub_flare_plan_data( 7 )['draft'] === null && isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+$_GET['vance_flare'] = 'saved';
+check( 'draft: with a success flash data() gives null and does not take the draft', vance_hub_flare_plan_data( 7 )['draft'] === null && isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+$_GET['vance_flare'] = 'bogus';
+check( 'draft: with an unknown flash data() does not take the draft', vance_hub_flare_plan_data( 7 )['draft'] === null && isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+$_GET['vance_flare'] = 'failed';
+check( 'draft: with a failed flash data() takes it', ( vance_hub_flare_plan_data( 7 )['draft']['answers']['signs'] ?? null ) === 'kept' );
+
+// Review fix: a "what helped" draft is kept when the end form is not on the page
+// (here: no plan and no open flare), so the text is not lost with nothing shown.
+fb_arrange( $FP_ON );
+$GLOBALS['TRANSIENTS']['vance_flare_draft_7'] = array( 'do' => 'flare_end', 'answers' => array( 'signs' => '', 'actions' => '', 'contacts' => '' ), 'helped' => 'Rest' );
+$_GET['vance_flare'] = 'flare_none';
+check( 'draft: control, flare_none is an error code', in_array( 'flare_none', vance_hub_flare_plan_error_codes(), true ) );
+check( 'draft: an end draft with no end form on the page is not given and not deleted', vance_hub_flare_plan_data( 7 )['draft'] === null && ( $GLOBALS['TRANSIENTS']['vance_flare_draft_7']['helped'] ?? null ) === 'Rest' );
+unset( $_GET['vance_flare'] );
+
+fb_arrange( $FP_ON );
+$GLOBALS['TRANSIENTS']['vance_flare_draft_7'] = array( 'do' => 'save', 'answers' => array( 'signs' => 'old', 'actions' => '', 'contacts' => '' ), 'helped' => '' );
+fb_post_save();
+fb_handle();
+check( 'draft: a successful save deletes the draft', ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$GLOBALS['TRANSIENTS']['vance_flare_draft_7'] = array( 'do' => 'flare_end', 'answers' => array( 'signs' => '', 'actions' => '', 'contacts' => '' ), 'helped' => 'old' );
+fb_post_flare( 'flare_end', 'Rest' );
+fb_handle();
+check( 'draft: a successful end deletes the draft', ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => 'typed text', 'actions' => '', 'contacts' => '' ) );
+$_POST['vance_hub_flare_nonce'] = 'forged';
+// CHANGED after the security audit: the typed text is kept only for a request from this site.
+$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-origin';
+fb_handle();
+check( 'draft: a bad nonce keeps the typed text for the logged-in member', ( $GLOBALS['TRANSIENTS']['vance_flare_draft_7']['answers']['signs'] ?? null ) === 'typed text' );
+
+// A form on another site must not put text into the member's form.
+$BAD_NONCE_DRAFT = function ( array $server ) use ( $FP_ON ) {
+	fb_arrange( $FP_ON );
+	fb_post_save( array( 'signs' => 'planted text', 'actions' => '', 'contacts' => 'Call 0906 000 0000' ) );
+	$_POST['vance_hub_flare_nonce'] = 'forged';
+	foreach ( $server as $name => $value ) {
+		$_SERVER[ $name ] = $value;
+	}
+	$url = fb_handle();
+	return array( isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ), $url );
+};
+$R = $BAD_NONCE_DRAFT( array( 'HTTP_SEC_FETCH_SITE' => 'cross-site' ) );
+check( 'draft csrf: a cross-site post with a bad nonce stores no draft', false === $R[0] );
+check( 'draft csrf: it still redirects with expired', false !== strpos( (string) $R[1], 'vance_flare=expired' ) );
+check( 'draft csrf: same-site (another host of the domain) stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_SEC_FETCH_SITE' => 'same-site' ) )[0] );
+check( 'draft csrf: Sec-Fetch-Site "none" stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_SEC_FETCH_SITE' => 'none' ) )[0] );
+check( 'draft csrf: no header at all stores no draft', false === $BAD_NONCE_DRAFT( array() )[0] );
+check( 'draft csrf: cross-site wins over a same-host Origin and Referer', false === $BAD_NONCE_DRAFT( array( 'HTTP_SEC_FETCH_SITE' => 'cross-site', 'HTTP_ORIGIN' => 'https://example.test', 'HTTP_REFERER' => 'https://example.test/hub/' ) )[0] );
+check( 'draft csrf: with no Sec-Fetch-Site, an Origin of this site stores the draft', true === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'https://example.test' ) )[0] );
+check( 'draft csrf: an Origin of another host stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'https://evil.test' ) )[0] );
+check( 'draft csrf: an Origin of another host wins over a Referer of this site', false === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'https://evil.test', 'HTTP_REFERER' => 'https://example.test/hub/' ) )[0] );
+check( 'draft csrf: Origin "null" stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'null' ) )[0] );
+check( 'draft csrf: a host that only starts with this host stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'https://example.test.evil.test' ) )[0] );
+check( 'draft csrf: this host over http, not https, stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'http://example.test' ) )[0] );
+check( 'draft csrf: this host on another port stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_ORIGIN' => 'https://example.test:8443' ) )[0] );
+check( 'draft csrf: with no Origin, a Referer of this site stores the draft', true === $BAD_NONCE_DRAFT( array( 'HTTP_REFERER' => 'https://example.test/hub/?tab=health-profile' ) )[0] );
+check( 'draft csrf: a Referer of another site stores no draft', false === $BAD_NONCE_DRAFT( array( 'HTTP_REFERER' => 'https://evil.test/?https://example.test/' ) )[0] );
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => 'Tight belly', 'actions' => '', 'contacts' => '' ), false );
+$_SERVER['HTTP_SEC_FETCH_SITE'] = 'cross-site';
+fb_handle();
+check( 'draft csrf: control, a valid nonce keeps the draft whatever the fetch header says', isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+fb_arrange( $FP_ON, false );
+fb_post_save( array( 'signs' => 'typed text', 'actions' => '', 'contacts' => '' ) );
+$_POST['vance_hub_flare_nonce'] = 'forged';
+fb_handle();
+check( 'draft: a visitor who is not logged in gets no draft', $GLOBALS['TRANSIENTS'] === array() );
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => '', 'actions' => '', 'contacts' => '' ) );
+fb_handle();
+check( 'draft: when every text is empty no draft is stored', $GLOBALS['TRANSIENTS'] === array() );
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => str_repeat( 'a', 5000 ), 'actions' => "x\x00y", 'contacts' => '' ) );
+fb_handle();
+$DRAFT34 = $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ?? array();
+check( 'draft: a toolong save keeps the text cut to 4000 characters per field, cleaned', strlen( $DRAFT34['answers']['signs'] ?? '' ) === 4000 && ( $DRAFT34['answers']['actions'] ?? null ) === 'xy' );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+fb_post_flare( 'flare_end', str_repeat( 'h', 501 ) );
+fb_handle();
+$DRAFT34 = $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ?? array();
+check( 'draft: a toolong end keeps the helped text, with do flare_end', ( $DRAFT34['do'] ?? null ) === 'flare_end' && strlen( $DRAFT34['helped'] ?? '' ) === 501 );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( $LOG_OK );
+fb_post_flare( 'flare_end', 'Rest' );
+fb_handle();
+check( 'draft: an end with no open flare (flare_none) keeps the helped text', ( $GLOBALS['TRANSIENTS']['vance_flare_draft_7']['helped'] ?? null ) === 'Rest' );
+foreach ( array( 'delete', 'delete (no lock)' ) as $case34 ) {
+	fb_arrange( $FP_ON );
+	fb_seed_all();
+	if ( 'delete (no lock)' === $case34 ) {
+		$GLOBALS['LOCK_RESULT'] = '0';
+	}
+	fb_post_delete();
+	fb_handle();
+	check( "draft: $case34 clears the draft", ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+}
+fb_arrange( $FP_ON );
+fb_post_flare( 'flare_start' );
+fb_handle();
+check( 'draft: a flare start stores no draft', $GLOBALS['TRANSIENTS'] === array() );
+check( 'draft: a draft of the wrong shape is dropped when taken', ( function () {
+	$GLOBALS['TRANSIENTS']['vance_flare_draft_7'] = array( 'do' => 'delete', 'answers' => array( 'signs' => 'x' ), 'helped' => '' );
+	return vance_hub_flare_plan_draft_take( 7 ) === null && ! isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] );
+} )() );
+
+// Render: the form holds the draft.
+$P34 = array( 'updated' => $OLD_TS, 'signs' => 'saved signs', 'actions' => 'saved actions', 'contacts' => 'saved contacts' );
+$DR_SAVE = array( 'do' => 'save', 'answers' => array( 'signs' => 'typed signs <b>', 'actions' => '', 'contacts' => 'typed contacts' ), 'helped' => '' );
+$H34 = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P34, 'updated' => '10 Nov 2026', 'flash' => 'failed', 'draft' => $DR_SAVE ) ) );
+check( 'draft render: the edit form holds the typed text, not the saved plan', false !== strpos( $H34, '>typed signs &lt;b&gt;</textarea>' ) && false !== strpos( $H34, '>typed contacts</textarea>' ) && false === strpos( $H34, '>saved signs</textarea>' ) );
+check( 'draft render: a blank typed answer stays blank, it is not refilled from the saved plan', false !== strpos( $H34, 'id="vhd-flare-edit-actions" name="vhd_flare[actions]" rows="4" maxlength="1000" aria-describedby="vhd-flare-edit-actions-hint"></textarea>' ) );
+check( 'draft render: the Edit box is open and the line is shown once', false !== strpos( $H34, '<details class="vhd-flare__edit" open>' ) && 1 === substr_count( $H34, 'We kept what you typed. Check it, then save again.' ) );
+$H34B = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P34, 'updated' => '10 Nov 2026', 'flash' => 'failed' ) ) );
+check( 'draft render: with no draft the saved plan fills the form, the box is closed, there is no line', false !== strpos( $H34B, '>saved signs</textarea>' ) && false !== strpos( $H34B, '<details class="vhd-flare__edit">' ) && false === strpos( $H34B, 'We kept what you typed' ) );
+$H34C = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => null, 'flash' => 'invalid', 'draft' => $DR_SAVE ) ) );
+check( 'draft render: the builder with no saved plan holds the typed text and the line', false !== strpos( $H34C, '>typed signs &lt;b&gt;</textarea>' ) && false !== strpos( $H34C, 'We kept what you typed. Check it, then save again.' ) && false !== strpos( $H34C, 'data-vhd-wizard' ) );
+$DR_END = array( 'do' => 'flare_end', 'answers' => array( 'signs' => '', 'actions' => '', 'contacts' => '' ), 'helped' => 'typed <helped>' );
+$H34D = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P34, 'updated' => '10 Nov 2026', 'flash' => 'toolong', 'draft' => $DR_END, 'log' => $LOG_OPEN_VIEW ) ) );
+check( 'draft render: an end draft fills the what-helped box, with the line above it', false !== strpos( $H34D, 'maxlength="500">typed &lt;helped&gt;</textarea>' ) && 1 === substr_count( $H34D, 'We kept what you typed. Check it, then save again.' ) );
+check( 'draft render: an end draft does not fill the plan form or open the Edit box', false !== strpos( $H34D, '>saved signs</textarea>' ) && false !== strpos( $H34D, '<details class="vhd-flare__edit">' ) );
+check( 'draft render: a plan draft does not fill the what-helped box', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P34, 'updated' => '10 Nov 2026', 'draft' => $DR_SAVE, 'log' => $LOG_OPEN_VIEW ) ) ), 'maxlength="500"></textarea>' ) );
+
+/* ===================================================================== */
+section( '35. a failed write changes nothing; the log keeps 50 entries' );
+
+// No earlier plan, a new agreement, and a store that writes damaged data.
+fb_arrange( $FP_ON );
+fb_post_save();
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_plan';
+check( 'failed write: a plan the read-back rejects gives failed', fb_handle() === 'https://example.test/hub/?vance_flare=failed' );
+check( 'failed write: with no earlier plan no plan is left stored (the damaged value is removed)', fb_meta( '_sla_flare_plan' ) === null );
+check( 'failed write: the agreement of the same request is rolled back to what it was (none)', fb_meta( '_sla_consent_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan_at' ) === null && fb_meta( '_sla_consent_flare_plan_text' ) === null );
+// An earlier plan and agreement: the old plan comes back exactly.
+fb_arrange( $FP_ON );
+fb_consented();
+fb_stored_plan();
+$OLD_PLAN35 = fb_meta( '_sla_flare_plan' );
+fb_post_save( array( 'signs' => 'New', 'actions' => '', 'contacts' => '' ), false );
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_plan';
+check( 'failed write: a failed edit gives failed', fb_handle() === 'https://example.test/hub/?vance_flare=failed' );
+check( 'failed write: the earlier plan is put back exactly', fb_meta( '_sla_flare_plan' ) === $OLD_PLAN35 );
+check( 'failed write: the earlier agreement is unchanged', fb_meta( '_sla_consent_flare_plan' ) === '1' && fb_meta( '_sla_consent_flare_plan_at' ) === '2026-10-01 09:00:00' );
+// A backslash in the earlier plan survives the put-back.
+fb_arrange( $FP_ON );
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_plan'] = array( 'updated' => $OLD_TS, 'signs' => 'C:\\Clinic', 'actions' => '', 'contacts' => '' );
+fb_post_save( array( 'signs' => 'New', 'actions' => '', 'contacts' => '' ), false );
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_plan';
+fb_handle();
+check( 'failed write: a backslash in the earlier plan is still one backslash after the put-back', ( fb_meta( '_sla_flare_plan' )['signs'] ?? null ) === 'C:\\Clinic' );
+// An earlier agreement for other wording and a failed plan write: the agreement is restored.
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan']      = '1';
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan_at']   = '2026-09-01 09:00:00';
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan_text'] = 'Old wording.';
+fb_post_save();
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_plan';
+fb_handle();
+check( 'failed write: an agreement to old wording is restored as it was after a failed save', fb_meta( '_sla_consent_flare_plan_at' ) === '2026-09-01 09:00:00' && fb_meta( '_sla_consent_flare_plan_text' ) === 'Old wording.' && fb_meta( '_sla_flare_plan' ) === null );
+
+// The log.
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( $LOG_OK );
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_log';
+check( 'failed log write: a start whose read-back is rejected gives failed', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'failed' );
+check( 'failed log write: the earlier log is put back exactly', fb_meta( '_sla_flare_log' ) === array( $LOG_OK ) );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_log';
+check( 'failed log write: with no earlier log the damaged value is removed', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'failed' && fb_meta( '_sla_flare_log' ) === null );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_log';
+check( 'failed log write: an end whose read-back is rejected gives failed and the flare stays open', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, 'Rest' ) === 'failed' && fb_meta( '_sla_flare_log' ) === $LOG_OPEN );
+
+// Trimmed.
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array_slice( $SIXTY, 0, 50 );
+check( 'trimmed: a start with 50 rows gives flare_started_trimmed', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'flare_started_trimmed' );
+check( 'trimmed: the log still holds 50 rows, the new one first, the oldest gone', count( fb_meta( '_sla_flare_log' ) ) === 50 && fb_meta( '_sla_flare_log' )[0]['end'] === '' && fb_meta( '_sla_flare_log' )[49]['id'] === 'r48' );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array_slice( $SIXTY, 0, 49 );
+check( 'trimmed: a start with 49 rows gives flare_started and keeps all 49', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'flare_started' && count( fb_meta( '_sla_flare_log' ) ) === 50 );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array_slice( $SIXTY, 0, 50 );
+fb_post_flare( 'flare_start' );
+check( 'trimmed: the handler redirects with flare_started_trimmed', fb_handle() === 'https://example.test/hub/?vance_flare=flare_started_trimmed' );
+
+/* ===================================================================== */
+section( '36. the appointment sheet and the quick check read each store only through its own gate' );
+
+$GLOBALS['OPEN_GATES'] = false;
+$CI36   = array( array( 'id' => 'c1', 'ts' => strtotime( '2026-11-18 09:00:00 UTC' ), 'payload' => array( 'pain' => 9, 'bowel' => -2, 'tired' => 3, 'kind' => 'check-in' ) ) );
+$PROF36 = array( 'next_appointment' => '2026-12-03', 'appointment_questions' => 'Can I eat oats?', 'medication' => 'Iron tablets' );
+$MN36   = array( array( 'id' => 'm1', 'ts' => strtotime( '2026-11-14 10:00:00 UTC' ), 'payload' => array( 'score' => 3, 'maxScore' => 8, 'riskLabel' => 'Medium risk' ) ) );
+function fb_stores36( $ci, $prof, $mn ) {
+	$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history']         = $ci;
+	$GLOBALS['UMETA'][7]['_sla_clinical_profile']                = $prof;
+	$GLOBALS['UMETA'][7]['_sla_malnutrition_calculator_history'] = $mn;
+}
+function fb_checkin_agreed36() {
+	$GLOBALS['UMETA'][7]['_sla_consent_checkin']      = '1';
+	$GLOBALS['UMETA'][7]['_sla_consent_checkin_at']   = '2026-10-01 09:00:00';
+	$GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] = vance_hub_checkin_consent_text();
+}
+
+// Everything closed.
+fb_arrange( $FP_ON );
+fb_stores36( $CI36, $PROF36, $MN36 );
+$S36 = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet gates: every gate closed gives empty profile parts, no check-ins and no screening', $S36['appointment'] === '' && $S36['questions'] === '' && $S36['medication'] === '' && $S36['checkins'] === array() && $S36['screening'] === null );
+check( 'sheet gates: every gate closed gives no quick check data', vance_hub_flare_plan_quick_data( 7 ) === null );
+// Only the health agreement.
+fb_arrange( $FP_ON );
+fb_stores36( $CI36, $PROF36, $MN36 );
+$GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
+$S36 = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet gates: the health agreement opens the profile and the screening, and not the check-ins', $S36['appointment'] === '3 Dec 2026' && $S36['questions'] === 'Can I eat oats?' && $S36['medication'] === 'Iron tablets' && is_array( $S36['screening'] ) && $S36['checkins'] === array() && vance_hub_flare_plan_quick_data( 7 ) === null );
+// Only the check-in gate.
+fb_arrange( $FP_ON );
+$GLOBALS['MODS']['vance_hub_dash_checkin'] = true;
+fb_checkin_agreed36();
+fb_stores36( $CI36, $PROF36, $MN36 );
+$S36 = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet gates: the check-in gate opens the check-ins and the quick check, and not the profile or the screening', count( $S36['checkins'] ) === 1 && $S36['appointment'] === '' && $S36['questions'] === '' && $S36['medication'] === '' && $S36['screening'] === null && is_array( vance_hub_flare_plan_quick_data( 7 ) ) );
+check( 'sheet clamp: check-in values are held between 0 and 4 in the sheet', ( $S36['checkins'][0] ?? null ) === array( 'date' => '18 Nov 2026', 'pain' => 4, 'bowel' => 0, 'tired' => 3 ) );
+check( 'quick clamp: the same values in the quick check', vance_hub_flare_plan_quick_data( 7 ) === array( 'date' => '18 Nov 2026', 'pain' => 4, 'bowel' => 0, 'tired' => 3 ) );
+// The check-in switch off with a valid agreement.
+fb_arrange( $FP_ON );
+fb_checkin_agreed36();
+fb_stores36( $CI36, $PROF36, $MN36 );
+check( 'sheet gates: a valid check-in agreement with the check-in switch off is closed', vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW )['checkins'] === array() && vance_hub_flare_plan_quick_data( 7 ) === null );
+// The check-in switch on, the agreement for other wording.
+fb_arrange( $FP_ON );
+$GLOBALS['MODS']['vance_hub_dash_checkin'] = true;
+fb_checkin_agreed36();
+$GLOBALS['UMETA'][7]['_sla_consent_checkin_text'] = 'Old wording.';
+fb_stores36( $CI36, $PROF36, $MN36 );
+check( 'sheet gates: a check-in agreement to old wording is closed', vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW )['checkins'] === array() && vance_hub_flare_plan_quick_data( 7 ) === null );
+// A flare plan agreement does not open the check-ins.
+fb_arrange( $FP_ON );
+$GLOBALS['MODS']['vance_hub_dash_checkin'] = true;
+fb_consented();
+fb_stores36( $CI36, $PROF36, $MN36 );
+check( 'sheet gates: the flare plan agreement does not open the check-ins', vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW )['checkins'] === array() );
+
+// data(): the sheet is null while consent is needed.
+fb_arrange( $FP_ON );
+fb_stored_plan();
+$GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
+fb_stores36( $CI36, $PROF36, $MN36 );
+$D36 = vance_hub_flare_plan_data( 7 );
+check( 'sheet data: the sheet is null while the flare agreement is missing', $D36['need_consent'] === true && $D36['sheet'] === null );
+fb_consented();
+$D36 = vance_hub_flare_plan_data( 7 );
+check( 'sheet data: the sheet is an array once the agreement is valid', $D36['need_consent'] === false && is_array( $D36['sheet'] ) && $D36['sheet']['medication'] === 'Iron tablets' );
+$H36 = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( 'sheet render: with a sheet the block is rendered', false !== strpos( $H36, 'vhd-flare__sheetbox' ) && false !== strpos( $H36, 'Iron tablets' ) );
+check( 'sheet render: the screening line has no risk label', false !== strpos( $H36, 'Score 3 of 8, on 14 Nov 2026.' ) && false === strpos( $H36, 'Medium risk' ) );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+$H36 = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( 'sheet render: with the sheet null the sheet block is not rendered', false === strpos( $H36, 'vhd-flare__sheetbox' ) && false === strpos( $H36, 'Print appointment sheet' ) );
+check( 'sheet render: the plan form still shows when the sheet is hidden', false !== strpos( $H36, '<details class="vhd-flare__edit" open>' ) );
+
+/* ===================================================================== */
+section( '37. remove one log entry' );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'o' );
+check( 'remove: an open row is removed, with flare_removed', fb_handle() === 'https://example.test/hub/?vance_flare=flare_removed' && fb_meta( '_sla_flare_log' ) === array( $LOG_TWO[1] ) );
+check( 'remove: the lock is taken first and released last, once', fb_seq_locked_once() && fb_seq_index( 'lock' ) === 0 );
+check( 'remove: the plan and the agreement are not touched', fb_meta( '_sla_flare_plan' ) !== null && fb_meta( '_sla_consent_flare_plan' ) === '1' && ! in_array( 'delete_user_meta:_sla_flare_plan', $GLOBALS['WRITES'], true ) );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'a1' );
+check( 'remove: a closed row is removed, the open row stays', fb_handle() === 'https://example.test/hub/?vance_flare=flare_removed' && fb_meta( '_sla_flare_log' ) === array( $LOG_TWO[0] ) );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'nope' );
+check( 'remove: an unknown id gives flare_none and writes nothing', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && $GLOBALS['WRITES'] === array() );
+foreach ( array( 'a-1', 'a 1', '', 'a1;', '../a1' ) as $bad37 ) {
+	fb_arrange( $FP_ON );
+	$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+	fb_post_remove( $bad37 );
+	check( 'remove: the id ' . var_export( $bad37, true ) . ' (not letters, digits, underscore) gives flare_none and writes nothing', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && $GLOBALS['WRITES'] === array() );
+}
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( array( 'o' ) );
+check( 'remove: an array id gives flare_none', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( $LOG_OK );
+fb_post_remove( 'a1' );
+check( 'remove: the last row removed deletes the meta key', fb_handle() === 'https://example.test/hub/?vance_flare=flare_removed' && fb_meta( '_sla_flare_log' ) === null && in_array( 'delete_user_meta:_sla_flare_log', $GLOBALS['WRITES'], true ) );
+fb_arrange( $FP_ON );
+fb_post_remove( 'a1' );
+check( 'remove: with no log at all gives flare_none', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' );
+// An old row with no id.
+$NOID37 = array( array( 'id' => '', 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => '' ), array( 'id' => 'x1', 'start' => '2026-11-01', 'end' => '', 'helped' => '' ) );
+$VIEW37 = vance_hub_flare_log_view( vance_hub_flare_log_normalise( $NOID37 ), $LOG_NOW );
+check( 'row id: a row with no id gets a stable id made from its dates', ( $VIEW37['rows'][0]['id'] ?? null ) === 'r' . md5( '2026-10-012026-10-02' ) && ( $VIEW37['rows'][1]['id'] ?? null ) === 'x1' );
+check( 'row id: the view exposes the id of the open flare too', ( $VIEW37['open']['id'] ?? null ) === 'x1' );
+check( 'row id: an id with a dash is replaced by the fallback id', vance_hub_flare_log_row_id( array( 'id' => 'a-b', 'start' => '2026-10-01', 'end' => '' ) ) === 'r' . md5( '2026-10-01' ) );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $NOID37;
+fb_post_remove( 'r' . md5( '2026-10-012026-10-02' ) );
+check( 'row id: the fallback id removes the row that has no id', fb_handle() === 'https://example.test/hub/?vance_flare=flare_removed' && count( fb_meta( '_sla_flare_log' ) ) === 1 && fb_meta( '_sla_flare_log' )[0]['id'] === 'x1' );
+// Two identical rows with no id: the first goes.
+fb_arrange( $FP_ON );
+$TWIN37 = array( array( 'id' => '', 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => 'first' ), array( 'id' => '', 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => 'second' ) );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $TWIN37;
+fb_post_remove( 'r' . md5( '2026-10-012026-10-02' ) );
+fb_handle();
+check( 'row id: two rows with the same fallback id lose one row, the first', count( fb_meta( '_sla_flare_log' ) ) === 1 && ( fb_meta( '_sla_flare_log' )[0]['helped'] ?? null ) === 'second' );
+// Lock, nonce, gate, failed write.
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+$GLOBALS['LOCK_RESULT'] = '0';
+fb_post_remove( 'o' );
+check( 'remove: without the lock the result is failed and the log is unchanged', fb_handle() === 'https://example.test/hub/?vance_flare=failed' && fb_meta( '_sla_flare_log' ) === $LOG_TWO && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'o' );
+$_POST['vance_hub_flare_nonce'] = 'forged';
+check( 'remove: a bad nonce gives expired and removes nothing', fb_handle() === 'https://example.test/hub/?vance_flare=expired' && fb_meta( '_sla_flare_log' ) === $LOG_TWO );
+fb_arrange( $FP_ON, false );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'o' );
+check( 'remove: a visitor who is not logged in does nothing', fb_handle() === null && fb_meta( '_sla_flare_log' ) === $LOG_TWO );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'a1' );
+$GLOBALS['CORRUPT_ONCE'] = '_sla_flare_log';
+check( 'remove: a write the read-back rejects gives failed and the old log is put back', fb_handle() === 'https://example.test/hub/?vance_flare=failed' && fb_meta( '_sla_flare_log' ) === $LOG_TWO );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( $LOG_OK );
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+fb_post_remove( 'a1' );
+check( 'remove: a last-row delete that does not stick gives failed', fb_handle() === 'https://example.test/hub/?vance_flare=failed' );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_TWO;
+fb_post_remove( 'o' );
+fb_handle();
+check( 'remove: it writes no check-in key and no flare plan key', preg_grep( '/_sla_consent_checkin|_sla_weekly_check_in_history|_sla_flare_plan/', $GLOBALS['WRITES'] ) === array() );
+
+// Render.
+$LOG_ID_VIEW = vance_hub_flare_log_view( $LOG_TWO, $LOG_NOW );
+$H37 = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'log' => $LOG_ID_VIEW ) ) );
+check( 'remove render: one remove form on the open flare and one on each history row (3 for 2 rows)', 3 === substr_count( $H37, 'name="vance_hub_flare_do" value="flare_remove"' ) );
+check( 'remove render: each form carries the row id and the nonce', 2 === substr_count( $H37, 'name="vhd_flare_row" value="o"' ) && 1 === substr_count( $H37, 'name="vhd_flare_row" value="a1"' ) && false !== strpos( $H37, 'name="vance_hub_flare_nonce" value="nonce-vance_hub_flare_plan"' ) );
+check( 'remove render: each form has a required tick box "Yes, remove it" and a "Remove this entry" button', 3 === substr_count( $H37, 'name="vhd_flare_remove_ok" value="1" required' ) && 3 === substr_count( $H37, 'Yes, remove it' ) && 3 === substr_count( $H37, 'Remove this entry' ) );
+$H37B = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'log' => vance_hub_flare_log_view( array( $LOG_OK ), $LOG_NOW ) ) ) );
+check( 'remove render: a closed row has a remove form and the start button shows', 1 === substr_count( $H37B, 'value="flare_remove"' ) && false !== strpos( $H37B, 'value="flare_start"' ) );
+check( 'remove render: a history row with no id in the view has no remove form (old callers)', false === strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'log' => $LOG_CLOSED_VIEW ) ) ), 'flare_remove' ) );
+check( 'remove render: the read-only card keeps the remove forms and has no start or end control', 3 === substr_count( vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'log' => $LOG_ID_VIEW ) ) ), 'value="flare_remove"' ) );
+
+/* ===================================================================== */
+section( '38. telephone links' );
+
+function fb_tel( $text ) { return vance_hub_flare_plan_text_html( $text, true ); }
+check( 'tel: a UK number with spaces becomes a link with digits only', fb_tel( 'Call 0800 000 000.' ) === 'Call <a href="tel:0800000000">0800 000 000</a>.' );
+check( 'tel: a number with + keeps the plus, and the spaces go from the href', fb_tel( '+44 20 7946 0958' ) === '<a href="tel:+442079460958">+44 20 7946 0958</a>' );
+check( 'tel: hyphens are allowed', fb_tel( 'Nurse 0800-000-000' ) === 'Nurse <a href="tel:0800000000">0800-000-000</a>' );
+check( 'tel: a bracketed trunk zero is allowed, and its digit is counted', fb_tel( '+44 (0) 20 7946 0958' ) === '<a href="tel:+4402079460958">+44 (0) 20 7946 0958</a>' );
+check( 'tel: 9 digits in total is the shortest number that links', false !== strpos( fb_tel( '0123 456 78' ), '<a href="tel:012345678">' ) );
+check( 'tel: 15 digits in total is the longest number that links', false !== strpos( fb_tel( '+123456789012345' ), '<a href="tel:+123456789012345">' ) );
+check( 'tel: 8 digits do not link', false === strpos( fb_tel( '0123 4567' ), '<a' ) );
+check( 'tel: 16 digits do not link', false === strpos( fb_tel( '+1234567890123456' ), '<a' ) );
+foreach ( array( '999', '111', '112' ) as $code38 ) {
+	check( "tel: the short code $code38 alone links", fb_tel( "Ring $code38 now" ) === "Ring <a href=\"tel:$code38\">$code38</a> now" );
+}
+check( 'tel: a short code at the end of a sentence links, the full stop stays outside', fb_tel( 'Ring 111.' ) === 'Ring <a href="tel:111">111</a>.' );
+check( 'tel: two numbers in one text both link', 2 === substr_count( fb_tel( 'Day 0800 000 000, night 0800 111 222' ), '<a href="tel:' ) );
+check( 'tel: a long number holding 999 or 111 is one link, not three', 1 === substr_count( fb_tel( '0800 999 111' ), '<a href="tel:' ) );
+foreach ( array( '2026-11-26', '26/11/2026', '2026', '26 November 2026', '1 Jan 2026', '01-12-2026', '01-12-2026 10:00', '2026-11-26 10:00', '12/11/26', '0123 4567 8901 2345', '1999', '11112', '£1,999', '12-111-5', '1 2 3 4 5 6 7 8 9 0' ) as $neg38 ) {
+	check( 'tel: "' . $neg38 . '" does not become a link', false === strpos( fb_tel( $neg38 ), '<a' ) );
+}
+check( 'tel: a date next to a number leaves the date alone and links the number', fb_tel( 'Seen 2026-11-26, call 0800 000 000' ) === 'Seen 2026-11-26, call <a href="tel:0800000000">0800 000 000</a>' );
+check( 'tel: markup in the text is escaped, and the number inside it still links', fb_tel( '<b>0800 000 000</b>' ) === '&lt;b&gt;<a href="tel:0800000000">0800 000 000</a>&lt;/b&gt;' );
+check( 'tel: an ampersand is escaped once', fb_tel( 'A & B 0800 000 000' ) === 'A &amp; B <a href="tel:0800000000">0800 000 000</a>' );
+check( 'tel: line breaks are kept', fb_tel( "Ann 0800 000 000\nBob" ) === "Ann <a href=\"tel:0800000000\">0800 000 000</a><br />\nBob" );
+check( 'tel: with $tel false (the default) nothing links and the output is as before', vance_hub_flare_plan_text_html( 'Call 0800 000 000' ) === 'Call 0800 000 000' && vance_hub_flare_plan_text_html( 'a < b', false ) === 'a &lt; b' );
+check( 'tel: negative control, a number the pattern should match is matched', 1 === preg_match( vance_hub_flare_plan_tel_pattern(), 'x 0800 000 000' ) );
+check( 'tel: negative control, the href function refuses a date-shaped match', vance_hub_flare_plan_tel_href( '01-12-2026 10' ) === '' && vance_hub_flare_plan_tel_href( '0800 000 000' ) === '0800000000' );
+
+// Where it is used.
+$PLAN38 = array( 'updated' => $OLD_TS, 'signs' => 'Ring 0800 111 222 first', 'actions' => 'Ring 0800 333 444', 'contacts' => 'Nurse 0800 000 000' );
+$H38 = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN38, 'updated' => '10 Nov 2026', 'urgent' => 'Ring 111 or 999.' ) ) );
+check( 'tel render: the "Who I contact" answer links', false !== strpos( $H38, '<p>Nurse <a href="tel:0800000000">0800 000 000</a></p>' ) );
+check( 'tel render: the other two answers do not link', false !== strpos( $H38, '<p>Ring 0800 111 222 first</p>' ) && false !== strpos( $H38, '<p>Ring 0800 333 444</p>' ) );
+check( 'tel render: the urgent help text links its short codes', false !== strpos( $H38, 'Ring <a href="tel:111">111</a> or <a href="tel:999">999</a>.' ) );
+$H38B = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN38, 'updated' => '10 Nov 2026', 'sheet' => array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => 'Ring 0800 555 666?', 'medication' => '0800 777 888', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) ) ) );
+$SHEET38 = substr( $H38B, (int) strpos( $H38B, 'vhd-flare-sheet' ) );
+check( 'tel render: the contacts on the sheet link', false !== strpos( $SHEET38, '<p>Nurse <a href="tel:0800000000">0800 000 000</a></p>' ) );
+check( 'tel render: the questions, the medication and the other plan answers on the sheet do not link', 1 === substr_count( $SHEET38, '<a href="tel:' ) );
+check( 'tel render: the edit box text is not linked (a textarea holds the plain text)', false !== strpos( $H38, '>Nurse 0800 000 000</textarea>' ) );
+
+/* ===================================================================== */
+section( '39. edge cases: multibyte at the limit, control-only text, draft per member, row ids, telephone, escaping' );
+
+// Multibyte text at the limit, through the handler. The limit counts characters.
+$EMOJI_1000  = str_repeat( "\xF0\x9F\x8C\xBF", 1000 );
+$EMOJI_1001  = str_repeat( "\xF0\x9F\x8C\xBF", 1001 );
+$ACCENT_1000 = str_repeat( "\xC3\xA9", 1000 );
+$ACCENT_1001 = str_repeat( "\xC3\xA9", 1001 );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => $EMOJI_1000, 'actions' => 'x', 'contacts' => 'y' ) );
+check( 'limit handler: 1000 emoji (4000 bytes) are saved, not refused', fb_handle() === 'https://example.test/hub/?vance_flare=saved' && ( fb_meta( '_sla_flare_plan' )['signs'] ?? null ) === $EMOJI_1000 );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => $EMOJI_1001, 'actions' => 'x', 'contacts' => 'y' ) );
+check( 'limit handler: 1001 emoji are refused with toolong and nothing is written', fb_handle() === 'https://example.test/hub/?vance_flare=toolong' && fb_meta( '_sla_flare_plan' ) === null && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => $ACCENT_1000, 'actions' => 'x', 'contacts' => 'y' ) );
+check( 'limit handler: 1000 accented characters (2000 bytes) are saved, not refused', fb_handle() === 'https://example.test/hub/?vance_flare=saved' && ( fb_meta( '_sla_flare_plan' )['signs'] ?? null ) === $ACCENT_1000 );
+
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => $ACCENT_1001, 'actions' => 'x', 'contacts' => 'y' ) );
+check( 'limit handler: 1001 accented characters are refused with toolong and nothing is written', fb_handle() === 'https://example.test/hub/?vance_flare=toolong' && fb_meta( '_sla_flare_plan' ) === null && $GLOBALS['WRITES'] === array() );
+
+// Text made only of control characters is no answer.
+check( 'control only: a text of control characters cleans to an empty string', vance_hub_flare_plan_clean_text( "\x00\x07\x1B\x7F" ) === '' );
+check( 'control only: three answers of control characters give no answer at all (null)', vance_hub_flare_plan_sanitise( array( 'signs' => "\x00\x07", 'actions' => "\x1B", 'contacts' => "\x7F" ) ) === null );
+fb_arrange( $FP_ON );
+fb_post_save( array( 'signs' => "\x00\x07\x1B", 'actions' => "\x7F", 'contacts' => '' ) );
+check( 'control only: a save of control characters alone is refused as invalid, with no plan and no agreement', fb_handle() === 'https://example.test/hub/?vance_flare=invalid' && fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null && $GLOBALS['WRITES'] === array() );
+
+// A draft belongs to the member who typed it.
+fb_arrange( $FP_ON, true, 7 );
+fb_post_save( array( 'signs' => 'Member seven text', 'actions' => '', 'contacts' => '' ), false );
+$_POST['vance_hub_flare_nonce'] = 'nonce-wrong';
+$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-origin';
+fb_handle();
+check( 'draft scope: an expired save of member 7 stores the draft under the member 7 key only', array_keys( $GLOBALS['TRANSIENTS'] ) === array( 'vance_flare_draft_7' ) );
+check( 'draft scope: taking the draft for member 8 gives nothing', vance_hub_flare_plan_draft_take( 8 ) === null );
+check( 'draft scope: taking for member 8 leaves the draft of member 7 in place', isset( $GLOBALS['TRANSIENTS']['vance_flare_draft_7'] ) );
+check( 'draft scope: member 7 still gets its own draft', ( vance_hub_flare_plan_draft_take( 7 )['answers']['signs'] ?? null ) === 'Member seven text' );
+
+// Row ids: only letters, digits and underscore are accepted.
+$ROW_R1 = array( array( 'id' => 'r1', 'start' => '2026-11-01', 'end' => '2026-11-03', 'helped' => '' ) );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $ROW_R1;
+fb_post_remove( 'r1' );
+check( 'row id: a plain id of letters and digits removes its row (positive control)', fb_handle() === 'https://example.test/hub/?vance_flare=flare_removed' && fb_meta( '_sla_flare_log' ) === null );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $ROW_R1;
+fb_post_remove( 'r1-x' );
+check( 'row id: a hyphen in the id gives flare_none and the log is unchanged', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && fb_meta( '_sla_flare_log' ) === $ROW_R1 && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $ROW_R1;
+fb_post_remove( "r1'; --" );
+check( 'row id: a quote and a space in the id give flare_none and the log is unchanged', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && fb_meta( '_sla_flare_log' ) === $ROW_R1 && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $ROW_R1;
+fb_post_remove( "r1\n" );
+check( 'row id: a trailing line break in the id gives flare_none and the log is unchanged', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && fb_meta( '_sla_flare_log' ) === $ROW_R1 && $GLOBALS['WRITES'] === array() );
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $ROW_R1;
+fb_post_remove( "r1\xC3\xA9" );
+check( 'row id: a non-ASCII letter in the id gives flare_none and the log is unchanged', fb_handle() === 'https://example.test/hub/?vance_flare=flare_none' && fb_meta( '_sla_flare_log' ) === $ROW_R1 && $GLOBALS['WRITES'] === array() );
+
+// Telephone positives.
+check( 'tel: a 020 number with spaces links, digits only in the href', fb_tel( '020 7946 0958' ) === '<a href="tel:02079460958">020 7946 0958</a>' );
+check( 'tel: a bracketed 020 number links as one number', fb_tel( '(020) 7946 0958' ) === '<a href="tel:02079460958">(020) 7946 0958</a>' );
+check( 'tel: a mobile number with a leading 0 links', fb_tel( '07700 900123' ) === '<a href="tel:07700900123">07700 900123</a>' );
+check( 'tel: a plus number with spaces links, the plus kept in the href', fb_tel( '+44 20 7946 0958' ) === '<a href="tel:+442079460958">+44 20 7946 0958</a>' );
+// Telephone negatives.
+check( 'tel: 1000 does not become a link', fb_tel( '1000' ) === '1000' );
+check( 'tel: 0.5 does not become a link', fb_tel( '0.5' ) === '0.5' );
+check( 'tel: 111.5 does not become a link', fb_tel( '111.5' ) === '111.5' );
+check( 'tel: a 6-digit number starting with 0 does not become a link', fb_tel( '012345' ) === '012345' );
+check( 'tel: a 6-digit number starting with 1 does not become a link', fb_tel( '123456' ) === '123456' );
+// The pattern itself does not match a date or a plain year (the first gate; the href check is the second).
+check( 'tel pattern: 2026-11-26 is not matched at all', 0 === preg_match( vance_hub_flare_plan_tel_pattern(), '2026-11-26' ) );
+check( 'tel pattern: 26/11/2026 is not matched at all', 0 === preg_match( vance_hub_flare_plan_tel_pattern(), '26/11/2026' ) );
+check( 'tel pattern: 1000 is not matched at all', 0 === preg_match( vance_hub_flare_plan_tel_pattern(), '1000' ) );
+
+// Review fixes: a closing bracket stays outside the link, a list of single
+// digits is not a number, and a short code needs a call word or its own line.
+check( 'tel: a closing bracket after the number stays outside the link', fb_tel( '(call 0800 123 4567)' ) === '(call <a href="tel:08001234567">0800 123 4567</a>)' );
+check( 'tel: a list of single digits does not link', fb_tel( '0 3 4 2 1 0 4 3 2' ) === '0 3 4 2 1 0 4 3 2' );
+check( 'tel: "pulse 112" does not link', fb_tel( 'pulse 112' ) === 'pulse 112' );
+check( 'tel: "112 mg" does not link', fb_tel( '112 mg' ) === '112 mg' );
+check( 'tel: "Call 999" links, whatever the letter case', fb_tel( 'Call 999' ) === 'Call <a href="tel:999">999</a>' );
+check( 'tel: "NHS 111" links', fb_tel( 'NHS 111' ) === 'NHS <a href="tel:111">111</a>' );
+check( 'tel: a short code alone on its line links', fb_tel( "Emergency:\n999" ) === "Emergency:<br />\n" . '<a href="tel:999">999</a>' );
+check( 'tel: +44 (0)20 form links as one number', fb_tel( '+44 (0)20 7946 0958' ) === '<a href="tel:+4402079460958">+44 (0)20 7946 0958</a>' );
+
+// Escaping with tel linking on: markup from the member is escaped, and only digits go in an href.
+check( 'escape: markup typed next to a number is escaped, and the number still links', fb_tel( '<img src=x onerror=0800 000 000>' ) === '&lt;img src=x onerror=<a href="tel:0800000000">0800 000 000</a>&gt;' );
+// CHANGED after review: a short code links only after a call word, so the input says "call 999".
+$NASTY39 = '<a href="x">0800 000 000</a><script>alert(1)</script> +44 20 7946 0958 "q" call 999';
+$OUT39   = fb_tel( $NASTY39 );
+check( 'escape: the only "<" in the output are the markup of the three links', 6 === substr_count( $OUT39, '<' ) );
+check( 'escape: each tel: href holds digits with an optional leading plus, and there are three', 3 === preg_match_all( '/href="tel:\+?\d+"/', $OUT39 ) && 3 === substr_count( $OUT39, 'href="tel:' ) );
 
 /* ===================================================================== */
 echo "\n";
