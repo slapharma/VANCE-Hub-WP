@@ -1029,10 +1029,10 @@ $C_MANAGE_0 = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' 
 check( 'delete control: no saved rows, no delete control', strpos( $C_MANAGE_0, 'value="delete"' ) === false && strpos( $C_MANAGE_0, 'vhd-checkin__manage' ) === false );
 
 $C_MANAGE_1 = vance_hub_checkin_tab_html( fb_checkin_view( array( 'count' => 1 ) ) );
-check( 'delete control: one saved row says "1 saved check-in" and shows the delete control', strpos( $C_MANAGE_1, 'You have 1 saved check-in.' ) !== false && strpos( $C_MANAGE_1, 'value="delete"' ) !== false );
+check( 'delete control: the check-ins tab no longer holds the delete control (it is in Manage my data)', strpos( $C_MANAGE_1, 'value="delete"' ) === false && strpos( $C_MANAGE_1, 'vhd-checkin__manage' ) === false );
 
 $C_MANAGE_3 = vance_hub_checkin_tab_html( fb_checkin_view( array( 'count' => 3 ) ) );
-check( 'delete control: three saved rows say "3 saved check-ins"', strpos( $C_MANAGE_3, 'You have 3 saved check-ins.' ) !== false );
+check( 'delete control: no delete form for any count', strpos( $C_MANAGE_3, '<form' ) === false );
 
 $TREND_POINTS = array(
 	fb_point( 1, 1.0, 4.0, '10 Nov 2026' ),

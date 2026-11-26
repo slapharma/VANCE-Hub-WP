@@ -1050,10 +1050,19 @@ get_header();
                     if ( ! empty( $hp_flare ) ) {
                         $hp_subs['flare'] = __( 'Flare plan', 'vance-health-hub' );
                     }
+                    // Last in the row, on the right: delete my saved data.
+                    $hp_data_ok = $hp_tabs_on && function_exists( 'vance_hub_data_panel_html' );
+                    if ( $hp_data_ok ) {
+                        $hp_subs['data'] = __( 'Manage my data', 'vance-health-hub' );
+                    }
                     $hp_sub = isset( $_GET['hsub'] ) && is_string( $_GET['hsub'] ) ? sanitize_key( wp_unslash( $_GET['hsub'] ) ) : '';
                     if ( '' === $hp_sub && ! empty( $hp_flare['flash'] ) ) {
                         // Back from a save or delete of the flare plan.
                         $hp_sub = 'flare';
+                    }
+                    if ( '' === $hp_sub && $hp_data_ok && '' !== vance_hub_data_flash_from_request() ) {
+                        // Back from a delete in Manage my data.
+                        $hp_sub = 'data';
                     }
                     if ( '' === $hp_sub && ! empty( $ci_data['flash'] ) && isset( $hp_subs['checkins'] ) ) {
                         // Back from a delete of the check-in answers.
@@ -1070,7 +1079,7 @@ get_header();
                     <div class="vhd">
                         <nav class="vhd-subtabs" aria-label="<?php esc_attr_e( 'Health sections', 'vance-health-hub' ); ?>">
                             <?php foreach ( $hp_subs as $hp_slug => $hp_text ) : ?>
-                                <a class="vhd-subtabs__link<?php echo $hp_slug === $hp_sub ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'tab' => 'health-profile', 'hsub' => $hp_slug ), get_permalink() ) ); ?>"<?php echo $hp_slug === $hp_sub ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $hp_text ); ?></a>
+                                <a class="vhd-subtabs__link<?php echo $hp_slug === $hp_sub ? ' is-active' : ''; ?><?php echo 'data' === $hp_slug ? ' vhd-subtabs__link--data' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'tab' => 'health-profile', 'hsub' => $hp_slug ), get_permalink() ) ); ?>"<?php echo $hp_slug === $hp_sub ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $hp_text ); ?></a>
                             <?php endforeach; ?>
                         </nav>
                     </div>
@@ -1307,6 +1316,11 @@ get_header();
                     <?php if ( isset( $hp_subs['checkins'] ) ) : ?>
                     <div class="hp-panel"<?php echo $hp_hide( 'checkins' ); ?>>
                         <?php echo vance_hub_checkin_tab_html( $ci_data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built. ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ( isset( $hp_subs['data'] ) ) : ?>
+                    <div class="hp-panel"<?php echo $hp_hide( 'data' ); ?>>
+                        <?php echo vance_hub_data_panel_html( $current_user->ID, vance_hub_data_flash_from_request() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built. ?>
                     </div>
                     <?php endif; ?>
                     <?php if ( ! empty( $hp_flare ) ) : ?>
