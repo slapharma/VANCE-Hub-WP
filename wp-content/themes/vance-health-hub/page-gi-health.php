@@ -160,7 +160,7 @@ $conditions = vance_gi_condition_cards();
     <div class="container gi-reveal">
       <h2><?php echo esc_html( $cta_heading ); ?></h2>
       <p><?php echo esc_html( $cta_desc ); ?></p>
-      <a href="<?php echo esc_url( $cta_btn_url ); ?>" class="btn btn-outline"><?php echo esc_html( $cta_btn_txt ); ?></a>
+      <a href="<?php echo esc_url( function_exists( 'vance_dashboard_link' ) ? vance_dashboard_link( $cta_btn_url ) : $cta_btn_url ); ?>" class="btn btn-outline"><?php echo esc_html( $cta_btn_txt ); ?></a>
     </div>
   </section>
 

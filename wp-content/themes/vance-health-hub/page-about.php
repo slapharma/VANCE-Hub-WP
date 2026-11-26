@@ -517,7 +517,7 @@ $vabout_img = get_template_directory_uri() . '/assets/img/about/';
                             $purl= vance_get_theme_mod("vance_about_plat{$i}_url",   $plat_defaults[$i][3]);
                         ?>
                         <li>
-                            <a class="vabout-feature-link" href="<?php echo esc_url($purl); ?>">
+                            <a class="vabout-feature-link" href="<?php echo esc_url(vance_dashboard_link($purl)); ?>">
                                 <span class="vabout-feat-ico"><?php echo vance_about_icon($plat_defaults[$i][2], 20); ?></span>
                                 <span>
                                     <strong style="<?php echo $styles['title']; ?>"><?php echo esc_html($pt); ?></strong>

@@ -139,9 +139,10 @@ $vhn_grid_cols = ( $vhn_cat instanceof WP_Term ) ? vance_get_cat_grid_cols( $vhn
             $vhn_view_all_base   = get_category_link( get_queried_object_id() );
             $vhn_last_month_date = ( new DateTimeImmutable( '@' . $vhn_last_month_start ) )->setTimezone( $vhn_tz );
             $vhn_view_all_urls   = array(
-                'this_month' => add_query_arg( 'm', current_datetime()->format( 'Ym' ), $vhn_view_all_base ),
-                'last_month' => add_query_arg( 'm', $vhn_last_month_date->format( 'Ym' ), $vhn_view_all_base ),
-                'this_year'  => add_query_arg( 'm', current_datetime()->format( 'Y' ), $vhn_view_all_base ),
+                // The ?m= form 301s to these date archives, so link to them directly.
+                'this_month' => get_month_link( (int) current_datetime()->format( 'Y' ), (int) current_datetime()->format( 'n' ) ),
+                'last_month' => get_month_link( (int) $vhn_last_month_date->format( 'Y' ), (int) $vhn_last_month_date->format( 'n' ) ),
+                'this_year'  => get_year_link( (int) current_datetime()->format( 'Y' ) ),
                 'earlier'    => $vhn_view_all_base,
             );
 

@@ -23,7 +23,7 @@ $vhub_askai_url = vance_hub_page_url( 'ask-ai', '/ask-ai/' );
 $vhub_survey    = vance_hub_page_url( 'gastro-health-survey', '/gastro-health-survey/' );
 $vhub_signup    = home_url( '/login/?tab=signup' );
 $vhub_signin    = home_url( '/login/' );
-$vhub_dashboard = home_url( '/dashboard/' );
+$vhub_dashboard = vance_dashboard_link( home_url( '/dashboard/' ) );
 $vhub_bar       = vance_hub_member_bar();
 $vhub_hero_img  = vance_hub_img( 'about/community-support.jpg' );
 $vhub_survey_n  = function_exists( 'vance_quiz_steps' ) ? count( vance_quiz_steps() ) : 0;
