@@ -447,7 +447,7 @@ $tools = array(
 					<span class="vug-eyebrow">Overview</span>
 					<h2>Everything, one click away</h2>
 					<p>The dashboard sidebar groups every feature into three areas — your health record, your learning, and your communication — so nothing is ever more than one click from the home tab.</p>
-					<a href="/dashboard/" class="btn btn-primary">Open My Dashboard</a>
+					<a href="<?php echo esc_url( vance_dashboard_link( home_url( '/dashboard/' ) ) ); ?>" class="btn btn-primary">Open My Dashboard</a>
 				</div>
 			</div>
 

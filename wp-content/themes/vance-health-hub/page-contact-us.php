@@ -330,7 +330,7 @@ get_header(); ?>
                         </button>
 
                         <p style="font-size: 12px; color: var(--text-light); text-align: center; margin-top: 16px; line-height: 1.6;">
-                            By submitting this form you agree to our <a href="/privacy-policy" style="color: var(--primary-color);">Privacy Policy</a>. We never share your data.
+                            By submitting this form you agree to our <a href="/privacy-policy/" style="color: var(--primary-color);">Privacy Policy</a>. We never share your data.
                         </p>
                     </form>
 

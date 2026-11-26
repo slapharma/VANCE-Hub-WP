@@ -77,6 +77,8 @@ require_once get_template_directory() . '/inc/seo-title.php';
 // Keeps titles at 20-60 characters and meta descriptions at 110-160. Loads after
 // seo-title.php because it edits the title that file has already stripped.
 require_once get_template_directory() . '/inc/seo-meta-length.php';
+// Links a signed-out visitor to /login/ instead of to /dashboard/, which 302s there.
+require_once get_template_directory() . '/inc/dashboard-url.php';
 // Alt text for card templates that build their own <img> from a thumbnail
 // URL. Loaded early: front-page.php and prime-block.php both call it.
 require_once get_template_directory() . '/inc/thumbnail-alt.php';

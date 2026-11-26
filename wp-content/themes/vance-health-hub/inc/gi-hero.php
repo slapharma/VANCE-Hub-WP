@@ -944,8 +944,10 @@ function vance_render_gi_hub_hero() {
 	// way page-gi-health.php's dashboard default already did. A full URL saved
 	// by an admin is left alone.
 	$abs = function ( $u ) {
-		return ( $u === '' || strpos( $u, '#' ) === 0 || preg_match( '#^[a-z]+:|^//#i', $u ) )
+		$full = ( $u === '' || strpos( $u, '#' ) === 0 || preg_match( '#^[a-z]+:|^//#i', $u ) )
 			? $u : home_url( $u );
+		// A signed-out visitor goes straight to sign-in, not through a redirect.
+		return function_exists( 'vance_dashboard_link' ) ? vance_dashboard_link( $full ) : $full;
 	};
 	$b1_url = $abs( $b1_url );
 	$b2_url = $abs( $b2_url );
