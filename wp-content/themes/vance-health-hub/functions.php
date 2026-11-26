@@ -74,6 +74,9 @@ require_once get_template_directory() . '/inc/seo-archive-robots.php';
 // Drops the " - Vance Health Hub" suffix from titles, which was pushing 150 of
 // them past the length Google will show. Front page keeps its brand-first title.
 require_once get_template_directory() . '/inc/seo-title.php';
+// Keeps titles at 20-60 characters and meta descriptions at 110-160. Loads after
+// seo-title.php because it edits the title that file has already stripped.
+require_once get_template_directory() . '/inc/seo-meta-length.php';
 // Alt text for card templates that build their own <img> from a thumbnail
 // URL. Loaded early: front-page.php and prime-block.php both call it.
 require_once get_template_directory() . '/inc/thumbnail-alt.php';
