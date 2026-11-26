@@ -23,6 +23,9 @@ $GLOBALS['LOCK_FAILS'] = false;
 $GLOBALS['ACTIVE']     = true;
 $GLOBALS['UID']        = 7;
 $GLOBALS['STUCK']      = '';
+$GLOBALS['ATT']        = array();
+$GLOBALS['ATT_STUCK']  = 0;
+$GLOBALS['POSTS']      = array();
 
 class Redirected extends Exception {}
 
@@ -46,6 +49,21 @@ function vance_hub_dashboard_active() { return $GLOBALS['ACTIVE']; }
 function get_user_meta( $u, $k, $single = false ) { return isset( $GLOBALS['UMETA'][ $u ][ $k ] ) ? $GLOBALS['UMETA'][ $u ][ $k ] : ''; }
 function update_user_meta( $u, $k, $v ) { $GLOBALS['UMETA'][ $u ][ $k ] = $v; return true; }
 function delete_user_meta( $u, $k ) { if ( $GLOBALS['STUCK'] === $k ) { return false; } unset( $GLOBALS['UMETA'][ $u ][ $k ] ); return true; }
+function wp_delete_attachment( $id, $force = false ) {
+	if ( ! empty( $GLOBALS['LATE'] ) ) {
+		foreach ( $GLOBALS['LATE'] as $u => $row ) {
+			$GLOBALS['UMETA'][ $u ]['_sla_profile_docs'][] = $row;
+		}
+		$GLOBALS['LATE'] = array();
+	}
+	if ( ! isset( $GLOBALS['ATT'][ $id ] ) || $GLOBALS['ATT_STUCK'] === $id ) { return false; }
+	unset( $GLOBALS['ATT'][ $id ] );
+	return (object) array( 'ID' => $id );
+}
+function get_post( $id ) {
+	if ( isset( $GLOBALS['ATT'][ $id ] ) ) { return (object) array( 'ID' => $id, 'post_type' => 'attachment' ); }
+	return isset( $GLOBALS['POSTS'][ $id ] ) ? (object) array( 'ID' => $id, 'post_type' => 'page' ) : null;
+}
 function vance_known_tool_slugs() { return array( 'malnutrition-calculator', 'ibd-recipes' ); }
 function vance_hub_checkin_meta_key() { return '_sla_weekly_check_in_history'; }
 function vance_hub_flare_plan_meta_key() { return '_sla_flare_plan'; }
@@ -75,7 +93,10 @@ $GLOBALS['wpdb'] = new Fake_Wpdb();
 require __DIR__ . '/../wp-content/themes/vance-health-hub/inc/hub-data-manage.php';
 
 function seed( $uid ) {
+	$GLOBALS['ATT'][ $uid * 10 + 1 ] = true;
+	$GLOBALS['ATT'][ $uid * 10 + 2 ] = true;
 	$GLOBALS['UMETA'][ $uid ] = array(
+		'_sla_profile_docs'                    => array( array( 'id' => $uid * 10 + 1, 'name' => 'a.pdf' ), array( 'id' => $uid * 10 + 2, 'name' => 'b.pdf' ) ),
 		'_sla_healthcare_quiz_results'         => array( 'age' => '40' ),
 		'_sla_clinical_profile'                => array( 'weight' => '70' ),
 		'_sla_malnutrition_calculator_history' => array( array( 'ts' => 1, 'payload' => array( 'score' => 2 ) ) ),
@@ -107,8 +128,8 @@ function count_meta( $uid ) { return count( $GLOBALS['UMETA'][ $uid ] ); }
 
 section( '1. Groups and what counts as data' );
 $G = vance_hub_data_groups();
-check( 'groups: the six groups, in order', array_keys( $G ) === array( 'assessment', 'details', 'malnutrition', 'tools', 'checkins', 'flare' ) );
 check( 'groups: the flare group holds the plan and the flare log', in_array( '_sla_flare_plan', $G['flare']['keys'], true ) && in_array( '_sla_flare_log', $G['flare']['keys'], true ) );
+check( 'groups: the seven groups, in order', array_keys( $G ) === array( 'assessment', 'details', 'malnutrition', 'tools', 'documents', 'checkins', 'flare' ) );
 check( 'groups: malnutrition uses the tool history key', $G['malnutrition']['keys'] === array( '_sla_malnutrition_calculator_history' ) );
 check( 'groups: other tools hold only the non-malnutrition slugs', $G['tools']['keys'] === array( '_sla_ibd_recipes_history' ) );
 seed( 7 );
@@ -116,7 +137,7 @@ $with_data = 0;
 foreach ( array_keys( $G ) as $s ) {
 	$with_data += vance_hub_data_has( 7, $s ) ? 1 : 0;
 }
-check( 'has: every group has data after the seed', 6 === $with_data );
+check( 'has: every group has data after the seed', 7 === $with_data );
 check( 'has: a member with no meta has no data', ! vance_hub_data_has( 8, 'assessment' ) );
 check( 'has: an unknown group has no data', ! vance_hub_data_has( 7, 'bogus' ) );
 $GLOBALS['UMETA'][9]['_sla_clinical_profile'] = array();
@@ -135,13 +156,34 @@ vance_hub_data_erase( 11, 'malnutrition' );
 check( 'calc results: erase removes every _sla_calc_results_ key of the member and nothing else', ! isset( $GLOBALS['UMETA'][11]['_sla_calc_results_malnutrition'] ) && ! isset( $GLOBALS['UMETA'][11]['_sla_calc_results_other'] ) && 'n' === $GLOBALS['UMETA'][11]['_sla_notes'] );
 check( 'calc results: another member keeps theirs', isset( $GLOBALS['UMETA'][12]['_sla_calc_results_malnutrition'] ) );
 
+seed( 13 );
+check( 'documents: the list counts as data', vance_hub_data_has( 13, 'documents' ) );
+check( 'documents: erase deletes both files and the list', true === vance_hub_data_erase( 13, 'documents' ) && ! isset( $GLOBALS['ATT'][131] ) && ! isset( $GLOBALS['ATT'][132] ) && ! isset( $GLOBALS['UMETA'][13]['_sla_profile_docs'] ) );
+check( 'documents: another member files are not touched', isset( $GLOBALS['ATT'][71] ) && isset( $GLOBALS['ATT'][72] ) );
+seed( 14 );
+$GLOBALS['ATT_STUCK'] = 141;
+check( 'documents: a file that cannot be deleted gives false and stays in the list', false === vance_hub_data_erase( 14, 'documents' ) && isset( $GLOBALS['ATT'][141] ) && array( 141 ) === array_column( $GLOBALS['UMETA'][14]['_sla_profile_docs'], 'id' ) && ! isset( $GLOBALS['ATT'][142] ) );
+$GLOBALS['ATT_STUCK'] = 0;
+check( 'documents: a second run then finishes it', true === vance_hub_data_erase( 14, 'documents' ) && ! isset( $GLOBALS['UMETA'][14]['_sla_profile_docs'] ) );
+$GLOBALS['UMETA'][15]['_sla_profile_docs'] = array( array( 'id' => 9999, 'name' => 'gone.pdf' ), 'junk', array( 'name' => 'noid' ) );
+check( 'documents: a listed file that is already gone, and damaged rows, do not block the delete', true === vance_hub_data_erase( 15, 'documents' ) && ! isset( $GLOBALS['UMETA'][15]['_sla_profile_docs'] ) );
+
+$GLOBALS['POSTS'][5000] = true;
+$GLOBALS['UMETA'][16]['_sla_profile_docs'] = array( array( 'id' => 5000, 'name' => 'page-not-a-file' ) );
+check( 'documents: a row whose id is a live non-attachment post is dropped, not stuck, and that post is not touched', true === vance_hub_data_erase( 16, 'documents' ) && ! isset( $GLOBALS['UMETA'][16]['_sla_profile_docs'] ) && isset( $GLOBALS['POSTS'][5000] ) );
+$GLOBALS['ATT'][171] = true;
+$GLOBALS['UMETA'][17]['_sla_profile_docs'] = array( array( 'id' => 171, 'name' => 'x' ) );
+$GLOBALS['ATT'][172] = true;
+$GLOBALS['LATE'] = array( 17 => array( 'id' => 172, 'name' => 'late-upload' ) );
+check( 'documents: a file added to the list while the delete runs (second pass) is deleted too', true === vance_hub_data_erase( 17, 'documents' ) && ! isset( $GLOBALS['ATT'][171] ) && ! isset( $GLOBALS['ATT'][172] ) && ! isset( $GLOBALS['UMETA'][17]['_sla_profile_docs'] ) );
+
 section( '2. Erase' );
 seed( 7 );
 seed( 8 );
 check( 'erase: assessment returns true', true === vance_hub_data_erase( 7, 'assessment' ) );
 check( 'erase: the assessment answers are gone', ! isset( $GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] ) );
 check( 'erase: the other groups stay', isset( $GLOBALS['UMETA'][7]['_sla_clinical_profile'] ) && isset( $GLOBALS['UMETA'][7]['_sla_malnutrition_calculator_history'] ) );
-check( 'erase: another member keeps everything', isset( $GLOBALS['UMETA'][8]['_sla_healthcare_quiz_results'] ) && 11 === count_meta( 8 ) );
+check( 'erase: another member keeps everything', isset( $GLOBALS['UMETA'][8]['_sla_healthcare_quiz_results'] ) && 12 === count_meta( 8 ) );
 vance_hub_data_erase( 7, 'checkins' );
 check( 'erase: check-in history gone, agreement flag gone', ! isset( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] ) && ! isset( $GLOBALS['UMETA'][7]['_sla_consent_checkin'] ) );
 check( 'erase: the withdrawal time is stored and the old agreement record stays', '2026-11-26 10:00:00' === $GLOBALS['UMETA'][7]['_sla_consent_checkin_withdrawn_at'] && '2026-11-01 09:00:00' === $GLOBALS['UMETA'][7]['_sla_consent_checkin_at'] );
@@ -168,20 +210,20 @@ vance_hub_data_handle_post();
 check( 'gate: a GET does nothing', null === $GLOBALS['REDIRECT'] );
 $GLOBALS['UID'] = 0;
 post( 'all' );
-check( 'gate: a logged-out visitor deletes nothing and is not redirected', null === $GLOBALS['REDIRECT'] && 11 === count_meta( 7 ) );
+check( 'gate: a logged-out visitor deletes nothing and is not redirected', null === $GLOBALS['REDIRECT'] && 12 === count_meta( 7 ) );
 $GLOBALS['UID']    = 7;
 $GLOBALS['ACTIVE'] = false;
 post( 'all' );
-check( 'gate: with the hub dashboard off nothing happens', null === $GLOBALS['REDIRECT'] && 11 === count_meta( 7 ) );
+check( 'gate: with the hub dashboard off nothing happens', null === $GLOBALS['REDIRECT'] && 12 === count_meta( 7 ) );
 $GLOBALS['ACTIVE'] = true;
 post( 'all', '1', 'bad' );
-check( 'nonce: a bad nonce redirects with expired and deletes nothing', 'expired' === code() && 11 === count_meta( 7 ) );
+check( 'nonce: a bad nonce redirects with expired and deletes nothing', 'expired' === code() && 12 === count_meta( 7 ) );
 post( 'all', null );
-check( 'confirm: no tick gives "confirm" and deletes nothing', 'confirm' === code() && 11 === count_meta( 7 ) );
+check( 'confirm: no tick gives "confirm" and deletes nothing', 'confirm' === code() && 12 === count_meta( 7 ) );
 post( 'all', '0' );
-check( 'confirm: a tick of 0 does not count', 'confirm' === code() && 11 === count_meta( 7 ) );
+check( 'confirm: a tick of 0 does not count', 'confirm' === code() && 12 === count_meta( 7 ) );
 post( 'bogus' );
-check( 'invalid: an unknown group gives "invalid" and deletes nothing', 'invalid' === code() && 11 === count_meta( 7 ) );
+check( 'invalid: an unknown group gives "invalid" and deletes nothing', 'invalid' === code() && 12 === count_meta( 7 ) );
 post( 'details' );
 check( 'one group: details deleted, result "deleted"', 'deleted' === code() && ! isset( $GLOBALS['UMETA'][7]['_sla_clinical_profile'] ) && isset( $GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] ) );
 check( 'one group: the redirect stays on the data tab', false !== strpos( $GLOBALS['REDIRECT'], 'hsub=data' ) );
@@ -191,12 +233,12 @@ check( 'nothing: deleting an empty group says "nothing"', 'nothing' === code() )
 $GLOBALS['LOCKS'] = array();
 post( 'all' );
 check( 'all: every group of this member is gone', ! vance_hub_data_has( 7, 'assessment' ) && ! vance_hub_data_has( 7, 'malnutrition' ) && ! vance_hub_data_has( 7, 'tools' ) && ! vance_hub_data_has( 7, 'checkins' ) && ! vance_hub_data_has( 7, 'flare' ) && 'deleted' === code() );
-check( 'all: another member is untouched', 11 === count_meta( 8 ) );
+check( 'all: another member is untouched', 12 === count_meta( 8 ) );
 check( 'all: the member notes are untouched', 'a note' === $GLOBALS['UMETA'][7]['_sla_notes'] );
 seed( 7 );
 $GLOBALS['LOCK_FAILS'] = true;
 post( 'all' );
-check( 'lock: when the lock cannot be taken nothing is deleted and the result is "kept"', 'kept' === code() && 11 === count_meta( 7 ) );
+check( 'lock: when the lock cannot be taken nothing is deleted and the result is "kept"', 'kept' === code() && 12 === count_meta( 7 ) );
 $GLOBALS['LOCK_FAILS'] = false;
 $GLOBALS['STUCK']      = '_sla_flare_plan';
 $GLOBALS['LOCKS']      = array();
@@ -207,13 +249,13 @@ $GLOBALS['STUCK'] = '';
 section( '4. The panel' );
 seed( 7 );
 $H = vance_hub_data_panel_html( 7, '' );
-check( 'panel: one delete form for each of the six groups plus the all form', 7 === substr_count( $H, 'name="vance_hub_data_do"' ) );
-check( 'panel: every form has a required confirm box and a nonce', 7 === substr_count( $H, 'name="vhd_confirm" value="1" required' ) && 7 === substr_count( $H, 'name="vance_hub_data_nonce" value="nonce-vance_hub_manage_data"' ) );
+check( 'panel: one delete form for each of the seven groups plus the all form', 8 === substr_count( $H, 'name="vance_hub_data_do"' ) );
+check( 'panel: every form has a required confirm box and a nonce', 8 === substr_count( $H, 'name="vhd_confirm" value="1" required' ) && 8 === substr_count( $H, 'name="vance_hub_data_nonce" value="nonce-vance_hub_manage_data"' ) );
 check( 'panel: no script output', false === strpos( $H, '<script' ) );
 $GLOBALS['UMETA'][7] = array( '_sla_clinical_profile' => array( 'a' => 1 ) );
 $H = vance_hub_data_panel_html( 7, '' );
 check( 'panel: only the group with data has a form, plus the all form', 2 === substr_count( $H, 'name="vance_hub_data_do"' ) && false !== strpos( $H, 'value="details"' ) && false === strpos( $H, 'value="flare"' ) );
-check( 'panel: groups with no data read "Nothing saved"', 5 === substr_count( $H, 'Nothing saved' ) );
+check( 'panel: groups with no data read "Nothing saved"', 6 === substr_count( $H, 'Nothing saved' ) );
 $GLOBALS['UMETA'][7] = array();
 $H = vance_hub_data_panel_html( 7, '' );
 check( 'panel: with no data there are no forms at all', false === strpos( $H, '<form' ) );
