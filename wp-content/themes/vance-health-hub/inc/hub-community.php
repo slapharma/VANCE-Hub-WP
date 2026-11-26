@@ -588,7 +588,7 @@ add_action( 'init', 'vance_community_seed_spaces', 20 );
  * ====================================================================== */
 
 /**
- * The Customizer switch, in section 6 of the VanceHubClub panel
+ * The Customizer switch, in the "Community" section of the VanceHubClub panel
  * (inc/hub-layout.php names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.

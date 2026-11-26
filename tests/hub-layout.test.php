@@ -274,6 +274,7 @@ function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $compon
 require_once $THEME . '/inc/dashboard-url.php';
 require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
+require_once $THEME . '/inc/hub-home-settings.php';
 
 /*
  * The condition registry lives in functions.php, which cannot be loaded here
@@ -311,7 +312,16 @@ function render_home( $logged_in ) {
 	} catch ( Throwable $e ) {
 		$RENDER_ERROR = $e->getMessage();
 	}
-	return ob_get_clean();
+	$html = ob_get_clean();
+	// When VHH_DUMP_DIR is set, keep every rendered page as home-<n>.html so two
+	// runs (before and after a change) can be compared byte for byte.
+	$dump_dir = getenv( 'VHH_DUMP_DIR' );
+	if ( false !== $dump_dir && '' !== $dump_dir ) {
+		static $dump_n = 0;
+		$dump_n++;
+		file_put_contents( rtrim( $dump_dir, '/\\' ) . '/home-' . $dump_n . '.html', $html );
+	}
+	return $html;
 }
 
 /**
@@ -1143,6 +1153,28 @@ $GLOBALS['PROMO_HTML'] = " \n\t ";
 $HTML = render_home( false );
 check( 'promo: a block that is only whitespace prints no wrapper', strpos( $HTML, 'vhub-promo' ) === false );
 
+section( '15a. Block order, texts and counts on the Hub home' );
+
+arrange( array( 'vance_hub_block_order' => 'join,tools' ) );
+$HTML = render_home( false );
+check( 'order: a saved order prints the Join block before the tools', strpos( $HTML, 'id="vhub-join"' ) !== false && strpos( $HTML, 'id="vhub-join"' ) < strpos( $HTML, 'vhub-tools-section' ) );
+check( 'order: a block that is not in the saved order does not print', strpos( $HTML, 'vhub-library' ) === false && strpos( $HTML, 'vhub-conditions' ) === false );
+check( 'order: the hero and the facts print first, whatever the order', strpos( $HTML, 'vhub-hero' ) < strpos( $HTML, 'vhub-facts' ) && strpos( $HTML, 'vhub-facts' ) < strpos( $HTML, 'id="vhub-join"' ) );
+check( 'order: with the Join block on, the member bar link is the #vhub-join anchor', strpos( $HTML, 'href="#vhub-join"' ) !== false || strpos( $HTML, 'vhub-bar' ) === false );
+
+arrange( array( 'vance_hub_block_order' => '' ) );
+$HTML = render_home( false );
+check( 'order: a saved empty order prints no movable block, only the hero and the facts', strpos( $HTML, 'vhub-hero' ) !== false && strpos( $HTML, 'vhub-facts' ) !== false && strpos( $HTML, 'vhub-tools' ) === false && strpos( $HTML, 'vhub-join' ) === false );
+
+arrange( array( 'vance_hub_text_hero_title' => 'Ask <b>us</b>', 'vance_hub_text_hero_accent' => '  ', 'vance_hub_text_fact_2_title' => 'Saved', 'vance_hub_text_member_title' => 'Welcome back' ) );
+$HTML = render_home( false );
+check( 'text: a saved hero title is printed, escaped', strpos( $HTML, 'Ask &lt;b&gt;us&lt;/b&gt; <span class="vhub-hero__accent">' ) !== false && strpos( $HTML, '<b>us</b>' ) === false );
+check( 'text: an empty accent prints the default inside the accent span', strpos( $HTML, '<span class="vhub-hero__accent">today?</span>' ) !== false );
+check( 'text: a saved fact title keeps the strong and span markup', strpos( $HTML, '<strong>Saved</strong><span>Save searches, answers and results.</span>' ) !== false );
+check( 'text: the survey note is fixed text', strpos( $HTML, 'You can change any answer later. This is not a diagnosis.' ) !== false );
+$HTML = render_home( true );
+check( 'text: a member sees the saved member title', strpos( $HTML, '>Welcome back</h2>' ) !== false );
+
 section( '15b. The promo and dashboard switches in the Customizer' );
 
 $WC = new HubCustomizeFake();
@@ -1150,7 +1182,7 @@ vance_hub_customize_register( $WC );
 check( 'customize: vance_hub_show_promo is registered as a setting', isset( $WC->settings['vance_hub_show_promo'] ) );
 check( 'customize: vance_hub_show_promo defaults to on', $WC->settings['vance_hub_show_promo']['default'] === true );
 check( 'customize: vance_hub_show_promo is sanitised as a checkbox', $WC->settings['vance_hub_show_promo']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
-check( 'customize: the promo switch is a checkbox in section 2 (vance_hub_sec_home)', $WC->controls['vance_hub_show_promo']['type'] === 'checkbox' && $WC->controls['vance_hub_show_promo']['section'] === 'vance_hub_sec_home' );
+check( 'customize: the promo switch has no control any more (the block order replaced it); the setting stays', ! isset( $WC->controls['vance_hub_show_promo'] ) && isset( $WC->settings['vance_hub_show_promo'] ) );
 check( 'customize: vance_hub_show_dashboard is registered as a setting', isset( $WC->settings['vance_hub_show_dashboard'] ) );
 check( 'customize: vance_hub_show_dashboard defaults to on (its switch default)', $WC->settings['vance_hub_show_dashboard']['default'] === true );
 check( 'customize: vance_hub_show_dashboard is sanitised as a checkbox', $WC->settings['vance_hub_show_dashboard']['sanitize_callback'] === 'vance_hub_sanitize_checkbox' );
@@ -1161,7 +1193,9 @@ $DASH_SRC  = file_get_contents( $THEME . '/inc/hub-dashboard.php' );
 $FRONT_SRC = file_get_contents( $THEME . '/front-page-hub.php' );
 check( 'customize: the dashboard gate reads the same key through the master switch', strpos( $DASH_SRC, "vance_hub_switch_on( 'vance_hub_show_dashboard' )" ) !== false );
 check( 'customize: the registered dashboard default is the one switch default', vance_hub_switch_default( 'vance_hub_show_dashboard' ) === $WC->settings['vance_hub_show_dashboard']['default'] );
-check( 'customize: the promo block reads the same key and default it registers', strpos( $FRONT_SRC, "vance_get_theme_mod( 'vance_hub_show_promo', true )" ) !== false );
+check( 'customize: the template decides what prints through vance_hub_block_order()', strpos( $FRONT_SRC, 'vance_hub_block_order()' ) !== false );
+check( 'customize: the template no longer reads the three retired switches itself', strpos( $FRONT_SRC, 'vance_hub_show_promo' ) === false && strpos( $FRONT_SRC, 'vance_hub_show_sections' ) === false && strpos( $FRONT_SRC, 'vance_hub_show_more' ) === false );
+check( 'customize: the retired switches are read in one place, vance_hub_block_order() (legacy mods)', vance_hub_home_legacy_switches() === array( 'promo' => 'vance_hub_show_promo', 'sections' => 'vance_hub_show_sections', 'more' => 'vance_hub_show_more' ) );
 
 check( 'sanitize: "0" is off', vance_hub_sanitize_checkbox( '0' ) === false );
 check( 'sanitize: an empty string is off', vance_hub_sanitize_checkbox( '' ) === false );

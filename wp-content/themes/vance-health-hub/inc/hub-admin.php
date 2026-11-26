@@ -12,7 +12,8 @@
  * preview mode and share link boxes at the end come from inc/hub-preview.php,
  * which owns their (nonce-protected) actions.
  *
- * Needs inc/hub-layout.php (vance_hub_saved_layout, vance_hub_sanitize_checkbox).
+ * Needs inc/hub-layout.php (vance_hub_saved_layout, vance_hub_sanitize_checkbox)
+ * and inc/hub-home-settings.php (vance_hub_block_order, vance_hub_home_blocks).
  *
  * @package Vance_Health_Hub
  */
@@ -91,6 +92,31 @@ function vance_hub_admin_status_groups() {
 		$groups[ $id ]['rows'][] = $row;
 	}
 	return $groups;
+}
+
+/**
+ * The home page blocks that print, and the ones that do not.
+ *
+ * Reads vance_hub_block_order() and vance_hub_home_blocks()
+ * (inc/hub-home-settings.php). This screen only reads: the order is set in the
+ * Customizer.
+ *
+ * @return array{on: string[], off: string[]} Labels of the blocks that print (in
+ *                                          print order) and of the blocks that do not.
+ */
+function vance_hub_admin_home_blocks() {
+	$blocks = vance_hub_home_blocks();
+	$on     = array();
+	foreach ( vance_hub_block_order() as $id ) {
+		if ( isset( $blocks[ $id ] ) ) {
+			$on[] = $blocks[ $id ];
+			unset( $blocks[ $id ] );
+		}
+	}
+	return array(
+		'on'  => $on,
+		'off' => array_values( $blocks ),
+	);
 }
 
 /**
@@ -189,6 +215,21 @@ function vance_hub_admin_render() {
 		</p>
 		<p>
 			<a class="button button-primary" href="<?php echo esc_url( vance_hub_admin_customizer_url() ); ?>"><?php esc_html_e( 'Change VanceHubClub settings', 'vance-health-hub' ); ?></a>
+		</p>
+
+		<?php
+		$home_blocks = vance_hub_admin_home_blocks();
+		?>
+		<p>
+			<?php esc_html_e( 'Home page blocks:', 'vance-health-hub' ); ?>
+			<strong><?php echo esc_html( empty( $home_blocks['on'] ) ? __( 'none', 'vance-health-hub' ) : implode( ', ', $home_blocks['on'] ) ); ?></strong>
+			<?php if ( ! empty( $home_blocks['off'] ) ) : ?>
+				<?php
+				/* translators: %s: labels of the home page blocks that are hidden, separated by commas. */
+				echo esc_html( sprintf( __( '(hidden: %s)', 'vance-health-hub' ), implode( ', ', $home_blocks['off'] ) ) );
+				?>
+			<?php endif; ?>
+			<a href="<?php echo esc_url( vance_hub_admin_section_url( 'vance_hub_sec_home' ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
 		</p>
 
 		<h2><?php esc_html_e( 'Switches', 'vance-health-hub' ); ?></h2>

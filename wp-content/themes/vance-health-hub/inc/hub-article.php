@@ -670,7 +670,7 @@ add_action( 'vance_article_sidebar_top', 'vance_hub_article_sidebar_top' );
  * ====================================================================== */
 
 /**
- * The article-layout checkbox, in section 4 of the VanceHubClub panel
+ * The article-layout checkbox, in the "Articles and Self-Assessment" section of the VanceHubClub panel
  * (inc/hub-layout.php names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.

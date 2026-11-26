@@ -221,6 +221,7 @@ function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $compon
 require_once $THEME . '/inc/dashboard-url.php';
 require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
+require_once $THEME . '/inc/hub-home-settings.php';
 require_once $THEME . '/inc/hub-header.php';
 
 // The condition registry lives in functions.php, which cannot be loaded here.
