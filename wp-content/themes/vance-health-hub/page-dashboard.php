@@ -621,45 +621,7 @@ get_header();
                         </div>
                         <?php endif; ?>
 
-                        <!-- 2. MESSAGES (Tall/Side) — admin-broadcast messages live here -->
-                        <?php if ($dash_on('messages')): ?>
-                        <div class="d-card d-col-4">
-                            <div class="d-card-header">
-                                <div class="d-card-title"><span class="d-icon-box">💬</span> <?php echo esc_html($dash_label("messages")); ?></div>
-                                <span style="font-size:12px; font-weight:700; padding:4px 10px; border-radius:var(--radius-control, 6px);
-                                    <?php echo $vance_unread_count > 0
-                                        ? 'background:#008080; color:white;'
-                                        : 'background:#F1F5F9; color:#64748B;'; ?>">
-                                    <?php echo (int) $vance_unread_count; ?> New
-                                </span>
-                            </div>
-                            <?php if ( empty( $vance_recent_msgs ) ) : ?>
-                                <div class="msg-empty-state">
-                                    <strong>Inbox Zero!</strong><br>No messages from the team yet.
-                                </div>
-                            <?php else : ?>
-                                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
-                                    <?php foreach ( $vance_recent_msgs as $vm ) :
-                                        $vm_reads = (array) get_post_meta( $vm->ID, '_sla_msg_read_by', true );
-                                        $vm_unread = ! in_array( (int) $current_user->ID, array_map( 'intval', $vm_reads ), true );
-                                        $vm_sev = get_post_meta( $vm->ID, '_sla_msg_severity', true ) ?: 'info';
-                                        $vm_dot = $vm_sev === 'important' ? '#b07d00' : ( $vm_sev === 'announcement' ? '#0A1929' : '#008080' );
-                                    ?>
-                                        <li>
-                                            <a href="?tab=messages" style="display: flex; gap: 12px; padding: 10px 12px; background: <?php echo $vm_unread ? '#F4FFFF' : '#F8FAFC'; ?>; border-left: 3px solid <?php echo esc_attr( $vm_dot ); ?>; text-decoration: none; color: inherit; transition: background 0.15s;" onmouseover="this.style.background='#def4f4'" onmouseout="this.style.background='<?php echo $vm_unread ? '#F4FFFF' : '#F8FAFC'; ?>'">
-                                                <span style="flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; background: <?php echo $vm_unread ? esc_attr( $vm_dot ) : 'transparent'; ?>;" aria-hidden="true"></span>
-                                                <div style="flex: 1; min-width: 0;">
-                                                    <div style="font-size: 13px; font-weight: <?php echo $vm_unread ? '700' : '600'; ?>; color: #0F172A; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html( $vm->post_title ); ?></div>
-                                                    <div style="font-size: 11px; color: #64748B; margin-top: 3px;"><?php echo esc_html( get_the_date( 'M j', $vm ) ); ?> · <?php echo esc_html( ucfirst( $vm_sev ) ); ?></div>
-                                                </div>
-                                            </a>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                                <a href="?tab=messages" style="display: block; text-align: center; margin-top: 12px; font-size: 12px; font-weight: 700; color: #008080; text-decoration: none; padding: 8px; border-top: 1px solid #E2E8F0;">View all messages →</a>
-                            <?php endif; ?>
-                        </div>
-                        <?php endif; ?>
+                        <!-- Messages card removed from the main screen; messages stay in their own tab. -->
 
                         <!-- 3. NOTES -->
                         <?php if ($dash_on('notes')): ?>
@@ -1068,6 +1030,24 @@ get_header();
                     // put every step index after "duration" off by one or two.
                     $quiz_fields = vance_quiz_field_labels();
                     $quiz_steps  = array_keys( $quiz_fields );
+
+                    // Own section for the daily check-in (emoji table and charts).
+                    // Shown only while the check-in feature is on.
+                    $ci_data    = function_exists( 'vance_hub_checkin_tab_data' ) ? vance_hub_checkin_tab_data( $current_user ) : null;
+                    $hp_section = ( $ci_data && isset( $_GET['section'] ) && 'checkins' === $_GET['section'] ) ? 'checkins' : 'profile'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- selects one view, changes nothing.
+                    if ( $ci_data ) :
+                        $hp_base = function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) : '?tab=health-profile';
+                        ?>
+                        <nav aria-label="<?php echo esc_attr( __( 'Health Profile sections', 'vance-health-hub' ) ); ?>" style="display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap;">
+                            <a href="<?php echo esc_url( $hp_base ); ?>"<?php echo 'profile' === $hp_section ? ' aria-current="page"' : ''; ?> style="padding:10px 18px; border-radius:var(--radius-control, 6px); font-weight:700; text-decoration:none; border:1px solid #008080; <?php echo 'profile' === $hp_section ? 'background:#008080; color:#fff;' : 'background:#fff; color:#006666;'; ?>">🩺 <?php esc_html_e( 'My profile', 'vance-health-hub' ); ?></a>
+                            <a href="<?php echo esc_url( $hp_base . '&section=checkins' ); ?>"<?php echo 'checkins' === $hp_section ? ' aria-current="page"' : ''; ?> style="padding:10px 18px; border-radius:var(--radius-control, 6px); font-weight:700; text-decoration:none; border:1px solid #008080; <?php echo 'checkins' === $hp_section ? 'background:#008080; color:#fff;' : 'background:#fff; color:#006666;'; ?>">😀 <?php esc_html_e( 'Daily check-ins', 'vance-health-hub' ); ?></a>
+                        </nav>
+                        <?php
+                        if ( 'checkins' === $hp_section ) {
+                            echo vance_hub_checkin_tab_html( $ci_data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built.
+                            break;
+                        }
+                    endif;
                     ?>
                     <?php
                     // Sub-tabs of this tab. They are plain links with ?hsub=, so they

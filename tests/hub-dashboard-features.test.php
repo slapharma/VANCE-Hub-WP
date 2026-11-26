@@ -287,7 +287,8 @@ function fb_checkin_view( array $over = array() ) {
 	return array_merge( array(
 		'due'          => true,
 		'last'         => '',
-		'next'         => '',
+		'days'         => array(),
+		'tab_href'     => '?tab=health-profile&section=checkins',
 		'count'        => 0,
 		'questions'    => array( 'pain' => 'Pain question', 'bowel' => 'Bowel question', 'tired' => 'Tiredness question' ),
 		'series'       => array( 'pain' => array(), 'bowel' => array(), 'tired' => array() ),
@@ -422,16 +423,16 @@ check( 'clean: a null input gives null', vance_hub_checkin_clean( null ) === nul
 check( 'clean: a string input gives null', vance_hub_checkin_clean( '2' ) === null );
 check( 'clean: an empty array gives null', vance_hub_checkin_clean( array() ) === null );
 
-// due(): six days, not seven.
+// due(): one check-in for each calendar day.
 $LAST = 1000000;
 check( 'due: no check-in yet (0) is due', vance_hub_checkin_due( 0, $LAST ) === true );
 check( 'due: a negative last time is due', vance_hub_checkin_due( -5, $LAST ) === true );
-check( 'due: one hour after the last check-in is not due', vance_hub_checkin_due( $LAST, $LAST + 3600 ) === false );
-check( 'due: five days after the last check-in is not due', vance_hub_checkin_due( $LAST, $LAST + 5 * 86400 ) === false );
-check( 'due: one second short of six days is not due', vance_hub_checkin_due( $LAST, $LAST + 6 * 86400 - 1 ) === false );
-check( 'due: exactly six days after the last check-in is due', vance_hub_checkin_due( $LAST, $LAST + 6 * 86400 ) === true );
-check( 'due: seven days after the last check-in is due', vance_hub_checkin_due( $LAST, $LAST + 7 * 86400 ) === true );
-check( 'due: a numeric string last time is read', vance_hub_checkin_due( '1000000', $LAST + 6 * 86400 ) === true );
+check( 'due: one hour later the same day is not due', vance_hub_checkin_due( $LAST, $LAST + 3600 ) === false );
+check( 'due: the same time the next day is due', vance_hub_checkin_due( $LAST, $LAST + 86400 ) === true );
+check( 'due: seven days later is due', vance_hub_checkin_due( $LAST, $LAST + 7 * 86400 ) === true );
+check( 'due: 23:59:59 then 00:00:00 the next day is due', vance_hub_checkin_due( 20 * 86400 - 1, 20 * 86400 ) === true );
+check( 'due: 00:00:00 then 23:59:59 the same day is not due', vance_hub_checkin_due( 20 * 86400, 21 * 86400 - 1 ) === false );
+check( 'due: a numeric string last time is read', vance_hub_checkin_due( '1000000', $LAST + 86400 ) === true );
 
 /* ===================================================================== */
 section( '4. Pure helpers: chart series' );
@@ -687,20 +688,20 @@ check( 'consent_ok: non-string stored wording is false', vance_hub_checkin_conse
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
-$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
-check( 'early: a check-in 2 days ago redirects with vance_checkin=early', fb_handle() === 'https://example.test/hub/?vance_checkin=early' );
-check( 'early: a check-in 2 days ago writes nothing', $GLOBALS['WRITES'] === array() );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( time(), array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
+check( 'early: a check-in today redirects with vance_checkin=early', fb_handle() === 'https://example.test/hub/?vance_checkin=early' );
+check( 'early: a check-in today writes nothing', $GLOBALS['WRITES'] === array() );
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
-$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 5 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
-check( 'early: a check-in 5 days ago is still early', fb_handle() === 'https://example.test/hub/?vance_checkin=early' && $GLOBALS['WRITES'] === array() );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( time() - 60, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
+check( 'early: a check-in a minute ago is still early', fb_handle() === 'https://example.test/hub/?vance_checkin=early' && $GLOBALS['WRITES'] === array() );
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 fb_post_save();
-$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 7 * $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - $DAY, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
 fb_consented();
-check( 'due: a check-in 7 days ago lets the next one save', fb_handle() === 'https://example.test/hub/?vance_checkin=saved' );
+check( 'due: a check-in yesterday lets today\'s one save', fb_handle() === 'https://example.test/hub/?vance_checkin=saved' );
 
 /* ===================================================================== */
 section( '8. Check-in POST handler: the save, the consent record, delete' );
@@ -949,7 +950,7 @@ $LAST_TS = $NOW - 2 * $DAY;
 $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $LAST_TS, array( 'pain' => 2, 'bowel' => 1, 'tired' => 0, 'kind' => 'check-in' ) ) );
 fb_consented();
 $CI = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
-check( 'checkin data: a check-in 2 days ago is not due, and shows its date and the next date', $CI['due'] === false && $CI['last'] === gmdate( 'j M Y', $LAST_TS ) && $CI['next'] === gmdate( 'j M Y', $LAST_TS + 6 * $DAY ) );
+check( 'checkin data: a check-in 2 days ago is due again, and shows its date and a table row', $CI['due'] === true && $CI['last'] === gmdate( 'j M Y', $LAST_TS ) && count( $CI['days'] ) === 1 && $CI['days'][0]['answers'] === array( 'pain' => 2, 'bowel' => 1, 'tired' => 0 ) );
 check( 'checkin data: one saved row is counted', $CI['count'] === 1 );
 check( 'checkin data: a consented member is not asked for consent again', $CI['need_consent'] === false );
 check( 'checkin data: the pain series has one point with the stored answer', count( $CI['series']['pain'] ) === 1 && $CI['series']['pain'][0]['value'] === 2.0 && $CI['series']['pain'][0]['max'] === 4.0 );
@@ -957,7 +958,7 @@ check( 'checkin data: the check-in writes nothing', $GLOBALS['WRITES'] === array
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $CI_NEW = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
-check( 'checkin data: a member with no history is due, with no last or next date and need_consent', $CI_NEW['due'] === true && $CI_NEW['last'] === '' && $CI_NEW['next'] === '' && $CI_NEW['need_consent'] === true && $CI_NEW['count'] === 0 );
+check( 'checkin data: a member with no history is due, with no last or next date and need_consent', $CI_NEW['due'] === true && $CI_NEW['last'] === '' && $CI_NEW['days'] === array() && $CI_NEW['need_consent'] === true && $CI_NEW['count'] === 0 );
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
@@ -971,7 +972,7 @@ check( 'checkin data: changed wording needs consent again', vance_hub_dashboard_
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true, 'vance_hub_checkin_q_pain' => '  Custom pain?  ', 'vance_hub_checkin_q_bowel' => '   ' ) );
 $CI_TEXT = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin'];
 check( 'checkin data: a saved question wording is used, trimmed', $CI_TEXT['questions']['pain'] === 'Custom pain?' );
-check( 'checkin data: a blank saved wording falls back to the default', $CI_TEXT['questions']['bowel'] === 'How much did bowel symptoms trouble you this week?' );
+check( 'checkin data: a blank saved wording falls back to the default', $CI_TEXT['questions']['bowel'] === 'How are your bowel symptoms today?' );
 
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true ) );
 $_GET['vance_checkin'] = 'saved';
@@ -999,14 +1000,14 @@ $C_CONSENT = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'need_con
 check( 'checkin html: a member who has not consented sees the consent box, required', strpos( $C_CONSENT, 'name="vhd_consent" value="1" required' ) !== false );
 check( 'checkin html: the consent box shows the consent text', strpos( $C_CONSENT, 'I agree to storage.' ) !== false );
 
-$C_NOT_DUE = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'due' => false, 'last' => '10 Nov 2026', 'next' => '16 Nov 2026', 'count' => 1 ) ) );
+$C_NOT_DUE = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'due' => false, 'last' => '10 Nov 2026', 'count' => 1 ) ) );
 check( 'checkin html: a member not due sees no form', strpos( $C_NOT_DUE, '<form class="vhd-checkin__form"' ) === false );
 check( 'checkin html: a member not due sees no radio buttons', strpos( $C_NOT_DUE, 'type="radio"' ) === false );
-check( 'checkin html: a member not due sees the last and next dates', strpos( $C_NOT_DUE, '<p class="vhd-checkin__done">You did your check-in on 10 Nov 2026. The next one opens on 16 Nov 2026.</p>' ) !== false );
+check( 'checkin html: a member not due sees the done line with the last date', strpos( $C_NOT_DUE, '<p class="vhd-checkin__done"><span aria-hidden="true">&#9989;</span> Done for today (10 Nov 2026). Come back tomorrow.</p>' ) !== false );
 
 check( 'checkin html: the saved flash is a status line with no warning class', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'saved' ) ) ), '<p class="vhd-flash" role="status">Your check-in is saved.</p>' ) !== false );
 check( 'checkin html: the deleted flash shows its text', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'deleted' ) ) ), 'Your check-in answers are deleted, and your agreement is withdrawn.' ) !== false );
-check( 'checkin html: the early flash is a warning line', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'early' ) ) ), '<p class="vhd-flash vhd-flash--warn" role="status">Not saved. You did your check-in for this week.</p>' ) !== false );
+check( 'checkin html: the early flash is a warning line', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'early' ) ) ), '<p class="vhd-flash vhd-flash--warn" role="status">Not saved. You did your check-in today.</p>' ) !== false );
 check( 'checkin html: the expired flash is a warning line with the page-left-open text', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'expired' ) ) ), '<p class="vhd-flash vhd-flash--warn" role="status">Not saved. This page was open for too long. Answer the questions again, then send the form.</p>' ) !== false );
 check( 'checkin html: the consent flash is a warning line',strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'consent' ) ) ), 'vhd-flash--warn" role="status">Not saved. Tick the box to agree' ) !== false );
 check( 'checkin html: the invalid flash is a warning line', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'flash' => 'invalid' ) ) ), 'vhd-flash--warn" role="status">Not saved. Answer all the questions' ) !== false );
@@ -1027,18 +1028,18 @@ check( 'escape: the note is escaped', strpos( $C_ESC, '&lt;i&gt;note&lt;/i&gt;' 
 $C_MANAGE_0 = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 0 ) ) );
 check( 'delete control: no saved rows, no delete control', strpos( $C_MANAGE_0, 'value="delete"' ) === false && strpos( $C_MANAGE_0, 'vhd-checkin__manage' ) === false );
 
-$C_MANAGE_1 = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 1 ) ) );
+$C_MANAGE_1 = vance_hub_checkin_tab_html( fb_checkin_view( array( 'count' => 1 ) ) );
 check( 'delete control: one saved row says "1 saved check-in" and shows the delete control', strpos( $C_MANAGE_1, 'You have 1 saved check-in.' ) !== false && strpos( $C_MANAGE_1, 'value="delete"' ) !== false );
 
-$C_MANAGE_3 = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 3 ) ) );
+$C_MANAGE_3 = vance_hub_checkin_tab_html( fb_checkin_view( array( 'count' => 3 ) ) );
 check( 'delete control: three saved rows say "3 saved check-ins"', strpos( $C_MANAGE_3, 'You have 3 saved check-ins.' ) !== false );
 
 $TREND_POINTS = array(
 	fb_point( 1, 1.0, 4.0, '10 Nov 2026' ),
 	fb_point( 2, 3.0, 4.0, '17 Nov 2026' ),
 );
-$C_TREND = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'series' => array( 'pain' => $TREND_POINTS, 'bowel' => array(), 'tired' => array() ) ) ) );
-check( 'trends: two answers for a question give its trend chart under its own name', strpos( $C_TREND, '<p class="vhd-checkin__trend-q">Pain question</p>' ) !== false && strpos( $C_TREND, '<svg' ) !== false );
+$C_TREND = vance_hub_checkin_tab_html( fb_checkin_view( array( 'series' => array( 'pain' => $TREND_POINTS, 'bowel' => array(), 'tired' => array() ) ) ) );
+check( 'trends: two answers for a question give its trend chart under its own name', strpos( $C_TREND, ' Pain</p>' ) !== false && strpos( $C_TREND, '<svg' ) !== false );
 check( 'trends: a question with no answers has no trend', strpos( $C_TREND, 'Bowel question</p>' ) === false );
 
 $C_TREND_ONE = vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'series' => array( 'pain' => array( fb_point( 1, 1.0, 4.0, '10 Nov 2026' ) ), 'bowel' => array(), 'tired' => array() ) ) ) );
@@ -1155,11 +1156,11 @@ vance_hub_checkin_append( 7, array( 'pain' => '2', 'bowel' => '3', 'tired' => '1
 check( 'append: the new row goes first and the older row keeps second place', array_column( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'], 'ts' ) === array( 1000, 500 ) );
 
 fb_arrange();
-$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array_map( function ( $t ) { return fb_row( $t, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ); }, range( 50, 1 ) );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array_map( function ( $t ) { return fb_row( $t, array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ); }, range( 120, 1 ) );
 vance_hub_checkin_append( 7, array( 'pain' => '2', 'bowel' => '3', 'tired' => '1' ), 1000 );
 $CAPPED = $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'];
-check( 'cap: 51 rows keep the newest 50', count( $CAPPED ) === 50 );
-check( 'cap: the newest row is first and the oldest kept row, ts 2, is last', $CAPPED[0]['ts'] === 1000 && $CAPPED[49]['ts'] === 2 );
+check( 'cap: 121 rows keep the newest 120', count( $CAPPED ) === 120 );
+check( 'cap: the newest row is first and the oldest kept row, ts 2, is last', $CAPPED[0]['ts'] === 1000 && $CAPPED[119]['ts'] === 2 );
 check( 'cap: the oldest row, ts 1, is dropped', ! in_array( 1, array_column( $CAPPED, 'ts' ), true ) );
 
 fb_arrange();
@@ -1227,7 +1228,7 @@ check( 'lock: a save with no agreement frees the lock', fb_handle() === 'https:/
 
 fb_arrange( $ON );
 fb_consented();
-$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( $NOW - 2 * $DAY, $ROW ) );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( fb_row( time(), $ROW ) );
 fb_post_save( $SAVE, false );
 check( 'lock: an early save frees the lock', fb_handle() === 'https://example.test/hub/?vance_checkin=early' && fb_seq_locked_once() );
 
@@ -1342,6 +1343,36 @@ fb_arrange( array( 'vance_home_layout' => 'classic', 'vance_hub_dash_chart' => t
 $_GET = array( 'vhh_layout' => 'hub' );
 check( 'preview: a visitor without edit_theme_options cannot preview a feature on', false === vance_hub_dash_feature_on( 'vance_hub_dash_chart' ) );
 $_GET = array();
+
+/* ===================================================================== */
+section( '13. Daily check-in: faces, pop-up, Health Profile table' );
+
+$FACES = vance_hub_checkin_faces();
+check( 'faces: five faces for answers 0 to 4', array_keys( $FACES ) === array( 0, 1, 2, 3, 4 ) && count( array_unique( $FACES ) ) === 5 );
+check( 'faces: the form holds no digit labels, only faces', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view() ), '>0</label>' ) === false && strpos( vance_hub_dashboard_checkin_html( fb_checkin_view() ), $FACES[0] ) !== false );
+
+$M_DUE = vance_hub_checkin_modal_html( fb_checkin_view() );
+check( 'modal: a due member gets the pop-up, hidden at first, with the day', strpos( $M_DUE, 'id="vhd-checkin-modal"' ) !== false && strpos( $M_DUE, ' hidden>' ) !== false && strpos( $M_DUE, 'data-day="' . gmdate( 'Y-m-d' ) . '"' ) !== false );
+check( 'modal: it holds the same save form', strpos( $M_DUE, 'name="vance_hub_checkin_do" value="save"' ) !== false && strpos( $M_DUE, 'id="vhd-ci-modal-pain-0"' ) !== false );
+check( 'modal: it is a dialog with a close button and a "Not now" control', strpos( $M_DUE, 'role="dialog"' ) !== false && strpos( $M_DUE, 'data-vhd-close' ) !== false );
+check( 'modal: a member who did today\'s check-in gets no pop-up', '' === vance_hub_checkin_modal_html( fb_checkin_view( array( 'due' => false ) ) ) );
+check( 'modal: right after a save (a flash is set) there is no pop-up', '' === vance_hub_checkin_modal_html( fb_checkin_view( array( 'flash' => 'saved' ) ) ) );
+check( 'modal: no data, no pop-up', '' === vance_hub_checkin_modal_html( null ) );
+
+$TAB_DAYS = array(
+	array( 'date' => 'Tue 24 Nov', 'answers' => array( 'pain' => 0, 'bowel' => 4, 'tired' => null ) ),
+	array( 'date' => 'Mon 23 Nov', 'answers' => array( 'pain' => 2, 'bowel' => 2, 'tired' => 2 ) ),
+);
+$TAB = vance_hub_checkin_tab_html( fb_checkin_view( array( 'days' => $TAB_DAYS, 'count' => 2 ) ) );
+check( 'tab: the table has a row for each day with the date as a row header', strpos( $TAB, '<th scope="row">Tue 24 Nov</th>' ) !== false && strpos( $TAB, '<th scope="row">Mon 23 Nov</th>' ) !== false );
+check( 'tab: answers are faces, and a screen reader gets the word', strpos( $TAB, '<td><span aria-hidden="true">' . $FACES[4] . '</span><span class="vhd-sr">Very bad</span></td>' ) !== false );
+check( 'tab: a missing answer reads "Not answered"', strpos( $TAB, 'Not answered' ) !== false );
+check( 'tab: the table holds no digits as answers', strpos( $TAB, '<td>0</td>' ) === false && strpos( $TAB, '<td>4</td>' ) === false );
+check( 'tab: no history gives the empty line and no table', strpos( vance_hub_checkin_tab_html( fb_checkin_view( array( 'days' => array() ) ) ), '<table' ) === false );
+check( 'tab: it holds no check-in form (the form is on the home page)', strpos( $TAB, 'type="radio"' ) === false );
+check( 'tab: a due member gets a link to check in today', strpos( vance_hub_checkin_tab_html( fb_checkin_view() ), 'Check in today' ) !== false );
+check( 'home card: it links to the Health Profile check-ins section', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view() ), 'section=checkins' ) !== false );
+check( 'home card: it no longer holds the charts or the delete control', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 2, 'series' => array( 'pain' => $TREND_POINTS, 'bowel' => array(), 'tired' => array() ) ) ) ), '<svg' ) === false && strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 2 ) ) ), 'value="delete"' ) === false );
 
 /* ===================================================================== */
 echo "\n";

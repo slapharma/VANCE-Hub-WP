@@ -39,7 +39,7 @@ function vance_hub_admin_switches() {
 		'vance_hub_show_dashboard' => __( 'Member dashboard: VanceHubClub home', 'vance-health-hub' ),
 		'vance_hub_dash_member_no' => __( 'Member dashboard: member number', 'vance-health-hub' ),
 		'vance_hub_dash_chart'     => __( 'Member dashboard: results chart', 'vance-health-hub' ),
-		'vance_hub_dash_checkin'   => __( 'Member dashboard: weekly check-in', 'vance-health-hub' ),
+		'vance_hub_dash_checkin'   => __( 'Member dashboard: daily check-in', 'vance-health-hub' ),
 		'vance_hub_dash_flare_plan' => __( 'Member dashboard: flare plan', 'vance-health-hub' ),
 		'vance_hub_dashboard_tabs' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
 		'vance_hub_tool_result'    => __( 'Self-Assessment: VanceHubClub result page', 'vance-health-hub' ),
