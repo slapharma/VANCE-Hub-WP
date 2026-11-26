@@ -217,6 +217,9 @@ class WP_Query {
 	public function __construct( $args ) {
 		$GLOBALS['WP_QUERY_LOG'][] = $args;
 		$key = isset( $args['cat'] ) ? 'cat:' . $args['cat'] : $args['post_type'];
+		// vance_hub_popular_recipes() asks for recipes ordered by view count; the
+		// "Recently Added" and "Most Popular" groups must not read the same list.
+		if ( isset( $args['meta_query']['views'] ) ) { $key .= ':popular'; }
 		$all = isset( $GLOBALS['QUERY_POSTS'][ $key ] ) ? $GLOBALS['QUERY_POSTS'][ $key ] : array();
 		if ( ! empty( $args['post__not_in'] ) ) {
 			$skip = $args['post__not_in'];
@@ -266,6 +269,9 @@ function get_the_category( $post_id ) {
 /* ---- load the code under test --------------------------------------------- */
 
 require_once $THEME . '/inc/thumbnail-alt.php';   // the real helper, not a copy
+// front-page-hub.php calls vance_dashboard_link(): load the real helper and its one missing stub.
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
+require_once $THEME . '/inc/dashboard-url.php';
 require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
 
@@ -360,6 +366,7 @@ function seed_full_home() {
 	$GLOBALS['META'][501]['_testimonial_role'] = 'Patient';
 
 	$GLOBALS['QUERY_POSTS']['vance_recipe'] = array( post_obj( 601, 'Porridge Bowl' ), post_obj( 602, 'Plain Rice' ) );
+	$GLOBALS['QUERY_POSTS']['vance_recipe:popular'] = array( post_obj( 603, 'Oat Pot' ) );
 	$GLOBALS['TERMS_BY_POST'][601]          = array( (object) array( 'name' => 'Breakfast' ) );
 
 	$GLOBALS['QUERY_POSTS']['post'] = array(
@@ -750,10 +757,10 @@ check( 'empty guest: no community block', strpos( $HTML, 'vhub-community' ) === 
 check( 'empty guest: no library block', strpos( $HTML, 'vhub-library' ) === false );
 check( 'empty guest: no literal "[" placeholder text', strpos( $HTML, '[' ) === false );
 check( 'empty guest: no unfilled %s placeholder', strpos( $HTML, '%s' ) === false );
-check( 'empty guest: no zero recipe count, the generic copy is used', strpos( $HTML, 'Gut-friendly recipes. Build a weekly meal plan.' ) !== false && strpos( $HTML, '0 gut-friendly' ) === false );
+check( 'empty guest: no zero recipe count, the generic copy is used', strpos( $HTML, 'Choose from gut-friendly recipes and leave with a weekly meal plan.' ) !== false && strpos( $HTML, '0 gut-friendly' ) === false );
 check( 'empty guest: no survey question count when there are no steps', strpos( $HTML, 'vhub-survey__count' ) === false );
 check( 'empty guest: the four tool tiles still render', substr_count( $HTML, '<li class="vhub-tool vhub-tool--' ) === 4 );
-check( 'empty guest: the conditions block renders from the registry', strpos( $HTML, 'Start with your condition' ) !== false );
+check( 'empty guest: the conditions block renders from the registry', strpos( $HTML, 'Recently diagnosed? Learn about your condition' ) !== false );
 check( 'empty guest: the join CTA is shown', strpos( $HTML, 'id="vhub-join"' ) !== false && strpos( $HTML, 'https://example.test/login/?tab=signup' ) !== false );
 check( 'empty guest: the member join card is not shown', strpos( $HTML, 'vhub-join--member' ) === false );
 check( 'empty guest: every <img> has a non-empty alt', imgs_without_alt( $HTML ) === array() );
@@ -788,10 +795,11 @@ check( 'full guest: no unfilled %s placeholder', strpos( $HTML, '%s' ) === false
 check( 'full guest: the member bar shows the real total', strpos( $HTML, '<strong>1,234 members</strong>' ) !== false );
 check( 'full guest: the member bar shows the real weekly joins', strpos( $HTML, '17 joined this week' ) !== false );
 check( 'full guest: the bar links to the join section, not the dashboard', strpos( $HTML, 'href="#vhub-join"' ) !== false && strpos( $HTML, 'https://example.test/dashboard/' ) === false );
-check( 'full guest: the survey tool shows the real step count', strpos( $HTML, 'Gastro Self-Assessment: 9 short questions.' ) !== false );
+check( 'full guest: the survey tool shows the real step count', strpos( $HTML, 'Answer 9 short questions and get guides, tools and recipes picked for you.' ) !== false );
 check( 'full guest: the survey starter shows the real question count', strpos( $HTML, '9 questions' ) !== false );
-check( 'full guest: the recipe tool shows the live recipe count', strpos( $HTML, '1,091 gut-friendly recipes.' ) !== false );
-check( 'full guest: the nutrition tool uses the calculator name', strpos( $HTML, 'IBD Malnutrition Calculator. ' ) !== false );
+check( 'full guest: the recipe tool shows the live recipe count', strpos( $HTML, 'Choose from 1,091 gut-friendly recipes and leave with a weekly meal plan.' ) !== false );
+check( 'full guest: the nutrition tool describes the malnutrition risk check', strpos( $HTML, 'A short check that shows your malnutrition risk, so you know what to raise with your care team.' ) !== false );
+check( 'full guest: the Most Popular group lists the popular recipe, not the recent ones again', strpos( $HTML, 'Most Popular Recipes' ) !== false && strpos( $HTML, 'Oat Pot' ) !== false );
 check( 'full guest: the member tiles render the titled tiles only, three of four', substr_count( $HTML, 'class="vhub-member-tile__title"' ) === 3 );
 check( 'full guest: the untitled tile text is not rendered', strpos( $HTML, 'Orphan text' ) === false );
 check( 'full guest: a tile title is escaped, so markup is text', strpos( $HTML, '&lt;b&gt;Bold&lt;/b&gt; tile' ) !== false && strpos( $HTML, '<b>Bold' ) === false );
@@ -807,7 +815,7 @@ check( 'full guest: the fifth post is not in the library block', section_html( $
 check( 'full guest: the fifth post goes to "More to read" instead', strpos( section_html( $HTML, 'vhub-more' ), 'Fifth article' ) !== false );
 check( 'full guest: the featured image keeps its own description as alt', strpos( $HTML, 'alt="A featured photo for the library"' ) !== false );
 check( 'full guest: a library category name is decoded once and escaped once', strpos( $HTML, 'Gastro Living &amp; More' ) !== false );
-check( 'full guest: the conditions copy counts the seven registry entries', strpos( $HTML, 'Plain-English guides to 7 gut conditions.' ) !== false );
+check( 'full guest: the conditions copy counts the seven registry entries', strpos( $HTML, 'Easy-to-follow guides to 7 common gut conditions.' ) !== false );
 check( 'full guest: three featured conditions are photo tiles', substr_count( $HTML, 'class="vhub-cond-tile"' ) === 3 );
 check( 'full guest: the other four conditions are in the plain list', substr_count( $HTML, 'class="vhub-cond-list__link"' ) === 4 );
 check( 'full guest: the join copy shows the Founding Member deadline', strpos( $HTML, 'Join by 1 December 2026 and keep the Founding Member mark.' ) !== false );
@@ -1008,9 +1016,9 @@ check( 'sections: Gastro Living skips the library post and keeps newest first',
 	isset( $COLS[0][0] ) && strpos( $COLS[0][0], '/p/701/' ) === false && strpos( $COLS[0][0], '/p/721/' ) < strpos( $COLS[0][0], '/p/723/' ) && strpos( $COLS[0][0], '/p/724/' ) === false );
 check( 'sections: Health News skips the post Gastro Living already shows', isset( $COLS[0][1] ) && strpos( $COLS[0][1], '/p/721/' ) === false && substr_count( $COLS[0][1], 'class="vhub-sec-card"' ) === 2 );
 check( 'sections: a title is escaped, so markup is text', strpos( $HTML, 'Gut walk &lt;script&gt;alert(1)&lt;/script&gt; &amp; more' ) !== false && strpos( $HTML, '<script>alert(1)' ) === false );
-check( 'sections: reading time comes from the word count (401 words is 3 min)', strpos( $COLS[0][0], '3 min read' ) !== false );
-check( 'sections: a set _oped_read_time wins over the word count', strpos( $COLS[0][1], '7 min read' ) !== false );
-check( 'sections: the date is real and machine-readable', strpos( $COLS[0][1], '<time datetime="2026-11-03T08:00:00+00:00">3 November 2026</time>' ) !== false );
+check( 'sections: reading time comes from the word count (401 words is 3 min)', isset( $COLS[0][0] ) && strpos( $COLS[0][0], '3 min read' ) !== false );
+check( 'sections: a set _oped_read_time wins over the word count', isset( $COLS[0][1] ) && strpos( $COLS[0][1], '7 min read' ) !== false );
+check( 'sections: the date is real and machine-readable', isset( $COLS[0][1] ) && strpos( $COLS[0][1], '<time datetime="2026-11-03T08:00:00+00:00">3 November 2026</time>' ) !== false );
 check( 'sections: no view count anywhere (that helper returns a random number)', stripos( $HTML, 'views' ) === false );
 check( 'sections: a thumbnail with no description renders with alt=""', preg_match( '/<img class="vhub-sec-card__img" src="https:\/\/example.test\/wp-content\/uploads\/g2.jpg" alt=""/', $SECS ) === 1 );
 check( 'sections: a post with no thumbnail renders no <img>', substr_count( $SECS, '<img' ) === 1 );
