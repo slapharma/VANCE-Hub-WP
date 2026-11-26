@@ -567,20 +567,30 @@ what they do first, and who they contact. Each answer holds up to 1000 character
 The member can edit, print and delete the plan. The fourth section, "When to get
 urgent help", is fixed text that an administrator enters.
 
+The card also holds a flare log, a "How am I today?" quick check, a step-by-step
+builder for a new plan, a plan progress bar and an appointment sheet. The card
+shows them in this order when a plan is saved: progress bar, quick check, the three
+answers, the urgent help text, the flare log, the print button, the appointment
+sheet, "Edit my plan", and "Manage my flare plan data". With no saved plan, the card
+shows the builder and the urgent help text only. Every part sits behind the same
+switch. The flare log and the appointment sheet store nothing new of their own.
+
 This is health data. The card records the member's own words and gives no advice.
 
-- **Health Profile sub-tabs:** the Health Profile tab (`?tab=health-profile`) shows three
-  plain links, `My profile` (`hsub=profile`), `Screening results` (`hsub=screening`) and
-  `Flare plan` (`hsub=flare`). `page-dashboard.php` builds them with `add_query_arg()`, so
-  they work with no script. The `Flare plan` link appears only when `vance_hub_flare_plan_data()`
-  returns data.
+- **Health Profile sub-tabs:** the Health Profile tab (`?tab=health-profile`) shows plain links
+  built with `add_query_arg()`, so they work with no script. `Self Assessment` (`hsub=profile`)
+  and `Screening results` (`hsub=screening`) always show. `Daily check-ins` (`hsub=checkins`)
+  shows with the VanceHubClub dashboard on and check-in data. `Flare plan` (`hsub=flare`)
+  shows only when `vance_hub_flare_plan_data()` returns data. `Manage my data` (`hsub=data`)
+  shows with the VanceHubClub dashboard on, as the last link in the row.
 - **Panels:** all three panels stay in the page. A panel that is not open has the `hidden`
   attribute, and `.hp-panel[hidden] { display: none !important; }` in
   `assets/css/hub-dashboard.css` hides it. The bar is `nav.vhd-subtabs`. Its styles are at the
   end of that file, and the bar is hidden when printing.
 - **Which panel opens:** `hsub` picks the open panel. A missing or unknown value opens
-  `profile`. With no `hsub`, a `vance_flare` code in the URL opens `flare`. An explicit `hsub`
-  wins over the code.
+  `profile`. With no `hsub`, a `vance_flare` code in the URL opens `flare`. With no `hsub`, a
+  check-in delete result opens `checkins`, and a "Manage my data" result opens `data`. An
+  explicit `hsub` wins over all of them.
 - **Hub layout off:** the bar and the hidden panels need `vance_hub_dashboard_active()`. When
   it is false, every section shows, with no bar. The flare card does not show, because the
   data is fetched only when the hub dashboard is active.
@@ -589,13 +599,16 @@ This is health data. The card records the member's own words and gives no advice
   they were. If `hsub` was not in the URL, the code still opens the Flare plan panel.
 - **Switch:** `vance_hub_dash_flare_plan`. Default OFF, set in `vance_hub_switch_default()`
   (`inc/hub-layout.php`). The comment there says health-data cards stay off until the
-  privacy policy covers them. Turn it on only after the policy covers the plan.
+  privacy policy covers them. Turn it on only after the policy covers the plan. The
+  flare log, the quick check and the appointment sheet all sit inside this card, so the
+  same switch turns them off too. The switch does not hide the "Manage my data" tab.
 - **Urgent help text:** theme mod `vance_hub_flare_plan_urgent`, set in Customize under
   `vance_home_layout`. It has no default. While it is empty the card does not show and
   a save is refused. Do not write this text as an agent. A clinician must write or
   approve it, and the site has no named medical reviewer (see Outstanding work, item 1).
-- **Storage:** `_sla_flare_plan` holds `{updated, signs, actions, contacts}`. The
-  agreement uses the check-in key pattern with base `flare_plan`:
+- **Storage:** `_sla_flare_plan` holds `{updated, signs, actions, contacts}`. The flare
+  log is `_sla_flare_log` (see Flare log below). The agreement uses the check-in key
+  pattern with base `flare_plan`:
   `_sla_consent_flare_plan` ('1' while the member agrees), `_sla_consent_flare_plan_at`,
   `_sla_consent_flare_plan_text` (the wording agreed to), and
   `_sla_consent_flare_plan_withdrawn_at` (set on delete). Never rename these keys
@@ -613,19 +626,99 @@ This is health data. The card records the member's own words and gives no advice
   `vance_hub_flare_nonce`. Field `vance_hub_flare_do` is `save` or `delete`. Answers are
   in `vhd_flare[signs]`, `vhd_flare[actions]` and `vhd_flare[contacts]`. The handler
   redirects with `?vance_flare=<code>`, and that code picks the message.
-- **Delete:** removes the plan and withdraws the agreement. The agreement time and
-  wording stay as a record.
+- **Builder (new plan only):** with no saved plan, the Form is a step-by-step builder. The
+  form carries `data-vhd-wizard`. `assets/js/hub-flare-plan.js` shows one box at a time with
+  Back and Next, and the text "Step n of 4". The consent box, when it shows, is on the last
+  step. With no script every box shows on one page, and the form still posts. A saved plan
+  opens the plain form under "Edit my plan" instead.
+- **Progress bar:** the card shows "My plan: n of 4 done" with a bar. The four parts are the
+  three answers (each counts when it has text) and one review: the review counts while the
+  plan's last change is less than 183 days old. Each empty answer gets an "Add:" hint. A plan
+  older than 183 days gets a hint with the months since the last change. The bar measures the
+  plan only. It says nothing about the member's health.
+- **How am I today? (quick check):** shown only with a saved plan. Three sliders from 0 to 4:
+  Tummy pain, Bowel symptoms and Tiredness. The block is in the markup with the `hidden`
+  attribute, and `assets/js/hub-flare-plan.js` removes it. With no script the block never
+  shows. "Compare with my plan" reads the sliders and the newest check-in from
+  `vance_hub_checkin_history()`. It shows both sets of values, names the symptoms that are
+  higher than the last check-in, and scrolls to the plan and highlights it. It gives no
+  verdict. With no saved check-in it says so. Nothing is saved or sent: the script makes no
+  request.
+- **Flare log:** `_sla_flare_log` holds rows `{id, start, end, helped}`, newest first, at most
+  50 rows. `start` and `end` are Y-m-d dates in the site time zone. `end` is `''` while the
+  flare is open. `helped` is "what helped", at most 500 characters. On read, a row with a bad
+  date, a missing or non-string `end`, or an `end` before its `start` is dropped without a
+  message.
+  - **Start:** POST `vance_hub_flare_do=flare_start` records a row with today's date and no
+    end. The card button is "I am in a flare".
+  - **End:** POST `vance_hub_flare_do=flare_end` with the optional text in `vhd_flare_helped`
+    sets `end` to today. If today is earlier than `start`, `end` becomes `start`. The card
+    button is "My flare has ended". The "Edit my plan" box opens after an end.
+  - **Needs:** a saved plan, the switch on with the urgent help text set, and an agreement to
+    the consent wording in use now. No saved plan, or no urgent help text, gives `noplan`. A
+    missing or old agreement gives `changed`. With the switch off the handler does nothing, so
+    the POST gets no result code.
+  - **Result codes:** `flare_started`, `flare_ended`, `flare_open` (a flare is already open),
+    `flare_none` (no open flare to end), `noplan`, `changed` (the agreement is missing or the
+    wording changed), `failed`. The card shows one fixed message for each code.
+  - **Cap:** a start with 50 rows already stored drops the oldest row, with no warning.
+  - **Days:** the count includes the first and the last day. An open flare counts up to today.
+  - **Display:** the card and the sheet show the five newest rows. The card shows the total
+    as "N flares logged".
+  - **No edit, no single-row delete.** A member removes log rows only by deleting the plan and
+    the log together, or by the "Manage my data" flare group.
+- **Consent wording:** the default now names the plan and the flare dates: "I agree that the
+  Hub stores my flare plan and my flare dates in my account. I can delete them at any time."
+  Customize sets it through `vance_hub_flare_plan_consent` (empty uses the default). The
+  agreement stores the wording it was given, and `vance_hub_checkin_consent_ok()` compares it
+  with the wording in use, exactly. So a member who agreed to the older wording is asked
+  again. The plan form shows the box, and a flare start or end returns `changed` until the
+  member saves the plan with the box ticked. Any edit to the consent text in Customize asks
+  every member again.
+- **Appointment sheet:** `vance_hub_flare_sheet_data()` builds it on each view from data the
+  member already saved. It stores nothing new. Sources:
+  - `_sla_clinical_profile`: `next_appointment` (shown as "j M Y" when `strtotime()` reads it,
+    otherwise left out), `appointment_questions` ("Questions to ask") and `medication`
+    ("Medication").
+  - The three plan answers, where not empty.
+  - The five newest flare log rows, under "My flares".
+  - Up to 14 newest check-ins from `vance_hub_checkin_history()`, as a table of Pain, Bowel
+    and Tired (0 to 4).
+  - The latest nutrition risk check: the score from the `malnutrition-calculator` history,
+    with its risk label when one is stored.
+  It starts "Prepared on <date> from what I saved in the Hub." and ends "Written by the member.
+  It is not medical advice." It sits in a closed `<details>` box, "Appointment sheet", with its
+  own button "Print appointment sheet" (`data-vhd-flare-print="sheet"`).
+- **Manage my data:** `inc/hub-data-manage.php`. The tab is `?tab=health-profile&hsub=data`, the
+  last link in the sub-tab row. It shows when the VanceHubClub dashboard is on
+  (`vance_hub_dashboard_active()`), whatever the flare switch says. The `flare` group clears
+  `_sla_flare_plan` and `_sla_flare_log` and withdraws the agreement the same way as the card's
+  delete. A group shows its delete form only when it holds data.
+- **Delete:** removes the plan AND the flare log, and withdraws the agreement. The agreement
+  time and wording stay as a record. The card's "Manage my flare plan data" box runs this
+  delete.
 - **Privacy:** registered with the WordPress personal data tools under `vance-flare-plan`.
-  The exporter writes the plan and the agreement record. The eraser removes the plan and
-  every key listed above.
-- **Print:** `@media print` in `assets/css/hub-dashboard.css` shows the card and hides the rest
-  of the page. `assets/js/hub-flare-plan.js` marks the card's ancestors on `beforeprint` and
-  clears the marks on `afterprint`, so the CSS can drop the rest. The same script shows the
-  Print button, which stays hidden until it runs, so a page with no script shows no button
-  that does nothing.
+  The exporter writes the plan, every flare log row (start, end and what helped) and the
+  agreement record. The eraser removes the plan, the flare log and every key listed above.
+- **Print:** `@media print` in `assets/css/hub-dashboard.css` shows only the part being printed
+  and hides the rest of the page. Before printing, `assets/js/hub-flare-plan.js` adds the class
+  `vhd-print-target` to that part and `vhd-print-path` to each of its ancestors. It removes both
+  on `afterprint`, and it adds `vhd-printing` to the `html` element while the marks are set. The
+  part is the plan card (`.vhd-flare`), or the appointment sheet (`.vhd-flare-sheet`) when its
+  box is open or its button was clicked. The plan print leaves out the progress bar, the quick
+  check, the flare log, the appointment sheet, "Edit my plan" and "Manage my flare plan data".
+  The buttons are "Print my plan" (`data-vhd-flare-print="plan"`) and "Print appointment sheet"
+  (`data-vhd-flare-print="sheet"`). Both stay hidden until the script runs, so a page with no
+  script shows no button that does nothing. A browser's own Print command, with no button, prints
+  the sheet when its box is open and the plan otherwise. When the card sits in a hidden sub-tab,
+  the script marks nothing and the page prints as the browser shows it.
 - **Tests:** `tests/hub-flare-plan.test.php`. Run `cd tests; php hub-flare-plan.test.php`.
-  It exits 1 when any check fails. The Health Profile tab is checked by reading
-  `page-dashboard.php` as text, not by rendering it.
+  It has 372 checks and exits 1 when any check fails. The checks cover the flare log, the quick
+  check, the builder, the progress bar and the appointment sheet. The Health Profile tab is
+  checked by reading `page-dashboard.php` as text, not by rendering it. The "Manage my data"
+  flare group is covered by `tests/hub-data-manage.test.php`: it checks that the group holds the
+  plan and the log, that erasing it clears both and withdraws the agreement, and that only a
+  group with data shows a form.
 
 ## Customizer structure: one map decides where everything sits
 

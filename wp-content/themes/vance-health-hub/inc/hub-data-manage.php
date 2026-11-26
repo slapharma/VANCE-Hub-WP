@@ -108,8 +108,8 @@ function vance_hub_data_groups() {
 	if ( function_exists( 'vance_hub_flare_plan_meta_key' ) ) {
 		$groups['flare'] = array(
 			'label'   => __( 'Flare plan', 'vance-health-hub' ),
-			'text'    => __( 'Your plan for a flare, and your agreement to store it.', 'vance-health-hub' ),
-			'keys'    => array( vance_hub_flare_plan_meta_key() ),
+			'text'    => __( 'Your plan for a flare, your flare log, and your agreement to store them.', 'vance-health-hub' ),
+			'keys'    => array_merge( array( vance_hub_flare_plan_meta_key() ), function_exists( 'vance_hub_flare_log_meta_key' ) ? array( vance_hub_flare_log_meta_key() ) : array() ),
 			'consent' => 'flare_plan',
 		);
 	}
