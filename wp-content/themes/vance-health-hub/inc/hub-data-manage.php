@@ -13,6 +13,7 @@
  *   details       _sla_clinical_profile          Health details and lifestyle
  *   malnutrition  _sla_malnutrition_calculator_history, and every _sla_calc_results_*
  *   tools         _sla_<tool>_history            any other saved tool results
+ *   documents     _sla_profile_docs              uploaded files (the attachments are deleted too)
  *   checkins      daily check-in answers and the agreement
  *   flare         the flare plan and the agreement
  *
@@ -20,7 +21,7 @@
  * as in their own delete: the "agreed" flag goes, and the withdrawal time is
  * stored. The old agreement time and wording stay as the record.
  *
- * Not in scope: the account itself, uploaded documents (_sla_profile_docs), notes,
+ * Not in scope: the account itself, notes,
  * saved chats, bookmarks, discounts, consult requests and messages. They are not health answers, and they have their own tabs.
  *
  * @package vance-health-hub
@@ -87,6 +88,14 @@ function vance_hub_data_groups() {
 			'consent' => null,
 		);
 	}
+
+	$groups['documents'] = array(
+		'label'       => __( 'Uploaded documents', 'vance-health-hub' ),
+		'text'        => __( 'The files you uploaded to My Documents. The files are deleted from the site.', 'vance-health-hub' ),
+		'keys'        => array( '_sla_profile_docs' ),
+		'consent'     => null,
+		'attachments' => true,
+	);
 
 	if ( function_exists( 'vance_hub_checkin_meta_key' ) ) {
 		$groups['checkins'] = array(
@@ -186,6 +195,43 @@ function vance_hub_data_erase( $uid, $slug ) {
 	}
 	$group = $groups[ $slug ];
 	$ok    = true;
+	// Uploaded documents: the files first, then the list. Only attachments that
+	// are in THIS member's own list are touched, as in the single delete in
+	// inc/user-documents.php. A file that cannot be removed stays in the list.
+	if ( ! empty( $group['attachments'] ) ) {
+		$done = array();
+		$left = array();
+		// Up to three passes. The uploads and the single delete in user-documents.php
+		// take the same lock, so a row should not appear while this runs. The extra
+		// passes are a second safety for a request that did not take the lock.
+		for ( $pass = 0; $pass < 3; $pass++ ) {
+			$docs    = get_user_meta( $uid, '_sla_profile_docs', true );
+			$changed = false;
+			foreach ( is_array( $docs ) ? $docs : array() as $doc ) {
+				$id = is_array( $doc ) && isset( $doc['id'] ) ? (int) $doc['id'] : 0;
+				if ( $id <= 0 || isset( $done[ $id ] ) ) {
+					continue;
+				}
+				$done[ $id ] = true;
+				$changed     = true;
+				if ( ! wp_delete_attachment( $id, true ) ) {
+					// Stuck only when a real attachment is still there. An id that
+					// is gone, or is not an attachment, is not a file of the member.
+					$post = get_post( $id );
+					if ( $post && 'attachment' === $post->post_type ) {
+						$left[ $id ] = $doc;
+					}
+				}
+			}
+			if ( ! $changed ) {
+				break;
+			}
+		}
+		if ( ! empty( $left ) ) {
+			update_user_meta( $uid, '_sla_profile_docs', array_values( $left ) );
+			return false;
+		}
+	}
 	foreach ( vance_hub_data_keys( $uid, $slug ) as $key ) {
 		delete_user_meta( $uid, $key );
 		if ( vance_hub_data_filled( get_user_meta( $uid, $key, true ) ) ) {
@@ -331,7 +377,7 @@ function vance_hub_data_panel_html( $uid, $flash = '' ) {
 
 	$html  = '<div class="vhd"><section class="vhd-card vhd-manage" aria-labelledby="vhd-manage-title"><div class="vhd-card__head">';
 	$html .= '<h2 id="vhd-manage-title" class="vhd-h3">' . esc_html__( 'Manage my data', 'vance-health-hub' ) . '</h2></div>';
-	$html .= '<p class="vhd-small">' . esc_html__( 'You choose what the Hub keeps. Delete one group, or everything below. A deleted group cannot be restored. Your account, uploaded documents, notes, saved chats and messages are not changed.', 'vance-health-hub' ) . '</p>';
+	$html .= '<p class="vhd-small">' . esc_html__( 'You choose what the Hub keeps. Delete one group, or everything below. A deleted group cannot be restored. Your account, notes, saved chats and messages are not changed.', 'vance-health-hub' ) . '</p>';
 	if ( isset( $messages[ $flash ] ) ) {
 		$ok    = in_array( $flash, array( 'deleted', 'nothing' ), true );
 		$html .= '<p class="vhd-flash' . ( $ok ? '' : ' vhd-flash--warn' ) . '" role="status">' . esc_html( $messages[ $flash ] ) . '</p>';

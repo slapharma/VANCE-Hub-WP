@@ -377,10 +377,37 @@ function vance_user_docs_backfill_text( $user_id ) {
 		$changed                   = true;
 	}
 
-	if ( $changed ) {
-		update_user_meta( $user_id, '_sla_profile_docs', $docs );
+	if ( ! $changed ) {
+		return false;
 	}
-	return $changed;
+	// Write under the member's lock, onto a fresh read: a document deleted while
+	// the text was read must not come back. Rows that are gone are left out. With
+	// no lock nothing is written, and the next page load tries again. This runs
+	// while the dashboard page is built, so it waits 1 s for the lock, not 5.
+	if ( ! vance_user_docs_lock( $user_id, 1 ) ) {
+		return false;
+	}
+	$fresh = get_user_meta( $user_id, '_sla_profile_docs', true );
+	$fresh = is_array( $fresh ) ? $fresh : array();
+	if ( empty( $fresh ) ) {
+		// Everything was deleted meanwhile: write nothing back.
+		vance_user_docs_unlock( $user_id );
+		return false;
+	}
+	$by_id = array();
+	foreach ( $docs as $d ) {
+		if ( is_array( $d ) && ! empty( $d['id'] ) ) {
+			$by_id[ (int) $d['id'] ] = $d;
+		}
+	}
+	foreach ( $fresh as $i => $d ) {
+		if ( is_array( $d ) && ! empty( $d['id'] ) && isset( $by_id[ (int) $d['id'] ] ) && empty( $d['text_status'] ) ) {
+			$fresh[ $i ] = $by_id[ (int) $d['id'] ];
+		}
+	}
+	update_user_meta( $user_id, '_sla_profile_docs', $fresh );
+	vance_user_docs_unlock( $user_id );
+	return true;
 }
 
 /**
@@ -401,6 +428,40 @@ function vance_user_docs_enabled() {
 	return function_exists( 'vance_dashboard_feature_enabled' )
 		? vance_dashboard_feature_enabled( 'documents' )
 		: true;
+}
+
+/* ============================================================================
+ * The member's lock
+ * ----------------------------------------------------------------------------
+ * The list in `_sla_profile_docs` is read, changed and written back. Two
+ * requests from one member (an upload and a delete, or "Manage my data") could
+ * each write back a stale list. They take the member's lock from
+ * hub-dashboard-features.php for the read-change-write step only. The slow work
+ * (the upload itself and the text extraction) is done before the lock.
+ *
+ * Without that file the lock is skipped, and the old behaviour stays.
+ * ========================================================================= */
+
+/**
+ * Take the member's lock.
+ *
+ * @param int $user_id User.
+ * @param int $wait    Seconds to wait for another request of the member.
+ * @return bool False when the lock was not given: write nothing then.
+ */
+function vance_user_docs_lock( $user_id, $wait = 5 ) {
+	return function_exists( 'vance_hub_checkin_lock' ) ? vance_hub_checkin_lock( (int) $user_id, (int) $wait ) : true;
+}
+
+/**
+ * Free the member's lock.
+ *
+ * @param int $user_id User.
+ */
+function vance_user_docs_unlock( $user_id ) {
+	if ( function_exists( 'vance_hub_checkin_unlock' ) ) {
+		vance_hub_checkin_unlock( (int) $user_id );
+	}
 }
 
 /* ============================================================================
@@ -472,6 +533,22 @@ function vance_user_docs_ajax_upload() {
 	$path = get_attached_file( $att_id );
 	list( $text, $status ) = vance_user_docs_extract_text( $path, $mime );
 
+	// The file is stored. Now change the list under the lock, from a fresh read:
+	// the list read at the start of this request can be old by now. When the lock
+	// or the room is not there, the file is removed again, so no file is left
+	// that no list names.
+	if ( ! vance_user_docs_lock( $user_id ) ) {
+		wp_delete_attachment( $att_id, true );
+		wp_send_json_error( array( 'message' => 'That file could not be saved just now, please try again.' ) );
+	}
+	$docs = get_user_meta( $user_id, '_sla_profile_docs', true );
+	$docs = is_array( $docs ) ? $docs : array();
+	if ( count( $docs ) >= VANCE_DOCS_MAX ) {
+		vance_user_docs_unlock( $user_id );
+		wp_delete_attachment( $att_id, true );
+		wp_send_json_error( array( 'message' => sprintf( 'You can store up to %d documents. Delete one to make room.', VANCE_DOCS_MAX ) ) );
+	}
+
 	$docs[] = array(
 		'id'          => (int) $att_id,
 		'url'         => wp_get_attachment_url( $att_id ),
@@ -483,6 +560,7 @@ function vance_user_docs_ajax_upload() {
 		'text_status' => $status,
 	);
 	update_user_meta( $user_id, '_sla_profile_docs', $docs );
+	vance_user_docs_unlock( $user_id );
 
 	wp_send_json_success( array(
 		'message'     => 'Document uploaded.',
@@ -511,8 +589,11 @@ function vance_user_docs_ajax_delete() {
 
 	$doc_id  = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
 	$user_id = get_current_user_id();
-	$docs    = get_user_meta( $user_id, '_sla_profile_docs', true );
-	$docs    = is_array( $docs ) ? $docs : array();
+	if ( ! vance_user_docs_lock( $user_id ) ) {
+		wp_send_json_error( array( 'message' => 'That document could not be deleted just now, please try again.' ) );
+	}
+	$docs = get_user_meta( $user_id, '_sla_profile_docs', true );
+	$docs = is_array( $docs ) ? $docs : array();
 
 	$kept  = array();
 	$found = false;
@@ -525,12 +606,14 @@ function vance_user_docs_ajax_delete() {
 	}
 
 	if ( ! $found ) {
+		vance_user_docs_unlock( $user_id );
 		wp_send_json_error( array( 'message' => 'That document is not in your list.' ) );
 	}
 
 	// Only after confirming it was in THIS user's list.
 	wp_delete_attachment( $doc_id, true );
 	update_user_meta( $user_id, '_sla_profile_docs', $kept );
+	vance_user_docs_unlock( $user_id );
 
 	wp_send_json_success( array( 'message' => 'Document deleted.' ) );
 }
