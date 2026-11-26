@@ -644,33 +644,90 @@ html.vhd-modal-open { overflow: hidden; }
 .vhd .vhd-flare__manage p { margin: 12px 0; }
 .vhd .vhd-flare__print[hidden] { display: none; }
 
-/* Print: the flare plan card only. */
+/* Flare plan: progress, quick check, flare log, builder steps, appointment sheet. */
+.vhd .vhd-flare [hidden] { display: none !important; }
+.vhd .vhd-flare__progress { display: flex; flex-direction: column; gap: 8px; }
+.vhd .vhd-flare__progress-text { margin: 0; font-size: 14px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__bar {
+	height: 10px;
+	border-radius: var(--radius-pill, 999px);
+	background: var(--vhd-wash);
+	overflow: hidden;
+}
+.vhd .vhd-flare__bar span { display: block; height: 100%; background: var(--vhd-teal); border-radius: var(--radius-pill, 999px); }
+.vhd .vhd-flare__hints { margin: 0; padding-left: 20px; font-size: 14px; color: var(--vhd-muted); }
+.vhd .vhd-flare__quick,
+.vhd .vhd-flare__log {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+}
+.vhd .vhd-flare__q { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.vhd .vhd-flare__q label { font-size: 14px; font-weight: 700; color: var(--vhd-ink); }
+.vhd .vhd-flare__q output { display: inline-block; min-width: 1.5em; margin-left: 6px; color: var(--vhd-teal-ink); }
+.vhd .vhd-flare__q input[type="range"] { width: 100%; accent-color: var(--vhd-teal); min-height: 32px; }
+.vhd .vhd-flare__quick-result { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--vhd-ink); }
+.vhd .vhd-flare__quick-result p { margin: 0; }
+.vhd .vhd-flare__quick-follow { font-weight: 700; }
+.vhd .vhd-flare__plan.is-highlight { outline: 3px solid var(--vhd-teal); outline-offset: 6px; border-radius: var(--radius-control, 6px); }
+.vhd .vhd-flare__logform { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; }
+.vhd .vhd-flare__history { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.vhd .vhd-flare__history li { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--vhd-line); font-size: 14px; }
+.vhd .vhd-flare__helped { color: var(--vhd-muted); overflow-wrap: anywhere; }
+.vhd .vhd-flare__step { margin: 0; font-size: 13px; font-weight: 700; color: var(--vhd-teal-ink); }
+.vhd .vhd-flare__nav { display: flex; gap: 10px; }
+.vhd .vhd-flare__final { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; width: 100%; }
+.vhd .vhd-flare__sheetbox { font-size: 14px; color: var(--vhd-muted); }
+.vhd .vhd-flare__sheetbox summary { cursor: pointer; font-weight: 700; color: var(--vhd-teal-ink); }
+.vhd .vhd-flare__sheetbox summary:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 3px; }
+.vhd .vhd-flare-sheet {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	margin-top: 12px;
+	padding: 20px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+	color: var(--vhd-ink);
+}
+.vhd .vhd-sheet__sec p { margin: 0; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.vhd .vhd-sheet__h { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-sheet__list { margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.6; }
+.vhd .vhd-sheet__table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vhd .vhd-sheet__table th,
+.vhd .vhd-sheet__table td { padding: 6px 8px; border: 1px solid var(--vhd-line); text-align: left; }
+
+/* Print: only the part the member prints, the plan card or the appointment sheet.
+   hub-flare-plan.js marks that part with .vhd-print-target and its ancestors with
+   .vhd-print-path, so the rest of the page takes no space and no blank pages print.
+   Every rule needs html.vhd-printing or a marker, so a plain print of any other
+   page, or of another sub-tab, is not touched. */
 @media print {
 	html.vhd-printing body * { visibility: hidden; }
-	html.vhd-printing .vhd .vhd-flare,
-	html.vhd-printing .vhd .vhd-flare * { visibility: visible; }
-	html.vhd-printing .vhd .vhd-flare {
-		position: absolute;
-		left: 0;
-		top: 0;
-		width: 100%;
-		margin: 0;
-		border: 0;
-		padding: 0;
-	}
-	html.vhd-printing .vhd .vhd-flare__actions,
-	html.vhd-printing .vhd .vhd-flare__edit,
-	html.vhd-printing .vhd .vhd-flare__manage,
-	html.vhd-printing .vhd .vhd-flash { display: none; }
+	html.vhd-printing .vhd-print-target,
+	html.vhd-printing .vhd-print-target * { visibility: visible; }
+	.vhd-print-path > *:not(.vhd-print-path):not(.vhd-print-target) { display: none !important; }
+	html.vhd-printing .vhd .vhd-flare { position: static; margin: 0; border: 0; padding: 0; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__actions,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__edit,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__manage,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__log,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__quick,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__progress,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__sheetbox,
+	html.vhd-printing .vhd .vhd-flash,
+	html.vhd-printing .vhd .vhd-flare-sheet .vhd-flare__actions { display: none; }
 	html.vhd-printing .vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }
 	html.vhd-printing .vhd .vhd-flare__urgent p { color: #000000; }
-}
-
-/* Print: hub-flare-plan.js marks the card's ancestors, so the rest of the page
-   takes no space and the printout has no blank pages. */
-@media print {
-	.vhd-print-path > *:not(.vhd-print-path):not(.vhd-flare) { display: none !important; }
-	html.vhd-printing .vhd .vhd-flare { position: static; }
+	html.vhd-printing .vhd .vhd-flare-sheet { margin: 0; border: 0; padding: 0; color: #000000; }
+	html.vhd-printing .vhd .vhd-sheet__table th,
+	html.vhd-printing .vhd .vhd-sheet__table td { border-color: #000000; }
 }
 
 /* Health Profile tab: horizontal sub-tabs, and the panels they switch between. */

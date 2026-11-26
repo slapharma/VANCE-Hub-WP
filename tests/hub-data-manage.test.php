@@ -49,6 +49,7 @@ function delete_user_meta( $u, $k ) { if ( $GLOBALS['STUCK'] === $k ) { return f
 function vance_known_tool_slugs() { return array( 'malnutrition-calculator', 'ibd-recipes' ); }
 function vance_hub_checkin_meta_key() { return '_sla_weekly_check_in_history'; }
 function vance_hub_flare_plan_meta_key() { return '_sla_flare_plan'; }
+function vance_hub_flare_log_meta_key() { return '_sla_flare_log'; }
 function vance_hub_checkin_consent_keys( $base = 'checkin' ) { return array( '_sla_consent_' . $base, '_sla_consent_' . $base . '_at', '_sla_consent_' . $base . '_text' ); }
 function vance_hub_checkin_lock( $uid ) { if ( $GLOBALS['LOCK_FAILS'] ) { return false; } $GLOBALS['LOCKS'][] = 'lock'; return true; }
 function vance_hub_checkin_unlock( $uid ) { $GLOBALS['LOCKS'][] = 'unlock'; }
@@ -107,6 +108,7 @@ function count_meta( $uid ) { return count( $GLOBALS['UMETA'][ $uid ] ); }
 section( '1. Groups and what counts as data' );
 $G = vance_hub_data_groups();
 check( 'groups: the six groups, in order', array_keys( $G ) === array( 'assessment', 'details', 'malnutrition', 'tools', 'checkins', 'flare' ) );
+check( 'groups: the flare group holds the plan and the flare log', in_array( '_sla_flare_plan', $G['flare']['keys'], true ) && in_array( '_sla_flare_log', $G['flare']['keys'], true ) );
 check( 'groups: malnutrition uses the tool history key', $G['malnutrition']['keys'] === array( '_sla_malnutrition_calculator_history' ) );
 check( 'groups: other tools hold only the non-malnutrition slugs', $G['tools']['keys'] === array( '_sla_ibd_recipes_history' ) );
 seed( 7 );

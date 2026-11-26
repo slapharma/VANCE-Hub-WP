@@ -27,6 +27,26 @@
  *  10  render: escaping, line breaks, states, print button, consent box, flash
  *  11  privacy exporter and eraser
  *  12  the $base parameter of the agreement helpers
+ *  13  flare log: dates, stored rows, cap, open flare, days, start, end, write
+ *  14  flare log action: result codes, the agreement, the plan, failed stores
+ *  15  POST handler, flare start and end: lock, gating, nonce, delete with the log,
+ *      check-in untouched
+ *  16  plan progress: answers and the six-month review
+ *  17  flare log view: open flare, five newest rows, count
+ *  18  quick check data: the last saved check-in
+ *  19  appointment sheet data: empty groups, caps, screening
+ *  20  render: progress bar, quick check, flare log, builder, print buttons, sheet
+ *  21  privacy: the flare log in the exporter and the eraser
+ *  22  static: print script, print CSS, hidden rule
+ *  23  dates: a stored day reads as the same day in any site time zone (own wp_date stub)
+ *  24  render: consent needed or given, the log forms and the Edit my plan box
+ *  25  delete order: the flare log goes before the plan; a failed log delete keeps the plan
+ *  26  static: the step builder moves focus after Back and Next
+ *  27  no-cache: the negative cases and the hook (static)
+ *  28  no-cache: the positive case, LAST in the file because it defines DONOTCACHEPAGE
+ *
+ * Checks that fail on the current code are findings. They are listed in the report,
+ * not hidden: a failure names the behaviour the code should have.
  *
  * A check whose label says what should happen and which fails on the current code is a finding,
  * not a broken check. The runner lists every failure and exits 1.
@@ -45,6 +65,16 @@ $DEFS = substr( $SRC, 0, $CUT );
 $DEFS = str_replace( 'dirname( __DIR__ )', var_export( $ROOT, true ), $DEFS );
 $DEFS = str_replace( '__DIR__', var_export( __DIR__, true ), $DEFS );
 $DEFS = preg_replace( '/^<\?php/', '', $DEFS );
+// This suite needs a wp_date() that applies the zone it is given. The shared stub
+// always formats in UTC, so a day that moves by one could never show. Its wp_date()
+// and wp_timezone() are taken out of the eval'd text here, and defined again after
+// the stub block. hub-layout.test.php itself is not changed.
+$DEFS = preg_replace( '/function wp_date\( \$format, \$timestamp = null \) \{.*?\r?\n\}\r?\n/s', '', $DEFS, 1, $N_DATE );
+$DEFS = preg_replace( '/function wp_timezone\(\) \{[^\r\n]*\r?\n/', '', $DEFS, 1, $N_ZONE );
+if ( 1 !== $N_DATE || 1 !== $N_ZONE ) {
+	fwrite( STDERR, "could not take the wp_date stub out of hub-layout.test.php\n" );
+	exit( 2 );
+}
 eval( $DEFS );
 
 // Lift the slug list from the real dashboard-functions.php, so the wiring check
@@ -56,6 +86,17 @@ if ( empty( $LIFT_SLUGS[0] ) ) {
 	exit( 2 );
 }
 eval( $LIFT_SLUGS[0] );
+
+// The appointment sheet reads the nutrition screening through vance_get_tool_history().
+// Lift the real one, as above. It needs vance_known_tool_slugs(), loaded just before.
+preg_match( '/function vance_get_tool_history\(.*?\r?\n\}\r?\n/s', $DASH_FN, $LIFT_HIST );
+if ( empty( $LIFT_HIST[0] ) ) {
+	fwrite( STDERR, "could not lift vance_get_tool_history() from dashboard-functions.php\n" );
+	exit( 2 );
+}
+if ( ! function_exists( 'vance_get_tool_history' ) ) {
+	eval( $LIFT_HIST[0] );
+}
 
 /* ---- stubs this suite adds ------------------------------------------------- */
 
@@ -69,6 +110,9 @@ class RedirectStop extends Exception {
 }
 
 function esc_html__( $text, $domain = '' ) { return esc_html( $text ); }
+if ( ! function_exists( 'esc_attr__' ) ) {
+	function esc_attr__( $text, $domain = '' ) { return esc_attr( $text ); }
+}
 function sanitize_text_field( $text ) { return trim( strip_tags( (string) $text ) ); }
 function current_time( $type ) { return '2026-11-18 12:00:00'; }
 function get_current_user_id() { return (int) $GLOBALS['CURRENT_UID']; }
@@ -177,6 +221,20 @@ function check( $label, $cond ) {
 	$FAIL[] = $label;
 }
 function section( $t ) { echo "\n-- $t\n"; }
+
+// The zone-aware wp_date() and wp_timezone() of this suite. The site zone is UTC until
+// a check sets another, so every check above section 23 sees the output it always saw.
+$GLOBALS['SITE_TZ'] = 'UTC';
+function wp_timezone() { return new DateTimeZone( $GLOBALS['SITE_TZ'] ); }
+function wp_date( $format, $timestamp = null, $timezone = null ) {
+	if ( null === $timestamp ) {
+		$timestamp = strtotime( $GLOBALS['TODAY'] . ' 12:00:00 UTC' );
+	}
+	$zone = $timezone instanceof DateTimeZone ? $timezone : wp_timezone();
+	$when = new DateTime( '@' . (int) $timestamp );
+	$when->setTimezone( $zone );
+	return $when->format( $format );
+}
 
 require_once $THEME . '/inc/hub-dashboard.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
@@ -314,6 +372,23 @@ function fb_checkin_handle() {
 		return $stop->url;
 	}
 	return null;
+}
+
+/** A flare action POST with the right nonce. $helped is the "what helped" text, when given. */
+function fb_post_flare( $do, $helped = null ) {
+	$_POST = array(
+		'vance_hub_flare_nonce' => 'nonce-vance_hub_flare_plan',
+		'vance_hub_flare_do'    => $do,
+	);
+	if ( null !== $helped ) {
+		$_POST['vhd_flare_helped'] = $helped;
+	}
+}
+
+/** The data-config attribute of the quick check, decoded. Null when it is not valid JSON. */
+function fb_config( $html ) {
+	preg_match( '/data-config="([^"]*)"/', $html, $m );
+	return json_decode( html_entity_decode( $m[1] ?? '', ENT_QUOTES, 'UTF-8' ), true );
 }
 
 /** A member object with an ID, as the features collector reads it. */
@@ -671,7 +746,7 @@ check( 'data: a whitespace-only urgent text gives null', vance_hub_flare_plan_da
 
 fb_arrange( $FP_ON );
 $D = vance_hub_flare_plan_data( 7 );
-check( 'data: the switch on gives the view with its eight keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash' ) );
+check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash' ) );
 check( 'data: no saved plan gives plan null and an empty date', is_array( $D ) && $D['plan'] === null && $D['updated'] === '' );
 check( 'data: no agreement on record asks for consent', is_array( $D ) && $D['need_consent'] === true );
 check( 'data: the urgent text is the one the administrator set', is_array( $D ) && $D['urgent'] === 'Call the clinic on 0800 000 000 if you have blood in your stool.' );
@@ -723,7 +798,7 @@ check( 'tab: sub-tabs and the hidden panels need the hub dashboard (the styleshe
 $HOME = file_get_contents( $THEME . '/inc/hub-dashboard.php' );
 $JS  = file_get_contents( $THEME . '/assets/js/hub-flare-plan.js' );
 $CSS = file_get_contents( $THEME . '/assets/css/hub-dashboard.css' );
-check( 'print: the script does not mark a card that sits in a hidden panel', false !== strpos( $JS, "card.closest( '[hidden]' )" ) );
+check( 'print: the script does not mark a card that sits in a hidden panel', false !== strpos( $JS, "part.closest( '[hidden]' )" ) );
 check( 'print: the card-only print rules apply only under html.vhd-printing', false !== strpos( $CSS, 'html.vhd-printing body * { visibility: hidden; }' ) && 0 === preg_match( '/^\tbody \* \{ visibility: hidden/m', $CSS ) );
 check( 'home: the hub dashboard home no longer prints the flare plan card', false === strpos( $HOME, 'vance_hub_flare_plan_html' ) && false === strpos( $HOME, "'flare_plan'" ) );
 
@@ -747,8 +822,8 @@ check( 'render: a plan shows its answers', strpos( $H_PLAN, '<p>Tight belly</p>'
 check( 'render: a plan shows the date of the last change', strpos( $H_PLAN, 'Last changed on 10 Nov 2026.' ) !== false );
 check( 'render: a plan shows Edit, Manage and Print controls', strpos( $H_PLAN, '<summary>Edit my plan</summary>' ) !== false && strpos( $H_PLAN, '<summary>Manage my flare plan data</summary>' ) !== false && strpos( $H_PLAN, 'Print my plan' ) !== false );
 check( 'render: a plan shows the open form only inside Edit, prefilled', strpos( $H_PLAN, 'id="vhd-flare-edit-signs"' ) !== false && strpos( $H_PLAN, '>Tight belly</textarea>' ) !== false );
-check( 'render: the delete control sends the delete action with the nonce', strpos( $H_PLAN, 'name="vance_hub_flare_do" value="delete"' ) !== false && strpos( $H_PLAN, 'Delete my plan and withdraw my agreement' ) !== false );
-check( 'render: the print button carries the hidden attribute, so it shows only with the script', strpos( $H_PLAN, 'data-vhd-flare-print hidden>' ) !== false );
+check( 'render: the delete control sends the delete action with the nonce', strpos( $H_PLAN, 'name="vance_hub_flare_do" value="delete"' ) !== false && strpos( $H_PLAN, 'Delete my plan and flare log, and withdraw my agreement' ) !== false );
+check( 'render: the print button carries the hidden attribute, so it shows only with the script', strpos( $H_PLAN, 'data-vhd-flare-print="plan" hidden>' ) !== false );
 
 $H_EMPTY = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => array( 'updated' => $OLD_TS, 'signs' => 'Tight belly', 'actions' => '', 'contacts' => '' ), 'updated' => '10 Nov 2026' ) ) );
 check( 'render: a blank answer in a plan shows "Nothing written."', strpos( $H_EMPTY, '<em>Nothing written.</em>' ) !== false );
@@ -861,6 +936,713 @@ fb_arrange( $FP_ON );
 $REC_F = vance_hub_checkin_consent_record( 7, 'Flare wording.', 'flare_plan' );
 check( 'base: a record with flare_plan stores the flare agreement and reports true', $REC_F === true && fb_meta( '_sla_consent_flare_plan' ) === '1' && fb_meta( '_sla_consent_flare_plan_text' ) === 'Flare wording.' );
 check( 'base: a record with flare_plan writes no check-in key', fb_meta( '_sla_consent_checkin' ) === null && preg_grep( '/_sla_consent_checkin/', $GLOBALS['WRITES'] ) === array() );
+
+/* ===================================================================== */
+section( '13. flare log: dates, stored rows, cap, open flare, days, start, end, write' );
+
+$LOG_NOW  = strtotime( '2026-11-18 12:00:00 UTC' );
+$LOG_OK   = array( 'id' => 'a1', 'start' => '2026-11-01', 'end' => '2026-11-03', 'helped' => 'Rest' );
+$LOG_OPEN = array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '', 'helped' => '' ) );
+$SIXTY    = array_map( function ( $i ) {
+	return array( 'id' => 'r' . $i, 'start' => '2026-11-01', 'end' => '2026-11-01', 'helped' => '' );
+}, range( 0, 59 ) );
+
+check( 'date: a real Y-m-d date is accepted', vance_hub_flare_log_date_ok( '2026-11-18' ) === true );
+check( 'date: 29 February of a leap year is accepted', vance_hub_flare_log_date_ok( '2028-02-29' ) === true );
+check( 'date: 29 February of a common year is refused', vance_hub_flare_log_date_ok( '2026-02-29' ) === false );
+check( 'date: 30 February is refused', vance_hub_flare_log_date_ok( '2026-02-30' ) === false );
+check( 'date: month 13 is refused', vance_hub_flare_log_date_ok( '2026-13-01' ) === false );
+check( 'date: plain text is refused', vance_hub_flare_log_date_ok( 'junk' ) === false );
+check( 'date: a day without a zero is refused', vance_hub_flare_log_date_ok( '2026-11-1' ) === false );
+check( 'date: a trailing newline is refused', vance_hub_flare_log_date_ok( "2026-11-18\n" ) === false );
+check( 'date: a leading space is refused', vance_hub_flare_log_date_ok( ' 2026-11-18' ) === false );
+check( 'date: a number, null and an array are refused', vance_hub_flare_log_date_ok( 20261118 ) === false && vance_hub_flare_log_date_ok( null ) === false && vance_hub_flare_log_date_ok( array( '2026-11-18' ) ) === false );
+
+check( 'normalise: a value that is not an array gives no rows', vance_hub_flare_log_normalise( 'junk' ) === array() );
+check( 'normalise: a good closed row is kept as it is', vance_hub_flare_log_normalise( array( $LOG_OK ) ) === array( $LOG_OK ) );
+check( 'normalise: a row that starts and ends on the same day is kept', count( vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-01', 'end' => '2026-11-01', 'helped' => '' ) ) ) ) === 1 );
+check( 'normalise: an open row with an empty end is kept as open', vance_hub_flare_log_normalise( $LOG_OPEN ) === $LOG_OPEN );
+check( 'normalise: a row with no start is dropped', vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'end' => '' ) ) ) === array() );
+check( 'normalise: a row with a bad start date is dropped', vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-02-30', 'end' => '' ) ) ) === array() );
+check( 'normalise: a row that ends before it starts is dropped', vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-05', 'end' => '2026-11-04', 'helped' => '' ) ) ) === array() );
+check( 'normalise: a row with a bad end date is dropped', vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-01', 'end' => '2026-02-30', 'helped' => '' ) ) ) === array() );
+check( 'normalise: a damaged row is dropped and the good rows around it are kept', vance_hub_flare_log_normalise( array( $LOG_OK, 'junk', array( 'start' => 'x' ), array( 'id' => 'b', 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => '' ) ) ) === array( $LOG_OK, array( 'id' => 'b', 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => '' ) ) );
+check( 'normalise: a missing id and a missing helped text come back as empty strings', vance_hub_flare_log_normalise( array( array( 'start' => '2026-11-01', 'end' => '' ) ) ) === array( array( 'id' => '', 'start' => '2026-11-01', 'end' => '', 'helped' => '' ) ) );
+check( 'normalise: a helped text that is not a string comes back empty', ( vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-01', 'end' => '', 'helped' => array( 'x' ) ) ) )[0]['helped'] ?? null ) === '' );
+check( 'normalise: a helped text longer than 500 characters is cut to 500', strlen( vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-01', 'end' => '', 'helped' => str_repeat( 'h', 600 ) ) ) )[0]['helped'] ?? '' ) === 500 );
+check( 'normalise: an end that is not a date text is dropped, not read as an open flare', vance_hub_flare_log_normalise( array( array( 'id' => 'a', 'start' => '2026-11-01', 'end' => 12, 'helped' => '' ) ) ) === array() );
+
+check( 'cap: the log keeps at most 50 rows', vance_hub_flare_log_max_rows() === 50 );
+check( 'cap: 60 stored rows are cut to 50', count( vance_hub_flare_log_normalise( $SIXTY ) ) === 50 );
+check( 'cap: the 50 kept are the first 50 in stored order', vance_hub_flare_log_normalise( $SIXTY )[49]['id'] === 'r49' );
+
+check( 'open index: no open flare gives null', vance_hub_flare_log_open_index( array( $LOG_OK ) ) === null );
+check( 'open index: an empty log gives null', vance_hub_flare_log_open_index( array() ) === null );
+check( 'open index: the open row is found at its position', vance_hub_flare_log_open_index( array( $LOG_OK, $LOG_OPEN[0] ) ) === 1 );
+
+check( 'days: a flare on one day counts as 1 day', vance_hub_flare_log_days( '2026-11-01', '2026-11-01' ) === 1 );
+check( 'days: 1 to 3 November counts 3 days, both ends included', vance_hub_flare_log_days( '2026-11-01', '2026-11-03' ) === 3 );
+check( 'days: 28 February to 1 March in a leap year counts 3 days', vance_hub_flare_log_days( '2028-02-28', '2028-03-01' ) === 3 );
+check( 'days: an end before the start counts 1 day, never less', vance_hub_flare_log_days( '2026-11-05', '2026-11-04' ) === 1 );
+
+check( 'start: a new open flare is added first, dated on the day given', vance_hub_flare_log_start( array( $LOG_OK ), '2026-11-18', 'new' ) === array( array( 'id' => 'new', 'start' => '2026-11-18', 'end' => '', 'helped' => '' ), $LOG_OK ) );
+check( 'start: a flare cannot start while one is open', vance_hub_flare_log_start( $LOG_OPEN, '2026-11-18', 'new' ) === null );
+check( 'start: a bad date gives null', vance_hub_flare_log_start( array(), '2026-02-30', 'new' ) === null );
+$FULL_LOG = array_slice( $SIXTY, 0, 50 );
+$FULL_NEW = vance_hub_flare_log_start( $FULL_LOG, '2026-11-18', 'new' );
+check( 'start: a full log keeps 50 rows and drops the oldest', count( (array) $FULL_NEW ) === 50 && ( $FULL_NEW[0]['id'] ?? null ) === 'new' && ( $FULL_NEW[49]['id'] ?? null ) === 'r48' );
+
+check( 'end: closes the open flare with today as its end', vance_hub_flare_log_end( $LOG_OPEN, '2026-11-18', 'Rest' ) === array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '2026-11-18', 'helped' => 'Rest' ) ) );
+check( 'end: with no open flare gives null', vance_hub_flare_log_end( array( $LOG_OK ), '2026-11-18', '' ) === null );
+check( 'end: a bad date gives null', vance_hub_flare_log_end( $LOG_OPEN, '2026-02-30', '' ) === null );
+check( 'end: an end before the start is clamped to the start', ( vance_hub_flare_log_end( array( array( 'id' => 'o', 'start' => '2026-11-18', 'end' => '', 'helped' => '' ) ), '2026-11-10', '' )[0]['end'] ?? null ) === '2026-11-18' );
+check( 'end: only the open row changes, the closed rows stay as they were', ( vance_hub_flare_log_end( array( $LOG_OK, $LOG_OPEN[0] ), '2026-11-18', 'x' )[0] ?? null ) === $LOG_OK );
+$END_IN = $LOG_OPEN;
+vance_hub_flare_log_end( $END_IN, '2026-11-18', 'Rest' );
+check( 'end: the rows passed in are not changed', $END_IN === $LOG_OPEN );
+
+fb_arrange( $FP_ON );
+$ROWS_RT = array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '2026-11-18', 'helped' => "Rest\nfluids" ) );
+check( 'write: a log is stored and reads back equal', vance_hub_flare_log_write( 7, $ROWS_RT ) === true && vance_hub_flare_log_get( 7 ) === $ROWS_RT );
+
+fb_arrange( $FP_ON );
+check( 'write: a backslash in what helped is stored as typed', vance_hub_flare_log_write( 7, array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '', 'helped' => 'C:\\Clinic' ) ) ) === true && ( vance_hub_flare_log_get( 7 )[0]['helped'] ?? null ) === 'C:\\Clinic' );
+
+fb_arrange( $FP_ON );
+check( 'write: two backslashes in what helped survive the round trip', vance_hub_flare_log_write( 7, array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '', 'helped' => 'a\\\\b' ) ) ) === true && ( vance_hub_flare_log_get( 7 )[0]['helped'] ?? null ) === 'a\\\\b' );
+
+fb_arrange( $FP_ON );
+$GLOBALS['UPDATE_FAILS'] = '_sla_flare_log';
+check( 'write: a failed store reports false', vance_hub_flare_log_write( 7, $LOG_OPEN ) === false );
+check( 'write: a failed store leaves no log behind', fb_meta( '_sla_flare_log' ) === null );
+
+fb_arrange( $FP_ON );
+check( 'write: an empty log is refused and writes nothing', vance_hub_flare_log_write( 7, array() ) === false && $GLOBALS['WRITES'] === array() );
+check( 'write: user id 0 is refused and writes nothing', vance_hub_flare_log_write( 0, $LOG_OPEN ) === false && $GLOBALS['WRITES'] === array() );
+
+/* ===================================================================== */
+section( '14. flare log action: result codes, the agreement, the plan, failed stores' );
+
+fb_arrange( $FP_ON );
+check( 'action: no saved plan gives noplan and writes nothing', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'noplan' && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ) );
+fb_stored_plan();
+fb_consented();
+check( 'action: the switch off gives noplan, even with a plan and an agreement', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'noplan' && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_consent_flare_plan_text'] = 'Old wording.';
+check( 'action: an agreement to other wording gives changed and writes nothing', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'changed' && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+check( 'action: no agreement on record gives changed and writes nothing', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'changed' && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+check( 'action: a start with a plan and an agreement gives flare_started', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, 'Rest' ) === 'flare_started' );
+$LOG_AFTER_START = fb_meta( '_sla_flare_log' );
+check( 'action: a start stores one open row dated on the day given', count( (array) $LOG_AFTER_START ) === 1 && ( $LOG_AFTER_START[0]['start'] ?? null ) === '2026-11-18' && ( $LOG_AFTER_START[0]['end'] ?? null ) === '' );
+check( 'action: a start stores no helped text, even when some is sent', ( $LOG_AFTER_START[0]['helped'] ?? null ) === '' );
+
+$WRITES_AFTER_START = $GLOBALS['WRITES'];
+check( 'action: a second start while a flare is open gives flare_open', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'flare_open' );
+check( 'action: a refused second start leaves the log and the writes as they were', fb_meta( '_sla_flare_log' ) === $LOG_AFTER_START && $GLOBALS['WRITES'] === $WRITES_AFTER_START );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+check( 'action: an end gives flare_ended', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, "  Rest\r\nfluids <b>x</b>  " ) === 'flare_ended' );
+check( 'action: an end closes the open row with today, and what helped is sanitised', fb_meta( '_sla_flare_log' ) === array( array( 'id' => 'o', 'start' => '2026-11-16', 'end' => '2026-11-18', 'helped' => "Rest\nfluids x" ) ) );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, str_repeat( 'h', 600 ) );
+check( 'action: what helped is kept to 500 characters', strlen( fb_meta( '_sla_flare_log' )[0]['helped'] ?? '' ) === 500 );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, 'C:\\\\Clinic' );
+check( 'action: a posted double backslash in what helped arrives as one', ( fb_meta( '_sla_flare_log' )[0]['helped'] ?? null ) === 'C:\\Clinic' );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( $LOG_OK );
+check( 'action: an end with no open flare gives flare_none and writes nothing', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, 'Rest' ) === 'flare_none' && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UPDATE_FAILS'] = '_sla_flare_log';
+check( 'action: a start whose store fails gives failed and leaves no log', vance_hub_flare_log_action( 7, 'flare_start', $LOG_NOW, '' ) === 'failed' && fb_meta( '_sla_flare_log' ) === null );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$GLOBALS['UPDATE_FAILS'] = '_sla_flare_log';
+check( 'action: an end whose store fails gives failed and the flare stays open', vance_hub_flare_log_action( 7, 'flare_end', $LOG_NOW, 'Rest' ) === 'failed' && ( fb_meta( '_sla_flare_log' )[0]['end'] ?? null ) === '' );
+
+/* ===================================================================== */
+section( '15. POST handler, flare start and end: lock, gating, delete with the log, check-in untouched' );
+
+$REAL_TODAY = gmdate( 'Y-m-d' );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+fb_post_flare( 'flare_start' );
+check( 'handler start: redirects with vance_flare=flare_started', fb_handle() === 'https://example.test/hub/?vance_flare=flare_started' );
+check( 'handler start: the open flare is stored dated today', ( fb_meta( '_sla_flare_log' )[0]['start'] ?? null ) === $REAL_TODAY && ( fb_meta( '_sla_flare_log' )[0]['end'] ?? null ) === '' );
+check( 'handler start: the lock is taken first and released last, once', fb_seq_locked_once() && fb_seq_index( 'lock' ) === 0 );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+fb_post_flare( 'flare_end', "  Rest\r\n<i>warm</i>  " );
+check( 'handler end: redirects with vance_flare=flare_ended', fb_handle() === 'https://example.test/hub/?vance_flare=flare_ended' );
+check( 'handler end: the open flare is closed, with what helped sanitised', ( fb_meta( '_sla_flare_log' )[0]['helped'] ?? null ) === "Rest\nwarm" && ( fb_meta( '_sla_flare_log' )[0]['start'] ?? null ) === '2026-11-16' );
+check( 'handler end: the end is not before the start', ( fb_meta( '_sla_flare_log' )[0]['end'] ?? '' ) >= '2026-11-16' );
+check( 'handler end: the lock is released last, once', fb_seq_locked_once() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['LOCK_RESULT'] = '0';
+fb_post_flare( 'flare_start' );
+check( 'handler start lock: without the lock the result is failed', fb_handle() === 'https://example.test/hub/?vance_flare=failed' );
+check( 'handler start lock: without the lock nothing is written and nothing is unlocked', $GLOBALS['WRITES'] === array() && $GLOBALS['UNLOCK_SQL'] === array() && fb_meta( '_sla_flare_log' ) === null );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$GLOBALS['LOCK_RESULT'] = '0';
+fb_post_flare( 'flare_end', 'Rest' );
+check( 'handler end lock: without the lock the result is failed and the flare stays open', fb_handle() === 'https://example.test/hub/?vance_flare=failed' && ( fb_meta( '_sla_flare_log' )[0]['end'] ?? null ) === '' );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+fb_post_flare( 'flare_start' );
+$_POST['vance_hub_flare_nonce'] = 'forged';
+check( 'handler flare: a bad nonce redirects with vance_flare=expired', fb_handle() === 'https://example.test/hub/?vance_flare=expired' );
+check( 'handler flare: a bad nonce takes no lock and writes nothing', $GLOBALS['LOCK_SQL'] === array() && $GLOBALS['WRITES'] === array() );
+
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ) );
+fb_stored_plan();
+fb_consented();
+fb_post_flare( 'flare_start' );
+check( 'handler flare: the switch off blocks a start, and nothing is written or locked', fb_handle() === null && $GLOBALS['WRITES'] === array() && $GLOBALS['LOCK_SQL'] === array() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+fb_post_flare( 'flare_stop' );
+check( 'handler flare: an unknown action similar to a flare action gives invalid, writes nothing, takes no lock', fb_handle() === 'https://example.test/hub/?vance_flare=invalid' && $GLOBALS['WRITES'] === array() && $GLOBALS['LOCK_SQL'] === array() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+fb_post_delete();
+check( 'delete log: redirects with vance_flare=deleted', fb_handle() === 'https://example.test/hub/?vance_flare=deleted' );
+check( 'delete log: the plan and the flare log are both removed', fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_flare_log' ) === null );
+check( 'delete log: the agreement is withdrawn, and its record is kept', fb_meta( '_sla_consent_flare_plan' ) === null && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === '2026-11-18 12:00:00' && fb_meta( '_sla_consent_flare_plan_at' ) === '2026-10-01 09:00:00' );
+check( 'delete log: the lock is released last, once', fb_seq_locked_once() );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+fb_post_delete();
+check( 'delete log read-back: a log that is still there gives kept', fb_handle() === 'https://example.test/hub/?vance_flare=kept' );
+check( 'delete log read-back: the log stays and the agreement is not withdrawn', fb_meta( '_sla_flare_log' ) !== null && fb_meta( '_sla_consent_flare_plan' ) === '1' && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === null );
+
+// The check-in record of the same member: no flare action may touch it.
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_checkin' => true, 'vance_hub_flare_plan_urgent' => 'Call the clinic.', 'vance_hub_dash_flare_plan' => true ) );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_consent_checkin']         = '1';
+$GLOBALS['UMETA'][7]['_sla_consent_checkin_at']      = '2026-10-01 09:00:00';
+$GLOBALS['UMETA'][7]['_sla_consent_checkin_text']    = vance_hub_checkin_consent_text();
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( array( 'id' => 'c1', 'ts' => $LOG_NOW - 86400, 'payload' => array( 'pain' => 2, 'bowel' => 1, 'tired' => 0, 'kind' => 'check-in' ) ) );
+$HIST_BEFORE = $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'];
+fb_post_flare( 'flare_start' );
+fb_handle();
+check( 'check-in untouched: a flare start writes no check-in key and no check-in history', preg_grep( '/_sla_consent_checkin|_sla_weekly_check_in_history/', $GLOBALS['WRITES'] ) === array() );
+check( 'check-in untouched: after a flare start the check-in agreement and history are the same', fb_meta( '_sla_consent_checkin' ) === '1' && fb_meta( '_sla_weekly_check_in_history' ) === $HIST_BEFORE );
+fb_post_flare( 'flare_end', 'Rest' );
+fb_handle();
+check( 'check-in untouched: a flare end writes no check-in key and no check-in history', preg_grep( '/_sla_consent_checkin|_sla_weekly_check_in_history/', $GLOBALS['WRITES'] ) === array() );
+fb_post_delete();
+fb_handle();
+check( 'check-in untouched: a delete leaves the check-in agreement and history as they were', fb_meta( '_sla_consent_checkin' ) === '1' && fb_meta( '_sla_weekly_check_in_history' ) === $HIST_BEFORE && preg_grep( '/_sla_consent_checkin/', $GLOBALS['WRITES'] ) === array() );
+
+/* ===================================================================== */
+section( '16. plan progress: answers and the six-month review' );
+
+$PLAN_X = array( 'updated' => $OLD_TS, 'signs' => 'Tight belly', 'actions' => 'Fluids', 'contacts' => 'Nurse' );
+$DAY    = 86400;
+
+$P4 = vance_hub_flare_plan_progress( array( 'updated' => $LOG_NOW, 'signs' => 'a', 'actions' => 'b', 'contacts' => 'c' ), $LOG_NOW );
+check( 'progress: three answers and a review in the last 183 days give 4 of 4', $P4['done'] === 4 && $P4['pct'] === 100 && $P4['missing'] === array() && $P4['stale'] === false && $P4['total'] === 4 );
+
+$P_182 = vance_hub_flare_plan_progress( array( 'updated' => $LOG_NOW - 182 * $DAY, 'signs' => 'a', 'actions' => 'b', 'contacts' => 'c' ), $LOG_NOW );
+check( 'progress: a review 182 days old is still in date, 4 of 4', $P_182['done'] === 4 && $P_182['stale'] === false );
+
+$P_183 = vance_hub_flare_plan_progress( array( 'updated' => $LOG_NOW - 183 * $DAY, 'signs' => 'a', 'actions' => 'b', 'contacts' => 'c' ), $LOG_NOW );
+check( 'progress: a review exactly 183 days old is stale, so 3 of 4 and 75 percent', $P_183['done'] === 3 && $P_183['stale'] === true && $P_183['pct'] === 75 );
+check( 'progress: a review 183 days old counts 6 months', $P_183['months'] === 6 );
+check( 'progress: a review 59 days old counts 1 month', vance_hub_flare_plan_progress( array( 'updated' => $LOG_NOW - 59 * $DAY, 'signs' => 'a', 'actions' => 'b', 'contacts' => 'c' ), $LOG_NOW )['months'] === 1 );
+
+$P_NONE = vance_hub_flare_plan_progress( array( 'updated' => $LOG_NOW - 200 * $DAY, 'signs' => '', 'actions' => '', 'contacts' => '' ), $LOG_NOW );
+check( 'progress: no answers and a stale review give 0 of 4, 0 percent', $P_NONE['done'] === 0 && $P_NONE['pct'] === 0 && $P_NONE['stale'] === true );
+check( 'progress: with no answers all three sections are listed as missing, in order', $P_NONE['missing'] === array( 'signs', 'actions', 'contacts' ) );
+
+$P_ONE = vance_hub_flare_plan_progress( array( 'updated' => $LOG_NOW, 'signs' => 'a', 'actions' => '', 'contacts' => '  ' ), $LOG_NOW );
+check( 'progress: one answer and a fresh review give 2 of 4, 50 percent', $P_ONE['done'] === 2 && $P_ONE['pct'] === 50 );
+check( 'progress: a blank answer, even spaces only, is listed as missing', $P_ONE['missing'] === array( 'actions', 'contacts' ) );
+
+/* ===================================================================== */
+section( '17. flare log view: open flare, five newest rows, count' );
+
+$V_EMPTY = vance_hub_flare_log_view( array(), $LOG_NOW );
+check( 'log view: no rows gives no open flare, no rows and a count of 0', $V_EMPTY === array( 'open' => null, 'rows' => array(), 'count' => 0 ) );
+
+$V_OPEN = vance_hub_flare_log_view( $LOG_OPEN, $LOG_NOW );
+check( 'log view: an open flare gives its start label and its days so far, 16 to 18 Nov is 3', ( $V_OPEN['open']['start'] ?? null ) === '16 Nov 2026' && ( $V_OPEN['open']['days'] ?? null ) === 3 && ( $V_OPEN['open']['end'] ?? null ) === '' );
+
+$V_CLOSED = vance_hub_flare_log_view( array( $LOG_OK ), $LOG_NOW );
+check( 'log view: a closed row gives its start and end labels, its days and what helped', $V_CLOSED['rows'] === array( array( 'start' => '1 Nov 2026', 'end' => '3 Nov 2026', 'days' => 3, 'helped' => 'Rest' ) ) && $V_CLOSED['open'] === null );
+
+$SEVEN = array_map( function ( $i ) {
+	return array( 'id' => 'r' . $i, 'start' => '2026-10-01', 'end' => '2026-10-02', 'helped' => 'h' . $i );
+}, range( 0, 6 ) );
+$V_SEVEN = vance_hub_flare_log_view( $SEVEN, $LOG_NOW );
+check( 'log view: seven rows show five, and the count still says seven', count( $V_SEVEN['rows'] ) === 5 && $V_SEVEN['count'] === 7 );
+check( 'log view: the five shown are the five newest, in stored order', ( $V_SEVEN['rows'][0]['helped'] ?? null ) === 'h0' && ( $V_SEVEN['rows'][4]['helped'] ?? null ) === 'h4' );
+
+/* ===================================================================== */
+section( '18. quick check data: the last saved check-in' );
+
+fb_arrange( $FP_ON );
+check( 'quick: no check-in history gives null', vance_hub_flare_plan_quick_data( 7 ) === null );
+
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( array( 'id' => 'c1', 'ts' => strtotime( '2026-11-18 09:00:00 UTC' ), 'payload' => array( 'pain' => 1, 'bowel' => 3, 'tired' => 2, 'kind' => 'check-in' ) ) );
+check( 'quick: the newest check-in gives its date and its three answers', vance_hub_flare_plan_quick_data( 7 ) === array( 'date' => '18 Nov 2026', 'pain' => 1, 'bowel' => 3, 'tired' => 2 ) );
+
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array(
+	array( 'id' => 'c2', 'ts' => strtotime( '2026-11-18 09:00:00 UTC' ), 'payload' => array( 'pain' => 1, 'bowel' => 0, 'tired' => 0, 'kind' => 'check-in' ) ),
+	array( 'id' => 'c1', 'ts' => strtotime( '2026-11-10 09:00:00 UTC' ), 'payload' => array( 'pain' => 4, 'bowel' => 0, 'tired' => 0, 'kind' => 'check-in' ) ),
+);
+check( 'quick: an older check-in is never used, the first row is the newest', ( vance_hub_flare_plan_quick_data( 7 )['pain'] ?? null ) === 1 );
+
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( array( 'id' => 'c1', 'ts' => strtotime( '2026-11-18 09:00:00 UTC' ), 'payload' => array( 'pain' => 9, 'bowel' => -2, 'tired' => 4, 'kind' => 'check-in' ) ) );
+check( 'quick: answers above 4 are held at 4, and below 0 at 0', vance_hub_flare_plan_quick_data( 7 ) === array( 'date' => '18 Nov 2026', 'pain' => 4, 'bowel' => 0, 'tired' => 4 ) );
+
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( array( 'id' => 'c1', 'ts' => strtotime( '2026-11-18 09:00:00 UTC' ), 'payload' => array( 'pain' => 'x', 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
+check( 'quick: a damaged answer gives null', vance_hub_flare_plan_quick_data( 7 ) === null );
+
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( array( 'id' => 'c1', 'ts' => strtotime( '2026-11-18 09:00:00 UTC' ), 'payload' => array( 'pain' => 1, 'bowel' => 1, 'kind' => 'check-in' ) ) );
+check( 'quick: a check-in missing one answer gives null', vance_hub_flare_plan_quick_data( 7 ) === null );
+
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array( array( 'id' => 'c1', 'ts' => 'junk', 'payload' => array( 'pain' => 1, 'bowel' => 1, 'tired' => 1, 'kind' => 'check-in' ) ) );
+check( 'quick: a check-in with a damaged time gives null, not a date of 1970', vance_hub_flare_plan_quick_data( 7 ) === null );
+
+/* ===================================================================== */
+section( '19. appointment sheet data: nothing new stored, empty groups, caps, screening' );
+
+fb_arrange( $FP_ON );
+$S_EMPTY = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet empty: no profile, history, screening or flares gives empty groups only', $S_EMPTY === array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => '', 'medication' => '', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) );
+
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2026-12-03', 'appointment_questions' => "  Can I eat oats?\nIs iron safe? ", 'medication' => '  Iron tablets  ' );
+$S_PROFILE = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet: the next appointment date reads as 3 Dec 2026', $S_PROFILE['appointment'] === '3 Dec 2026' );
+check( 'sheet: the questions keep their line break and lose the outer spaces', $S_PROFILE['questions'] === "Can I eat oats?\nIs iron safe?" );
+check( 'sheet: the medication is trimmed', $S_PROFILE['medication'] === 'Iron tablets' );
+
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => 'soon' );
+check( 'sheet: an appointment date that does not parse gives an empty date', vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW )['appointment'] === '' );
+
+fb_arrange( $FP_ON );
+$HIST20 = array_map( function ( $i ) use ( $LOG_NOW ) {
+	return array( 'id' => 'c' . $i, 'ts' => $LOG_NOW - $i * 86400, 'payload' => array( 'pain' => $i % 5, 'bowel' => 0, 'tired' => 0, 'kind' => 'check-in' ) );
+}, range( 0, 19 ) );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = $HIST20;
+$S_CI = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet: the check-in table holds the 14 newest rows, no more', count( $S_CI['checkins'] ) === 14 );
+check( 'sheet: the first check-in row is the newest, with its date', ( $S_CI['checkins'][0] ?? null ) === array( 'date' => '18 Nov 2026', 'pain' => 0, 'bowel' => 0, 'tired' => 0 ) );
+
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] = array(
+	array( 'id' => 'bad', 'ts' => $LOG_NOW, 'payload' => array( 'pain' => 1, 'kind' => 'check-in' ) ),
+	array( 'id' => 'ok', 'ts' => $LOG_NOW - 86400, 'payload' => array( 'pain' => 2, 'bowel' => 2, 'tired' => 2, 'kind' => 'check-in' ) ),
+);
+$S_BAD = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet: a check-in with a missing answer is left out of the table', count( $S_BAD['checkins'] ) === 1 && ( $S_BAD['checkins'][0]['pain'] ?? null ) === 2 );
+
+fb_arrange( $FP_ON );
+$GLOBALS['UMETA'][7]['_sla_malnutrition_calculator_history'] = array(
+	array( 'id' => 'm1', 'ts' => strtotime( '2026-11-02 10:00:00 UTC' ), 'payload' => array( 'score' => 5, 'maxScore' => 8, 'riskLabel' => 'Low risk' ) ),
+	array( 'id' => 'm2', 'ts' => strtotime( '2026-11-14 10:00:00 UTC' ), 'payload' => array( 'score' => 3, 'maxScore' => 8, 'riskLabel' => 'Medium risk' ) ),
+);
+$S_SCREEN = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
+check( 'sheet: the newest nutrition screening gives its date, score, maximum and risk', $S_SCREEN['screening'] === array( 'date' => '14 Nov 2026', 'score' => '3', 'max' => '8', 'risk' => 'Medium risk' ) );
+
+fb_arrange( $FP_ON );
+$S_FL = vance_hub_flare_sheet_data( 7, $PLAN_X, $LOG_OPEN, $LOG_NOW );
+check( 'sheet: the flares are the log view rows, with the count of the whole log', count( $S_FL['flares'] ) === 1 && $S_FL['flare_count'] === 1 && ( $S_FL['flares'][0]['days'] ?? null ) === 3 );
+
+/* ===================================================================== */
+section( '20. render: progress bar, quick check, flare log, builder, print buttons, sheet' );
+
+$PROG = array( 'done' => 2, 'total' => 4, 'pct' => 50, 'missing' => array( 'contacts' ), 'stale' => false, 'months' => 0 );
+$H_PROG = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'progress' => $PROG ) ) );
+check( 'progress: the bar is a progressbar with its value and maximum', strpos( $H_PROG, 'role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="2"' ) !== false );
+check( 'progress: the bar fill width is the percentage as a number', strpos( $H_PROG, '<span style="width:50%"></span>' ) !== false );
+check( 'progress: a missing section is named in a hint', strpos( $H_PROG, '<li>Add: Who I contact</li>' ) !== false );
+check( 'progress: a fresh review gives no review hint', strpos( $H_PROG, 'You last changed your plan' ) === false );
+
+$H_STALE = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'progress' => array( 'done' => 3, 'total' => 4, 'pct' => 75, 'missing' => array(), 'stale' => true, 'months' => 7 ) ) ) );
+check( 'progress: an old review gives a hint with the months', strpos( $H_STALE, 'You last changed your plan 7 months ago. Check that it is still right.' ) !== false );
+check( 'progress: no progress bar is drawn without progress data', strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026' ) ) ), 'role="progressbar"' ) === false );
+
+$H_Q = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'quick' => array( 'date' => '18 Nov 2026', 'pain' => 1, 'bowel' => 3, 'tired' => 2 ) ) ) );
+check( 'quick: the block is hidden in the markup, so it shows only with the script', strpos( $H_Q, '<section class="vhd-flare__quick" data-vhd-flare-quick data-config="' ) !== false && strpos( $H_Q, '" hidden aria-labelledby="vhd-flare-quick-title">' ) !== false );
+check( 'quick: the config holds the last check-in values and date', ( fb_config( $H_Q )['last_v'] ?? null ) === array( 'pain' => 1, 'bowel' => 3, 'tired' => 2 ) && ( fb_config( $H_Q )['last_at'] ?? null ) === '18 Nov 2026' );
+check( 'quick: the config holds the three labels, in order', array_keys( fb_config( $H_Q )['labels'] ?? array() ) === array( 'pain', 'bowel', 'tired' ) );
+check( 'quick: the compare button and the result box are in the block', strpos( $H_Q, 'data-vhd-quick-show' ) !== false && strpos( $H_Q, 'data-vhd-quick-result' ) !== false );
+
+$H_Q_NONE = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'quick' => null ) ) );
+// array_key_exists, not ??: ?? cannot tell a stored null from a missing key.
+check( 'quick: with no check-in the config has last_v null, and last_at empty', array_key_exists( 'last_v', fb_config( $H_Q_NONE ) ?? array() ) && fb_config( $H_Q_NONE )['last_v'] === null && ( fb_config( $H_Q_NONE )['last_at'] ?? null ) === '' );
+
+$H_Q_EVIL = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'quick' => array( 'date' => '</script>"x\'', 'pain' => 0, 'bowel' => 0, 'tired' => 0 ) ) ) );
+check( 'quick: a value with quotes and a closing script tag keeps the config valid JSON', ( fb_config( $H_Q_EVIL )['last_at'] ?? null ) === '</script>"x\'' );
+check( 'quick: no raw closing script tag appears in the card', strpos( $H_Q_EVIL, '</script>' ) === false );
+
+$LOG_OPEN_VIEW = array( 'open' => array( 'start' => '16 Nov 2026', 'end' => '', 'days' => 3, 'helped' => '' ), 'rows' => array( array( 'start' => '16 Nov 2026', 'end' => '', 'days' => 3, 'helped' => '' ) ), 'count' => 1 );
+$H_LOG_OPEN = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'log' => $LOG_OPEN_VIEW ) ) );
+check( 'log: an open flare shows its start and the day number', strpos( $H_LOG_OPEN, 'I am in a flare. It started on 16 Nov 2026. Today is day 3.' ) !== false );
+check( 'log: an open flare shows the end form and not the start button', strpos( $H_LOG_OPEN, 'name="vance_hub_flare_do" value="flare_end"' ) !== false && strpos( $H_LOG_OPEN, 'value="flare_start"' ) === false );
+check( 'log: the end form has the what-helped box with its limit of 500', strpos( $H_LOG_OPEN, 'name="vhd_flare_helped" rows="3" maxlength="500"' ) !== false );
+check( 'log: the history line of an open flare says the days so far', strpos( $H_LOG_OPEN, '16 Nov 2026 to now (3 days so far)' ) !== false );
+check( 'log: one flare logged is counted in the singular', strpos( $H_LOG_OPEN, '1 flare logged.' ) !== false );
+
+$LOG_CLOSED_VIEW = array( 'open' => null, 'rows' => array( array( 'start' => '1 Nov 2026', 'end' => '3 Nov 2026', 'days' => 3, 'helped' => "Rest\nwarm <b>tea</b>" ) ), 'count' => 1 );
+$H_LOG_CLOSED = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'log' => $LOG_CLOSED_VIEW ) ) );
+check( 'log: no open flare shows the start button and not the end form', strpos( $H_LOG_CLOSED, 'name="vance_hub_flare_do" value="flare_start"' ) !== false && strpos( $H_LOG_CLOSED, 'value="flare_end"' ) === false );
+check( 'log: a closed flare shows its dates and its days', strpos( $H_LOG_CLOSED, '1 Nov 2026 to 3 Nov 2026 (3 days)' ) !== false );
+check( 'log: what helped is escaped and keeps its line break', strpos( $H_LOG_CLOSED, "Rest<br />\nwarm &lt;b&gt;tea&lt;/b&gt;" ) !== false && strpos( $H_LOG_CLOSED, '<b>tea</b>' ) === false );
+
+$H_ENDED = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'flash' => 'flare_ended' ) ) );
+check( 'flash: flare_ended opens the Edit my plan box', strpos( $H_ENDED, '<details class="vhd-flare__edit" open>' ) !== false );
+check( 'flash: flare_ended shows a success message, not a warning', strpos( $H_ENDED, 'Your flare is logged as ended.' ) !== false && strpos( $H_ENDED, 'vhd-flash--warn' ) === false );
+check( 'flash: with no flash message the Edit box stays closed', strpos( $H_PLAN, '<details class="vhd-flare__edit">' ) !== false );
+$H_FSTART = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'flash' => 'flare_started' ) ) );
+check( 'flash: flare_started shows a success message', strpos( $H_FSTART, 'Your flare is logged.' ) !== false && strpos( $H_FSTART, 'vhd-flash--warn' ) === false );
+$H_FOPEN = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'flash' => 'flare_open' ) ) );
+check( 'flash: flare_open shows a warning', strpos( $H_FOPEN, 'A flare is already open. End it first.' ) !== false && strpos( $H_FOPEN, 'vhd-flash--warn' ) !== false );
+$H_FNONE = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'flash' => 'flare_none' ) ) );
+check( 'flash: flare_none shows a warning', strpos( $H_FNONE, 'There is no open flare to end.' ) !== false && strpos( $H_FNONE, 'vhd-flash--warn' ) !== false );
+
+$H_NEW = vance_hub_flare_plan_html( fb_flare_view() );
+check( 'builder: a new plan form has data-vhd-wizard and the final step', strpos( $H_NEW, 'action="" data-vhd-wizard ' ) !== false && strpos( $H_NEW, 'vhd-flare__final' ) !== false );
+check( 'builder: a saved plan edit form has no data-vhd-wizard', strpos( $H_PLAN, 'data-vhd-wizard' ) === false );
+check( 'builder: a saved plan edit form has no data-vhd-wizard (the final wrapper is only layout)', strpos( $H_PLAN, 'data-vhd-wizard' ) === false );
+
+$H_PRINT_SHEET = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'sheet' => array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => 'Q', 'medication' => '', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) ) ) );
+check( 'print: the plan print button is hidden and names the plan target', strpos( $H_PLAN, 'data-vhd-flare-print="plan" hidden>' ) !== false );
+check( 'print: the sheet print button is hidden and names the sheet target', strpos( $H_PRINT_SHEET, 'data-vhd-flare-print="sheet" hidden>' ) !== false );
+check( 'print: no sheet print button without a sheet', strpos( $H_PLAN, 'data-vhd-flare-print="sheet"' ) === false );
+
+$SHEET_FULL = array(
+	'prepared'    => '18 Nov 2026',
+	'appointment' => '3 Dec 2026',
+	'questions'   => 'Can I eat oats?',
+	'medication'  => 'Iron tablets',
+	'checkins'    => array( array( 'date' => '18 Nov 2026', 'pain' => 1, 'bowel' => 3, 'tired' => 2 ) ),
+	'screening'   => array( 'date' => '14 Nov 2026', 'score' => '3', 'max' => '8', 'risk' => 'Medium risk' ),
+	'flares'      => array( array( 'start' => '1 Nov 2026', 'end' => '3 Nov 2026', 'days' => 3, 'helped' => 'Rest' ) ),
+	'flare_count' => 1,
+);
+$H_SHEET = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'sheet' => $SHEET_FULL ) ) );
+check( 'sheet: the heading, the prepared line and the next appointment show', strpos( $H_SHEET, '<h3 class="vhd-flare__h">Appointment sheet</h3>' ) !== false && strpos( $H_SHEET, 'Prepared on 18 Nov 2026 from what I saved in the Hub.' ) !== false && strpos( $H_SHEET, '<p>3 Dec 2026</p>' ) !== false );
+check( 'sheet: the questions, the medication and the plan answers show', strpos( $H_SHEET, '<p>Can I eat oats?</p>' ) !== false && strpos( $H_SHEET, '<p>Iron tablets</p>' ) !== false );
+check( 'sheet: a flare line gives dates, days and what helped', strpos( $H_SHEET, '1 Nov 2026 to 3 Nov 2026 (3 days) - what helped: Rest' ) !== false );
+check( 'sheet: a check-in row gives the date and the three numbers', strpos( $H_SHEET, '<td>18 Nov 2026</td><td>1</td><td>3</td><td>2</td>' ) !== false );
+check( 'sheet: the screening line gives score, maximum, date and risk', strpos( $H_SHEET, 'Score 3 of 8, on 14 Nov 2026. Medium risk.' ) !== false );
+
+$SHEET_XSS = array(
+	'prepared'    => '18 Nov 2026',
+	'appointment' => '',
+	'questions'   => '<script>alert(1)</script>',
+	'medication'  => '<img src=x onerror=alert(1)>',
+	'checkins'    => array(),
+	'screening'   => null,
+	'flares'      => array( array( 'start' => '1 Nov 2026', 'end' => '', 'days' => 2, 'helped' => '<b>heat</b>' ) ),
+	'flare_count' => 1,
+);
+$PLAN_EVIL = array( 'updated' => $OLD_TS, 'signs' => '<script>x</script>', 'actions' => 'Fluids', 'contacts' => 'Nurse' );
+$H_XSS = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_EVIL, 'updated' => '10 Nov 2026', 'sheet' => $SHEET_XSS ) ) );
+check( 'sheet escape: a script in the questions is shown as text', strpos( $H_XSS, '<script>alert(1)' ) === false && strpos( $H_XSS, '&lt;script&gt;alert(1)&lt;/script&gt;' ) !== false );
+check( 'sheet escape: markup in the medication is shown as text', strpos( $H_XSS, '<img src=x' ) === false && strpos( $H_XSS, '&lt;img src=x onerror=alert(1)&gt;' ) !== false );
+check( 'sheet escape: markup in what helped on the sheet is shown as text', strpos( $H_XSS, '<b>heat</b>' ) === false && strpos( $H_XSS, '&lt;b&gt;heat&lt;/b&gt;' ) !== false );
+check( 'sheet escape: a script in a plan answer is not written raw anywhere in the card', substr_count( $H_XSS, '<script>' ) === 0 );
+
+$SHEET_BARE = array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => '', 'medication' => '', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 );
+$H_BARE = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN_X, 'updated' => '10 Nov 2026', 'sheet' => $SHEET_BARE ) ) );
+check( 'sheet empty: the heading shows and the empty groups are left out', strpos( $H_BARE, '<h3 class="vhd-flare__h">Appointment sheet</h3>' ) !== false && strpos( $H_BARE, 'Next appointment' ) === false && strpos( $H_BARE, 'Questions to ask' ) === false && strpos( $H_BARE, 'Medication' ) === false && strpos( $H_BARE, 'My flares' ) === false && strpos( $H_BARE, 'Recent check-ins' ) === false && strpos( $H_BARE, 'Latest nutrition risk check' ) === false );
+
+/* ===================================================================== */
+section( '21. privacy: the flare log in the exporter and the eraser' );
+
+check( 'erase keys: the flare log key is one of the keys the eraser clears', in_array( '_sla_flare_log', vance_hub_flare_plan_all_meta_keys(), true ) );
+
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array(
+	array( 'id' => 'b', 'start' => '2026-11-01', 'end' => '2026-11-03', 'helped' => 'Rest' ),
+	array( 'id' => 'a', 'start' => '2026-10-02', 'end' => '', 'helped' => '' ),
+);
+$EXP_L = vance_hub_flare_plan_export( 'ruth@example.test' );
+check( 'export log: a closed flare is one row with its dates and what helped', ( $EXP_L['data'][0]['data'][4] ?? null ) === array( 'name' => 'Flare (start / end)', 'value' => '2026-11-01 / 2026-11-03 / What helped: Rest' ) );
+check( 'export log: a flare not yet ended says so', ( $EXP_L['data'][0]['data'][5] ?? null ) === array( 'name' => 'Flare (start / end)', 'value' => '2026-10-02 / not ended' ) );
+check( 'export log: the agreement record follows the flares', ( $EXP_L['data'][0]['data'][6] ?? null ) === array( 'name' => 'Agreed on', 'value' => '2026-10-01 09:00:00' ) );
+
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = array( array( 'id' => 'b', 'start' => '2026-11-01', 'end' => '2026-11-03', 'helped' => '' ) );
+$EXP_LO = vance_hub_flare_plan_export( 'ruth@example.test' );
+check( 'export log only: a member with a flare log and no plan gets the flares', count( $EXP_LO['data'] ) === 1 && ( $EXP_LO['data'][0]['data'][0] ?? null ) === array( 'name' => 'Flare (start / end)', 'value' => '2026-11-01 / 2026-11-03' ) );
+
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$ERA_L = vance_hub_flare_plan_erase( 'ruth@example.test' );
+check( 'erase log: the flare log is removed with the plan, and nothing is retained', fb_meta( '_sla_flare_log' ) === null && $ERA_L['items_removed'] === true && $ERA_L['items_retained'] === false );
+
+fb_arrange( $FP_ON );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+fb_stored_plan();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $LOG_OPEN;
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+$ERA_R = vance_hub_flare_plan_erase( 'ruth@example.test' );
+check( 'erase log: a flare log that cannot be deleted is reported as retained', $ERA_R['items_retained'] === true && count( $ERA_R['messages'] ) === 1 );
+check( 'erase log: the retained message names the log key, and the log is still there', strpos( $ERA_R['messages'][0] ?? '', '_sla_flare_log' ) !== false && fb_meta( '_sla_flare_log' ) !== null );
+
+/* ===================================================================== */
+section( '22. static: print script, print CSS, hidden rule' );
+
+check( 'script: marks the part to print with vhd-print-target', strpos( $JS, 'vhd-print-target' ) !== false );
+check( 'script: the sheet is printed only from an open sheet box', strpos( $JS, "'.vhd-flare__sheetbox[open]'" ) !== false );
+check( 'script: member text is written with textContent', strpos( $JS, 'textContent' ) !== false );
+check( 'script: no innerHTML anywhere in the file', strpos( $JS, 'innerHTML' ) === false );
+check( 'script: no other HTML-writing sink (outerHTML, insertAdjacentHTML, document.write)', preg_match( '/outerHTML|insertAdjacentHTML|document\.write/', $JS ) === 0 );
+check( 'script: sends nothing (no fetch, XMLHttpRequest or sendBeacon)', preg_match( '/fetch\s*\(|XMLHttpRequest|sendBeacon/', $JS ) === 0 );
+check( 'script: the quick check and the print buttons are shown only by the script', strpos( $JS, 'box.hidden = false' ) !== false && strpos( $JS, 'button.hidden = false' ) !== false );
+check( 'css: the hidden rule keeps hidden flare parts hidden, with !important', strpos( $CSS, '.vhd .vhd-flare [hidden] { display: none !important; }' ) !== false );
+
+// The flare print block is the one after its comment. The sub-tab print rule
+// elsewhere in the file is not part of this change and is not checked here.
+preg_match( '/Print: only the part the member prints.*?@media print \{(.*?)\r?\n\}\r?\n/s', $CSS, $PM );
+preg_match_all( '/([^{}]+)\{/', $PM[1] ?? '', $SEL );
+check( 'css print: the flare print block is found and holds its rules', count( $SEL[1] ?? array() ) >= 8 );
+// The whitespace is inside the lookahead: a leading \s* outside it can give back its
+// whitespace and let the lookahead see a newline, which passes every selector.
+check( 'css print: every rule in it is under html.vhd-printing or a print marker', preg_grep( '/^(?!\s*(?:html\.vhd-printing|\.vhd-print-path|\.vhd-print-target))/', $SEL[1] ?? array() ) === array() );
+check( 'css print: negative control, a bare body rule is caught by the same pattern', count( preg_grep( '/^(?!\s*(?:html\.vhd-printing|\.vhd-print-path|\.vhd-print-target))/', array( "\tbody * " ) ) ) === 1 );
+check( 'css print: negative control, a marked rule is not caught by the same pattern', count( preg_grep( '/^(?!\s*(?:html\.vhd-printing|\.vhd-print-path|\.vhd-print-target))/', array( "\n\thtml.vhd-printing .vhd-flare { position: static; }" ) ) ) === 0 );
+
+/* ===================================================================== */
+section( '23. dates: a stored day reads as the same day in any site time zone' );
+
+$D23_NOW  = strtotime( '2026-11-18 12:00:00 UTC' );
+$D23_PLAN = array( 'updated' => $OLD_TS, 'signs' => 'a', 'actions' => 'b', 'contacts' => 'c' );
+$FP_SRC   = file_get_contents( $THEME . '/inc/hub-flare-plan.php' );
+
+// The stub itself. It must apply the zone it is given, or the checks below prove nothing.
+check( 'stub: wp_date applies America/Los_Angeles (12:00 UTC on 12 Nov is 04:00 that day)', wp_date( 'Y-m-d H:i', strtotime( '2026-11-12 12:00:00 UTC' ), new DateTimeZone( 'America/Los_Angeles' ) ) === '2026-11-12 04:00' );
+check( 'stub: wp_date applies Pacific/Auckland (12:00 UTC on 12 Nov is 01:00 on 13 Nov)', wp_date( 'Y-m-d H:i', strtotime( '2026-11-12 12:00:00 UTC' ), new DateTimeZone( 'Pacific/Auckland' ) ) === '2026-11-13 01:00' );
+check( 'stub: wp_date with no zone uses the site zone', wp_date( 'Y-m-d H:i', strtotime( '2026-11-12 12:00:00 UTC' ) ) === '2026-11-12 12:00' );
+
+// Site zone east of UTC. The PHP default zone follows it, as a site could set it.
+fb_arrange( $FP_ON );
+$GLOBALS['SITE_TZ'] = 'Pacific/Auckland';
+date_default_timezone_set( 'Pacific/Auckland' );
+check( 'label: 12 Nov 2026 reads 12 Nov 2026 with the site zone Pacific/Auckland', vance_hub_flare_log_label( '2026-11-12' ) === '12 Nov 2026' );
+check( 'label: 1 Jan 2027 reads 1 Jan 2027 with the site zone Pacific/Auckland', vance_hub_flare_log_label( '2027-01-01' ) === '1 Jan 2027' );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2026-12-03' );
+$D23_NZ = vance_hub_flare_sheet_data( 7, $D23_PLAN, array(), $D23_NOW );
+check( 'appointment: 3 Dec 2026 reads 3 Dec 2026 with the PHP default and site zone Pacific/Auckland', $D23_NZ['appointment'] === '3 Dec 2026' );
+
+// Site zone west of UTC.
+fb_arrange( $FP_ON );
+$GLOBALS['SITE_TZ'] = 'America/Los_Angeles';
+date_default_timezone_set( 'America/Los_Angeles' );
+check( 'label: 12 Nov 2026 reads 12 Nov 2026 with the site zone America/Los_Angeles', vance_hub_flare_log_label( '2026-11-12' ) === '12 Nov 2026' );
+
+// PHP default UTC with a west site zone. The appointment's own UTC argument is the only
+// thing that keeps the day: without it, 00:00 UTC reads as the day before in Los Angeles.
+fb_arrange( $FP_ON );
+$GLOBALS['SITE_TZ'] = 'America/Los_Angeles';
+date_default_timezone_set( 'UTC' );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2026-12-03' );
+$D23_LA = vance_hub_flare_sheet_data( 7, $D23_PLAN, array(), $D23_NOW );
+check( 'appointment: 3 Dec 2026 reads 3 Dec 2026 with PHP default UTC and site zone America/Los_Angeles', $D23_LA['appointment'] === '3 Dec 2026' );
+
+$GLOBALS['SITE_TZ'] = 'UTC';
+date_default_timezone_set( 'UTC' );
+
+// Static: both calls pass UTC explicitly.
+preg_match( '/function vance_hub_flare_log_label\(.*?\r?\n\}/s', $FP_SRC, $LABEL_FN );
+preg_match( '/function vance_hub_flare_sheet_data\(.*?\r?\n\}/s', $FP_SRC, $SHEET_FN );
+check( 'static: the flare log label passes new DateTimeZone( UTC ) to wp_date', strpos( $LABEL_FN[0] ?? '', "wp_date( 'j M Y', \$ts, new DateTimeZone( 'UTC' ) )" ) !== false );
+check( 'static: the appointment date passes new DateTimeZone( UTC ) to wp_date', strpos( $SHEET_FN[0] ?? '', "wp_date( 'j M Y', \$ts, new DateTimeZone( 'UTC' ) )" ) !== false );
+check( 'static: negative control, a wp_date call without the UTC zone is not matched', strpos( "return wp_date( 'j M Y', \$ts );", "wp_date( 'j M Y', \$ts, new DateTimeZone( 'UTC' ) )" ) === false );
+
+/* ===================================================================== */
+section( '24. render: consent needed or given, the log forms and the Edit my plan box' );
+
+fb_arrange( $FP_ON );
+$P24 = array( 'updated' => $OLD_TS, 'signs' => 'Tight belly', 'actions' => 'Fluids', 'contacts' => 'Nurse' );
+
+// An open flare, so that the end form would render if the consent guard failed.
+$D24_LOG_OPEN = array( 'open' => array( 'start' => '16 Nov 2026', 'end' => '', 'days' => 3, 'helped' => '' ), 'rows' => array( array( 'start' => '16 Nov 2026', 'end' => '', 'days' => 3, 'helped' => '' ) ), 'count' => 1 );
+$H24_NEED = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P24, 'updated' => '10 Nov 2026', 'need_consent' => true, 'consent' => 'I agree.', 'log' => $D24_LOG_OPEN ) ) );
+check( 'consent needed: no flare start form is rendered', strpos( $H24_NEED, 'value="flare_start"' ) === false );
+check( 'consent needed: no flare end form is rendered', strpos( $H24_NEED, 'value="flare_end"' ) === false );
+check( 'consent needed: the card says to read the agreement again and open Edit my plan', strpos( $H24_NEED, 'read the agreement again and save your plan' ) !== false && strpos( $H24_NEED, 'Edit my plan' ) !== false );
+check( 'consent needed: the Edit my plan box is rendered open', strpos( $H24_NEED, '<details class="vhd-flare__edit" open>' ) !== false );
+
+// No flare open: a flare start form would render if the consent guard failed.
+$H24_NEED_NOFLARE = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P24, 'updated' => '10 Nov 2026', 'need_consent' => true, 'consent' => 'I agree.' ) ) );
+check( 'consent needed, no flare open: no flare start form is rendered', strpos( $H24_NEED_NOFLARE, 'value="flare_start"' ) === false );
+
+$H24_OK = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P24, 'updated' => '10 Nov 2026', 'need_consent' => false ) ) );
+check( 'consent given: the flare start form is rendered', strpos( $H24_OK, 'value="flare_start"' ) !== false );
+$H24_OPEN = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P24, 'updated' => '10 Nov 2026', 'need_consent' => false, 'log' => $D24_LOG_OPEN ) ) );
+check( 'consent given with an open flare: the flare end form is rendered (positive control for the end-form check)', strpos( $H24_OPEN, 'value="flare_end"' ) !== false );
+check( 'consent given: the Edit my plan box is rendered closed', strpos( $H24_OK, '<details class="vhd-flare__edit">' ) !== false );
+check( 'consent given: the card does not tell the member to read the agreement again', strpos( $H24_OK, 'read the agreement again' ) === false );
+
+$H24_END = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $P24, 'updated' => '10 Nov 2026', 'need_consent' => false, 'flash' => 'flare_ended' ) ) );
+check( 'consent given, flare just ended: the Edit my plan box is rendered open', strpos( $H24_END, '<details class="vhd-flare__edit" open>' ) !== false );
+
+/* ===================================================================== */
+section( '25. delete order: the flare log goes before the plan, and a failed log delete keeps the plan' );
+
+$D25_LOG = array( array( 'id' => 'd1', 'start' => '2026-11-16', 'end' => '', 'helped' => '' ) );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $D25_LOG;
+fb_post_delete();
+fb_handle();
+check( 'delete order: the flare log is deleted before the plan', fb_seq_index( 'write:_sla_flare_log' ) >= 0 && fb_seq_index( 'write:_sla_flare_log' ) < fb_seq_index( 'write:_sla_flare_plan' ) );
+
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['UMETA'][7]['_sla_flare_log'] = $D25_LOG;
+$GLOBALS['DELETE_FAILS'] = '_sla_flare_log';
+fb_post_delete();
+check( 'delete log fails: the result is kept', fb_handle() === 'https://example.test/hub/?vance_flare=kept' );
+check( 'delete log fails: the plan is still stored with its answers', ( fb_meta( '_sla_flare_plan' )['signs'] ?? '' ) === 'Tight belly' );
+check( 'delete log fails: the flare log is still stored', fb_meta( '_sla_flare_log' ) === $D25_LOG );
+check( 'delete log fails: the agreement is not withdrawn', fb_meta( '_sla_consent_flare_plan' ) === '1' && fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === null );
+
+// The member can only retry from the card, so the card must still offer the delete form.
+$_GET['vance_flare'] = 'kept';
+$H25_CARD = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( 'delete log fails: the card still offers the delete form, so the member can try again', strpos( $H25_CARD, 'name="vance_hub_flare_do" value="delete"' ) !== false );
+
+$GLOBALS['DELETE_FAILS'] = '';
+fb_post_delete();
+check( 'delete log retry: the retry gives deleted', fb_handle() === 'https://example.test/hub/?vance_flare=deleted' );
+check( 'delete log retry: the plan, the flare log and the agreement flag are gone', fb_meta( '_sla_flare_plan' ) === null && fb_meta( '_sla_flare_log' ) === null && fb_meta( '_sla_consent_flare_plan' ) === null );
+check( 'delete log retry: the withdrawal time is written', fb_meta( '_sla_consent_flare_plan_withdrawn_at' ) === '2026-11-18 12:00:00' );
+
+/* ===================================================================== */
+section( '26. static: the step builder moves focus after Back and Next' );
+
+check( 'focus: a step change moves focus inside the moved branch', preg_match( '/if \( moved \) \{[^}]*focus\.focus\(\);/', $JS ) === 1 );
+check( 'focus: the step label can take focus with tabIndex -1', strpos( $JS, 'label.tabIndex = -1;' ) !== false );
+check( 'focus: negative control, a focus call after the moved branch is not matched', preg_match( '/if \( moved \) \{[^}]*focus\.focus\(\);/', "if ( moved ) {\n\tvar x = 1;\n}\nfocus.focus();" ) === 0 );
+
+/* ===================================================================== */
+section( '27. no-cache: the negative cases and the hook (the positive case is section 28)' );
+
+// Not in the shared stubs. Without is_page() the function returns early, and the
+// "another page" case would pass for the wrong reason. The counter shows whether
+// the headers were sent.
+function is_page( $page = '' ) { return '' !== $page && $page === $GLOBALS['PAGE_SLUG']; }
+function nocache_headers() { $GLOBALS['NOCACHE_CALLS']++; }
+
+fb_arrange( $FP_ON, false );
+$GLOBALS['PAGE_SLUG']     = 'dashboard';
+$GLOBALS['NOCACHE_CALLS'] = 0;
+vance_hub_flare_plan_no_cache();
+check( 'no-cache, logged out: DONOTCACHEPAGE is not defined', ! defined( 'DONOTCACHEPAGE' ) );
+check( 'no-cache, logged out: no no-cache headers are sent', 0 === $GLOBALS['NOCACHE_CALLS'] );
+
+fb_arrange( $FP_ON, true );
+$GLOBALS['PAGE_SLUG']     = 'hub';
+$GLOBALS['NOCACHE_CALLS'] = 0;
+vance_hub_flare_plan_no_cache();
+check( 'no-cache, another page: DONOTCACHEPAGE is not defined', ! defined( 'DONOTCACHEPAGE' ) );
+check( 'no-cache, another page: no no-cache headers are sent', 0 === $GLOBALS['NOCACHE_CALLS'] );
+
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => '' ), true );
+$GLOBALS['PAGE_SLUG']     = 'dashboard';
+$GLOBALS['NOCACHE_CALLS'] = 0;
+vance_hub_flare_plan_no_cache();
+check( 'no-cache, plan not available (no urgent text): DONOTCACHEPAGE is not defined', ! defined( 'DONOTCACHEPAGE' ) );
+check( 'no-cache, plan not available (no urgent text): no no-cache headers are sent', 0 === $GLOBALS['NOCACHE_CALLS'] );
+
+fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => false, 'vance_hub_flare_plan_urgent' => 'Call the clinic.' ), true );
+$GLOBALS['PAGE_SLUG']     = 'dashboard';
+$GLOBALS['NOCACHE_CALLS'] = 0;
+vance_hub_flare_plan_no_cache();
+check( 'no-cache, plan not available (switch off): DONOTCACHEPAGE is not defined', ! defined( 'DONOTCACHEPAGE' ) );
+check( 'no-cache, plan not available (switch off): no no-cache headers are sent', 0 === $GLOBALS['NOCACHE_CALLS'] );
+
+// Static: the hook. Another priority would run it after other template_redirect callbacks.
+check( 'hook: the no-cache check is added on template_redirect at priority 1', strpos( $FP_SRC, "add_action( 'template_redirect', 'vance_hub_flare_plan_no_cache', 1 );" ) !== false );
+check( 'hook: negative control, priority 11 is not matched by the same text', strpos( "add_action( 'template_redirect', 'vance_hub_flare_plan_no_cache', 11 );", "add_action( 'template_redirect', 'vance_hub_flare_plan_no_cache', 1 );" ) === false );
+
+/* ===================================================================== */
+section( '28. no-cache: the positive case, LAST in the file because it defines DONOTCACHEPAGE' );
+
+// A constant cannot be undefined in this process. Nothing after this section may
+// depend on DONOTCACHEPAGE being absent: sections 27 and earlier have run.
+fb_arrange( $FP_ON, true );
+$GLOBALS['PAGE_SLUG']     = 'dashboard';
+$GLOBALS['NOCACHE_CALLS'] = 0;
+vance_hub_flare_plan_no_cache();
+check( 'no-cache, dashboard, logged in, card on: DONOTCACHEPAGE is defined as true', defined( 'DONOTCACHEPAGE' ) && true === constant( 'DONOTCACHEPAGE' ) );
+check( 'no-cache, dashboard, logged in, card on: the no-cache headers are sent once', 1 === $GLOBALS['NOCACHE_CALLS'] );
 
 /* ===================================================================== */
 echo "\n";
