@@ -1031,23 +1031,8 @@ get_header();
                     $quiz_fields = vance_quiz_field_labels();
                     $quiz_steps  = array_keys( $quiz_fields );
 
-                    // Own section for the daily check-in (emoji table and charts).
-                    // Shown only while the check-in feature is on.
-                    $ci_data    = function_exists( 'vance_hub_checkin_tab_data' ) ? vance_hub_checkin_tab_data( $current_user ) : null;
-                    $hp_section = ( $ci_data && isset( $_GET['section'] ) && 'checkins' === $_GET['section'] ) ? 'checkins' : 'profile'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- selects one view, changes nothing.
-                    if ( $ci_data ) :
-                        $hp_base = function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) : '?tab=health-profile';
-                        ?>
-                        <nav aria-label="<?php echo esc_attr( __( 'Health Profile sections', 'vance-health-hub' ) ); ?>" style="display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap;">
-                            <a href="<?php echo esc_url( $hp_base ); ?>"<?php echo 'profile' === $hp_section ? ' aria-current="page"' : ''; ?> style="padding:10px 18px; border-radius:var(--radius-control, 6px); font-weight:700; text-decoration:none; border:1px solid #008080; <?php echo 'profile' === $hp_section ? 'background:#008080; color:#fff;' : 'background:#fff; color:#006666;'; ?>">🩺 <?php esc_html_e( 'My profile', 'vance-health-hub' ); ?></a>
-                            <a href="<?php echo esc_url( $hp_base . '&section=checkins' ); ?>"<?php echo 'checkins' === $hp_section ? ' aria-current="page"' : ''; ?> style="padding:10px 18px; border-radius:var(--radius-control, 6px); font-weight:700; text-decoration:none; border:1px solid #008080; <?php echo 'checkins' === $hp_section ? 'background:#008080; color:#fff;' : 'background:#fff; color:#006666;'; ?>">😀 <?php esc_html_e( 'Daily check-ins', 'vance-health-hub' ); ?></a>
-                        </nav>
-                        <?php
-                        if ( 'checkins' === $hp_section ) {
-                            echo vance_hub_checkin_tab_html( $ci_data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built.
-                            break;
-                        }
-                    endif;
+                    // The daily check-in is one of the sub-tabs below (null when its feature is off).
+                    $ci_data = function_exists( 'vance_hub_checkin_tab_data' ) ? vance_hub_checkin_tab_data( $current_user ) : null;
                     ?>
                     <?php
                     // Sub-tabs of this tab. They are plain links with ?hsub=, so they
@@ -1056,9 +1041,12 @@ get_header();
                     $hp_tabs_on = function_exists( 'vance_hub_dashboard_active' ) && vance_hub_dashboard_active();
                     $hp_flare   = $hp_tabs_on && function_exists( 'vance_hub_flare_plan_data' ) ? vance_hub_flare_plan_data( $current_user->ID ) : null;
                     $hp_subs    = array(
-                        'profile'   => __( 'My profile', 'vance-health-hub' ),
+                        'profile'   => __( 'Self Assessment', 'vance-health-hub' ),
                         'screening' => __( 'Screening results', 'vance-health-hub' ),
                     );
+                    if ( $hp_tabs_on && ! empty( $ci_data ) ) {
+                        $hp_subs['checkins'] = __( 'Daily check-ins', 'vance-health-hub' );
+                    }
                     if ( ! empty( $hp_flare ) ) {
                         $hp_subs['flare'] = __( 'Flare plan', 'vance-health-hub' );
                     }
@@ -1066,6 +1054,10 @@ get_header();
                     if ( '' === $hp_sub && ! empty( $hp_flare['flash'] ) ) {
                         // Back from a save or delete of the flare plan.
                         $hp_sub = 'flare';
+                    }
+                    if ( '' === $hp_sub && ! empty( $ci_data['flash'] ) && isset( $hp_subs['checkins'] ) ) {
+                        // Back from a delete of the check-in answers.
+                        $hp_sub = 'checkins';
                     }
                     if ( ! isset( $hp_subs[ $hp_sub ] ) ) {
                         $hp_sub = 'profile';
@@ -1312,6 +1304,11 @@ get_header();
                         <?php endif; ?>
                     </div>
                     </div>
+                    <?php if ( isset( $hp_subs['checkins'] ) ) : ?>
+                    <div class="hp-panel"<?php echo $hp_hide( 'checkins' ); ?>>
+                        <?php echo vance_hub_checkin_tab_html( $ci_data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built. ?>
+                    </div>
+                    <?php endif; ?>
                     <?php if ( ! empty( $hp_flare ) ) : ?>
                     <div class="hp-panel vhd"<?php echo $hp_hide( 'flare' ); ?>>
                         <?php echo vance_hub_flare_plan_html( $hp_flare ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is escaped inside. ?>

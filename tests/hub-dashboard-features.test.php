@@ -288,7 +288,7 @@ function fb_checkin_view( array $over = array() ) {
 		'due'          => true,
 		'last'         => '',
 		'days'         => array(),
-		'tab_href'     => '?tab=health-profile&section=checkins',
+		'tab_href'     => '?tab=health-profile&hsub=checkins',
 		'count'        => 0,
 		'questions'    => array( 'pain' => 'Pain question', 'bowel' => 'Bowel question', 'tired' => 'Tiredness question' ),
 		'series'       => array( 'pain' => array(), 'bowel' => array(), 'tired' => array() ),
@@ -1371,7 +1371,7 @@ check( 'tab: the table holds no digits as answers', strpos( $TAB, '<td>0</td>' )
 check( 'tab: no history gives the empty line and no table', strpos( vance_hub_checkin_tab_html( fb_checkin_view( array( 'days' => array() ) ) ), '<table' ) === false );
 check( 'tab: it holds no check-in form (the form is on the home page)', strpos( $TAB, 'type="radio"' ) === false );
 check( 'tab: a due member gets a link to check in today', strpos( vance_hub_checkin_tab_html( fb_checkin_view() ), 'Check in today' ) !== false );
-check( 'home card: it links to the Health Profile check-ins section', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view() ), 'section=checkins' ) !== false );
+check( 'home card: it links to the Health Profile check-ins section', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view() ), 'hsub=checkins' ) !== false );
 check( 'home card: it no longer holds the charts or the delete control', strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 2, 'series' => array( 'pain' => $TREND_POINTS, 'bowel' => array(), 'tired' => array() ) ) ) ), '<svg' ) === false && strpos( vance_hub_dashboard_checkin_html( fb_checkin_view( array( 'count' => 2 ) ) ), 'value="delete"' ) === false );
 
 /* ===================================================================== */

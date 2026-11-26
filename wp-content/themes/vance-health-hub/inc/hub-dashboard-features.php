@@ -850,7 +850,7 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 			'due'          => vance_hub_checkin_due( $last, time() ),
 			'last'         => $last > 0 ? (string) wp_date( 'j M Y', $last ) : '',
 			'days'         => $days,
-			'tab_href'     => function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) . '&section=checkins' : '?tab=health-profile&section=checkins',
+			'tab_href'     => function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) . '&hsub=checkins' : '?tab=health-profile&hsub=checkins',
 			'count'        => count( $history ),
 			'questions'    => $questions,
 			'series'       => $series,
