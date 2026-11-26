@@ -419,6 +419,142 @@ function vance_hub_checkin_append( $user_id, $answers, $now ) {
 }
 
 /**
+ * Every user meta key that holds check-in data: the history and the whole
+ * agreement record, including the withdrawal time.
+ *
+ * @return string[]
+ */
+function vance_hub_checkin_all_meta_keys() {
+	$keys   = vance_hub_checkin_consent_keys( 'checkin' );
+	$keys[] = '_sla_consent_checkin_withdrawn_at';
+	$keys[] = vance_hub_checkin_meta_key();
+	return $keys;
+}
+
+/**
+ * Add the check-in exporter to the WordPress personal data tools.
+ *
+ * @param array $exporters Registered exporters.
+ * @return array
+ */
+function vance_hub_checkin_register_exporter( $exporters ) {
+	$exporters['vance-checkin'] = array(
+		'exporter_friendly_name' => __( 'Daily check-ins', 'vance-health-hub' ),
+		'callback'               => 'vance_hub_checkin_export',
+	);
+	return $exporters;
+}
+add_filter( 'wp_privacy_personal_data_exporters', 'vance_hub_checkin_register_exporter' );
+
+/**
+ * Add the check-in eraser to the WordPress personal data tools.
+ *
+ * @param array $erasers Registered erasers.
+ * @return array
+ */
+function vance_hub_checkin_register_eraser( $erasers ) {
+	$erasers['vance-checkin'] = array(
+		'eraser_friendly_name' => __( 'Daily check-ins', 'vance-health-hub' ),
+		'callback'             => 'vance_hub_checkin_erase',
+	);
+	return $erasers;
+}
+add_filter( 'wp_privacy_personal_data_erasers', 'vance_hub_checkin_register_eraser' );
+
+/**
+ * Exporter: every check-in row and the agreement record.
+ *
+ * One page only: the history holds at most 120 rows.
+ *
+ * @param string $email Member email.
+ * @param int    $page  Page, unused.
+ * @return array {data, done}
+ */
+function vance_hub_checkin_export( $email, $page = 1 ) {
+	$none = array( 'data' => array(), 'done' => true );
+	$user = get_user_by( 'email', (string) $email );
+	if ( ! $user ) {
+		return $none;
+	}
+	$uid   = (int) $user->ID;
+	$items = array();
+	$icons = vance_hub_checkin_icons();
+	foreach ( vance_hub_checkin_history( $uid ) as $index => $row ) {
+		$data = array(
+			array( 'name' => __( 'Date', 'vance-health-hub' ), 'value' => (string) wp_date( 'j M Y H:i', (int) $row['ts'] ) ),
+		);
+		foreach ( $icons as $key => $icon ) {
+			if ( isset( $row['payload'][ $key ] ) && is_numeric( $row['payload'][ $key ] ) ) {
+				$data[] = array( 'name' => $icon[1], 'value' => (int) $row['payload'][ $key ] . ' / ' . vance_hub_checkin_max() );
+			}
+		}
+		$items[] = array(
+			'group_id'    => 'vance-checkin',
+			'group_label' => __( 'Daily check-ins', 'vance-health-hub' ),
+			'item_id'     => 'vance-checkin-' . $uid . '-' . (int) $index,
+			'data'        => $data,
+		);
+	}
+	$record = array(
+		'_sla_consent_checkin_at'           => __( 'Agreed on', 'vance-health-hub' ),
+		'_sla_consent_checkin_text'         => __( 'Agreement wording', 'vance-health-hub' ),
+		'_sla_consent_checkin_withdrawn_at' => __( 'Withdrawn on', 'vance-health-hub' ),
+	);
+	$agreement = array();
+	foreach ( $record as $key => $name ) {
+		$value = get_user_meta( $uid, $key, true );
+		if ( is_string( $value ) && '' !== $value ) {
+			$agreement[] = array( 'name' => $name, 'value' => $value );
+		}
+	}
+	if ( ! empty( $agreement ) ) {
+		$items[] = array(
+			'group_id'    => 'vance-checkin-agreement',
+			'group_label' => __( 'Daily check-in agreement', 'vance-health-hub' ),
+			'item_id'     => 'vance-checkin-agreement-' . $uid,
+			'data'        => $agreement,
+		);
+	}
+	if ( empty( $items ) ) {
+		return $none;
+	}
+	return array( 'data' => $items, 'done' => true );
+}
+
+/**
+ * Eraser: the check-in history and every agreement key.
+ *
+ * Each key is read back after the delete. A key that is still there is
+ * reported as retained, never as removed.
+ *
+ * @param string $email Member email.
+ * @param int    $page  Page, unused.
+ * @return array {items_removed, items_retained, messages, done}
+ */
+function vance_hub_checkin_erase( $email, $page = 1 ) {
+	$out  = array( 'items_removed' => false, 'items_retained' => false, 'messages' => array(), 'done' => true );
+	$user = get_user_by( 'email', (string) $email );
+	if ( ! $user ) {
+		return $out;
+	}
+	$uid = (int) $user->ID;
+	foreach ( vance_hub_checkin_all_meta_keys() as $key ) {
+		if ( '' === get_user_meta( $uid, $key, true ) ) {
+			continue;
+		}
+		delete_user_meta( $uid, $key );
+		if ( '' !== get_user_meta( $uid, $key, true ) ) {
+			$out['items_retained'] = true;
+			/* translators: %s: user meta key. */
+			$out['messages'][] = sprintf( __( 'The check-in record %s could not be deleted.', 'vance-health-hub' ), $key );
+		} else {
+			$out['items_removed'] = true;
+		}
+	}
+	return $out;
+}
+
+/**
  * The member's code. Made and stored on first call.
  *
  * @param int $user_id Member.
