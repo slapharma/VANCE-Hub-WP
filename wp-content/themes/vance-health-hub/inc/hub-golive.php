@@ -18,9 +18,12 @@
  *   - one WP-Cron event, vance_hub_golive_event, scheduled when the Customizer
  *     is saved. It makes the change happen on a site with little traffic.
  *
- * A page that the page cache serves does not reach WordPress, so it can show the
- * classic layout for a few more minutes. The run purges the cache when it
- * switches.
+ * A page that a page cache serves does not reach WordPress, so the run cannot
+ * start from that page. When it switches, the run purges the LiteSpeed Cache
+ * plugin only. The hosting cache (Hostinger) is separate and this code cannot
+ * purge it. An administrator must purge it by hand in the hosting panel after
+ * the go-live time. Until then, or until that cache expires, visitors can see
+ * the classic layout.
  *
  * The pure functions (vance_hub_sanitize_datetime, vance_hub_golive_timestamp,
  * vance_hub_golive_decide) read no theme mod, so tests can call them.
@@ -158,8 +161,10 @@ function vance_hub_golive_run() {
 		set_theme_mod( 'vance_home_layout', 'hub' );
 		remove_theme_mod( 'vance_hub_golive_at' );
 		set_theme_mod( 'vance_hub_golive_done_at', time() );
-		// Purge the page cache, so visitors get the new layout. Nothing listens
-		// when LiteSpeed Cache is not active, and that is harmless.
+		// Purge the LiteSpeed Cache plugin, so its visitors get the new layout.
+		// Nothing listens when that plugin is not active, and that is harmless.
+		// This does NOT purge the hosting cache (Hostinger): an administrator
+		// purges that by hand in the hosting panel.
 		do_action( 'litespeed_purge_all' );
 		do_action( 'vance_hub_went_live' );
 	} elseif ( 'clear' === $decision ) {
@@ -210,7 +215,7 @@ function vance_hub_golive_customize_register( $wp_customize ) {
 	$wp_customize->add_control( 'vance_hub_golive_at', array(
 		'label'       => __( 'Go-live date and time', 'vance-health-hub' ),
 		/* translators: 1: site time zone name, 2: number of the check-in section, 3: number of the flare plan section. */
-		'description' => sprintf( __( 'The site changes to VanceHubClub at this time. The time is in the site time zone (%1$s). The change is saved, and this field then becomes empty. This change does not turn on the daily check-in or the flare plan. You turn them on in sections %2$d and %3$d. Leave this field empty for no planned change. The change runs on the first request that reaches WordPress after the time. A page from the page cache can show the classic layout for a few more minutes.', 'vance-health-hub' ), esc_html( wp_timezone_string() ), vance_hub_customizer_section_number( 'vance_hub_sec_checkin' ), vance_hub_customizer_section_number( 'vance_hub_sec_flare' ) ),
+		'description' => sprintf( __( 'The site changes to VanceHubClub at this time. The time is in the site time zone (%1$s). The change is saved, and this field then becomes empty. This change does not turn on the daily check-in or the flare plan. You turn them on in sections %2$d and %3$d. Leave this field empty for no planned change. A time that is already past changes the site on the next request, so check the year and the time before you publish. The change runs on the first request that reaches WordPress after the time. The theme then purges the LiteSpeed cache. The hosting cache is separate. Purge it by hand in the hosting panel after the go-live time, or visitors can see the classic layout until that cache expires.', 'vance-health-hub' ), esc_html( wp_timezone_string() ), vance_hub_customizer_section_number( 'vance_hub_sec_checkin' ), vance_hub_customizer_section_number( 'vance_hub_sec_flare' ) ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'datetime-local',
 		'priority'    => 20,

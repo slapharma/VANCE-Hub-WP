@@ -648,7 +648,9 @@ check( 'go-live: the control is a datetime-local input labelled "Go-live date an
 check( 'go-live: the description names the site time zone', false !== strpos( $GO['description'], '(Europe/London)' ) );
 check( 'go-live: the description names the check-in and flare plan sections by number (10 and 11)', false !== strpos( $GO['description'], 'sections 10 and 11' ) );
 check( 'go-live: the description says the field becomes empty, and that empty means no change', false !== strpos( $GO['description'], 'this field then becomes empty' ) && false !== strpos( $GO['description'], 'Leave this field empty for no planned change.' ) );
-check( 'go-live: the description warns about the page cache', false !== strpos( $GO['description'], 'page cache' ) );
+check( 'go-live: the description names the LiteSpeed purge and the separate hosting cache, purged by hand', false !== strpos( $GO['description'], 'purges the LiteSpeed cache' ) && false !== strpos( $GO['description'], 'The hosting cache is separate.' ) && false !== strpos( $GO['description'], 'hosting panel' ) );
+check( 'go-live: the description no longer promises "a few more minutes"', false === strpos( $GO['description'], 'few more minutes' ) );
+check( 'go-live: the description says a past time changes the site on the next request', false !== strpos( $GO['description'], 'A time that is already past changes the site on the next request, so check the year and the time before you publish.' ) );
 check( 'go-live: the layout control points to the go-live field', false !== strpos( $M->controls['vance_home_layout']['description'], 'use the go-live field below' ) );
 
 /* ===================================================================== */
