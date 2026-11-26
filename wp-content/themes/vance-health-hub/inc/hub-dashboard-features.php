@@ -119,8 +119,8 @@ function vance_hub_checkin_clean( $raw ) {
 /**
  * True when the member can do a check-in now.
  *
- * Six days, not seven: a member who answers on Monday evening can answer again
- * on the next Monday morning.
+ * One check-in for each calendar day of the site time zone: a member who
+ * answers at 23:00 can answer again at 00:01.
  *
  * @param int $last_ts Time of the newest check-in, 0 when there is none.
  * @param int $now     Current time.
@@ -128,7 +128,29 @@ function vance_hub_checkin_clean( $raw ) {
  */
 function vance_hub_checkin_due( $last_ts, $now ) {
 	$last_ts = (int) $last_ts;
-	return $last_ts <= 0 || ( (int) $now - $last_ts ) >= 6 * 86400;
+	return $last_ts <= 0 || wp_date( 'Y-m-d', $last_ts ) !== wp_date( 'Y-m-d', (int) $now );
+}
+
+/**
+ * The emoji of the check-in scale, 0 (none) to 4 (very bad).
+ *
+ * @return string[] Answer => emoji.
+ */
+function vance_hub_checkin_faces() {
+	return array( 0 => "\u{1F600}", 1 => "\u{1F642}", 2 => "\u{1F610}", 3 => "\u{1F623}", 4 => "\u{1F62B}" );
+}
+
+/**
+ * The emoji and short name of each check-in question.
+ *
+ * @return array[] Key => {emoji, label}.
+ */
+function vance_hub_checkin_icons() {
+	return array(
+		'pain'  => array( "\u{1F915}", __( 'Pain', 'vance-health-hub' ) ),
+		'bowel' => array( "\u{1F6BD}", __( 'Bowel', 'vance-health-hub' ) ),
+		'tired' => array( "\u{1F634}", __( 'Energy', 'vance-health-hub' ) ),
+	);
 }
 
 /**
@@ -273,9 +295,9 @@ function vance_hub_dash_text( $name, $default ) {
  */
 function vance_hub_checkin_text_defaults() {
 	return array(
-		'vance_hub_checkin_q_pain'  => __( 'How much abdominal pain did you have this week?', 'vance-health-hub' ),
-		'vance_hub_checkin_q_bowel' => __( 'How much did bowel symptoms trouble you this week?', 'vance-health-hub' ),
-		'vance_hub_checkin_q_tired' => __( 'How tired were you this week?', 'vance-health-hub' ),
+		'vance_hub_checkin_q_pain'  => __( 'How is your tummy pain today?', 'vance-health-hub' ),
+		'vance_hub_checkin_q_bowel' => __( 'How are your bowel symptoms today?', 'vance-health-hub' ),
+		'vance_hub_checkin_q_tired' => __( 'How tired are you today?', 'vance-health-hub' ),
 		'vance_hub_checkin_consent' => __( 'I agree that the Hub stores my answers in my account. I can delete them at any time.', 'vance-health-hub' ),
 		'vance_hub_checkin_note'    => __( 'This is a record for you. It is not medical advice. Speak to your health team if your symptoms get worse.', 'vance-health-hub' ),
 	);
@@ -298,7 +320,7 @@ function vance_hub_dash_features_customize( $wp_customize ) {
 			__( 'A chart of the member\'s saved nutrition risk checks. It shows with two or more saved scores. With one, the member sees that result.', 'vance-health-hub' ),
 		),
 		'vance_hub_dash_checkin'   => array(
-			__( 'Member dashboard: show the weekly check-in', 'vance-health-hub' ),
+			__( 'Member dashboard: show the daily check-in', 'vance-health-hub' ),
 			__( 'Three symptom questions, each on a scale from 0 to 4. The answers are health data: get the wording and the privacy policy approved before you turn this on.', 'vance-health-hub' ),
 		),
 	);
@@ -373,7 +395,7 @@ function vance_hub_checkin_history( $user_id ) {
 }
 
 /**
- * Add one validated check-in. Keeps the newest 50 rows.
+ * Add one validated check-in. Keeps the newest 120 rows (about four months).
  *
  * @param int   $user_id Member.
  * @param array $answers Answers, key => 0..4. Validated again here.
@@ -393,7 +415,7 @@ function vance_hub_checkin_append( $user_id, $answers, $now ) {
 		'ts'      => (int) $now,
 		'payload' => $answers,
 	) );
-	return false !== update_user_meta( $user_id, vance_hub_checkin_meta_key(), array_slice( $rows, 0, 50 ) );
+	return false !== update_user_meta( $user_id, vance_hub_checkin_meta_key(), array_slice( $rows, 0, 120 ) );
 }
 
 /**
@@ -800,7 +822,19 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 		foreach ( vance_hub_checkin_keys() as $key ) {
 			$name              = 'vance_hub_checkin_q_' . $key;
 			$questions[ $key ] = vance_hub_dash_text( $name, $defaults[ $name ] );
-			$series[ $key ]    = vance_hub_dashboard_series_dates( vance_hub_dashboard_series( $history, $key, vance_hub_checkin_max() ) );
+			$series[ $key ]    = vance_hub_dashboard_series_dates( vance_hub_dashboard_series( $history, $key, vance_hub_checkin_max(), 30 ) );
+		}
+		// The last 14 check-ins, newest first, for the Health Profile table.
+		$days = array();
+		foreach ( array_slice( $history, 0, 14 ) as $row ) {
+			$answers = array();
+			foreach ( vance_hub_checkin_keys() as $key ) {
+				$answers[ $key ] = isset( $row['payload'][ $key ] ) && is_numeric( $row['payload'][ $key ] ) ? (int) $row['payload'][ $key ] : null;
+			}
+			$days[] = array(
+				'date'    => (string) wp_date( 'D j M', (int) $row['ts'] ),
+				'answers' => $answers,
+			);
 		}
 		$flash = '';
 		if ( isset( $_GET['vance_checkin'] ) && is_string( $_GET['vance_checkin'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- selects one fixed message, changes nothing.
@@ -809,7 +843,8 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 		$out['checkin'] = array(
 			'due'          => vance_hub_checkin_due( $last, time() ),
 			'last'         => $last > 0 ? (string) wp_date( 'j M Y', $last ) : '',
-			'next'         => $last > 0 ? (string) wp_date( 'j M Y', $last + 6 * 86400 ) : '',
+			'days'         => $days,
+			'tab_href'     => function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) . '&section=checkins' : '?tab=health-profile&section=checkins',
 			'count'        => count( $history ),
 			'questions'    => $questions,
 			'series'       => $series,
@@ -888,90 +923,4 @@ function vance_hub_dashboard_results_html( $r ) {
 	return $html;
 }
 
-/**
- * The weekly check-in block: the form when a check-in is due, the member's
- * own answers by date, and the delete control.
- *
- * @param array|null $c 'checkin' from vance_hub_dashboard_features_data().
- * @return string
- */
-function vance_hub_dashboard_checkin_html( $c ) {
-	if ( empty( $c ) || empty( $c['questions'] ) ) {
-		return '';
-	}
-	$max      = (int) $c['max'];
-	$messages = array(
-		'saved'   => __( 'Your check-in is saved.', 'vance-health-hub' ),
-		'deleted' => __( 'Your check-in answers are deleted, and your agreement is withdrawn.', 'vance-health-hub' ),
-		'consent' => __( 'Not saved. Tick the box to agree, then send the form again.', 'vance-health-hub' ),
-		'early'   => __( 'Not saved. You did your check-in for this week.', 'vance-health-hub' ),
-		'invalid' => __( 'Not saved. Answer all the questions, then send the form again.', 'vance-health-hub' ),
-		'expired' => __( 'Not saved. This page was open for too long. Answer the questions again, then send the form.', 'vance-health-hub' ),
-		'failed'  => __( 'Not saved. The Hub could not store your answers. Try again later.', 'vance-health-hub' ),
-		'changed' => __( 'Not saved. The agreement text changed. Read it again, then send the form.', 'vance-health-hub' ),
-		'kept'    => __( 'Not completed. The Hub could not delete your answers or withdraw your agreement. Try again later.', 'vance-health-hub' ),
-	);
-	$nonce = '<input type="hidden" name="vance_hub_checkin_nonce" value="' . esc_attr( $c['nonce'] ) . '">';
-
-	$html  = '<section class="vhd-card vhd-checkin" aria-labelledby="vhd-checkin-title"><div class="vhd-card__head">';
-	$html .= '<h2 id="vhd-checkin-title" class="vhd-h3">' . esc_html__( 'My weekly check-in', 'vance-health-hub' ) . '</h2></div>';
-
-	if ( isset( $messages[ $c['flash'] ] ) ) {
-		$ok    = in_array( $c['flash'], array( 'saved', 'deleted' ), true );
-		$html .= '<p class="vhd-flash' . ( $ok ? '' : ' vhd-flash--warn' ) . '" role="status">' . esc_html( $messages[ $c['flash'] ] ) . '</p>';
-	}
-
-	if ( ! empty( $c['due'] ) ) {
-		$html .= '<form class="vhd-checkin__form" method="post" action="">' . $nonce;
-		$html .= '<input type="hidden" name="vance_hub_checkin_do" value="save">';
-		/* translators: %s: highest value of the scale. */
-		$html .= '<p class="vhd-checkin__scale">' . esc_html( sprintf( __( 'Choose a number for each question. 0 is none. %s is very bad.', 'vance-health-hub' ), number_format_i18n( $max ) ) ) . '</p>';
-		foreach ( $c['questions'] as $key => $question ) {
-			$html .= '<fieldset class="vhd-checkin__q"><legend>' . esc_html( $question ) . '</legend><div class="vhd-checkin__opts">';
-			for ( $n = 0; $n <= $max; $n++ ) {
-				$id    = 'vhd-checkin-' . $key . '-' . $n;
-				$html .= '<input class="vhd-sr" type="radio" id="' . esc_attr( $id ) . '" name="vhd_checkin[' . esc_attr( $key ) . ']" value="' . $n . '" required>';
-				$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( number_format_i18n( $n ) ) . '</label>';
-			}
-			$html .= '</div></fieldset>';
-		}
-		if ( ! empty( $c['need_consent'] ) ) {
-			// The reference of the wording shown here. The save refuses a tick
-			// for wording that is not the wording in use at that time.
-			$html .= '<input type="hidden" name="vhd_consent_ref" value="' . esc_attr( vance_hub_checkin_consent_ref( $c['consent'] ) ) . '">';
-			$html .= '<label class="vhd-checkin__consent"><input type="checkbox" name="vhd_consent" value="1" required> <span>' . esc_html( $c['consent'] ) . '</span></label>';
-		}
-		$html .= '<button type="submit" class="vhd-btn vhd-btn--purple">' . esc_html__( 'Save my check-in', 'vance-health-hub' ) . '</button>';
-		$html .= '</form>';
-	} else {
-		/* translators: 1: date of the last check-in, 2: date the next one opens. */
-		$html .= '<p class="vhd-checkin__done">' . esc_html( sprintf( __( 'You did your check-in on %1$s. The next one opens on %2$s.', 'vance-health-hub' ), $c['last'], $c['next'] ) ) . '</p>';
-	}
-
-	// The member's own answers by date: one small chart per question.
-	$charts = '';
-	foreach ( $c['questions'] as $key => $question ) {
-		$chart = isset( $c['series'][ $key ] ) ? vance_hub_dashboard_chart_html( $c['series'][ $key ], $question ) : '';
-		if ( '' !== $chart ) {
-			$charts .= '<div class="vhd-checkin__trend"><p class="vhd-checkin__trend-q">' . esc_html( $question ) . '</p>' . $chart . '</div>';
-		}
-	}
-	if ( '' !== $charts ) {
-		$html .= '<div class="vhd-checkin__trends">' . $charts . '</div>';
-	}
-
-	if ( '' !== $c['note'] ) {
-		$html .= '<p class="vhd-small">' . esc_html( $c['note'] ) . '</p>';
-	}
-
-	if ( (int) $c['count'] > 0 ) {
-		$html .= '<details class="vhd-checkin__manage"><summary>' . esc_html__( 'Manage my check-in data', 'vance-health-hub' ) . '</summary>';
-		/* translators: %s: number of saved check-ins. */
-		$html .= '<p>' . esc_html( sprintf( _n( 'You have %s saved check-in.', 'You have %s saved check-ins.', (int) $c['count'], 'vance-health-hub' ), number_format_i18n( (int) $c['count'] ) ) ) . ' ' . esc_html__( 'You cannot get them back after you delete them.', 'vance-health-hub' ) . '</p>';
-		$html .= '<form method="post" action="">' . $nonce . '<input type="hidden" name="vance_hub_checkin_do" value="delete">';
-		$html .= '<button type="submit" class="vhd-btn vhd-btn--outline">' . esc_html__( 'Delete my answers and withdraw my agreement', 'vance-health-hub' ) . '</button></form></details>';
-	}
-
-	$html .= '</section>';
-	return $html;
-}
+require_once __DIR__ . '/hub-checkin-ui.php';

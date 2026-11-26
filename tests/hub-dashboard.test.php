@@ -674,31 +674,25 @@ check( 'cols: saved articles only shows the saved card', strpos( $HTML, 'id="vhd
 $V = hd_view_empty();
 $V['show_messages'] = true;
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'cols: messages only gives the one-column wrapper', strpos( $HTML, '<div class="vhd-cols vhd-cols--one">' ) !== false );
-check( 'cols: messages only shows the messages card', strpos( $HTML, 'id="vhd-msgs-title"' ) !== false );
+check( 'cols: messages on, the home shows no Messages card, no badge and no list', strpos( $HTML, 'id="vhd-msgs-title"' ) === false && strpos( $HTML, 'vhd-badge' ) === false && strpos( $HTML, 'vhd-msgs' ) === false );
 
 $V = hd_view_empty();
 $V['saved'] = array( $card );
 $V['show_messages'] = true;
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'cols: both cards give the two-column wrapper with no modifier', strpos( $HTML, '<div class="vhd-cols">' ) !== false );
-check( 'cols: both cards give no one-column modifier', strpos( $HTML, 'vhd-cols--one' ) === false );
 
 // Empty messages line, and the unread badge.
 $V = hd_view_empty();
 $V['show_messages'] = true;
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'messages: no messages shows the empty line', strpos( $HTML, '<p class="vhd-empty">No messages from the team.</p>' ) !== false );
 check( 'messages: no messages shows no message list', strpos( $HTML, '<ul class="vhd-msgs">' ) === false );
 check( 'messages: no unread gives no badge', strpos( $HTML, 'vhd-badge' ) === false );
 
 $V['unread'] = 1;
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'messages: one unread shows a badge with the count', strpos( $HTML, '<span class="vhd-badge">1 new</span>' ) !== false );
 
 $V['unread'] = 1234;
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'messages: a large unread count gets a thousands separator', strpos( $HTML, '<span class="vhd-badge">1,234 new</span>' ) !== false );
 
 $V = hd_view_empty();
 $V['show_messages'] = true;
@@ -708,10 +702,6 @@ $V['messages'] = array(
 );
 $V['unread'] = 1;
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'messages: an unread message has the is-unread class', strpos( $HTML, '<a class="vhd-msg is-unread" href="?tab=messages">' ) !== false );
-check( 'messages: a read message has no is-unread class', substr_count( $HTML, 'is-unread' ) === 1 );
-check( 'messages: only an unread message says "Not read"', substr_count( $HTML, 'Not read' ) === 1 );
-check( 'messages: each message shows its date', strpos( $HTML, '<span class="vhd-msg__meta">1 Nov 2026</span>' ) !== false );
 
 // Escaping of member-supplied text.
 $V = hd_view_empty();
@@ -746,7 +736,6 @@ $V = hd_view_empty();
 $V['show_messages'] = true;
 $V['messages'] = array( array( 'title' => '<script>m</script>', 'date' => '', 'unread' => false ) );
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'escape: a message title is escaped', strpos( $HTML, '&lt;script&gt;m&lt;/script&gt;' ) !== false && strpos( $HTML, '<script>m' ) === false );
 
 $V = hd_view_empty();
 $V['saved_label'] = '<u>Saved</u>';

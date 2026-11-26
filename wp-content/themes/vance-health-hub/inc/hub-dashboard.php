@@ -772,6 +772,10 @@ function vance_hub_dashboard_home_html( $d ) {
 	}
 	if ( ! empty( $d['checkin'] ) && function_exists( 'vance_hub_dashboard_checkin_html' ) ) {
 		$top .= vance_hub_dashboard_checkin_html( $d['checkin'] );
+		// The pop-up for the first visit of the day. Empty when no check-in is due.
+		if ( function_exists( 'vance_hub_checkin_modal_html' ) ) {
+			$top .= vance_hub_checkin_modal_html( $d['checkin'] );
+		}
 	}
 	if ( '' !== $top ) {
 		$html .= '<div class="vhd-top">' . $top . '</div>';
@@ -820,7 +824,8 @@ function vance_hub_dashboard_home_html( $d ) {
 
 	// -- Saved articles and messages, side by side ---------------------------
 	$has_saved = ! empty( $d['saved'] );
-	$has_msgs  = ! empty( $d['show_messages'] );
+	// The Messages card is not shown on the home screen. The Messages tab stays.
+	$has_msgs  = false;
 	if ( $has_saved || $has_msgs ) {
 		$html .= '<div class="vhd-cols' . ( $has_saved && $has_msgs ? '' : ' vhd-cols--one' ) . '">';
 		if ( $has_saved ) {

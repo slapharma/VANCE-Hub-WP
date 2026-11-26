@@ -397,7 +397,7 @@ check( 'render: the sections row reads On by default, as the status does', switc
 check( 'render: the dashboard row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Member dashboard: VanceHubClub home' ) === 'On' && $ST[4]['on'] === true );
 check( 'render: the member number row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Member dashboard: member number' ) === 'On' && $ST[5]['on'] === true );
 check( 'render: the Community hub row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Community hub' ) === 'On' && $ST[11]['on'] === true );
-check( 'render: the check-in row reads Off, its own default is off', switch_cell( $OUT, 'Member dashboard: weekly check-in' ) === 'Off' && $ST[7]['on'] === false );
+check( 'render: the check-in row reads Off, its own default is off', switch_cell( $OUT, 'Member dashboard: daily check-in' ) === 'Off' && $ST[7]['on'] === false );
 
 arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_community' => true ), array( 'manage_options' => true ) );
 $OUT = render_screen();
@@ -441,7 +441,7 @@ $OUT = render_screen();
 check( 'escape: a javascript: dashboard URL does not reach the HTML', strpos( $OUT, 'javascript:' ) === false );
 
 arrange_admin( array(), array( 'manage_options' => true ) );
-$GLOBALS['I18N'] = array( 'Member dashboard: weekly check-in' => '<script>x</script>' );
+$GLOBALS['I18N'] = array( 'Member dashboard: daily check-in' => '<script>x</script>' );
 $OUT = render_screen();
 check( 'escape: a switch label with markup is escaped, not raw', strpos( $OUT, '<script>' ) === false );
 check( 'escape: a switch label with markup is shown as text', strpos( $OUT, '&lt;script&gt;x&lt;/script&gt;' ) !== false );
@@ -499,7 +499,7 @@ check( 'row text: a part saved off reads "Off" under a hub master', switch_cell(
 
 arrange_admin( array( 'vance_hub_dash_checkin' => false ), array( 'manage_options' => true ) );
 $OUT = render_screen();
-check( 'row text: a part off under a classic master reads "Off", not the master text', switch_cell( $OUT, 'Member dashboard: weekly check-in' ) === 'Off' );
+check( 'row text: a part off under a classic master reads "Off", not the master text', switch_cell( $OUT, 'Member dashboard: daily check-in' ) === 'Off' );
 
 /* ===================================================================== */
 echo "\n";
