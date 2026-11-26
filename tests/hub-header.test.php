@@ -366,9 +366,11 @@ arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => true ) );
 check( 'body class: vhub-header is added when on, and the other classes stay', vance_hub_header_body_class( array( 'home' ) ) === array( 'home', 'vhub-header' ) );
 
 class HeaderCustomizeFake {
+	public $panels   = array();
 	public $sections = array();
 	public $settings = array();
 	public $controls = array();
+	public function add_panel( $id, $args = array() ) { $this->panels[ $id ] = $args; }
 	public function add_section( $id, $args = array() ) { $this->sections[ $id ] = $args; }
 	public function add_setting( $id, $args = array() ) { $this->settings[ $id ] = $args; }
 	public function add_control( $id, $args = array() ) { $this->controls[ $id ] = $args; }
@@ -378,8 +380,8 @@ vance_hub_header_customize_register( $WC );
 check( 'customizer: the setting vance_hub_header is registered', isset( $WC->settings['vance_hub_header'] ) );
 check( 'customizer: the default is true (the master switch decides whether it shows)', ( $WC->settings['vance_hub_header']['default'] ?? null ) === true );
 check( 'customizer: the sanitize callback is vance_hub_sanitize_checkbox', ( $WC->settings['vance_hub_header']['sanitize_callback'] ?? '' ) === 'vance_hub_sanitize_checkbox' );
-check( 'customizer: the control is a checkbox in section vance_home_layout', ( $WC->controls['vance_hub_header']['type'] ?? '' ) === 'checkbox' && ( $WC->controls['vance_hub_header']['section'] ?? '' ) === 'vance_home_layout' );
-check( 'customizer: the label is "Site header: use the VanceHubClub header"', ( $WC->controls['vance_hub_header']['label'] ?? '' ) === 'Site header: use the VanceHubClub header' );
+check( 'customizer: the control is a checkbox in section vance_hub_sec_header', ( $WC->controls['vance_hub_header']['type'] ?? '' ) === 'checkbox' && ( $WC->controls['vance_hub_header']['section'] ?? '' ) === 'vance_hub_sec_header' );
+check( 'customizer: the label is "Use the VanceHubClub header"', ( $WC->controls['vance_hub_header']['label'] ?? '' ) === 'Use the VanceHubClub header' );
 check( 'hooks: the Customizer registration is hooked', isset( $GLOBALS['HOOKS']['customize_register'][10] ) && in_array( 'vance_hub_header_customize_register', $GLOBALS['HOOKS']['customize_register'][10], true ) );
 
 /* ---- 4. the fallback navigation ---------------------------------------------- */

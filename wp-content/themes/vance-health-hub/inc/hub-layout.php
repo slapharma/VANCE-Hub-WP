@@ -476,45 +476,161 @@ add_filter( 'body_class', 'vance_hub_body_class_cleanup', 20 );
  * ====================================================================== */
 
 /**
- * Register the "Home layout" section and the hub home settings.
+ * The VanceHubClub panel of the Customizer.
+ */
+const VANCE_HUB_CUSTOMIZER_PANEL = 'vance_hub_panel';
+
+/**
+ * The sections of the VanceHubClub panel, in screen order.
+ *
+ * This is the only place that names the sections. Every hub file registers
+ * its controls into one of these ids. The number in each title is the order
+ * of setup. The first section keeps the id 'vance_home_layout', which is also
+ * the name of the master setting.
+ *
+ * @return array[] Section id => title and description.
+ */
+function vance_hub_customizer_sections() {
+	return array(
+		'vance_home_layout'       => array(
+			'title'       => __( '1. On or off', 'vance-health-hub' ),
+			'description' => __( 'The master switch for all of VanceHubClub.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_home'      => array(
+			'title'       => __( '2. Home page', 'vance-health-hub' ),
+			'description' => __( 'The parts of the VanceHubClub home page.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_header'    => array(
+			'title'       => __( '3. Header and member bar', 'vance-health-hub' ),
+			'description' => __( 'The header on every page, and the purple member bar below it.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_pages'     => array(
+			'title'       => __( '4. Articles and Self-Assessment', 'vance-health-hub' ),
+			'description' => __( 'The article pages and the end of the Gastro Self-Assessment.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_dashboard' => array(
+			'title'       => __( '5. Member dashboard', 'vance-health-hub' ),
+			'description' => __( 'What a member sees after sign in.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_community' => array(
+			'title'       => __( '6. Community', 'vance-health-hub' ),
+			'description' => __( 'The Community hub at /community/.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_checkin'   => array(
+			'title'       => __( '7. Daily check-in (health data)', 'vance-health-hub' ),
+			'description' => __( 'The answers are health data. Get the wording and the privacy policy approved before you turn the check-in on.', 'vance-health-hub' ),
+		),
+		'vance_hub_sec_flare'     => array(
+			'title'       => __( '8. Flare plan (health data)', 'vance-health-hub' ),
+			'description' => __( 'The plan is health data. Turn it on only when the privacy policy covers it and a clinician has approved the urgent help text.', 'vance-health-hub' ),
+		),
+	);
+}
+
+/**
+ * The on/off switches: section and label, in screen order.
+ *
+ * The Customizer registrations and the Vance Club Layout screen
+ * (inc/hub-admin.php) read this list, so the two always show the same words.
+ *
+ * @return array[] Setting id => section id and label.
+ */
+function vance_hub_customizer_switches() {
+	return array(
+		'vance_hub_show_promo'      => array( 'section' => 'vance_hub_sec_home', 'label' => __( 'Show the promo block', 'vance-health-hub' ) ),
+		'vance_hub_show_sections'   => array( 'section' => 'vance_hub_sec_home', 'label' => __( 'Show "Latest by section"', 'vance-health-hub' ) ),
+		'vance_hub_show_more'       => array( 'section' => 'vance_hub_sec_home', 'label' => __( 'Show "More to read"', 'vance-health-hub' ) ),
+		'vance_hub_header'          => array( 'section' => 'vance_hub_sec_header', 'label' => __( 'Use the VanceHubClub header', 'vance-health-hub' ) ),
+		'vance_hub_articles'        => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Use the VanceHubClub article layout', 'vance-health-hub' ) ),
+		'vance_hub_tool_result'     => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Show the Self-Assessment result page', 'vance-health-hub' ) ),
+		'vance_hub_show_dashboard'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Use the VanceHubClub dashboard home', 'vance-health-hub' ) ),
+		'vance_hub_dashboard_tabs'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Use the VanceHubClub look on every tab', 'vance-health-hub' ) ),
+		'vance_hub_dash_member_no'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Show the member number', 'vance-health-hub' ) ),
+		'vance_hub_dash_chart'      => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Show the results chart', 'vance-health-hub' ) ),
+		'vance_hub_community'       => array( 'section' => 'vance_hub_sec_community', 'label' => __( 'Turn on the Community hub', 'vance-health-hub' ) ),
+		'vance_hub_dash_checkin'    => array( 'section' => 'vance_hub_sec_checkin', 'label' => __( 'Show the daily check-in', 'vance-health-hub' ) ),
+		'vance_hub_dash_flare_plan' => array( 'section' => 'vance_hub_sec_flare', 'label' => __( 'Show the flare plan', 'vance-health-hub' ) ),
+	);
+}
+
+/**
+ * Section and label of one switch, for its Customizer control.
+ *
+ * @param string $mod Setting id of the switch.
+ * @return array 'section' and 'label'.
+ */
+function vance_hub_customizer_switch( $mod ) {
+	$switches = vance_hub_customizer_switches();
+	return $switches[ $mod ];
+}
+
+/**
+ * Show a control only while "Use the VanceHubClub dashboard home" is on in
+ * the Customizer. With no such setting, the control shows.
+ *
+ * @param WP_Customize_Control $control The control.
+ * @return bool
+ */
+function vance_hub_customizer_dashboard_home_on( $control ) {
+	$setting = $control->manager->get_setting( 'vance_hub_show_dashboard' );
+	return $setting ? (bool) vance_hub_sanitize_checkbox( $setting->value() ) : true;
+}
+
+/**
+ * Register the VanceHubClub panel, its sections, and the settings that this
+ * file owns: the master switch, the home page and the member bar.
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.
  */
 function vance_hub_customize_register( $wp_customize ) {
-	$section = 'vance_home_layout';
-
-	$wp_customize->add_section( $section, array(
-		// Top level, not inside the Homepage panel: the section also holds the
-		// article and member dashboard switches.
+	$wp_customize->add_panel( VANCE_HUB_CUSTOMIZER_PANEL, array(
+		// Top of the Customizer: this panel changes the layout of the whole site.
 		'title'       => __( 'VanceHubClub', 'vance-health-hub' ),
 		'priority'    => 1,
-		'description' => __( 'VanceHealthHub is the current home page. VanceHubClub puts the free tools and the community first. Administrators can preview either one without saving: add ?vhh_layout=hub (VanceHubClub) or ?vhh_layout=classic (VanceHealthHub) to the home page address. To see the whole VanceHubClub layout on every page, turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
+		'description' => __( 'VanceHubClub is the new site layout. It puts the free tools and the community first. The classic layout is VanceHealthHub. Do section 1 first. Then set each part in sections 2 to 8. To see VanceHubClub before you turn it on, use Preview mode on the Vance Club Layout screen (VanceHealthHub menu), or add ?vhh_layout=hub to one page address. Only administrators see a preview.', 'vance-health-hub' ),
 	) );
+
+	$order = 0;
+	foreach ( vance_hub_customizer_sections() as $id => $section ) {
+		$order += 10;
+		$wp_customize->add_section( $id, array(
+			'title'       => $section['title'],
+			'description' => $section['description'],
+			'panel'       => VANCE_HUB_CUSTOMIZER_PANEL,
+			'priority'    => $order,
+		) );
+	}
+
+	/* ---- 1. On or off ---- */
 
 	$wp_customize->add_setting( 'vance_home_layout', array(
 		'default'           => 'classic',
 		'sanitize_callback' => 'vance_hub_sanitize_layout',
 	) );
 	$wp_customize->add_control( 'vance_home_layout', array(
-		'label'       => __( 'Home layout (master switch)', 'vance-health-hub' ),
-		'description' => __( 'This switch turns all of VanceHubClub on or off: the home page, the header, article pages, the member dashboard, the Self-Assessment result page and the Community hub. With VanceHubClub selected, every part below is on unless you turn it off. With VanceHealthHub selected, every part is off.', 'vance-health-hub' ),
-		'section'     => $section,
+		'label'       => __( 'Site layout', 'vance-health-hub' ),
+		'description' => __( 'Classic: every VanceHubClub part is off. VanceHubClub: every part is on, unless you turn that part off in sections 2 to 8. The daily check-in and the flare plan are different: they start off, and you turn them on in sections 7 and 8. To see one page in a layout with no change to the site, add ?vhh_layout=hub or ?vhh_layout=classic to its address.', 'vance-health-hub' ),
+		'section'     => 'vance_home_layout',
 		'type'        => 'radio',
-		'choices' => array(
-			'classic' => __( 'VanceHealthHub (current home page)', 'vance-health-hub' ),
-			'hub'     => __( 'VanceHubClub (tools and community first)', 'vance-health-hub' ),
+		'priority'    => 10,
+		'choices'     => array(
+			'classic' => __( 'Classic (VanceHealthHub)', 'vance-health-hub' ),
+			'hub'     => __( 'VanceHubClub', 'vance-health-hub' ),
 		),
 	) );
+
+	/* ---- 3. Header and member bar (the header switch is in inc/hub-header.php) ---- */
 
 	$wp_customize->add_setting( 'vance_hub_member_min', array(
 		'default'           => 100,
 		'sanitize_callback' => 'absint',
 	) );
 	$wp_customize->add_control( 'vance_hub_member_min', array(
-		'label'       => __( 'Hub: show member counts from', 'vance-health-hub' ),
-		'description' => __( 'The purple member bar shows the real member total only when it reaches this number. Below it, the bar shows the Founding Member line (if a deadline is set) or nothing.', 'vance-health-hub' ),
-		'section'     => $section,
+		'label'       => __( 'Show the member total from this number', 'vance-health-hub' ),
+		'description' => __( 'The member bar shows the real member total only when the total reaches this number. Below this number, the bar shows the Founding Member line (if a deadline is set) or nothing.', 'vance-health-hub' ),
+		'section'     => 'vance_hub_sec_header',
 		'type'        => 'number',
+		'priority'    => 20,
 		'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 	) );
 
@@ -523,98 +639,120 @@ function vance_hub_customize_register( $wp_customize ) {
 		'sanitize_callback' => 'vance_hub_sanitize_date',
 	) );
 	$wp_customize->add_control( 'vance_hub_founding_deadline', array(
-		'label'       => __( 'Hub: Founding Member deadline', 'vance-health-hub' ),
-		'description' => __( 'Leave empty to hide the Founding Member line. The line shows to logged-out visitors until the end of this date.', 'vance-health-hub' ),
-		'section'     => $section,
+		'label'       => __( 'Founding Member deadline', 'vance-health-hub' ),
+		'description' => __( 'Logged-out visitors see the Founding Member line until the end of this date. Leave empty to hide the line.', 'vance-health-hub' ),
+		'section'     => 'vance_hub_sec_header',
 		'type'        => 'date',
+		'priority'    => 30,
 	) );
 
+	/* ---- 2. Home page ---- */
+
+	$switch = vance_hub_customizer_switch( 'vance_hub_show_promo' );
 	$wp_customize->add_setting( 'vance_hub_show_promo', array(
 		'default'           => true,
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_show_promo', array(
-		'label'       => __( 'Hub: show the promo block', 'vance-health-hub' ),
-		'description' => __( 'The same promo block as the VanceHealthHub home page. Its content and its own on/off switch are in the "Promo Block" section. It shows here only when both switches are on.', 'vance-health-hub' ),
-		'section'     => $section,
+		'label'       => $switch['label'],
+		'description' => __( 'This is the same promo block as on the classic home page. Its content and its own switch are in Home · Blocks > Promo block. The block shows only when the two switches are on.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
+		'priority'    => 10,
 	) );
 
-	$wp_customize->add_setting( 'vance_hub_show_dashboard', array(
-		'default'           => vance_hub_switch_default( 'vance_hub_show_dashboard' ),
-		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
-	) );
-	$wp_customize->add_control( 'vance_hub_show_dashboard', array(
-		'label'       => __( 'Member dashboard: use the VanceHubClub home', 'vance-health-hub' ),
-		'description' => __( 'Replaces the first screen of the member dashboard with the VanceHubClub layout: a greeting, one next step, the free tools with the member\'s own progress, and the member\'s saved items. The other dashboard tabs do not change. Administrators can preview it without saving: add ?vhh_layout=hub to the dashboard address, or turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
-		'section'     => $section,
-		'type'        => 'checkbox',
-	) );
-
-	$wp_customize->add_setting( 'vance_hub_dashboard_tabs', array(
-		'default'           => vance_hub_switch_default( 'vance_hub_dashboard_tabs' ),
-		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
-	) );
-	$wp_customize->add_control( 'vance_hub_dashboard_tabs', array(
-		'label'       => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
-		'description' => __( 'Gives every other dashboard tab the VanceHubClub look: a navy side menu with a member card and an "Ask VANCE-Ai" block, and a new look for headings, cards and buttons. The tabs hold the same forms and data. It works only when the VanceHubClub home above is on, or in an administrator preview (?vhh_layout=hub, or preview mode).', 'vance-health-hub' ),
-		'section'     => $section,
-		'type'        => 'checkbox',
-	) );
-
+	$switch = vance_hub_customizer_switch( 'vance_hub_show_sections' );
 	$wp_customize->add_setting( 'vance_hub_show_sections', array(
 		'default'           => true,
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_show_sections', array(
-		'label'       => __( 'Hub: show "Latest by section"', 'vance-health-hub' ),
-		'description' => __( 'One column per content section (Gastro Living, Health News, Clinical Reviews) with its newest articles. A section with no articles is left out.', 'vance-health-hub' ),
-		'section'     => $section,
+		'label'       => $switch['label'],
+		'description' => __( 'One column for each content section (Gastro Living, Health News, Clinical Reviews) with its newest articles. A section with no articles does not show.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
+		'priority'    => 20,
 	) );
 
+	$switch = vance_hub_customizer_switch( 'vance_hub_show_more' );
 	$wp_customize->add_setting( 'vance_hub_show_more', array(
 		'default'           => true,
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_show_more', array(
-		'label'       => __( 'Hub: show "More to read"', 'vance-health-hub' ),
-		'description' => __( 'A grid of up to six more recent articles that are not already on the page.', 'vance-health-hub' ),
-		'section'     => $section,
+		'label'       => $switch['label'],
+		'description' => __( 'A grid of a maximum of six more recent articles that are not already on the page.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
 		'type'        => 'checkbox',
+		'priority'    => 30,
 	) );
 
 	for ( $i = 1; $i <= 4; $i++ ) {
+		// Tile 1 uses priorities 110 to 113, tile 2 uses 120 to 123, and so on.
+		$base = 100 + ( 10 * $i );
 		$wp_customize->add_setting( "vance_hub_tile_{$i}_badge", array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
 		$wp_customize->add_control( "vance_hub_tile_{$i}_badge", array(
 			/* translators: %d: tile number. */
-			'label'       => sprintf( __( 'Hub: "Inside the Hub" tile %d badge', 'vance-health-hub' ), $i ),
-			'description' => 1 === $i ? __( 'The "Inside the Hub this week" section shows only tiles that have a title. With no titles set, the whole section is hidden.', 'vance-health-hub' ) : '',
-			'section'     => $section,
+			'label'       => sprintf( __( 'Tile %d: badge', 'vance-health-hub' ), $i ),
+			'description' => 1 === $i ? __( 'The four tiles make the "Inside the Hub this week" row. A tile shows only when it has a title. With no titles, the row does not show.', 'vance-health-hub' ) : '',
+			'section'     => 'vance_hub_sec_home',
 			'type'        => 'text',
+			'priority'    => $base,
 		) );
 		$wp_customize->add_setting( "vance_hub_tile_{$i}_title", array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
 		$wp_customize->add_control( "vance_hub_tile_{$i}_title", array(
 			/* translators: %d: tile number. */
-			'label'   => sprintf( __( 'Hub: tile %d title', 'vance-health-hub' ), $i ),
-			'section' => $section,
-			'type'    => 'text',
+			'label'    => sprintf( __( 'Tile %d: title', 'vance-health-hub' ), $i ),
+			'section'  => 'vance_hub_sec_home',
+			'type'     => 'text',
+			'priority' => $base + 1,
 		) );
 		$wp_customize->add_setting( "vance_hub_tile_{$i}_text", array( 'default' => '', 'sanitize_callback' => 'sanitize_textarea_field' ) );
 		$wp_customize->add_control( "vance_hub_tile_{$i}_text", array(
 			/* translators: %d: tile number. */
-			'label'   => sprintf( __( 'Hub: tile %d text', 'vance-health-hub' ), $i ),
-			'section' => $section,
-			'type'    => 'textarea',
+			'label'    => sprintf( __( 'Tile %d: text', 'vance-health-hub' ), $i ),
+			'section'  => 'vance_hub_sec_home',
+			'type'     => 'textarea',
+			'priority' => $base + 2,
 		) );
 		$wp_customize->add_setting( "vance_hub_tile_{$i}_link", array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
 		$wp_customize->add_control( "vance_hub_tile_{$i}_link", array(
 			/* translators: %d: tile number. */
-			'label'   => sprintf( __( 'Hub: tile %d link', 'vance-health-hub' ), $i ),
-			'section' => $section,
-			'type'    => 'url',
+			'label'    => sprintf( __( 'Tile %d: link', 'vance-health-hub' ), $i ),
+			'section'  => 'vance_hub_sec_home',
+			'type'     => 'url',
+			'priority' => $base + 3,
 		) );
 	}
+
+	/* ---- 5. Member dashboard (the number and the chart are in inc/hub-dashboard-features.php) ---- */
+
+	$switch = vance_hub_customizer_switch( 'vance_hub_show_dashboard' );
+	$wp_customize->add_setting( 'vance_hub_show_dashboard', array(
+		'default'           => vance_hub_switch_default( 'vance_hub_show_dashboard' ),
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_show_dashboard', array(
+		'label'       => $switch['label'],
+		'description' => __( 'On: the first screen of the member dashboard shows a greeting, one next step, the free tools with the member\'s progress, and the member\'s saved items. The other tabs do not change.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
+		'type'        => 'checkbox',
+		'priority'    => 10,
+	) );
+
+	$switch = vance_hub_customizer_switch( 'vance_hub_dashboard_tabs' );
+	$wp_customize->add_setting( 'vance_hub_dashboard_tabs', array(
+		'default'           => vance_hub_switch_default( 'vance_hub_dashboard_tabs' ),
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_dashboard_tabs', array(
+		'label'           => $switch['label'],
+		'description'     => __( 'On: each other dashboard tab gets a navy side menu with a member card and an "Ask VANCE-Ai" block, and new headings, cards and buttons. The forms and the data stay the same. This switch needs the dashboard home above.', 'vance-health-hub' ),
+		'section'         => $switch['section'],
+		'type'            => 'checkbox',
+		'priority'        => 20,
+		'active_callback' => 'vance_hub_customizer_dashboard_home_on',
+	) );
 }
 add_action( 'customize_register', 'vance_hub_customize_register' );
 
