@@ -249,15 +249,6 @@ function vance_hub_checkin_tab_html( $c ) {
 		$html .= '<p class="vhd-small">' . esc_html( $c['note'] ) . '</p>';
 	}
 
-	if ( (int) $c['count'] > 0 ) {
-		$nonce = '<input type="hidden" name="vance_hub_checkin_nonce" value="' . esc_attr( $c['nonce'] ) . '">';
-		$html .= '<details class="vhd-checkin__manage"><summary>' . esc_html__( 'Manage my check-in data', 'vance-health-hub' ) . '</summary>';
-		/* translators: %s: number of saved check-ins. */
-		$html .= '<p>' . esc_html( sprintf( _n( 'You have %s saved check-in.', 'You have %s saved check-ins.', (int) $c['count'], 'vance-health-hub' ), number_format_i18n( (int) $c['count'] ) ) ) . ' ' . esc_html__( 'You cannot get them back after you delete them.', 'vance-health-hub' ) . '</p>';
-		$html .= '<form method="post" action="">' . $nonce . '<input type="hidden" name="vance_hub_checkin_do" value="delete">';
-		$html .= '<button type="submit" class="vhd-btn vhd-btn--outline">' . esc_html__( 'Delete my answers and withdraw my agreement', 'vance-health-hub' ) . '</button></form></details>';
-	}
-
 	$html .= '</section></div>';
 	return $html;
 }

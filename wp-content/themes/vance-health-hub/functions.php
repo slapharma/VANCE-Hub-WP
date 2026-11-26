@@ -145,6 +145,8 @@ require_once get_template_directory() . '/inc/hub-dashboard.php';
 require_once get_template_directory() . '/inc/hub-dashboard-features.php';
 // The flare plan card. Reuses the consent and lock helpers above, so it comes after.
 require_once get_template_directory() . '/inc/hub-flare-plan.php';
+// Manage my data: delete the health data a member saved. Needs the lock helpers and the groups above.
+require_once get_template_directory() . '/inc/hub-data-manage.php';
 // VanceHubClub site header: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-header.php';
 // One admin menu item for every VanceHubClub control. Needs hub-layout.php.

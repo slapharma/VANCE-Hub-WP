@@ -547,6 +547,20 @@
 .vhd .vhd-modal__later { align-self: center; background: none; border: 0; cursor: pointer; font: inherit; min-height: 44px; }
 html.vhd-modal-open { overflow: hidden; }
 
+/* Manage my data: last tab, on the right of the row */
+.vhd .vhd-subtabs__link--data { margin-left: auto; }
+.vhd .vhd-btn--danger { background: #FFFFFF; border: 2px solid #B91C1C; color: #B91C1C; }
+.vhd .vhd-btn--danger:hover { background: #B91C1C; color: #FFFFFF; }
+.vhd .vhd-manage__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.vhd .vhd-manage__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 14px 0; border-top: 1px solid var(--vhd-line); }
+.vhd .vhd-manage__what { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.vhd .vhd-manage__status { font-size: 13px; font-weight: 700; color: var(--vhd-muted); }
+.vhd .vhd-manage__status.is-saved { color: var(--vhd-teal-ink); }
+.vhd .vhd-manage__form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.vhd .vhd-manage__confirm { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--vhd-ink); }
+.vhd .vhd-manage__confirm input { width: 20px; height: 20px; }
+.vhd .vhd-manage__all { display: flex; flex-direction: column; gap: 10px; padding-top: 16px; border-top: 2px solid var(--vhd-line); }
+
 /* --- Narrow screens ------------------------------------------------------ */
 @media (max-width: 900px) {
 	.vhd .vhd-checkin__trends { grid-template-columns: minmax(0, 1fr); }
