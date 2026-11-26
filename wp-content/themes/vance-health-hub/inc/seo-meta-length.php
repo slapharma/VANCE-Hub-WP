@@ -246,6 +246,10 @@ function vance_meta_description_fallback() {
 		return;
 	}
 	$raw = '' !== trim( (string) $post->post_excerpt ) ? $post->post_excerpt : $post->post_content;
+	// Discount pages keep their text in post meta and have an empty body.
+	if ( '' === trim( wp_strip_all_tags( $raw ) ) && 'vance_discount' === $post->post_type ) {
+		$raw = trim( get_post_meta( $post->ID, '_vance_discount_what', true ) . ' ' . get_post_meta( $post->ID, '_vance_discount_ibd_note', true ) );
+	}
 	$fit = vance_meta_fit_description( '', wp_strip_all_tags( strip_shortcodes( $raw ) ) );
 	if ( '' === $fit ) {
 		return;
