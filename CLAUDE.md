@@ -555,6 +555,78 @@ The cookie is added through LSCWP's documented `litespeed_vary_curr_cookies`
 on a settings save). After deploy: purge every cache and re-save LSCWP settings.
 Not verified on the live server yet; Hostinger's own cache layer is untested.
 
+### Flare plan — `inc/hub-flare-plan.php`
+
+A member's own plan for a flare. It shows as the "My flare plan" card in the Health Profile
+tab of the VanceHubClub dashboard, on the "Flare plan" sub-tab. `page-dashboard.php`
+(`case 'health-profile'`) calls `vance_hub_flare_plan_data()` for the current member and
+prints the card with `vance_hub_flare_plan_html()`. The card is not in the dashboard home
+render (`inc/hub-dashboard.php`) and not in `vance_hub_dashboard_features_data()`
+(`inc/hub-dashboard-features.php`). The member writes three answers: early signs,
+what they do first, and who they contact. Each answer holds up to 1000 characters.
+The member can edit, print and delete the plan. The fourth section, "When to get
+urgent help", is fixed text that an administrator enters.
+
+This is health data. The card records the member's own words and gives no advice.
+
+- **Health Profile sub-tabs:** the Health Profile tab (`?tab=health-profile`) shows three
+  plain links, `My profile` (`hsub=profile`), `Screening results` (`hsub=screening`) and
+  `Flare plan` (`hsub=flare`). `page-dashboard.php` builds them with `add_query_arg()`, so
+  they work with no script. The `Flare plan` link appears only when `vance_hub_flare_plan_data()`
+  returns data.
+- **Panels:** all three panels stay in the page. A panel that is not open has the `hidden`
+  attribute, and `.hp-panel[hidden] { display: none !important; }` in
+  `assets/css/hub-dashboard.css` hides it. The bar is `nav.vhd-subtabs`. Its styles are at the
+  end of that file, and the bar is hidden when printing.
+- **Which panel opens:** `hsub` picks the open panel. A missing or unknown value opens
+  `profile`. With no `hsub`, a `vance_flare` code in the URL opens `flare`. An explicit `hsub`
+  wins over the code.
+- **Hub layout off:** the bar and the hidden panels need `vance_hub_dashboard_active()`. When
+  it is false, every section shows, with no bar. The flare card does not show, because the
+  data is fetched only when the hub dashboard is active.
+- **After a save or delete:** the forms post to the current URL (`action=""`). The handler
+  redirects to that URL with `vance_flare` set to the result code, so `tab` and `hsub` stay as
+  they were. If `hsub` was not in the URL, the code still opens the Flare plan panel.
+- **Switch:** `vance_hub_dash_flare_plan`. Default OFF, set in `vance_hub_switch_default()`
+  (`inc/hub-layout.php`). The comment there says health-data cards stay off until the
+  privacy policy covers them. Turn it on only after the policy covers the plan.
+- **Urgent help text:** theme mod `vance_hub_flare_plan_urgent`, set in Customize under
+  `vance_home_layout`. It has no default. While it is empty the card does not show and
+  a save is refused. Do not write this text as an agent. A clinician must write or
+  approve it, and the site has no named medical reviewer (see Outstanding work, item 1).
+- **Storage:** `_sla_flare_plan` holds `{updated, signs, actions, contacts}`. The
+  agreement uses the check-in key pattern with base `flare_plan`:
+  `_sla_consent_flare_plan` ('1' while the member agrees), `_sla_consent_flare_plan_at`,
+  `_sla_consent_flare_plan_text` (the wording agreed to), and
+  `_sla_consent_flare_plan_withdrawn_at` (set on delete). Never rename these keys
+  (constraint 2).
+- **Shared helpers:** `vance_hub_checkin_consent_keys()`, `vance_hub_checkin_consent_snapshot()`,
+  `vance_hub_checkin_consent_restore()` and `vance_hub_checkin_consent_record()` take a
+  `$base` argument. The plan passes `'flare_plan'`. The plan also reuses
+  `vance_hub_checkin_consent_ok()`, the consent reference helpers and
+  `vance_hub_checkin_lock()` from `inc/hub-dashboard-features.php`. The lock is one per
+  member, so a plan save and a check-in save never run at the same time.
+- **Not a generic tool:** the plan is not in `vance_known_tool_slugs()`
+  (`inc/dashboard-functions.php`). That list opens the generic save handlers. The plan
+  is written only by `vance_hub_flare_plan_handle_post()`, after validation.
+- **Form:** posts to the page it is on (`action=""`), which is the Health Profile tab. Nonce action `vance_hub_flare_plan`, field
+  `vance_hub_flare_nonce`. Field `vance_hub_flare_do` is `save` or `delete`. Answers are
+  in `vhd_flare[signs]`, `vhd_flare[actions]` and `vhd_flare[contacts]`. The handler
+  redirects with `?vance_flare=<code>`, and that code picks the message.
+- **Delete:** removes the plan and withdraws the agreement. The agreement time and
+  wording stay as a record.
+- **Privacy:** registered with the WordPress personal data tools under `vance-flare-plan`.
+  The exporter writes the plan and the agreement record. The eraser removes the plan and
+  every key listed above.
+- **Print:** `@media print` in `assets/css/hub-dashboard.css` shows the card and hides the rest
+  of the page. `assets/js/hub-flare-plan.js` marks the card's ancestors on `beforeprint` and
+  clears the marks on `afterprint`, so the CSS can drop the rest. The same script shows the
+  Print button, which stays hidden until it runs, so a page with no script shows no button
+  that does nothing.
+- **Tests:** `tests/hub-flare-plan.test.php`. Run `cd tests; php hub-flare-plan.test.php`.
+  It exits 1 when any check fails. The Health Profile tab is checked by reading
+  `page-dashboard.php` as text, not by rendering it.
+
 ## Customizer structure: one map decides where everything sits
 
 Panels, sections and controls are still registered where they always were:

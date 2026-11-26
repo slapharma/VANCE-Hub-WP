@@ -1,0 +1,269 @@
+<?php
+/**
+ * Tests for the organic social plan code:
+ *   inc/attribution.php, inc/marketing-pages.php, inc/waitlist.php and the plan
+ *   page templates. Plain PHP, no WordPress. Run: php tests/marketing.test.php
+ * Exits 1 when any check fails.
+ */
+
+define( 'ABSPATH', true );
+define( 'DAY_IN_SECONDS', 86400 );
+$THEME = dirname( __DIR__ ) . '/wp-content/themes/vance-health-hub';
+
+/* ---- stubs ---------------------------------------------------------------- */
+$GLOBALS['META']    = array();
+$GLOBALS['OPTIONS'] = array();
+$GLOBALS['CRM']     = array();
+$GLOBALS['FILTERS'] = array();
+class JsonReply extends Exception {
+	public $ok; public $data; public $status;
+	public function __construct( $ok, $data, $status ) { parent::__construct( 'json' ); $this->ok = $ok; $this->data = $data; $this->status = $status; }
+}
+function add_action() {}
+function add_filter( $tag, $cb ) { $GLOBALS['FILTERS'][ $tag ][] = $cb; }
+function apply_filters( $tag, $value ) { return $value; }
+function __( $s ) { return $s; }
+function wp_unslash( $v ) { return $v; }
+function sanitize_text_field( $v ) { return trim( strip_tags( (string) $v ) ); }
+function sanitize_email( $v ) { return trim( (string) $v ); }
+function is_email( $v ) { return (bool) preg_match( '/^[^@\s]+@[^@\s]+\.[^@\s]+$/', (string) $v ); }
+function update_user_meta( $id, $k, $v ) { $GLOBALS['META'][ $id ][ $k ] = $v; }
+function get_user_meta( $id, $k, $single = true ) { return $GLOBALS['META'][ $id ][ $k ] ?? ''; }
+function get_option( $k, $d = false ) { return $GLOBALS['OPTIONS'][ $k ] ?? $d; }
+function update_option( $k, $v ) { $GLOBALS['OPTIONS'][ $k ] = $v; return true; }
+function wp_verify_nonce( $n, $a ) { return 'good' === $n && 'vance_waitlist' === $a; }
+function vance_rate_limit() { return true; }
+function home_url( $p = '' ) { return 'https://example.test' . $p; }
+function add_query_arg( $args, $url ) { return $url . '?' . http_build_query( $args ); }
+function wp_send_json_success( $d = null, $s = 200 ) { throw new JsonReply( true, $d, $s ); }
+function wp_send_json_error( $d = null, $s = 400 ) { throw new JsonReply( false, $d, $s ); }
+$GLOBALS['CRM_EXISTING'] = array();
+function FluentCrmApi() {
+	return new class() {
+		public function createOrUpdate( $data ) { $GLOBALS['CRM'][] = $data; return true; }
+		public function getContact( $email ) { return in_array( strtolower( $email ), $GLOBALS['CRM_EXISTING'], true ) ? (object) array( 'email' => $email ) : null; }
+	};
+}
+$GLOBALS['GET_POSTS_ARGS'] = array();
+function get_posts( $args ) { $GLOBALS['GET_POSTS_ARGS'][] = $args; return array(); }
+
+require $THEME . '/inc/attribution.php';
+require $THEME . '/inc/marketing-pages.php';
+require $THEME . '/inc/waitlist.php';
+
+/* ---- harness ---------------------------------------------------------------- */
+$GLOBALS['PASS'] = 0;
+$GLOBALS['FAILS'] = array();
+function check( $label, $ok ) {
+	if ( $ok ) { $GLOBALS['PASS']++; return; }
+	$GLOBALS['FAILS'][] = $label;
+}
+function section( $t ) { echo "\n-- $t\n"; }
+function waitlist_call( array $post ) {
+	$_POST = $post;
+	try {
+		vance_waitlist_signup_ajax();
+	} catch ( JsonReply $r ) {
+		return $r;
+	}
+	return null;
+}
+$good = array( 'nonce' => 'good', 'email' => 'a@example.test', 'first_name' => 'Ann', 'consent' => '1' );
+
+/* ---- 1. attribution values ----------------------------------------------------- */
+section( '1. Campaign values are short safe labels' );
+check( 'clean: lower case, junk stripped', 'instagram' === vance_attribution_clean( ' Instagram!! ' ) );
+check( 'clean: markup and quotes removed', 'scriptalert1script' === vance_attribution_clean( '<script>alert(1)</script>' ) );
+check( 'clean: capped at 40 characters', 40 === strlen( vance_attribution_clean( str_repeat( 'a', 90 ) ) ) );
+check( 'clean: a non-string gives an empty string', '' === vance_attribution_clean( array( 'x' ) ) );
+check( 'clean: hyphen, dot and underscore are kept', 'bio-link_2.0' === vance_attribution_clean( 'bio-link_2.0' ) );
+$ex = vance_attribution_extract( array( 'utm_source' => 'TikTok', 'utm_medium' => 'bio', 'utm_term' => 'ibs', 'q' => 'x' ) );
+check( 'extract: keeps only the four campaign keys', array( 'utm_source' => 'tiktok', 'utm_medium' => 'bio' ) === $ex );
+check( 'extract: an empty value is dropped', array() === vance_attribution_extract( array( 'utm_source' => '!!!' ) ) );
+
+/* ---- 2. sign-up record ------------------------------------------------------------ */
+section( '2. The source is copied to the member on sign-up' );
+$_COOKIE = array( 'vance_utm' => 'utm_source=instagram&utm_medium=bio&utm_campaign=wk1' );
+vance_attribution_record_signup( 11 );
+check( 'record: source, medium and campaign are stored', 'instagram' === get_user_meta( 11, '_vance_signup_source' ) && 'bio' === get_user_meta( 11, '_vance_signup_medium' ) && 'wk1' === get_user_meta( 11, '_vance_signup_campaign' ) );
+$_COOKIE = array();
+vance_attribution_record_signup( 12 );
+check( 'record: no cookie means no meta is written', empty( $GLOBALS['META'][12] ) );
+$_COOKIE = array( 'vance_utm' => 'utm_medium=bio' );
+vance_attribution_record_signup( 13 );
+check( 'record: no source means nothing is written', empty( $GLOBALS['META'][13] ) );
+$_COOKIE = array( 'vance_utm' => 'utm_source=%3Cb%3Eevil%3C%2Fb%3E&condition=ibs' );
+vance_attribution_record_signup( 14 );
+check( 'record: markup in the cookie is reduced to a token', 'bevilb' === get_user_meta( 14, '_vance_signup_source' ) );
+check( 'record: an unknown cookie key (such as a condition) is never stored', ! isset( $GLOBALS['META'][14]['_vance_signup_condition'] ) && 1 === count( $GLOBALS['META'][14] ) );
+
+/* ---- 3. CRM fields -------------------------------------------------------------------- */
+section( '3. FluentCRM gets the source tag and value' );
+$contact = vance_attribution_crm_contact( array( 'email' => 'a@example.test', 'tags' => array( 'member' ), 'custom_values' => array( 'wp_user_id' => 11 ) ), 11 );
+check( 'crm: the utm tag is added next to the existing tags', array( 'member', 'utm-instagram' ) === $contact['tags'] );
+check( 'crm: the custom value is added and the old value kept', 'instagram' === $contact['custom_values']['utm_source'] && 11 === $contact['custom_values']['wp_user_id'] );
+$same = array( 'email' => 'b@example.test', 'tags' => array( 'member' ) );
+check( 'crm: a member with no source gets the contact unchanged', $same === vance_attribution_crm_contact( $same, 12 ) );
+check( 'crm: a different source gives a different tag (control)', in_array( 'utm-bevilb', vance_attribution_crm_contact( array( 'tags' => array() ), 14 )['tags'], true ) );
+
+/* ---- 4. tool links on the landing page -------------------------------------------------- */
+section( '4. Landing page links keep the tags and use exact slugs' );
+$_GET = array( 'utm_source' => 'Instagram', 'utm_medium' => 'bio', 'utm_campaign' => 'wk1', 'evil' => '<x>' );
+$tools = vance_marketing_tools();
+check( 'tools: exactly three tools', 3 === count( $tools ) );
+check( 'tools: the paths are the exact slugs with the final slash', array( '/ask-ai/', '/gastro-meal-planner/', '/gastro-health-survey/' ) === array_column( $tools, 'path' ) );
+foreach ( $tools as $t ) {
+	$u = vance_marketing_tool_url( $t['path'] );
+	check( 'link ' . $t['path'] . ': keeps the three utm tags', false !== strpos( $u, 'utm_source=instagram' ) && false !== strpos( $u, 'utm_medium=bio' ) && false !== strpos( $u, 'utm_campaign=wk1' ) );
+	check( 'link ' . $t['path'] . ': passes no other parameter on', false === strpos( $u, 'evil' ) );
+	check( 'link ' . $t['path'] . ': the path is followed by the query with the final slash intact', 0 === strpos( $u, 'https://example.test' . $t['path'] . '?' ) );
+}
+$_GET = array();
+check( 'link: with no tags the link is the bare path', 'https://example.test/ask-ai/' === vance_marketing_tool_url( '/ask-ai/' ) );
+
+/* ---- 5. waitlist handler ------------------------------------------------------------------ */
+section( '5. The waitlist asks for consent and for no health information' );
+$r = waitlist_call( $good );
+check( 'waitlist: a good request succeeds', $r && $r->ok );
+check( 'waitlist: the consent is recorded with the version id (not the text), a time and confirmed=false', 1 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) && empty( $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['text'] ) && false === $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['confirmed'] && 'draft-1' === $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['version'] && ! empty( $GLOBALS['OPTIONS']['vance_waitlist_consents'][0]['at'] ) );
+check( 'waitlist: the CRM contact is pending and tagged for the waitlist', 1 === count( $GLOBALS['CRM'] ) && 'pending' === $GLOBALS['CRM'][0]['status'] && in_array( 'waitlist-b-vance', $GLOBALS['CRM'][0]['tags'], true ) );
+$crm_text = json_encode( $GLOBALS['CRM'][0] );
+check( 'waitlist: the contact is NOT added to a newsletter list or tag', false === stripos( $crm_text, 'newsletter' ) && false === stripos( $crm_text, 'Members' ) && false === stripos( $crm_text, 'marketing-opt-in' ) );
+check( 'waitlist: the contact holds no health field', array( 'email', 'first_name', 'status', 'tags', 'lists', 'source' ) === array_keys( $GLOBALS['CRM'][0] ) );
+
+/* existing contact: not touched */
+$n = count( $GLOBALS['CRM'] );
+$GLOBALS['CRM_EXISTING'] = array( 'member@example.test' );
+$ex = $good; $ex['email'] = 'member@example.test';
+$r = waitlist_call( $ex );
+check( 'waitlist: an address that is already a CRM contact is NOT updated, listed or tagged', $r && $r->ok && $n === count( $GLOBALS['CRM'] ) );
+check( 'waitlist: the local consent record is still written for that address', 2 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) );
+$r = waitlist_call( $good );
+check( 'waitlist: the same address twice keeps one row (no growth)', 2 === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) );
+$forged = array( 'utm_source' => 'zzz-random' );
+$_COOKIE = array( 'vance_utm' => http_build_query( $forged ) );
+$f = $good; $f['email'] = 'forged@example.test';
+$n = count( $GLOBALS['CRM'] );
+waitlist_call( $f );
+check( 'waitlist: a forged source cookie does not create a CRM tag', $n + 1 === count( $GLOBALS['CRM'] ) && array( 'waitlist-b-vance' ) === $GLOBALS['CRM'][ $n ]['tags'] );
+$_COOKIE = array( 'vance_utm' => 'utm_source=tiktok' );
+$f['email'] = 'known@example.test';
+waitlist_call( $f );
+check( 'waitlist: a known source (tiktok) becomes a tag (control)', in_array( 'utm-tiktok', $GLOBALS['CRM'][ $n + 1 ]['tags'], true ) );
+$_COOKIE = array();
+$GLOBALS['OPTIONS']['vance_waitlist_consents'] = array_fill( 0, vance_waitlist_max_records(), array( 'email' => 'x@example.test', 'at' => '', 'version' => 'v', 'source' => '', 'confirmed' => false ) );
+$f['email'] = 'overflow@example.test';
+$r = waitlist_call( $f );
+check( 'waitlist: past the cap a new address is refused with 503', $r && ! $r->ok && 503 === $r->status );
+$GLOBALS['OPTIONS']['vance_waitlist_consents'] = array();
+waitlist_call( $good ); // put the first address back for the checks below
+
+$before = count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] );
+$bad = $good; unset( $bad['consent'] );
+$r = waitlist_call( $bad );
+check( 'waitlist: no consent is refused', $r && ! $r->ok && 422 === $r->status && $before === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) );
+$bad = $good; $bad['consent'] = '0';
+$r = waitlist_call( $bad );
+check( 'waitlist: consent "0" is refused', $r && ! $r->ok );
+$bad = $good; $bad['email'] = 'not-an-email';
+$r = waitlist_call( $bad );
+check( 'waitlist: a bad address is refused', $r && ! $r->ok && 422 === $r->status );
+$bad = $good; $bad['nonce'] = 'bad';
+$r = waitlist_call( $bad );
+check( 'waitlist: a bad nonce is refused', $r && ! $r->ok && 403 === $r->status );
+$n = count( $GLOBALS['CRM'] );
+$bad = $good; $bad['website'] = 'http://spam.test';
+$r = waitlist_call( $bad );
+check( 'waitlist: the honeypot is dropped silently, with no record and no CRM call', $r && $r->ok && $n === count( $GLOBALS['CRM'] ) && $before === count( $GLOBALS['OPTIONS']['vance_waitlist_consents'] ) );
+$ext = vance_waitlist_export( 'a@example.test' );
+check( 'privacy: the export returns the record', 1 === count( $ext['data'] ) );
+vance_waitlist_erase( 'a@example.test' );
+check( 'privacy: the eraser removes the record', 0 === count( vance_waitlist_export( 'a@example.test' )['data'] ) );
+
+/* ---- 6. templates and scripts, read as text ---------------------------------------------------- */
+section( '6. Templates: no health question, no link from the tools, noindex rules' );
+$wl  = file_get_contents( $THEME . '/page-waitlist.php' );
+$wl  = substr( $wl, strpos( $wl, 'get_header' ) ); // the rendered part, not the file comment
+$wljs = file_get_contents( $THEME . '/assets/js/waitlist.js' );
+check( 'waitlist page: no textarea, no select, no radio, no condition or symptom word', ! preg_match( '/<textarea|<select|type="radio"|symptom|condition|diagnos|ibs|crohn|colitis/i', $wl ) );
+check( 'waitlist page: the form has exactly email, first name, honeypot and consent', 4 === preg_match_all( '/<input /', $wl ) && false !== strpos( $wl, 'name="email"' ) && false !== strpos( $wl, 'name="consent"' ) );
+check( 'waitlist page: the consent box is not ticked by default', ! preg_match( '/name="consent"[^>]*checked/', $wl ) );
+check( 'waitlist page: the only checkbox is the product consent (no newsletter box)', 1 === preg_match_all( '/type="checkbox"/', $wl ) );
+preg_match_all( "/body\\.set\\('([a-z_]+)'/", $wljs, $m );
+check( 'waitlist script: posts only action, nonce, email, first_name, website and consent', array( 'action', 'nonce', 'email', 'first_name', 'website', 'consent' ) === $m[1] );
+$linked = false;
+foreach ( glob( $THEME . '/*.php' ) as $f ) {
+	if ( basename( $f ) === 'page-waitlist.php' ) { continue; }
+	if ( false !== strpos( file_get_contents( $f ), '/waitlist/' ) ) { $linked = true; }
+}
+foreach ( glob( $THEME . '/inc/*.php' ) as $f ) {
+	if ( in_array( basename( $f ), array( 'marketing-pages.php', 'waitlist.php' ), true ) ) { continue; }
+	if ( false !== strpos( file_get_contents( $f ), '/waitlist/' ) ) { $linked = true; }
+}
+check( 'waitlist: no other theme file links to /waitlist/', ! $linked );
+$tpl = file_get_contents( $THEME . '/page-ibs-tools.php' );
+check( 'ibs-tools page: no sign-up form and no redirect', ! preg_match( '/<form|wp_redirect|header\( *.Location/i', $tpl ) );
+$ev = file_get_contents( $THEME . '/assets/js/vance-events.js' );
+check( 'events script: the tool list matches vance_event_tools()', 1 === preg_match( '/ask_ai: 1, meal_planner: 1, self_assessment: 1/', $ev ) && array( 'ask_ai', 'meal_planner', 'self_assessment' ) === vance_event_tools() );
+check( 'events script: the pushed object has only an event name and a tool name', 1 === preg_match( '/push\(\{ event: .vance_tool_. \+ stage, vance_tool: tool \}\)/', $ev ) );
+
+/* ---- 7. pages the code keeps ----------------------------------------------------------------------- */
+section( '7. The page registry' );
+$pages = vance_marketing_pages();
+check( 'registry: the four pages', array( 'community', 'community-rules', 'ibs-tools', 'waitlist' ) === array_keys( $pages ) );
+check( 'registry: the waitlist and the rules are made as drafts, the others published', 'draft' === $pages['waitlist']['status'] && 'draft' === $pages['community-rules']['status'] && 'publish' === $pages['ibs-tools']['status'] && 'publish' === $pages['community']['status'] );
+vance_marketing_page_exists( 'waitlist' );
+$last = end( $GLOBALS['GET_POSTS_ARGS'] );
+check( 'page exists check: looks in the bin (trash is in the statuses asked for)', in_array( 'trash', (array) $last['post_status'], true ) && 'any' !== $last['post_status'] );
+foreach ( array( 'page-community-rules.php', 'page-ibs-tools.php', 'page-waitlist.php' ) as $f ) {
+	check( 'template file exists: ' . $f, is_file( $THEME . '/' . $f ) );
+}
+
+/* ---- 8. the templates, rendered logged out ------------------------------------------------------------ */
+section( '8. Rendered as a visitor: content, links, robots' );
+function get_header() {}
+function get_footer() {}
+function have_posts() { return false; }
+function the_post() {}
+function get_the_content() { return ''; }
+function esc_html_e( $s ) { echo htmlspecialchars( $s, ENT_QUOTES ); }
+function esc_html__( $s ) { return htmlspecialchars( $s, ENT_QUOTES ); }
+function esc_html( $s ) { return htmlspecialchars( $s, ENT_QUOTES ); }
+function esc_url( $s ) { return htmlspecialchars( $s, ENT_QUOTES ); }
+function current_user_can() { return false; }
+function render_template( $file ) {
+	global $THEME;
+	ob_start();
+	include $THEME . '/' . $file;
+	return ob_get_clean();
+}
+$_GET = array( 'utm_source' => 'instagram', 'utm_medium' => 'bio' );
+$tools_html = render_template( 'page-ibs-tools.php' );
+check( 'render ibs-tools: a heading and the three tools by name', false !== strpos( $tools_html, '<h1>' ) && false !== strpos( $tools_html, 'VANCE-Ai' ) && false !== strpos( $tools_html, 'Gastro Meal Planner' ) && false !== strpos( $tools_html, 'Gastro Self-Assessment' ) );
+check( 'render ibs-tools: three links, each exact slug, each with the utm tags', 3 === preg_match_all( '#href="https://example.test/(ask-ai|gastro-meal-planner|gastro-health-survey)/\?utm_source=instagram&amp;utm_medium=bio"#', $tools_html ) );
+check( 'render ibs-tools: the page names NHS 111 and 999', false !== strpos( $tools_html, 'NHS 111' ) && false !== strpos( $tools_html, '999' ) );
+check( 'render ibs-tools: no waitlist link, no sign-up form', false === strpos( $tools_html, 'waitlist' ) && false === strpos( $tools_html, '<form' ) );
+check( 'render ibs-tools: no cure, heal or prevent promise, and "treat" only in a denial', ! preg_match( '/\b(cure|heal|prevent|relieve)\b/i', $tools_html ) && 1 === substr_count( strtolower( $tools_html ), 'treat' ) && false !== strpos( $tools_html, 'do not diagnose or treat' ) );
+$_GET = array();
+$rules_html = render_template( 'page-community-rules.php' );
+foreach ( array( 'Privacy', 'Names and nicknames', 'Reporting a post', 'Complaints', 'Moderation', 'Medical information and misinformation', 'DRAFT for review', 'NHS 111', '999', 'not an emergency service', 'not always anonymity' ) as $needle ) {
+	check( 'render rules: contains "' . $needle . '"', false !== strpos( $rules_html, $needle ) );
+}
+$wl_html = render_template( 'page-waitlist.php' );
+check( 'render waitlist: the consent wording is on the page', false !== strpos( $wl_html, htmlspecialchars( vance_waitlist_consent_text(), ENT_QUOTES ) ) );
+check( 'render waitlist: the draft banner is hidden from a visitor', false === strpos( $wl_html, 'Editors only' ) );
+check( 'render waitlist: says it is not an order and asks no health question', false !== strpos( $wl_html, 'not an order' ) && false !== strpos( $wl_html, 'will not ask about your health' ) );
+if ( getenv( 'MARKETING_RENDER_DIR' ) ) {
+	$css = file_get_contents( $THEME . '/assets/css/marketing-pages.css' );
+	foreach ( array( 'ibs-tools' => $tools_html, 'community-rules' => $rules_html, 'waitlist' => $wl_html ) as $name => $body ) {
+		file_put_contents( getenv( 'MARKETING_RENDER_DIR' ) . '/' . $name . '.html', '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:sans-serif}' . $css . '</style>' . $body );
+	}
+}
+
+/* ---- result -------------------------------------------------------------------------------------------- */
+if ( $GLOBALS['FAILS'] ) {
+	echo count( $GLOBALS['FAILS'] ) . " FAILED of " . ( $GLOBALS['PASS'] + count( $GLOBALS['FAILS'] ) ) . ":\n";
+	foreach ( $GLOBALS['FAILS'] as $f ) { echo "  x  $f\n"; }
+	exit( 1 );
+}
+echo "\nOK — {$GLOBALS['PASS']} checks passed.\n";

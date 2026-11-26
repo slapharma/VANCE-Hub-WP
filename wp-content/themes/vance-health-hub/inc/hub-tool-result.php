@@ -1,8 +1,8 @@
 <?php
 /**
- * VanceHubClub result page for the Gastro Health Survey.
+ * VanceHubClub result page for the Gastro Self-Assessment.
  *
- * Off by default. With the Customizer checkbox "Health Survey: VanceHubClub
+ * Off by default. With the Customizer checkbox "Self-Assessment: VanceHubClub
  * result page" (VanceHubClub section) unticked, nothing in this file changes
  * the survey: no markup, no stylesheet, no script. An administrator can preview
  * it without saving: add ?vhh_layout=hub to the survey address
@@ -245,8 +245,8 @@ function vance_hub_tool_result_html( $d ) {
 	} else {
 		$html .= esc_html__( 'Tools', 'vance-health-hub' );
 	}
-	$html .= ' / ' . esc_html__( 'Gastro Health Survey', 'vance-health-hub' ) . ' / ' . esc_html__( 'Your summary', 'vance-health-hub' ) . '</p>';
-	$html .= '<p class="vhub-tr__pill">' . esc_html__( 'GASTRO HEALTH SURVEY', 'vance-health-hub' ) . ' &middot; ' . esc_html__( 'COMPLETE', 'vance-health-hub' ) . '</p>';
+	$html .= ' / ' . esc_html__( 'Gastro Self-Assessment', 'vance-health-hub' ) . ' / ' . esc_html__( 'Your summary', 'vance-health-hub' ) . '</p>';
+	$html .= '<p class="vhub-tr__pill">' . esc_html__( 'GASTRO SELF-ASSESSMENT', 'vance-health-hub' ) . ' &middot; ' . esc_html__( 'COMPLETE', 'vance-health-hub' ) . '</p>';
 	$html .= '<h1 id="vhub-tr-title" class="vhub-tr__title">' . esc_html__( 'Your summary is', 'vance-health-hub' ) . ' <span>' . esc_html__( 'ready', 'vance-health-hub' ) . '</span></h1>';
 	$html .= '<p class="vhub-tr__lead">' . esc_html__( 'You can read it now. You do not need an account. This summary is not a diagnosis.', 'vance-health-hub' ) . '</p>';
 	$html .= '</div>';
@@ -263,7 +263,7 @@ function vance_hub_tool_result_html( $d ) {
 	if ( ! empty( $config['fields'] ) ) {
 		$html .= '<section class="vhub-tr__summary" id="vhub-tr-summary" hidden aria-labelledby="vhub-tr-summary-title">';
 		$html .= '<h2 id="vhub-tr-summary-title" class="vhub-tr__h2">' . esc_html__( 'What you told us', 'vance-health-hub' ) . '</h2>';
-		$html .= '<p class="vhub-tr__print-note">' . esc_html__( 'Gastro Health Survey summary. This summary is not a diagnosis.', 'vance-health-hub' ) . '</p>';
+		$html .= '<p class="vhub-tr__print-note">' . esc_html__( 'Gastro Self-Assessment summary. This summary is not a diagnosis.', 'vance-health-hub' ) . '</p>';
 		$html .= '<div class="vhub-tr__tiles" id="vhub-tr-tiles"></div>';
 		$html .= '<div class="vhub-tr__actions"><button type="button" class="vhub-tr__btn vhub-tr__btn--teal" id="vhub-tr-print">' . esc_html__( 'Print the summary', 'vance-health-hub' ) . '</button></div>';
 		$html .= '</section>';
@@ -477,8 +477,8 @@ function vance_hub_tool_result_customize_register( $wp_customize ) {
 		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
 	) );
 	$wp_customize->add_control( 'vance_hub_tool_result', array(
-		'label'       => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ),
-		'description' => __( 'Off: the survey ends as it does now. On: the end of the Gastro Health Survey shows a summary of the answers, a print button and next steps. Administrators can preview it without saving: add ?vhh_layout=hub to the survey address, or turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
+		'label'       => __( 'Self-Assessment: VanceHubClub result page', 'vance-health-hub' ),
+		'description' => __( 'Off: the survey ends as it does now. On: the end of the Gastro Self-Assessment shows a summary of the answers, a print button and next steps. Administrators can preview it without saving: add ?vhh_layout=hub to the survey address, or turn on preview mode (VanceHubClub admin page or "Club preview" in the admin bar).', 'vance-health-hub' ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'checkbox',
 		'priority'    => 9,

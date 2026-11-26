@@ -236,6 +236,16 @@ function vance_hub_dashboard_enqueue_assets() {
 		array( 'vance-main-style' ),
 		@filemtime( get_template_directory() . '/assets/css/hub-dashboard.css' ) ?: '1.0.0'
 	);
+	// The print button of the flare plan card. Only when the card can show.
+	if ( function_exists( 'vance_hub_flare_plan_available' ) && vance_hub_flare_plan_available() ) {
+		wp_enqueue_script(
+			'vance-hub-flare-plan',
+			get_template_directory_uri() . '/assets/js/hub-flare-plan.js',
+			array(),
+			@filemtime( get_template_directory() . '/assets/js/hub-flare-plan.js' ) ?: '1.0.0',
+			true
+		);
+	}
 }
 add_action( 'wp_enqueue_scripts', 'vance_hub_dashboard_enqueue_assets', 20 );
 
@@ -539,7 +549,7 @@ function vance_hub_dashboard_data( $user ) {
 	}
 	$steps = array(
 		'survey'  => array(
-			'title' => __( 'Do the Gastro Health Survey', 'vance-health-hub' ),
+			'title' => __( 'Do the Gastro Self-Assessment', 'vance-health-hub' ),
 			'text'  => __( 'Your answers go into your Health Profile. The Hub then shows what fits you.', 'vance-health-hub' ),
 			'cta'   => __( 'Start the survey', 'vance-health-hub' ),
 			'href'  => isset( $tools_by_mod['survey'] ) ? $tools_by_mod['survey']['href'] : '',

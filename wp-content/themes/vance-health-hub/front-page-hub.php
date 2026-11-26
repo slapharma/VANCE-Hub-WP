@@ -52,7 +52,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Your Gastro Health Community', 'vance-health-hub' ); ?></p>
 				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php esc_html_e( 'What do you need help with', 'vance-health-hub' ); ?> <span class="vhub-hero__accent"><?php esc_html_e( 'today?', 'vance-health-hub' ); ?></span></h1>
 			</div>
-			<p class="vhub-hero__sub"><?php esc_html_e( 'Take a short gut health survey, plan meals, read the science and get plain answers from our VANCE-Ai.', 'vance-health-hub' ); ?></p>
+			<p class="vhub-hero__sub"><?php esc_html_e( 'Take the Gastro Self-Assessment, plan meals, read the science and get plain answers from our VANCE-Ai.', 'vance-health-hub' ); ?></p>
 
 			<?php
 			/* The input has no name on purpose: Ask AI takes no query parameter,
@@ -76,7 +76,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 			<?php endif; ?>
 			<div class="vhub-survey<?php echo $vhub_hero_img ? '' : ' vhub-survey--flat'; ?>">
 				<div class="vhub-survey__meta">
-					<p class="vhub-survey__eyebrow"><?php esc_html_e( 'Gastro Health Survey', 'vance-health-hub' ); ?></p>
+					<p class="vhub-survey__eyebrow"><?php esc_html_e( 'Gastro Self-Assessment', 'vance-health-hub' ); ?></p>
 					<?php if ( $vhub_survey_n > 0 ) : ?>
 						<p class="vhub-survey__count"><?php
 							/* translators: %s: number of survey questions. */

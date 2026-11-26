@@ -377,7 +377,7 @@ section( '3. Data: the member view, reads only' );
 hd_arrange();
 $M = hd_user( 7, 'Ruth Adeyemi', '2024-03-05 10:00:00' );
 $D = vance_hub_dashboard_data( $M );
-check( 'data: nothing saved, the first step is the survey', is_array( $D['step'] ) && $D['step']['title'] === 'Do the Gastro Health Survey' );
+check( 'data: nothing saved, the first step is the survey', is_array( $D['step'] ) && $D['step']['title'] === 'Do the Gastro Self-Assessment' );
 check( 'data: nothing saved, the survey step links to the survey page', is_array( $D['step'] ) && $D['step']['href'] === 'https://example.test/gastro-health-survey/' );
 check( 'data: nothing saved, four tools show', count( $D['tools'] ) === 4 );
 check( 'data: nothing saved, the survey tile says not started', $D['tools'][0]['status'] === 'Not started.' && $D['tools'][0]['done'] === false );
@@ -629,9 +629,9 @@ check( 'absent: no empty-messages line when messages are off', strpos( $HTML, 'N
 
 // Next step.
 $V = hd_view_empty();
-$V['step'] = hd_step( 'Do the Gastro Health Survey', 'https://example.test/gastro-health-survey/' );
+$V['step'] = hd_step( 'Do the Gastro Self-Assessment', 'https://example.test/gastro-health-survey/' );
 $HTML = vance_hub_dashboard_home_html( $V );
-check( 'html: a next step shows its title', strpos( $HTML, '<h2 id="vhd-step-title" class="vhd-step__title">Do the Gastro Health Survey</h2>' ) !== false );
+check( 'html: a next step shows its title', strpos( $HTML, '<h2 id="vhd-step-title" class="vhd-step__title">Do the Gastro Self-Assessment</h2>' ) !== false );
 check( 'html: a next step links its button to the step', strpos( $HTML, '<a class="vhd-btn vhd-btn--white" href="https://example.test/gastro-health-survey/">Go' ) !== false );
 
 $V['step'] = hd_step( 'Title', 'javascript:alert(1)' );

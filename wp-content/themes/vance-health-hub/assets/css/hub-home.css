@@ -1035,7 +1035,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 		background-size: cover;
 		background-position: center 25%;
 	}
-	.vhub-hero__head .vhub-pill { padding: 5px 10px; font-size: 11px; }
+	.vhub-hero__head .vhub-pill { padding: 5px 10px; font-size: 12px; }
 	.vhub-hero__title { font-size: 30px; line-height: 1.05; color: #FFFFFF; }
 	.vhub-hero__accent { color: #FFFFFF; }
 	.vhub-hero__sub,
@@ -1086,14 +1086,20 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	/* Every section post stays visible here. A post hidden on a phone is still
 	   counted as shown, so it would then appear nowhere on the page. */
 	.vhub-sec-card__img { flex-basis: 76px; width: 76px; height: 76px; }
+	/* The annotations plugin puts the image in a span. The span is then the
+	   flex item, and without this rule it shrinks the image. */
+	.vhub-sec-card > .vhh-img-wrap { flex: none; }
 
 	/* More to read: two columns, four cards, so the page does not run on. */
 	.vhub-more__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 	.vhub-more__grid > li:nth-child(n+5) { display: none; }
 	.vhub-card__body { padding: 12px 12px 14px; gap: 8px; }
-	.vhub-card__title { font-size: 13px; }
-	.vhub-card__meta { padding: 5px 12px; font-size: 12px; }
-	.vhub-card .vhub-tag { font-size: 11px; padding: 3px 7px; }
+	.vhub-card__title { font-size: 14px; }
+	/* A card is too narrow for three items on one line. The date takes the
+	   first line. The read time and the read count take the second line. */
+	.vhub-card__meta { padding: 5px 12px; font-size: 12px; flex-wrap: wrap; justify-content: flex-start; gap: 2px 10px; }
+	.vhub-card__meta > * { white-space: nowrap; }
+	.vhub-card .vhub-tag { font-size: 12px; padding: 3px 7px; }
 
 	.vhub-feat { min-height: 260px; }
 	.vhub-feat__body { padding: 70px 20px 20px; }

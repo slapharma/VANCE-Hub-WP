@@ -1049,6 +1049,41 @@ get_header();
                         }
                     endif;
                     ?>
+                    <?php
+                    // Sub-tabs of this tab. They are plain links with ?hsub=, so they
+                    // work with no script. They need the hub dashboard stylesheet:
+                    // with the hub layout off, every section shows, as before.
+                    $hp_tabs_on = function_exists( 'vance_hub_dashboard_active' ) && vance_hub_dashboard_active();
+                    $hp_flare   = $hp_tabs_on && function_exists( 'vance_hub_flare_plan_data' ) ? vance_hub_flare_plan_data( $current_user->ID ) : null;
+                    $hp_subs    = array(
+                        'profile'   => __( 'My profile', 'vance-health-hub' ),
+                        'screening' => __( 'Screening results', 'vance-health-hub' ),
+                    );
+                    if ( ! empty( $hp_flare ) ) {
+                        $hp_subs['flare'] = __( 'Flare plan', 'vance-health-hub' );
+                    }
+                    $hp_sub = isset( $_GET['hsub'] ) && is_string( $_GET['hsub'] ) ? sanitize_key( wp_unslash( $_GET['hsub'] ) ) : '';
+                    if ( '' === $hp_sub && ! empty( $hp_flare['flash'] ) ) {
+                        // Back from a save or delete of the flare plan.
+                        $hp_sub = 'flare';
+                    }
+                    if ( ! isset( $hp_subs[ $hp_sub ] ) ) {
+                        $hp_sub = 'profile';
+                    }
+                    // A panel is hidden only when the tabs are on and it is not the open one.
+                    $hp_hide = function ( $slug ) use ( $hp_tabs_on, $hp_sub ) {
+                        return $hp_tabs_on && $slug !== $hp_sub ? ' hidden' : '';
+                    };
+                    if ( $hp_tabs_on ) : ?>
+                    <div class="vhd">
+                        <nav class="vhd-subtabs" aria-label="<?php esc_attr_e( 'Health sections', 'vance-health-hub' ); ?>">
+                            <?php foreach ( $hp_subs as $hp_slug => $hp_text ) : ?>
+                                <a class="vhd-subtabs__link<?php echo $hp_slug === $hp_sub ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'tab' => 'health-profile', 'hsub' => $hp_slug ), get_permalink() ) ); ?>"<?php echo $hp_slug === $hp_sub ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $hp_text ); ?></a>
+                            <?php endforeach; ?>
+                        </nav>
+                    </div>
+                    <?php endif; ?>
+                    <div class="hp-panel"<?php echo $hp_hide( 'profile' ); ?>>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
                         <!-- Quiz Results Section -->
                         <div class="dash-card">
@@ -1174,6 +1209,8 @@ get_header();
                             </div>
                         </div>
                     </div>
+                    </div>
+                    <div class="hp-panel"<?php echo $hp_hide( 'screening' ); ?>>
 
                     <!-- Malnutrition screening history -->
                     <div class="dash-card vance-mc-card" style="margin-top:32px;">
@@ -1274,6 +1311,12 @@ get_header();
                             <p style="margin:20px 0 0; font-size:12px; color:#94A3B8; line-height:1.5;">Screening results are an estimate based on the answers you gave. They are not a diagnosis &mdash; discuss any concerns with your health team.</p>
                         <?php endif; ?>
                     </div>
+                    </div>
+                    <?php if ( ! empty( $hp_flare ) ) : ?>
+                    <div class="hp-panel vhd"<?php echo $hp_hide( 'flare' ); ?>>
+                        <?php echo vance_hub_flare_plan_html( $hp_flare ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is escaped inside. ?>
+                    </div>
+                    <?php endif; ?>
 
                     <?php if (!empty($malnutrition_history)): ?>
                     <style>
@@ -2609,7 +2652,7 @@ get_header();
                     // link to the per-tool wrapper pages; saving results from the
                     // wrappers is now logged-in-aware (see vance_save_tool_result).
                     $dash_tools = array(
-                        array( 'slug' => 'healthcare-quiz',        'page_url' => '/gastro-health-survey/',         'name' => 'Gastro Health Survey',        'tag' => 'Self-Assessment',  'desc' => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
+                        array( 'slug' => 'healthcare-quiz',        'page_url' => '/gastro-health-survey/',         'name' => 'Gastro Self-Assessment',        'tag' => 'Self-Assessment',  'desc' => 'A short, evidence-based questionnaire covering symptom patterns, dietary triggers, and lifestyle factors. Get an instant summary you can share with your clinician.', 'colors' => array( '#78bfbf', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>' ),
                         array( 'slug' => 'ibd-recipes',            'page_url' => '/gastro-meal-planner/',     'name' => 'IBD Recipes & Meal Planner','tag' => 'Meal Planning', 'desc' => 'Browse EPA-rich, gut-friendly recipes with full nutrition data. Build weekly meal plans freely, saving plans prompts a quick signup.', 'colors' => array( '#def4f4', '#aedbdb', '#008080' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4a2 2 0 00-2-2H10a2 2 0 00-2 2v4a2 2 0 01-2 2H2V9z" transform="translate(0,-1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8M8 11h8" />' ),
                         array( 'slug' => 'malnutrition-calculator','page_url' => '/malnutrition-calculator/','name' => 'Malnutrition Calculator','tag' => 'IBD Screening',    'desc' => 'Clinically-grounded 11-step malnutrition risk screener for IBD patients. Combines MUST, IBD-NST, and GLIM criteria into a single, actionable score.', 'colors' => array( '#78bfbf', '#5fa3a3', '#ffffff' ), 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' ),
                     );

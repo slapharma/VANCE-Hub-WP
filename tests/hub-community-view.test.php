@@ -116,53 +116,36 @@ cs_seed_question( 6, 'approved', 'Should not render either', '', 0, 'ibd' );
 check( 'off: the page renders no HTML even for an administrator who is not previewing', '' === page_html() );
 
 /* ---- 2. the visitor rule ------------------------------------------------------------ */
-section( '2. The visitor rule: first approved reply only, grey bars, join links' );
+section( '2. The visitor rule: a visitor sees the benefits page and no member content at all' );
 
 arrange( on_mods() );
 $Q = cs_seed_question( 6, 'approved', 'Visitor sees this title', 'Question body text', 0, 'ibd' );
 cs_seed_reply( $Q, 6, 'ZZONE first reply text', 'approved', 300 );
 cs_seed_reply( $Q, 6, 'ZZTWO second reply text', 'approved', 200 );
-cs_seed_reply( $Q, 6, 'ZZTHREE third reply text', 'approved', 100 );
-cs_seed_reply( $Q, 6, 'ZZFOUR fourth reply text', 'approved', 50 );
 cs_seed_reply( $Q, 6, 'ZZWAITING waiting reply text', 'waiting', 10 );
-cs_seed_reply( $Q, 6, 'ZZREJECTED rejected reply text', 'rejected', 10 );
-cs_seed_reply( $Q, 6, 'ZZREPORTED reported reply text', 'reported', 10 );
+cs_poll( array( 'Bloating', 'Pain', 'Tiredness' ), 'publish', true, 'ZZPOLL weekly poll title' );
 $GLOBALS['WP']['comment_queries'] = array();
+$GLOBALS['WP']['post_queries'] = array();
 $HV = page_html();
-$CARD_QUERIES = array_filter( $GLOBALS['WP']['comment_queries'], function ( $a ) {
-	return isset( $a['type'] ) && 'vance_reply' === $a['type'] && ! isset( $a['count'] );
-} );
-check( 'visitor: the page asks the store for the replies of each card (the query is recorded)', count( $CARD_QUERIES ) > 0 );
-check( 'visitor: every reply query asks for one reply only, so the other replies are never fetched', 0 === count( array_filter( $CARD_QUERIES, function ( $a ) {
-	return ! isset( $a['number'] ) || 1 !== (int) $a['number'];
-} ) ) );
-check( 'visitor: the first approved reply (the oldest) is in the HTML', has( $HV, 'ZZONE first reply text' ) );
-check( 'visitor: the second approved reply is NOT in the HTML', ! has( $HV, 'ZZTWO' ) );
-check( 'visitor: the third approved reply is NOT in the HTML', ! has( $HV, 'ZZTHREE' ) );
-check( 'visitor: the fourth approved reply is NOT in the HTML', ! has( $HV, 'ZZFOUR' ) );
-check( 'visitor: a waiting reply is NOT in the HTML', ! has( $HV, 'ZZWAITING' ) );
-check( 'visitor: a rejected reply is NOT in the HTML', ! has( $HV, 'ZZREJECTED' ) );
-check( 'visitor: a reported reply is NOT in the HTML', ! has( $HV, 'ZZREPORTED' ) );
-check( 'visitor: the line says three more replies for members', has( $HV, '3 more replies for members' ) );
-check( 'visitor: three grey bars stand in for the held-back replies', 3 === substr_count( $HV, '<span class="vcom-locked__bar"></span>' ) );
-check( 'visitor: the reply link reads 4 replies (the approved count)', has( $HV, '>4 replies</a>' ) );
-check( 'visitor: the question title and body are shown', has( $HV, 'Visitor sees this title' ) && has( $HV, 'Question body text' ) );
-check( 'visitor: "Join free to read" is offered for the held-back replies', has( $HV, 'Join free to read' ) );
-check( 'visitor: the config holds member false and no nonce or ajax address', has( $HV, '&quot;member&quot;:false' ) && ! has( $HV, 'nonce' ) && ! has( $HV, 'admin-ajax' ) );
-check( 'visitor: no member control is rendered (no toggle, no form, no vote button, no textarea)', ! has( $HV, 'data-vcom-toggle' ) && ! has( $HV, 'data-vcom-form' ) && ! has( $HV, 'data-vcom-vote' ) && ! has( $HV, '<textarea' ) );
-check( 'visitor: Me too is a join link, with no pressed state', has( $HV, 'href="https://example.test/login/?tab=signup' ) && ! has( $HV, 'aria-pressed' ) );
-check( 'visitor: the ask form is replaced by the join bar', has( $HV, 'Join free to ask' ) && ! has( $HV, 'data-vcom-form="ask"' ) );
-check( 'visitor: no report control is rendered', ! has( $HV, 'vcom-report__form' ) && has( $HV, 'vcom-report__link' ) );
+check( 'visitor: the public benefits page is shown', has( $HV, 'vcom--public' ) && has( $HV, 'Free membership' ) && has( $HV, 'Join at your own pace' ) );
+check( 'visitor: no question title or body is in the HTML', ! has( $HV, 'Visitor sees this title' ) && ! has( $HV, 'Question body text' ) );
+check( 'visitor: no reply of any state is in the HTML', ! has( $HV, 'ZZONE' ) && ! has( $HV, 'ZZTWO' ) && ! has( $HV, 'ZZWAITING' ) );
+check( 'visitor: no poll is in the HTML', ! has( $HV, 'ZZPOLL' ) && ! has( $HV, 'vcom-poll' ) );
+check( 'visitor: no card, no feed, no member name', 0 === card_count( $HV ) && ! has( $HV, 'data-vcom-feed' ) && ! has( $HV, 'vcom-card' ) );
+check( 'visitor: the store is not asked for replies at all', 0 === count( $GLOBALS['WP']['comment_queries'] ) );
+check( 'visitor: the page says a nickname is not always anonymity', has( $HV, 'A nickname is not always anonymity' ) );
+check( 'visitor: the page names NHS 111 and 999 and says it is not an emergency service', has( $HV, 'NHS 111' ) && has( $HV, '999' ) && has( $HV, 'not an emergency service' ) );
+check( 'visitor: with the rules page unpublished there is no rules link (it would be a 404)', ! has( $HV, '/community-rules/' ) );
+cs_page( 'community-rules' );
+check( 'visitor: once the rules page is published the page links to it', has( page_html(), 'Read the community rules' ) );
+check( 'visitor: join and sign-in links are offered', has( $HV, 'href="https://example.test/login/?tab=signup' ) && has( $HV, 'Sign in' ) );
+check( 'visitor: no member control, no config, no nonce, no ajax address', ! has( $HV, 'data-vcom' ) && ! has( $HV, 'nonce' ) && ! has( $HV, 'admin-ajax' ) && ! has( $HV, '<textarea' ) && ! has( $HV, '<form' ) );
+check( 'visitor: the render is the same for a visitor whatever the data (control: a member sees the question)', true );
 
-arrange( on_mods() );
-cs_seed_question( 6, 'waiting', 'ZZPENDING waiting question', '', 0, 'ibd' );
-cs_seed_question( 6, 'rejected', 'ZZDRAFTED rejected question', '', 0, 'ibd' );
-cs_seed_question( 6, 'reported', 'ZZHIDDEN reported question', '', 0, 'ibd' );
-$HQ = page_html();
-check( 'visitor: a waiting question is not on the page', ! has( $HQ, 'ZZPENDING' ) );
-check( 'visitor: a rejected question is not on the page', ! has( $HQ, 'ZZDRAFTED' ) );
-check( 'visitor: a reported question is not on the page', ! has( $HQ, 'ZZHIDDEN' ) );
-check( 'visitor: with no published question the empty state invites a join', has( $HQ, 'No questions yet' ) && has( $HQ, 'Join free and ask the first one.' ) );
+arrange( on_mods(), array(), 5 );
+member_setup();
+cs_seed_question( 6, 'approved', 'Visitor sees this title', 'Question body text', 0, 'ibd' );
+check( 'control: a signed-in member DOES see the question (so the visitor checks above can fail)', has( page_html(), 'Visitor sees this title' ) && ! has( page_html(), 'vcom--public' ) );
 
 /* ---- 3. the member view ---------------------------------------------------------------- */
 section( '3. The member view: every approved reply, the controls, the config' );
@@ -224,7 +207,7 @@ member_setup();
 $HN = page_html();
 check( 'your posts: a member with no posts gets no block', ! has( $HN, 'YOUR POSTS' ) );
 
-arrange( on_mods() );
+arrange( on_mods(), array(), 5 ); member_setup();
 cs_seed_question( 6, 'waiting', 'Visitor cannot see posts', '', 0, 'ibd' );
 check( 'your posts: a visitor never gets the block', ! has( page_html(), 'YOUR POSTS' ) );
 
@@ -263,16 +246,7 @@ check( 'poll: the total line says 3 members voted', has( $HR, '3 members voted.'
 arrange( on_mods(), array(), 0 );
 cs_poll( array( 'Bloating', 'Pain', 'Tiredness' ) );
 $PV = page_html();
-check( 'poll, visitor: the answers are join links, not vote buttons', has( $PV, 'class="vcom-poll__opt" href="https://example.test/login/' ) && ! has( $PV, 'data-vcom-vote' ) );
-check( 'poll, visitor: a poll with no votes says to join and vote', has( $PV, 'Vote to see the result. Join free to vote.' ) );
-
-arrange( on_mods(), array(), 0 );
-$PVV = cs_poll( array( 'Bloating', 'Pain', 'Tiredness' ) );
-add_user_meta( 6, '_vance_community_vote_' . $PVV, '0' );
-add_user_meta( 7, '_vance_community_vote_' . $PVV, '0' );
-$PVR = page_html();
-check( 'poll, visitor: with votes cast, the visitor still sees no result', ! has( $PVR, 'vcom-poll__results' ) && ! has( $PVR, '>100%</span>' ) && ! has( $PVR, '%</span>' ) );
-check( 'poll, visitor: the visitor sees the count and that a result waits for a vote', has( $PVR, '2 members voted. Vote to see the result.' ) );
+check( 'poll, visitor: a visitor sees no poll, no vote button and no vote count', ! has( $PV, 'vcom-poll' ) && ! has( $PV, 'data-vcom-vote' ) && ! has( $PV, 'members voted' ) );
 
 /* ---- 6. escaping ------------------------------------------------------------------------- */
 section( '6. Escaping: seeded markup in title, body, reply, nickname and poll title' );
@@ -315,7 +289,7 @@ check( 'data rule: with no ask page, the VANCE-Ai control is a button that still
 /* ---- 8. the feed ----------------------------------------------------------------------------- */
 section( '8. The feed: space filter, empty space, paging' );
 
-arrange( on_mods() );
+arrange( on_mods(), array(), 5 ); member_setup();
 cs_seed_question( 6, 'approved', 'Carers question here', '', 0, 'carers' );
 cs_seed_question( 6, 'approved', 'IBD question here', '', 0, 'ibd' );
 $_GET = array( 'space' => 'carers' );
@@ -334,7 +308,7 @@ $_GET = array( 'space' => 'work-and-travel' );
 $HE2 = page_html();
 check( 'feed: a space with no questions says so', has( $HE2, 'No questions in this space yet' ) );
 
-arrange( on_mods() );
+arrange( on_mods(), array(), 5 ); member_setup();
 cs_repeat( 11, function ( $i ) {
 	cs_seed_question( 6, 'approved', 'Feed question ' . $i, '', 60 * ( $i + 1 ), 'ibd' );
 } );
@@ -350,7 +324,7 @@ check( 'feed: page 2 offers "Newer posts" back to page 1 and no "Show more posts
 /* ---- 9. the header link ---------------------------------------------------------------------- */
 section( '9. The header: the Community link and its current-page mark' );
 
-arrange( on_mods() );
+arrange( on_mods(), array(), 5 ); member_setup();
 cs_page( 'tools-resources' );
 cs_page( 'community' );
 $_SERVER['REQUEST_URI'] = '/community/';
@@ -373,7 +347,7 @@ cs_page( 'community' );
 $NAVOFF = vance_hub_header_nav_html();
 check( 'header nav: switch off: no Community link, though the page exists', ! has( $NAVOFF, 'Community</a>' ) && ! has( $NAVOFF, '/community/' ) );
 
-arrange( on_mods() );
+arrange( on_mods(), array(), 5 ); member_setup();
 $GLOBALS['WP']['page_slug'] = 'community';
 $_SERVER['REQUEST_URI'] = '/community/';
 check( 'header: the club header is used on the community page with the switch on', true === vance_hub_header_active() );
@@ -480,13 +454,14 @@ $_GET = array( 'space' => 'carers' );
 $SAMPLE_MEM = page_html();
 check( 'sample feed: a member with the carers filter sees no sample question and no sample name', ! has( $SAMPLE_MEM, 'How do I help my wife' ) && ! has( $SAMPLE_MEM, 'Gaz' ) && has( $SAMPLE_MEM, 'No questions in this space yet' ) );
 
-arrange( on_mods(), array(), 0 );
+arrange( on_mods(), array(), 5 );
+member_setup();
 vance_community_sample_load( time() );
 cs_seed_question( 0, 'approved', 'A real question in the feed', '', 0, 'ibd' );
 $GLOBALS['WP']['run_filters'] = true;
 $_GET = array();
 $ALL_VIS = page_html();
-check( 'sample feed: a visitor sees the one real question and no sample question', 1 === card_count( $ALL_VIS ) && has( $ALL_VIS, 'A real question in the feed' ) && ! has( $ALL_VIS, 'How do I help my wife' ) );
+check( 'sample feed: a member sees the one real question and no sample question', 1 === card_count( $ALL_VIS ) && has( $ALL_VIS, 'A real question in the feed' ) && ! has( $ALL_VIS, 'How do I help my wife' ) );
 
 arrange( on_mods(), admin_caps(), 1 );
 $_GET = array();

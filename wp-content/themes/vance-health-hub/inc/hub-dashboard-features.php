@@ -512,21 +512,24 @@ function vance_hub_checkin_consent_ref_ok( $current, $posted ) {
 /**
  * The three keys of the agreement record.
  *
+ * @param string $base 'checkin' (default) or another feature, for example 'flare_plan'.
  * @return string[]
  */
-function vance_hub_checkin_consent_keys() {
-	return array( '_sla_consent_checkin', '_sla_consent_checkin_at', '_sla_consent_checkin_text' );
+function vance_hub_checkin_consent_keys( $base = 'checkin' ) {
+	$base = (string) $base;
+	return array( '_sla_consent_' . $base, '_sla_consent_' . $base . '_at', '_sla_consent_' . $base . '_text' );
 }
 
 /**
  * The agreement record as it is now, to put back if a save fails.
  *
- * @param int $user_id Member.
+ * @param int    $user_id Member.
+ * @param string $base    Feature, see vance_hub_checkin_consent_keys().
  * @return array key => stored value ('' when absent).
  */
-function vance_hub_checkin_consent_snapshot( $user_id ) {
+function vance_hub_checkin_consent_snapshot( $user_id, $base = 'checkin' ) {
 	$snapshot = array();
-	foreach ( vance_hub_checkin_consent_keys() as $key ) {
+	foreach ( vance_hub_checkin_consent_keys( $base ) as $key ) {
 		$snapshot[ $key ] = get_user_meta( (int) $user_id, $key, true );
 	}
 	return $snapshot;
@@ -535,11 +538,12 @@ function vance_hub_checkin_consent_snapshot( $user_id ) {
 /**
  * Put an agreement record back to a snapshot.
  *
- * @param int   $user_id  Member.
- * @param array $snapshot vance_hub_checkin_consent_snapshot() result.
+ * @param int    $user_id  Member.
+ * @param array  $snapshot vance_hub_checkin_consent_snapshot() result.
+ * @param string $base     Feature, see vance_hub_checkin_consent_keys().
  */
-function vance_hub_checkin_consent_restore( $user_id, $snapshot ) {
-	foreach ( vance_hub_checkin_consent_keys() as $key ) {
+function vance_hub_checkin_consent_restore( $user_id, $snapshot, $base = 'checkin' ) {
+	foreach ( vance_hub_checkin_consent_keys( $base ) as $key ) {
 		$value = isset( $snapshot[ $key ] ) ? $snapshot[ $key ] : '';
 		if ( is_string( $value ) && '' !== $value ) {
 			update_user_meta( (int) $user_id, $key, wp_slash( $value ) );
@@ -557,23 +561,25 @@ function vance_hub_checkin_consent_restore( $user_id, $snapshot ) {
  *
  * @param int    $user_id Member.
  * @param string $wording The wording the member agreed to.
+ * @param string $base    Feature, see vance_hub_checkin_consent_keys().
  * @return bool True when the stored record is valid for this wording and
  *              holds the time of this agreement.
  */
-function vance_hub_checkin_consent_record( $user_id, $wording ) {
+function vance_hub_checkin_consent_record( $user_id, $wording, $base = 'checkin' ) {
 	$user_id = (int) $user_id;
 	$at      = (string) current_time( 'mysql' );
-	update_user_meta( $user_id, '_sla_consent_checkin', '1' );
-	update_user_meta( $user_id, '_sla_consent_checkin_at', $at );
+	list( $k_flag, $k_at, $k_text ) = vance_hub_checkin_consent_keys( $base );
+	update_user_meta( $user_id, $k_flag, '1' );
+	update_user_meta( $user_id, $k_at, $at );
 	// wp_slash: update_user_meta() removes one level of slashes. With no slash
 	// added here, wording that holds a backslash is stored changed, never
 	// matches again, and the member is asked each week.
-	update_user_meta( $user_id, '_sla_consent_checkin_text', wp_slash( $wording ) );
+	update_user_meta( $user_id, $k_text, wp_slash( $wording ) );
 	// The time is part of the record: a record with no time, or with the time
 	// of an older agreement to other wording, is wrong evidence.
 	return '' !== $at
-		&& get_user_meta( $user_id, '_sla_consent_checkin_at', true ) === $at
-		&& vance_hub_checkin_consent_ok( get_user_meta( $user_id, '_sla_consent_checkin', true ), get_user_meta( $user_id, '_sla_consent_checkin_text', true ), $wording );
+		&& get_user_meta( $user_id, $k_at, true ) === $at
+		&& vance_hub_checkin_consent_ok( get_user_meta( $user_id, $k_flag, true ), get_user_meta( $user_id, $k_text, true ), $wording );
 }
 
 /* =========================================================================
@@ -857,6 +863,7 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 		);
 	}
 
+	// The flare plan is not here: it lives in the Health Profile tab (page-dashboard.php).
 	return $out;
 }
 
