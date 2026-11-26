@@ -113,7 +113,7 @@ require_once get_template_directory() . '/inc/article-conditions.php';
 require_once get_template_directory() . '/inc/article-schema-types.php';
 require_once get_template_directory() . '/inc/hero-spotlight.php';
 // The same spotlight hero carried across to Contact, About and the three
-// free-tool pages (Gastro Health Survey, meal planner, malnutrition
+// free-tool pages (Gastro Self-Assessment, meal planner, malnutrition
 // calculator). Kept separate from the homepage renderer because each page
 // fills the search field's slot with its own content, but it reuses the
 // homepage's stylesheet block, colour defaults and vance_hex_to_rgb_triple()
@@ -151,13 +151,17 @@ require_once get_template_directory() . '/inc/hub-header.php';
 require_once get_template_directory() . '/inc/hub-admin.php';
 // Recipes, Gastro Discounts and VANCE-Ai KB as items of the VanceHealthHub admin menu.
 require_once get_template_directory() . '/inc/admin-menu-content.php';
-// VanceHubClub result page for the Gastro Health Survey: opt-in (Customizer, default off). Needs hub-layout.php.
+// VanceHubClub result page for the Gastro Self-Assessment: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-tool-result.php';
 // VanceHubClub Community hub (/community/): opt-in (Customizer, default off). Needs hub-layout.php.
 // Data model, member actions and privacy hooks; the page markup; the moderation queue and poll editor.
 require_once get_template_directory() . '/inc/hub-community.php';
 require_once get_template_directory() . '/inc/hub-community-view.php';
 require_once get_template_directory() . '/inc/hub-community-admin.php';
+// Organic social plan: sign-up source (UTM), tool events, the plan pages and the B-Vance waitlist.
+require_once get_template_directory() . '/inc/attribution.php';
+require_once get_template_directory() . '/inc/marketing-pages.php';
+require_once get_template_directory() . '/inc/waitlist.php';
 // Sample questions and replies for a team review: staff only, loaded and removed from the Community queue.
 require_once get_template_directory() . '/inc/hub-community-sample.php';
 
@@ -804,7 +808,7 @@ function vance_register_prime_block_controls( $wp_customize, $section_id, $prefi
     $pb_cards = array(
         'card1' => array(
             'label' => 'Card 1',
-            'title' => 'Gastro Health Survey',
+            'title' => 'Gastro Self-Assessment',
             'desc'  => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.',
             'extra' => 'Find your starting point',
             'link'  => '/gastro-health-survey/',
@@ -1612,7 +1616,7 @@ add_action( 'template_redirect', 'vance_tool_embed_trim_head' );
  * results silently fail to save instead of persisting to `_sla_*` meta.
  */
 /**
- * Permanent redirect for the Gastro Health Survey's retired URL.
+ * Permanent redirect for the Gastro Self-Assessment's retired URL.
  *
  * The WP page was renamed `healthcare-quiz` -> `gastro-health-survey` (post
  * 440, still on page-healthcare-quiz.php), which left `/healthcare-quiz/`
@@ -5435,7 +5439,7 @@ function vance_customize_register( $wp_customize ) {
     $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'vance_pwc_icon_bg_color', array( 'label' => 'Image Placeholder Background', 'section' => 'vance_pathway_content_settings' ) ) );
 
     // Card 1: Healthcare Quiz
-    $wp_customize->add_setting( 'vance_hquiz_tile_title', array( 'default' => 'Gastro Health Survey', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp_customize->add_setting( 'vance_hquiz_tile_title', array( 'default' => 'Gastro Self-Assessment', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp_customize->add_control( 'vance_hquiz_tile_title', array( 'label' => 'Healthcare Quiz, Title', 'section' => 'vance_pathway_content_settings', 'type' => 'text' ) );
 
     $wp_customize->add_setting( 'vance_hquiz_tile_desc', array( 'default' => 'A 2-minute interactive quiz that points you to the most relevant tools, resources, and content for your situation.', 'sanitize_callback' => 'sanitize_textarea_field' ) );

@@ -112,7 +112,7 @@ check( "about: stat figure present",   strpos( $p2, ">30+<" ) !== false );
 set_mods( array( "vance_hquiz_hero_style" => "spotlight" ) );
 $p3 = render( "hquiz" );
 check( "survey: eyebrow is not empty",  strpos( $p3, "Self-Assessment" ) !== false );
-check( "survey: headline is not empty", strpos( $p3, "Gastro Health Survey" ) !== false );
+check( "survey: headline is not empty", strpos( $p3, "Gastro Self-Assessment" ) !== false );
 check( "survey: intro is not empty",    strpos( $p3, "evidence-based questionnaire" ) !== false );
 
 set_mods( array( "vance_recipes_hero_style" => "spotlight" ) );
@@ -131,8 +131,8 @@ check( "calculator: intro is not empty",    strpos( $p5, "MUST, IBD-NST" ) !== f
 // name and badge settings, which are just as unsaved.
 check( "survey band names the planner",     strpos( $p3, "Meal Planner" ) !== false );
 check( "survey band names the calculator",  strpos( $p3, "IBD Malnutrition Calculator" ) !== false );
-check( "planner band names the survey",     strpos( $p4, "Gastro Health Survey" ) !== false );
-check( "calculator band names the survey",  strpos( $p5, "Gastro Health Survey" ) !== false );
+check( "planner band names the survey",     strpos( $p4, "Gastro Self-Assessment" ) !== false );
+check( "calculator band names the survey",  strpos( $p5, "Gastro Self-Assessment" ) !== false );
 
 // Ask AI, Get Started Today and the User Guide. Ask AI's defaults are the
 // third set on this page to disagree with what functions.php REGISTERS
@@ -369,7 +369,7 @@ check( 'the rest of the hero survives',             strpos( $a2, '__card--stat' 
 echo "\n=== 5b. The three tool pages carry each other, never themselves ===\n";
 set_mods( array(
     'vance_malnutrition_hero_style' => 'spotlight',
-    'vance_hquiz_hero_title'        => 'Gastro Health Survey',
+    'vance_hquiz_hero_title'        => 'Gastro Self-Assessment',
     'vance_tool_recipes_name'       => 'Gastro Recipes & Meal Planner',
     'vance_tool_malnutrition_name'  => 'IBD Malnutrition Calculator',
 ) );
@@ -377,7 +377,7 @@ $m = render( 'malnutrition' );
 check( 'markup is balanced', tags_balanced( $m ) );
 check( 'band is the lines markup',        strpos( $m, 'vhh-hero-spotlight__slot--lines' ) !== false );
 check( 'and carries the tools modifier',  strpos( $m, 'vhh-hero-spotlight__slot--tools' ) !== false );
-check( 'lists the survey',                strpos( $m, 'Gastro Health Survey' ) !== false );
+check( 'lists the survey',                strpos( $m, 'Gastro Self-Assessment' ) !== false );
 check( 'lists the meal planner',          strpos( $m, 'Meal Planner' ) !== false );
 check( 'does NOT list itself in the band',
        strpos( $m, 'href="https://example.test/malnutrition-calculator/"' ), false );
@@ -412,7 +412,7 @@ $r3 = render( 'recipes' );
 check( 'a cleared tool is dropped from the band',
        strpos( $r3, 'href="https://example.test/malnutrition-calculator/"' ) === false );
 check( 'the surviving cells still render',
-       strpos( $r3, 'Gastro Health Survey' ) !== false );
+       strpos( $r3, 'Gastro Self-Assessment' ) !== false );
 check( 'the shelf cell is always there',
        strpos( $r3, 'href="https://example.test/free-health-tools/"' ) !== false );
 
@@ -432,7 +432,7 @@ set_mods( array( 'vance_askai_hero_style' => 'spotlight' ) );
 $ai = render( 'askai' );
 check( 'markup is balanced', tags_balanced( $ai ) );
 check( 'askai lists all three tools',
-       strpos( $ai, 'Gastro Health Survey' ) !== false
+       strpos( $ai, 'Gastro Self-Assessment' ) !== false
     && strpos( $ai, 'Meal Planner' ) !== false
     && strpos( $ai, 'IBD Malnutrition Calculator' ) !== false );
 check( 'askai has NO "browse all" cell (that would be a fourth)',
@@ -507,7 +507,7 @@ set_mods( array( 'vance_tools_hero_style' => 'spotlight' ) );
 $tp = render( 'tools' );
 check( 'markup is balanced', tags_balanced( $tp ) );
 check( 'the shelf lists all three tools',
-       strpos( $tp, 'Gastro Health Survey' ) !== false
+       strpos( $tp, 'Gastro Self-Assessment' ) !== false
     && strpos( $tp, 'Meal Planner' ) !== false
     && strpos( $tp, 'IBD Malnutrition Calculator' ) !== false );
 check( 'and does NOT link to itself',

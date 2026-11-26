@@ -174,6 +174,18 @@
 		};
 		saveState();
 		renderPlanner();
+		trackPlanner();
+	}
+
+	// Measurement (assets/js/vance-events.js): a start on the first meal placed;
+	// complete when one whole day has every slot filled. No recipe or meal is sent.
+	function trackPlanner() {
+		if (!window.vanceTrack) { return; }
+		window.vanceTrack('meal_planner', 'start');
+		var full = state.days.some(function (d) {
+			return SLOT_KEYS.every(function (slot) { return !!d.meals[slot]; });
+		});
+		if (full) { window.vanceTrack('meal_planner', 'complete'); }
 	}
 
 	function removeMeal(day, slot) {
@@ -231,6 +243,7 @@
 			});
 		});
 
+		trackPlanner();
 		saveState();
 		renderPlanner();
 

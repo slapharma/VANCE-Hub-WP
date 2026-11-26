@@ -224,7 +224,7 @@ check( 'customizer: the setting vance_hub_tool_result exists', isset( $WC->setti
 check( 'customizer: default is true (the master switch decides whether it shows)', isset( $WC->settings['vance_hub_tool_result'] ) && true === $WC->settings['vance_hub_tool_result']['default'] );
 check( 'customizer: sanitized by vance_hub_sanitize_checkbox', isset( $WC->settings['vance_hub_tool_result'] ) && 'vance_hub_sanitize_checkbox' === $WC->settings['vance_hub_tool_result']['sanitize_callback'] );
 check( 'customizer: a checkbox in section vance_home_layout', isset( $WC->controls['vance_hub_tool_result'] ) && 'checkbox' === $WC->controls['vance_hub_tool_result']['type'] && 'vance_home_layout' === $WC->controls['vance_hub_tool_result']['section'] );
-check( 'customizer: the label is "Health Survey: VanceHubClub result page"', isset( $WC->controls['vance_hub_tool_result'] ) && 'Health Survey: VanceHubClub result page' === $WC->controls['vance_hub_tool_result']['label'] );
+check( 'customizer: the label is "Self-Assessment: VanceHubClub result page"', isset( $WC->controls['vance_hub_tool_result'] ) && 'Self-Assessment: VanceHubClub result page' === $WC->controls['vance_hub_tool_result']['label'] );
 
 /* ---- 3. field spec from the real questions ----------------------------------- */
 section( '3. Field spec from the real survey questions' );
@@ -280,8 +280,8 @@ $g = vance_hub_tool_result_html( sample() );
 check( 'guest: the block starts hidden and has the id the script looks for', has( $g, 'id="vhub-tool-result" hidden' ) );
 check( 'guest: the heading reads "Your summary is ready"', has( $g, 'Your summary is <span>ready</span>' ) );
 check( 'guest: the lead says no account is needed and that it is not a diagnosis', has( $g, 'You do not need an account. This summary is not a diagnosis.' ) );
-check( 'guest: the pill reads GASTRO HEALTH SURVEY · COMPLETE', has( $g, 'GASTRO HEALTH SURVEY</p>' ) === false && has( $g, 'GASTRO HEALTH SURVEY &middot; COMPLETE' ) );
-check( 'guest: the breadcrumb reads Tools / Gastro Health Survey / Your summary', has( $g, 'Tools</a> / Gastro Health Survey / Your summary' ) );
+check( 'guest: the pill reads GASTRO SELF-ASSESSMENT · COMPLETE', has( $g, 'GASTRO SELF-ASSESSMENT</p>' ) === false && has( $g, 'GASTRO SELF-ASSESSMENT &middot; COMPLETE' ) );
+check( 'guest: the breadcrumb reads Tools / Gastro Self-Assessment / Your summary', has( $g, 'Tools</a> / Gastro Self-Assessment / Your summary' ) );
 check( 'guest: the join card is there with its heading', has( $g, 'Join free and save your next survey' ) );
 check( 'guest: the card says this summary is not kept (no false save promise)', has( $g, 'We do not keep this summary.' ) && ! has( $g, 'Save my summary' ) && ! has( $g, 'keeps this summary' ) );
 check( 'guest: "Join free" is a link to the sign-up address', 1 === preg_match( '#<a class="vhub-tr__btn vhub-tr__btn--purple" href="https://example\.test/login/\?tab=signup&amp;redirect_to=[^"]+">Join free#', $g ) );

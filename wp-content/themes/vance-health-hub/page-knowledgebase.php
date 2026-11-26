@@ -561,7 +561,7 @@ if ( ! function_exists( 'vance_kb_lobby_tools' ) ) :
 
 		$fallback = array(
 			array( 'title' => 'Malnutrition Calculator', 'path' => 'malnutrition-calculator' ),
-			array( 'title' => 'Gastro Health Survey',    'path' => 'gastro-health-survey' ),
+			array( 'title' => 'Gastro Self-Assessment',    'path' => 'gastro-health-survey' ),
 			array( 'title' => 'Recipes &amp; Meal Planner',  'path' => 'gastro-meal-planner' ),
 		);
 

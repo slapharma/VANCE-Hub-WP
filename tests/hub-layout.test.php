@@ -788,7 +788,7 @@ check( 'full guest: no unfilled %s placeholder', strpos( $HTML, '%s' ) === false
 check( 'full guest: the member bar shows the real total', strpos( $HTML, '<strong>1,234 members</strong>' ) !== false );
 check( 'full guest: the member bar shows the real weekly joins', strpos( $HTML, '17 joined this week' ) !== false );
 check( 'full guest: the bar links to the join section, not the dashboard', strpos( $HTML, 'href="#vhub-join"' ) !== false && strpos( $HTML, 'https://example.test/dashboard/' ) === false );
-check( 'full guest: the survey tool shows the real step count', strpos( $HTML, 'Gastro Health Survey: 9 short questions.' ) !== false );
+check( 'full guest: the survey tool shows the real step count', strpos( $HTML, 'Gastro Self-Assessment: 9 short questions.' ) !== false );
 check( 'full guest: the survey starter shows the real question count', strpos( $HTML, '9 questions' ) !== false );
 check( 'full guest: the recipe tool shows the live recipe count', strpos( $HTML, '1,091 gut-friendly recipes.' ) !== false );
 check( 'full guest: the nutrition tool uses the calculator name', strpos( $HTML, 'IBD Malnutrition Calculator. ' ) !== false );

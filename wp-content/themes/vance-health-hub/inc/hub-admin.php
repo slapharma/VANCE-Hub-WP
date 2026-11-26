@@ -42,7 +42,7 @@ function vance_hub_admin_switches() {
 		'vance_hub_dash_checkin'   => __( 'Member dashboard: weekly check-in', 'vance-health-hub' ),
 		'vance_hub_dash_flare_plan' => __( 'Member dashboard: flare plan', 'vance-health-hub' ),
 		'vance_hub_dashboard_tabs' => __( 'Member dashboard: VanceHubClub look on every tab', 'vance-health-hub' ),
-		'vance_hub_tool_result'    => __( 'Health Survey: VanceHubClub result page', 'vance-health-hub' ),
+		'vance_hub_tool_result'    => __( 'Self-Assessment: VanceHubClub result page', 'vance-health-hub' ),
 		'vance_hub_header'         => __( 'Site header: VanceHubClub header', 'vance-health-hub' ),
 		'vance_hub_community'      => __( 'Community hub', 'vance-health-hub' ),
 	);

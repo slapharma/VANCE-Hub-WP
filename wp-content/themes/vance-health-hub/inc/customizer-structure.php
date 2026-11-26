@@ -217,8 +217,8 @@ function vance_customizer_structure_sections() {
 			'vance_edu_intro'            => 'Education: Intro',
 			'vance_edu_tracks'           => 'Education: Course tracks',
 			'vance_edu_waitlist'         => 'Education: Waitlist signup',
-			'vance_hquiz_hero'           => 'Gastro Health Survey: ' . $classic,
-			'vance_hquiz_hero_spotlight' => 'Gastro Health Survey: ' . $spotlight,
+			'vance_hquiz_hero'           => 'Gastro Self-Assessment: ' . $classic,
+			'vance_hquiz_hero_spotlight' => 'Gastro Self-Assessment: ' . $spotlight,
 		),
 
 		'vance_about_panel'            => array(

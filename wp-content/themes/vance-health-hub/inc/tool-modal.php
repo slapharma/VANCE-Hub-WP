@@ -46,7 +46,7 @@ $vance_tm_tools = array(
         'inline' => false,
     ),
     'healthcare-quiz' => array(
-        'title'  => 'Gastro Health Survey',
+        'title'  => 'Gastro Self-Assessment',
         'url'    => home_url( '/gastro-health-survey/' ),
         'inline' => true, // reuses openQuizModal()
     ),

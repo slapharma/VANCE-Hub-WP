@@ -336,7 +336,7 @@ function vance_gi_hero_hub_defaults() {
 		'eyebrow'   => __( 'Gastro health', 'vance-health-hub' ),
 		'heading'   => __( 'Seven gut conditions, clearly explained', 'vance-health-hub' ),
 		'lede'      => __( 'Clinician-reviewed information on inflammatory bowel disease, IBS, colorectal cancer and more, written in plain language to help you understand a diagnosis, prepare for appointments and manage day to day.', 'vance-health-hub' ),
-		'btn1_text' => __( 'Take the Gastro Health Survey', 'vance-health-hub' ),
+		'btn1_text' => __( 'Take the Gastro Self-Assessment', 'vance-health-hub' ),
 		'btn1_url'  => '/gastro-health-survey/',
 		'btn2_text' => __( 'My Dashboard', 'vance-health-hub' ),
 		'btn2_url'  => '/dashboard/',

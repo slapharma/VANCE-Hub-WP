@@ -1026,7 +1026,7 @@ function vance_sync_fluentcrm_contact( $user_id, $email, $audience_role, $market
 
     $user = get_userdata( $user_id );
 
-    FluentCrmApi( 'contacts' )->createOrUpdate( array(
+    $contact = array(
         'email'         => $email,
         'first_name'    => $user ? $user->first_name : '',
         'last_name'     => $user ? $user->last_name : '',
@@ -1038,7 +1038,12 @@ function vance_sync_fluentcrm_contact( $user_id, $email, $audience_role, $market
             'wp_user_id'     => $user_id,
             'dashboard_role' => get_user_meta( $user_id, '_sla_dashboard_role', true ),
         ),
-    ) );
+    );
+
+    // Adds the UTM source tag and value (inc/attribution.php). No health data.
+    $contact = apply_filters( 'vance_fluentcrm_contact', $contact, $user_id );
+
+    FluentCrmApi( 'contacts' )->createOrUpdate( $contact );
 }
 
 /**
