@@ -19,6 +19,7 @@ $THEME = dirname( __DIR__ ) . '/wp-content/themes/vance-health-hub';
 /* ---- WordPress stubs --------------------------------------------------- */
 
 function add_filter( $tag, $callback, $priority = 10, $accepted_args = 1 ) {}
+function add_action( $tag, $callback, $priority = 10, $accepted_args = 1 ) {}
 
 /*
  * mbstring shim. The suite runs on PHP installs where mbstring is not loaded.
