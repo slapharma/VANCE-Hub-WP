@@ -382,8 +382,8 @@ check( 'data: nothing saved, the survey step links to the survey page', is_array
 check( 'data: nothing saved, four tools show', count( $D['tools'] ) === 4 );
 check( 'data: nothing saved, the survey tile says not started', $D['tools'][0]['status'] === 'Not started.' && $D['tools'][0]['done'] === false );
 check( 'data: nothing saved, the survey tile keeps its Start button', $D['tools'][0]['cta'] === 'Start the survey' );
-check( 'data: nothing saved, the planner tile says no saved plan', $D['tools'][1]['status'] === 'No saved meal plan.' );
-check( 'data: nothing saved, the nutrition tile says no saved check', $D['tools'][2]['status'] === 'No saved check.' );
+check( 'data: nothing saved, the planner tile says no saved plan', $D['tools'][2]['mod'] === 'recipes' && $D['tools'][2]['status'] === 'No saved meal plan.' );
+check( 'data: nothing saved, the nutrition tile says no saved check', $D['tools'][1]['mod'] === 'nutrition' && $D['tools'][1]['status'] === 'No saved check.' );
 check( 'data: nothing saved, the discounts tile says no saved scheme', $D['tools'][3]['status'] === 'No saved scheme.' );
 check( 'data: nothing saved, four stat tiles show with a zero each', count( $D['stats'] ) === 4 && $D['stats'][0]['count'] === 0 && $D['stats'][3]['count'] === 0 );
 check( 'data: nothing saved, no saved articles', $D['saved'] === array() );
@@ -451,15 +451,15 @@ $GLOBALS['HISTORY']['malnutrition-calculator'] = array(
 );
 $D = vance_hub_dashboard_data( hd_user( 7, 'Ruth', '2024-03-05 10:00:00' ) );
 check( 'data: all four steps done, there is no next step', $D['step'] === null );
-check( 'data: planner tile shows the count and the newest plan date', $D['tools'][1]['status'] === '1 saved meal plan. Last saved 5 Nov 2026.' );
-check( 'data: nutrition tile shows three checks and the newest date, not the first row', $D['tools'][2]['status'] === '3 saved checks. Last check 12 Nov 2026.' );
+check( 'data: planner tile shows the count and the newest plan date', $D['tools'][2]['mod'] === 'recipes' && $D['tools'][2]['status'] === '1 saved meal plan. Last saved 5 Nov 2026.' );
+check( 'data: nutrition tile shows three checks and the newest date, not the first row', $D['tools'][1]['mod'] === 'nutrition' && $D['tools'][1]['status'] === '3 saved checks. Last check 12 Nov 2026.' );
 
 // Discounts tile and the discounts tab.
 hd_arrange( array(), array(), array(), true );
 $GLOBALS['FEATURE_ON']['discounts'] = false;
 $D = vance_hub_dashboard_data( hd_user( 7, 'Ruth', '2024-03-05 10:00:00' ) );
 check( 'data: discounts tab off removes its tile, three tiles left', count( $D['tools'] ) === 3 );
-check( 'data: discounts tab off leaves the nutrition tile in place as the third', $D['tools'][2]['mod'] === 'nutrition' );
+check( 'data: discounts tab off leaves the planner tile in place as the third', $D['tools'][2]['mod'] === 'recipes' );
 
 hd_arrange();
 $GLOBALS['USER_META'][7]['_sla_saved_discounts'] = array( 'scheme-a', 'scheme-b' );
