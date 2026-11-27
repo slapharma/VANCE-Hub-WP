@@ -2645,7 +2645,9 @@ check( 'tel render: the "Who I contact" answer links', false !== strpos( $H38, '
 check( 'tel render: the other two answers do not link', false !== strpos( $H38, '<p>Ring 0800 111 222 first</p>' ) && false !== strpos( $H38, '<p>Ring 0800 333 444</p>' ) );
 check( 'tel render: the urgent help text links its short codes', false !== strpos( $H38, 'Ring <a href="tel:111">111</a> or <a href="tel:999">999</a>.' ) );
 $H38B = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $PLAN38, 'updated' => '10 Nov 2026', 'sheet' => array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => 'Ring 0800 555 666?', 'medication' => '0800 777 888', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) ) ) );
+// The sheet only: it ends where the "Urgent help and my contacts" group starts.
 $SHEET38 = substr( $H38B, (int) strpos( $H38B, 'vhd-flare-sheet' ) );
+$SHEET38 = substr( $SHEET38, 0, (int) strpos( $SHEET38, 'data-vhd-group="contacts"' ) );
 check( 'tel render: the contacts on the sheet link', false !== strpos( $SHEET38, '<p>Nurse <a href="tel:0800000000">0800 000 000</a></p>' ) );
 check( 'tel render: the questions, the medication and the other plan answers on the sheet do not link', 1 === substr_count( $SHEET38, '<a href="tel:' ) );
 check( 'tel render: the edit box text is not linked (a textarea holds the plain text)', false !== strpos( $H38, '>Nurse 0800 000 000</textarea>' ) );
@@ -2968,7 +2970,28 @@ $G_SAVED = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $G_PLAN, '
 $G_RO    = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $G_PLAN, 'updated' => '10 Nov 2026', 'readonly' => true ) ) );
 check( 'groups: a saved plan opens the now group and closes the plan group', false !== strpos( $G_OPEN, 'data-vhd-group="now" open>' ) && false !== strpos( $G_OPEN, 'data-vhd-group="plan"><summary' ) );
 check( 'groups: after a save the plan group is open', false !== strpos( $G_SAVED, 'data-vhd-group="plan" open>' ) );
-check( 'groups: the read-only card and the no-plan card have no groups', false === strpos( $G_RO, 'vhd-flare__group' ) && false === strpos( vance_hub_flare_plan_html( fb_flare_view() ), 'data-vhd-group=' ) );
+check( 'groups: the read-only card has only the contacts group, and the no-plan card has no groups', 1 === substr_count( $G_RO, 'vhd-flare__group"' ) + substr_count( $G_RO, 'vhd-flare__group ' ) && false !== strpos( $G_RO, 'data-vhd-group="contacts"' ) && false === strpos( vance_hub_flare_plan_html( fb_flare_view() ), 'data-vhd-group=' ) );
+
+// "Urgent help and my contacts": the last group, above the manage box, and closed in every state.
+$G_CONTACTS = '<details class="vhd-flare__group vhd-flare__now" data-vhd-group="contacts"><summary class="vhd-flare__group-sum">Urgent help and my contacts</summary>';
+$G_SHEET    = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $G_PLAN, 'updated' => '10 Nov 2026', 'sheet' => array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => 'Q', 'medication' => '', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) ) ) );
+$G_AT       = strpos( $G_SHEET, $G_CONTACTS );
+check( 'contacts group: it is drawn one time, closed, with its name in the summary', false !== $G_AT && 1 === substr_count( $G_SHEET, 'data-vhd-group="contacts"' ) );
+check( 'contacts group: it comes after the now, plan and appointment groups', false !== $G_AT && $G_AT > strpos( $G_SHEET, 'data-vhd-group="now"' ) && $G_AT > strpos( $G_SHEET, 'data-vhd-group="plan"' ) && $G_AT > strpos( $G_SHEET, 'data-vhd-group="appointment"' ) );
+check( 'contacts group: no group comes after it, and the manage box is the only thing below it', false !== $G_AT && false === strpos( substr( $G_SHEET, $G_AT + strlen( $G_CONTACTS ) ), 'data-vhd-group=' ) && strpos( $G_SHEET, 'vhd-flare__manage' ) > $G_AT );
+check( 'contacts group: it holds the urgent help text and the contacts', false !== $G_AT && false !== strpos( substr( $G_SHEET, $G_AT ), 'When to get urgent help' ) && false !== strpos( substr( $G_SHEET, $G_AT ), 'Who I contact' ) && false === strpos( substr( $G_SHEET, 0, $G_AT ), 'When to get urgent help' ) );
+$G_ALWAYS = true;
+foreach ( array( '', 'saved', 'toolong', 'invalid', 'consent', 'changed', 'expired', 'baddate', 'toomany', 'failed', 'kept', 'partial', 'noplan', 'flare_started', 'flare_started_trimmed', 'flare_ended', 'flare_open', 'flare_none', 'flare_removed' ) as $g_flash ) {
+	foreach ( array( false, true ) as $g_consent ) {
+		$g_html = vance_hub_flare_plan_html( fb_flare_view( array( 'plan' => $G_PLAN, 'updated' => '10 Nov 2026', 'flash' => $g_flash, 'need_consent' => $g_consent ) ) );
+		if ( false === strpos( $g_html, $G_CONTACTS ) || false !== strpos( $g_html, 'data-vhd-group="contacts" open' ) ) {
+			$G_ALWAYS = false;
+		}
+	}
+}
+check( 'contacts group: it is closed for every message, with and without the agreement', $G_ALWAYS );
+$G_RO_AT = strpos( $G_RO, $G_CONTACTS );
+check( 'contacts group: on the read-only card it is closed, after the plan and the log, above the manage box', false !== $G_RO_AT && $G_RO_AT > strpos( $G_RO, 'vhd-flare__plan' ) && $G_RO_AT > strpos( $G_RO, 'vhd-flare__log' ) && strpos( $G_RO, 'vhd-flare__manage' ) > $G_RO_AT );
 check( 'groups: negative control, the saved plan is not read-only', false !== strpos( $G_OPEN, 'data-vhd-group="now"' ) );
 
 /* ===================================================================== */
@@ -3999,10 +4022,10 @@ check( 'p4 wallet escape: every value is escaped (name, row, notes, urgent text)
 
 // The wallet card: where it sits, and in which view.
 $P4_FULL = fb_p2_card( array( 'name' => 'Ruth Ames', 'sheet' => fb_p2_sheet( array( 'questions' => 'Q' ) ) ), $P4_WPLAN );
-$P4_NOWEND = strpos( $P4_FULL, '</div><div class="vhd-flare-wallet" aria-hidden="true">' );
-check( 'p4 wallet: in the full view it follows the "Urgent help and my contacts" block and comes before the groups', false !== $P4_NOWEND && $P4_NOWEND > strpos( $P4_FULL, '<div class="vhd-flare__now">' ) && $P4_NOWEND < strpos( $P4_FULL, 'data-vhd-group="now"' ) && 1 === substr_count( $P4_FULL, 'vhd-flare-wallet"' ) );
+$P4_NOWEND = strpos( $P4_FULL, '</details><div class="vhd-flare-wallet" aria-hidden="true">' );
+check( 'p4 wallet: in the full view it follows the "Urgent help and my contacts" group, after the other groups', false !== $P4_NOWEND && $P4_NOWEND > strpos( $P4_FULL, 'data-vhd-group="contacts"' ) && $P4_NOWEND > strpos( $P4_FULL, 'data-vhd-group="appointment"' ) && $P4_NOWEND < strpos( $P4_FULL, 'vhd-flare__manage' ) && 1 === substr_count( $P4_FULL, 'vhd-flare-wallet"' ) );
 $P4_RO_CARD = vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => $P4_WPLAN, 'updated' => '10 Nov 2026', 'name' => 'Ruth Ames' ) ) );
-check( 'p4 wallet: the read-only view has the wallet too, after the contacts block', false !== strpos( $P4_RO_CARD, '</div><div class="vhd-flare-wallet" aria-hidden="true">' ) && false !== strpos( $P4_RO_CARD, '<p class="vhd-flare-wallet__name">Ruth Ames</p>' ) );
+check( 'p4 wallet: the read-only view has the wallet too, after the contacts group', false !== strpos( $P4_RO_CARD, '</details><div class="vhd-flare-wallet" aria-hidden="true">' ) && false !== strpos( $P4_RO_CARD, '<p class="vhd-flare-wallet__name">Ruth Ames</p>' ) );
 $P4_RO_NONE = vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => fb_v2( array( 'signs' => 'S' ) ), 'updated' => '10 Nov 2026', 'urgent' => '', 'name' => 'Ruth Ames' ) ) );
 check( 'p4 wallet: nothing to show gives no wallet block and no wallet button', false === strpos( $P4_RO_NONE, 'vhd-flare-wallet' ) && false === strpos( $P4_RO_NONE, 'data-vhd-flare-print="wallet"' ) );
 check( 'p4 wallet: no plan gives no wallet block and no print control', false === strpos( $H_OPEN, 'vhd-flare-wallet' ) && false === strpos( $H_OPEN, 'data-vhd-flare-print' ) && false === strpos( $H_OPEN, 'vhd-flare__pdfhint' ) );

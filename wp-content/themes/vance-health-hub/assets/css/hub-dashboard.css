@@ -659,14 +659,11 @@ html.vhd-modal-open { overflow: hidden; }
 .vhd .vhd-flare__sheetbox summary { display: flex; align-items: center; min-height: 44px; padding: 0 4px; }
 .vhd .vhd-flare button,
 .vhd .vhd-flare input[type="range"] { min-height: 44px; }
-.vhd .vhd-flare__now {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-	padding: 16px;
-	border: 2px solid var(--vhd-teal);
-	border-radius: var(--radius-surface);
-}
+/* "Urgent help and my contacts": the last group of the card, closed when the page
+   opens. It is a .vhd-flare__group, so the box, the padding and the summary bar
+   come from the group rules. The teal border marks it. */
+.vhd .vhd-flare__group.vhd-flare__now { border: 2px solid var(--vhd-teal); }
+.vhd .vhd-flare__now > .vhd-flare__sec + .vhd-flare__sec { margin-top: 14px; }
 .vhd .vhd-flare__now a[href^="tel:"],
 .vhd .vhd-flare-sheet a[href^="tel:"] {
 	font-weight: 700;
@@ -908,8 +905,8 @@ html.vhd-modal-open { overflow: hidden; }
    page, or of another sub-tab, is not touched.
    The plan print is black on white at 12pt, with no shadows and no fills. Its only box is
    the 1px border of the urgent help. The order on paper is the order of the card: print
-   header, urgent help and contacts, early signs, first steps, optional sections, documents,
-   date. The wallet card sits inside the card. On screen it is display none. In the plan print
+   header, early signs, first steps, optional sections, documents, date, then urgent help
+   and contacts last. The wallet card sits inside the card. On screen it is display none. In the plan print
    and the sheet print it stays hidden. It shows only when it is the print target: then the
    card and its ancestors are on the print path, and the path rule drops every sibling of the
    wallet. It is 90mm wide with a dashed cut line. No comment goes inside the block below:
