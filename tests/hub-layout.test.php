@@ -279,6 +279,7 @@ require_once $THEME . '/inc/dashboard-url.php';
 require_once $THEME . '/inc/condition-priority.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
+require_once $THEME . '/inc/hub-look-settings.php';
 
 /*
  * The condition registry lives in functions.php, which cannot be loaded here

@@ -354,6 +354,7 @@ function cookie_write( $name ) {
 require_once $THEME . '/inc/hub-preview.php';
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
+require_once $THEME . '/inc/hub-look-settings.php';
 require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard.php';

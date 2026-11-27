@@ -26,6 +26,16 @@ $vhh_logged_in = is_user_logged_in();
 $vhh_nav       = vance_hub_header_nav_html();
 $vhh_mega      = vance_hub_header_nav_is_mega( $vhh_nav );
 $vhh_search    = is_search();
+// Button texts, links and the search hint come from inc/hub-look-settings.php.
+// With that file missing, each one keeps today's literal.
+$vhh_look       = function_exists( 'vance_hub_look_text' ) && function_exists( 'vance_hub_look_link' );
+$vhh_t_signin   = $vhh_look ? vance_hub_look_text( 'vance_hub_text_signin' ) : __( 'Sign in', 'vance-health-hub' );
+$vhh_t_join     = $vhh_look ? vance_hub_look_text( 'vance_hub_text_join' ) : __( 'Join free', 'vance-health-hub' );
+$vhh_t_myhub    = $vhh_look ? vance_hub_look_text( 'vance_hub_text_myhub' ) : __( 'My Hub', 'vance-health-hub' );
+$vhh_t_search   = $vhh_look ? vance_hub_look_text( 'vance_hub_text_search' ) : __( 'Search articles, tools, recipes...', 'vance-health-hub' );
+$vhh_l_signin   = $vhh_look ? vance_hub_look_link( 'signin' ) : home_url( '/login/' );
+$vhh_l_join     = $vhh_look ? vance_hub_look_link( 'join' ) : home_url( '/login/?tab=signup' );
+$vhh_l_myhub    = $vhh_look ? vance_hub_look_link( 'myhub' ) : home_url( '/dashboard/' );
 $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>';
 ?>
 <?php /* Marks the page as scripted before the header paints, so the phone panel is
@@ -44,7 +54,7 @@ $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 			<div class="vhh-nav__extra">
 				<button type="button" class="vhh-btn vhh-btn--teal" data-vance-askai-open aria-haspopup="dialog"><?php echo $vhh_spark; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG above. ?><span><?php esc_html_e( 'VANCE-Ai', 'vance-health-hub' ); ?></span></button>
 				<?php if ( ! $vhh_logged_in ) : ?>
-					<a class="vhh-btn vhh-btn--outline" href="<?php echo esc_url( home_url( '/login/' ) ); ?>"><?php esc_html_e( 'Sign in', 'vance-health-hub' ); ?></a>
+					<a class="vhh-btn vhh-btn--outline" href="<?php echo esc_url( $vhh_l_signin ); ?>"><?php echo esc_html( $vhh_t_signin ); ?></a>
 				<?php endif; ?>
 			</div>
 		</nav>
@@ -52,10 +62,10 @@ $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 		<div class="vhh-actions">
 			<button type="button" class="vhh-btn vhh-btn--teal vhh-actions__ask" data-vance-askai-open aria-haspopup="dialog" aria-label="<?php esc_attr_e( 'VANCE-Ai', 'vance-health-hub' ); ?>"><?php echo $vhh_spark; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG above. ?><span><?php esc_html_e( 'VANCE-Ai', 'vance-health-hub' ); ?></span></button>
 			<?php if ( $vhh_logged_in ) : ?>
-				<a class="vhh-btn vhh-btn--purple" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>"><?php esc_html_e( 'My Hub', 'vance-health-hub' ); ?></a>
+				<a class="vhh-btn vhh-btn--purple" href="<?php echo esc_url( $vhh_l_myhub ); ?>"><?php echo esc_html( $vhh_t_myhub ); ?></a>
 			<?php else : ?>
-				<a class="vhh-btn vhh-btn--outline vhh-actions__signin" href="<?php echo esc_url( home_url( '/login/' ) ); ?>"><?php esc_html_e( 'Sign in', 'vance-health-hub' ); ?></a>
-				<a class="vhh-btn vhh-btn--purple" href="<?php echo esc_url( home_url( '/login/?tab=signup' ) ); ?>"><?php esc_html_e( 'Join free', 'vance-health-hub' ); ?></a>
+				<a class="vhh-btn vhh-btn--outline vhh-actions__signin" href="<?php echo esc_url( $vhh_l_signin ); ?>"><?php echo esc_html( $vhh_t_signin ); ?></a>
+				<a class="vhh-btn vhh-btn--purple" href="<?php echo esc_url( $vhh_l_join ); ?>"><?php echo esc_html( $vhh_t_join ); ?></a>
 			<?php endif; ?>
 
 			<?php /* Site search: same block and hooks as the classic header
@@ -68,7 +78,7 @@ $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 						class="vance-header-search__field"
 						name="s"
 						value="<?php echo esc_attr( get_search_query() ); ?>"
-						placeholder="<?php esc_attr_e( 'Search articles, tools, recipes...', 'vance-health-hub' ); ?>"
+						placeholder="<?php echo esc_attr( $vhh_t_search ); ?>"
 						aria-label="<?php esc_attr_e( 'Search the Hub', 'vance-health-hub' ); ?>"
 						autocomplete="off">
 				</form>

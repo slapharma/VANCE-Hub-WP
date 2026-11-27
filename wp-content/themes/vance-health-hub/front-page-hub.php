@@ -25,7 +25,16 @@ $vhub_signup    = home_url( '/login/?tab=signup' );
 $vhub_signin    = home_url( '/login/' );
 $vhub_dashboard = vance_dashboard_link( home_url( '/dashboard/' ) );
 $vhub_bar       = vance_hub_member_bar();
-$vhub_hero_img  = vance_hub_img( 'about/community-support.jpg' );
+// The hero photo: the one saved in the Customizer, else the theme photo
+// (vance_hub_hero_image() in inc/hub-look-settings.php; with that file missing
+// the theme photo prints exactly as before).
+$vhub_hero      = function_exists( 'vance_hub_hero_image' ) ? vance_hub_hero_image() : array(
+	'src'    => vance_hub_img( 'about/community-support.jpg' ),
+	'alt'    => __( 'Five people sit in a circle of chairs and talk; one woman holds a clipboard', 'vance-health-hub' ),
+	'width'  => 800,
+	'height' => 650,
+);
+$vhub_hero_img  = $vhub_hero['src'];
 $vhub_survey_n  = function_exists( 'vance_quiz_steps' ) ? count( vance_quiz_steps() ) : 0;
 
 /* ---------------------------------------------------------------------------
@@ -96,7 +105,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 
 		<div class="vhub-hero__media">
 			<?php if ( $vhub_hero_img ) : ?>
-				<img class="vhub-hero__img" src="<?php echo esc_url( $vhub_hero_img ); ?>" width="800" height="650" alt="<?php esc_attr_e( 'Five people sit in a circle of chairs and talk; one woman holds a clipboard', 'vance-health-hub' ); ?>">
+				<img class="vhub-hero__img" src="<?php echo esc_url( $vhub_hero_img ); ?>" width="<?php echo (int) $vhub_hero['width']; ?>" height="<?php echo (int) $vhub_hero['height']; ?>" alt="<?php echo esc_attr( $vhub_hero['alt'] ); ?>">
 			<?php endif; ?>
 			<div class="vhub-survey<?php echo $vhub_hero_img ? '' : ' vhub-survey--flat'; ?>">
 				<div class="vhub-survey__meta">
@@ -542,7 +551,8 @@ foreach ( vance_hub_block_order() as $vhub_block ) {
 			<?php if ( '' !== $vhub_bar['deadline'] ) : ?>
 				<p class="vhub-join__founding"><?php
 					/* translators: %s: Founding Member deadline date. */
-					echo esc_html( sprintf( __( 'Join by %s and keep the Founding Member mark.', 'vance-health-hub' ), vance_hub_format_date( $vhub_bar['deadline'] ) ) );
+					$vhub_founding = function_exists( 'vance_hub_look_founding_line' ) ? vance_hub_look_founding_line( vance_hub_format_date( $vhub_bar['deadline'] ) ) : '';
+					echo esc_html( '' !== $vhub_founding ? $vhub_founding : sprintf( __( 'Join by %s and keep the Founding Member mark.', 'vance-health-hub' ), vance_hub_format_date( $vhub_bar['deadline'] ) ) );
 				?></p>
 			<?php endif; ?>
 		</div>

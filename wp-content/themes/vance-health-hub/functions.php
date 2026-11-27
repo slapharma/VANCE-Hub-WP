@@ -144,6 +144,8 @@ require_once get_template_directory() . '/inc/hub-preview.php';
 require_once get_template_directory() . '/inc/hub-layout.php';
 // VanceHubClub home page settings: block order, counts and texts. Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-home-settings.php';
+// VanceHubClub look settings: hero photo, header buttons, member bar, dashboard text. Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-look-settings.php';
 // VanceHubClub scheduled go-live: switches the layout at a saved time. Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-golive.php';
 // VanceHubClub article layout: opt-in (Customizer, default off). Needs hub-layout.php.
