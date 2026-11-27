@@ -112,6 +112,7 @@ class SuiteCustomizeFake {
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
 require_once $THEME . '/inc/hub-look-settings.php';
+require_once $THEME . '/inc/hub-brand.php';
 require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
@@ -139,6 +140,7 @@ $M = new SuiteCustomizeFake();
 vance_hub_customize_register( $M );
 vance_hub_home_customize_register( $M );
 vance_hub_look_customize_register( $M );
+vance_hub_brand_customize_register( $M );
 vance_hub_golive_customize_register( $M );
 vance_hub_article_customize_register( $M );
 vance_hub_dash_features_customize( $M );
@@ -277,6 +279,13 @@ $LOOK_SETTINGS = array(
 	'vance_hub_text_dash_check_button'   => array( 'Start the check', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
 );
 
+// The 3 brand colour settings (inc/hub-brand.php): one sanitiser and one validator for all three.
+$BRAND_SETTINGS = array(
+	'vance_hub_color_teal'   => array( '#008080', 'vance_hub_sanitize_brand_color', 'vance_hub_sec_header' ),
+	'vance_hub_color_navy'   => array( '#0A1929', 'vance_hub_sanitize_brand_color', 'vance_hub_sec_header' ),
+	'vance_hub_color_purple' => array( '#6B489E', 'vance_hub_sanitize_brand_color', 'vance_hub_sec_header' ),
+);
+
 $SECTION_IDS = array(
 	'vance_home_layout',
 	'vance_hub_sec_home',
@@ -326,6 +335,7 @@ $ORDER = array(
 		'vance_hub_text_signin', 'vance_hub_text_join', 'vance_hub_text_myhub', 'vance_hub_text_search',
 		'vance_hub_link_signin', 'vance_hub_link_join', 'vance_hub_link_myhub',
 		'vance_hub_text_bar_total', 'vance_hub_text_bar_week', 'vance_hub_text_bar_founding', 'vance_hub_text_bar_link_visitor', 'vance_hub_text_bar_link_member',
+		'vance_hub_color_teal', 'vance_hub_color_navy', 'vance_hub_color_purple',
 	),
 	'vance_hub_sec_pages'     => array( 'vance_hub_articles', 'vance_hub_tool_result' ),
 	'vance_hub_sec_dashboard' => array( 'vance_hub_show_dashboard', 'vance_hub_dashboard_tabs', 'vance_hub_dash_member_no', 'vance_hub_dash_chart' ),
@@ -376,11 +386,11 @@ $EXP = array_keys( $SETTINGS );
 sort( $IDS );
 sort( $EXP );
 check( 'settings: the agreed table holds exactly forty original ids', count( $SETTINGS ) === 40 );
-check( 'settings: the registered ids are exactly the original forty plus the 28 new ones plus the 25 tool card and go-live ones plus the 29 look ones (122)', count( $M->settings ) === 122 );
+check( 'settings: the registered ids are exactly the original forty plus the 28 new ones plus the 25 tool card and go-live ones plus the 29 look ones plus the 3 brand colours (125)', count( $M->settings ) === 125 );
 check( 'settings: the original forty are all still registered', array_diff( $EXP, $IDS ) === array() );
-$EXP_ALL = array_merge( $EXP, array_keys( $NEW_SETTINGS ), array_keys( $TOOL_SETTINGS ), array_keys( $LOOK_SETTINGS ) );
+$EXP_ALL = array_merge( $EXP, array_keys( $NEW_SETTINGS ), array_keys( $TOOL_SETTINGS ), array_keys( $LOOK_SETTINGS ), array_keys( $BRAND_SETTINGS ) );
 sort( $EXP_ALL );
-check( 'settings: the registered ids are exactly the original forty plus the agreed 28 plus the agreed 25 plus the agreed 29', $IDS === $EXP_ALL && count( $NEW_SETTINGS ) === 28 && count( $TOOL_SETTINGS ) === 25 && count( $LOOK_SETTINGS ) === 29 );
+check( 'settings: the registered ids are exactly the original forty plus the agreed 28 plus the agreed 25 plus the agreed 29 plus the agreed 3', $IDS === $EXP_ALL && count( $NEW_SETTINGS ) === 28 && count( $TOOL_SETTINGS ) === 25 && count( $LOOK_SETTINGS ) === 29 && count( $BRAND_SETTINGS ) === 3 );
 
 foreach ( $SETTINGS as $id => $row ) {
 	check( "setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
@@ -400,6 +410,12 @@ foreach ( $TOOL_SETTINGS as $id => $row ) {
 foreach ( $LOOK_SETTINGS as $id => $row ) {
 	check( "look setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
 	check( "look setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
+}
+
+foreach ( $BRAND_SETTINGS as $id => $row ) {
+	check( "brand setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
+	check( "brand setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
+	check( "brand setting $id: validate_callback is the contrast check", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['validate_callback'] === 'vance_hub_validate_brand_color' );
 }
 
 check( 'settings: the check-in texts equal vance_hub_checkin_text_defaults()', vance_hub_checkin_text_defaults()['vance_hub_checkin_note'] === $M->settings['vance_hub_checkin_note']['default'] && vance_hub_checkin_text_defaults()['vance_hub_checkin_q_pain'] === $M->settings['vance_hub_checkin_q_pain']['default'] );
@@ -434,10 +450,10 @@ check( 'sections: every section has a one-sentence description', count( array_fi
 section( '3. Controls: sections, priorities and on-screen order' );
 
 $CONTROL_SECTIONS = array_column( $M->controls, 'section' );
-check( 'controls: 119 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live, plus 29 look)', count( $M->controls ) === 119 );
+check( 'controls: 122 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live, plus 29 look, plus 3 brand colours)', count( $M->controls ) === 122 );
 check( 'controls: every control sits in one of the twelve sections', array_diff( $CONTROL_SECTIONS, $SECTION_IDS ) === array() );
 check( 'controls: no section is empty (all twelve sections hold controls)', count( array_count_values( $CONTROL_SECTIONS ) ) === 12 && array_diff( $SECTION_IDS, $CONTROL_SECTIONS ) === array() );
-check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 119 );
+check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 122 );
 
 $DISTINCT_OK = true;
 foreach ( $SECTION_IDS as $sid ) {
@@ -465,6 +481,9 @@ foreach ( $TOOL_SETTINGS as $id => $row ) {
 foreach ( $LOOK_SETTINGS as $id => $row ) {
 	check( "section: look control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
 }
+foreach ( $BRAND_SETTINGS as $id => $row ) {
+	check( "section: brand control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
+}
 
 check( 'order: section 1 holds the master switch, then the go-live date (priorities 10 and 20)', suite_section_order( $M, 'vance_home_layout' ) === $ORDER['vance_home_layout'] && $M->controls['vance_home_layout']['priority'] === 10 && $M->controls['vance_hub_golive_at']['priority'] === 20 );
 check( 'order: section 2 runs the block order, the five counts, then the hero photo', suite_section_order( $M, 'vance_hub_sec_home' ) === $ORDER['vance_hub_sec_home'] );
@@ -477,7 +496,7 @@ check( 'order: section 5 runs tiles 1 to 4 (badge, title, text, link)', suite_se
 check( 'order: section 6 runs header, member bar switch, member total, founding deadline, header texts, header links, member bar texts', suite_section_order( $M, 'vance_hub_sec_header' ) === $ORDER['vance_hub_sec_header'] );
 $HEADER_PRIORITIES = array();
 foreach ( $ORDER['vance_hub_sec_header'] as $id ) { $HEADER_PRIORITIES[] = $M->controls[ $id ]['priority']; }
-check( 'order: the section 6 priorities are 10, 15, 20, 30, 40 to 70, 80 to 100 and 110 to 150 (the three old controls keep 10, 20 and 30)', $HEADER_PRIORITIES === array( 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150 ) );
+check( 'order: the section 6 priorities are 10, 15, 20, 30, 40 to 70, 80 to 100, 110 to 150 and 160 to 180 (the three old controls keep 10, 20 and 30)', $HEADER_PRIORITIES === array( 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180 ) );
 check( 'order: section 7 runs articles, then the survey result page', suite_section_order( $M, 'vance_hub_sec_pages' ) === $ORDER['vance_hub_sec_pages'] );
 check( 'order: section 8 runs dashboard home, tab look, member number, chart', suite_section_order( $M, 'vance_hub_sec_dashboard' ) === $ORDER['vance_hub_sec_dashboard'] );
 check( 'order: section 9 (dashboard text) runs the greeting, welcome line, step label, then the four steps (title, text, button)', suite_section_order( $M, 'vance_hub_sec_dashboard_text' ) === $ORDER['vance_hub_sec_dashboard_text'] );
