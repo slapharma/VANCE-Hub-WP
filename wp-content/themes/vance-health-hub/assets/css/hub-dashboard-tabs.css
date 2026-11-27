@@ -25,16 +25,22 @@ body.vhd-tabs {
 	--dash-border: #D9ECEC;
 	--vhdt-teal: #008080;
 	--vhdt-teal-ink: #006666;
+	--vhdt-teal-hover: #006666;
+	--vhdt-teal-deeper: #004C4C;
+	--vhdt-teal-pale: #AEDBDB;
+	--vhdt-teal-bg: #F3FBFB;
 	--vhdt-wash: #DEF4F4;
 	--vhdt-navy: #0A1929;
+	--vhdt-navy-rgb: 10, 25, 41;
 	--vhdt-navy-2: #13243A;
 	--vhdt-purple: #6B489E;
+	--vhdt-purple-rgb: 107, 72, 158;
 	--vhdt-purple-ink: #5B3D8A;
 	--vhdt-ink: #1F2937;
 	--vhdt-heading: #0A3D3D;
 	--vhdt-line: #D9ECEC;
-	--vhdt-shadow: 0 8px 22px rgba(10, 25, 41, 0.08);
-	background-color: #F3FBFB;
+	--vhdt-shadow: 0 8px 22px rgba(var(--vhdt-navy-rgb), 0.08);
+	background-color: var(--vhdt-teal-bg);
 }
 
 /* --- Side menu: navy, teal active item ------------------------------------ */
@@ -64,7 +70,7 @@ body.vhd-tabs .dash-nav {
 body.vhd-tabs .nav-section { margin-bottom: 12px; }
 body.vhd-tabs .nav-section:last-child { margin-bottom: 0; }
 body.vhd-tabs .nav-label {
-	color: #AEDBDB;
+	color: var(--vhdt-teal-pale);
 	opacity: 1;
 	font-weight: 700;
 	letter-spacing: 0.8px;
@@ -112,7 +118,7 @@ body.vhd-tabs .vhdt-member__label {
 	font-size: 13px;
 	font-weight: 700;
 	letter-spacing: 0.2px;
-	color: #AEDBDB;
+	color: var(--vhdt-teal-pale);
 }
 body.vhd-tabs .vhdt-member__name {
 	font-family: var(--font-heading, 'Outfit', sans-serif);
@@ -155,7 +161,7 @@ body.vhd-tabs .vhdt-ask__title {
 
 /* --- Content area --------------------------------------------------------- */
 body.vhd-tabs .dash-main {
-	background: #F3FBFB;
+	background: var(--vhdt-teal-bg);
 	min-width: 0;
 }
 body.vhd-tabs .dash-header {
@@ -224,8 +230,8 @@ body.vhd-tabs .rl-btn--primary {
 }
 body.vhd-tabs .btn-primary:hover,
 body.vhd-tabs .rl-btn--primary:hover {
-	background: #006666;
-	border-color: #006666;
+	background: var(--vhdt-teal-hover);
+	border-color: var(--vhdt-teal-hover);
 	color: #FFFFFF;
 }
 body.vhd-tabs .rl-btn:not(.rl-btn--primary):not(.rl-btn--text) {
@@ -237,7 +243,7 @@ body.vhd-tabs .rl-btn:not(.rl-btn--primary):not(.rl-btn--text) {
 body.vhd-tabs .rl-btn:not(.rl-btn--primary):not(.rl-btn--text):hover {
 	background: var(--vhdt-wash);
 	border-color: var(--vhdt-teal);
-	color: #004C4C;
+	color: var(--vhdt-teal-deeper);
 }
 body.vhd-tabs .rl-btn,
 body.vhd-tabs .btn-primary {
@@ -253,7 +259,7 @@ body.vhd-tabs .btn-primary:focus-visible {
 body.vhd-tabs .dash-content input:focus,
 body.vhd-tabs .dash-content textarea:focus,
 body.vhd-tabs .dash-content select:focus {
-	outline: 3px solid rgba(107, 72, 158, 0.35);
+	outline: 3px solid rgba(var(--vhdt-purple-rgb), 0.35);
 	outline-offset: 1px;
 	border-color: var(--vhdt-teal);
 }

@@ -16,10 +16,14 @@
 .vhd {
 	--vhd-teal: #008080;
 	--vhd-teal-ink: #004C4C;
+	--vhd-teal-tint: #F4FFFF;
 	--vhd-wash: #DEF4F4;
 	--vhd-navy: #0A1929;
+	--vhd-navy-rgb: 10, 25, 41;
 	--vhd-purple: #6B489E;
 	--vhd-purple-ink: #5B3D8A;
+	--vhd-purple-soft: #E6DCF5;
+	--vhd-purple-mist: #F1EAFB;
 	--vhd-ink: #1F2937;
 	--vhd-muted: #4B5563;
 	--vhd-line: #D9ECEC;
@@ -52,7 +56,7 @@
 	text-transform: uppercase;
 	color: var(--vhd-purple-ink);
 }
-.vhd .vhd-eyebrow--light { color: #E6DCF5; }
+.vhd .vhd-eyebrow--light { color: var(--vhd-purple-soft); }
 .vhd .vhd-h2 {
 	font-family: var(--vhd-heading);
 	font-size: 22px;
@@ -138,7 +142,7 @@
 	line-height: 1.25;
 	color: #FFFFFF;
 }
-.vhd .vhd-step__text { font-size: 15px; line-height: 1.55; color: #F1EAFB; max-width: 62ch; }
+.vhd .vhd-step__text { font-size: 15px; line-height: 1.55; color: var(--vhd-purple-mist); max-width: 62ch; }
 
 /* --- Top row: next step, Ask VANCE-Ai and the weekly check-in, side by side.
        Each card stacks its copy over its button. Flex, not grid: a card that
@@ -206,7 +210,7 @@
 	background: #FFFFFF;
 	transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.vhd .vhd-tool:hover { border-color: var(--vhd-teal); box-shadow: 0 8px 24px rgba(10, 25, 41, 0.08); }
+.vhd .vhd-tool:hover { border-color: var(--vhd-teal); box-shadow: 0 8px 24px rgba(var(--vhd-navy-rgb), 0.08); }
 .vhd .vhd-tool__img {
 	display: block;
 	width: 100%;
@@ -356,7 +360,7 @@
 	border-left: 3px solid var(--vhd-line);
 	background: #F8FAFC;
 }
-.vhd .vhd-msg.is-unread { border-left-color: var(--vhd-teal); background: #F4FFFF; }
+.vhd .vhd-msg.is-unread { border-left-color: var(--vhd-teal); background: var(--vhd-teal-tint); }
 .vhd .vhd-msg:hover { background: var(--vhd-wash); }
 .vhd .vhd-msg__title { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--vhd-navy); overflow-wrap: anywhere; }
 .vhd .vhd-msg.is-unread .vhd-msg__title { font-weight: 700; }
@@ -515,7 +519,7 @@
 .vhd .vhd-checkin__key { word-spacing: .15em; }
 .vhd .vhd-modal[hidden] { display: none; }
 .vhd .vhd-modal { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.vhd .vhd-modal__backdrop { position: absolute; inset: 0; background: rgba(10, 25, 41, .55); }
+.vhd .vhd-modal__backdrop { position: absolute; inset: 0; background: rgba(var(--vhd-navy-rgb), .55); }
 .vhd .vhd-modal__box {
 	position: relative;
 	width: 100%;
@@ -525,7 +529,7 @@
 	padding: 24px 20px 18px;
 	background: #FFFFFF;
 	border-radius: var(--radius-surface, 14px);
-	box-shadow: 0 20px 50px rgba(10, 25, 41, .35);
+	box-shadow: 0 20px 50px rgba(var(--vhd-navy-rgb), .35);
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
