@@ -19,10 +19,13 @@
 (function ($) {
 	'use strict';
 
-	var data = window.vanceHubReset;
-	if (!data || !data.sections || !window.wp || !wp.customize) {
+	// No data at all (or no sections) is not a reason to stay silent: a click then
+	// shows the "cannot be reset here" notice.
+	var data = window.vanceHubReset || {};
+	if (!window.wp || !wp.customize) {
 		return;
 	}
+	var UNAVAILABLE = 'This section cannot be reset here. Reload the page and try again.';
 	var api = wp.customize;
 	var NOTICE_CODE = 'vance_hub_reset_done';
 	var HEX = /^#[0-9a-fA-F]{6}$/;
@@ -42,15 +45,14 @@
 		});
 	}
 
-	function showNotice(sectionId) {
+	function showNotice(sectionId, message, type) {
 		var section = api.section(sectionId);
-		var message = String(data.done || '');
 		if (section && section.notifications && typeof api.Notification === 'function') {
 			if (typeof section.notifications.remove === 'function') {
 				section.notifications.remove(NOTICE_CODE);
 			}
 			section.notifications.add(new api.Notification(NOTICE_CODE, {
-				type: 'info',
+				type: type,
 				message: message,
 				dismissible: true
 			}));
@@ -62,7 +64,7 @@
 			return;
 		}
 		$content.find('.vance-hub-reset-notice').remove();
-		var $notice = $('<div class="notice notice-info inline vance-hub-reset-notice" role="status"></div>')
+		var $notice = $('<div class="notice notice-' + type + ' inline vance-hub-reset-notice" role="status"></div>')
 			.append($('<p></p>').text(message));
 		var $anchor = $content.find('.customize-section-title').first();
 		if ($anchor.length) {
@@ -73,8 +75,9 @@
 	}
 
 	function resetSection(sectionId) {
-		var section = data.sections[sectionId];
+		var section = data.sections ? data.sections[sectionId] : null;
 		if (!section || !section.defaults) {
+			showNotice(sectionId, String(data.unavailable || UNAVAILABLE), 'error');
 			return;
 		}
 		var title = section.title || sectionId;
@@ -91,7 +94,7 @@
 				redrawColour(settingId, value);
 			});
 		});
-		showNotice(sectionId);
+		showNotice(sectionId, String(data.done || ''), 'info');
 	}
 
 	$(document).on('click', '.vance-hub-reset', function (event) {

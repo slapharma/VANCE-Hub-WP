@@ -515,6 +515,38 @@ $PARSED = json_decode( $JSON );
 check( 'enqueue: the inline script payload is valid JSON', is_object( $PARSED ) && isset( $PARSED->sections ) );
 check( 'enqueue: the payload default of the hostile setting is the exact string', is_object( $PARSED ) && $HOSTILE === $PARSED->sections->vance_hub_sec_community->defaults->vance_hub_text_com_visitor_intro );
 
+/* ===================================================================== */
+
+section( 'B4. The inline script when the encoding fails' );
+
+// Valid data: one assignment of a JSON object.
+$OK_SCRIPT = vance_hub_reset_inline_script( vance_hub_reset_script_data( $MAP, array() ) );
+$OK_JSON   = substr( $OK_SCRIPT, strlen( 'window.vanceHubReset = ' ), -1 );
+check( 'inline: valid data gives one assignment that ends with a semicolon', 0 === strpos( $OK_SCRIPT, 'window.vanceHubReset = {' ) && ';' === substr( $OK_SCRIPT, -1 ) );
+check( 'inline: valid data assigns a JSON object with the sections', is_object( json_decode( $OK_JSON ) ) && isset( json_decode( $OK_JSON )->sections->vance_hub_sec_home ) );
+
+// A default that holds an invalid UTF-8 byte: json_encode returns false for it.
+$BAD_BYTES = 'caf' . chr( 0xC3 ) . chr( 0x28 );
+check( 'inline: the bad string really makes the encoder fail (the check is not vacuous)', false === wp_json_encode( array( 'x' => $BAD_BYTES ), JSON_HEX_TAG ) );
+$BAD_CONTROLS = $CONTROLS;
+$BAD_CONTROLS[] = fake_control( 'c_bad', 'vance_hub_sec_home', array( fake_setting( 'vance_hub_bad_text', $BAD_BYTES ) ) );
+$BAD_MAP    = vance_hub_reset_map( vance_hub_reset_sections(), vance_hub_reset_collect( $BAD_CONTROLS ) );
+$BAD_DATA   = vance_hub_reset_script_data( $BAD_MAP, array() );
+check( 'inline: the bad data does not encode (so the guard is what is tested)', false === wp_json_encode( $BAD_DATA, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) );
+$BAD_SCRIPT = vance_hub_reset_inline_script( $BAD_DATA );
+$BAD_JSON   = substr( $BAD_SCRIPT, strlen( 'window.vanceHubReset = ' ), -1 );
+check( 'inline: bad data still gives a complete assignment', 0 === strpos( $BAD_SCRIPT, 'window.vanceHubReset = {' ) && ';' === substr( $BAD_SCRIPT, -1 ) );
+check( 'inline: bad data never prints an empty assignment', ! has( $BAD_SCRIPT, '= ;' ) && ! has( $BAD_SCRIPT, '=;' ) );
+check( 'inline: bad data prints JSON that decodes to an object', is_object( json_decode( $BAD_JSON ) ) );
+$BAD_OBJ = json_decode( $BAD_JSON );
+check( 'inline: bad data prints no sections, an empty object', is_object( $BAD_OBJ ) && isset( $BAD_OBJ->sections ) && is_object( $BAD_OBJ->sections ) && 0 === count( (array) $BAD_OBJ->sections ) && has( $BAD_JSON, '"sections":{}' ) );
+check( 'inline: bad data keeps the notice text for the script', has( $BAD_JSON, 'cannot be reset here' ) );
+check( 'inline: bad data holds no setting id of the bad section', ! has( $BAD_SCRIPT, 'vance_hub_bad_text' ) && ! has( $BAD_SCRIPT, 'vance_hub_block_order' ) );
+foreach ( array( 'vance_home_layout', 'vance_hub_golive_at', 'vance_hub_dash_checkin', 'vance_hub_checkin_consent', 'vance_hub_dash_flare_plan', 'vance_hub_flare_plan_consent', 'vance_hub_flare_plan_urgent' ) as $EXCLUDED_ID ) {
+	check( "inline: bad data holds no excluded setting id ($EXCLUDED_ID)", ! has( $BAD_SCRIPT, $EXCLUDED_ID ) );
+}
+check( 'inline: the unavailable text is in the normal data too', has( $OK_JSON, 'cannot be reset here' ) );
+
 echo "\n$PASS passed, " . count( $FAIL ) . " failed\n";
 foreach ( $FAIL as $f ) {
 	echo "FAIL: $f\n";

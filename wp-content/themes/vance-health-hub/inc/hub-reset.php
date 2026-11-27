@@ -105,7 +105,42 @@ function vance_hub_reset_texts() {
 		/* translators: %s: title of the section. */
 		'confirm'     => __( 'Reset every setting in "%s" to its default? Nothing changes on the site until you select Publish.', 'vance-health-hub' ),
 		'done'        => __( 'This section is reset. Select Publish to make the change live.', 'vance-health-hub' ),
+		'unavailable' => __( 'This section cannot be reset here. Reload the page and try again.', 'vance-health-hub' ),
 	);
+}
+
+/**
+ * The inline script that gives the reset data to the page.
+ *
+ * wp_json_encode() returns false when a value is not valid UTF-8, and a script
+ * "window.vanceHubReset = ;" is a syntax error that stops every button without a
+ * message. So when the encoding fails, this prints valid data with no sections
+ * (the script then tells the administrator that the section cannot be reset). The
+ * second encoding holds the fixed texts only. If that fails too, a literal empty
+ * object is used.
+ *
+ * @param array $data From vance_hub_reset_script_data().
+ * @return string One JavaScript assignment that always ends with a semicolon.
+ */
+function vance_hub_reset_inline_script( array $data ) {
+	$flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+	$json  = wp_json_encode( $data, $flags );
+	if ( ! is_string( $json ) || '' === $json ) {
+		$texts = vance_hub_reset_texts();
+		$json  = wp_json_encode(
+			array(
+				'sections'    => (object) array(),
+				'confirm'     => $texts['confirm'],
+				'done'        => $texts['done'],
+				'unavailable' => $texts['unavailable'],
+			),
+			$flags
+		);
+		if ( ! is_string( $json ) || '' === $json ) {
+			$json = '{"sections":{}}';
+		}
+	}
+	return 'window.vanceHubReset = ' . $json . ';';
 }
 
 /**
@@ -179,6 +214,7 @@ function vance_hub_reset_script_data( array $map, array $titles ) {
 		'sections' => (object) $sections,
 		'confirm'  => $texts['confirm'],
 		'done'     => $texts['done'],
+		'unavailable' => $texts['unavailable'],
 	);
 }
 
@@ -275,7 +311,7 @@ function vance_hub_reset_enqueue() {
 	// JSON, not wp_localize_script(): this keeps a boolean and a number as they are.
 	wp_add_inline_script(
 		'vance-hub-reset',
-		'window.vanceHubReset = ' . wp_json_encode( vance_hub_reset_script_data( $map, $titles ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';',
+		vance_hub_reset_inline_script( vance_hub_reset_script_data( $map, $titles ) ),
 		'before'
 	);
 }
