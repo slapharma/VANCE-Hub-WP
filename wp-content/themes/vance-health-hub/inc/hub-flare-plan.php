@@ -21,7 +21,8 @@
  *   transient vance_flare_draft_<uid>      what the member typed, 10 minutes, after a refused request
  *   _sla_flare_log                         [{id, start, end, helped}]
  *   _sla_flare_plan                        v2: {v, updated, signs, actions, contacts (notes), team[{name, role, tel, hours}],
- *                                          medicines, told, triggers, helps, questions, review_on, sections_on[]}.
+ *                                          medicines, told, triggers, helps, questions, review_on, sections_on[],
+ *                                          docs[] (ids of up to 5 of the member's own documents, never their text)}.
  *                                          A v1 value {updated, signs, actions, contacts} still reads (see
  *                                          vance_hub_flare_plan_normalise()) and becomes v2 on the next save.
  *   _sla_consent_flare_plan                '1' while the member agrees
@@ -293,6 +294,126 @@ function vance_hub_flare_plan_team_rows( $rows, $clean = false ) {
 }
 
 /**
+ * The most documents a plan keeps.
+ *
+ * @return int
+ */
+function vance_hub_flare_plan_docs_max() {
+	return 5;
+}
+
+/**
+ * A list of document ids, checked: positive whole numbers (an int, or a string of
+ * digits), no duplicate, in the order given, the first $limit only. A value that is
+ * not a document id is dropped.
+ *
+ * @param mixed $ids   Stored or posted ids.
+ * @param int   $limit Most ids to keep. Default vance_hub_flare_plan_docs_max().
+ * @return int[]
+ */
+function vance_hub_flare_plan_docs_clean( $ids, $limit = 0 ) {
+	$limit = (int) $limit > 0 ? (int) $limit : vance_hub_flare_plan_docs_max();
+	$out   = array();
+	if ( ! is_array( $ids ) ) {
+		return $out;
+	}
+	foreach ( $ids as $id ) {
+		if ( is_int( $id ) && $id > 0 ) {
+			$value = $id;
+		} elseif ( is_string( $id ) && 1 === preg_match( '/^[1-9][0-9]{0,17}$/D', $id ) ) {
+			$value = (int) $id;
+		} else {
+			continue;
+		}
+		if ( ! in_array( $value, $out, true ) ) {
+			$out[] = $value;
+		}
+	}
+	return array_slice( $out, 0, $limit );
+}
+
+/**
+ * True when the member's documents may be read: the My Documents feature is on.
+ * The documents are the member's own list in inc/user-documents.php. A missing
+ * function gives false.
+ *
+ * @return bool
+ */
+function vance_hub_flare_plan_docs_open() {
+	return function_exists( 'vance_user_docs_enabled' ) && function_exists( 'vance_user_docs_get' ) && vance_user_docs_enabled();
+}
+
+/**
+ * The posted document ids that belong to the member now, in the order of the
+ * member's own document list. An id that is not the member's is dropped, with no message.
+ *
+ * @param int   $uid    Member.
+ * @param array $posted Posted ids (strings).
+ * @return int[]
+ */
+function vance_hub_flare_plan_docs_member_ids( $uid, $posted ) {
+	$wanted = vance_hub_flare_plan_docs_clean( $posted, 1000 );
+	$out    = array();
+	if ( empty( $wanted ) || ! function_exists( 'vance_user_docs_get' ) ) {
+		return $out;
+	}
+	foreach ( (array) vance_user_docs_get( (int) $uid ) as $doc ) {
+		if ( is_array( $doc ) && isset( $doc['id'] ) && in_array( (int) $doc['id'], $wanted, true ) && ! in_array( (int) $doc['id'], $out, true ) ) {
+			$out[] = (int) $doc['id'];
+		}
+	}
+	return $out;
+}
+
+/**
+ * The documents a plan keeps that still exist and belong to the member: id and
+ * title. Never the text or the file. A deleted document is not in the list.
+ *
+ * @param int   $uid   Member.
+ * @param array $plan  A plan.
+ * @param bool  $gated True to give nothing when the My Documents feature is off.
+ * @return array[] {id:int, title:string}, in the order of the plan's list.
+ */
+function vance_hub_flare_plan_docs_resolve( $uid, $plan, $gated = true ) {
+	if ( ( $gated && ! vance_hub_flare_plan_docs_open() ) || ! function_exists( 'vance_user_docs_get' ) || ! is_array( $plan ) || empty( $plan['docs'] ) ) {
+		return array();
+	}
+	$mine = array();
+	foreach ( (array) vance_user_docs_get( (int) $uid ) as $doc ) {
+		if ( is_array( $doc ) && isset( $doc['id'] ) ) {
+			$mine[ (int) $doc['id'] ] = isset( $doc['name'] ) && is_string( $doc['name'] ) ? trim( $doc['name'] ) : '';
+		}
+	}
+	$out = array();
+	foreach ( vance_hub_flare_plan_docs_clean( $plan['docs'] ) as $id ) {
+		if ( isset( $mine[ $id ] ) ) {
+			$out[] = array( 'id' => $id, 'title' => '' !== $mine[ $id ] ? $mine[ $id ] : __( 'Document', 'vance-health-hub' ) );
+		}
+	}
+	return $out;
+}
+
+/**
+ * The documents to show in the card: the resolved list, with the reader link of
+ * each one. Empty when the My Documents feature is off.
+ *
+ * @param int   $uid  Member.
+ * @param array $plan A plan.
+ * @return array[] {id:int, title:string, url:string}
+ */
+function vance_hub_flare_plan_docs_shown( $uid, $plan ) {
+	if ( ! function_exists( 'vance_user_docs_reader_url' ) ) {
+		return array();
+	}
+	$out = array();
+	foreach ( vance_hub_flare_plan_docs_resolve( $uid, $plan ) as $doc ) {
+		$doc['url'] = (string) vance_user_docs_reader_url( $doc['id'] );
+		$out[]      = $doc;
+	}
+	return $out;
+}
+
+/**
  * True when a section of a plan has something written in it. Works on a stored
  * plan, a normalised plan and a posted set of values.
  *
@@ -330,6 +451,7 @@ function vance_hub_flare_plan_blank( $updated = 0 ) {
 	}
 	$plan['review_on']   = '';
 	$plan['sections_on'] = array();
+	$plan['docs']        = array();
 	return $plan;
 }
 
@@ -448,6 +570,8 @@ function vance_hub_flare_plan_sanitise_plan( $fields ) {
 		}
 	}
 	$clean['sections_on'] = $on;
+	// The kept documents: ids only. That they belong to the member is checked by the handler.
+	$clean['docs'] = vance_hub_flare_plan_docs_clean( isset( $fields['docs'] ) ? $fields['docs'] : array() );
 	return $clean;
 }
 
@@ -531,6 +655,8 @@ function vance_hub_flare_plan_normalise( $stored ) {
 			$plan['sections_on'][] = $id;
 		}
 	}
+	// A v2 plan with no 'docs' (written before documents) reads as an empty list.
+	$plan['docs'] = vance_hub_flare_plan_docs_clean( isset( $stored['docs'] ) ? $stored['docs'] : array() );
 	return $plan;
 }
 
@@ -665,6 +791,45 @@ function vance_hub_flare_plan_can( $what ) {
 			return is_user_logged_in();
 	}
 	return false;
+}
+
+/**
+ * The link to the flare plan card: the Health Profile tab, the "Flare plan" sub-tab
+ * and the card itself. Relative, like every dashboard tab link, so it stays on the
+ * address of the dashboard page. An administrator's layout preview is kept.
+ *
+ * @return string
+ */
+function vance_hub_flare_plan_url() {
+	$base = function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) : '?tab=health-profile';
+	return $base . '&hsub=flare#vhd-flare';
+}
+
+/**
+ * The link for the shortcuts on the check-in card and the dashboard home: the URL of
+ * the flare plan card, or '' when the card would not show for this member. The card
+ * shows when the hub dashboard is on, the Health Profile tab is on, and either the
+ * card is available (switch on, urgent help text set) or the member has a stored plan
+ * (the read-only card). One read of the plan at most, and no draft or nonce.
+ *
+ * @param int $uid Member.
+ * @return string URL, or ''.
+ */
+function vance_hub_flare_plan_shortcut_url( $uid ) {
+	$uid = (int) $uid;
+	if ( $uid <= 0 ) {
+		return '';
+	}
+	if ( function_exists( 'vance_hub_dashboard_active' ) && ! vance_hub_dashboard_active() ) {
+		return '';
+	}
+	if ( function_exists( 'vance_dashboard_feature_enabled' ) && ! vance_dashboard_feature_enabled( 'health-profile' ) ) {
+		return '';
+	}
+	if ( ! vance_hub_flare_plan_available() && null === vance_hub_flare_plan_get( $uid ) ) {
+		return '';
+	}
+	return vance_hub_flare_plan_url();
 }
 
 /**
@@ -916,13 +1081,14 @@ function vance_hub_flare_plan_draft_team_cap() {
 }
 
 /**
- * A draft, cleaned: the shape array( 'do', 'answers', 'team', 'on', 'helped' ) or null.
+ * A draft, cleaned: the shape array( 'do', 'answers', 'team', 'on', 'docs', 'helped' ) or null.
  *
  * 'answers' holds only the texts (and 'review_on') that the request sent, so a
  * form that was open before a section existed does not blank that section: the
  * form falls back to the saved plan for a key the draft does not hold. 'team' is
  * null when the request sent no contact rows. 'on' is null when it sent no list
- * of ticked sections, else a list of optional section ids.
+ * of ticked sections, else a list of optional section ids. 'docs' is null when
+ * the request sent no list of ticked documents, else a list of document ids.
  *
  * Each text is cut to vance_hub_flare_plan_draft_cap() characters, each contact
  * value to vance_hub_flare_plan_draft_team_cap(). That keeps the transient small:
@@ -966,11 +1132,18 @@ function vance_hub_flare_plan_draft_normalise( $draft ) {
 			}
 		}
 	}
+	// The ticked documents: ids only, null when the request sent no list. A member holds
+	// 10 documents at most, so 20 is a size cap and not a limit of the plan.
+	$docs = null;
+	if ( isset( $draft['docs'] ) && is_array( $draft['docs'] ) ) {
+		$docs = vance_hub_flare_plan_docs_clean( $draft['docs'], 20 );
+		$any  = $any || ! empty( $docs );
+	}
 	$helped = isset( $draft['helped'] ) && is_string( $draft['helped'] ) ? vance_hub_flare_plan_limit_text( vance_hub_flare_plan_clean_text( $draft['helped'] ), $cap ) : '';
 	if ( ! $any && '' === $helped ) {
 		return null;
 	}
-	return array( 'do' => $draft['do'], 'answers' => $answers, 'team' => $team, 'on' => $on, 'helped' => $helped );
+	return array( 'do' => $draft['do'], 'answers' => $answers, 'team' => $team, 'on' => $on, 'docs' => $docs, 'helped' => $helped );
 }
 
 /**
@@ -1059,13 +1232,14 @@ function vance_hub_flare_plan_draft_clear( $user_id ) {
  *
  * Fields: vhd_flare[<section id>] and vhd_flare[review_on] (text),
  * vhd_flare_team[0..5][name|role|tel|hours] (rows) and vhd_flare_on[] (ticked
- * optional sections), the last one read only when vhd_flare_on_sent is set.
+ * optional sections), the last one read only when vhd_flare_on_sent is set, and
+ * vhd_flare_docs[] (ticked document ids), read only when vhd_flare_docs_sent is set.
  * A value that is not a string counts as not sent.
  *
- * @return array {answers: key => text (sent keys only), team: array[]|null, on: string[]|null}
+ * @return array {answers: key => text (sent keys only), team: array[]|null, on: string[]|null, docs: string[]|null}
  */
 function vance_hub_flare_plan_post_fields() {
-	$out = array( 'answers' => array(), 'team' => null, 'on' => null );
+	$out = array( 'answers' => array(), 'team' => null, 'on' => null, 'docs' => null );
 	// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- unslashed here, cleaned by vance_hub_flare_plan_sanitise_plan(); the caller checked the nonce.
 	$posted = isset( $_POST['vhd_flare'] ) && is_array( $_POST['vhd_flare'] ) ? $_POST['vhd_flare'] : array();
 	foreach ( array_merge( vance_hub_flare_plan_string_keys(), array( 'review_on' ) ) as $key ) {
@@ -1095,6 +1269,16 @@ function vance_hub_flare_plan_post_fields() {
 			}
 		}
 	}
+	if ( ! empty( $_POST['vhd_flare_docs_sent'] ) ) {
+		$out['docs'] = array();
+		if ( isset( $_POST['vhd_flare_docs'] ) && is_array( $_POST['vhd_flare_docs'] ) ) {
+			foreach ( $_POST['vhd_flare_docs'] as $id ) {
+				if ( is_string( $id ) ) {
+					$out['docs'][] = wp_unslash( $id );
+				}
+			}
+		}
+	}
 	// phpcs:enable
 	return $out;
 }
@@ -1103,7 +1287,7 @@ function vance_hub_flare_plan_post_fields() {
  * The draft of the current POST request: what the member typed, unslashed.
  *
  * @param string $do 'save' or 'flare_end'. Any other value gives null.
- * @return array|null array( 'do', 'answers', 'team', 'on', 'helped' ) before cleaning.
+ * @return array|null array( 'do', 'answers', 'team', 'on', 'docs', 'helped' ) before cleaning.
  */
 function vance_hub_flare_plan_draft_from_post( $do ) {
 	if ( ! in_array( $do, array( 'save', 'flare_end' ), true ) ) {
@@ -1113,7 +1297,7 @@ function vance_hub_flare_plan_draft_from_post( $do ) {
 	// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here, cleaned by vance_hub_flare_plan_draft_set().
 	$helped = isset( $_POST['vhd_flare_helped'] ) && is_string( $_POST['vhd_flare_helped'] ) ? wp_unslash( $_POST['vhd_flare_helped'] ) : '';
 	// phpcs:enable
-	return array( 'do' => $do, 'answers' => $fields['answers'], 'team' => $fields['team'], 'on' => $fields['on'], 'helped' => $helped );
+	return array( 'do' => $do, 'answers' => $fields['answers'], 'team' => $fields['team'], 'on' => $fields['on'], 'docs' => $fields['docs'], 'helped' => $helped );
 }
 
 /**
@@ -1123,7 +1307,7 @@ function vance_hub_flare_plan_draft_from_post( $do ) {
  * @return string[]
  */
 function vance_hub_flare_plan_error_codes() {
-	return array( 'consent', 'invalid', 'toolong', 'baddate', 'expired', 'failed', 'changed', 'kept', 'partial', 'noplan', 'flare_open', 'flare_none' );
+	return array( 'consent', 'invalid', 'toolong', 'baddate', 'toomany', 'expired', 'failed', 'changed', 'kept', 'partial', 'noplan', 'flare_open', 'flare_none' );
 }
 
 /**
@@ -1607,6 +1791,23 @@ function vance_hub_flare_plan_handle_post() {
 		if ( null !== $posted['on'] ) {
 			$merged['sections_on'] = $posted['on'];
 		}
+		// The documents: a list that was not posted keeps the stored list. A posted list is
+		// ignored while the My Documents feature is off. Only ids that belong to the member
+		// now are kept, in the order of the member's own list. Past 5 the save is refused.
+		$docs_posted = null;
+		if ( null !== $posted['docs'] && vance_hub_flare_plan_docs_open() ) {
+			$docs_posted    = vance_hub_flare_plan_docs_member_ids( $uid, $posted['docs'] );
+			$merged['docs'] = array_slice( $docs_posted, 0, vance_hub_flare_plan_docs_max() );
+		} elseif ( ! empty( $merged['docs'] ) && vance_hub_flare_plan_docs_open() ) {
+			// No list was posted: the stored list stays, but an id of a document the
+			// member deleted is dropped now. An empty document list can also be a list
+			// that could not be read, so then nothing is dropped: the card shows only
+			// documents that exist.
+			$docs_now = function_exists( 'vance_user_docs_get' ) ? vance_user_docs_get( $uid ) : array();
+			if ( ! empty( $docs_now ) ) {
+				$merged['docs'] = vance_hub_flare_plan_docs_member_ids( $uid, $merged['docs'] );
+			}
+		}
 		// A request with no vhd_flare array at all is not from the form: nothing to save.
 		$answers = isset( $_POST['vhd_flare'] ) && is_array( $_POST['vhd_flare'] ) ? vance_hub_flare_plan_sanitise_plan( $merged ) : null; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the nonce was checked above.
 		$wording = vance_hub_flare_plan_consent_text();
@@ -1621,6 +1822,9 @@ function vance_hub_flare_plan_handle_post() {
 		} elseif ( ! vance_hub_flare_plan_review_ok( $answers['review_on'] ) ) {
 			// A review date that is not a real year-month-day date. Refused, never guessed.
 			$result = 'baddate';
+		} elseif ( null !== $docs_posted && count( $docs_posted ) > vance_hub_flare_plan_docs_max() ) {
+			// More than 5 documents ticked. Refused, never cut.
+			$result = 'toomany';
 		} elseif ( ! $consent && empty( $_POST['vhd_consent'] ) ) {
 			$result = 'consent';
 		} elseif ( ! $consent && ! vance_hub_checkin_consent_ref_ok( $wording, isset( $_POST['vhd_consent_ref'] ) ? wp_unslash( $_POST['vhd_consent_ref'] ) : null ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- compared with hash_equals() only, never stored or output.
@@ -1767,6 +1971,15 @@ function vance_hub_flare_plan_export( $email, $page = 1 ) {
 			if ( vance_hub_flare_plan_has_content( $plan, $id ) ) {
 				$data[] = array( 'name' => $names[ $id ]['label'], 'value' => $plan[ $id ] );
 			}
+		}
+		// The titles of the kept documents that still exist. Never the text or the file.
+		// Not gated by the My Documents switch: an export lists what the member stored.
+		$titles = array();
+		foreach ( vance_hub_flare_plan_docs_resolve( $uid, $plan, false ) as $doc ) {
+			$titles[] = $doc['title'];
+		}
+		if ( ! empty( $titles ) ) {
+			$data[] = array( 'name' => __( 'Documents kept with my plan', 'vance-health-hub' ), 'value' => implode( ' / ', $titles ) );
 		}
 	}
 	foreach ( vance_hub_flare_log_get( $uid ) as $row ) {
@@ -2043,12 +2256,19 @@ function vance_hub_flare_sheet_data( $uid, $plan, $log, $now ) {
 		}
 	}
 
+	// The titles of the documents the member keeps with the plan (titles only, no link, no text).
+	$documents = array();
+	foreach ( vance_hub_flare_plan_docs_resolve( $uid, $plan ) as $doc ) {
+		$documents[] = $doc['title'];
+	}
+
 	$view = vance_hub_flare_log_view( $log, $now );
 	return array(
 		'prepared'    => (string) wp_date( 'j M Y', (int) $now ),
 		'appointment' => $appointment,
 		'questions'   => $text( 'appointment_questions' ),
 		'medication'  => $text( 'medication' ),
+		'documents'   => $documents,
 		'checkins'    => $checkins,
 		'screening'   => $screening,
 		'flares'      => $view['rows'],
@@ -2091,6 +2311,9 @@ function vance_hub_flare_plan_data( $uid ) {
 			'log'          => vance_hub_flare_log_view( $log, time() ),
 			'quick'        => null,
 			'sheet'        => null,
+			// The read-only card shows the kept documents. It has no form, so no sources.
+			'sources'      => array(),
+			'docs'         => vance_hub_flare_plan_docs_shown( $uid, $plan ),
 			'updated'      => (string) wp_date( 'j M Y', $plan['updated'] ),
 			'urgent'       => vance_hub_flare_plan_urgent_text(),
 			'need_consent' => false,
@@ -2123,6 +2346,10 @@ function vance_hub_flare_plan_data( $uid ) {
 		'quick'        => null !== $plan ? vance_hub_flare_plan_quick_data( $uid ) : null,
 		// No appointment sheet while the member has not agreed to the wording in use.
 		'sheet'        => null !== $plan && ! $need_consent ? vance_hub_flare_sheet_data( $uid, $plan, $log, time() ) : null,
+		// What the member saved in other tools, each part read through its own gate
+		// (inc/hub-flare-plan-sources.php). Only the edit form and the links use it.
+		'sources'      => null !== $plan && function_exists( 'vance_hub_flare_plan_sources' ) ? vance_hub_flare_plan_sources( $uid ) : array(),
+		'docs'         => null !== $plan ? vance_hub_flare_plan_docs_shown( $uid, $plan ) : array(),
 		'updated'      => null !== $plan ? (string) wp_date( 'j M Y', $plan['updated'] ) : '',
 		'urgent'       => vance_hub_flare_plan_urgent_text(),
 		'need_consent' => $need_consent,
@@ -2233,9 +2460,12 @@ function vance_hub_flare_plan_contacts_fields_html( $def, $fid, $team, $notes ) 
  * @param string     $id     Prefix for the field ids.
  * @param array|null $draft  'draft' from vance_hub_flare_plan_data(), or null.
  * @param bool       $wizard True for the step-by-step builder: the core sections only.
+ * @param array|null $sources 'sources' from vance_hub_flare_plan_data(): the member's own data from
+ *                            other tools. Used by the edit form only: the "From my health profile"
+ *                            panel and the documents box. Null or empty parts add nothing.
  * @return string
  */
-function vance_hub_flare_plan_fields_html( $plan, $id, $draft = null, $wizard = false ) {
+function vance_hub_flare_plan_fields_html( $plan, $id, $draft = null, $wizard = false, $sources = null ) {
 	if ( ! vance_hub_flare_plan_draft_is( $draft, 'save' ) ) {
 		$draft = null;
 	}
@@ -2284,20 +2514,140 @@ function vance_hub_flare_plan_fields_html( $plan, $id, $draft = null, $wizard = 
 			$offered[ $key ] = $def;
 		}
 	}
-	if ( empty( $offered ) ) {
-		return $html;
+	$sources = is_array( $sources ) ? $sources : array();
+	if ( ! empty( $offered ) ) {
+		$html .= '<fieldset class="vhd-flare__more"><legend>' . esc_html__( 'More sections', 'vance-health-hub' ) . '</legend>';
+		$html .= '<input type="hidden" name="vhd_flare_on_sent" value="1">';
+		foreach ( $offered as $key => $def ) {
+			$checked = in_array( $key, $on, true ) || '' !== trim( $value( $key ) );
+			$html   .= '<label class="vhd-flare__more-item"><input type="checkbox" name="vhd_flare_on[]" value="' . esc_attr( $key ) . '" data-vhd-sec-toggle="' . esc_attr( $key ) . '"' . ( $checked ? ' checked' : '' ) . '> <span>' . esc_html( $def['label'] ) . '</span></label>';
+		}
+		$html .= '</fieldset>';
+		// What the member wrote in the health profile, before the optional fields it can fill.
+		$html .= vance_hub_flare_plan_own_html( isset( $sources['profile'] ) ? $sources['profile'] : array(), $id, $offered );
+		foreach ( $offered as $key => $def ) {
+			$html .= $field( $key, 'opt' );
+		}
 	}
-	$html .= '<fieldset class="vhd-flare__more"><legend>' . esc_html__( 'More sections', 'vance-health-hub' ) . '</legend>';
-	$html .= '<input type="hidden" name="vhd_flare_on_sent" value="1">';
-	foreach ( $offered as $key => $def ) {
-		$checked = in_array( $key, $on, true ) || '' !== trim( $value( $key ) );
-		$html   .= '<label class="vhd-flare__more-item"><input type="checkbox" name="vhd_flare_on[]" value="' . esc_attr( $key ) . '" data-vhd-sec-toggle="' . esc_attr( $key ) . '"' . ( $checked ? ' checked' : '' ) . '> <span>' . esc_html( $def['label'] ) . '</span></label>';
-	}
-	$html .= '</fieldset>';
-	foreach ( $offered as $key => $def ) {
-		$html .= $field( $key, 'opt' );
-	}
+	// The documents box. The ticked boxes are the draft's, else the saved plan's.
+	$docs_on = null !== $draft && isset( $draft['docs'] ) && is_array( $draft['docs'] ) ? $draft['docs'] : ( null !== $plan && isset( $plan['docs'] ) && is_array( $plan['docs'] ) ? $plan['docs'] : array() );
+	$html   .= vance_hub_flare_plan_docs_fields_html( isset( $sources['documents'] ) ? $sources['documents'] : array(), $docs_on, $id );
 	return $html;
+}
+
+/**
+ * The "From my health profile" panel of the edit form: the values the member wrote
+ * in the health profile, each with a button that copies it into the matching section.
+ * Nothing is copied until the member saves. The buttons are hidden here and shown by
+ * hub-flare-plan.js, so with no script the member reads the value and types it.
+ *
+ * Each value is shown as typed (a date is written as the card writes a date). The
+ * raw value is in data-vhd-copy-value of its button: the script copies that, because
+ * the text of the paragraph loses its line breaks.
+ *
+ * @param array[] $items   'profile' of vance_hub_flare_plan_sources(): {key, label, value, target}.
+ * @param string  $prefix  Prefix of the field ids (the edit form).
+ * @param array[] $offered The sections the form offers (id => registry entry). An item whose
+ *                         target is not in it is left out: there is no field to copy into.
+ * @return string HTML, '' when there is no item to show.
+ */
+function vance_hub_flare_plan_own_html( $items, $prefix, $offered ) {
+	$rows = '';
+	foreach ( (array) $items as $item ) {
+		if ( ! is_array( $item ) || ! isset( $item['label'], $item['value'], $item['target'] ) || ! is_string( $item['value'] ) || '' === trim( $item['value'] ) || ! isset( $offered[ $item['target'] ] ) ) {
+			continue;
+		}
+		$target = (string) $item['target'];
+		$raw    = (string) $item['value'];
+		$shown  = 'review_on' === $target ? vance_hub_flare_log_label( $raw ) : $raw;
+		if ( '' === trim( $shown ) ) {
+			continue;
+		}
+		/* translators: %s: the name of a plan section, for example "My medicines". */
+		$button = sprintf( __( 'Copy into "%s"', 'vance-health-hub' ), $offered[ $target ]['label'] );
+		$rows  .= '<div class="vhd-flare__own-item"><p class="vhd-flare__own-label">' . esc_html( (string) $item['label'] ) . '</p>';
+		$rows  .= '<p class="vhd-flare__own-value">' . vance_hub_flare_plan_text_html( $shown ) . '</p>';
+		$rows  .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__copy" hidden data-vhd-copy-to="' . esc_attr( $prefix . '-' . $target ) . '" data-vhd-copy-sec="' . esc_attr( $target ) . '" data-vhd-copy-value="' . esc_attr( $raw ) . '">' . esc_html( $button ) . '</button></div>';
+	}
+	if ( '' === $rows ) {
+		return '';
+	}
+	$html  = '<div class="vhd-flare__own"><h3 class="vhd-flare__h">' . esc_html__( 'From my health profile', 'vance-health-hub' ) . '</h3>';
+	$html .= '<p class="vhd-flare__hint">' . esc_html__( 'This is what you wrote in your health profile. Copy what you want into your plan. Nothing is copied until you save.', 'vance-health-hub' ) . '</p>';
+	return $html . $rows . '</div>';
+}
+
+/**
+ * The documents box of the edit form: one tick box for each of the member's documents,
+ * to keep up to 5 with the plan. The marker tells the save that the box was on the page,
+ * so a form with no box does not clear the saved list.
+ *
+ * @param array[] $documents 'documents' of vance_hub_flare_plan_sources(): {id, title}.
+ * @param int[]   $ticked    The ids to show ticked.
+ * @param string  $prefix    Prefix of the field ids.
+ * @return string HTML, '' when the member has no document or the feature is off.
+ */
+function vance_hub_flare_plan_docs_fields_html( $documents, $ticked, $prefix ) {
+	$rows = '';
+	foreach ( (array) $documents as $doc ) {
+		if ( ! is_array( $doc ) || ! isset( $doc['id'], $doc['title'] ) || (int) $doc['id'] <= 0 ) {
+			continue;
+		}
+		$did   = (int) $doc['id'];
+		$rows .= '<label class="vhd-flare__docs-item"><input type="checkbox" name="vhd_flare_docs[]" id="' . esc_attr( $prefix . '-doc-' . $did ) . '" value="' . $did . '"' . ( in_array( $did, (array) $ticked, true ) ? ' checked' : '' ) . '> <span>' . esc_html( (string) $doc['title'] ) . '</span></label>';
+	}
+	if ( '' === $rows ) {
+		return '';
+	}
+	$html  = '<fieldset class="vhd-flare__docs"><legend>' . esc_html__( 'Documents to keep with my plan', 'vance-health-hub' ) . '</legend>';
+	$html .= '<p class="vhd-flare__hint">' . esc_html__( 'Choose up to 5 of your documents, for example a clinic letter.', 'vance-health-hub' ) . '</p>';
+	$html .= '<input type="hidden" name="vhd_flare_docs_sent" value="1">';
+	return $html . $rows . '</fieldset>';
+}
+
+/**
+ * The documents a plan keeps, as a list of links. Titles and links only: never the
+ * text of a document.
+ *
+ * @param array[] $docs 'docs' of vance_hub_flare_plan_data(): {id, title, url}.
+ * @return string HTML, '' when there is no document.
+ */
+function vance_hub_flare_plan_docs_view_html( $docs ) {
+	$items = '';
+	foreach ( (array) $docs as $doc ) {
+		if ( ! is_array( $doc ) || ! isset( $doc['title'], $doc['url'] ) || '' === (string) $doc['url'] ) {
+			continue;
+		}
+		$items .= '<li><a href="' . esc_url( (string) $doc['url'] ) . '">' . esc_html( (string) $doc['title'] ) . '</a></li>';
+	}
+	if ( '' === $items ) {
+		return '';
+	}
+	return '<div class="vhd-flare__docs-view"><h3 class="vhd-flare__h">' . esc_html__( 'My documents', 'vance-health-hub' ) . '</h3><ul class="vhd-flare__docs-list">' . $items . '</ul></div>';
+}
+
+/**
+ * The "More in my Hub" links of the card: the member's condition page and the
+ * reading list. Each link shows only when its part of the sources is not empty.
+ *
+ * @param array|null $sources 'sources' of vance_hub_flare_plan_data().
+ * @return string HTML, '' when there is no link.
+ */
+function vance_hub_flare_plan_links_html( $sources ) {
+	$sources = is_array( $sources ) ? $sources : array();
+	$items   = '';
+	if ( ! empty( $sources['condition']['title'] ) && ! empty( $sources['condition']['url'] ) ) {
+		/* translators: %s: the title of the member's condition page. */
+		$items .= '<li><a href="' . esc_url( (string) $sources['condition']['url'] ) . '">' . esc_html( sprintf( __( 'My condition page: %s', 'vance-health-hub' ), (string) $sources['condition']['title'] ) ) . '</a></li>';
+	}
+	if ( ! empty( $sources['reading']['count'] ) && ! empty( $sources['reading']['url'] ) ) {
+		/* translators: %s: the number of articles in the member's reading list. */
+		$items .= '<li><a href="' . esc_url( (string) $sources['reading']['url'] ) . '">' . esc_html( sprintf( __( 'My reading list (%s)', 'vance-health-hub' ), number_format_i18n( (int) $sources['reading']['count'] ) ) ) . '</a></li>';
+	}
+	if ( '' === $items ) {
+		return '';
+	}
+	return '<nav class="vhd-flare__links" aria-label="' . esc_attr__( 'More in my Hub', 'vance-health-hub' ) . '"><ul>' . $items . '</ul></nav>';
 }
 
 /**
@@ -2325,7 +2675,7 @@ function vance_hub_flare_plan_form_html( $f, $plan, $nonce, $wizard ) {
 		}
 		$form .= '</p>';
 	}
-	$form .= vance_hub_flare_plan_fields_html( $plan, $wizard ? 'vhd-flare' : 'vhd-flare-edit', $draft, $wizard );
+	$form .= vance_hub_flare_plan_fields_html( $plan, $wizard ? 'vhd-flare' : 'vhd-flare-edit', $draft, $wizard, isset( $f['sources'] ) ? $f['sources'] : null );
 	$form .= '<div class="vhd-flare__final">';
 	if ( ! empty( $f['need_consent'] ) ) {
 		$form .= '<input type="hidden" name="vhd_consent_ref" value="' . esc_attr( vance_hub_checkin_consent_ref( $f['consent'] ) ) . '">';
@@ -2603,6 +2953,18 @@ function vance_hub_flare_plan_sheet_html( $s, $plan ) {
 	if ( '' !== $s['medication'] ) {
 		$html .= $sec( __( 'Medication', 'vance-health-hub' ), '<p>' . vance_hub_flare_plan_text_html( $s['medication'] ) . '</p>' );
 	}
+	if ( ! empty( $s['documents'] ) && is_array( $s['documents'] ) ) {
+		// Titles only, no link: the sheet is printed.
+		$titles = array();
+		foreach ( $s['documents'] as $title ) {
+			if ( is_string( $title ) && '' !== trim( $title ) ) {
+				$titles[] = esc_html( $title );
+			}
+		}
+		if ( ! empty( $titles ) ) {
+			$html .= $sec( __( 'Documents I will bring', 'vance-health-hub' ), '<p>' . implode( ', ', $titles ) . '</p>' );
+		}
+	}
 	if ( ! empty( $s['flares'] ) ) {
 		$list = '<ul class="vhd-sheet__list">';
 		foreach ( $s['flares'] as $row ) {
@@ -2663,8 +3025,9 @@ function vance_hub_flare_plan_html( $f ) {
 		'flare_removed' => __( 'The entry is removed.', 'vance-health-hub' ),
 		'consent'       => __( 'Not saved. Tick the box to agree, then send the form again.', 'vance-health-hub' ),
 		'baddate'       => __( 'Not saved. Write the review date as year-month-day, for example 2027-03-31.', 'vance-health-hub' ),
+		'toomany'       => __( 'Not saved. Choose 5 documents or fewer.', 'vance-health-hub' ),
 		'invalid'       => __( 'Not saved. Write at least one answer, then send the form again.', 'vance-health-hub' ),
-		'expired'       => __( 'Not saved. This page was open for too long. Send the form again.', 'vance-health-hub' ),
+		'expired'     => __( 'Not saved. This page was open for too long. Send the form again.', 'vance-health-hub' ),
 		'failed'        => __( 'Not saved. The Hub could not store your data. Try again later.', 'vance-health-hub' ),
 		'changed'       => __( 'Not saved. Your agreement is missing, or the agreement text changed. Read it again, then save your plan.', 'vance-health-hub' ),
 		'kept'          => __( 'Not completed. The Hub could not delete your data or withdraw your agreement. Try again later.', 'vance-health-hub' ),
@@ -2734,10 +3097,13 @@ function vance_hub_flare_plan_html( $f ) {
 			/* translators: %s: date of the last change. */
 			$updated_html = '<p class="vhd-small vhd-flare__date">' . esc_html( sprintf( __( 'Last changed on %s.', 'vance-health-hub' ), $f['updated'] ) ) . '</p>';
 		}
+		// The documents the member keeps with the plan, and (not on the read-only card) the links to the Hub.
+		$docs_html  = vance_hub_flare_plan_docs_view_html( isset( $f['docs'] ) ? $f['docs'] : array() );
+		$links_html = $readonly ? '' : vance_hub_flare_plan_links_html( isset( $f['sources'] ) ? $f['sources'] : null );
 
 		if ( $readonly ) {
 			// The read-only card keeps its layout: no groups, no progress bar, no edit box.
-			$html .= '<div class="vhd-flare__plan">' . $signs_html . $optional_html . $updated_html . '</div>';
+			$html .= '<div class="vhd-flare__plan">' . $signs_html . $optional_html . $docs_html . $updated_html . '</div>';
 		} else {
 			$print_html = '<div class="vhd-flare__actions">'
 				// Hidden until hub-flare-plan.js shows it: with no script it does nothing.
@@ -2745,12 +3111,12 @@ function vance_hub_flare_plan_html( $f ) {
 			// After a flare ends, or when a kept draft fills the form, the edit box and the plan group open.
 			$edit_open = 'flare_ended' === $flash || ! empty( $f['need_consent'] ) || vance_hub_flare_plan_draft_is( $draft, 'save' );
 			// The plan group also opens after a save, or a refused save, so the member sees the result.
-			$plan_open = $edit_open || in_array( $flash, array( 'saved', 'toolong', 'invalid', 'consent', 'changed', 'expired', 'baddate', 'failed' ), true );
+			$plan_open = $edit_open || in_array( $flash, array( 'saved', 'toolong', 'invalid', 'consent', 'changed', 'expired', 'baddate', 'toomany', 'failed' ), true );
 
 			// vhd-flare__plan--core: the quick check in hub-flare-plan.js points to this block.
 			$now_inner   = $log_html . vance_hub_flare_plan_quick_html( isset( $f['quick'] ) ? $f['quick'] : null ) . '<div class="vhd-flare__plan vhd-flare__plan--core">' . $signs_html . '</div>';
 			$plan_inner  = vance_hub_flare_plan_progress_html( isset( $f['progress'] ) ? $f['progress'] : null );
-			$plan_inner .= '<div class="vhd-flare__plan">' . $optional_html . $updated_html . '</div>';
+			$plan_inner .= '<div class="vhd-flare__plan">' . $optional_html . $docs_html . $links_html . $updated_html . '</div>';
 			$plan_inner .= $print_html;
 			$plan_inner .= '<details class="vhd-flare__edit"' . ( $edit_open ? ' open' : '' ) . '><summary>' . esc_html__( 'Edit my plan', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_form_html( $f, $plan, $nonce, false ) . '</details>';
 

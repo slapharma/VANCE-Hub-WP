@@ -694,6 +694,8 @@ function vance_hub_dashboard_data( $user ) {
 		'messages_label' => $label( 'messages', __( 'Messages', 'vance-health-hub' ) ),
 		'messages_href'  => vance_hub_dashboard_tab_url( 'messages' ),
 		'fresh'          => $fresh,
+		// The link to the flare plan card, or '' when that card would not show for this member.
+		'flare_href'     => function_exists( 'vance_hub_flare_plan_shortcut_url' ) ? vance_hub_flare_plan_shortcut_url( $uid ) : '',
 	);
 }
 
@@ -780,8 +782,12 @@ function vance_hub_dashboard_home_html( $d ) {
 		$top .= '<button type="button" class="vhd-btn vhd-btn--white" data-vance-askai-open="new">' . esc_html__( 'Ask VANCE-Ai', 'vance-health-hub' ) . $arrow . '</button>';
 		$top .= '</section>';
 	}
+	// True when the check-in card that was drawn already holds the flare plan link.
+	$flare_in_card = false;
 	if ( ! empty( $d['checkin'] ) && function_exists( 'vance_hub_dashboard_checkin_html' ) ) {
-		$top .= vance_hub_dashboard_checkin_html( $d['checkin'] );
+		$checkin_card  = (string) vance_hub_dashboard_checkin_html( $d['checkin'] );
+		$flare_in_card = false !== strpos( $checkin_card, 'vhd-flare__shortcut' );
+		$top          .= $checkin_card;
 		// The pop-up for the first visit of the day. Empty when no check-in is due.
 		if ( function_exists( 'vance_hub_checkin_modal_html' ) ) {
 			$top .= vance_hub_checkin_modal_html( $d['checkin'] );
@@ -789,6 +795,11 @@ function vance_hub_dashboard_home_html( $d ) {
 	}
 	if ( '' !== $top ) {
 		$html .= '<div class="vhd-top">' . $top . '</div>';
+	}
+	// The check-in card above already holds the same link when it shows one.
+	if (! empty( $d['flare_href'] ) && ! $flare_in_card ) {
+		// Shortcut to the flare plan card, under the top row. 'flare_href' is '' when that card would not show.
+		$html .= '<p class="vhd-flare__shortcut vhd-flare__shortcut--home"><a class="vhd-link" href="' . esc_url( $d['flare_href'] ) . '">' . esc_html__( 'Open my Flare Management Plan', 'vance-health-hub' ) . $arrow . '</a></p>';
 	}
 
 	// -- Tools -------------------------------------------------------------

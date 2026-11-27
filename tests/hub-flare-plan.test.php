@@ -272,6 +272,11 @@ function wp_date( $format, $timestamp = null, $timezone = null ) {
 require_once $THEME . '/inc/hub-dashboard.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
 require_once $THEME . '/inc/hub-flare-plan.php';
+// What the plan reads from the member's other tools (phase 3).
+require_once $THEME . '/inc/hub-flare-plan-sources.php';
+// The Reading List gate of the sources reads vance_dashboard_feature_enabled(), which the theme loads
+// in functions.php. Loaded here too, so that gate runs for real (section 43).
+require_once $THEME . '/inc/dashboard-features.php';
 // The "Manage my data" delete: section 29 checks that it uses the flare plan's own delete.
 require_once $THEME . '/inc/hub-data-manage.php';
 
@@ -307,6 +312,9 @@ function fb_arrange( array $mods = array(), $logged_in = true, $uid = 7 ) {
 	$GLOBALS['LOCK_SQL']       = array();
 	$GLOBALS['UNLOCK_SQL']     = array();
 	$GLOBALS['USERS_BY_EMAIL'] = array();
+	$GLOBALS['DOCS']           = array();
+	$GLOBALS['DOCS_ON']        = false;
+	$GLOBALS['COND_PAGES']     = array();
 	$_GET                      = array();
 	$_POST                     = array();
 	$_SERVER['REQUEST_METHOD'] = 'POST';
@@ -385,6 +393,7 @@ function fb_v2( array $over = array() ) {
 		'questions'   => '',
 		'review_on'   => '',
 		'sections_on' => array(),
+		'docs'        => array(),
 	), $over );
 }
 
@@ -477,6 +486,29 @@ function fb_config( $html ) {
 /** A member object with an ID, as the features collector reads it. */
 function fb_user( $id ) {
 	return (object) array( 'ID' => $id );
+}
+
+/* ---- phase 3 stubs: the member's other stores -------------------------------------
+ * The real functions are in inc/user-documents.php and inc/article-conditions.php, which this
+ * suite does not load. DOCS_ON is the My Documents switch (closed by default, so every older check
+ * sees the gate closed). DOCS[uid] is the member's document list as vance_user_docs_get() gives it.
+ * COND_PAGES[slug] is a published condition page. fb_arrange() resets all three.
+ */
+function vance_user_docs_enabled() { return ! empty( $GLOBALS['DOCS_ON'] ); }
+function vance_user_docs_get( $uid ) { return isset( $GLOBALS['DOCS'][ (int) $uid ] ) ? $GLOBALS['DOCS'][ (int) $uid ] : array(); }
+function vance_user_docs_reader_url( $id ) { return 'https://example.test/wp-admin/admin-ajax.php?action=vance_doc_stream&doc=' . (int) $id . '&nonce=n' . (int) $id; }
+function vance_condition_page( $slug ) { return isset( $GLOBALS['COND_PAGES'][ $slug ] ) ? $GLOBALS['COND_PAGES'][ $slug ] : null; }
+// The real vocabulary, lifted from the source (it is a plain array literal).
+preg_match( '/function vance_condition_vocabulary\(\) \{.*?\r?\n\}\r?\n/s', file_get_contents( $THEME . '/inc/article-conditions.php' ), $LIFT_VOC );
+if ( empty( $LIFT_VOC[0] ) ) {
+	fwrite( STDERR, "could not lift vance_condition_vocabulary() from article-conditions.php\n" );
+	exit( 2 );
+}
+eval( $LIFT_VOC[0] );
+
+/** One document record as vance_user_docs_get() gives it, with text that must never reach the plan. */
+function fb_doc( $id, $name, $text = 'SECRET DOCUMENT TEXT' ) {
+	return array( 'id' => $id, 'url' => 'https://example.test/wp-content/uploads/' . $id . '.pdf', 'name' => $name, 'date' => '2026-11-01', 'mime' => 'application/pdf', 'size' => 100, 'text' => $text, 'text_status' => 'ok' );
 }
 
 /* ===================================================================== */
@@ -900,7 +932,7 @@ check( 'data: a whitespace-only urgent text gives null', vance_hub_flare_plan_da
 
 fb_arrange( $FP_ON );
 $D = vance_hub_flare_plan_data( 7 );
-check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
+check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'sources', 'docs', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
 check( 'data: no saved plan gives plan null and an empty date', is_array( $D ) && $D['plan'] === null && $D['updated'] === '' );
 check( 'data: no agreement on record asks for consent', is_array( $D ) && $D['need_consent'] === true );
 check( 'data: the urgent text is the one the administrator set', is_array( $D ) && $D['urgent'] === 'Call the clinic on 0800 000 000 if you have blood in your stool.' );
@@ -1439,7 +1471,7 @@ section( '19. appointment sheet data: nothing new stored, empty groups, caps, sc
 
 fb_arrange( $FP_ON );
 $S_EMPTY = vance_hub_flare_sheet_data( 7, $PLAN_X, array(), $LOG_NOW );
-check( 'sheet empty: no profile, history, screening or flares gives empty groups only', $S_EMPTY === array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => '', 'medication' => '', 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) );
+check( 'sheet empty: no profile, history, screening or flares gives empty groups only', $S_EMPTY === array( 'prepared' => '18 Nov 2026', 'appointment' => '', 'questions' => '', 'medication' => '', 'documents' => array(), 'checkins' => array(), 'screening' => null, 'flares' => array(), 'flare_count' => 0 ) );
 
 fb_arrange( $FP_ON );
 $GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2026-12-03', 'appointment_questions' => "  Can I eat oats?\nIs iron safe? ", 'medication' => '  Iron tablets  ' );
@@ -2007,7 +2039,8 @@ foreach ( vance_hub_flare_plan_error_codes() as $code30 ) {
 	}
 }
 // CHANGED (phase 2): the new code baddate makes 12 error codes.
-check( 'roles: every error code has a message with role alert, tabindex -1 and id vhd-flare-flash, and the warning class', $ROLE_OK && count( vance_hub_flare_plan_error_codes() ) === 12 && in_array( 'baddate', vance_hub_flare_plan_error_codes(), true ) );
+// CHANGED (phase 3): the new code toomany makes 13.
+check( 'roles: every error code has a message with role alert, tabindex -1 and id vhd-flare-flash, and the warning class', $ROLE_OK && count( vance_hub_flare_plan_error_codes() ) === 13 && in_array( 'baddate', vance_hub_flare_plan_error_codes(), true ) && in_array( 'toomany', vance_hub_flare_plan_error_codes(), true ) );
 check( 'roles: negative control, an unknown code has no flash element', false === strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'nonsense' ) ) ), 'vhd-flare-flash' ) );
 check( 'message: the toolong text', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'toolong' ) ) ), 'Not saved. A text is too long. Make it shorter, then save again.' ) );
 check( 'message: the flare_removed text', false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'flare_removed' ) ) ), 'The entry is removed.' ) );
@@ -2064,7 +2097,7 @@ $RO = vance_hub_flare_plan_data( 7 );
 check( 'read-only data: the switch off with a stored plan gives the data with readonly true', is_array( $RO ) && $RO['readonly'] === true && ( $RO['plan']['signs'] ?? null ) === 'Tight belly' );
 check( 'read-only data: progress, quick, sheet and draft are null, need_consent is false', is_array( $RO ) && $RO['progress'] === null && $RO['quick'] === null && $RO['sheet'] === null && $RO['draft'] === null && $RO['need_consent'] === false );
 check( 'read-only data: it carries the date, the urgent text, the log view, the nonce and the flash', is_array( $RO ) && $RO['updated'] === '10 Nov 2026' && $RO['urgent'] === 'Call the clinic.' && ( $RO['log']['count'] ?? null ) === 2 && $RO['nonce'] === 'nonce-vance_hub_flare_plan' && $RO['flash'] === '' );
-check( 'read-only data: it has the same keys as the full view', is_array( $RO ) && array_keys( $RO ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
+check( 'read-only data: it has the same keys as the full view', is_array( $RO ) && array_keys( $RO ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'sources', 'docs', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
 fb_arrange( $OFF );
 check( 'read-only data: the switch off with no stored plan gives null', vance_hub_flare_plan_data( 7 ) === null );
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => '' ) );
@@ -3271,6 +3304,623 @@ check( '41g progress: a stored tick for a section the administrator turned off, 
 $P2_KB_FULL = vance_hub_flare_plan_progress( vance_hub_flare_plan_normalise( array( 'updated' => $OLD_TS, 'signs' => 'S', 'medicines' => 'Iron' ) ), $P2_NOW )['total'];
 check( '41g progress: the same section with content is still counted', 4 === $P2_KB_FULL );
 fb_arrange( $FP_ON );
+
+/* ===================================================================== */
+echo "\n";
+section( '42. phase 3: the plan reads the member\'s own data from other tools, each through its own gate' );
+
+/** A member with a v2 plan and the agreement, the health agreement open, and the optional sections on. */
+function fb_p3_member( array $plan = array(), array $mods = array() ) {
+	fb_arrange( array_merge( $GLOBALS['FP_ON'], $mods ) );
+	fb_consented();
+	$GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
+	$GLOBALS['UMETA'][7]['_sla_flare_plan']     = fb_v2( array_merge( array( 'signs' => 'S', 'actions' => 'A' ), $plan ) );
+}
+
+/** One save request with the documents box posted. $ticked null: the marker is not sent. */
+function fb_p3_save( $ticked, array $answers = array( 'signs' => 'S2' ) ) {
+	fb_post_save( $answers, false );
+	if ( null !== $ticked ) {
+		$_POST['vhd_flare_docs_sent'] = '1';
+		$_POST['vhd_flare_docs']      = $ticked;
+	}
+	return fb_p2_code( fb_handle() );
+}
+
+$PROFILE = array(
+	'medication'            => "Mesalazine 1.2 g\nVitamin D",
+	'trigger_foods'         => 'Spicy food',
+	'appointment_questions' => 'Can I change dose?',
+	'next_appointment'      => '2027-03-31',
+	'weight'                => '70',
+);
+
+// -- the stored value: docs
+check( '42 docs: a v2 plan with no docs reads as an empty list', ( vance_hub_flare_plan_normalise( array( 'v' => 2, 'updated' => $OLD_TS, 'signs' => 'S' ) )['docs'] ?? null ) === array() );
+check( '42 docs: the blank plan and a v1 plan have docs as an empty list', ( vance_hub_flare_plan_blank()['docs'] ?? null ) === array() && ( vance_hub_flare_plan_normalise( array( 'updated' => $OLD_TS, 'signs' => 'S' ) )['docs'] ?? null ) === array() );
+check( '42 docs: ints and digit strings are kept as ints, a damaged value and a duplicate are dropped', vance_hub_flare_plan_normalise( array( 'updated' => $OLD_TS, 'signs' => 'S', 'docs' => array( 4, '5', '5', 4, 0, -2, 'x', '7a', 1.5, array( 9 ), null, '08' ) ) )['docs'] === array( 4, 5 ) );
+check( '42 docs: a stored list is cut to 5, the first 5 stay', vance_hub_flare_plan_normalise( array( 'updated' => $OLD_TS, 'signs' => 'S', 'docs' => array( 1, 2, 3, 4, 5, 6, 7 ) ) )['docs'] === array( 1, 2, 3, 4, 5 ) );
+check( '42 docs: a value that is not a list is an empty list', vance_hub_flare_plan_normalise( array( 'updated' => $OLD_TS, 'signs' => 'S', 'docs' => 'x' ) )['docs'] === array() );
+
+// -- sources: every gate closed gives nothing
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_clinical_profile']        = $PROFILE;
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => "Crohn's" );
+$GLOBALS['UMETA'][7]['_sla_reading_list']            = array( 3, 4 );
+$GLOBALS['DOCS'][7]                                  = array( fb_doc( 11, 'Clinic letter' ) );
+$GLOBALS['COND_PAGES']['crohns-disease']             = post_obj( 901, "Crohn's disease" );
+unset( $GLOBALS['UMETA'][7]['_sla_consent_health'] );
+$S_CLOSED = vance_hub_flare_plan_sources( 7 );
+check( '42 sources: with the health agreement missing the profile and the condition are empty', $S_CLOSED['profile'] === array() && $S_CLOSED['condition'] === array() );
+check( '42 sources: with the My Documents switch off the documents are empty', $S_CLOSED['documents'] === array() );
+check( '42 sources: the reading list needs no health agreement', ( $S_CLOSED['reading']['count'] ?? null ) === 2 );
+$GLOBALS['CURRENT_UID'] = 8;
+check( '42 sources: the reading list of another member is not read', vance_hub_flare_plan_sources( 7 )['reading'] === array() );
+$GLOBALS['CURRENT_UID'] = 7;
+check( '42 sources: a member with no id gives four empty parts', vance_hub_flare_plan_sources( 0 ) === array( 'profile' => array(), 'condition' => array(), 'reading' => array(), 'documents' => array() ) );
+
+// -- sources: gates open
+$GLOBALS['UMETA'][7]['_sla_consent_health'] = '1';
+$GLOBALS['DOCS_ON']                         = true;
+$S_OPEN = vance_hub_flare_plan_sources( 7 );
+check( '42 sources: the profile gives the four mapped values and none of the others', array_column( $S_OPEN['profile'], 'target', 'key' ) === array( 'medication' => 'medicines', 'trigger_foods' => 'triggers', 'appointment_questions' => 'questions', 'next_appointment' => 'review_on' ) );
+check( '42 sources: a profile value is as the member typed it, line breaks kept', ( $S_OPEN['profile'][0]['value'] ?? null ) === "Mesalazine 1.2 g\nVitamin D" && ( $S_OPEN['profile'][3]['value'] ?? null ) === '2027-03-31' );
+check( '42 sources: each profile item says where it comes from', ( $S_OPEN['profile'][0]['label'] ?? null ) === 'Medication in my health profile' && ( $S_OPEN['profile'][3]['label'] ?? null ) === 'Next appointment in my health profile' );
+check( '42 sources: the condition page of one condition is the title and the link', $S_OPEN['condition'] === array( 'title' => "Crohn's disease", 'url' => 'https://example.test/p/901/' ) );
+check( '42 sources: the reading list is a count and the link to its tab', $S_OPEN['reading'] === array( 'count' => 2, 'url' => '?tab=reading-list' ) );
+check( '42 sources: the documents are ids and titles only, never the text', $S_OPEN['documents'] === array( array( 'id' => 11, 'title' => 'Clinic letter' ) ) && false === strpos( json_encode( $S_OPEN ), 'SECRET' ) );
+
+// -- sources: the profile edge cases
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'medication' => '   ', 'trigger_foods' => array( 'x' ), 'next_appointment' => '31/03/2027', 'appointment_questions' => 'Q' );
+check( '42 sources: an empty value, a value that is not text and a date that is not year-month-day are left out', array_column( vance_hub_flare_plan_sources( 7 )['profile'], 'key' ) === array( 'appointment_questions' ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-02-30', 'medication' => 'Iron' );
+check( '42 sources: an impossible date is left out', array_column( vance_hub_flare_plan_sources( 7 )['profile'], 'key' ) === array( 'medication' ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+fb_p3_member( array(), array( 'vance_hub_flare_sec_medicines_on' => false, 'vance_hub_flare_sec_questions_on' => false ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+check( '42 sources: an item whose section an administrator turned off is left out when the plan has nothing in it', array_column( vance_hub_flare_plan_sources( 7 )['profile'], 'key' ) === array( 'trigger_foods', 'next_appointment' ) );
+fb_p3_member( array( 'medicines' => 'Iron' ), array( 'vance_hub_flare_sec_medicines_on' => false ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+check( '42 sources: the same item stays when the plan has content in that section', in_array( 'medication', array_column( vance_hub_flare_plan_sources( 7 )['profile'], 'key' ), true ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = 'damaged';
+check( '42 sources: a damaged profile gives nothing', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+
+// -- sources: the condition page
+fb_p3_member();
+$GLOBALS['COND_PAGES']['crohns-disease']       = post_obj( 901, "Crohn's disease" );
+$GLOBALS['COND_PAGES']['ulcerative-colitis']   = post_obj( 902, 'Ulcerative colitis' );
+foreach ( array(
+	'two conditions give nothing'                    => array( "Crohn's, UC", array() ),
+	'one condition and Other give the page'          => array( "Crohn's, Other", array( 'title' => "Crohn's disease", 'url' => 'https://example.test/p/901/' ) ),
+	'UC gives the colitis page'                      => array( 'UC', array( 'title' => 'Ulcerative colitis', 'url' => 'https://example.test/p/902/' ) ),
+	'general gut health gives nothing'               => array( 'General gut health / wellness', array() ),
+	'IBS with no published page gives nothing'       => array( 'IBS', array() ),
+	'an empty answer gives nothing'                  => array( '', array() ),
+) as $label => $case ) {
+	$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => $case[0] );
+	check( '42 condition: ' . $label, vance_hub_flare_plan_sources( 7 )['condition'] === $case[1] );
+}
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => array( "Crohn's" ), 'condition_type_other' => "Crohn's" );
+check( '42 condition: an answer that is not text, and the free text, give nothing', vance_hub_flare_plan_sources( 7 )['condition'] === array() );
+
+// -- sources: the reading list edge cases
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_reading_list'] = array( 5, '5', 0, -1, 'x', 6, array( 1 ) );
+check( '42 reading: ids count once, and a value that is not an id does not count', ( vance_hub_flare_plan_sources( 7 )['reading']['count'] ?? null ) === 3 );
+$GLOBALS['UMETA'][7]['_sla_reading_list'] = array();
+check( '42 reading: an empty list gives nothing', vance_hub_flare_plan_sources( 7 )['reading'] === array() );
+$GLOBALS['UMETA'][7]['_sla_reading_list'] = 'damaged';
+check( '42 reading: a damaged list gives nothing', vance_hub_flare_plan_sources( 7 )['reading'] === array() );
+
+// -- save: the documents
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ), fb_doc( 14, 'D' ), fb_doc( 15, 'E' ), fb_doc( 16, 'F' ) );
+$GLOBALS['DOCS'][8] = array( fb_doc( 90, 'Not mine' ) );
+check( '42 save docs: a ticked document of the member is stored, as an int', 'saved' === fb_p3_save( array( '12' ) ) && ( vance_hub_flare_plan_get( 7 )['docs'] ?? null ) === array( 12 ) );
+fb_p3_member( array( 'docs' => array( 11 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ) );
+$GLOBALS['DOCS'][8] = array( fb_doc( 90, 'Not mine' ) );
+check( '42 save docs: an id that is not the member\'s is dropped with no message', 'saved' === fb_p3_save( array( '13', '90', '99999' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 13 ) );
+fb_p3_member( array( 'docs' => array( 11 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ) );
+check( '42 save docs: the saved list follows the order of the member\'s own list, not the order posted', 'saved' === fb_p3_save( array( '13', '11', '12' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11, 12, 13 ) );
+fb_p3_member( array( 'docs' => array( 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ) );
+check( '42 save docs: the marker with no box ticked clears the list', 'saved' === fb_p3_save( array() ) && vance_hub_flare_plan_get( 7 )['docs'] === array() );
+fb_p3_member( array( 'docs' => array( 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ) );
+check( '42 save docs: no marker keeps the stored list (the merge rule)', 'saved' === fb_p3_save( null ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 12 ) );
+fb_p3_member( array( 'docs' => array( 12 ) ) );
+$GLOBALS['DOCS_ON'] = false;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ) );
+check( '42 save docs: with the My Documents switch off a posted list is ignored and the stored list is kept', 'saved' === fb_p3_save( array( '11' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 12 ) );
+fb_p3_member( array( 'docs' => array( 12 ), 'signs' => 'Old' ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ), fb_doc( 14, 'D' ), fb_doc( 15, 'E' ), fb_doc( 16, 'F' ) );
+$P3_CODE = fb_p3_save( array( '11', '12', '13', '14', '15', '16' ), array( 'signs' => 'New text' ) );
+check( '42 save docs: 6 valid ticks are refused with toomany and nothing is written', 'toomany' === $P3_CODE && vance_hub_flare_plan_get( 7 )['signs'] === 'Old' && vance_hub_flare_plan_get( 7 )['docs'] === array( 12 ) );
+check( '42 save docs: the refused save keeps what was typed and the ticked ids in the draft', ( $GLOBALS['TRANSIENTS']['vance_flare_draft_7']['docs'] ?? null ) === array( 11, 12, 13, 14, 15, 16 ) && ( $GLOBALS['TRANSIENTS']['vance_flare_draft_7']['answers']['signs'] ?? null ) === 'New text' );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ), fb_doc( 14, 'D' ), fb_doc( 15, 'E' ), fb_doc( 16, 'F' ) );
+check( '42 save docs: 5 valid ticks are saved', 'saved' === fb_p3_save( array( '11', '12', '13', '14', '15' ) ) && count( vance_hub_flare_plan_get( 7 )['docs'] ) === 5 );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ), fb_doc( 14, 'D' ), fb_doc( 15, 'E' ), fb_doc( 16, 'F' ) );
+check( '42 save docs: 5 valid ticks and 3 that are not the member\'s are saved, the others are not counted', 'saved' === fb_p3_save( array( '11', '12', '13', '14', '15', '90', '91', '92' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11, 12, 13, 14, 15 ) );
+check( '42 save docs: the toomany message and the code', in_array( 'toomany', vance_hub_flare_plan_error_codes(), true ) && false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'toomany' ) ) ), 'Not saved. Choose 5 documents or fewer.' ) );
+check( '42 save docs: no document text is stored in the plan', false === strpos( json_encode( fb_meta( '_sla_flare_plan' ) ), 'SECRET' ) );
+
+// -- the card: documents, deleted documents, links
+fb_p3_member( array( 'docs' => array( 11, 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic <b>letter</b>' ), fb_doc( 12, 'Blood test' ) );
+$P3_D = vance_hub_flare_plan_data( 7 );
+$P3_H = vance_hub_flare_plan_html( $P3_D );
+check( '42 card: the data holds the kept documents with title and reader link', array_column( $P3_D['docs'], 'title' ) === array( 'Clinic <b>letter</b>', 'Blood test' ) && ( $P3_D['docs'][0]['url'] ?? '' ) === vance_user_docs_reader_url( 11 ) );
+check( '42 card: the "My plan" group shows the documents block with links, escaped', false !== strpos( $P3_H, 'class="vhd-flare__docs-view"' ) && false !== strpos( $P3_H, '<h3 class="vhd-flare__h">My documents</h3>' ) && false !== strpos( $P3_H, '<a href="' . esc_url( vance_user_docs_reader_url( 12 ) ) . '">Blood test</a>' ) && false !== strpos( $P3_H, 'Clinic &lt;b&gt;letter&lt;/b&gt;' ) && false === strpos( $P3_H, 'Clinic <b>' ) );
+check( '42 card: the documents block sits in the "My plan" group, after the optional sections', ( strpos( $P3_H, 'data-vhd-group="plan"' ) ?: PHP_INT_MAX ) < ( strpos( $P3_H, 'vhd-flare__docs-view' ) ?: -1 ) && strpos( $P3_H, 'vhd-flare__docs-view' ) < strpos( $P3_H, 'data-vhd-group="appointment"' ) );
+check( '42 card: no document text reaches the card', false === strpos( $P3_H, 'SECRET' ) );
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+$P3_H2 = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 card: a deleted document is not shown, the other one is', false === strpos( $P3_H2, 'Blood test' ) && false !== strpos( $P3_H2, 'Clinic letter' ) );
+$GLOBALS['DOCS'][7] = array();
+check( '42 card: with no document left there is no documents block', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__docs-view' ) );
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ), fb_doc( 12, 'Blood test' ) );
+$GLOBALS['DOCS_ON'] = false;
+check( '42 card: with the My Documents switch off there is no documents block (the ids stay stored)', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__docs-view' ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11, 12 ) );
+
+// -- the card: links
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => "Crohn's" );
+$GLOBALS['UMETA'][7]['_sla_reading_list']            = array( 3, 4, 5 );
+$GLOBALS['COND_PAGES']['crohns-disease']             = post_obj( 901, "Crohn's disease" );
+$P3_L = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 links: the nav has the condition page and the reading list with its count', false !== strpos( $P3_L, '<nav class="vhd-flare__links" aria-label="More in my Hub">' ) && false !== strpos( $P3_L, '<a href="https://example.test/p/901/">My condition page: Crohn&#039;s disease</a>' ) && false !== strpos( $P3_L, '<a href="?tab=reading-list">My reading list (3)</a>' ) );
+check( '42 links: the nav is in the "My plan" group', ( strpos( $P3_L, 'data-vhd-group="plan"' ) ?: PHP_INT_MAX ) < ( strpos( $P3_L, 'vhd-flare__links' ) ?: -1 ) );
+unset( $GLOBALS['UMETA'][7]['_sla_consent_health'] );
+$P3_L2 = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 links: with the health agreement missing only the reading list shows', false === strpos( $P3_L2, 'My condition page' ) && false !== strpos( $P3_L2, 'My reading list (3)' ) );
+$GLOBALS['UMETA'][7]['_sla_reading_list'] = array();
+check( '42 links: with nothing to link to there is no nav', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__links' ) );
+check( '42 links: the read-only card has no nav', false === strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => fb_v2( array( 'signs' => 'S' ) ), 'updated' => '10 Nov 2026', 'sources' => array( 'reading' => array( 'count' => 2, 'url' => '?tab=reading-list' ) ) ) ) ), 'vhd-flare__links' ) );
+check( '42 links: a link with a bad scheme has no href (escaped with esc_url)', false === strpos( vance_hub_flare_plan_links_html( array( 'reading' => array( 'count' => 2, 'url' => 'javascript:alert(1)' ) ) ), 'javascript:' ) );
+
+// -- the read-only card shows the documents
+fb_p3_member( array( 'docs' => array( 11 ) ), array( 'vance_hub_dash_flare_plan' => false ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+$P3_RO = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 read-only: the card shows the documents block and no links, no form', false !== strpos( $P3_RO, 'vhd-flare__docs-view' ) && false === strpos( $P3_RO, 'vhd-flare__links' ) && false === strpos( $P3_RO, 'vhd-flare__form' ) );
+
+// -- the edit form: the "From my health profile" panel
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+$P3_F = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+$P3_F_OWN = substr( $P3_F, (int) strpos( $P3_F, 'vhd-flare__own"' ) );
+check( '42 own: the panel has the heading and the line that says nothing is copied until the member saves', false !== strpos( $P3_F, '<div class="vhd-flare__own"><h3 class="vhd-flare__h">From my health profile</h3>' ) && false !== strpos( $P3_F, 'This is what you wrote in your health profile. Copy what you want into your plan. Nothing is copied until you save.' ) );
+check( '42 own: the panel sits after "More sections" and before the optional fields', strpos( $P3_F, 'vhd-flare__more"' ) < strpos( $P3_F, 'vhd-flare__own"' ) && strpos( $P3_F, 'vhd-flare__own"' ) < strpos( $P3_F, 'vhd-flare__field--opt' ) );
+check( '42 own: the value is in a paragraph with its line breaks and is escaped', false !== strpos( $P3_F, '<p class="vhd-flare__own-value">Mesalazine 1.2 g<br />' . "\n" . 'Vitamin D</p>' ) );
+check( '42 own: the copy button is hidden and names the target field and the section', false !== strpos( $P3_F, '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__copy" hidden data-vhd-copy-to="vhd-flare-edit-medicines" data-vhd-copy-sec="medicines" data-vhd-copy-value="Mesalazine 1.2 g' ) && false !== strpos( $P3_F, 'Copy into &quot;My medicines&quot;</button>' ) );
+preg_match_all( '/data-vhd-copy-to="([^"]+)"/', $P3_F, $P3_TO );
+$P3_IDS_OK = ! empty( $P3_TO[1] );
+foreach ( $P3_TO[1] as $to ) {
+	$P3_IDS_OK = $P3_IDS_OK && false !== strpos( $P3_F, 'id="' . $to . '"' );
+}
+check( '42 own: every copy target is a field of the form', $P3_IDS_OK && 4 === count( $P3_TO[1] ) );
+check( '42 own: the date item shows the date as the card writes it and keeps the raw date for the script, with the exact button text', false !== strpos( $P3_F, '<p class="vhd-flare__own-value">31 Mar 2027</p>' ) && false !== strpos( $P3_F, 'data-vhd-copy-to="vhd-flare-edit-review_on" data-vhd-copy-sec="review_on" data-vhd-copy-value="2027-03-31">Copy into &quot;I will review this plan on&quot;</button>' ) );
+check( '42 own: the panel is in the edit form only, not the step builder', false === strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'sources' => vance_hub_flare_plan_sources( 7 ) ) ) ), 'vhd-flare__own' ) );
+check( '42 own: nothing is copied by the server (the plan is unchanged by the page)', vance_hub_flare_plan_get( 7 )['medicines'] === '' && vance_hub_flare_plan_get( 7 )['review_on'] === '' );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'medication' => '<script>alert(1)</script> & "x"' );
+$P3_X = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 own: a value with markup is escaped in the paragraph and in the attribute', false === strpos( $P3_X, '<script>alert' ) && false !== strpos( $P3_X, '&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;x&quot;' ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'weight' => '70' );
+check( '42 own: a profile with no mapped value gives no panel', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__own' ) );
+unset( $GLOBALS['UMETA'][7]['_sla_consent_health'] );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+check( '42 own: with the health agreement missing there is no panel', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__own' ) );
+fb_p3_member( array(), array( 'vance_hub_flare_sec_medicines_on' => false ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+$P3_OFF = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 own: an item whose section is not offered has no button', false === strpos( $P3_OFF, 'data-vhd-copy-sec="medicines"' ) && false !== strpos( $P3_OFF, 'data-vhd-copy-sec="triggers"' ) );
+// A draft that empties an admin-off section that has content in the saved plan: no field, so no button either.
+fb_p3_member( array( 'medicines' => 'Iron', 'sections_on' => array( 'medicines' ) ), array( 'vance_hub_flare_sec_medicines_on' => false ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = $PROFILE;
+$P3_DV = vance_hub_flare_plan_data( 7 );
+$P3_DV['draft'] = array( 'do' => 'save', 'answers' => array( 'medicines' => '' ), 'team' => null, 'on' => null, 'docs' => null, 'helped' => '' );
+check( '42 own: a button whose target field is not on the page is not drawn', false === strpos( vance_hub_flare_plan_html( $P3_DV ), 'data-vhd-copy-sec="medicines"' ) && false === strpos( vance_hub_flare_plan_html( $P3_DV ), 'id="vhd-flare-edit-medicines"' ) );
+
+// -- the edit form: the documents box
+fb_p3_member( array( 'docs' => array( 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ), fb_doc( 12, 'Blood <i>test</i>' ) );
+$P3_DF = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 docs form: the fieldset has the legend, the hint and the marker', false !== strpos( $P3_DF, '<fieldset class="vhd-flare__docs"><legend>Documents to keep with my plan</legend>' ) && false !== strpos( $P3_DF, 'Choose up to 5 of your documents, for example a clinic letter.' ) && false !== strpos( $P3_DF, '<input type="hidden" name="vhd_flare_docs_sent" value="1">' ) );
+check( '42 docs form: one checkbox for each document, the kept one ticked, titles escaped', false !== strpos( $P3_DF, 'name="vhd_flare_docs[]" id="vhd-flare-edit-doc-11" value="11"> <span>Clinic letter</span>' ) && false !== strpos( $P3_DF, 'name="vhd_flare_docs[]" id="vhd-flare-edit-doc-12" value="12" checked> <span>Blood &lt;i&gt;test&lt;/i&gt;</span>' ) );
+$P3_DD = vance_hub_flare_plan_data( 7 );
+$P3_DD['draft'] = array( 'do' => 'save', 'answers' => array(), 'team' => null, 'on' => null, 'docs' => array( 11 ), 'helped' => '' );
+$P3_DDH = vance_hub_flare_plan_html( $P3_DD );
+check( '42 docs form: a kept draft ticks the draft\'s documents, not the saved list', false !== strpos( $P3_DDH, 'id="vhd-flare-edit-doc-11" value="11" checked>' ) && false !== strpos( $P3_DDH, 'id="vhd-flare-edit-doc-12" value="12"> <span>' ) );
+$P3_DN = vance_hub_flare_plan_data( 7 );
+$P3_DN['draft'] = array( 'do' => 'save', 'answers' => array(), 'team' => null, 'on' => null, 'docs' => null, 'helped' => '' );
+check( '42 docs form: a draft with no list falls back to the saved list', false !== strpos( vance_hub_flare_plan_html( $P3_DN ), 'id="vhd-flare-edit-doc-12" value="12" checked>' ) );
+check( '42 docs form: the step builder has no documents box', false === strpos( vance_hub_flare_plan_fields_html( null, 'vhd-flare', null, true, vance_hub_flare_plan_sources( 7 ) ), 'vhd-flare__docs' ) );
+$GLOBALS['DOCS'][7] = array();
+check( '42 docs form: with no document there is no box', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__docs"' ) );
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+$GLOBALS['DOCS_ON'] = false;
+check( '42 docs form: with the My Documents switch off there is no box', false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__docs"' ) );
+
+// -- every gate closed: the card and the form render as before this phase
+fb_p3_member();
+$P3_CLOSED = vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+check( '42 closed: with every gate closed the card has no panel, no documents box, no documents block and no links', false === strpos( $P3_CLOSED, 'vhd-flare__own' ) && false === strpos( $P3_CLOSED, 'vhd-flare__docs' ) && false === strpos( $P3_CLOSED, 'vhd-flare__links' ) && false === strpos( $P3_CLOSED, 'vhd_flare_docs' ) );
+check( '42 closed: the form is the same as the form made with no sources at all', vance_hub_flare_plan_fields_html( vance_hub_flare_plan_get( 7 ), 'vhd-flare-edit', null, false, vance_hub_flare_plan_sources( 7 ) ) === vance_hub_flare_plan_fields_html( vance_hub_flare_plan_get( 7 ), 'vhd-flare-edit', null, false, null ) );
+check( '42 closed: negative control, an open documents gate makes the form different', ( function () {
+	$GLOBALS['DOCS_ON'] = true;
+	$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+	$differs = vance_hub_flare_plan_fields_html( vance_hub_flare_plan_get( 7 ), 'vhd-flare-edit', null, false, vance_hub_flare_plan_sources( 7 ) ) !== vance_hub_flare_plan_fields_html( vance_hub_flare_plan_get( 7 ), 'vhd-flare-edit', null, false, null );
+	$GLOBALS['DOCS_ON'] = false;
+	return $differs;
+} )() );
+check( '42 closed: without the sources file the data has no sources and the card works', ( function () use ( $P3_CLOSED ) {
+	return '' !== $P3_CLOSED && false !== strpos( $P3_CLOSED, 'id="vhd-flare"' );
+} )() );
+
+// -- the appointment sheet and the export
+fb_p3_member( array( 'docs' => array( 11, 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ), fb_doc( 12, 'Blood <b>test</b>' ) );
+$P3_SH = vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), $LOG_NOW );
+check( '42 sheet: the sheet data holds the document titles only', $P3_SH['documents'] === array( 'Clinic letter', 'Blood <b>test</b>' ) );
+$P3_SHH = vance_hub_flare_plan_sheet_html( $P3_SH, vance_hub_flare_plan_get( 7 ) );
+check( '42 sheet: a line "Documents I will bring" with the titles, escaped, with no link', false !== strpos( $P3_SHH, '<h4 class="vhd-sheet__h">Documents I will bring</h4><p>Clinic letter, Blood &lt;b&gt;test&lt;/b&gt;</p>' ) && false === strpos( substr( $P3_SHH, (int) strpos( $P3_SHH, 'Documents I will bring' ) ), '<a ' ) );
+$GLOBALS['DOCS'][7] = array( fb_doc( 12, 'Blood test' ) );
+check( '42 sheet: a deleted document is not on the sheet', vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), $LOG_NOW )['documents'] === array( 'Blood test' ) );
+$GLOBALS['DOCS_ON'] = false;
+check( '42 sheet: with the My Documents switch off the sheet has no documents line', vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), $LOG_NOW )['documents'] === array() && false === strpos( vance_hub_flare_plan_sheet_html( vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), $LOG_NOW ), vance_hub_flare_plan_get( 7 ) ), 'Documents I will bring' ) );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+$P3_EXP = array_column( vance_hub_flare_plan_export( 'ruth@example.test' )['data'][0]['data'] ?? array(), 'value', 'name' );
+check( '42 export: one row "Documents kept with my plan" with the titles of the documents that still exist', ( $P3_EXP['Documents kept with my plan'] ?? null ) === 'Clinic letter' && false === strpos( json_encode( $P3_EXP ), 'SECRET' ) );
+$GLOBALS['DOCS'][7] = array();
+check( '42 export: no row when no kept document exists any more', ! array_key_exists( 'Documents kept with my plan', array_column( vance_hub_flare_plan_export( 'ruth@example.test' )['data'][0]['data'] ?? array(), 'value', 'name' ) ) );
+$P3_ERA = vance_hub_flare_plan_erase( 'ruth@example.test' );
+check( '42 erase: the eraser removes the plan with its documents (same key)', fb_meta( '_sla_flare_plan' ) === null && $P3_ERA['items_retained'] === false );
+
+// -- the shortcuts
+fb_p3_member();
+check( '42 url: the link goes to the Health Profile tab, the Flare plan sub-tab and the card', vance_hub_flare_plan_url() === '?tab=health-profile&hsub=flare#vhd-flare' );
+check( '42 shortcut: the card is available, so the link shows', vance_hub_flare_plan_shortcut_url( 7 ) === vance_hub_flare_plan_url() );
+fb_arrange( $FP_ON );
+check( '42 shortcut: a member with no plan and an available card gets the link', vance_hub_flare_plan_shortcut_url( 7 ) === vance_hub_flare_plan_url() );
+fb_arrange( array_merge( $FP_ON, array( 'vance_hub_dash_flare_plan' => false ) ) );
+check( '42 shortcut: switch off and no plan gives no link', vance_hub_flare_plan_shortcut_url( 7 ) === '' );
+fb_arrange( array_merge( $FP_ON, array( 'vance_hub_flare_plan_urgent' => '' ) ) );
+check( '42 shortcut: no urgent help text and no plan gives no link', vance_hub_flare_plan_shortcut_url( 7 ) === '' );
+fb_arrange( array_merge( $FP_ON, array( 'vance_hub_dash_flare_plan' => false ) ) );
+$GLOBALS['UMETA'][7]['_sla_flare_plan'] = fb_v2( array( 'signs' => 'S' ) );
+check( '42 shortcut: switch off and a stored plan (the read-only card) gives the link', vance_hub_flare_plan_shortcut_url( 7 ) === vance_hub_flare_plan_url() );
+fb_arrange( array_merge( $FP_ON, array( 'vance_home_layout' => 'classic' ) ) );
+check( '42 shortcut: with the hub dashboard off there is no link (there is no sub-tab)', vance_hub_flare_plan_shortcut_url( 7 ) === '' );
+fb_arrange( $FP_ON );
+check( '42 shortcut: a member with no id gets no link', vance_hub_flare_plan_shortcut_url( 0 ) === '' );
+check( '42 shortcut: the check-in data carries the link when the card shows, and an empty text when it does not', ( function () use ( $FP_ON ) {
+	fb_arrange( array_merge( $FP_ON, array( 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => true ) ) );
+	$yes = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin']['flare_href'] ?? null;
+	fb_arrange( array_merge( $FP_ON, array( 'vance_hub_dash_member_no' => false, 'vance_hub_dash_chart' => false, 'vance_hub_dash_checkin' => true, 'vance_hub_dash_flare_plan' => false ) ) );
+	$no = vance_hub_dashboard_features_data( fb_user( 7 ), array(), '' )['checkin']['flare_href'] ?? null;
+	return '?tab=health-profile&hsub=flare#vhd-flare' === $yes && '' === $no;
+} )() );
+fb_arrange( $FP_ON );
+$P3_CI = array( 'questions' => array( 'pain' => 'Pain?' ), 'due' => false, 'last' => '1 Nov 2026', 'note' => '', 'tab_href' => '?tab=health-profile&hsub=checkins', 'max' => 4, 'flash' => '' );
+if ( function_exists( 'vance_hub_dashboard_checkin_html' ) ) {
+	check( '42 shortcut: the check-in card shows the link "Open my Flare Management Plan" when it has one', false !== strpos( vance_hub_dashboard_checkin_html( $P3_CI + array( 'flare_href' => '?tab=health-profile&hsub=flare#vhd-flare' ) ), '<a class="vhd-link" href="?tab=health-profile&amp;hsub=flare#vhd-flare">Open my Flare Management Plan' ) );
+	check( '42 shortcut: the check-in card has no such link when the link is empty or missing', false === strpos( vance_hub_dashboard_checkin_html( $P3_CI + array( 'flare_href' => '' ) ), 'Open my Flare Management Plan' ) && false === strpos( vance_hub_dashboard_checkin_html( $P3_CI ), 'Open my Flare Management Plan' ) );
+} else {
+	check( '42 shortcut: hub-checkin-ui.php is not loaded in this suite (the check-in card is checked by static read)', false !== strpos( file_get_contents( $THEME . '/inc/hub-checkin-ui.php' ), "'Open my Flare Management Plan'" ) );
+}
+$P3_HOME = vance_hub_dashboard_home_html( array( 'name' => 'Ruth', 'since' => '', 'flare_href' => '?tab=health-profile&hsub=flare#vhd-flare', 'tools' => array(), 'stats' => array(), 'saved' => array(), 'fresh' => array(), 'step' => null, 'ask' => false ) );
+check( '42 shortcut: the dashboard home shows the link when it has one', false !== strpos( $P3_HOME, 'vhd-flare__shortcut' ) && false !== strpos( $P3_HOME, 'Open my Flare Management Plan' ) && false !== strpos( $P3_HOME, 'href="?tab=health-profile&amp;hsub=flare#vhd-flare"' ) );
+check( '42 shortcut: the dashboard home has no such link when the link is empty', false === strpos( vance_hub_dashboard_home_html( array( 'name' => 'Ruth', 'since' => '', 'flare_href' => '', 'tools' => array(), 'stats' => array(), 'saved' => array(), 'fresh' => array(), 'step' => null, 'ask' => false ) ), 'Open my Flare Management Plan' ) );
+// The check-in card holds the same link. When the home draws that card, the home adds no second link.
+$P3_HOME_BASE = array( 'name' => 'Ruth', 'since' => '', 'flare_href' => '?x=1#vhd-flare', 'tools' => array(), 'stats' => array(), 'saved' => array(), 'fresh' => array(), 'step' => null, 'ask' => false );
+check( '42 shortcut: this suite has the real check-in card', function_exists( 'vance_hub_dashboard_checkin_html' ) );
+$P3_HOME_IN   = vance_hub_dashboard_home_html( $P3_HOME_BASE + array( 'checkin' => $P3_CI + array( 'flare_href' => '?x=1#vhd-flare' ) ) );
+$P3_HOME_OUT  = vance_hub_dashboard_home_html( $P3_HOME_BASE + array( 'checkin' => $P3_CI + array( 'flare_href' => '' ) ) );
+$P3_HOME_NONE = vance_hub_dashboard_home_html( $P3_HOME_BASE + array( 'checkin' => array( 'flare_href' => '?x=1#vhd-flare' ) ) );
+check( '42 shortcut: the home with a check-in card that holds the link shows the link one time, in the card', 1 === substr_count( $P3_HOME_IN, 'Open my Flare Management Plan' ) && false === strpos( $P3_HOME_IN, 'vhd-flare__shortcut--home' ) );
+check( '42 shortcut: the home with a check-in card that holds no link shows its own link one time', 1 === substr_count( $P3_HOME_OUT, 'Open my Flare Management Plan' ) && false !== strpos( $P3_HOME_OUT, 'vhd-flare__shortcut--home' ) );
+check( '42 shortcut: when the check-in card draws nothing, the home still shows its own link', 1 === substr_count( $P3_HOME_NONE, 'Open my Flare Management Plan' ) && false !== strpos( $P3_HOME_NONE, 'vhd-flare__shortcut--home' ) );
+check( '42 shortcut: the home data carries the link key',false !== strpos( file_get_contents( $THEME . '/inc/hub-dashboard.php' ), "'flare_href'     => function_exists( 'vance_hub_flare_plan_shortcut_url' )" ) );
+
+// -- the sources file is wired
+check( '42 wiring: functions.php requires the sources file right after the flare plan file', 1 === preg_match( "#inc/hub-flare-plan\\.php';\\s*(?://[^\\n]*\\n\\s*)?require_once get_template_directory\\(\\) \\. '/inc/hub-flare-plan-sources\\.php';#", file_get_contents( $THEME . '/functions.php' ) ) );
+check( '42 wiring: the sources file has the ABSPATH guard and writes nothing', false !== strpos( file_get_contents( $THEME . '/inc/hub-flare-plan-sources.php' ), "defined( 'ABSPATH' )" ) && 0 === preg_match( '/update_user_meta|add_user_meta|delete_user_meta|set_transient/', file_get_contents( $THEME . '/inc/hub-flare-plan-sources.php' ) ) );
+fb_arrange( $FP_ON );
+
+/* ===================================================================== */
+echo "\n";
+section( '43. phase 3, round 2: gates, values, documents, copy values, shortcuts, privacy, error order' );
+
+/** The card of member 7, as the page shows it. */
+function fb_p3_card() {
+	return vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) );
+}
+
+/** Six document records of member 7, ids 11 to 16. */
+function fb_p3_six_docs() {
+	return array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ), fb_doc( 13, 'C' ), fb_doc( 14, 'D' ), fb_doc( 15, 'E' ), fb_doc( 16, 'F' ) );
+}
+
+/** Every store of member 7 holds one marker text, and every gate is open. Call after fb_arrange(). */
+function fb_p3_markers() {
+	fb_p3_member( array( 'docs' => array( 11 ) ) );
+	$GLOBALS['UMETA'][7]['_sla_clinical_profile']        = array(
+		'medication'            => 'MEDMARK iron',
+		'trigger_foods'         => 'TRIGMARK spice',
+		'appointment_questions' => 'QMARK dose',
+		'next_appointment'      => '2027-03-31',
+	);
+	$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => "Crohn's" );
+	$GLOBALS['UMETA'][7]['_sla_reading_list']            = array( 3, 4, 5 );
+	$GLOBALS['COND_PAGES']['crohns-disease']             = post_obj( 901, "Crohn's disease" );
+	$GLOBALS['DOCS_ON'] = true;
+	$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'DOCMARK letter' ) );
+}
+
+// -- gap 1: each gate closed on its own. The card holds the form, the links, the documents and the sheet.
+fb_p3_markers();
+check( '43 gates open: the card shows every store (the baseline for the closed-gate checks)', false !== strpos( fb_p3_card(), 'MEDMARK' ) && false !== strpos( fb_p3_card(), 'DOCMARK' ) && false !== strpos( fb_p3_card(), 'My reading list (3)' ) && false !== strpos( fb_p3_card(), 'My condition page' ) );
+
+fb_p3_markers();
+unset( $GLOBALS['UMETA'][7]['_sla_consent_health'] );
+$G_HEALTH = fb_p3_card();
+$SH_HEALTH = vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), time() );
+check( 'gate health: with the health agreement missing no profile value reaches the card or its form', false === strpos( $G_HEALTH, 'MEDMARK' ) && false === strpos( $G_HEALTH, 'TRIGMARK' ) && false === strpos( $G_HEALTH, 'QMARK' ) );
+check( 'gate health: with the health agreement missing the card has no own panel and no condition link', false === strpos( $G_HEALTH, 'vhd-flare__own' ) && false === strpos( $G_HEALTH, 'My condition page' ) );
+check( 'gate health: with the health agreement missing the sheet has no medication, questions or appointment', '' === $SH_HEALTH['medication'] && '' === $SH_HEALTH['questions'] && '' === $SH_HEALTH['appointment'] );
+check( 'gate health: with the health agreement missing the reading list and the documents still show', false !== strpos( $G_HEALTH, 'My reading list (3)' ) && false !== strpos( $G_HEALTH, 'DOCMARK' ) );
+
+fb_p3_markers();
+$GLOBALS['DOCS_ON'] = false;
+$G_DOCS = fb_p3_card();
+$SH_DOCS = vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), time() );
+check( 'gate documents: with My Documents off no document title reaches the card, the form or the sheet', false === strpos( $G_DOCS, 'DOCMARK' ) && false === strpos( $G_DOCS, 'vhd-flare__docs' ) && false === strpos( $G_DOCS, 'Documents I will bring' ) );
+check( 'gate documents: with My Documents off the sources and the sheet hold no document', vance_hub_flare_plan_sources( 7 )['documents'] === array() && $SH_DOCS['documents'] === array() );
+check( 'gate documents: with My Documents off the other stores still show', false !== strpos( $G_DOCS, 'MEDMARK' ) && false !== strpos( $G_DOCS, 'My reading list (3)' ) && false !== strpos( $G_DOCS, 'My condition page' ) );
+
+fb_p3_markers();
+$GLOBALS['MODS'][ vance_dashboard_setting_key( 'vance_dash_feature_', 'reading-list' ) ] = false;
+$G_READ = fb_p3_card();
+check( 'gate reading: with the Reading List tab off the card has no reading link and the sources hold no reading part', false === strpos( $G_READ, 'My reading list' ) && vance_hub_flare_plan_sources( 7 )['reading'] === array() );
+check( 'gate reading: with the Reading List tab off the other stores still show', false !== strpos( $G_READ, 'MEDMARK' ) && false !== strpos( $G_READ, 'DOCMARK' ) && false !== strpos( $G_READ, 'My condition page' ) );
+
+fb_p3_markers();
+$GLOBALS['CURRENT_UID'] = 8;
+$G_USER = fb_p3_card();
+check( 'gate user: with another member as the current user the card has no reading link and the reading part is empty', false === strpos( $G_USER, 'My reading list' ) && vance_hub_flare_plan_sources( 7 )['reading'] === array() );
+$GLOBALS['CURRENT_UID'] = 7;
+
+// Known gap: the brief asks for the other-user gate on every part. The profile and the documents have none.
+fb_p3_markers();
+$GLOBALS['UMETA'][8]['_sla_consent_health']   = '1';
+$GLOBALS['UMETA'][8]['_sla_clinical_profile'] = array( 'medication' => 'OTHERMARK iron' );
+$GLOBALS['DOCS'][8] = array( fb_doc( 90, 'OTHERDOC letter' ) );
+$OTHER_SRC = vance_hub_flare_plan_sources( 8 );
+check( 'gate user: sources of member 8 while member 7 is the current user give no profile value and no document', $OTHER_SRC['profile'] === array() && $OTHER_SRC['documents'] === array() && $OTHER_SRC['condition'] === array() );
+$GLOBALS['CURRENT_UID'] = 8;
+$OWN_SRC = vance_hub_flare_plan_sources( 8 );
+check( 'gate user: control, member 8 as the current user gets the profile value and the document', array_column( $OWN_SRC['profile'], 'value' ) === array( 'OTHERMARK iron' ) && array_column( $OWN_SRC['documents'], 'title' ) === array( 'OTHERDOC letter' ) );
+$GLOBALS['CURRENT_UID'] = 7;
+
+// Every gate closed: the card is byte-equal to a card rendered with no sources.
+fb_p3_markers();
+unset( $GLOBALS['UMETA'][7]['_sla_consent_health'] );
+$GLOBALS['DOCS_ON'] = false;
+$GLOBALS['MODS'][ vance_dashboard_setting_key( 'vance_dash_feature_', 'reading-list' ) ] = false;
+$F_ALL  = vance_hub_flare_plan_data( 7 );
+$F_NONE = $F_ALL;
+unset( $F_NONE['sources'], $F_NONE['docs'] );
+$H_ALL = vance_hub_flare_plan_html( $F_ALL );
+check( 'closed: with every gate closed the card is byte-equal to a card rendered with no sources', $H_ALL === vance_hub_flare_plan_html( $F_NONE ) );
+check( 'closed: with every gate closed the card holds no value of any store', false === strpos( $H_ALL, 'MARK' ) && false === strpos( $H_ALL, 'Crohn' ) && false === strpos( $H_ALL, 'My reading list' ) );
+$GLOBALS['MODS'][ vance_dashboard_setting_key( 'vance_dash_feature_', 'reading-list' ) ] = true;
+check( 'closed, negative control: with the reading tab on again the card is no longer byte-equal', vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ) !== vance_hub_flare_plan_html( $F_NONE ) );
+
+// -- gap 2: profile values, dates, copy values
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'medication' => 5, 'trigger_foods' => null, 'appointment_questions' => true, 'next_appointment' => array( '2027-03-31' ) );
+check( 'profile: values that are not text (a number, null, true, an array) are left out', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'medication' => "\n\t ", 'trigger_foods' => '', 'appointment_questions' => "  \r\n  ", 'next_appointment' => '' );
+check( 'profile: empty strings and whitespace only (spaces, tabs, line breaks) are left out', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = null;
+check( 'profile: a profile stored as null gives nothing', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-02-29' );
+check( 'profile date: 29 February of a year that is not a leap year is left out', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2028-02-29' );
+check( 'profile date: 29 February of a leap year is kept as typed', ( vance_hub_flare_plan_sources( 7 )['profile'][0]['value'] ?? null ) === '2028-02-29' );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-3-5' );
+check( 'profile date: a date without leading zeros is left out', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-03-31 10:00' );
+check( 'profile date: a date with a time after it is left out', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '20270331' );
+check( 'profile date: a date with no separators is left out', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+fb_p3_member( array( 'review_on' => '' ), array( 'vance_hub_flare_sec_review_on_on' => false ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-03-31' );
+check( 'profile date: a date is left out when its review section is admin-off and the plan has nothing in it', vance_hub_flare_plan_sources( 7 )['profile'] === array() );
+fb_p3_member( array( 'review_on' => '2027-01-02' ), array( 'vance_hub_flare_sec_review_on_on' => false ) );
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-03-31' );
+check( 'profile date: the same date is kept when the review section holds a date in the plan', array_column( vance_hub_flare_plan_sources( 7 )['profile'], 'key' ) === array( 'next_appointment' ) );
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'medication' => "Line one\nLine two \"q\" & <b>" );
+$H_LB = fb_p3_card();
+check( 'copy value: the copy value keeps the line break and escapes quotes, ampersand and tags', false !== strpos( $H_LB, 'data-vhd-copy-value="Line one' . "\n" . 'Line two &quot;q&quot; &amp; &lt;b&gt;"' ) );
+check( 'copy value: the paragraph breaks the line with a tag and escapes the same text', false !== strpos( $H_LB, '<p class="vhd-flare__own-value">Line one<br />' . "\n" . 'Line two &quot;q&quot; &amp; &lt;b&gt;</p>' ) );
+
+// -- gap 3: the condition link
+fb_p3_member();
+$GLOBALS['COND_PAGES']['crohns-disease'] = post_obj( 901, "Crohn's disease" );
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => 'Other' );
+check( 'condition: "Other" alone gives no page', vance_hub_flare_plan_sources( 7 )['condition'] === array() );
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => 'Coeliac disease' );
+check( 'condition: an unknown condition gives no page', vance_hub_flare_plan_sources( 7 )['condition'] === array() );
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => 5 );
+check( 'condition: a damaged answer that is a number gives no page', vance_hub_flare_plan_sources( 7 )['condition'] === array() );
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => null );
+check( 'condition: a damaged answer that is null gives no page', vance_hub_flare_plan_sources( 7 )['condition'] === array() );
+$GLOBALS['UMETA'][7]['_sla_healthcare_quiz_results'] = array( 'condition_type' => "Crohn's" );
+unset( $GLOBALS['COND_PAGES']['crohns-disease'] );
+check( 'condition: a known condition with no published page gives no page', vance_hub_flare_plan_sources( 7 )['condition'] === array() );
+$GLOBALS['COND_PAGES']['crohns-disease'] = post_obj( 903, '<i>Crohn</i> & "x"' );
+check( 'condition: the title is kept raw in the sources, as the page has it', ( vance_hub_flare_plan_sources( 7 )['condition']['title'] ?? null ) === '<i>Crohn</i> & "x"' );
+check( 'condition: the title is escaped in the link text of the card', false !== strpos( fb_p3_card(), '<a href="https://example.test/p/903/">My condition page: &lt;i&gt;Crohn&lt;/i&gt; &amp; &quot;x&quot;</a>' ) );
+
+// -- gap 4: documents
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'ids: strings that are not whole positive ids, arrays and a float are dropped, the valid id is kept', 'saved' === fb_p3_save( array( '-1', '0', '1.5', 'abc', '1e3', '11', array( '12' ) ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11 ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'ids: a number too long for an id, and an id with a leading zero, are dropped', 'saved' === fb_p3_save( array( '99999999999999999999', '000011', '11' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11 ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'ids: a duplicate ticked twice is saved once', 'saved' === fb_p3_save( array( '12', '11', '12' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11, 12 ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'limit: six posted ticks with one duplicate are five valid ids and are saved', 'saved' === fb_p3_save( array( '11', '11', '12', '13', '14', '15' ) ) && count( vance_hub_flare_plan_get( 7 )['docs'] ) === 5 );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'limit: six posted ticks of which one is not the member\'s are five valid ids and are saved', 'saved' === fb_p3_save( array( '11', '12', '13', '14', '15', '90' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11, 12, 13, 14, 15 ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = false;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'limit: with My Documents off six posted ticks are ignored, so there is no toomany', 'saved' === fb_p3_save( array( '11', '12', '13', '14', '15', '16' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array() );
+fb_p3_member( array( 'docs' => array( 11, 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ) );
+check( 'deleted: the next save with the box keeps only the document that still exists', 'saved' === fb_p3_save( array( '11' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 11 ) );
+fb_p3_member( array( 'docs' => array( 90 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ) );
+$GLOBALS['DOCS'][8] = array( fb_doc( 90, 'NOTMINE letter' ) );
+check( 'ownership: a stored id that is another member\'s document is not shown in the card or on the sheet', false === strpos( fb_p3_card(), 'NOTMINE' ) && vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), time() )['documents'] === array() );
+fb_p3_member( array( 'docs' => array( 12, 11 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'First' ), fb_doc( 12, 'Second' ) );
+check( 'order: the card lists the documents in the order the plan keeps them', strpos( fb_p3_card(), '>Second</a>' ) < strpos( fb_p3_card(), '>First</a>' ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+check( 'refused: six ticks are refused and nothing is written','toomany' === fb_p3_save( array( '11', '12', '13', '14', '15', '16' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array() );
+// A refused save keeps the ticks for the form, and the form shows them again.
+$_GET = array( 'vance_flare' => 'toomany' );
+$H_DRAFT = fb_p3_card();
+$_GET = array();
+check( 'draft after toomany: the form ticks the six documents again', false !== strpos( $H_DRAFT, 'id="vhd-flare-edit-doc-11" value="11" checked>' ) && false !== strpos( $H_DRAFT, 'id="vhd-flare-edit-doc-16" value="16" checked>' ) );
+
+fb_p3_member( array( 'docs' => array( 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'A' ), fb_doc( 12, 'B' ) );
+check( 'merge: a save with no marker keeps the stored list and still saves the text', 'saved' === fb_p3_save( null, array( 'signs' => 'S8' ) ) && vance_hub_flare_plan_get( 7 )['docs'] === array( 12 ) && vance_hub_flare_plan_get( 7 )['signs'] === 'S8' );
+
+fb_p3_member( array( 'docs' => array( 11 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, '<img src=x onerror="alert(1)"> & "q"' ) );
+check( 'documents: a title with a tag and quotes is escaped as the link text of the card, and no tag reaches the page', false !== strpos( fb_p3_card(), '>&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; &quot;q&quot;</a></li>' ) && false === strpos( fb_p3_card(), '<img' ) );
+
+// -- gap 5: the server never copies another store into the plan
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array(
+	'medication'            => 'MEDMARK iron',
+	'trigger_foods'         => 'TRIGMARK spice',
+	'appointment_questions' => 'QMARK dose',
+	'next_appointment'      => '2027-03-31',
+);
+$NOCOPY_CODE = fb_p3_save( null, array( 'signs' => 'S2' ) );
+$NOCOPY_JSON = json_encode( fb_meta( '_sla_flare_plan' ) );
+check( 'no copy: a save with no copy by the member keeps every profile value out of the stored plan', 'saved' === $NOCOPY_CODE && false === strpos( $NOCOPY_JSON, 'MEDMARK' ) && false === strpos( $NOCOPY_JSON, 'TRIGMARK' ) && false === strpos( $NOCOPY_JSON, 'QMARK' ) && false === strpos( $NOCOPY_JSON, '2027-03-31' ) );
+check( 'no copy: the stored plan holds the posted text and empty fields where the member posted none', vance_hub_flare_plan_get( 7 )['signs'] === 'S2' && vance_hub_flare_plan_get( 7 )['medicines'] === '' && vance_hub_flare_plan_get( 7 )['review_on'] === '' && vance_hub_flare_plan_get( 7 )['questions'] === '' );
+fb_p3_save( null, array( 'signs' => 'S3', 'medicines' => 'MEDMARK iron' ) );
+check( 'no copy, positive control: a value the member posts is stored', false !== strpos( json_encode( fb_meta( '_sla_flare_plan' ) ), 'MEDMARK' ) );
+
+// -- gap 6: the shortcut is escaped in the check-in card and the dashboard home
+require_once $THEME . '/inc/hub-checkin-ui.php';
+$CI_VIEW = array( 'questions' => array( 'pain' => 'Pain?' ), 'due' => false, 'last' => '1 Nov 2026', 'note' => '', 'tab_href' => '?tab=health-profile&hsub=checkins', 'max' => 4, 'flash' => '', 'need_consent' => false, 'series' => array(), 'count' => 0, 'days' => array(), 'consent' => '', 'nonce' => 'nonce-vance_hub_checkin' );
+$CI_X = vance_hub_dashboard_checkin_html( $CI_VIEW + array( 'flare_href' => '"><script>x</script>' ) );
+check( 'shortcut escape: the check-in card escapes the link, so no script tag reaches the page', false === strpos( $CI_X, '<script>x' ) && false !== strpos( $CI_X, 'href="&quot;&gt;&lt;script&gt;x&lt;/script&gt;"' ) );
+$CI_OK = vance_hub_dashboard_checkin_html( $CI_VIEW + array( 'flare_href' => '?tab=health-profile&hsub=flare#vhd-flare' ) );
+check( 'shortcut: the check-in card shows the link text with the flare plan URL', false !== strpos( $CI_OK, 'href="?tab=health-profile&amp;hsub=flare#vhd-flare"' ) && false !== strpos( $CI_OK, 'Open my Flare Management Plan' ) );
+$HOME_X = vance_hub_dashboard_home_html( array( 'name' => 'Ruth', 'since' => '', 'flare_href' => '"><script>x</script>', 'tools' => array(), 'stats' => array(), 'saved' => array(), 'fresh' => array(), 'step' => null, 'ask' => false ) );
+check( 'shortcut escape: the dashboard home escapes the link, so no script tag reaches the page', false === strpos( $HOME_X, '<script>x' ) && false !== strpos( $HOME_X, 'href="&quot;&gt;&lt;script&gt;x&lt;/script&gt;"' ) );
+
+// -- gap 7: privacy. The export reads the stored data, so it holds the titles even while the switch is off.
+fb_p3_member( array( 'docs' => array( 11 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+fb_p3_save( array( '11' ), array( 'signs' => 'S4' ) );
+check( 'privacy: no stored key of the member has documents in its name, after a save with documents', array() === preg_grep( '/doc/i', array_keys( $GLOBALS['UMETA'][7] ) ) );
+check( 'privacy: the list of the feature\'s own meta keys has no documents key', array() === preg_grep( '/doc/i', vance_hub_flare_plan_all_meta_keys() ) );
+vance_hub_flare_plan_delete_all( 7 );
+check( 'privacy: delete_all removes the plan with its documents and leaves no plan', fb_meta( '_sla_flare_plan' ) === null && vance_hub_flare_plan_get( 7 ) === null );
+fb_p3_member( array( 'docs' => array( 11 ) ) );
+$GLOBALS['DOCS_ON'] = false;
+$GLOBALS['DOCS'][7] = array( fb_doc( 11, 'Clinic letter' ) );
+$GLOBALS['USERS_BY_EMAIL']['ruth@example.test'] = (object) array( 'ID' => 7 );
+$EXP_OFF = array_column( vance_hub_flare_plan_export( 'ruth@example.test' )['data'][0]['data'] ?? array(), 'value', 'name' );
+check( 'privacy: the export holds the kept document title even while the My Documents switch is off (pinned on purpose)', ( $EXP_OFF['Documents kept with my plan'] ?? null ) === 'Clinic letter' );
+
+// -- gap 8: error codes and their order
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+$LONG_TEXT = str_repeat( 'a', vance_hub_flare_plan_max_chars() + 1 );
+check( 'order: a text that is too long gives toolong, even with six ticks', 'toolong' === fb_p3_save( array( '11', '12', '13', '14', '15', '16' ), array( 'signs' => $LONG_TEXT ) ) );
+check( 'order: a review date that is not real gives baddate, even with six ticks', 'baddate' === fb_p3_save( array( '11', '12', '13', '14', '15', '16' ), array( 'signs' => 'S5', 'review_on' => '2027-02-30' ) ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+unset( $GLOBALS['UMETA'][7]['_sla_consent_flare_plan'], $GLOBALS['UMETA'][7]['_sla_consent_flare_plan_text'] );
+check( 'order: six ticks with no agreement give toomany, because the documents are counted before the agreement', 'toomany' === fb_p3_save( array( '11', '12', '13', '14', '15', '16' ), array( 'signs' => 'S6' ) ) && vance_hub_flare_plan_get( 7 )['signs'] === 'S' );
+check( 'error code: toomany is an error code and has its message', in_array( 'toomany', vance_hub_flare_plan_error_codes(), true ) && false !== strpos( vance_hub_flare_plan_html( fb_flare_view( array( 'flash' => 'toomany' ) ) ), 'Not saved. Choose 5 documents or fewer.' ) );
+fb_p3_member();
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = fb_p3_six_docs();
+$_GET = array( 'vance_flare' => 'toomany' );
+$H_TOO = fb_p3_card();
+$_GET = array();
+check( 'error code: toomany opens the "My plan" group', false !== strpos( $H_TOO, '<details class="vhd-flare__group" data-vhd-group="plan" open>' ) );
+check( 'error code: without a flash the "My plan" group is closed', false !== strpos( fb_p3_card(), '<details class="vhd-flare__group" data-vhd-group="plan">' ) );
+
+// -- known bugs: each label holds the input and the output that was seen.
+fb_p3_member();
+$GLOBALS['UMETA'][7]['_sla_clinical_profile'] = array( 'next_appointment' => '2027-02-30' );
+$SH_DATE = vance_hub_flare_sheet_data( 7, vance_hub_flare_plan_get( 7 ), array(), time() )['appointment'];
+known_bug( 'KNOWN BUG: the appointment sheet shows the impossible date 2027-02-30 as a real day (the sources reject it, the sheet does not). Expected an empty appointment, got ' . json_encode( $SH_DATE ) . '.', '' === $SH_DATE );
+
+fb_p3_member( array( 'docs' => array( 11, 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array();
+$KB_CODE = fb_p3_save( null, array( 'signs' => 'S7' ) );
+$KB_DOCS = vance_hub_flare_plan_get( 7 )['docs'];
+check( 'deleted, all of them: the save with no documents left is saved', 'saved' === $KB_CODE );
+// An empty document list can be a list that could not be read. Then the kept ids stay stored, and the card shows none.
+check( 'deleted, all of them: the kept ids stay stored while the document list is empty, and the card shows no document', $KB_DOCS === array( 11, 12 ) && false === strpos( vance_hub_flare_plan_html( vance_hub_flare_plan_data( 7 ) ), 'vhd-flare__docs-view' ) );
+fb_p3_member( array( 'docs' => array( 11, 12 ) ) );
+$GLOBALS['DOCS_ON'] = true;
+$GLOBALS['DOCS'][7] = array( fb_doc( 12, 'Left.pdf' ) );
+fb_p3_save( null, array( 'signs' => 'S8' ) );
+check( 'deleted, one of two: a save with no documents list posted drops the id of the deleted document and keeps the other', vance_hub_flare_plan_get( 7 )['docs'] === array( 12 ) );
 
 if ( $FAIL ) {
 	echo count( $FAIL ) . ' FAILED of ' . ( $PASS + count( $FAIL ) ) . ":\n";

@@ -1,16 +1,21 @@
 /**
- * Flare plan card: print, the step-by-step builder, "How am I today?", the
- * character counters, and focus on load.
+ * Flare plan card: print (with the groups opened for print), the step-by-step
+ * builder, the optional sections in the edit form, copy from the health profile,
+ * "How am I today?", the character counters, and focus on load.
  *
- * Every part is an enhancement. The print buttons, the quick check and the
- * counters are hidden in the markup and shown here, so with no script the member
- * never sees a control that does nothing. With no script the plan form shows all
- * its boxes.
+ * Every part is an enhancement. The print buttons, the copy buttons, the quick
+ * check and the counters are hidden in the markup and shown here, so with no
+ * script the member never sees a control that does nothing. With no script the
+ * plan form shows all its boxes.
  *
  * Print: the layout is CSS (@media print in hub-dashboard.css). Before printing
  * this script marks the part to print and every ancestor of it, so the CSS can
  * drop the rest of the page and print no blank pages. The part is the plan card,
  * or the appointment sheet when the member prints from it.
+ *
+ * Copy: a button in the "From my health profile" panel writes a value the member
+ * already gave in the Hub into the plan field it names, then opens that section.
+ * It makes no network call. Nothing is saved until the member saves the plan.
  *
  * Nothing here sends data. The quick check reads three sliders and the last
  * check-in from the page, and writes text into the page.
@@ -183,6 +188,88 @@
 		} );
 	}
 
+	/* ---- copy from the health profile ----------------------------------- */
+
+	// Each copy button fills the plan field it names with a value the member already
+	// gave in the Hub, then opens that section. The value is read from
+	// data-vhd-copy-value, never from the text on the page.
+	function initCopy( button ) {
+		var target = document.getElementById( button.getAttribute( 'data-vhd-copy-to' ) || '' );
+		if ( ! target ) {
+			return;
+		}
+		var doneText  = button.getAttribute( 'data-vhd-copy-done' ) || 'Copied';
+		var noFitText = button.getAttribute( 'data-vhd-copy-nofit' ) || 'It does not fit. Make the text shorter.';
+		// NaN when the field has no maxlength: then the length check never fails.
+		var maxLength = parseInt( target.getAttribute( 'maxlength' ), 10 );
+		var note      = null;
+
+		// The status line after the button. It is made on first use and then reused.
+		function say( text ) {
+			if ( ! note ) {
+				if ( ! text ) {
+					return;
+				}
+				note = el( 'p', 'vhd-small vhd-flare__copy-note' );
+				note.setAttribute( 'role', 'status' );
+				button.parentNode.insertBefore( note, button.nextSibling );
+			}
+			note.textContent = text;
+		}
+
+		button.hidden = false;
+		button.addEventListener( 'click', function () {
+			var value = button.getAttribute( 'data-vhd-copy-value' ) || '';
+			var sec   = button.getAttribute( 'data-vhd-copy-sec' ) || '';
+			if ( '' === value ) {
+				return;
+			}
+			if ( 'date' === target.type ) {
+				// A date the member typed is never replaced. The member removes it first.
+				if ( '' !== target.value && target.value !== value ) {
+					say( button.getAttribute( 'data-vhd-copy-hasdate' ) || 'A date is there already. Remove it first.' );
+					target.focus();
+					return;
+				}
+				target.value = value;
+				// The browser drops a date it cannot read. Then nothing was copied.
+				if ( target.value !== value ) {
+					return;
+				}
+			} else {
+				var current = target.value;
+				// The text is already in the field: copy nothing and only move to the field.
+				if ( -1 !== current.indexOf( value ) ) {
+					target.focus();
+					return;
+				}
+				var base = current.replace( /\s+$/, '' );
+				var next = base ? base + '\n' + value : value;
+				// Count code points, as the counter does.
+				if ( Array.from( next ).length > maxLength ) {
+					say( noFitText );
+					return;
+				}
+				target.value = next;
+			}
+			say( '' );
+
+			var toggle = sec ? document.querySelector( 'input[data-vhd-sec-toggle="' + sec + '"]' ) : null;
+			if ( toggle ) {
+				toggle.checked = true;
+				toggle.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+			}
+			// Tells the counter, and any other listener, that the field changed.
+			target.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+			var wrap = sec ? document.querySelector( '.vhd-flare__field--opt[data-vhd-sec="' + sec + '"]' ) : null;
+			if ( wrap ) {
+				wrap.hidden = false;
+			}
+			target.focus();
+			button.textContent = doneText;
+		} );
+	}
+
 	/* ---- How am I today?------------------------------------------------ */
 
 	function initQuick( box ) {
@@ -324,6 +411,7 @@
 		if ( card ) {
 			initOptional( card );
 		}
+		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__copy' ), initCopy );
 		Array.prototype.forEach.call( document.querySelectorAll( 'form[data-vhd-wizard]' ), initWizard );
 		Array.prototype.forEach.call( document.querySelectorAll( '[data-vhd-flare-quick]' ), initQuick );
 		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__count[data-count-for]' ), initCount );
