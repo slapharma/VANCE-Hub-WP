@@ -875,7 +875,7 @@ check( 'menu card: the heading is a visually hidden h1 with the name', strpos( $
 check( 'menu card: exactly one h1 on the page', substr_count( $MH, '<h1' ) === 1 );
 check( 'menu card: no My Hub eyebrow on the page', strpos( $MH, 'My Hub' ) === false );
 
-// Classic layout: the greeting keeps its own eyebrow, date and member number.
+// Classic layout: the greeting keeps its date and member number, with no eyebrow.
 $CL = hd_view_empty();
 $CL['name']        = 'Ruth';
 $CL['since']       = 'March 2026';
@@ -885,7 +885,7 @@ $CL['menu_card']   = false;
 $CH = vance_hub_dashboard_home_html( $CL );
 check( 'classic: the greeting section is kept', strpos( $CH, '<section class="vhd-hello" aria-labelledby="vhd-hello-title">' ) !== false );
 check( 'classic: the visible h1 keeps its id and class', strpos( $CH, '<h1 id="vhd-hello-title" class="vhd-hello__title">Hello, Ruth</h1>' ) !== false );
-check( 'classic: the eyebrow shows', strpos( $CH, '<p class="vhd-eyebrow">My Hub</p>' ) !== false );
+check( 'classic: no My Hub eyebrow', strpos( $CH, 'My Hub' ) === false );
 check( 'classic: the join line shows', strpos( $CH, '<p class="vhd-hello__since">Member since March 2026</p>' ) !== false );
 check( 'classic: the member number line shows', strpos( $CH, '<p class="vhd-hello__code">Member number K7QM-4XZP</p>' ) !== false );
 check( 'classic: no screen-reader heading', strpos( $CH, 'vhd-sr' ) === false );
