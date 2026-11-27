@@ -6,6 +6,7 @@
  *   2  erase: data gone, agreement withdrawn, other users untouched
  *   3  the POST handler: gating, nonce, confirm tick, one group, all
  *   4  the panel: forms only where there is data, escaping of codes
+ *   5  the flare group uses vance_hub_flare_plan_delete_all() when it exists, inside the member lock
  */
 define( 'ABSPATH', __DIR__ . '/' );
 error_reporting( E_ALL );
@@ -268,6 +269,49 @@ $_GET = array( 'vance_data' => '<b>x</b>' );
 check( 'request: an unknown code is dropped', '' === vance_hub_data_flash_from_request() );
 $_GET = array( 'vance_data' => array( 'a' ) );
 check( 'request: an array is dropped', '' === vance_hub_data_flash_from_request() );
+
+section( '5. The flare group uses the flare plan delete when it exists' );
+// Defined only now: the sections above run with no such function, so the generic key loop
+// is what they test. function_exists() is read at call time. The if block stops PHP from
+// defining the function when the file is compiled.
+$GLOBALS['DA_RESULT'] = true;
+$GLOBALS['DA_CALLS']  = array();
+if ( true ) {
+	function vance_hub_flare_plan_delete_all( $uid ) {
+		$GLOBALS['LOCKS'][]    = 'delete_all';
+		$GLOBALS['DA_CALLS'][] = $uid;
+		return array( 'log' => $GLOBALS['DA_RESULT'], 'plan' => $GLOBALS['DA_RESULT'], 'consent' => $GLOBALS['DA_RESULT'], 'ok' => $GLOBALS['DA_RESULT'] );
+	}
+}
+seed( 7 );
+$GLOBALS['LOCKS'] = array();
+check( 'flare: erase calls the plan delete with the member id and returns its ok (true)', true === vance_hub_data_erase( 7, 'flare' ) && array( 7 ) === $GLOBALS['DA_CALLS'] );
+check( 'flare: the generic key loop did not run, the stub deleted nothing', isset( $GLOBALS['UMETA'][7]['_sla_flare_plan'] ) && isset( $GLOBALS['UMETA'][7]['_sla_consent_flare_plan'] ) );
+$GLOBALS['DA_RESULT'] = false;
+check( 'flare: erase returns false when the plan delete reports ok false', false === vance_hub_data_erase( 7, 'flare' ) );
+$GLOBALS['DA_RESULT'] = true;
+check( 'flare: another group still uses the generic loop and never calls the plan delete', ( function () {
+	$GLOBALS['DA_CALLS'] = array();
+	$ok = vance_hub_data_erase( 7, 'checkins' );
+	return true === $ok && array() === $GLOBALS['DA_CALLS'] && ! isset( $GLOBALS['UMETA'][7]['_sla_weekly_check_in_history'] );
+} )() );
+seed( 7 );
+$GLOBALS['LOCKS']     = array();
+$GLOBALS['DA_CALLS']  = array();
+$GLOBALS['DA_RESULT'] = true;
+post( 'flare' );
+check( 'flare handler: the plan delete runs between the member lock and its release', array( 'lock', 'delete_all', 'unlock' ) === $GLOBALS['LOCKS'] && 'deleted' === code() );
+$GLOBALS['DA_RESULT'] = false;
+$GLOBALS['LOCKS']     = array();
+seed( 7 );
+post( 'flare' );
+check( 'flare handler: a plan delete that reports ok false gives kept, and the lock is freed', 'kept' === code() && 'unlock' === end( $GLOBALS['LOCKS'] ) );
+$GLOBALS['LOCK_FAILS'] = true;
+$GLOBALS['LOCKS']      = array();
+$GLOBALS['DA_CALLS']   = array();
+post( 'flare' );
+check( 'flare handler: with no lock the plan delete is not called', 'kept' === code() && array() === $GLOBALS['DA_CALLS'] );
+$GLOBALS['LOCK_FAILS'] = false;
 
 echo "\n";
 if ( $FAIL ) {

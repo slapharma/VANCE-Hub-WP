@@ -5,7 +5,7 @@
  *
  * Same shape as hub-customizer.test.php, and on purpose its stub manager: this
  * suite runs every Customizer register function against a fake manager, so the
- * totals (133 settings, 139 controls, 12 sections) and the default of every
+ * totals (157 settings, 163 controls, 12 sections) and the default of every
  * setting that existed before the look and brand work are checked for real.
  * The stub block cannot be shared with hub-layout.test.php, because the two
  * blocks define the same functions. This suite does not render any template.
@@ -25,7 +25,7 @@
  *   6  vance_hub_brand_enqueue(): inline CSS only for enqueued handles, nothing
  *      at the defaults, and the hook at priority 30
  *   7  the Customizer guard: the settings that existed before this work keep
- *      their default, and the totals are 133, 139 and 12
+ *      their default, and the totals are 157, 163 and 12
  *
  * A check whose label says what should happen and which fails on the current
  * code is a finding, not a broken check. The runner lists every failure.
@@ -615,8 +615,9 @@ foreach ( $PRE_WORK as $id => $default ) {
 }
 check( 'guard: the pre-work table has the 93 settings that existed before this work', count( $PRE_WORK ) === 93 );
 
-check( 'guard: 133 settings are registered in total', count( $M->settings ) === 133 );
-check( 'guard: 139 controls are registered in total (130 plus 9 reset buttons)', count( $M->controls ) === 139 );
+// The 24 flare plan section settings and controls are in both totals.
+check( 'guard: 157 settings are registered in total', count( $M->settings ) === 157 );
+check( 'guard: 163 controls are registered in total (154 plus 9 reset buttons)', count( $M->controls ) === 163 );
 check( 'guard: 12 sections are registered in total', count( $M->sections ) === 12 );
 check( 'guard: exactly one panel is registered', count( $M->panels ) === 1 );
 

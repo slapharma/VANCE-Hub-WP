@@ -479,8 +479,6 @@
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 20px;
-	padding-top: 16px;
-	border-top: 1px solid var(--vhd-line);
 }
 /* space-between: the charts line up when one question wraps to two lines. */
 .vhd .vhd-checkin__trend { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; }
@@ -608,10 +606,10 @@ html.vhd-modal-open { overflow: hidden; }
 	width: 100%;
 	box-sizing: border-box;
 	padding: 10px 12px;
-	border: 1px solid var(--vhd-line);
+	border: 1px solid #6F8489;
 	border-radius: var(--radius-field, 10px);
 	font: inherit;
-	font-size: 15px;
+	font-size: 16px;
 	line-height: 1.5;
 	color: var(--vhd-ink);
 	background: #FFFFFF;
@@ -647,6 +645,38 @@ html.vhd-modal-open { overflow: hidden; }
 .vhd .vhd-flare__edit form,
 .vhd .vhd-flare__manage p { margin: 12px 0; }
 .vhd .vhd-flare__print[hidden] { display: none; }
+.vhd .vhd-flare__pdfhint { margin: 8px 0 0; }
+/* Only for print. The print block at the end of the flare rules shows the print header with the plan,
+   and the wallet card when it is the part the member prints. */
+.vhd .vhd-flare__printhead,
+.vhd .vhd-flare-wallet { display: none; }
+
+/* Flare plan: touch targets, the urgent help and contacts block, short notes, the remove forms. */
+.vhd .vhd-flare__edit summary,
+.vhd .vhd-flare__manage summary,
+.vhd .vhd-flare__sheetbox summary { display: flex; align-items: center; min-height: 44px; padding: 0 4px; }
+.vhd .vhd-flare button,
+.vhd .vhd-flare input[type="range"] { min-height: 44px; }
+/* "Urgent help and my contacts": the last group of the card, closed when the page
+   opens. It is a .vhd-flare__group, so the box, the padding and the summary bar
+   come from the group rules. The teal border marks it. */
+.vhd .vhd-flare__group.vhd-flare__now { border: 2px solid var(--vhd-teal); }
+.vhd .vhd-flare__now > .vhd-flare__sec + .vhd-flare__sec { margin-top: 14px; }
+.vhd .vhd-flare__now a[href^="tel:"],
+.vhd .vhd-flare-sheet a[href^="tel:"] {
+	font-weight: 700;
+	text-decoration: underline;
+	display: inline-block;
+	padding: 4px 0;
+}
+.vhd .vhd-flare__intro,
+.vhd .vhd-flare__store,
+.vhd .vhd-flare__review,
+.vhd .vhd-flare__count { margin: 0; font-size: 14px; color: var(--vhd-muted); }
+.vhd .vhd-flare__count { font-size: 13px; }
+.vhd .vhd-flare__remove { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; }
+.vhd .vhd-flare__remove .vhd-btn { border: 2px solid #B91C1C; background: #FFFFFF; color: #B91C1C; }
+.vhd .vhd-flare__remove .vhd-btn:hover { background: #B91C1C; color: #FFFFFF; }
 
 /* Flare plan: progress, quick check, flare log, builder steps, appointment sheet. */
 .vhd .vhd-flare [hidden] { display: none !important; }
@@ -707,11 +737,178 @@ html.vhd-modal-open { overflow: hidden; }
 .vhd .vhd-sheet__table th,
 .vhd .vhd-sheet__table td { padding: 6px 8px; border: 1px solid var(--vhd-line); text-align: left; }
 
+/* Flare plan card: the three groups (now, plan, appointment), the contact rows, and
+   the "More sections" box in the edit form. Radius from the tokens only. */
+.vhd .vhd-flare__group {
+	margin: 12px 0 0;
+	padding: 0 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+}
+.vhd .vhd-flare__group[open] { padding-bottom: 16px; }
+.vhd .vhd-flare__group-sum {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 44px;
+	cursor: pointer;
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--vhd-navy);
+	list-style: none;
+}
+.vhd .vhd-flare__group-sum::-webkit-details-marker { display: none; }
+.vhd .vhd-flare__group-sum::after { content: "+"; font-size: 22px; font-weight: 400; line-height: 1; color: var(--vhd-teal-ink); }
+.vhd .vhd-flare__group[open] > .vhd-flare__group-sum { margin-bottom: 12px; }
+.vhd .vhd-flare__group[open] > .vhd-flare__group-sum::after { content: "\2212"; }
+.vhd .vhd-flare__group-sum:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 3px; }
+.vhd .vhd-flare__team {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.vhd .vhd-flare__team legend { padding: 0; margin-bottom: 6px; }
+.vhd .vhd-flare__team-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 10px;
+	padding: 12px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-field, 10px);
+}
+@media (min-width: 600px) {
+	.vhd .vhd-flare__team-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.vhd .vhd-flare__team-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vhd .vhd-flare__team-field label { font-size: 14px; font-weight: 700; color: var(--vhd-ink); }
+.vhd .vhd-flare input.vhd-flare__input { min-height: 44px; }
+.vhd .vhd-flare input.vhd-flare__date { min-height: 44px; font-size: 16px; }
+.vhd .vhd-flare__more {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+}
+.vhd .vhd-flare__more legend { padding: 0 4px; font-size: 15px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__more-item { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--vhd-ink); }
+.vhd .vhd-flare__more-item input[type="checkbox"] { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; }
+.vhd .vhd-flare__team-list { margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.6; color: var(--vhd-ink); overflow-wrap: anywhere; }
+.vhd .vhd-flare__team-role,
+.vhd .vhd-flare__team-hours { color: var(--vhd-muted); }
+
+/* Flare plan: the health profile panel and its copy buttons, the documents box,
+   the documents on the card, the links, and the shortcut outside the card. */
+.vhd .vhd-flare__own {
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+}
+.vhd .vhd-flare__own-item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	min-width: 0;
+	padding: 12px 0;
+	border-top: 1px solid var(--vhd-line);
+}
+.vhd .vhd-flare__own-label { margin: 0; font-size: 13px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__own-value {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.6;
+	color: var(--vhd-ink);
+	overflow-wrap: anywhere;
+}
+.vhd .vhd-flare__copy { min-height: 44px; }
+.vhd .vhd-flare__copy-note { margin: 0; font-size: 14px; font-weight: 700; color: var(--vhd-ink); overflow-wrap: anywhere; }
+.vhd .vhd-flare__docs {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+}
+.vhd .vhd-flare__docs legend { padding: 0 4px; font-size: 15px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__docs-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 44px;
+	font-size: 15px;
+	color: var(--vhd-ink);
+}
+.vhd .vhd-flare__docs-item input[type="checkbox"] { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; }
+.vhd .vhd-flare__docs-item span { min-width: 0; overflow-wrap: anywhere; }
+.vhd .vhd-flare__docs-view { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vhd .vhd-flare__docs-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.vhd .vhd-flare__docs-list a,
+.vhd .vhd-flare__links a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	font-size: 15px;
+	color: var(--vhd-teal-ink);
+	overflow-wrap: anywhere;
+}
+.vhd .vhd-flare__docs-list a:focus-visible,
+.vhd .vhd-flare__links a:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 2px; }
+.vhd .vhd-flare__links ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.vhd .vhd-flare__links a { font-weight: 700; }
+.vhd .vhd-flare__shortcut { margin: 12px 0; font-size: 15px; color: var(--vhd-ink); overflow-wrap: anywhere; }
+.vhd .vhd-flare__shortcut a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+
 /* Print: only the part the member prints, the plan card or the appointment sheet.
    hub-flare-plan.js marks that part with .vhd-print-target and its ancestors with
    .vhd-print-path, so the rest of the page takes no space and no blank pages print.
    Every rule needs html.vhd-printing or a marker, so a plain print of any other
-   page, or of another sub-tab, is not touched. */
+   page, or of another sub-tab, is not touched.
+   The plan print is black on white at 12pt, with no shadows and no fills. Its only box is
+   the 1px border of the urgent help. The order on paper is the order of the card: print
+   header, early signs, first steps, optional sections, documents, date, then urgent help
+   and contacts last. The wallet card sits inside the card. On screen it is display none. In the plan print
+   and the sheet print it stays hidden. It shows only when it is the print target: then the
+   card and its ancestors are on the print path, and the path rule drops every sibling of the
+   wallet. It is 90mm wide with a dashed cut line. No comment goes inside the block below:
+   the test reads each selector in it. */
 @media print {
 	html.vhd-printing body * { visibility: hidden; }
 	html.vhd-printing .vhd-print-target,
@@ -727,11 +924,48 @@ html.vhd-modal-open { overflow: hidden; }
 	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__sheetbox,
 	html.vhd-printing .vhd .vhd-flash,
 	html.vhd-printing .vhd .vhd-flare-sheet .vhd-flare__actions { display: none; }
+	html.vhd-printing .vhd .vhd-flare__group { margin: 0; padding: 0; border: 0; }
+	html.vhd-printing .vhd .vhd-flare__group-sum { display: none; }
 	html.vhd-printing .vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }
 	html.vhd-printing .vhd .vhd-flare__urgent p { color: #000000; }
 	html.vhd-printing .vhd .vhd-flare-sheet { margin: 0; border: 0; padding: 0; color: #000000; }
 	html.vhd-printing .vhd .vhd-sheet__table th,
 	html.vhd-printing .vhd .vhd-sheet__table td { border-color: #000000; }
+	html.vhd-printing .vhd .vhd-flare__now,
+	html.vhd-printing .vhd .vhd-flare__sec,
+	html.vhd-printing .vhd .vhd-flare__urgent { break-inside: avoid; }
+	html.vhd-printing .vhd .vhd-flare__count,
+	html.vhd-printing .vhd .vhd-flare__intro,
+	html.vhd-printing .vhd .vhd-flare__store,
+	html.vhd-printing .vhd .vhd-flare__remove { display: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__links,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__own,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__copy,
+	html.vhd-printing .vhd .vhd-print-target button { display: none; }
+	html.vhd-printing .vhd .vhd-flare__docs-view .vhd-flare__h { color: #000000; }
+	html.vhd-printing .vhd .vhd-flare__docs-view a { color: #000000; text-decoration: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target { font-size: 12pt; color: #000000; background: #FFFFFF; box-shadow: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target * { color: #000000; background: transparent; box-shadow: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target p,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target li { font-size: 12pt; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__h { font-size: 14pt; break-after: avoid; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target a { color: #000000; text-decoration: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__now { border: 0; padding: 0; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__team-list li { break-inside: avoid; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-card__head,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target > .vhd-small,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__pdfhint { display: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printhead { display: block; margin: 0 0 12pt; padding: 0 0 6pt; border-bottom: 1px solid #000000; break-after: avoid; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printtitle { margin: 0 0 4pt; font-size: 18pt; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printmeta { margin: 0; font-size: 11pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target { display: block; box-sizing: border-box; width: 90mm; margin: 0; padding: 4mm; border: 1px dashed #000000; font-size: 10pt; line-height: 1.35; color: #000000; background: #FFFFFF; break-inside: avoid; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target * { color: #000000; background: transparent; box-shadow: none; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target p { margin: 0 0 2mm; font-size: 10pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target .vhd-flare-wallet__title { font-size: 11pt; font-weight: 700; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target .vhd-flare-wallet__label { font-weight: 700; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target ul { margin: 0 0 2mm; padding: 0 0 0 4mm; font-size: 10pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target li { break-inside: avoid; font-size: 10pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target a { text-decoration: none; }
 }
 
 /* Health Profile tab: horizontal sub-tabs, and the panels they switch between. */

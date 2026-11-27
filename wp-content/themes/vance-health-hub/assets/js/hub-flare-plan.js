@@ -1,14 +1,22 @@
 /**
- * Flare plan card: print, the step-by-step builder, and "How am I today?".
+ * Flare plan card: print (with the groups opened for print), the step-by-step
+ * builder, the optional sections in the edit form, copy from the health profile,
+ * "How am I today?", the character counters, and focus on load.
  *
- * Every part is an enhancement. The print buttons and the quick check are hidden
- * in the markup and shown here, so with no script the member never sees a
- * control that does nothing. With no script the plan form shows all its boxes.
+ * Every part is an enhancement. The print buttons, the copy buttons, the quick
+ * check and the counters are hidden in the markup and shown here, so with no
+ * script the member never sees a control that does nothing. With no script the
+ * plan form shows all its boxes.
  *
  * Print: the layout is CSS (@media print in hub-dashboard.css). Before printing
  * this script marks the part to print and every ancestor of it, so the CSS can
  * drop the rest of the page and print no blank pages. The part is the plan card,
- * or the appointment sheet when the member prints from it.
+ * the appointment sheet (its group is opened for the print if it is closed), or the
+ * wallet card. The groups are not opened for the wallet card.
+ *
+ * Copy: a button in the "From my health profile" panel writes a value the member
+ * already gave in the Hub into the plan field it names, then opens that section.
+ * It makes no network call. Nothing is saved until the member saves the plan.
  *
  * Nothing here sends data. The quick check reads three sliders and the last
  * check-in from the page, and writes text into the page.
@@ -17,6 +25,8 @@
 	'use strict';
 
 	var printTarget = '';
+	// The groups this script opened so the plan prints in full. They are closed again after the print.
+	var openedForPrint = [];
 
 	function el( tag, className, text ) {
 		var node = document.createElement( tag );
@@ -31,12 +41,43 @@
 
 	/* ---- print ---------------------------------------------------------- */
 
+	// The part to print: the sheet (its group may be closed, markPrint opens it), the wallet card, or the plan card.
 	function printablePart( which ) {
 		if ( 'sheet' === which ) {
-			var box = document.querySelector( '.vhd-flare__sheetbox[open]' );
+			var box = document.querySelector( '.vhd-flare__sheetbox' );
 			return box ? box.querySelector( '.vhd-flare-sheet' ) : null;
 		}
+		if ( 'wallet' === which ) {
+			return document.querySelector( '.vhd-flare-wallet' );
+		}
 		return document.querySelector( '.vhd-flare' );
+	}
+
+	// Open the appointment group when it is closed, so the sheet prints. It is closed again after the print.
+	function openSheetForPrint( part ) {
+		var group = part.closest( 'details.vhd-flare__group' );
+		if ( group && ! group.open ) {
+			group.open = true;
+			openedForPrint.push( group );
+		}
+	}
+
+	// Open every group of the card, so the now and plan groups print in full. The CSS
+	// hides the appointment group in the plan print.
+	function openGroupsForPrint( part ) {
+		Array.prototype.forEach.call( part.querySelectorAll( 'details.vhd-flare__group' ), function ( group ) {
+			if ( ! group.open ) {
+				group.open = true;
+				openedForPrint.push( group );
+			}
+		} );
+	}
+
+	function closeGroupsAfterPrint() {
+		openedForPrint.forEach( function ( group ) {
+			group.open = false;
+		} );
+		openedForPrint = [];
 	}
 
 	function markPrint() {
@@ -48,6 +89,23 @@
 		if ( ! part || part.closest( '[hidden]' ) ) {
 			return;
 		}
+		// The header date is the day of the print, not the day the page was opened.
+		var today = '';
+		try {
+			today = new Date().toLocaleDateString( 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' } );
+		} catch ( e ) {
+			today = '';
+		}
+		if ( today ) {
+			Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__printdate' ), function ( node ) {
+				node.textContent = today;
+			} );
+		}
+		if ( 'plan' === which ) {
+			openGroupsForPrint( part );
+		} else if ( 'sheet' === which ) {
+			openSheetForPrint( part );
+		}
 		document.documentElement.classList.add( 'vhd-printing' );
 		part.classList.add( 'vhd-print-target' );
 		for ( var node = part.parentElement; node; node = node.parentElement ) {
@@ -57,6 +115,7 @@
 
 	function unmarkPrint() {
 		printTarget = '';
+		closeGroupsAfterPrint();
 		document.documentElement.classList.remove( 'vhd-printing' );
 		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-print-path, .vhd-print-target' ), function ( node ) {
 			node.classList.remove( 'vhd-print-path' );
@@ -72,9 +131,14 @@
 		Array.prototype.forEach.call( buttons, function ( button ) {
 			button.hidden = false;
 			button.addEventListener( 'click', function () {
-				printTarget = 'sheet' === button.getAttribute( 'data-vhd-flare-print' ) ? 'sheet' : 'plan';
+				var which = button.getAttribute( 'data-vhd-flare-print' );
+				printTarget = 'sheet' === which || 'wallet' === which ? which : 'plan';
 				window.print();
 			} );
+		} );
+		// The hint about "Save as PDF" shows with the buttons, so with no script it does not show.
+		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__pdfhint' ), function ( hint ) {
+			hint.hidden = false;
 		} );
 	}
 
@@ -94,11 +158,11 @@
 		var next     = el( 'button', 'vhd-btn vhd-btn--purple', form.getAttribute( 'data-next-text' ) || 'Next' );
 		back.type = 'button';
 		next.type = 'button';
-		label.setAttribute( 'aria-live', 'polite' );
 		nav.appendChild( back );
 		nav.appendChild( next );
 		form.insertBefore( label, steps[ 0 ] );
-		form.appendChild( nav );
+		// Back and Next sit before the last step, so the Save button comes after them in the DOM.
+		form.insertBefore( nav, steps[ total - 1 ] );
 
 		label.tabIndex = -1;
 
@@ -111,9 +175,8 @@
 			next.hidden = current === total - 1;
 			if ( moved ) {
 				// Keep keyboard focus on the page: the button that was clicked may
-				// be hidden now. Go to the first field of the step, else to the label.
-				var focus = steps[ current ].querySelector( 'textarea, input:not([type="hidden"]), button' ) || label;
-				focus.focus();
+				// be hidden now. Focus goes to the step label.
+				label.focus();
 			}
 		}
 
@@ -128,7 +191,119 @@
 		show( false );
 	}
 
-	/* ---- How am I today? ------------------------------------------------ */
+	/* ---- Optional sections in the edit form ---------------------------------- */
+
+	// True when a field has text, a date or a number in it. Checkboxes do not count.
+	function fieldHasValue( field ) {
+		var inputs = field.querySelectorAll( 'input, textarea, select' );
+		return Array.prototype.some.call( inputs, function ( input ) {
+			if ( 'checkbox' === input.type || 'radio' === input.type || 'hidden' === input.type ) {
+				return false;
+			}
+			return '' !== String( input.value ).trim();
+		} );
+	}
+
+	// An optional section is hidden while its "More sections" box is not ticked and it is empty.
+	// A field with a value is never hidden. With no script every field shows.
+	function initOptional( root ) {
+		Array.prototype.forEach.call( root.querySelectorAll( '[data-vhd-sec-toggle]' ), function ( toggle ) {
+			var id    = toggle.getAttribute( 'data-vhd-sec-toggle' );
+			var field = root.querySelector( '.vhd-flare__field--opt[data-vhd-sec="' + id + '"]' );
+			if ( ! field ) {
+				return;
+			}
+			function sync() {
+				field.hidden = ! toggle.checked && ! fieldHasValue( field );
+			}
+			toggle.addEventListener( 'change', sync );
+			sync();
+		} );
+	}
+
+	/* ---- copy from the health profile ----------------------------------- */
+
+	// Each copy button fills the plan field it names with a value the member already
+	// gave in the Hub, then opens that section. The value is read from
+	// data-vhd-copy-value, never from the text on the page.
+	function initCopy( button ) {
+		var target = document.getElementById( button.getAttribute( 'data-vhd-copy-to' ) || '' );
+		if ( ! target ) {
+			return;
+		}
+		var doneText  = button.getAttribute( 'data-vhd-copy-done' ) || 'Copied';
+		var noFitText = button.getAttribute( 'data-vhd-copy-nofit' ) || 'It does not fit. Make the text shorter.';
+		// NaN when the field has no maxlength: then the length check never fails.
+		var maxLength = parseInt( target.getAttribute( 'maxlength' ), 10 );
+		var note      = null;
+
+		// The status line after the button. It is made on first use and then reused.
+		function say( text ) {
+			if ( ! note ) {
+				if ( ! text ) {
+					return;
+				}
+				note = el( 'p', 'vhd-small vhd-flare__copy-note' );
+				note.setAttribute( 'role', 'status' );
+				button.parentNode.insertBefore( note, button.nextSibling );
+			}
+			note.textContent = text;
+		}
+
+		button.hidden = false;
+		button.addEventListener( 'click', function () {
+			var value = button.getAttribute( 'data-vhd-copy-value' ) || '';
+			var sec   = button.getAttribute( 'data-vhd-copy-sec' ) || '';
+			if ( '' === value ) {
+				return;
+			}
+			if ( 'date' === target.type ) {
+				// A date the member typed is never replaced. The member removes it first.
+				if ( '' !== target.value && target.value !== value ) {
+					say( button.getAttribute( 'data-vhd-copy-hasdate' ) || 'A date is there already. Remove it first.' );
+					target.focus();
+					return;
+				}
+				target.value = value;
+				// The browser drops a date it cannot read. Then nothing was copied.
+				if ( target.value !== value ) {
+					return;
+				}
+			} else {
+				var current = target.value;
+				// The text is already in the field: copy nothing and only move to the field.
+				if ( -1 !== current.indexOf( value ) ) {
+					target.focus();
+					return;
+				}
+				var base = current.replace( /\s+$/, '' );
+				var next = base ? base + '\n' + value : value;
+				// Count code points, as the counter does.
+				if ( Array.from( next ).length > maxLength ) {
+					say( noFitText );
+					return;
+				}
+				target.value = next;
+			}
+			say( '' );
+
+			var toggle = sec ? document.querySelector( 'input[data-vhd-sec-toggle="' + sec + '"]' ) : null;
+			if ( toggle ) {
+				toggle.checked = true;
+				toggle.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+			}
+			// Tells the counter, and any other listener, that the field changed.
+			target.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+			var wrap = sec ? document.querySelector( '.vhd-flare__field--opt[data-vhd-sec="' + sec + '"]' ) : null;
+			if ( wrap ) {
+				wrap.hidden = false;
+			}
+			target.focus();
+			button.textContent = doneText;
+		} );
+	}
+
+	/* ---- How am I today?------------------------------------------------ */
 
 	function initQuick( box ) {
 		var config;
@@ -146,19 +321,47 @@
 		}
 		box.hidden = false;
 
+		// A slider counts as moved once the member changes it. Compare needs all three.
+		var moved      = {};
+		var movedCount = 0;
+
+		function updateButton() {
+			button.disabled = movedCount < sliders.length;
+		}
+		updateButton();
+
 		Array.prototype.forEach.call( sliders, function ( slider ) {
+			var key = slider.getAttribute( 'data-vhd-q' );
 			var out = box.querySelector( 'output[for="' + slider.id + '"]' );
-			slider.addEventListener( 'input', function () {
+			function touched() {
 				if ( out ) {
 					out.textContent = slider.value;
+				}
+				slider.setAttribute( 'aria-valuetext', ( config.valuetext || '%s of 4' ).replace( '%s', slider.value ) );
+				if ( ! moved[ key ] ) {
+					moved[ key ] = true;
+					movedCount++;
+					updateButton();
+				}
+			}
+			// 'input' does not fire when the member taps or presses a key and the
+			// value stays at 0. A tap or a key press on the slider is also an answer.
+			[ 'input', 'change', 'pointerup' ].forEach( function ( type ) {
+				slider.addEventListener( type, touched );
+			} );
+			// Only the keys that set a slider value count. Tab moves the focus to the
+			// next slider and must not mark it as answered.
+			slider.addEventListener( 'keydown', function ( e ) {
+				var keys = [ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown' ];
+				if ( keys.indexOf( e.key ) !== -1 ) {
+					touched();
 				}
 			} );
 		} );
 
 		button.addEventListener( 'click', function () {
-			var today  = {};
-			var higher = [];
-			var line   = [];
+			var today = {};
+			var line  = [];
 			Array.prototype.forEach.call( sliders, function ( slider ) {
 				var key = slider.getAttribute( 'data-vhd-q' );
 				today[ key ] = parseInt( slider.value, 10 ) || 0;
@@ -167,26 +370,21 @@
 			while ( result.firstChild ) {
 				result.removeChild( result.firstChild );
 			}
-			result.appendChild( el( 'p', '', ( config.today || 'Today' ) + ': ' + line.join( ', ' ) + '.' ) );
+			result.appendChild( el( 'p', '', ( config.today || 'Today' ) + ': ' + line.join( ', ' ) ) );
 
 			var last = config.last_v;
 			if ( last ) {
 				var lastLine = [];
 				Object.keys( today ).forEach( function ( key ) {
 					lastLine.push( ( labels[ key ] || key ) + ' ' + last[ key ] );
-					if ( today[ key ] > last[ key ] ) {
-						higher.push( labels[ key ] || key );
-					}
 				} );
-				result.appendChild( el( 'p', '', ( config.last || '%s' ).replace( '%s', config.last_at || '' ) + ': ' + lastLine.join( ', ' ) + '.' ) );
-				result.appendChild( el( 'p', '', higher.length ? ( config.higher || '%s' ).replace( '%s', higher.join( ', ' ) ) : ( config.same || '' ) ) );
-			} else if ( config.nolast ) {
-				result.appendChild( el( 'p', '', config.nolast ) );
+				result.appendChild( el( 'p', '', ( config.last || '%s' ).replace( '%s', config.last_at || '' ) + ': ' + lastLine.join( ', ' ) ) );
 			}
 			result.appendChild( el( 'p', 'vhd-flare__quick-follow', config.follow || '' ) );
 
 			// Point to the member's own plan. No verdict: the member decides.
-			var plan = document.querySelector( '.vhd-flare__plan' );
+			// The early signs and first steps are in the same group as the quick check.
+			var plan = document.querySelector( '.vhd-flare__plan--core' ) || document.querySelector( '.vhd-flare__plan' );
 			if ( plan ) {
 				plan.classList.add( 'is-highlight' );
 				var calm = window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
@@ -194,13 +392,64 @@
 					plan.scrollIntoView( { behavior: calm ? 'auto' : 'smooth', block: 'nearest' } );
 				}
 			}
+			// Focus last, so the result stays in view after the plan is shown.
+			result.focus();
 		} );
+	}
+
+	/* ---- character counters --------------------------------------------- */
+
+	function initCount( counter ) {
+		var target = document.getElementById( counter.getAttribute( 'data-count-for' ) || '' );
+		if ( ! target ) {
+			return;
+		}
+		var max      = counter.getAttribute( 'data-count-max' ) || '';
+		var template = counter.getAttribute( 'data-count-text' ) || '%d of %d characters';
+
+		function show() {
+			// Count code points, as the server does, so one emoji counts once.
+			var n = Array.from( target.value ).length;
+			counter.textContent = template.replace( '%d', String( n ) ).replace( '%d', max );
+		}
+
+		counter.hidden = false;
+		target.addEventListener( 'input', show );
+		show();
+	}
+
+	/* ---- focus on load -------------------------------------------------- */
+
+	function initFlash() {
+		var flash = document.getElementById( 'vhd-flare-flash' );
+		if ( ! flash ) {
+			return;
+		}
+		flash.focus();
+		if ( flash.scrollIntoView ) {
+			flash.scrollIntoView( { block: 'center' } );
+		}
+	}
+
+	function initSubtabs() {
+		var active = document.querySelector( '.vhd-subtabs .is-active' );
+		if ( active && active.scrollIntoView ) {
+			active.scrollIntoView( { inline: 'center', block: 'nearest' } );
+		}
 	}
 
 	function init() {
 		initPrint();
+		var card = document.querySelector( '.vhd-flare' );
+		if ( card ) {
+			initOptional( card );
+		}
+		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__copy' ), initCopy );
 		Array.prototype.forEach.call( document.querySelectorAll( 'form[data-vhd-wizard]' ), initWizard );
 		Array.prototype.forEach.call( document.querySelectorAll( '[data-vhd-flare-quick]' ), initQuick );
+		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__count[data-count-for]' ), initCount );
+		initFlash();
+		initSubtabs();
 	}
 
 	window.addEventListener( 'beforeprint', markPrint );
