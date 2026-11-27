@@ -3160,9 +3160,11 @@ function vance_hub_flare_plan_html( $f ) {
 			$html .= vance_hub_flare_plan_form_html( $f, null, $nonce, true );
 		}
 	} else {
-		// Urgent help and contacts come first, always shown, before any group.
-		$wallet_html = vance_hub_flare_plan_wallet_html( $plan, $f['urgent'], $name );
-		$html       .= '<div class="vhd-flare__now"><h3 class="vhd-flare__h">' . esc_html__( 'Urgent help and my contacts', 'vance-health-hub' ) . '</h3>' . $urgent_html . vance_hub_flare_plan_section_view_html( 'contacts', $plan ) . '</div>' . $wallet_html;
+		// Urgent help and contacts: one group, always closed when the page opens, and
+		// always the last group of the card (drawn below, above the manage box). The
+		// print-only wallet card follows it.
+		$wallet_html   = vance_hub_flare_plan_wallet_html( $plan, $f['urgent'], $name );
+		$contacts_html = '<details class="vhd-flare__group vhd-flare__now" data-vhd-group="contacts"><summary class="vhd-flare__group-sum">' . esc_html__( 'Urgent help and my contacts', 'vance-health-hub' ) . '</summary>' . $urgent_html . vance_hub_flare_plan_section_view_html( 'contacts', $plan ) . '</details>' . $wallet_html;
 		$draft = isset( $f['draft'] ) ? $f['draft'] : null;
 
 		// The flare log block. With the agreement missing or changed, the log buttons would only fail.
@@ -3227,7 +3229,7 @@ function vance_hub_flare_plan_html( $f ) {
 
 	// Fixed text: shown to every member, with or without a plan. The read-only
 	// card shows the box only when an administrator's text is set. With a saved plan
-	// the box is in the "Urgent help and my contacts" block above.
+	// the box is in the "Urgent help and my contacts" group at the end of the card.
 	if ( null === $plan ) {
 		$html .= $urgent_html;
 	}
@@ -3249,6 +3251,8 @@ function vance_hub_flare_plan_html( $f ) {
 			}
 			$html .= '</div>' . vance_hub_flare_plan_pdfhint_html();
 		}
+		// Last group of the card, in the full view and the read-only view.
+		$html .= $contacts_html;
 		$html .= '<details class="vhd-flare__manage"><summary>' . esc_html__( 'Manage my flare plan data', 'vance-health-hub' ) . '</summary>';
 		$html .= '<p>' . esc_html__( 'You cannot get your plan and your flare log back after you delete them.', 'vance-health-hub' ) . '</p>';
 		$html .= '<form method="post" action="">' . $nonce . '<input type="hidden" name="vance_hub_flare_do" value="delete">';

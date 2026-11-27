@@ -657,11 +657,12 @@ Each part is read through its own gate, for the current user only. The server co
 
 **Card layout** (saved plan)
 
-- Always shown: "Urgent help and my contacts" (the urgent text, then the contact rows and notes), and the wallet card (print only).
 - Group "In a flare now": the flare log, "How am I today?", and the sections `signs` and `actions` (default labels "My early signs" and "What I do first").
 - Group "My plan": the progress bar, the optional sections with content, the documents, the links, the last-change date, the print buttons, and "Edit my plan".
 - Group "For my appointment", closed by default: the appointment sheet. It shows only when the agreement is current.
-- "Manage my flare plan data": the delete box. The member must tick it first.
+- Group "Urgent help and my contacts" (`data-vhd-group="contacts"`, class `vhd-flare__now`): the urgent text, then the contact rows and notes. It is always the last group and always closed when the page opens, in the full view and the read-only view. Clifton set this on 2026-11-27. Do not move it up or open it by a rule. The wallet card (print only) follows it.
+- "Manage my flare plan data": the delete box, below the last group. The member must tick it first.
+- Print of the plan follows the same order, so the urgent help and the contacts print last.
 - Open state: "In a flare now" is open by default. After a save, a refused save, a flare end or a kept draft, "My plan" opens instead. "Edit my plan" opens after a flare end, when the agreement is missing, or when a draft is kept.
 - New plan: a step-by-step builder (`data-vhd-wizard`). It shows the three core sections, one per step, then a last step with the agreement box and "Save my plan". The edit form adds "More sections", the profile panel and the documents box.
 - Progress: counts the three core sections, plus each optional text section the member chose that is on or has content. The review date is not counted. A stale note shows when the review date has passed, or when the plan was last changed 183 days ago or more.
