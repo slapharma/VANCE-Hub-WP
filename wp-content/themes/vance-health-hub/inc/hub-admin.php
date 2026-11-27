@@ -161,6 +161,37 @@ function vance_hub_admin_golive( $now = null ) {
 }
 
 /**
+ * The master line of the screen: the saved Site layout in words.
+ *
+ * @param string $saved The saved layout: 'classic', 'members' or 'hub'.
+ * @return string
+ */
+function vance_hub_admin_master_text( $saved ) {
+	if ( 'hub' === $saved ) {
+		return __( 'VanceHubClub: on', 'vance-health-hub' );
+	}
+	if ( 'members' === $saved ) {
+		return __( 'VanceHubClub: on for logged-in members only', 'vance-health-hub' );
+	}
+	return __( 'VanceHealthHub (classic): every VanceHubClub part is off', 'vance-health-hub' );
+}
+
+/**
+ * The note under the master line. Only the 'members' state has one: the switch
+ * rows show what a logged-in member sees, which is what the administrator who
+ * reads this screen is.
+ *
+ * @param string $saved The saved layout: 'classic', 'members' or 'hub'.
+ * @return string
+ */
+function vance_hub_admin_master_note( $saved ) {
+	if ( 'members' !== $saved ) {
+		return '';
+	}
+	return __( 'Visitors see the classic layout. The switches below show what a logged-in member sees.', 'vance-health-hub' );
+}
+
+/**
  * Address of the VanceHubClub panel in the Customizer.
  *
  * @return string
@@ -245,15 +276,19 @@ function vance_hub_admin_render() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$is_hub = 'hub' === vance_hub_saved_layout();
+	$saved = vance_hub_saved_layout();
+	$note  = vance_hub_admin_master_note( $saved );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Vance Club Layout', 'vance-health-hub' ); ?></h1>
 		<p>
 			<?php esc_html_e( 'Master switch (Site layout):', 'vance-health-hub' ); ?>
-			<strong><?php echo esc_html( $is_hub ? __( 'VanceHubClub: on', 'vance-health-hub' ) : __( 'VanceHealthHub (classic): every VanceHubClub part is off', 'vance-health-hub' ) ); ?></strong>
+			<strong><?php echo esc_html( vance_hub_admin_master_text( $saved ) ); ?></strong>
 			<a href="<?php echo esc_url( vance_hub_admin_section_url( 'vance_home_layout' ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
 		</p>
+		<?php if ( '' !== $note ) : ?>
+		<p><?php echo esc_html( $note ); ?></p>
+		<?php endif; ?>
 		<?php
 		$golive = vance_hub_admin_golive();
 		if ( '' !== $golive['text'] ) :
