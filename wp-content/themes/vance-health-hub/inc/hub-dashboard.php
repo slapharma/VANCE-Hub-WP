@@ -451,14 +451,6 @@ function vance_hub_dashboard_ask_block_html( $enabled ) {
 		. '</button>';
 }
 
-/**
- * The small purple line above a tab heading.
- *
- * @return string
- */
-function vance_hub_dashboard_tab_eyebrow_html() {
-	return '<p class="vhdt-eyebrow">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</p>';
-}
 
 /**
  * Print the side-menu member card. Called from page-dashboard.php.
@@ -773,7 +765,6 @@ function vance_hub_dashboard_home_html( $d ) {
 		$html .= '<h1 class="vhd-sr">' . esc_html( $hello ) . '</h1>';
 	} else {
 		$html .= '<section class="vhd-hello" aria-labelledby="vhd-hello-title"><div class="vhd-hello__copy">';
-		$html .= '<p class="vhd-eyebrow">' . esc_html__( 'My Hub', 'vance-health-hub' ) . '</p>';
 		$html .= '<h1 id="vhd-hello-title" class="vhd-hello__title">' . esc_html( $hello ) . '</h1>';
 		if ( '' !== $d['since'] ) {
 			/* translators: %s: month and year the member joined. */

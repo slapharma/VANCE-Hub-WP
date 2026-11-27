@@ -192,24 +192,18 @@ get_header();
 .dash-header { height: 64px; background: white; border-bottom: 1px solid var(--dash-border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 998; }
 .page-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: #0A1929; display: flex; align-items: center; gap: 8px; }
 
-/* Header breadcrumb — "My Dashboard › My Profile".
-   The trail is only ever two deep (the dashboard has no nested tabs), so this
-   is a flat list rather than anything recursive. The separator is a real
-   element with aria-hidden rather than a ::before, so screen readers get
-   "My Dashboard, My Profile" instead of the chevron being announced. */
+/* Header breadcrumb — "My Dashboard" only.
+   The tab name is not in the trail: the tab heading below already shows it.
+   On the home tab the root is the current page; on every other tab it is a
+   link back to home. It is never hidden on a phone, because it is the only
+   item, and hiding it would leave an empty header. */
 .dash-crumbs { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; }
 .dash-crumbs li { display: flex; align-items: center; gap: 8px; }
 .dash-crumbs a { color: #64748B; text-decoration: none; transition: color 0.2s; }
 .dash-crumbs a:hover, .dash-crumbs a:focus-visible { color: var(--dash-primary); text-decoration: underline; }
-.dash-crumb-sep { color: #CBD5E1; font-weight: 400; }
 .dash-crumb-current { color: #0A1929; }
 @media (max-width: 640px) {
-    /* The root crumb is the one thing a phone header can afford to lose — the
-       sidebar toggle sits immediately to its left and does the same job. Only
-       the linked form is dropped: on the home tab the root IS the current page,
-       and hiding that would leave an empty breadcrumb. */
     .dash-crumbs { font-size: 16px; }
-    .dash-crumbs .dash-crumb-root--link { display: none; }
 }
 .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .profile-avatar { width: 32px; height: 32px; border-radius: var(--radius-control, 6px); object-fit: cover; border: 1px solid #E2E8F0; }
@@ -485,23 +479,19 @@ get_header();
                 // in the sidebar.
                 $tab_label = vance_dashboard_feature_label($current_tab);
                 if ('' === $tab_label) { $tab_label = 'Overview'; }
-                // On the home tab the trail would read "My Dashboard › Dashboard",
-                // so the root stands alone there instead of repeating itself.
+                // The trail shows only "My Dashboard". The tab name is the
+                // heading of the page, so it is not repeated here.
                 $is_dash_root = ( 'home' === $current_tab );
                 ?>
                 <nav class="page-title" aria-label="Breadcrumb">
                     <ol class="dash-crumbs">
-                        <li class="dash-crumb-root<?php echo $is_dash_root ? '' : ' dash-crumb-root--link'; ?>">
+                        <li class="dash-crumb-root">
                             <?php if ( $is_dash_root ) : ?>
                                 <span class="dash-crumb-current" aria-current="page">My Dashboard</span>
                             <?php else : ?>
                                 <a href="<?php echo esc_attr( $vance_tab_href( 'home' ) ); ?>">My Dashboard</a>
-                                <span class="dash-crumb-sep" aria-hidden="true">&rsaquo;</span>
                             <?php endif; ?>
                         </li>
-                        <?php if ( ! $is_dash_root ) : ?>
-                            <li><span class="dash-crumb-current" aria-current="page"><?php echo esc_html($tab_label); ?></span></li>
-                        <?php endif; ?>
                     </ol>
                 </nav>
             </div>
@@ -525,7 +515,6 @@ get_header();
             <?php if ( ! $vance_hub_dash ) : ?>
             <div<?php echo $vance_hub_tabs ? ' class="vhdt-head"' : ''; ?> style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
-                    <?php if ( $vance_hub_tabs ) { echo vance_hub_dashboard_tab_eyebrow_html(); } ?>
                     <h1 style="font-family:'Outfit'; font-size:28px; color:<?php echo $theme_primary; ?>; margin:0 0 8px 0;"><?php echo esc_html($tab_label); ?></h1>
                     <p style="color:#64748B; margin:0;">
                         <?php 

@@ -333,7 +333,7 @@ $GLOBALS['FEATURE_ON'] = array( 'ai-chats' => false );
 $out = ( function () { ob_start(); vance_hub_dashboard_tabs_render_ask_block(); return ob_get_clean(); } )();
 check( 'render ask: nothing when the ai-chats feature is off', $out === '' );
 
-check( 'eyebrow: one small line with the My Hub label', vance_hub_dashboard_tab_eyebrow_html() === '<p class="vhdt-eyebrow">My Hub</p>' );
+check( 'eyebrow: the My Hub eyebrow helper is gone', ! function_exists( 'vance_hub_dashboard_tab_eyebrow_html' ) );
 
 /* ===================================================================== */
 section( '6. page-dashboard.php, by static inspection' );
@@ -352,14 +352,14 @@ check( 'page: the tab flag does not depend on the tab, so it covers every tab', 
 $GUARDED = true;
 $CALLS   = 0;
 foreach ( explode( "\n", $PD ) as $line ) {
-	if ( preg_match( '/vance_hub_dashboard_(tabs_render_member_card|tabs_render_ask_block|tab_eyebrow_html)\(/', $line ) ) {
+	if ( preg_match( '/vance_hub_dashboard_(tabs_render_member_card|tabs_render_ask_block)\(/', $line ) ) {
 		$CALLS++;
 		if ( strpos( $line, '$vance_hub_tabs' ) === false ) {
 			$GUARDED = false;
 		}
 	}
 }
-check( 'page: three calls into the new markup (card, Ask block, eyebrow)', 3 === $CALLS );
+check( 'page: two calls into the new markup (card, Ask block)', 2 === $CALLS );
 check( 'page: each of them is guarded by $vance_hub_tabs on the same line', $GUARDED );
 
 $P_HEAD  = strpos( $PD, '<div class="sidebar-header">' );
@@ -374,10 +374,20 @@ check( 'page: the Ask block sits after the menu and before the close of the side
 $P_SW  = strpos( $PD, '<?php switch($current_tab) :' );
 $P_GATE = strpos( $PD, '<?php if ( ! $vance_hub_dash ) : ?>' );
 $P_WRAP = strpos( $PD, '<div<?php echo $vance_hub_tabs ? \' class="vhdt-head"\' : \'\'; ?> style="margin-bottom: 32px;' );
-$P_EYE  = strpos( $PD, 'vance_hub_dashboard_tab_eyebrow_html()' );
 $P_H1   = strpos( $PD, '<h1 style="font-family:' );
 check( 'page: the heading wrapper gets its class only through the flag', $P_WRAP !== false && $P_WRAP > $P_GATE && $P_WRAP < $P_SW );
-check( 'page: the eyebrow comes right before the heading, inside the gate', $P_EYE > $P_WRAP && $P_EYE < $P_H1 && $P_H1 < $P_SW );
+check( 'page: the heading sits inside the gate', $P_H1 > $P_WRAP && $P_H1 < $P_SW );
+check( 'page: no My Hub eyebrow above the tab heading', strpos( $PD, 'eyebrow' ) === false );
+
+// Header breadcrumb: "My Dashboard" only, never the tab name.
+$P_CRB = strpos( $PD, '<ol class="dash-crumbs">' );
+$P_CRE = strpos( $PD, '</ol>', $P_CRB );
+$CRUMB = ( false !== $P_CRB && false !== $P_CRE ) ? substr( $PD, $P_CRB, $P_CRE - $P_CRB ) : '';
+check( 'page: the breadcrumb can be found', '' !== $CRUMB );
+check( 'page: the breadcrumb has one item only', 1 === substr_count( $CRUMB, '<li' ) );
+check( 'page: the breadcrumb does not print the tab name', strpos( $CRUMB, '$tab_label' ) === false );
+check( 'page: the breadcrumb has no separator', strpos( $CRUMB, 'dash-crumb-sep' ) === false );
+check( 'page: the root crumb is not hidden on a phone', strpos( $PD, 'dash-crumb-root--link' ) === false );
 
 // The tab-link helper, run from its own source in both modes.
 $GOT = preg_match( '/\$vance_tab_href = function \( \$slug \) use \( \$vance_hub_tabs \) \{.*?\n    \};/s', $PD, $LIFT );
