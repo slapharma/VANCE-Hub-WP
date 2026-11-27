@@ -132,6 +132,10 @@ function vance_hub_dashboard_checkin_html( $c ) {
 	if ( ! empty( $c['tab_href'] ) ) {
 		$html .= '<a class="vhd-link" href="' . esc_url( $c['tab_href'] ) . '">' . esc_html__( 'See my check-ins', 'vance-health-hub' ) . ' <span aria-hidden="true">&rarr;</span></a>';
 	}
+	if ( ! empty( $c['flare_href'] ) ) {
+		// Shortcut to the flare plan card. 'flare_href' is '' when that card would not show.
+		$html .= '<p class="vhd-flare__shortcut"><a class="vhd-link" href="' . esc_url( $c['flare_href'] ) . '">' . esc_html__( 'Open my Flare Management Plan', 'vance-health-hub' ) . ' <span aria-hidden="true">&rarr;</span></a></p>';
+	}
 	if ( '' !== $c['note'] ) {
 		$html .= '<p class="vhd-small">' . esc_html( $c['note'] ) . '</p>';
 	}

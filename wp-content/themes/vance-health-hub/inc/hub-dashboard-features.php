@@ -999,6 +999,8 @@ function vance_hub_dashboard_features_data( $user, $checks, $check_href ) {
 			'last'         => $last > 0 ? (string) wp_date( 'j M Y', $last ) : '',
 			'days'         => $days,
 			'tab_href'     => function_exists( 'vance_hub_dashboard_tab_url' ) ? vance_hub_dashboard_tab_url( 'health-profile' ) . '&hsub=checkins' : '?tab=health-profile&hsub=checkins',
+			// The link to the flare plan card, or '' when that card would not show for this member.
+			'flare_href'   => function_exists( 'vance_hub_flare_plan_shortcut_url' ) ? vance_hub_flare_plan_shortcut_url( $uid ) : '',
 			'count'        => count( $history ),
 			'questions'    => $questions,
 			'series'       => $series,

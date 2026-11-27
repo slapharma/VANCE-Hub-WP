@@ -194,7 +194,14 @@ function vance_hub_data_erase( $uid, $slug ) {
 		return false;
 	}
 	$group = $groups[ $slug ];
-	$ok    = true;
+	// The flare plan has one delete with one order (log, plan, agreement), shared
+	// with its own card. The caller holds the member lock: the only caller,
+	// vance_hub_data_handle_post(), takes it before this loop.
+	if ( 'flare' === $slug && function_exists( 'vance_hub_flare_plan_delete_all' ) ) {
+		$gone = vance_hub_flare_plan_delete_all( $uid );
+		return ! empty( $gone['ok'] );
+	}
+	$ok = true;
 	// Uploaded documents: the files first, then the list. Only attachments that
 	// are in THIS member's own list are touched, as in the single delete in
 	// inc/user-documents.php. A file that cannot be removed stays in the list.
