@@ -173,19 +173,7 @@ body.vhd-tabs .dash-crumbs a:focus-visible { color: var(--vhdt-teal-ink); }
 body.vhd-tabs .dash-crumb-current { color: var(--vhdt-navy); }
 body.vhd-tabs .dash-content { min-width: 0; }
 
-/* --- Tab heading: eyebrow pill + Outfit 800 ------------------------------- */
-body.vhd-tabs .vhdt-eyebrow {
-	display: inline-block;
-	margin: 0 0 8px;
-	padding: 6px 12px;
-	background: var(--vhdt-purple);
-	border-radius: var(--radius-control, 6px);
-	font-size: 12px;
-	font-weight: 700;
-	letter-spacing: 0.8px;
-	text-transform: uppercase;
-	color: #FFFFFF;
-}
+/* --- Tab heading: Outfit 800 ---------------------------------------------- */
 /* The heading has inline font, size and colour, so these need !important. */
 body.vhd-tabs .vhdt-head h1 {
 	font-family: var(--font-heading, 'Outfit', sans-serif) !important;
