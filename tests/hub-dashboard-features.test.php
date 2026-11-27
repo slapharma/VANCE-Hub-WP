@@ -1368,6 +1368,8 @@ check( 'tab: the table has a row for each day with the date as a row header', st
 check( 'tab: answers are faces, and a screen reader gets the word', strpos( $TAB, '<td><span aria-hidden="true">' . $FACES[4] . '</span><span class="vhd-sr">Very bad</span></td>' ) !== false );
 check( 'tab: a missing answer reads "Not answered"', strpos( $TAB, 'Not answered' ) !== false );
 check( 'tab: the table holds no digits as answers', strpos( $TAB, '<td>0</td>' ) === false && strpos( $TAB, '<td>4</td>' ) === false );
+$TAB_BOTH = vance_hub_checkin_tab_html( fb_checkin_view( array( 'days' => $TAB_DAYS, 'count' => 2, 'series' => array( 'pain' => $TREND_POINTS, 'bowel' => array(), 'tired' => array() ) ) ) );
+check( 'tab: the charts come above the table of days', strpos( $TAB_BOTH, 'vhd-checkin__trends' ) !== false && strpos( $TAB_BOTH, '<table' ) !== false && strpos( $TAB_BOTH, 'vhd-checkin__trends' ) < strpos( $TAB_BOTH, '<table' ) );
 check( 'tab: no history gives the empty line and no table', strpos( vance_hub_checkin_tab_html( fb_checkin_view( array( 'days' => array() ) ) ), '<table' ) === false );
 check( 'tab: it holds no check-in form (the form is on the home page)', strpos( $TAB, 'type="radio"' ) === false );
 check( 'tab: a due member gets a link to check in today', strpos( vance_hub_checkin_tab_html( fb_checkin_view() ), 'Check in today' ) !== false );

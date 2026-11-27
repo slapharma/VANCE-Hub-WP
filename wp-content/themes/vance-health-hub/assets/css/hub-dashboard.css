@@ -479,8 +479,6 @@
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 20px;
-	padding-top: 16px;
-	border-top: 1px solid var(--vhd-line);
 }
 /* space-between: the charts line up when one question wraps to two lines. */
 .vhd .vhd-checkin__trend { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; }
