@@ -11,7 +11,8 @@
  * Print: the layout is CSS (@media print in hub-dashboard.css). Before printing
  * this script marks the part to print and every ancestor of it, so the CSS can
  * drop the rest of the page and print no blank pages. The part is the plan card,
- * or the appointment sheet when the member prints from it.
+ * the appointment sheet (its group is opened for the print if it is closed), or the
+ * wallet card. The groups are not opened for the wallet card.
  *
  * Copy: a button in the "From my health profile" panel writes a value the member
  * already gave in the Hub into the plan field it names, then opens that section.
@@ -40,12 +41,25 @@
 
 	/* ---- print ---------------------------------------------------------- */
 
+	// The part to print: the sheet (its group may be closed, markPrint opens it), the wallet card, or the plan card.
 	function printablePart( which ) {
 		if ( 'sheet' === which ) {
-			var box = document.querySelector( '.vhd-flare__sheetbox[open]' );
+			var box = document.querySelector( '.vhd-flare__sheetbox' );
 			return box ? box.querySelector( '.vhd-flare-sheet' ) : null;
 		}
+		if ( 'wallet' === which ) {
+			return document.querySelector( '.vhd-flare-wallet' );
+		}
 		return document.querySelector( '.vhd-flare' );
+	}
+
+	// Open the appointment group when it is closed, so the sheet prints. It is closed again after the print.
+	function openSheetForPrint( part ) {
+		var group = part.closest( 'details.vhd-flare__group' );
+		if ( group && ! group.open ) {
+			group.open = true;
+			openedForPrint.push( group );
+		}
 	}
 
 	// Open every group of the card, so the now and plan groups print in full. The CSS
@@ -75,8 +89,22 @@
 		if ( ! part || part.closest( '[hidden]' ) ) {
 			return;
 		}
+		// The header date is the day of the print, not the day the page was opened.
+		var today = '';
+		try {
+			today = new Date().toLocaleDateString( 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' } );
+		} catch ( e ) {
+			today = '';
+		}
+		if ( today ) {
+			Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__printdate' ), function ( node ) {
+				node.textContent = today;
+			} );
+		}
 		if ( 'plan' === which ) {
 			openGroupsForPrint( part );
+		} else if ( 'sheet' === which ) {
+			openSheetForPrint( part );
 		}
 		document.documentElement.classList.add( 'vhd-printing' );
 		part.classList.add( 'vhd-print-target' );
@@ -103,9 +131,14 @@
 		Array.prototype.forEach.call( buttons, function ( button ) {
 			button.hidden = false;
 			button.addEventListener( 'click', function () {
-				printTarget = 'sheet' === button.getAttribute( 'data-vhd-flare-print' ) ? 'sheet' : 'plan';
+				var which = button.getAttribute( 'data-vhd-flare-print' );
+				printTarget = 'sheet' === which || 'wallet' === which ? which : 'plan';
 				window.print();
 			} );
+		} );
+		// The hint about "Save as PDF" shows with the buttons, so with no script it does not show.
+		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__pdfhint' ), function ( hint ) {
+			hint.hidden = false;
 		} );
 	}
 

@@ -643,6 +643,11 @@ html.vhd-modal-open { overflow: hidden; }
 .vhd .vhd-flare__edit form,
 .vhd .vhd-flare__manage p { margin: 12px 0; }
 .vhd .vhd-flare__print[hidden] { display: none; }
+.vhd .vhd-flare__pdfhint { margin: 8px 0 0; }
+/* Only for print. The print block at the end of the flare rules shows the print header with the plan,
+   and the wallet card when it is the part the member prints. */
+.vhd .vhd-flare__printhead,
+.vhd .vhd-flare-wallet { display: none; }
 
 /* Flare plan: touch targets, the urgent help and contacts block, short notes, the remove forms. */
 .vhd .vhd-flare__edit summary,
@@ -896,7 +901,15 @@ html.vhd-modal-open { overflow: hidden; }
    hub-flare-plan.js marks that part with .vhd-print-target and its ancestors with
    .vhd-print-path, so the rest of the page takes no space and no blank pages print.
    Every rule needs html.vhd-printing or a marker, so a plain print of any other
-   page, or of another sub-tab, is not touched. */
+   page, or of another sub-tab, is not touched.
+   The plan print is black on white at 12pt, with no shadows and no fills. Its only box is
+   the 1px border of the urgent help. The order on paper is the order of the card: print
+   header, urgent help and contacts, early signs, first steps, optional sections, documents,
+   date. The wallet card sits inside the card. On screen it is display none. In the plan print
+   and the sheet print it stays hidden. It shows only when it is the print target: then the
+   card and its ancestors are on the print path, and the path rule drops every sibling of the
+   wallet. It is 90mm wide with a dashed cut line. No comment goes inside the block below:
+   the test reads each selector in it. */
 @media print {
 	html.vhd-printing body * { visibility: hidden; }
 	html.vhd-printing .vhd-print-target,
@@ -932,6 +945,28 @@ html.vhd-modal-open { overflow: hidden; }
 	html.vhd-printing .vhd .vhd-print-target button { display: none; }
 	html.vhd-printing .vhd .vhd-flare__docs-view .vhd-flare__h { color: #000000; }
 	html.vhd-printing .vhd .vhd-flare__docs-view a { color: #000000; text-decoration: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target { font-size: 12pt; color: #000000; background: #FFFFFF; box-shadow: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target * { color: #000000; background: transparent; box-shadow: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target p,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target li { font-size: 12pt; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__h { font-size: 14pt; break-after: avoid; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target a { color: #000000; text-decoration: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__now { border: 0; padding: 0; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__team-list li { break-inside: avoid; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-card__head,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target > .vhd-small,
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__pdfhint { display: none; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printhead { display: block; margin: 0 0 12pt; padding: 0 0 6pt; border-bottom: 1px solid #000000; break-after: avoid; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printtitle { margin: 0 0 4pt; font-size: 18pt; }
+	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printmeta { margin: 0; font-size: 11pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target { display: block; box-sizing: border-box; width: 90mm; margin: 0; padding: 4mm; border: 1px dashed #000000; font-size: 10pt; line-height: 1.35; color: #000000; background: #FFFFFF; break-inside: avoid; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target * { color: #000000; background: transparent; box-shadow: none; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target p { margin: 0 0 2mm; font-size: 10pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target .vhd-flare-wallet__title { font-size: 11pt; font-weight: 700; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target .vhd-flare-wallet__label { font-weight: 700; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target ul { margin: 0 0 2mm; padding: 0 0 0 4mm; font-size: 10pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target li { break-inside: avoid; font-size: 10pt; }
+	html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target a { text-decoration: none; }
 }
 
 /* Health Profile tab: horizontal sub-tabs, and the panels they switch between. */

@@ -236,8 +236,13 @@ function vance_hub_dashboard_enqueue_assets() {
 		array( 'vance-main-style' ),
 		@filemtime( get_template_directory() . '/assets/css/hub-dashboard.css' ) ?: '1.0.0'
 	);
-	// The print button of the flare plan card. Only when the card can show.
-	if ( function_exists( 'vance_hub_flare_plan_available' ) && vance_hub_flare_plan_available() ) {
+	// The print buttons of the flare plan card. Only when the card can show: the card
+	// is available, or it is read-only because this member has a stored plan.
+	$flare_script = function_exists( 'vance_hub_flare_plan_available' ) && vance_hub_flare_plan_available();
+	if ( ! $flare_script && function_exists( 'vance_hub_flare_plan_get' ) ) {
+		$flare_script = null !== vance_hub_flare_plan_get( get_current_user_id() );
+	}
+	if ( $flare_script ) {
 		wp_enqueue_script(
 			'vance-hub-flare-plan',
 			get_template_directory_uri() . '/assets/js/hub-flare-plan.js',

@@ -128,6 +128,8 @@ if ( ! function_exists( 'esc_attr__' ) ) {
 function sanitize_text_field( $text ) { return trim( strip_tags( (string) $text ) ); }
 function current_time( $type ) { return '2026-11-18 12:00:00'; }
 function get_current_user_id() { return (int) $GLOBALS['CURRENT_UID']; }
+// Users by id, for the member name (phase 4). A user is an object with a display_name.
+function get_userdata( $id ) { return isset( $GLOBALS['USERS_BY_ID'][ (int) $id ] ) ? $GLOBALS['USERS_BY_ID'][ (int) $id ] : false; }
 function wp_create_nonce( $action ) { return 'nonce-' . $action; }
 function wp_verify_nonce( $nonce, $action ) { return $nonce === 'nonce-' . $action ? 1 : false; }
 function remove_query_arg( $key, $url = false ) {
@@ -312,6 +314,7 @@ function fb_arrange( array $mods = array(), $logged_in = true, $uid = 7 ) {
 	$GLOBALS['LOCK_SQL']       = array();
 	$GLOBALS['UNLOCK_SQL']     = array();
 	$GLOBALS['USERS_BY_EMAIL'] = array();
+	$GLOBALS['USERS_BY_ID']    = array();
 	$GLOBALS['DOCS']           = array();
 	$GLOBALS['DOCS_ON']        = false;
 	$GLOBALS['COND_PAGES']     = array();
@@ -932,7 +935,7 @@ check( 'data: a whitespace-only urgent text gives null', vance_hub_flare_plan_da
 
 fb_arrange( $FP_ON );
 $D = vance_hub_flare_plan_data( 7 );
-check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'sources', 'docs', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
+check( 'data: the switch on gives the view with its keys in order', is_array( $D ) && array_keys( $D ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'sources', 'docs', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly', 'name' ) );
 check( 'data: no saved plan gives plan null and an empty date', is_array( $D ) && $D['plan'] === null && $D['updated'] === '' );
 check( 'data: no agreement on record asks for consent', is_array( $D ) && $D['need_consent'] === true );
 check( 'data: the urgent text is the one the administrator set', is_array( $D ) && $D['urgent'] === 'Call the clinic on 0800 000 000 if you have blood in your stool.' );
@@ -2097,7 +2100,7 @@ $RO = vance_hub_flare_plan_data( 7 );
 check( 'read-only data: the switch off with a stored plan gives the data with readonly true', is_array( $RO ) && $RO['readonly'] === true && ( $RO['plan']['signs'] ?? null ) === 'Tight belly' );
 check( 'read-only data: progress, quick, sheet and draft are null, need_consent is false', is_array( $RO ) && $RO['progress'] === null && $RO['quick'] === null && $RO['sheet'] === null && $RO['draft'] === null && $RO['need_consent'] === false );
 check( 'read-only data: it carries the date, the urgent text, the log view, the nonce and the flash', is_array( $RO ) && $RO['updated'] === '10 Nov 2026' && $RO['urgent'] === 'Call the clinic.' && ( $RO['log']['count'] ?? null ) === 2 && $RO['nonce'] === 'nonce-vance_hub_flare_plan' && $RO['flash'] === '' );
-check( 'read-only data: it has the same keys as the full view', is_array( $RO ) && array_keys( $RO ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'sources', 'docs', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly' ) );
+check( 'read-only data: it has the same keys as the full view', is_array( $RO ) && array_keys( $RO ) === array( 'plan', 'progress', 'log', 'quick', 'sheet', 'sources', 'docs', 'updated', 'urgent', 'need_consent', 'consent', 'note', 'nonce', 'flash', 'draft', 'readonly', 'name' ) );
 fb_arrange( $OFF );
 check( 'read-only data: the switch off with no stored plan gives null', vance_hub_flare_plan_data( 7 ) === null );
 fb_arrange( array( 'vance_home_layout' => 'hub', 'vance_hub_dash_flare_plan' => true, 'vance_hub_flare_plan_urgent' => '' ) );
@@ -3921,6 +3924,143 @@ $GLOBALS['DOCS_ON'] = true;
 $GLOBALS['DOCS'][7] = array( fb_doc( 12, 'Left.pdf' ) );
 fb_p3_save( null, array( 'signs' => 'S8' ) );
 check( 'deleted, one of two: a save with no documents list posted drops the id of the deleted document and keeps the other', vance_hub_flare_plan_get( 7 )['docs'] === array( 12 ) );
+
+/* ===================================================================== */
+section( '44. phase 4: print header, appointment sheet line, wallet card, print buttons, PDF hint' );
+
+$P4_EVIL     = '<script>alert("x")</script> O\'Neil';
+$P4_EVIL_ESC = esc_html( $P4_EVIL );
+$P4_TODAY    = wp_date( 'j M Y', time() );
+$P4_TEAM     = array( array( 'name' => 'Ann', 'role' => 'IBD nurse', 'tel' => '020 7946 0000', 'hours' => 'Weekdays' ) );
+
+// The name in the data, both views.
+fb_arrange( $FP_ON );
+fb_stored_plan();
+fb_consented();
+$GLOBALS['USERS_BY_ID'][7] = (object) array( 'display_name' => '  Ruth Ames ' );
+check( 'p4 data: the full view carries the display name, trimmed', ( vance_hub_flare_plan_data( 7 )['name'] ?? null ) === 'Ruth Ames' );
+fb_arrange( $OFF );
+fb_stored_plan();
+$GLOBALS['USERS_BY_ID'][7] = (object) array( 'display_name' => 'Ruth Ames' );
+$P4_RO = vance_hub_flare_plan_data( 7 );
+check( 'p4 data: the read-only view carries the display name', is_array( $P4_RO ) && true === $P4_RO['readonly'] && 'Ruth Ames' === $P4_RO['name'] );
+fb_arrange( $FP_ON );
+fb_stored_plan();
+check( 'p4 data: a member with no user record has the name as an empty string, not null', '' === ( vance_hub_flare_plan_data( 7 )['name'] ?? null ) );
+$GLOBALS['USERS_BY_ID'][7] = (object) array( 'display_name' => array( 'x' ) );
+check( 'p4 data: a display name that is not text gives an empty string', '' === ( vance_hub_flare_plan_data( 7 )['name'] ?? null ) );
+$GLOBALS['USERS_BY_ID'][7] = (object) array( 'display_name' => $P4_EVIL );
+check( 'p4 data: the name is stored raw in the data and escaped only on output (negative control for the render checks)', $P4_EVIL === ( vance_hub_flare_plan_data( 7 )['name'] ?? null ) );
+
+// The print header.
+fb_arrange( $FP_ON );
+$P4_NAMED = fb_p2_card( array( 'name' => 'Ruth Ames' ) );
+$P4_HEAD  = '<div class="vhd-flare__printhead"><h2 class="vhd-flare__printtitle">My Flare Management Plan</h2><p class="vhd-flare__printmeta"><span class="vhd-flare__printname">Ruth Ames</span> - Printed on <span class="vhd-flare__printdate">' . $P4_TODAY . '</span>.</p></div>';
+check( 'p4 header: it is the first child of the card, with the title, the name and the date', 0 === strpos( $P4_NAMED, '<section id="vhd-flare" class="vhd-card vhd-flare" aria-labelledby="vhd-flare-title">' . $P4_HEAD . '<div class="vhd-card__head">' ) );
+$P4_NONAME = fb_p2_card();
+check( 'p4 header: with no name the line holds only the date', false !== strpos( $P4_NONAME, '<p class="vhd-flare__printmeta">Printed on <span class="vhd-flare__printdate">' . $P4_TODAY . '</span>.</p>' ) && false === strpos( $P4_NONAME, 'vhd-flare__printname' ) );
+check( 'p4 header: the script writes the day of the print into the date', false !== strpos( file_get_contents( $THEME . '/assets/js/hub-flare-plan.js' ), "document.querySelectorAll( '.vhd-flare__printdate' )" ) );
+check( 'p4 header: a name of spaces only counts as no name', false === strpos( fb_p2_card( array( 'name' => '   ' ) ), 'vhd-flare__printname' ) );
+check( 'p4 header: the card has one header, and the print-only title is not the h2 that names the card', 1 === substr_count( $P4_NAMED, 'vhd-flare__printhead"' ) && false !== strpos( $P4_NAMED, '<h2 id="vhd-flare-title" class="vhd-h3">My Flare Management Plan</h2>' ) );
+$P4_CARD_EVIL = fb_p2_card( array( 'name' => $P4_EVIL, 'sheet' => fb_p2_sheet() ) );
+check( 'p4 escape: the name in the header is escaped', false !== strpos( $P4_CARD_EVIL, '<span class="vhd-flare__printname">' . $P4_EVIL_ESC . '</span>' ) );
+check( 'p4 escape: no raw script tag and no raw quote-bearing name anywhere in the card', 0 === substr_count( $P4_CARD_EVIL, '<script>' ) && 0 === substr_count( $P4_CARD_EVIL, $P4_EVIL ) && false !== strpos( $P4_CARD_EVIL, '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; O&#039;Neil' ) );
+check( 'p4 escape: the name is written three times (header, sheet line, wallet card), each escaped', 3 === substr_count( $P4_CARD_EVIL, $P4_EVIL_ESC ) );
+check( 'p4 escape: negative control, the raw name would be caught by the same counter', 1 === substr_count( 'a ' . $P4_EVIL . ' b', $P4_EVIL ) );
+
+// The appointment sheet line.
+$P4_PLAN = fb_v2( array( 'signs' => 'S', 'actions' => 'A' ) );
+$P4_S1   = vance_hub_flare_plan_sheet_html( fb_p2_sheet(), $P4_PLAN, 'Ruth Ames' );
+$P4_S0   = vance_hub_flare_plan_sheet_html( fb_p2_sheet(), $P4_PLAN );
+$GLOBALS['USERS_BY_ID'][7] = (object) array( 'display_name' => 'Ruth Ames' );
+check( 'p4 sheet: with a name the prepared line says for whom', false !== strpos( $P4_S1, '<p class="vhd-small">Prepared on 18 Nov 2026 for Ruth Ames from what I saved in the Hub.</p>' ) );
+check( 'p4 sheet: with no name the prepared line is the line it was', false !== strpos( $P4_S0, '<p class="vhd-small">Prepared on 18 Nov 2026 from what I saved in the Hub.</p>' ) && false === strpos( $P4_S0, ' for ' ) );
+check( 'p4 sheet: the render function does not read the user (a user is set, no name is passed, no name shows)', false === strpos( vance_hub_flare_plan_sheet_html( fb_p2_sheet(), $P4_PLAN, '' ), 'Ruth Ames' ) );
+check( 'p4 sheet: a name that is not text is ignored', false === strpos( vance_hub_flare_plan_sheet_html( fb_p2_sheet(), $P4_PLAN, array( 'x' ) ), ' for ' ) );
+check( 'p4 sheet: the name is escaped in the prepared line', false !== strpos( vance_hub_flare_plan_sheet_html( fb_p2_sheet(), $P4_PLAN, $P4_EVIL ), 'for ' . $P4_EVIL_ESC . ' from what' ) && false === strpos( vance_hub_flare_plan_sheet_html( fb_p2_sheet(), $P4_PLAN, $P4_EVIL ), '<script>' ) );
+
+// The wallet card: content.
+fb_arrange( $FP_ON );
+$P4_WPLAN = fb_v2( array( 'signs' => 'S', 'actions' => 'A', 'team' => $P4_TEAM, 'contacts' => 'Ring first. 020 7946 1111' ) );
+$P4_W     = vance_hub_flare_plan_wallet_html( $P4_WPLAN, 'Call the clinic.', 'Ruth Ames' );
+check( 'p4 wallet: it is hidden from screen readers and carries its class', 0 === strpos( $P4_W, '<div class="vhd-flare-wallet" aria-hidden="true">' ) );
+check( 'p4 wallet: the title and the name come first', false !== strpos( $P4_W, '<p class="vhd-flare-wallet__title">My flare contacts</p><p class="vhd-flare-wallet__name">Ruth Ames</p>' ) );
+check( 'p4 wallet: the contact rows are the same HTML as the card list (same escaping and tel links)', false !== strpos( $P4_W, vance_hub_flare_plan_team_list_html( $P4_TEAM ) ) && false !== strpos( $P4_W, 'href="tel:' ) );
+check( 'p4 wallet: the contact notes and the urgent help text show, in that order, after the rows', false !== strpos( $P4_W, '<p class="vhd-flare-wallet__notes">' . vance_hub_flare_plan_text_html( 'Ring first. 020 7946 1111', true ) . '</p>' ) && strpos( $P4_W, 'vhd-flare-wallet__notes' ) < strpos( $P4_W, 'vhd-flare-wallet__urgent' ) && strpos( $P4_W, 'vhd-flare__team-list' ) < strpos( $P4_W, 'vhd-flare-wallet__notes' ) && false !== strpos( $P4_W, '<p class="vhd-flare-wallet__urgent">Call the clinic.</p>' ) );
+check( 'p4 wallet: with no name there is no name line', false === strpos( vance_hub_flare_plan_wallet_html( $P4_WPLAN, 'Call the clinic.', '' ), 'vhd-flare-wallet__name' ) );
+check( 'p4 wallet: with no urgent text the urgent part is left out and the rest stays', false === strpos( vance_hub_flare_plan_wallet_html( $P4_WPLAN, '', 'Ruth Ames' ), 'vhd-flare-wallet__urgent' ) && false !== strpos( vance_hub_flare_plan_wallet_html( $P4_WPLAN, '', 'Ruth Ames' ), 'Ann' ) );
+check( 'p4 wallet: an urgent text of "0" still counts as set text', false !== strpos( vance_hub_flare_plan_wallet_html( fb_v2(), '0', '' ), '<p class="vhd-flare-wallet__urgent">0</p>' ) );
+check( 'p4 wallet: with no row, no note and no urgent text there is no wallet, even with a name', '' === vance_hub_flare_plan_wallet_html( fb_v2( array( 'signs' => 'S' ) ), '', 'Ruth Ames' ) && '' === vance_hub_flare_plan_wallet_html( fb_v2( array( 'signs' => 'S' ) ), "  \n ", 'Ruth Ames' ) );
+check( 'p4 wallet: with no plan there is no wallet', '' === vance_hub_flare_plan_wallet_html( null, 'Call the clinic.', 'Ruth Ames' ) );
+check( 'p4 wallet: notes alone are enough', false !== strpos( vance_hub_flare_plan_wallet_html( fb_v2( array( 'contacts' => 'Ring me' ) ), '', '' ), 'Ring me' ) );
+check( 'p4 wallet: a row alone is enough', false !== strpos( vance_hub_flare_plan_wallet_html( fb_v2( array( 'team' => $P4_TEAM ) ), '', '' ), 'IBD nurse' ) );
+$P4_WE = vance_hub_flare_plan_wallet_html( fb_v2( array( 'team' => array( array( 'name' => '<b>Ann</b>', 'role' => '<i>r</i>', 'tel' => '', 'hours' => '<u>h</u>' ) ), 'contacts' => '<script>n()</script>' ) ), '<img src=x onerror=y()>', $P4_EVIL );
+check( 'p4 wallet escape: every value is escaped (name, row, notes, urgent text)', false === strpos( $P4_WE, '<b>' ) && false === strpos( $P4_WE, '<i>' ) && false === strpos( $P4_WE, '<u>' ) && false === strpos( $P4_WE, '<script>' ) && false === strpos( $P4_WE, '<img' ) && false !== strpos( $P4_WE, '&lt;img src=x onerror=y()&gt;' ) && false !== strpos( $P4_WE, $P4_EVIL_ESC ) );
+
+// The wallet card: where it sits, and in which view.
+$P4_FULL = fb_p2_card( array( 'name' => 'Ruth Ames', 'sheet' => fb_p2_sheet( array( 'questions' => 'Q' ) ) ), $P4_WPLAN );
+$P4_NOWEND = strpos( $P4_FULL, '</div><div class="vhd-flare-wallet" aria-hidden="true">' );
+check( 'p4 wallet: in the full view it follows the "Urgent help and my contacts" block and comes before the groups', false !== $P4_NOWEND && $P4_NOWEND > strpos( $P4_FULL, '<div class="vhd-flare__now">' ) && $P4_NOWEND < strpos( $P4_FULL, 'data-vhd-group="now"' ) && 1 === substr_count( $P4_FULL, 'vhd-flare-wallet"' ) );
+$P4_RO_CARD = vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => $P4_WPLAN, 'updated' => '10 Nov 2026', 'name' => 'Ruth Ames' ) ) );
+check( 'p4 wallet: the read-only view has the wallet too, after the contacts block', false !== strpos( $P4_RO_CARD, '</div><div class="vhd-flare-wallet" aria-hidden="true">' ) && false !== strpos( $P4_RO_CARD, '<p class="vhd-flare-wallet__name">Ruth Ames</p>' ) );
+$P4_RO_NONE = vance_hub_flare_plan_html( fb_flare_view( array( 'readonly' => true, 'plan' => fb_v2( array( 'signs' => 'S' ) ), 'updated' => '10 Nov 2026', 'urgent' => '', 'name' => 'Ruth Ames' ) ) );
+check( 'p4 wallet: nothing to show gives no wallet block and no wallet button', false === strpos( $P4_RO_NONE, 'vhd-flare-wallet' ) && false === strpos( $P4_RO_NONE, 'data-vhd-flare-print="wallet"' ) );
+check( 'p4 wallet: no plan gives no wallet block and no print control', false === strpos( $H_OPEN, 'vhd-flare-wallet' ) && false === strpos( $H_OPEN, 'data-vhd-flare-print' ) && false === strpos( $H_OPEN, 'vhd-flare__pdfhint' ) );
+
+// The three buttons and the PDF hint.
+$P4_BTN = static function ( $html, $which ) {
+	return substr_count( $html, 'data-vhd-flare-print="' . $which . '" hidden>' );
+};
+check( 'p4 buttons: the full view with a sheet and a wallet has the plan button once', 1 === $P4_BTN( $P4_FULL, 'plan' ) );
+check( 'p4 buttons: the sheet button is in the plan group action row, and the sheet keeps its own button (two in all)', 2 === $P4_BTN( $P4_FULL, 'sheet' ) && false !== strpos( $P4_FULL, 'data-vhd-flare-print="plan" hidden>Print my plan</button><button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="sheet" hidden>Print appointment sheet</button><button' ) );
+check( 'p4 buttons: the wallet button comes after the sheet button, in the same row, and every print button carries hidden', 1 === $P4_BTN( $P4_FULL, 'wallet' ) && false !== strpos( $P4_FULL, 'data-vhd-flare-print="wallet" hidden>Print wallet card</button></div>' ) && substr_count( $P4_FULL, 'data-vhd-flare-print=' ) === 4 && substr_count( $P4_FULL, 'data-vhd-flare-print="plan" hidden' ) + substr_count( $P4_FULL, 'data-vhd-flare-print="sheet" hidden' ) + substr_count( $P4_FULL, 'data-vhd-flare-print="wallet" hidden' ) === 4 );
+$P4_NOSHEET = fb_p2_card( array(), $P4_WPLAN );
+check( 'p4 buttons: with no sheet the plan row has the plan and wallet buttons and no sheet button', 1 === $P4_BTN( $P4_NOSHEET, 'plan' ) && 0 === $P4_BTN( $P4_NOSHEET, 'sheet' ) && 1 === $P4_BTN( $P4_NOSHEET, 'wallet' ) );
+check( 'p4 buttons: the read-only view has the plan and wallet buttons and no sheet button', 1 === $P4_BTN( $P4_RO_CARD, 'plan' ) && 1 === $P4_BTN( $P4_RO_CARD, 'wallet' ) && 0 === $P4_BTN( $P4_RO_CARD, 'sheet' ) );
+check( 'p4 buttons: the read-only view with nothing for the wallet has the plan button only', 1 === $P4_BTN( $P4_RO_NONE, 'plan' ) && 0 === $P4_BTN( $P4_RO_NONE, 'wallet' ) );
+$P4_HINT = '<p class="vhd-small vhd-flare__pdfhint" hidden>To save a PDF, choose &quot;Save as PDF&quot; in the print window.</p>';
+check( 'p4 hint: the full view has the PDF hint once, hidden in the markup, right after the action row', 1 === substr_count( $P4_FULL, $P4_HINT ) && false !== strpos( $P4_FULL, '</div>' . $P4_HINT ) );
+check( 'p4 hint: the read-only view has the PDF hint once', 1 === substr_count( $P4_RO_CARD, $P4_HINT ) && 1 === substr_count( $P4_RO_NONE, $P4_HINT ) );
+check( 'p4 hint: no plan, no hint', false === strpos( $H_OPEN, 'vhd-flare__pdfhint' ) );
+
+// The script and the stylesheet, read as text.
+check( 'p4 script: it knows the wallet target and finds the wallet block', false !== strpos( $JS, "'wallet' === which" ) && false !== strpos( $JS, "'.vhd-flare-wallet'" ) );
+check( 'p4 script: the sheet no longer needs an open box, and opens its group for the print', false !== strpos( $JS, "document.querySelector( '.vhd-flare__sheetbox' )" ) && false !== strpos( $JS, 'openSheetForPrint( part )' ) && false !== strpos( $JS, "part.closest( 'details.vhd-flare__group' )" ) );
+check( 'p4 script: the groups are opened for the plan only, so not for the wallet', 1 === preg_match( "/if \( 'plan' === which \) \{\s*openGroupsForPrint\( part \);\s*\} else if \( 'sheet' === which \) \{\s*openSheetForPrint\( part \);\s*\}/", $JS ) );
+check( 'p4 script: the menu rule stays (the sheet when its group is open, else the plan)', false !== strpos( $JS, "document.querySelector( '.vhd-flare__sheetbox[open]' ) ? 'sheet' : 'plan'" ) );
+check( 'p4 script: a button sets the wallet as the target, and the hint is shown with the buttons', false !== strpos( $JS, "'sheet' === which || 'wallet' === which ? which : 'plan'" ) && false !== strpos( $JS, '.vhd-flare__pdfhint' ) && false !== strpos( $JS, 'hint.hidden = false' ) );
+check( 'p4 css: on screen the print header and the wallet are display none', 1 === preg_match( '/^\.vhd \.vhd-flare__printhead,\r?\n\.vhd \.vhd-flare-wallet \{ display: none; \}/m', $CSS ) );
+
+$P4_RULES = array();
+if ( preg_match_all( '/([^{}]+)\{([^{}]*)\}/', $PM[1] ?? '', $P4_R, PREG_SET_ORDER ) ) {
+	foreach ( $P4_R as $r ) {
+		$P4_RULES[] = array( 'sel' => trim( $r[1] ), 'body' => trim( $r[2] ) );
+	}
+}
+// A rule in the print block that names the wallet must name it only as the print target.
+$P4_WALLET_ONLY_TARGET = static function ( array $rules ) {
+	foreach ( $rules as $r ) {
+		foreach ( explode( ',', $r['sel'] ) as $one ) {
+			if ( false !== strpos( $one, 'vhd-flare-wallet' ) && false === strpos( $one, 'vhd-print-target' ) ) {
+				return false;
+			}
+		}
+	}
+	return true;
+};
+$P4_WALLET_RULES = array_values( array_filter( $P4_RULES, static function ( $r ) { return false !== strpos( $r['sel'], 'vhd-flare-wallet' ); } ) );
+check( 'p4 css print: the print block has wallet rules, and each names the wallet only as the print target', count( $P4_WALLET_RULES ) >= 5 && $P4_WALLET_ONLY_TARGET( $P4_RULES ) );
+check( 'p4 css print: negative control, a wallet rule without the print target is caught by the same test', false === $P4_WALLET_ONLY_TARGET( array( array( 'sel' => 'html.vhd-printing .vhd .vhd-flare-wallet', 'body' => 'display: block;' ) ) ) );
+check( 'p4 css print: the wallet shows as a block only for the target, 90mm wide, with a 1px dashed black cut line, 4mm padding, 10pt, no page break inside', 1 === count( array_filter( $P4_WALLET_RULES, static function ( $r ) { return 'html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target' === $r['sel'] && false !== strpos( $r['body'], 'display: block' ) && false !== strpos( $r['body'], 'width: 90mm' ) && false !== strpos( $r['body'], 'border: 1px dashed #000000' ) && false !== strpos( $r['body'], 'padding: 4mm' ) && false !== strpos( $r['body'], 'font-size: 10pt' ) && false !== strpos( $r['body'], 'break-inside: avoid' ); } ) ) );
+check( 'p4 css print: the wallet title is 11pt bold', 1 === count( array_filter( $P4_WALLET_RULES, static function ( $r ) { return false !== strpos( $r['sel'], 'vhd-flare-wallet__title' ) && false !== strpos( $r['body'], 'font-size: 11pt' ) && false !== strpos( $r['body'], 'font-weight: 700' ); } ) ) );
+check( 'p4 css print: the wallet on-screen hiding specificity is beaten by the print rule (the print selector has more classes)', substr_count( 'html.vhd-printing .vhd .vhd-flare-wallet.vhd-print-target', '.' ) > substr_count( '.vhd .vhd-flare-wallet', '.' ) );
+check( 'p4 css print: the plan print shows the header only under the card as the print target', 1 === count( array_filter( $P4_RULES, static function ( $r ) { return 'html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__printhead' === $r['sel'] && false !== strpos( $r['body'], 'display: block' ); } ) ) && 0 === count( array_filter( $P4_RULES, static function ( $r ) { return false !== strpos( $r['sel'], 'vhd-flare__printhead' ) && false === strpos( $r['sel'], 'vhd-print-target' ); } ) ) );
+check( 'p4 css print: the plan print hides the card title, the note line, the PDF hint', 1 === count( array_filter( $P4_RULES, static function ( $r ) { return false !== strpos( $r['sel'], '.vhd-flare.vhd-print-target .vhd-card__head' ) && false !== strpos( $r['sel'], '.vhd-flare.vhd-print-target > .vhd-small' ) && false !== strpos( $r['sel'], '.vhd-flare__pdfhint' ) && false !== strpos( $r['body'], 'display: none' ); } ) ) );
+check( 'p4 css print: the plan is 12pt black on white with no shadow, headings 14pt with no break after', 1 === count( array_filter( $P4_RULES, static function ( $r ) { return 'html.vhd-printing .vhd .vhd-flare.vhd-print-target' === $r['sel'] && false !== strpos( $r['body'], 'font-size: 12pt' ) && false !== strpos( $r['body'], 'color: #000000' ) && false !== strpos( $r['body'], 'box-shadow: none' ); } ) ) && 1 === count( array_filter( $P4_RULES, static function ( $r ) { return false !== strpos( $r['sel'], 'vhd-flare__h' ) && false !== strpos( $r['body'], 'font-size: 14pt' ) && false !== strpos( $r['body'], 'break-after: avoid' ); } ) ) );
+check( 'p4 css print: contact rows, sections and the urgent box do not break across pages', 1 === count( array_filter( $P4_RULES, static function ( $r ) { return false !== strpos( $r['sel'], 'vhd-flare__team-list li' ) && false !== strpos( $r['body'], 'break-inside: avoid' ); } ) ) && 1 === preg_match( '/vhd-flare__now,\s*html\.vhd-printing \.vhd \.vhd-flare__sec,\s*html\.vhd-printing \.vhd \.vhd-flare__urgent \{ break-inside: avoid; \}/', $CSS ) );
+check( 'p4 css print: links print as plain black text and no rule adds the address after a link', 1 === count( array_filter( $P4_RULES, static function ( $r ) { return 'html.vhd-printing .vhd .vhd-flare.vhd-print-target a' === $r['sel'] && false !== strpos( $r['body'], 'text-decoration: none' ) && false !== strpos( $r['body'], 'color: #000000' ); } ) ) && 0 === count( array_filter( $P4_RULES, static function ( $r ) { return false !== strpos( $r['body'], 'attr(href)' ); } ) ) );
+check( 'p4 css print: the only border added to the plan is the 1px black one of the urgent box (no teal box on the contacts block)', false !== strpos( $CSS, 'html.vhd-printing .vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }' ) && 1 === count( array_filter( $P4_RULES, static function ( $r ) { return 'html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__now' === $r['sel'] && false !== strpos( $r['body'], 'border: 0' ); } ) ) );
+check( 'p4 css print: the sheet group stays out of the plan print, and no hard-coded radius is added in the print block', false !== strpos( $CSS, 'html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__sheetbox,' ) && 0 === preg_match( '/border-radius/', $PM[1] ?? '' ) );
 
 if ( $FAIL ) {
 	echo count( $FAIL ) . ' FAILED of ' . ( $PASS + count( $FAIL ) ) . ":\n";

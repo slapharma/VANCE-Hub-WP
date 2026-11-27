@@ -2277,6 +2277,20 @@ function vance_hub_flare_sheet_data( $uid, $plan, $log, $now ) {
 }
 
 /**
+ * The display name of a member, for the print header, the appointment sheet and the wallet card.
+ *
+ * @param int $uid Member.
+ * @return string The name, or '' when the member has none.
+ */
+function vance_hub_flare_plan_member_name( $uid ) {
+	$user = function_exists( 'get_userdata' ) ? get_userdata( (int) $uid ) : false;
+	if ( ! is_object( $user ) || ! isset( $user->display_name ) || ! is_string( $user->display_name ) ) {
+		return '';
+	}
+	return trim( $user->display_name );
+}
+
+/**
  * The flare plan data for one member.
  *
  * Two modes. When the card is available, the full view. When it is not (the
@@ -2323,6 +2337,7 @@ function vance_hub_flare_plan_data( $uid ) {
 			'flash'        => $flash,
 			'draft'        => null,
 			'readonly'     => true,
+			'name'         => vance_hub_flare_plan_member_name( $uid ),
 		);
 	}
 
@@ -2359,6 +2374,7 @@ function vance_hub_flare_plan_data( $uid ) {
 		'flash'        => $flash,
 		'draft'        => $draft,
 		'readonly'     => false,
+		'name'         => vance_hub_flare_plan_member_name( $uid ),
 	);
 }
 
@@ -2925,9 +2941,10 @@ function vance_hub_flare_plan_section_view_html( $id, $plan ) {
  *
  * @param array      $s    'sheet' from vance_hub_flare_plan_data().
  * @param array|null $plan The member's plan.
+ * @param string     $name The member's name, or '' for none. It is passed in, not read here.
  * @return string
  */
-function vance_hub_flare_plan_sheet_html( $s, $plan ) {
+function vance_hub_flare_plan_sheet_html( $s, $plan, $name = '' ) {
 	if ( empty( $s ) || null === $plan ) {
 		return '';
 	}
@@ -2935,8 +2952,15 @@ function vance_hub_flare_plan_sheet_html( $s, $plan ) {
 		return '<div class="vhd-sheet__sec"><h4 class="vhd-sheet__h">' . esc_html( $title ) . '</h4>' . $body . '</div>';
 	};
 	$html  = '<div class="vhd-flare-sheet"><h3 class="vhd-flare__h">' . esc_html__( 'Appointment sheet', 'vance-health-hub' ) . '</h3>';
-	/* translators: %s: date the sheet was made. */
-	$html .= '<p class="vhd-small">' . esc_html( sprintf( __( 'Prepared on %s from what I saved in the Hub.', 'vance-health-hub' ), $s['prepared'] ) ) . '</p>';
+	$name  = is_string( $name ) ? trim( $name ) : '';
+	if ( '' !== $name ) {
+		/* translators: 1: date the sheet was made, 2: the member's name. */
+		$prepared = sprintf( __( 'Prepared on %1$s for %2$s from what I saved in the Hub.', 'vance-health-hub' ), $s['prepared'], $name );
+	} else {
+		/* translators: %s: date the sheet was made. */
+		$prepared = sprintf( __( 'Prepared on %s from what I saved in the Hub.', 'vance-health-hub' ), $s['prepared'] );
+	}
+	$html .= '<p class="vhd-small">' . esc_html( $prepared ) . '</p>';
 	if ( '' !== $s['appointment'] ) {
 		$html .= $sec( __( 'Next appointment', 'vance-health-hub' ), '<p>' . esc_html( $s['appointment'] ) . '</p>' );
 	}
@@ -2999,6 +3023,67 @@ function vance_hub_flare_plan_sheet_html( $s, $plan ) {
 }
 
 /**
+ * The block that shows only in print: the title, the member's name and today's date.
+ * The stylesheet hides it on screen.
+ *
+ * @param string $name The member's name, or '' for none.
+ * @return string
+ */
+function vance_hub_flare_plan_printhead_html( $name ) {
+	$name = is_string( $name ) ? trim( $name ) : '';
+	$line = '';
+	if ( '' !== $name ) {
+		$line .= '<span class="vhd-flare__printname">' . esc_html( $name ) . '</span> - ';
+	}
+	// The date here is the day the page was made. hub-flare-plan.js writes the day of
+	// the print into .vhd-flare__printdate before each print.
+	$date = '<span class="vhd-flare__printdate">' . esc_html( (string) wp_date( 'j M Y', time() ) ) . '</span>';
+	/* translators: %s: today's date. */
+	$line .= sprintf( esc_html__( 'Printed on %s.', 'vance-health-hub' ), $date );
+	return '<div class="vhd-flare__printhead"><h2 class="vhd-flare__printtitle">' . esc_html__( 'My Flare Management Plan', 'vance-health-hub' ) . '</h2><p class="vhd-flare__printmeta">' . $line . '</p></div>';
+}
+
+/**
+ * The line under the print buttons. The script shows it with the buttons, so with
+ * no script it does not show. It is not printed.
+ *
+ * @return string
+ */
+function vance_hub_flare_plan_pdfhint_html() {
+	return '<p class="vhd-small vhd-flare__pdfhint" hidden>' . esc_html__( 'To save a PDF, choose "Save as PDF" in the print window.', 'vance-health-hub' ) . '</p>';
+}
+
+/**
+ * The wallet card: only what a person needs in an emergency. The contact rows, the
+ * contact notes and the administrator's urgent help text, as they are. It repeats
+ * content that is on the page, so it is hidden from screen readers. The stylesheet
+ * hides it on screen and shows it only when the member prints it.
+ *
+ * @param array|null $plan   The member's plan.
+ * @param string     $urgent The urgent help text.
+ * @param string     $name   The member's name, or '' for none.
+ * @return string HTML, or '' when there is no contact row, no note and no urgent text.
+ */
+function vance_hub_flare_plan_wallet_html( $plan, $urgent, $name ) {
+	if ( ! is_array( $plan ) ) {
+		return '';
+	}
+	$team   = vance_hub_flare_plan_team_list_html( isset( $plan['team'] ) ? $plan['team'] : array() );
+	$notes  = isset( $plan['contacts'] ) && is_string( $plan['contacts'] ) && '' !== trim( $plan['contacts'] ) ? '<p class="vhd-flare-wallet__notes">' . vance_hub_flare_plan_text_html( $plan['contacts'], true ) . '</p>' : '';
+	$urgent = is_string( $urgent ) ? $urgent : '';
+	$help   = '' !== trim( $urgent ) ? '<p class="vhd-flare-wallet__label">' . esc_html__( 'When to get urgent help', 'vance-health-hub' ) . '</p><p class="vhd-flare-wallet__urgent">' . vance_hub_flare_plan_text_html( $urgent, true ) . '</p>' : '';
+	if ( '' === $team && '' === $notes && '' === $help ) {
+		return '';
+	}
+	$name  = is_string( $name ) ? trim( $name ) : '';
+	$title = '<p class="vhd-flare-wallet__title">' . esc_html__( 'My flare contacts', 'vance-health-hub' ) . '</p>';
+	if ( '' !== $name ) {
+		$title .= '<p class="vhd-flare-wallet__name">' . esc_html( $name ) . '</p>';
+	}
+	return '<div class="vhd-flare-wallet" aria-hidden="true">' . $title . $team . $notes . $help . '</div>';
+}
+
+/**
  * The flare plan card.
  *
  * @param array|null $f vance_hub_flare_plan_data() result.
@@ -3043,7 +3128,10 @@ function vance_hub_flare_plan_html( $f ) {
 	$nonce = '<input type="hidden" name="vance_hub_flare_nonce" value="' . esc_attr( $f['nonce'] ) . '">';
 
 	// id="vhd-flare": the redirect after every request ends in #vhd-flare.
-	$html  = '<section id="vhd-flare" class="vhd-card vhd-flare" aria-labelledby="vhd-flare-title"><div class="vhd-card__head">';
+	$name        = isset( $f['name'] ) && is_string( $f['name'] ) ? trim( $f['name'] ) : '';
+	$wallet_html = '';
+	// The print header is the first child of the card. The stylesheet shows it only in print.
+	$html  = '<section id="vhd-flare" class="vhd-card vhd-flare" aria-labelledby="vhd-flare-title">' . vance_hub_flare_plan_printhead_html( $name ) . '<div class="vhd-card__head">';
 	$html .= '<h2 id="vhd-flare-title" class="vhd-h3">' . esc_html__( 'My Flare Management Plan', 'vance-health-hub' ) . '</h2></div>';
 	if ( null === $plan ) {
 		$html .= '<p class="vhd-flare__intro">' . esc_html__( 'A flare plan is your own note of what a flare looks like for you, what you do first, and who you contact. You can print it and take it to an appointment.', 'vance-health-hub' ) . '</p>';
@@ -3073,7 +3161,8 @@ function vance_hub_flare_plan_html( $f ) {
 		}
 	} else {
 		// Urgent help and contacts come first, always shown, before any group.
-		$html .= '<div class="vhd-flare__now"><h3 class="vhd-flare__h">' . esc_html__( 'Urgent help and my contacts', 'vance-health-hub' ) . '</h3>' . $urgent_html . vance_hub_flare_plan_section_view_html( 'contacts', $plan ) . '</div>';
+		$wallet_html = vance_hub_flare_plan_wallet_html( $plan, $f['urgent'], $name );
+		$html       .= '<div class="vhd-flare__now"><h3 class="vhd-flare__h">' . esc_html__( 'Urgent help and my contacts', 'vance-health-hub' ) . '</h3>' . $urgent_html . vance_hub_flare_plan_section_view_html( 'contacts', $plan ) . '</div>' . $wallet_html;
 		$draft = isset( $f['draft'] ) ? $f['draft'] : null;
 
 		// The flare log block. With the agreement missing or changed, the log buttons would only fail.
@@ -3105,9 +3194,16 @@ function vance_hub_flare_plan_html( $f ) {
 			// The read-only card keeps its layout: no groups, no progress bar, no edit box.
 			$html .= '<div class="vhd-flare__plan">' . $signs_html . $optional_html . $docs_html . $updated_html . '</div>';
 		} else {
+			// Hidden until hub-flare-plan.js shows them: with no script they do nothing.
 			$print_html = '<div class="vhd-flare__actions">'
-				// Hidden until hub-flare-plan.js shows it: with no script it does nothing.
-				. '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button></div>';
+				. '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button>';
+			if ( ! empty( $f['sheet'] ) ) {
+				$print_html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="sheet" hidden>' . esc_html__( 'Print appointment sheet', 'vance-health-hub' ) . '</button>';
+			}
+			if ( '' !== $wallet_html ) {
+				$print_html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="wallet" hidden>' . esc_html__( 'Print wallet card', 'vance-health-hub' ) . '</button>';
+			}
+			$print_html .= '</div>' . vance_hub_flare_plan_pdfhint_html();
 			// After a flare ends, or when a kept draft fills the form, the edit box and the plan group open.
 			$edit_open = 'flare_ended' === $flash || ! empty( $f['need_consent'] ) || vance_hub_flare_plan_draft_is( $draft, 'save' );
 			// The plan group also opens after a save, or a refused save, so the member sees the result.
@@ -3124,7 +3220,7 @@ function vance_hub_flare_plan_html( $f ) {
 			$html .= '<details class="vhd-flare__group" data-vhd-group="plan"' . ( $plan_open ? ' open' : '' ) . '><summary class="vhd-flare__group-sum">' . esc_html__( 'My plan', 'vance-health-hub' ) . '</summary>' . $plan_inner . '</details>';
 			// No sheet group while the sheet is empty (it is null while the agreement is missing).
 			if ( ! empty( $f['sheet'] ) ) {
-				$html .= '<details class="vhd-flare__group vhd-flare__sheetbox" data-vhd-group="appointment"><summary class="vhd-flare__group-sum">' . esc_html__( 'For my appointment', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_sheet_html( $f['sheet'], $plan ) . '</details>';
+				$html .= '<details class="vhd-flare__group vhd-flare__sheetbox" data-vhd-group="appointment"><summary class="vhd-flare__group-sum">' . esc_html__( 'For my appointment', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_sheet_html( $f['sheet'], $plan, $name ) . '</details>';
 			}
 		}
 	}
@@ -3147,7 +3243,11 @@ function vance_hub_flare_plan_html( $f ) {
 			$html .= vance_hub_flare_plan_log_html( isset( $f['log'] ) ? $f['log'] : array(), $nonce, $readonly, $draft );
 			$html .= '<div class="vhd-flare__actions">';
 			// Hidden until hub-flare-plan.js shows it: with no script it does nothing.
-			$html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button></div>';
+			$html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button>';
+			if ( '' !== $wallet_html ) {
+				$html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="wallet" hidden>' . esc_html__( 'Print wallet card', 'vance-health-hub' ) . '</button>';
+			}
+			$html .= '</div>' . vance_hub_flare_plan_pdfhint_html();
 		}
 		$html .= '<details class="vhd-flare__manage"><summary>' . esc_html__( 'Manage my flare plan data', 'vance-health-hub' ) . '</summary>';
 		$html .= '<p>' . esc_html__( 'You cannot get your plan and your flare log back after you delete them.', 'vance-health-hub' ) . '</p>';
