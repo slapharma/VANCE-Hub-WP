@@ -412,6 +412,26 @@
 }
 .vhub-tool--nutrition .vhub-tool__cta { color: #AEDBDB; }
 
+/* An administrator can hide a card, so the row can hold one to four cards. The
+   row must fill whatever it holds. Desktop: twelve columns, and each card spans
+   12 divided by the number of cards. Four cards have the same width as in the
+   old four-column grid. The count is read from the list itself
+   (:nth-last-child), so the markup carries no class for it. Same method as the
+   community quotes. */
+@media (min-width: 1025px) {
+	.vhub-tools { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+	.vhub-tool { grid-column: span 3; }
+	.vhub-tool:first-child:nth-last-child(3),
+	.vhub-tool:first-child:nth-last-child(3) ~ .vhub-tool { grid-column: span 4; }
+	.vhub-tool:first-child:nth-last-child(2),
+	.vhub-tool:first-child:nth-last-child(2) ~ .vhub-tool { grid-column: span 6; }
+	.vhub-tool:only-child { grid-column: span 12; }
+}
+/* Tablet: two columns. An odd last card takes the full row, not half of it. */
+@media (min-width: 769px) and (max-width: 1024px) {
+	.vhub-tool:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
 /* ---- d. fact band ------------------------------------------------------- */
 
 /* The band now follows the hero and overlaps its bottom edge; the tool tiles
@@ -599,6 +619,24 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 .vhub-recipe:hover .vhub-recipe__name { text-decoration: underline; }
 @media (max-width: 1023px) {
 	.vhub-community__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* The number of quotes is a Customizer setting (1 to 4), and a site can hold
+   fewer quotes than that. So the row must fill whatever it holds. Desktop: twelve
+   columns, and each quote spans 12 divided by the number of quotes. Four quotes
+   have the same width as in the old four-column grid. The count is read from the
+   list itself (:nth-last-child), so the markup carries no class for it. */
+@media (min-width: 1024px) {
+	.vhub-community__cards { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+	.vhub-community__card { grid-column: span 3; }
+	.vhub-community__card:first-child:nth-last-child(3),
+	.vhub-community__card:first-child:nth-last-child(3) ~ .vhub-community__card { grid-column: span 4; }
+	.vhub-community__card:first-child:nth-last-child(2),
+	.vhub-community__card:first-child:nth-last-child(2) ~ .vhub-community__card { grid-column: span 6; }
+	.vhub-community__card:only-child { grid-column: span 12; }
+}
+/* Tablet: two columns. An odd last quote takes the full row, not half of it. */
+@media (min-width: 769px) and (max-width: 1023px) {
+	.vhub-community__card:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 
 /* ---- g. conditions ------------------------------------------------------ */
@@ -1054,6 +1092,8 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 		gap: 10px;
 	}
 	.vhub-tool { box-shadow: none; }
+	/* One to four cards: an odd last card (the third, or a single one) takes the full row. */
+	.vhub-tool:last-child:nth-child(odd) { grid-column: 1 / -1; }
 	.vhub-tool__img,
 	.vhub-tool__desc,
 	.vhub-tool__cta { display: none; }

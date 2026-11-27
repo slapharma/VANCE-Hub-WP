@@ -221,9 +221,9 @@ function vance_hub_flare_plan_consent_text() {
 }
 
 /**
- * Customizer controls: the switch and the three texts, in section 8 of the
- * VanceHubClub panel (inc/hub-layout.php names the sections and the switch
- * labels).
+ * Customizer controls: the switch and the three texts, in the "Flare plan"
+ * section of the VanceHubClub panel (inc/hub-layout.php names the sections and
+ * the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer.
  */
@@ -236,7 +236,8 @@ function vance_hub_flare_plan_customize( $wp_customize ) {
 	) );
 	$wp_customize->add_control( 'vance_hub_dash_flare_plan', array(
 		'label'       => $switch['label'],
-		'description' => __( 'A card where the member writes their own plan for a flare. It shows in the Health Profile tab of the member dashboard (sub-tab "Flare plan"). It needs the dashboard home (section 5) and the urgent help text below.', 'vance-health-hub' ),
+		/* translators: %d: number of the member dashboard section. */
+		'description' => sprintf( __( 'A card where the member writes their own plan for a flare. It shows in the Health Profile tab of the member dashboard (sub-tab "Flare plan"). It needs the dashboard home (section %d) and the urgent help text below.', 'vance-health-hub' ), vance_hub_customizer_section_number( 'vance_hub_sec_dashboard' ) ),
 		'section'     => $section,
 		'type'        => 'checkbox',
 		'priority'    => 10,

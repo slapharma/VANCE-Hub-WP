@@ -222,7 +222,7 @@ add_filter( 'body_class', 'vance_hub_header_body_class' );
  * ====================================================================== */
 
 /**
- * Register the header switch in section 3 of the VanceHubClub panel
+ * Register the header switch in the "Header and member bar" section of the VanceHubClub panel
  * (inc/hub-layout.php names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.

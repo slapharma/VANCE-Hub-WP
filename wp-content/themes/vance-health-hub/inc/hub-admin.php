@@ -12,7 +12,9 @@
  * preview mode and share link boxes at the end come from inc/hub-preview.php,
  * which owns their (nonce-protected) actions.
  *
- * Needs inc/hub-layout.php (vance_hub_saved_layout, vance_hub_sanitize_checkbox).
+ * Needs inc/hub-layout.php (vance_hub_saved_layout, vance_hub_sanitize_checkbox)
+ * and inc/hub-home-settings.php (vance_hub_block_order, vance_hub_home_blocks)
+ * and inc/hub-golive.php (vance_hub_golive_timestamp).
  *
  * @package Vance_Health_Hub
  */
@@ -91,6 +93,71 @@ function vance_hub_admin_status_groups() {
 		$groups[ $id ]['rows'][] = $row;
 	}
 	return $groups;
+}
+
+/**
+ * The home page blocks that print, and the ones that do not.
+ *
+ * Reads vance_hub_block_order() and vance_hub_home_blocks()
+ * (inc/hub-home-settings.php). This screen only reads: the order is set in the
+ * Customizer.
+ *
+ * @return array{on: string[], off: string[]} Labels of the blocks that print (in
+ *                                          print order) and of the blocks that do not.
+ */
+function vance_hub_admin_home_blocks() {
+	$blocks = vance_hub_home_blocks();
+	$on     = array();
+	foreach ( vance_hub_block_order() as $id ) {
+		if ( isset( $blocks[ $id ] ) ) {
+			$on[] = $blocks[ $id ];
+			unset( $blocks[ $id ] );
+		}
+	}
+	return array(
+		'on'  => $on,
+		'off' => array_values( $blocks ),
+	);
+}
+
+/**
+ * The go-live line of the screen (inc/hub-golive.php). This screen only reads.
+ *
+ * 'planned': a valid date in the future is saved and the layout is not yet
+ * VanceHubClub. 'done': the layout is VanceHubClub and a scheduled switch is
+ * recorded. Any other state gives an empty text, and the screen prints nothing.
+ *
+ * @param int|null $now Now, as a Unix timestamp. Null means the current time.
+ * @return array{state: string, text: string} State ('planned', 'done' or 'none') and the sentence.
+ */
+function vance_hub_admin_golive( $now = null ) {
+	$now    = null === $now ? time() : (int) $now;
+	$tz     = wp_timezone();
+	$format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+	$is_hub = 'hub' === vance_hub_saved_layout();
+
+	$planned = vance_hub_golive_timestamp( vance_get_theme_mod( 'vance_hub_golive_at', '' ), $tz );
+	if ( ! $is_hub && $planned > $now ) {
+		return array(
+			'state' => 'planned',
+			/* translators: 1: date and time, 2: site time zone name. */
+			'text'  => sprintf( __( 'Go-live: planned for %1$s (%2$s).', 'vance-health-hub' ), wp_date( $format, $planned, $tz ), wp_timezone_string() ),
+		);
+	}
+
+	$done = (int) vance_get_theme_mod( 'vance_hub_golive_done_at', 0 );
+	if ( $is_hub && $done > 0 ) {
+		return array(
+			'state' => 'done',
+			/* translators: %s: date and time. */
+			'text'  => sprintf( __( 'VanceHubClub went live by schedule on %s.', 'vance-health-hub' ), wp_date( $format, $done, $tz ) ),
+		);
+	}
+
+	return array(
+		'state' => 'none',
+		'text'  => '',
+	);
 }
 
 /**
@@ -187,8 +254,34 @@ function vance_hub_admin_render() {
 			<strong><?php echo esc_html( $is_hub ? __( 'VanceHubClub: on', 'vance-health-hub' ) : __( 'VanceHealthHub (classic): every VanceHubClub part is off', 'vance-health-hub' ) ); ?></strong>
 			<a href="<?php echo esc_url( vance_hub_admin_section_url( 'vance_home_layout' ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
 		</p>
+		<?php
+		$golive = vance_hub_admin_golive();
+		if ( '' !== $golive['text'] ) :
+			?>
+		<p>
+			<?php echo esc_html( $golive['text'] ); ?>
+			<?php if ( 'planned' === $golive['state'] ) : ?>
+				<a href="<?php echo esc_url( vance_hub_admin_section_url( 'vance_home_layout' ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
+			<?php endif; ?>
+		</p>
+		<?php endif; ?>
 		<p>
 			<a class="button button-primary" href="<?php echo esc_url( vance_hub_admin_customizer_url() ); ?>"><?php esc_html_e( 'Change VanceHubClub settings', 'vance-health-hub' ); ?></a>
+		</p>
+
+		<?php
+		$home_blocks = vance_hub_admin_home_blocks();
+		?>
+		<p>
+			<?php esc_html_e( 'Home page blocks:', 'vance-health-hub' ); ?>
+			<strong><?php echo esc_html( empty( $home_blocks['on'] ) ? __( 'none', 'vance-health-hub' ) : implode( ', ', $home_blocks['on'] ) ); ?></strong>
+			<?php if ( ! empty( $home_blocks['off'] ) ) : ?>
+				<?php
+				/* translators: %s: labels of the home page blocks that are hidden, separated by commas. */
+				echo esc_html( sprintf( __( '(hidden: %s)', 'vance-health-hub' ), implode( ', ', $home_blocks['off'] ) ) );
+				?>
+			<?php endif; ?>
+			<a href="<?php echo esc_url( vance_hub_admin_section_url( 'vance_hub_sec_home' ) ); ?>"><?php esc_html_e( 'Change', 'vance-health-hub' ); ?></a>
 		</p>
 
 		<h2><?php esc_html_e( 'Switches', 'vance-health-hub' ); ?></h2>
