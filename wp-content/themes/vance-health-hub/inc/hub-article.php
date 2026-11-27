@@ -522,6 +522,186 @@ function vance_hub_article_tool_key( $post_id ) {
 }
 
 /**
+ * True when the "Try this now" prompt is switched on.
+ *
+ * The raw value of the sub-switch (default on). The article layout's own switch
+ * and the master switch decide whether the layout renders at all.
+ *
+ * @return bool
+ */
+function vance_hub_article_prompt_on() {
+	return (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_article_prompt', true ) );
+}
+
+/**
+ * Keep a position inside 1 to 10. A value that is not a number gives 2, the
+ * built-in position. Pure.
+ *
+ * @param mixed $value Raw value.
+ * @return int 1 to 10.
+ */
+function vance_hub_article_sanitize_after( $value ) {
+	if ( ! is_numeric( $value ) ) {
+		return 2;
+	}
+	return max( 1, min( 10, (int) $value ) );
+}
+
+/**
+ * The paragraph after which the prompt goes: the saved position, default 2.
+ *
+ * @return int 1 to 10.
+ */
+function vance_hub_article_prompt_after() {
+	return vance_hub_article_sanitize_after( vance_get_theme_mod( 'vance_hub_article_prompt_after', 2 ) );
+}
+
+/**
+ * The choices of the per-category tool select: key => label. 'auto' keeps the
+ * built-in rule, 'none' gives no prompt, the others name a tool of
+ * vance_hub_tools() ('mod').
+ *
+ * @return string[]
+ */
+function vance_hub_article_prompt_choices() {
+	return array(
+		'auto'      => __( 'Automatic', 'vance-health-hub' ),
+		'survey'    => __( 'Self-Assessment', 'vance-health-hub' ),
+		'recipes'   => __( 'Meal planner', 'vance-health-hub' ),
+		'nutrition' => __( 'Nutrition check', 'vance-health-hub' ),
+		'discounts' => __( 'Discounts', 'vance-health-hub' ),
+		'none'      => __( 'No prompt', 'vance-health-hub' ),
+	);
+}
+
+/**
+ * Sanitise one per-category tool choice. Anything that is not a key of
+ * vance_hub_article_prompt_choices() gives 'auto'. Pure.
+ *
+ * @param mixed $value Raw value.
+ * @return string
+ */
+function vance_hub_article_sanitize_tool_choice( $value ) {
+	$keys = array( 'auto', 'survey', 'recipes', 'nutrition', 'discounts', 'none' );
+	return is_string( $value ) && in_array( $value, $keys, true ) ? $value : 'auto';
+}
+
+/**
+ * Setting id of the tool choice for one top-level category, or '' when the slug
+ * has nothing left after sanitize_key().
+ *
+ * @param string $slug Category slug.
+ * @return string
+ */
+function vance_hub_article_tool_setting_id( $slug ) {
+	$clean = sanitize_key( (string) $slug );
+	return '' === $clean ? '' : 'vance_hub_aprompt_tool_' . $clean;
+}
+
+/**
+ * Choose the tool for an article. Pure: it calls no WordPress function.
+ *
+ * Walk the article's top-level category slugs in the order given (name order).
+ * The first slug with a saved choice other than 'auto' wins. When none has one,
+ * the built-in tool stands.
+ *
+ * @param string[] $top_slugs Top-level category slugs of the article, in name order.
+ * @param array    $choices   Category slug => saved choice (a key of vance_hub_article_prompt_choices()).
+ * @param string   $auto_tool Tool key from the built-in rule (vance_hub_article_tool_key()).
+ * @return string A tool key, or 'none' for no prompt.
+ */
+function vance_hub_article_choose_tool( array $top_slugs, array $choices, $auto_tool ) {
+	foreach ( $top_slugs as $slug ) {
+		if ( ! is_string( $slug ) || ! isset( $choices[ $slug ] ) ) {
+			continue;
+		}
+		$choice = vance_hub_article_sanitize_tool_choice( $choices[ $slug ] );
+		if ( 'auto' !== $choice ) {
+			return $choice;
+		}
+	}
+	return $auto_tool;
+}
+
+/**
+ * The top-level categories of an article, as slugs in name order.
+ *
+ * Each category of the article stands for its root: the category itself when it
+ * has no parent, else its highest ancestor that can be loaded. Several
+ * categories with the same root give that root once.
+ *
+ * @param int $post_id Post ID.
+ * @return string[] Slugs, sorted by category name, then by slug.
+ */
+function vance_hub_article_top_category_slugs( $post_id ) {
+	$tops = array();
+	foreach ( (array) get_the_category( $post_id ) as $term ) {
+		if ( ! is_object( $term ) || empty( $term->slug ) ) {
+			continue;
+		}
+		$top = $term;
+		if ( ! empty( $term->term_id ) ) {
+			// get_ancestors() lists the nearest parent first and the root last.
+			foreach ( array_reverse( (array) get_ancestors( (int) $term->term_id, 'category', 'taxonomy' ) ) as $ancestor_id ) {
+				$ancestor = get_term( (int) $ancestor_id, 'category' );
+				if ( is_object( $ancestor ) && ! empty( $ancestor->slug ) ) {
+					$top = $ancestor;
+					break;
+				}
+			}
+		}
+		$tops[ (string) $top->slug ] = isset( $top->name ) ? (string) $top->name : (string) $top->slug;
+	}
+	$slugs = array_keys( $tops );
+	usort( $slugs, function ( $a, $b ) use ( $tops ) {
+		$by_name = strnatcasecmp( $tops[ $a ], $tops[ $b ] );
+		return 0 !== $by_name ? $by_name : strcmp( $a, $b );
+	} );
+	return $slugs;
+}
+
+/**
+ * The saved tool choice of each of the given top-level categories.
+ *
+ * @param string[] $top_slugs Category slugs.
+ * @return string[] Slug => 'auto' or a tool key or 'none'. A slug with no valid setting id is left out.
+ */
+function vance_hub_article_tool_choices( array $top_slugs ) {
+	$choices = array();
+	foreach ( $top_slugs as $slug ) {
+		$id = vance_hub_article_tool_setting_id( $slug );
+		if ( '' === $id ) {
+			continue;
+		}
+		$choices[ $slug ] = vance_hub_article_sanitize_tool_choice( vance_get_theme_mod( $id, 'auto' ) );
+	}
+	return $choices;
+}
+
+/**
+ * The wording of the prompt for a tool: the prompt's own copy for the survey and
+ * the meal planner, and for the nutrition check and the discounts the tool's own
+ * published title and description.
+ *
+ * @param string $key  Tool key.
+ * @param array  $tool vance_hub_tools() row for that key.
+ * @return array title and text, or an empty array when there are no words.
+ */
+function vance_hub_article_prompt_copy_for( $key, $tool ) {
+	$copy = vance_hub_article_prompt_copy( $key );
+	if ( ! empty( $copy ) || ! in_array( $key, array( 'nutrition', 'discounts' ), true ) ) {
+		return $copy;
+	}
+	if ( empty( $tool['title'] ) || empty( $tool['desc'] ) ) {
+		return array();
+	}
+	return array(
+		'title' => (string) $tool['title'],
+		'text'  => (string) $tool['desc'],
+	);
+}
+
+/**
  * True when the the_content filter may add the prompt in this call.
  *
  * Only the main post, rendered by the main query's loop on a single article,
@@ -593,13 +773,24 @@ function vance_hub_article_content_filter( $content ) {
 	if ( ! vance_hub_article_should_filter() ) {
 		return $content;
 	}
-	$key  = vance_hub_article_tool_key( (int) get_the_ID() );
+	// The "Show the Try this now prompt" switch: off leaves the content as it is.
+	if ( ! vance_hub_article_prompt_on() ) {
+		return $content;
+	}
+	$post_id = (int) get_the_ID();
+	// The built-in rule gives the tool; a category choice from the Customizer can replace it.
+	$top = vance_hub_article_top_category_slugs( $post_id );
+	$key = vance_hub_article_choose_tool( $top, vance_hub_article_tool_choices( $top ), vance_hub_article_tool_key( $post_id ) );
+	if ( 'none' === $key ) {
+		return $content;
+	}
 	$tool = vance_hub_article_find_tool( vance_hub_tools(), $key );
 	if ( empty( $tool ) ) {
 		$key  = 'survey';
 		$tool = vance_hub_article_find_tool( vance_hub_tools(), $key );
 	}
-	$out = vance_hub_article_insert( $content, vance_hub_article_prompt_html( $tool, vance_hub_article_prompt_copy( $key ) ) );
+	$after = vance_hub_article_prompt_after();
+	$out   = vance_hub_article_insert( $content, vance_hub_article_prompt_html( $tool, vance_hub_article_prompt_copy_for( $key, $tool ) ), $after, $after + 2 );
 	// Record it only for a real filter run (depth 1), and only when the prompt
 	// went in, so a call that added nothing does not use up the article's turn.
 	if ( 1 === vance_hub_article_depth() && $out !== $content ) {
@@ -688,5 +879,72 @@ function vance_hub_article_customize_register( $wp_customize ) {
 		'type'        => 'checkbox',
 		'priority'    => 10,
 	) );
+
+	// The prompt switch, priority 12: directly under the article layout switch.
+	$switch = vance_hub_customizer_switch( 'vance_hub_article_prompt' );
+	$wp_customize->add_setting( 'vance_hub_article_prompt', array(
+		'default'           => vance_hub_switch_default( 'vance_hub_article_prompt' ),
+		'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+	) );
+	$wp_customize->add_control( 'vance_hub_article_prompt', array(
+		'label'       => $switch['label'],
+		'description' => __( 'On: each article with the VanceHubClub layout shows one "Try this now" prompt in the text. Off: the prompt does not show. The rest of the article layout does not change.', 'vance-health-hub' ),
+		'section'     => $switch['section'],
+		'type'        => 'checkbox',
+		'priority'    => 12,
+	) );
+
+	// The position of the prompt, priority 14.
+	$wp_customize->add_setting( 'vance_hub_article_prompt_after', array(
+		'default'           => 2,
+		'sanitize_callback' => 'vance_hub_article_sanitize_after',
+	) );
+	$wp_customize->add_control( 'vance_hub_article_prompt_after', array(
+		'label'       => __( 'Show the prompt after paragraph', 'vance-health-hub' ),
+		'description' => __( 'Use a number from 1 to 10. The default is 2. An article with fewer paragraphs than this number plus 2 gets the prompt at the end of the text.', 'vance-health-hub' ),
+		'section'     => 'vance_hub_sec_pages',
+		'type'        => 'number',
+		'priority'    => 14,
+		'input_attrs' => array( 'min' => 1, 'max' => 10, 'step' => 1 ),
+	) );
+
+	// One tool select per top-level category, priorities 30, 32, 34 and so on. The
+	// test stubs have no get_categories(): the loop does nothing there.
+	if ( ! function_exists( 'get_categories' ) ) {
+		return;
+	}
+	$terms = get_categories( array( 'parent' => 0, 'hide_empty' => true ) );
+	if ( ! is_array( $terms ) ) {
+		return;
+	}
+	$terms = array_values( array_filter( $terms, function ( $term ) {
+		return is_object( $term ) && ! empty( $term->slug ) && '' !== vance_hub_article_tool_setting_id( $term->slug );
+	} ) );
+	usort( $terms, function ( $a, $b ) {
+		$by_name = strnatcasecmp( isset( $a->name ) ? (string) $a->name : (string) $a->slug, isset( $b->name ) ? (string) $b->name : (string) $b->slug );
+		return 0 !== $by_name ? $by_name : strcmp( (string) $a->slug, (string) $b->slug );
+	} );
+	$priority = 30;
+	foreach ( $terms as $index => $term ) {
+		$id          = vance_hub_article_tool_setting_id( $term->slug );
+		$description = '';
+		if ( 0 === $index ) {
+			$description = __( 'Choose the tool that the "Try this now" prompt offers in the articles of each section. Automatic keeps the built-in rule. An article in more than one section uses the first section, in name order, that has a choice other than Automatic. A choice applies to the articles in that section and in its sub-sections.', 'vance-health-hub' );
+		}
+		$wp_customize->add_setting( $id, array(
+			'default'           => 'auto',
+			'sanitize_callback' => 'vance_hub_article_sanitize_tool_choice',
+		) );
+		$wp_customize->add_control( $id, array(
+			/* translators: %s: name of a top-level category. */
+			'label'       => sprintf( __( 'Prompt tool: %s', 'vance-health-hub' ), isset( $term->name ) ? (string) $term->name : (string) $term->slug ),
+			'description' => $description,
+			'section'     => 'vance_hub_sec_pages',
+			'type'        => 'select',
+			'choices'     => vance_hub_article_prompt_choices(),
+			'priority'    => $priority,
+		) );
+		$priority += 2;
+	}
 }
 add_action( 'customize_register', 'vance_hub_article_customize_register', 11 );

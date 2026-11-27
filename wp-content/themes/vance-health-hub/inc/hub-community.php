@@ -1510,6 +1510,11 @@ function vance_community_ajax_vote() {
 	$answer  = vance_community_post_field( 'answer' );
 	$active  = vance_community_active_poll();
 
+	// The poll switch is off (inc/hub-community-settings.php): the poll is closed.
+	// Same refusal as below, and nothing is written. Saved votes stay.
+	if ( function_exists( 'vance_hub_community_poll_on' ) && ! vance_hub_community_poll_on() ) {
+		wp_send_json_error( array( 'message' => __( 'This poll is closed.', 'vance-health-hub' ) ), 404 );
+	}
 	if ( ! $active || (int) $active->ID !== $poll_id ) {
 		wp_send_json_error( array( 'message' => __( 'This poll is closed.', 'vance-health-hub' ) ), 404 );
 	}
