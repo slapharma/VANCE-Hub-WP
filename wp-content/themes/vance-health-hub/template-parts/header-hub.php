@@ -91,6 +91,8 @@ $vhh_spark     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 </header>
 <?php
 // On the VanceHubClub home page the "See what members get" link scrolls to the
-// join section; on every other page it opens the sign-up page.
-vance_hub_render_member_bar( vance_hub_is_hub_home() ? array( 'join_href' => '#vhub-join' ) : array() );
+// join section (or the sign-up page when the Join block is hidden); on every
+// other page it opens the sign-up page. vance_hub_join_href() lives in
+// inc/hub-home-settings.php; with that file missing the link keeps the anchor.
+vance_hub_render_member_bar( vance_hub_is_hub_home() ? array( 'join_href' => function_exists( 'vance_hub_join_href' ) ? vance_hub_join_href() : '#vhub-join' ) : array() );
 ?>

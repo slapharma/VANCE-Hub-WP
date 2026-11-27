@@ -142,6 +142,10 @@ require_once get_template_directory() . '/inc/nav-mega.php';
 // (admin ?vhh_layout=, the admin preview flag, the share link). Before hub-*.
 require_once get_template_directory() . '/inc/hub-preview.php';
 require_once get_template_directory() . '/inc/hub-layout.php';
+// VanceHubClub home page settings: block order, counts and texts. Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-home-settings.php';
+// VanceHubClub scheduled go-live: switches the layout at a saved time. Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-golive.php';
 // VanceHubClub article layout: opt-in (Customizer, default off). Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-article.php';
 // VanceHubClub member dashboard home: opt-in (Customizer, default off). Needs hub-layout.php.

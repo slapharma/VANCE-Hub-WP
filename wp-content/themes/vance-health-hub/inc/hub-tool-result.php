@@ -466,7 +466,7 @@ function vance_hub_tool_result_enqueue() {
 add_action( 'wp_enqueue_scripts', 'vance_hub_tool_result_enqueue', 20 );
 
 /**
- * The Customizer switch, in section 4 of the VanceHubClub panel
+ * The Customizer switch, in the "Articles and Self-Assessment" section of the VanceHubClub panel
  * (inc/hub-layout.php names the sections and the switch labels; this file
  * loads after it).
  *

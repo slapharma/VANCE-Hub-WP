@@ -305,9 +305,9 @@ function vance_hub_checkin_text_defaults() {
 
 /**
  * Customizer controls for the three features: the member number and the
- * results chart in section 5 of the VanceHubClub panel, and the daily
- * check-in in section 7 (inc/hub-layout.php names the sections and the
- * switch labels).
+ * results chart in the "Member dashboard" section of the VanceHubClub panel,
+ * and the daily check-in in the "Daily check-in" section (inc/hub-layout.php
+ * names the sections and the switch labels).
  *
  * @param WP_Customize_Manager $wp_customize Customizer.
  */
@@ -323,7 +323,8 @@ function vance_hub_dash_features_customize( $wp_customize ) {
 			40,
 		),
 		'vance_hub_dash_checkin'   => array(
-			__( 'Three symptom questions, each on a scale from 0 to 4. The check-in shows on the VanceHubClub dashboard home and in the Health Profile tab. It needs the dashboard home (section 5).', 'vance-health-hub' ),
+			/* translators: %d: number of the member dashboard section. */
+			sprintf( __( 'Three symptom questions, each on a scale from 0 to 4. The check-in shows on the VanceHubClub dashboard home and in the Health Profile tab. It needs the dashboard home (section %d).', 'vance-health-hub' ), vance_hub_customizer_section_number( 'vance_hub_sec_dashboard' ) ),
 			10,
 		),
 	);

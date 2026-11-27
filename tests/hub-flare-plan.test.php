@@ -241,10 +241,7 @@ function delete_user_meta( $user_id, $key, $value = '' ) {
 // set_transient(), get_transient() and delete_transient(). They keep the values in
 // $GLOBALS['TRANSIENTS'] and the lifetimes in $GLOBALS['SET_TRANSIENTS'].
 // As WordPress does for UTF-8 text: invalid UTF-8 gives an empty string.
-// home_url() comes from the shared stub block: 'https://example.test' . $path.
-function wp_parse_url( $url, $component = -1 ) {
-	return parse_url( (string) $url, $component );
-}
+// home_url() and wp_parse_url() come from the shared stub block.
 function wp_check_invalid_utf8( $text, $strip = false ) {
 	return 1 === preg_match( '//u', (string) $text ) ? (string) $text : '';
 }

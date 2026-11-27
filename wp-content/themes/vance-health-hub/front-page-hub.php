@@ -27,6 +27,30 @@ $vhub_dashboard = vance_dashboard_link( home_url( '/dashboard/' ) );
 $vhub_bar       = vance_hub_member_bar();
 $vhub_hero_img  = vance_hub_img( 'about/community-support.jpg' );
 $vhub_survey_n  = function_exists( 'vance_quiz_steps' ) ? count( vance_quiz_steps() ) : 0;
+
+/* ---------------------------------------------------------------------------
+ * DATA PHASE. The three article blocks run in this FIXED sequence, whatever
+ * order the page prints them in: library, then "Latest by section", then
+ * "More to read". Each one skips the ids that came before it in $vhub_shown, so
+ * no article appears twice. A block that is off runs no query and adds no id,
+ * so with "Latest by section" off, "More to read" takes the next posts.
+ * Block order and counts: inc/hub-home-settings.php.
+ * ------------------------------------------------------------------------ */
+$vhub_posts    = array();
+$vhub_shown    = array();
+$vhub_sections = array();
+$vhub_more     = array();
+if ( vance_hub_block_on( 'library' ) ) {
+	$vhub_posts = vance_hub_library_posts( vance_hub_count( 'vance_hub_count_library' ) );
+	// Every article already on the page. The blocks below skip these.
+	$vhub_shown = array_column( $vhub_posts, 'id' );
+}
+if ( vance_hub_block_on( 'sections' ) ) {
+	$vhub_sections = vance_hub_section_columns( $vhub_shown, vance_hub_count( 'vance_hub_count_sections' ) );
+}
+if ( vance_hub_block_on( 'more' ) ) {
+	$vhub_more = vance_hub_more_posts( $vhub_shown, vance_hub_count( 'vance_hub_count_more' ) );
+}
 ?>
 
 <main id="main" class="vhub">
@@ -38,7 +62,7 @@ $vhub_survey_n  = function_exists( 'vance_quiz_steps' ) ? count( vance_quiz_step
  * ------------------------------------------------------------------ */ ?>
 <?php
 if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active() ) ) {
-	vance_hub_render_member_bar( array( 'join_href' => '#vhub-join' ) );
+	vance_hub_render_member_bar( array( 'join_href' => vance_hub_join_href() ) );
 }
 ?>
 
@@ -49,10 +73,10 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 	<div class="vhub-wrap vhub-hero__inner">
 		<div class="vhub-hero__copy">
 			<div class="vhub-hero__head"<?php if ( $vhub_hero_img ) : ?> style="--vhub-hero-photo: url('<?php echo esc_url( $vhub_hero_img ); ?>');"<?php endif; ?>>
-				<p class="vhub-pill vhub-pill--purple"><?php esc_html_e( 'Your Gastro Health Community', 'vance-health-hub' ); ?></p>
-				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php esc_html_e( 'What do you need help with', 'vance-health-hub' ); ?> <span class="vhub-hero__accent"><?php esc_html_e( 'today?', 'vance-health-hub' ); ?></span></h1>
+				<p class="vhub-pill vhub-pill--purple"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_pill' ) ); ?></p>
+				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_title' ) ); ?> <span class="vhub-hero__accent"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_accent' ) ); ?></span></h1>
 			</div>
-			<p class="vhub-hero__sub"><?php esc_html_e( 'Take the Gastro Self-Assessment, plan meals, read the science and get plain answers from our VANCE-Ai.', 'vance-health-hub' ); ?></p>
+			<p class="vhub-hero__sub"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_sub' ) ); ?></p>
 
 			<?php
 			/* The input has no name on purpose: Ask AI takes no query parameter,
@@ -76,7 +100,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 			<?php endif; ?>
 			<div class="vhub-survey<?php echo $vhub_hero_img ? '' : ' vhub-survey--flat'; ?>">
 				<div class="vhub-survey__meta">
-					<p class="vhub-survey__eyebrow"><?php esc_html_e( 'Gastro Self-Assessment', 'vance-health-hub' ); ?></p>
+					<p class="vhub-survey__eyebrow"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_survey_label' ) ); ?></p>
 					<?php if ( $vhub_survey_n > 0 ) : ?>
 						<p class="vhub-survey__count"><?php
 							/* translators: %s: number of survey questions. */
@@ -84,9 +108,9 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 						?></p>
 					<?php endif; ?>
 				</div>
-				<h2 class="vhub-survey__title"><?php esc_html_e( 'Not sure where to start?', 'vance-health-hub' ); ?></h2>
-				<p class="vhub-survey__text"><?php esc_html_e( 'Answer a few short questions about you and your gut. The Hub then points you to the guides, tools and recipes that fit.', 'vance-health-hub' ); ?></p>
-				<a class="vhub-btn vhub-btn--purple" href="<?php echo esc_url( $vhub_survey ); ?>"><?php esc_html_e( 'Start the survey', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+				<h2 class="vhub-survey__title"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_survey_title' ) ); ?></h2>
+				<p class="vhub-survey__text"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_survey_text' ) ); ?></p>
+				<a class="vhub-btn vhub-btn--purple" href="<?php echo esc_url( $vhub_survey ); ?>"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_survey_button' ) ); ?> <span aria-hidden="true">&rarr;</span></a>
 				<p class="vhub-survey__note"><?php esc_html_e( 'You can change any answer later. This is not a diagnosis.', 'vance-health-hub' ); ?></p>
 			</div>
 		</div>
@@ -100,26 +124,41 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 	<ul class="vhub-facts">
 		<li class="vhub-fact">
 			<span class="vhub-fact__icon"><?php echo vance_hub_icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Free Forever', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Every tool available 24/7', 'vance-health-hub' ); ?></span></span>
+			<span class="vhub-fact__text"><strong><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_fact_1_title' ) ); ?></strong><span><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_fact_1_text' ) ); ?></span></span>
 		</li>
 		<li class="vhub-fact">
 			<span class="vhub-fact__icon vhub-fact__icon--purple"><?php echo vance_hub_icon( 'person' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Activity driven', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Save searches, answers and results.', 'vance-health-hub' ); ?></span></span>
+			<span class="vhub-fact__text"><strong><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_fact_2_title' ) ); ?></strong><span><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_fact_2_text' ) ); ?></span></span>
 		</li>
 		<li class="vhub-fact">
 			<span class="vhub-fact__icon"><?php echo vance_hub_icon( 'book' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span class="vhub-fact__text"><strong><?php esc_html_e( 'Verified Science', 'vance-health-hub' ); ?></strong><span><?php esc_html_e( 'Every clinical source referenced.', 'vance-health-hub' ); ?></span></span>
+			<span class="vhub-fact__text"><strong><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_fact_3_title' ) ); ?></strong><span><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_fact_3_text' ) ); ?></span></span>
 		</li>
 	</ul>
 </div>
 
-<?php /* ---------------------------------------------------------------
- * c. Four tool tiles. Real URLs; the recipe count is live.
- * ------------------------------------------------------------------ */ ?>
+<?php
+/* ---------------------------------------------------------------
+ * PRINT PHASE, movable blocks. The member bar, the hero and the fact band
+ * above always print, in that order. The blocks below print in the order of
+ * vance_hub_block_order(); a block that is not in the list does not print.
+ * Each case holds one block's markup and its own "is there data" test.
+ * ------------------------------------------------------------------ */
+foreach ( vance_hub_block_order() as $vhub_block ) {
+	switch ( $vhub_block ) {
+
+		/* ---------------------------------------------------------------
+		 * c. Four tool tiles. Real URLs; the recipe count is live.
+		 * ------------------------------------------------------------ */
+		case 'tools':
+			// Up to four cards, set in the Customizer. Every card hidden: no block.
+			$vhub_tool_cards = vance_hub_home_tools();
+			if ( ! empty( $vhub_tool_cards ) ) :
+				?>
 <section class="vhub-tools-section" aria-labelledby="vhub-tools-title">
 	<h2 id="vhub-tools-title" class="screen-reader-text vhub-sr"><?php esc_html_e( 'Free tools', 'vance-health-hub' ); ?></h2>
 	<ul class="vhub-wrap vhub-tools">
-		<?php foreach ( vance_hub_tools() as $vhub_tool ) : ?>
+		<?php foreach ( $vhub_tool_cards as $vhub_tool ) : ?>
 			<li class="vhub-tool vhub-tool--<?php echo esc_attr( $vhub_tool['mod'] ); ?>">
 				<a class="vhub-tool__link" href="<?php echo esc_url( $vhub_tool['href'] ); ?>">
 					<?php if ( $vhub_tool['img'] ) : ?>
@@ -137,11 +176,17 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 	</ul>
 </section>
 
-<?php /* ---------------------------------------------------------------
- * e. Inside the Hub this week. Customizer tiles only; empty by default.
- * ------------------------------------------------------------------ */
-$vhub_tiles = vance_hub_member_tiles();
-if ( ! empty( $vhub_tiles ) ) : ?>
+<?php
+			endif;
+			break;
+
+		/* ---------------------------------------------------------------
+		 * e. Inside the Hub this week. Customizer tiles only; empty by default.
+		 * ------------------------------------------------------------ */
+		case 'inside':
+			$vhub_tiles = vance_hub_member_tiles();
+			if ( ! empty( $vhub_tiles ) ) :
+				?>
 <section class="vhub-wrap vhub-section vhub-inside" aria-labelledby="vhub-inside-title">
 	<div class="vhub-section__head">
 		<div class="vhub-section__intro">
@@ -178,16 +223,20 @@ if ( ! empty( $vhub_tiles ) ) : ?>
 </section>
 <?php endif; ?>
 
-<?php /* ---------------------------------------------------------------
- * g. Conditions: photo tiles and a list, from the real registry.
- * ------------------------------------------------------------------ */
-$vhub_cards = function_exists( 'vance_gi_condition_cards' ) ? vance_gi_condition_cards() : array();
-if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
-	list( $vhub_cond_tiles, $vhub_cond_list ) = vance_hub_split_conditions(
-		$vhub_cards,
-		vance_condition_priority()
-	);
-	?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * g. Conditions: photo tiles and a list, from the real registry.
+		 * ------------------------------------------------------------ */
+		case 'conditions':
+			$vhub_cards = function_exists( 'vance_gi_condition_cards' ) ? vance_gi_condition_cards() : array();
+			if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
+				list( $vhub_cond_tiles, $vhub_cond_list ) = vance_hub_split_conditions(
+					$vhub_cards,
+					vance_condition_priority()
+				);
+				?>
 <section class="vhub-wrap vhub-section vhub-conditions" aria-labelledby="vhub-conditions-title">
 	<div class="vhub-section__intro">
 		<h2 id="vhub-conditions-title" class="vhub-h2"><?php esc_html_e( 'Recently diagnosed? Learn about your condition', 'vance-health-hub' ); ?></h2>
@@ -226,30 +275,34 @@ if ( ! empty( $vhub_cards ) && function_exists( 'vance_gi_page_url' ) ) :
 </section>
 <?php endif; ?>
 
-<?php /* ---------------------------------------------------------------
- * f. Community block: real community quotes (the classic home page's
- *    testimonial source) plus the newest real recipes. No forum, poll or
- *    "members made this" data exists, so those parts are not built. With no
- *    quotes, the whole block is omitted.
- * ------------------------------------------------------------------ */
-$vhub_quotes = vance_hub_testimonials( 4 );
-if ( ! empty( $vhub_quotes ) ) :
-	$vhub_recipe_groups = array_filter( array(
-		array(
-			'eyebrow' => __( 'New in the recipe hub', 'vance-health-hub' ),
-			'title'   => __( 'Recently Added Recipes', 'vance-health-hub' ),
-			'items'   => vance_hub_recent_recipes( 2 ),
-		),
-		array(
-			'eyebrow' => __( 'Most read', 'vance-health-hub' ),
-			'title'   => __( 'Most Popular Recipes', 'vance-health-hub' ),
-			'items'   => vance_hub_popular_recipes( 2 ),
-		),
-	), function ( $vhub_g ) {
-		return ! empty( $vhub_g['items'] );
-	} );
-	$vhub_meal_url = vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' );
-	?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * f. Community block: real community quotes (the classic home page's
+		 *    testimonial source) plus the newest real recipes. No forum, poll or
+		 *    "members made this" data exists, so those parts are not built. With no
+		 *    quotes, the whole block is omitted.
+		 * ------------------------------------------------------------ */
+		case 'community':
+			$vhub_quotes = vance_hub_testimonials( vance_hub_count( 'vance_hub_count_quotes' ) );
+			if ( ! empty( $vhub_quotes ) ) :
+				$vhub_recipe_groups = array_filter( array(
+					array(
+						'eyebrow' => __( 'New in the recipe hub', 'vance-health-hub' ),
+						'title'   => __( 'Recently Added Recipes', 'vance-health-hub' ),
+						'items'   => vance_hub_recent_recipes( vance_hub_count( 'vance_hub_count_recipes' ) ),
+					),
+					array(
+						'eyebrow' => __( 'Most read', 'vance-health-hub' ),
+						'title'   => __( 'Most Popular Recipes', 'vance-health-hub' ),
+						'items'   => vance_hub_popular_recipes( vance_hub_count( 'vance_hub_count_recipes' ) ),
+					),
+				), function ( $vhub_g ) {
+					return ! empty( $vhub_g['items'] );
+				} );
+				$vhub_meal_url = vance_hub_page_url( 'gastro-meal-planner', '/gastro-meal-planner/' );
+				?>
 <section class="vhub-community" aria-labelledby="vhub-community-title">
 	<div class="vhub-wrap vhub-community__inner">
 		<div class="vhub-community__head">
@@ -305,37 +358,42 @@ if ( ! empty( $vhub_quotes ) ) :
 </section>
 <?php endif; ?>
 
-<?php /* ---------------------------------------------------------------
- * f2. Promo block: the same Customizer-driven block the VanceHealthHub home
- *     page shows (inc/promo-block.php, "Promo Block" settings). It prints
- *     nothing when its own "show" setting is off, so the output is buffered
- *     and the wrapper renders only when there is a block to wrap. Off for
- *     this layout alone with "Hub: show the promo block".
- * ------------------------------------------------------------------ */
-$vhub_promo = '';
-if ( function_exists( 'vance_render_promo_home' ) && vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_promo', true ) ) ) {
-	ob_start();
-	vance_render_promo_home();
-	$vhub_promo = trim( (string) ob_get_clean() );
-}
-if ( '' !== $vhub_promo ) : ?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * f2. Promo block: the same Customizer-driven block the VanceHealthHub home
+		 *     page shows (inc/promo-block.php, "Promo Block" settings). It prints
+		 *     nothing when its own "show" setting is off, so the output is buffered
+		 *     and the wrapper renders only when there is a block to wrap. Off for
+		 *     this layout alone by removing "Promo block" from "Home page blocks".
+		 * ------------------------------------------------------------ */
+		case 'promo':
+			$vhub_promo = '';
+			if ( function_exists( 'vance_render_promo_home' ) ) {
+				ob_start();
+				vance_render_promo_home();
+				$vhub_promo = trim( (string) ob_get_clean() );
+			}
+			if ( '' !== $vhub_promo ) :
+				?>
 <div class="vhub-promo">
 	<?php echo $vhub_promo; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by vance_render_promo_block(). ?>
 </div>
 <?php endif; ?>
 
 
-<?php /* ---------------------------------------------------------------
- * h. Library: the newest real articles. No "Goes with" lines: no mapping
- *    from article to tool exists.
- * ------------------------------------------------------------------ */
-$vhub_posts = vance_hub_library_posts();
-// Every article already on the page. The blocks below skip these, so no post
-// appears twice.
-$vhub_shown = array_column( $vhub_posts, 'id' );
-if ( ! empty( $vhub_posts ) ) :
-	$vhub_feat = array_shift( $vhub_posts );
-	?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * h. Library: the newest real articles (read in the data phase above).
+		 *    No "Goes with" lines: no mapping from article to tool exists.
+		 * ------------------------------------------------------------ */
+		case 'library':
+			if ( ! empty( $vhub_posts ) ) :
+				$vhub_feat = array_shift( $vhub_posts );
+				?>
 <section class="vhub-wrap vhub-section vhub-library" aria-labelledby="vhub-library-title">
 	<div class="vhub-library__head">
 		<h2 id="vhub-library-title" class="vhub-library__title"><?php esc_html_e( 'From the library', 'vance-health-hub' ); ?></h2>
@@ -366,15 +424,18 @@ if ( ! empty( $vhub_posts ) ) :
 </section>
 <?php endif; ?>
 
-<?php /* ---------------------------------------------------------------
- * h2. Latest by section: one column per content section the site really
- *     has (category term found, posts found), newest first, none repeated
- *     from the library above. Off with "Hub: show Latest by section".
- * ------------------------------------------------------------------ */
-$vhub_sections = vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_sections', true ) )
-	? vance_hub_section_columns( $vhub_shown, 3 )
-	: array();
-if ( ! empty( $vhub_sections ) ) : ?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * h2. Latest by section: one column per content section the site really
+		 *     has (category term found, posts found), newest first, none repeated
+		 *     from the library (read in the data phase above). Off by removing
+		 *     "Latest by section" from "Home page blocks".
+		 * ------------------------------------------------------------ */
+		case 'sections':
+			if ( ! empty( $vhub_sections ) ) :
+				?>
 <section class="vhub-wrap vhub-section vhub-secs" aria-labelledby="vhub-secs-title">
 	<div class="vhub-library__head">
 		<h2 id="vhub-secs-title" class="vhub-library__title"><?php esc_html_e( 'Latest by section', 'vance-health-hub' ); ?></h2>
@@ -417,15 +478,17 @@ if ( ! empty( $vhub_sections ) ) : ?>
 </section>
 <?php endif; ?>
 
-<?php /* ---------------------------------------------------------------
- * h3. More to read: up to six further recent posts not shown above.
- *     Phones show the first four (hub-home.css). Off with
- *     "Hub: show More to read".
- * ------------------------------------------------------------------ */
-$vhub_more = vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_show_more', true ) )
-	? vance_hub_more_posts( $vhub_shown, 6 )
-	: array();
-if ( ! empty( $vhub_more ) ) : ?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * h3. More to read: further recent posts not shown above (read in the
+		 *     data phase above). Phones show the first four (hub-home.css). Off
+		 *     by removing "More to read" from "Home page blocks".
+		 * ------------------------------------------------------------ */
+		case 'more':
+			if ( ! empty( $vhub_more ) ) :
+				?>
 <section class="vhub-wrap vhub-section vhub-more" aria-labelledby="vhub-more-title">
 	<div class="vhub-library__head">
 		<h2 id="vhub-more-title" class="vhub-library__title"><?php esc_html_e( 'More to read', 'vance-health-hub' ); ?></h2>
@@ -459,18 +522,23 @@ if ( ! empty( $vhub_more ) ) : ?>
 </section>
 <?php endif; ?>
 
-<?php /* ---------------------------------------------------------------
- * i. Join band. Logged-out: opens the theme's existing join modal
- *    (openGuestModal() in footer.php); the link is the no-JS fallback.
- *    Logged-in: a link to the dashboard.
- * ------------------------------------------------------------------ */ ?>
-<?php if ( ! $vhub_logged_in ) : ?>
+<?php
+			break;
+
+		/* ---------------------------------------------------------------
+		 * i. Join band. Logged-out: opens the theme's existing join modal
+		 *    (openGuestModal() in footer.php); the link is the no-JS fallback.
+		 *    Logged-in: a link to the dashboard.
+		 * ------------------------------------------------------------ */
+		case 'join':
+			if ( ! $vhub_logged_in ) :
+				?>
 <section id="vhub-join" class="vhub-join" aria-labelledby="vhub-join-title">
 	<div class="vhub-wrap vhub-join__inner">
 		<div class="vhub-join__copy">
-			<p class="vhub-pill vhub-pill--white"><?php esc_html_e( 'Membership is free', 'vance-health-hub' ); ?></p>
-			<h2 id="vhub-join-title" class="vhub-h2 vhub-h2--light"><?php esc_html_e( 'Your place is ready.', 'vance-health-hub' ); ?></h2>
-			<p class="vhub-join__text"><?php esc_html_e( 'Members keep their survey answers, tool results and meal plans. They can save articles and notes, and their VANCE-Ai chats stay in their dashboard.', 'vance-health-hub' ); ?></p>
+			<p class="vhub-pill vhub-pill--white"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_join_pill' ) ); ?></p>
+			<h2 id="vhub-join-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_join_title' ) ); ?></h2>
+			<p class="vhub-join__text"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_join_text' ) ); ?></p>
 			<?php if ( '' !== $vhub_bar['deadline'] ) : ?>
 				<p class="vhub-join__founding"><?php
 					/* translators: %s: Founding Member deadline date. */
@@ -479,8 +547,8 @@ if ( ! empty( $vhub_more ) ) : ?>
 			<?php endif; ?>
 		</div>
 		<div class="vhub-join__card">
-			<p class="vhub-join__card-title"><?php esc_html_e( 'Take your place', 'vance-health-hub' ); ?></p>
-			<a class="vhub-btn vhub-btn--purple vhub-btn--block" href="<?php echo esc_url( $vhub_signup ); ?>" data-vhub-join><?php esc_html_e( 'Create my free account', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+			<p class="vhub-join__card-title"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_join_card' ) ); ?></p>
+			<a class="vhub-btn vhub-btn--purple vhub-btn--block" href="<?php echo esc_url( $vhub_signup ); ?>" data-vhub-join><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_join_button' ) ); ?> <span aria-hidden="true">&rarr;</span></a>
 			<p class="vhub-join__signin"><?php esc_html_e( 'Already a member?', 'vance-health-hub' ); ?> <a href="<?php echo esc_url( $vhub_signin ); ?>"><?php esc_html_e( 'Sign in', 'vance-health-hub' ); ?></a></p>
 		</div>
 	</div>
@@ -489,14 +557,20 @@ if ( ! empty( $vhub_more ) ) : ?>
 <section class="vhub-join vhub-join--member" aria-labelledby="vhub-join-title">
 	<div class="vhub-wrap vhub-join__inner">
 		<div class="vhub-join__copy">
-			<h2 id="vhub-join-title" class="vhub-h2 vhub-h2--light"><?php esc_html_e( 'Pick up where you left off.', 'vance-health-hub' ); ?></h2>
-			<p class="vhub-join__text"><?php esc_html_e( 'Your saved articles, notes, results and chats are in your dashboard.', 'vance-health-hub' ); ?></p>
+			<h2 id="vhub-join-title" class="vhub-h2 vhub-h2--light"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_member_title' ) ); ?></h2>
+			<p class="vhub-join__text"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_member_text' ) ); ?></p>
 		</div>
-		<a class="vhub-btn vhub-btn--white" href="<?php echo esc_url( $vhub_dashboard ); ?>"><?php esc_html_e( 'Go to My Hub', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+		<a class="vhub-btn vhub-btn--white" href="<?php echo esc_url( $vhub_dashboard ); ?>"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_member_button' ) ); ?> <span aria-hidden="true">&rarr;</span></a>
 	</div>
 </section>
 <?php endif; ?>
 
+<?php
+			break;
+
+	}
+}
+?>
 </main>
 
 <?php

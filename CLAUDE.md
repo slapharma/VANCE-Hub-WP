@@ -466,11 +466,17 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 - **`og:image` is present on every page**, falling back to
   `assets/img/og-default.jpg` where AIOSEO has none.
 - **The Customizer shows 25 theme panels.** The VanceHubClub panel comes first and
-  has eight numbered sections, from "1. On or off" to "8. Flare plan (health data)".
+  has eleven numbered sections, from "1. On or off" to "11. Flare plan (health data)".
   The other 24 are grouped Site / Home / Content / Section / Pages / Members /
   Website Functions. No panel called "Hero
   Overlays" or "Advanced" — those are the old names; see "Customizer
   structure" above.
+- **VanceHubClub home page (`?vhh_layout=hub`).** Open the home page as an administrator with
+  `?vhh_layout=hub`. With no home page setting saved, the hero and the three facts show first.
+  Then each block with data shows, in the default order: Tools, Inside the Hub, Conditions,
+  Community and recipes, Promo block, From the library, Latest by section, More to read, Join block.
+  A block with no data prints nothing. Inside the Hub stays hidden until a member tile has a title.
+  Community and recipes stays hidden until a community quote exists.
 
 A quick way to run most of this: fetch every URL in the sitemap and assert on
 content, not status codes. All 217 returned 200 with zero PHP notices on
@@ -605,7 +611,7 @@ This is health data. The card records the member's own words and gives no advice
   flare log, the quick check and the appointment sheet all sit inside this card, so the
   same switch turns them off too. The switch does not hide the "Manage my data" tab.
 - **Urgent help text:** theme mod `vance_hub_flare_plan_urgent`, set in Customize in
-  section 8, "8. Flare plan (health data)" (section id `vance_hub_sec_flare`), of the
+  section 11, "11. Flare plan (health data)" (section id `vance_hub_sec_flare`), of the
   VanceHubClub panel. It has no default. While it is empty the card does not show and
   a save is refused. Do not write this text as an agent. A clinician must write or
   approve it, and the site has no named medical reviewer (see Outstanding work, item 1).
@@ -723,6 +729,116 @@ This is health data. The card records the member's own words and gives no advice
   plan and the log, that erasing it clears both and withdraws the agreement, and that only a
   group with data shows a form.
 
+### VanceHubClub home page settings — `inc/hub-home-settings.php`
+
+The Customizer sets what the VanceHubClub home page shows. `front-page-hub.php` prints the page.
+`inc/hub-home-settings.php` holds the registries and readers. Its controls sit in sections 2 to 4
+of the VanceHubClub panel. The member tiles (section 5) are in `inc/hub-layout.php`.
+
+- **Blocks.** Nine blocks can move or hide: `tools`, `inside`, `conditions`, `community`, `promo`,
+  `library`, `sections`, `more`, `join`. The labels are in `vance_hub_home_blocks()`. The hero, the
+  three facts and the member bar always print first. They are not in the list.
+- **Block order.** The setting is `vance_hub_block_order`. It holds block ids separated by commas,
+  in print order, for example `tools,library,join`. Unknown and repeated ids are dropped. An empty
+  value hides every block.
+- **Never saved.** A setting that was never saved is not the same as one saved empty. A never-saved
+  setting gives `vance_hub_block_order_default()`: all nine blocks, minus any block whose retired
+  switch is saved off. A saved empty value hides all nine blocks.
+- **Retired switches.** `vance_hub_show_promo`, `vance_hub_show_sections` and `vance_hub_show_more`
+  have no control. Their settings stay registered, so a value saved earlier stays valid and the reader
+  can still read it. A saved "off" still hides its block until the block order is saved once. After
+  that, the block order decides and the switches are ignored.
+- **Fixed data order.** The three article blocks query in this order: library, then Latest by section,
+  then More to read. Each later query skips the articles that came before it, so no article appears twice.
+  A block that is off runs no query and adds no article. With Latest by section off, More to read
+  takes the next posts. A block that is not in the order runs no query at all.
+- **Counts.** Five numbers. Each has a default, a smallest and a largest value, in `vance_hub_home_counts()`:
+  - `vance_hub_count_sections`: 3, from 1 to 6. Articles in each Latest by section column.
+  - `vance_hub_count_more`: 6, from 3 to 12. More to read articles.
+  - `vance_hub_count_library`: 4, from 2 to 7. Library articles, one large and a list.
+  - `vance_hub_count_recipes`: 2, from 1 to 4. Recipes in each recipe list.
+  - `vance_hub_count_quotes`: 4, from 1 to 4. Community quotes.
+  A value outside the range goes to the nearest limit. A value that is not a number gives the default.
+- **Texts.** There are 22 texts, in `vance_hub_home_text_defaults()`. They cover the hero (4), the
+  Self-Assessment card (4), the facts (6), the Join block for visitors (5) and the Join block for
+  members (3). An empty text, or one with only spaces, shows the default.
+- **Fixed note.** The note under the Self-Assessment button, "You can change any answer later. This is
+  not a diagnosis.", is fixed in `front-page-hub.php`. It is not a setting. Keep it fixed. It is a
+  safety statement.
+- **Tool cards.** The home page has four card slots. Each slot has a tool (`vance_hub_tool_{n}_pick`),
+  and optional title, text, button, link and image. The defaults are Self-Assessment, Nutrition check,
+  Meal planner and Discounts and benefits, in that order. "Hide this card" removes that card.
+  An empty field keeps the standard wording of the tool. A custom image takes its alt text from the
+  media library, so an image with no alt text prints an empty alt. With every slot hidden, the Tools
+  block prints nothing.
+- **Home page only.** `vance_hub_home_tools()` builds the home page cards. `vance_hub_tools()` keeps
+  the standard list. The article sidebar (`inc/hub-article.php`) and the member dashboard
+  (`inc/hub-dashboard.php`) read `vance_hub_tools()`, so the slots do not change them.
+- **`vance_hub_join_href()`.** It returns `#vhub-join` when the Join block prints and the visitor is not
+  signed in. Otherwise it returns the sign-up page. The member bar uses it, so the link never points at
+  an anchor that is not on the page.
+- **Add a block.** Add its id and label to `vance_hub_home_blocks()`. The Customizer control and the
+  admin screen read that list. Add a `case` for it in the loop in `front-page-hub.php`. If it needs
+  articles, add its query to the data phase in the fixed order. Then update the block lists in
+  `tests/hub-customizer.test.php` (section 8) and `tests/hub-admin.test.php` (section 5).
+- **Add a text.** Add a row to `vance_hub_home_text_defaults()`: default, label, group and type
+  (`text` or `textarea`). Use an existing group, or add the group to the `$where` list in
+  `vance_hub_home_customize_register()`. Print the text with `vance_hub_home_text()`. The test checks
+  exactly 22 texts, so update `tests/hub-customizer.test.php` too.
+- **Add a count.** Add a row to `vance_hub_home_counts()`: default, smallest, largest and label. Read it
+  with `vance_hub_count()`. The test checks exactly five counts, so update `tests/hub-customizer.test.php`.
+- **Tests.** Run `cd tests && php hub-layout.test.php`, `php hub-customizer.test.php`,
+  `php hub-admin.test.php` and `php hub-golive.test.php`.
+- **Byte-identical rule.** With no new setting saved, the home page must not change. To check this,
+  run `hub-layout.test.php` before and after your change, each time with `VHH_DUMP_DIR` set to an
+  existing empty folder. The suite writes each rendered page as `home-1.html`, `home-2.html` and so
+  on. Compare the two folders file by file. The files must match byte for byte. Use the same test file
+  for both runs. For example: `cd tests && VHH_DUMP_DIR=/path/to/before php hub-layout.test.php`.
+
+### Scheduled go-live — `inc/hub-golive.php`
+
+- **The setting.** `vance_hub_golive_at` holds the switch time as `YYYY-MM-DDTHH:MM`, for example
+  `2026-07-01T09:30`. Seconds are accepted and dropped. An invalid value saves as empty. The time is in
+  the site time zone (`wp_timezone()`). An empty value means no planned change.
+- **The control.** Section 1, "On or off": "Go-live date and time" (a date and time field).
+- **Two triggers.** Both call `vance_hub_golive_run()`:
+  - `init`, priority 20, on every request. With no date saved, the run costs one theme mod read. This
+    trigger decides.
+  - The WP-Cron event `vance_hub_golive_event`. The Customizer save plans it for the saved time
+    (`customize_save_after`). It helps a site with little traffic. A missed event does not stop the
+    switch, because the `init` trigger still decides.
+- **What a switch writes.** The run switches when the time has passed and the layout is not already
+  `hub`. It writes, in this order:
+  1. `vance_home_layout` to `hub`;
+  2. removes `vance_hub_golive_at`;
+  3. `vance_hub_golive_done_at` to the current time.
+  It then fires `litespeed_purge_all` and the action `vance_hub_went_live`. It writes nothing else. It
+  never turns on the daily check-in (`vance_hub_dash_checkin`) or the flare plan
+  (`vance_hub_dash_flare_plan`). Those hold health data and keep their own state.
+- **Decisions.** `vance_hub_golive_decide()` returns one of four values: `none` (no valid date), `wait`
+  (the time is in the future), `switch` (the time has come and the layout is not `hub`) and `clear`
+  (the layout is already `hub`). On `clear`, the run removes the date at once, even when its time is
+  still in the future.
+- **Customizer preview guard. Never remove it.** `vance_hub_golive_run()` returns `none` while
+  `is_customize_preview()` is true. In the preview, a theme mod reads as its unsaved value. Without
+  this guard, an administrator who types a date and does not publish it would make a real, saved switch.
+- **Page cache.** The switch fires `litespeed_purge_all`, which reaches the LiteSpeed Cache plugin only.
+  A page that the page cache serves never reaches WordPress. The Hostinger cache is a separate layer, and
+  the theme cannot purge it. After the go-live time, purge the Hostinger cache by hand (hPanel → Cache
+  Manager → Purge All). Otherwise visitors can see the classic home page until that cache expires. This
+  is not verified on the live server.
+- **`vance_hub_golive_done_at`.** The Unix time of the last switch. Only the run sets it, and nothing
+  clears it. The admin screen shows "VanceHubClub went live by schedule on ..." while the layout is `hub`
+  and this value is set. That line also shows after a later manual switch to `hub`.
+- **Safe to run twice.** Each write sets or removes one value, so a second run decides `none`. Two
+  overlapping runs can write the same values again. Only the purge and the action can fire twice, and
+  both are harmless twice.
+- **Past time.** A time that is already past switches the site on the next request. There is no
+  confirmation step.
+- **Stale changeset.** A Customizer changeset that was drafted before the switch and still holds
+  `vance_home_layout` set to classic puts the site back to classic if someone publishes it later.
+- **Tests.** Run `cd tests && php hub-golive.test.php`.
+
 ## Customizer structure: one map decides where everything sits
 
 Panels, sections and controls are still registered where they always were:
@@ -801,7 +917,7 @@ kept in the repo.
 The VanceHubClub panel is not in the structure map. Its id is the constant
 `VANCE_HUB_CUSTOMIZER_PANEL`. It sits at priority 1, above the seven silos.
 
-The sections and the 13 switch labels are named in one place: `vance_hub_customizer_sections()`
+The sections and the 10 switch labels are named in one place: `vance_hub_customizer_sections()`
 and `vance_hub_customizer_switches()` in `inc/hub-layout.php`. The Vance Club Layout admin
 screen (`inc/hub-admin.php`) reads the same two lists, so the screen and the Customizer use the
 same words.
@@ -809,13 +925,21 @@ same words.
 | Section priority | Section id | Title |
 |---|---|---|
 | 10 | `vance_home_layout` | 1. On or off |
-| 20 | `vance_hub_sec_home` | 2. Home page |
-| 30 | `vance_hub_sec_header` | 3. Header and member bar |
-| 40 | `vance_hub_sec_pages` | 4. Articles and Self-Assessment |
-| 50 | `vance_hub_sec_dashboard` | 5. Member dashboard |
-| 60 | `vance_hub_sec_community` | 6. Community |
-| 70 | `vance_hub_sec_checkin` | 7. Daily check-in (health data) |
-| 80 | `vance_hub_sec_flare` | 8. Flare plan (health data) |
+| 20 | `vance_hub_sec_home` | 2. Home page: blocks and counts |
+| 30 | `vance_hub_sec_home_text` | 3. Home page: text |
+| 40 | `vance_hub_sec_home_tools` | 4. Home page: tool cards |
+| 50 | `vance_hub_sec_home_tiles` | 5. Home page: member tiles |
+| 60 | `vance_hub_sec_header` | 6. Header and member bar |
+| 70 | `vance_hub_sec_pages` | 7. Articles and Self-Assessment |
+| 80 | `vance_hub_sec_dashboard` | 8. Member dashboard |
+| 90 | `vance_hub_sec_community` | 9. Community |
+| 100 | `vance_hub_sec_checkin` | 10. Daily check-in (health data) |
+| 110 | `vance_hub_sec_flare` | 11. Flare plan (health data) |
+
+The numbers in the titles come from the position in `vance_hub_customizer_sections()`. A section
+that moves gets a new number. Do not type a section number into text. Use
+`vance_hub_customizer_section_number( 'vance_hub_sec_flare' )` and put the result in a `%d`
+placeholder, as the go-live field and the flare plan description do.
 
 Section 1 keeps the id `vance_home_layout`, which is also the id of the master setting.
 
@@ -825,7 +949,10 @@ Rules for this panel:
 - To move, rename or retitle a section, or to move or relabel a switch, edit
   `inc/hub-layout.php`. Do not edit the structure map for this panel. Other controls set
   their own section in the file that registers them. For example, the flare controls are
-  registered in `vance_hub_flare_plan_customize()` in `inc/hub-flare-plan.php`.
+  registered in `vance_hub_flare_plan_customize()` in `inc/hub-flare-plan.php`. The home page
+  block order, counts and texts (sections 2 to 4) are registered in `inc/hub-home-settings.php`.
+  The member tiles (section 5) are registered in `inc/hub-layout.php`. The go-live field
+  (section 1) is registered in `inc/hub-golive.php`.
 - `inc/customizer-structure.php` does not manage this panel. Its clean-up step at the end
   still runs over every `vance_` section and panel, and it removes one that has no controls
   or no sections.
