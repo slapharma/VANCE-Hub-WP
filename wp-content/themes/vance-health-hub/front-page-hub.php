@@ -81,7 +81,7 @@ if ( ! ( function_exists( 'vance_hub_header_active' ) && vance_hub_header_active
 <section class="vhub-hero" style="<?php echo esc_attr( vance_hub_hero_style( vance_get_theme_mod( 'vance_hero_spotlight_bg_from', '#ECF5F5' ), vance_get_theme_mod( 'vance_hero_spotlight_bg_to', '#F6F9FA' ) ) ); ?>" aria-labelledby="vhub-hero-title">
 	<div class="vhub-wrap vhub-hero__inner">
 		<div class="vhub-hero__copy">
-			<div class="vhub-hero__head"<?php if ( $vhub_hero_img ) : ?> style="--vhub-hero-photo: url('<?php echo esc_url( $vhub_hero_img ); ?>');"<?php endif; ?>>
+			<div class="vhub-hero__head"<?php if ( $vhub_hero_img ) : ?> style="--vhub-hero-photo: url('<?php echo esc_url( function_exists( 'vance_hub_look_css_url' ) ? vance_hub_look_css_url( $vhub_hero_img ) : $vhub_hero_img ); ?>');"<?php endif; ?>>
 				<p class="vhub-pill vhub-pill--purple"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_pill' ) ); ?></p>
 				<h1 id="vhub-hero-title" class="vhub-hero__title"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_title' ) ); ?> <span class="vhub-hero__accent"><?php echo esc_html( vance_hub_home_text( 'vance_hub_text_hero_accent' ) ); ?></span></h1>
 			</div>

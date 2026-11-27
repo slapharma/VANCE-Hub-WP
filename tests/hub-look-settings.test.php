@@ -434,6 +434,20 @@ $H = look_home_html();
 check( 'hero: nothing saved, the home page prints the standard alt', strpos( $H, 'alt="Five people sit in a circle of chairs and talk; one woman holds a clipboard"' ) !== false );
 check( 'hero: nothing saved, the home page prints 800 by 650', strpos( $H, 'width="800" height="650"' ) !== false );
 
+// The CSS url() in the hero style attribute.
+check( 'css url: an apostrophe becomes %27', vance_hub_look_css_url( "https://cdn.example/a'b.jpg" ) === 'https://cdn.example/a%27b.jpg' );
+check( 'css url: an opening bracket becomes %28', vance_hub_look_css_url( 'https://cdn.example/a(b.jpg' ) === 'https://cdn.example/a%28b.jpg' );
+check( 'css url: a closing bracket becomes %29', vance_hub_look_css_url( 'https://cdn.example/a)b.jpg' ) === 'https://cdn.example/a%29b.jpg' );
+check( 'css url: a URL without those characters is unchanged', vance_hub_look_css_url( 'https://cdn.example/uploads/hero-1.jpg?v=3&w=2' ) === 'https://cdn.example/uploads/hero-1.jpg?v=3&w=2' );
+check( 'css url: the standard photo URL is unchanged', vance_hub_look_css_url( $STANDARD['src'] ) === $STANDARD['src'] );
+
+look_arrange( array( 'vance_hub_hero_image' => 9001 ) );
+$GLOBALS['IMG_SRC'][9001] = array( "https://cdn.example/a(1)'b.jpg", 1024, 768, false );
+$H = look_home_html();
+check( 'css url: the home page holds the encoded URL inside --vhub-hero-photo', strpos( $H, "--vhub-hero-photo: url('https://cdn.example/a%281%29%27b.jpg');" ) !== false );
+preg_match( "/--vhub-hero-photo: url\\('(.*?)'\\);/", $H, $CSS );
+check( 'css url: no raw apostrophe, bracket or entity of one sits before the closing quote', isset( $CSS[1] ) && ! preg_match( "/['()]|&#0*39;|&apos;/", $CSS[1] ) );
+
 /* ===================================================================== */
 section( '4. The header: labels, links and the bad stored link' );
 

@@ -473,6 +473,22 @@ function vance_hub_look_link( $which ) {
  * ====================================================================== */
 
 /**
+ * Make a URL safe inside a CSS url('...') in a style attribute. Pure.
+ *
+ * esc_url() leaves ( and ) as they are, and its &#039; for ' is decoded again
+ * by the browser inside the attribute. Each of the three would end the CSS
+ * string early. They become %27, %28 and %29, which every browser reads back as
+ * the same characters in the address. The caller still escapes the result.
+ * Use it only for the CSS url(), not for an <img src>.
+ *
+ * @param string $url URL.
+ * @return string URL with ', ( and ) percent-encoded.
+ */
+function vance_hub_look_css_url( $url ) {
+	return strtr( (string) $url, array( "'" => '%27', '(' => '%28', ')' => '%29' ) );
+}
+
+/**
  * Put the saved hero image on the standard one. Pure: no theme mod is read.
  *
  * With a valid attachment, the image is the 'large' size of that attachment and
