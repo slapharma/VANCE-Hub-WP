@@ -119,7 +119,9 @@ function vance_hub_date_open( $deadline, $today ) {
  *                reached the threshold;
  *   'founding' - the Founding Member line, for logged-out visitors only, when
  *                the total is below the threshold and a deadline is open;
- *   ''         - nothing: the bar does not render.
+ *   ''         - nothing: the bar does not render. This is also the result for
+ *                every input while the "Show the member bar" switch
+ *                (vance_hub_member_bar) is off.
  *
  * @param int  $total         Real number of registered users.
  * @param int  $threshold     Minimum total before counts show.
@@ -128,6 +130,12 @@ function vance_hub_date_open( $deadline, $today ) {
  * @return string
  */
 function vance_hub_member_bar_mode( $total, $threshold, $founding_open, $logged_in ) {
+	// The "Show the member bar" switch: off hides the bar and nothing else. The
+	// Join block on the home page reads the deadline from vance_hub_member_bar(),
+	// which does not depend on this mode, so its Founding Member line stays.
+	if ( ! vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_member_bar', vance_hub_switch_default( 'vance_hub_member_bar' ) ) ) ) {
+		return '';
+	}
 	$total     = max( 0, (int) $total );
 	$threshold = max( 0, (int) $threshold );
 	if ( $total > 0 && $total >= $threshold ) {
@@ -526,6 +534,10 @@ function vance_hub_customizer_sections() {
 			'title'       => __( 'Member dashboard', 'vance-health-hub' ),
 			'description' => __( 'What a member sees after sign in.', 'vance-health-hub' ),
 		),
+		'vance_hub_sec_dashboard_text' => array(
+			'title'       => __( 'Member dashboard: text', 'vance-health-hub' ),
+			'description' => __( 'Change the greeting and the four "next step" cards on the home screen of the member dashboard.', 'vance-health-hub' ),
+		),
 		'vance_hub_sec_community' => array(
 			'title'       => __( 'Community', 'vance-health-hub' ),
 			'description' => __( 'The Community hub at /community/.', 'vance-health-hub' ),
@@ -572,6 +584,7 @@ function vance_hub_customizer_section_number( $id ) {
 function vance_hub_customizer_switches() {
 	return array(
 		'vance_hub_header'         => array( 'section' => 'vance_hub_sec_header', 'label' => __( 'Use the VanceHubClub header', 'vance-health-hub' ) ),
+		'vance_hub_member_bar'     => array( 'section' => 'vance_hub_sec_header', 'label' => __( 'Show the member bar', 'vance-health-hub' ) ),
 		'vance_hub_articles'        => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Use the VanceHubClub article layout', 'vance-health-hub' ) ),
 		'vance_hub_tool_result'     => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Show the Self-Assessment result page', 'vance-health-hub' ) ),
 		'vance_hub_show_dashboard'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Use the VanceHubClub dashboard home', 'vance-health-hub' ) ),
@@ -920,6 +933,15 @@ function vance_hub_render_member_bar( $args = array() ) {
 		? $args['join_href']
 		: home_url( '/login/?tab=signup' );
 
+	// Custom wording from inc/hub-look-settings.php. '' means "use the built-in
+	// sentence below"; with that file missing every value stays at the built-in one.
+	$look       = function_exists( 'vance_hub_look_bar_text' ) && function_exists( 'vance_hub_look_fill' );
+	$text_total = $look ? vance_hub_look_bar_text( 'vance_hub_text_bar_total' ) : '';
+	$text_week  = $look ? vance_hub_look_bar_text( 'vance_hub_text_bar_week' ) : '';
+	$text_found = function_exists( 'vance_hub_look_founding_line' ) && '' !== $bar['deadline'] ? vance_hub_look_founding_line( vance_hub_format_date( $bar['deadline'] ) ) : '';
+	$link_visit = $look ? vance_hub_look_bar_text( 'vance_hub_text_bar_link_visitor' ) : __( 'See what members get', 'vance-health-hub' );
+	$link_mem   = $look ? vance_hub_look_bar_text( 'vance_hub_text_bar_link_member' ) : __( 'Go to My Hub', 'vance-health-hub' );
+
 	if ( 'counts' === $bar['mode'] ) :
 		?>
 	<div class="vhub-bar">
@@ -927,20 +949,24 @@ function vance_hub_render_member_bar( $args = array() ) {
 			<p class="vhub-bar__text">
 				<strong><?php
 					/* translators: %s: number of registered members. */
-					echo esc_html( sprintf( _n( '%s member', '%s members', $bar['total'], 'vance-health-hub' ), number_format_i18n( $bar['total'] ) ) );
+					echo esc_html( '' !== $text_total
+						? vance_hub_look_fill( $text_total, array( '{count}' => number_format_i18n( $bar['total'] ) ) )
+						: sprintf( _n( '%s member', '%s members', $bar['total'], 'vance-health-hub' ), number_format_i18n( $bar['total'] ) ) );
 				?></strong>
 				<?php if ( $bar['week'] > 0 ) : ?>
 					<span aria-hidden="true">&middot;</span>
 					<?php
 					/* translators: %s: number of members who joined in the last seven days. */
-					echo esc_html( sprintf( _n( '%s joined this week', '%s joined this week', $bar['week'], 'vance-health-hub' ), number_format_i18n( $bar['week'] ) ) );
+					echo esc_html( '' !== $text_week
+						? vance_hub_look_fill( $text_week, array( '{count}' => number_format_i18n( $bar['week'] ) ) )
+						: sprintf( _n( '%s joined this week', '%s joined this week', $bar['week'], 'vance-health-hub' ), number_format_i18n( $bar['week'] ) ) );
 					?>
 				<?php endif; ?>
 			</p>
 			<?php if ( $logged_in ) : ?>
-				<a class="vhub-bar__link" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>"><?php esc_html_e( 'Go to My Hub', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+				<a class="vhub-bar__link" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>"><?php echo esc_html( $link_mem ); ?> <span aria-hidden="true">&rarr;</span></a>
 			<?php else : ?>
-				<a class="vhub-bar__link" href="<?php echo esc_url( $join_href ); ?>"><?php esc_html_e( 'See what members get', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+				<a class="vhub-bar__link" href="<?php echo esc_url( $join_href ); ?>"><?php echo esc_html( $link_visit ); ?> <span aria-hidden="true">&rarr;</span></a>
 			<?php endif; ?>
 		</div>
 	</div>
@@ -951,9 +977,9 @@ function vance_hub_render_member_bar( $args = array() ) {
 		<div class="vhub-wrap vhub-bar__inner">
 			<p class="vhub-bar__text"><?php
 				/* translators: %s: Founding Member deadline date. */
-				echo esc_html( sprintf( __( 'Join by %s and keep the Founding Member mark.', 'vance-health-hub' ), vance_hub_format_date( $bar['deadline'] ) ) );
+				echo esc_html( '' !== $text_found ? $text_found : sprintf( __( 'Join by %s and keep the Founding Member mark.', 'vance-health-hub' ), vance_hub_format_date( $bar['deadline'] ) ) );
 			?></p>
-			<a class="vhub-bar__link" href="<?php echo esc_url( $join_href ); ?>"><?php esc_html_e( 'See what members get', 'vance-health-hub' ); ?> <span aria-hidden="true">&rarr;</span></a>
+			<a class="vhub-bar__link" href="<?php echo esc_url( $join_href ); ?>"><?php echo esc_html( $link_visit ); ?> <span aria-hidden="true">&rarr;</span></a>
 		</div>
 	</div>
 		<?php

@@ -111,6 +111,8 @@ class SuiteCustomizeFake {
 
 require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
+require_once $THEME . '/inc/hub-look-settings.php';
+require_once $THEME . '/inc/hub-brand.php';
 require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
@@ -137,6 +139,8 @@ function suite_section_order( $manager, $section ) {
 $M = new SuiteCustomizeFake();
 vance_hub_customize_register( $M );
 vance_hub_home_customize_register( $M );
+vance_hub_look_customize_register( $M );
+vance_hub_brand_customize_register( $M );
 vance_hub_golive_customize_register( $M );
 vance_hub_article_customize_register( $M );
 vance_hub_dash_features_customize( $M );
@@ -239,6 +243,49 @@ foreach ( array( 1 => 'survey', 2 => 'nutrition', 3 => 'recipes', 4 => 'discount
 }
 $TOOL_SETTINGS['vance_hub_golive_at'] = array( '', 'vance_hub_sanitize_datetime', 'vance_home_layout' );
 
+// The 29 look settings (inc/hub-look-settings.php): the hero photo, the member bar switch, four header texts,
+// three header links, five member bar texts and fifteen dashboard texts. Same shape as the tables above.
+// The three member bar lines, the greeting and the welcome line have the default '' on purpose: the template
+// keeps the built-in sentence and '' means "use it".
+$LOOK_SETTINGS = array(
+	'vance_hub_hero_image'               => array( 0, 'absint', 'vance_hub_sec_home' ),
+	'vance_hub_member_bar'               => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_header' ),
+	'vance_hub_text_signin'              => array( 'Sign in', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_join'                => array( 'Join free', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_myhub'               => array( 'My Hub', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_search'              => array( 'Search articles, tools, recipes...', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_link_signin'              => array( '', 'vance_hub_sanitize_link', 'vance_hub_sec_header' ),
+	'vance_hub_link_join'                => array( '', 'vance_hub_sanitize_link', 'vance_hub_sec_header' ),
+	'vance_hub_link_myhub'               => array( '', 'vance_hub_sanitize_link', 'vance_hub_sec_header' ),
+	'vance_hub_text_bar_total'           => array( '', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_bar_week'            => array( '', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_bar_founding'        => array( '', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_bar_link_visitor'    => array( 'See what members get', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_bar_link_member'     => array( 'Go to My Hub', 'sanitize_text_field', 'vance_hub_sec_header' ),
+	'vance_hub_text_dash_hello'          => array( '', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_welcome'        => array( '', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_step_label'     => array( 'Your next step', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_survey_title'   => array( 'Do the Gastro Self-Assessment', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_survey_text'    => array( 'Your answers go into your Health Profile. The Hub then shows what fits you.', 'sanitize_textarea_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_survey_button'  => array( 'Start the survey', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_profile_title'  => array( 'Complete your Health Profile', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_profile_text'   => array( 'Add your condition and your care details. You can change them at any time.', 'sanitize_textarea_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_profile_button' => array( 'Open my Health Profile', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_plan_title'     => array( 'Build your first meal plan', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_plan_text'      => array( 'Choose recipes for the week. Your saved plans show on your dashboard.', 'sanitize_textarea_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_plan_button'    => array( 'Open the planner', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_check_title'    => array( 'Check your nutrition risk', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_check_text'     => array( 'A short check with a clear result. Your saved checks show in your Health Profile.', 'sanitize_textarea_field', 'vance_hub_sec_dashboard_text' ),
+	'vance_hub_text_dash_check_button'   => array( 'Start the check', 'sanitize_text_field', 'vance_hub_sec_dashboard_text' ),
+);
+
+// The 3 brand colour settings (inc/hub-brand.php): one sanitiser and one validator for all three.
+$BRAND_SETTINGS = array(
+	'vance_hub_color_teal'   => array( '#008080', 'vance_hub_sanitize_brand_color', 'vance_hub_sec_header' ),
+	'vance_hub_color_navy'   => array( '#0A1929', 'vance_hub_sanitize_brand_color', 'vance_hub_sec_header' ),
+	'vance_hub_color_purple' => array( '#6B489E', 'vance_hub_sanitize_brand_color', 'vance_hub_sec_header' ),
+);
+
 $SECTION_IDS = array(
 	'vance_home_layout',
 	'vance_hub_sec_home',
@@ -248,6 +295,7 @@ $SECTION_IDS = array(
 	'vance_hub_sec_header',
 	'vance_hub_sec_pages',
 	'vance_hub_sec_dashboard',
+	'vance_hub_sec_dashboard_text',
 	'vance_hub_sec_community',
 	'vance_hub_sec_checkin',
 	'vance_hub_sec_flare',
@@ -258,6 +306,7 @@ $ORDER = array(
 	'vance_home_layout'       => array( 'vance_home_layout', 'vance_hub_golive_at' ),
 	'vance_hub_sec_home'      => array(
 		'vance_hub_block_order', 'vance_hub_count_sections', 'vance_hub_count_more', 'vance_hub_count_library', 'vance_hub_count_recipes', 'vance_hub_count_quotes',
+		'vance_hub_hero_image',
 	),
 	'vance_hub_sec_home_text' => array(
 		'vance_hub_text_hero_pill', 'vance_hub_text_hero_title', 'vance_hub_text_hero_accent', 'vance_hub_text_hero_sub',
@@ -279,9 +328,24 @@ $ORDER = array(
 		'vance_hub_tile_3_badge', 'vance_hub_tile_3_title', 'vance_hub_tile_3_text', 'vance_hub_tile_3_link',
 		'vance_hub_tile_4_badge', 'vance_hub_tile_4_title', 'vance_hub_tile_4_text', 'vance_hub_tile_4_link',
 	),
-	'vance_hub_sec_header'    => array( 'vance_hub_header', 'vance_hub_member_min', 'vance_hub_founding_deadline' ),
+	// Priorities: 10 header switch, 15 member bar switch, 20 member total, 30 deadline, 40 to 70 header texts,
+	// 80 to 100 header links, 110 to 150 member bar texts.
+	'vance_hub_sec_header'    => array(
+		'vance_hub_header', 'vance_hub_member_bar', 'vance_hub_member_min', 'vance_hub_founding_deadline',
+		'vance_hub_text_signin', 'vance_hub_text_join', 'vance_hub_text_myhub', 'vance_hub_text_search',
+		'vance_hub_link_signin', 'vance_hub_link_join', 'vance_hub_link_myhub',
+		'vance_hub_text_bar_total', 'vance_hub_text_bar_week', 'vance_hub_text_bar_founding', 'vance_hub_text_bar_link_visitor', 'vance_hub_text_bar_link_member',
+		'vance_hub_color_teal', 'vance_hub_color_navy', 'vance_hub_color_purple',
+	),
 	'vance_hub_sec_pages'     => array( 'vance_hub_articles', 'vance_hub_tool_result' ),
 	'vance_hub_sec_dashboard' => array( 'vance_hub_show_dashboard', 'vance_hub_dashboard_tabs', 'vance_hub_dash_member_no', 'vance_hub_dash_chart' ),
+	'vance_hub_sec_dashboard_text' => array(
+		'vance_hub_text_dash_hello', 'vance_hub_text_dash_welcome', 'vance_hub_text_dash_step_label',
+		'vance_hub_text_dash_survey_title', 'vance_hub_text_dash_survey_text', 'vance_hub_text_dash_survey_button',
+		'vance_hub_text_dash_profile_title', 'vance_hub_text_dash_profile_text', 'vance_hub_text_dash_profile_button',
+		'vance_hub_text_dash_plan_title', 'vance_hub_text_dash_plan_text', 'vance_hub_text_dash_plan_button',
+		'vance_hub_text_dash_check_title', 'vance_hub_text_dash_check_text', 'vance_hub_text_dash_check_button',
+	),
 	'vance_hub_sec_community' => array( 'vance_hub_community' ),
 	'vance_hub_sec_checkin'   => array( 'vance_hub_dash_checkin', 'vance_hub_checkin_q_pain', 'vance_hub_checkin_q_bowel', 'vance_hub_checkin_q_tired', 'vance_hub_checkin_consent', 'vance_hub_checkin_note' ),
 	'vance_hub_sec_flare'     => array( 'vance_hub_dash_flare_plan', 'vance_hub_flare_plan_urgent', 'vance_hub_flare_plan_consent', 'vance_hub_flare_plan_note' ),
@@ -297,9 +361,10 @@ $TITLES = array(
 	'vance_hub_sec_header'     => '6. Header and member bar',
 	'vance_hub_sec_pages'      => '7. Articles and Self-Assessment',
 	'vance_hub_sec_dashboard'  => '8. Member dashboard',
-	'vance_hub_sec_community'  => '9. Community',
-	'vance_hub_sec_checkin'    => '10. Daily check-in (health data)',
-	'vance_hub_sec_flare'      => '11. Flare plan (health data)',
+	'vance_hub_sec_dashboard_text' => '9. Member dashboard: text',
+	'vance_hub_sec_community'  => '10. Community',
+	'vance_hub_sec_checkin'    => '11. Daily check-in (health data)',
+	'vance_hub_sec_flare'      => '12. Flare plan (health data)',
 );
 
 /* ---- check() and section() ------------------------------------------------ */
@@ -321,11 +386,11 @@ $EXP = array_keys( $SETTINGS );
 sort( $IDS );
 sort( $EXP );
 check( 'settings: the agreed table holds exactly forty original ids', count( $SETTINGS ) === 40 );
-check( 'settings: the registered ids are exactly the original forty plus the 28 new ones plus the 25 tool card and go-live ones (93)', count( $M->settings ) === 93 );
+check( 'settings: the registered ids are exactly the original forty plus the 28 new ones plus the 25 tool card and go-live ones plus the 29 look ones plus the 3 brand colours (125)', count( $M->settings ) === 125 );
 check( 'settings: the original forty are all still registered', array_diff( $EXP, $IDS ) === array() );
-$EXP_ALL = array_merge( $EXP, array_keys( $NEW_SETTINGS ), array_keys( $TOOL_SETTINGS ) );
+$EXP_ALL = array_merge( $EXP, array_keys( $NEW_SETTINGS ), array_keys( $TOOL_SETTINGS ), array_keys( $LOOK_SETTINGS ), array_keys( $BRAND_SETTINGS ) );
 sort( $EXP_ALL );
-check( 'settings: the registered ids are exactly the original forty plus the agreed 28 plus the agreed 25', $IDS === $EXP_ALL && count( $NEW_SETTINGS ) === 28 && count( $TOOL_SETTINGS ) === 25 );
+check( 'settings: the registered ids are exactly the original forty plus the agreed 28 plus the agreed 25 plus the agreed 29 plus the agreed 3', $IDS === $EXP_ALL && count( $NEW_SETTINGS ) === 28 && count( $TOOL_SETTINGS ) === 25 && count( $LOOK_SETTINGS ) === 29 && count( $BRAND_SETTINGS ) === 3 );
 
 foreach ( $SETTINGS as $id => $row ) {
 	check( "setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
@@ -342,42 +407,53 @@ foreach ( $TOOL_SETTINGS as $id => $row ) {
 	check( "tool/go-live setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
 }
 
+foreach ( $LOOK_SETTINGS as $id => $row ) {
+	check( "look setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
+	check( "look setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
+}
+
+foreach ( $BRAND_SETTINGS as $id => $row ) {
+	check( "brand setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
+	check( "brand setting $id: sanitize_callback equals the agreed sanitiser", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['sanitize_callback'] === $row[1] );
+	check( "brand setting $id: validate_callback is the contrast check", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['validate_callback'] === 'vance_hub_validate_brand_color' );
+}
+
 check( 'settings: the check-in texts equal vance_hub_checkin_text_defaults()', vance_hub_checkin_text_defaults()['vance_hub_checkin_note'] === $M->settings['vance_hub_checkin_note']['default'] && vance_hub_checkin_text_defaults()['vance_hub_checkin_q_pain'] === $M->settings['vance_hub_checkin_q_pain']['default'] );
 check( 'settings: the flare plan texts equal vance_hub_flare_plan_text_defaults()', vance_hub_flare_plan_text_defaults()['vance_hub_flare_plan_consent'] === $M->settings['vance_hub_flare_plan_consent']['default'] && vance_hub_flare_plan_text_defaults()['vance_hub_flare_plan_note'] === $M->settings['vance_hub_flare_plan_note']['default'] );
 
-section( '2. The panel and the eleven sections' );
+section( '2. The panel and the twelve sections' );
 
 check( 'panel: exactly one panel is registered', count( $M->panels ) === 1 );
 check( 'panel: it is vance_hub_panel', isset( $M->panels['vance_hub_panel'] ) );
 check( 'panel: its priority is 1', isset( $M->panels['vance_hub_panel']['priority'] ) && $M->panels['vance_hub_panel']['priority'] === 1 );
 check( 'panel: its title is VanceHubClub', isset( $M->panels['vance_hub_panel']['title'] ) && $M->panels['vance_hub_panel']['title'] === 'VanceHubClub' );
 
-check( 'sections: exactly eleven sections are registered', count( $M->sections ) === 11 );
+check( 'sections: exactly twelve sections are registered', count( $M->sections ) === 12 );
 check( 'sections: the sections are in the order of vance_hub_customizer_sections()', array_keys( $M->sections ) === array_keys( vance_hub_customizer_sections() ) );
-check( 'sections: the order is the agreed eleven, from section 1 to section 11', array_keys( $M->sections ) === $SECTION_IDS );
+check( 'sections: the order is the agreed twelve, from section 1 to section 12', array_keys( $M->sections ) === $SECTION_IDS );
 
 $PANEL_OF = array_column( array_values( $M->sections ), 'panel' );
-check( 'sections: every section sits in vance_hub_panel', $PANEL_OF === array_fill( 0, 11, 'vance_hub_panel' ) );
+check( 'sections: every section sits in vance_hub_panel', $PANEL_OF === array_fill( 0, 12, 'vance_hub_panel' ) );
 
 $PRIORITIES = array_column( array_values( $M->sections ), 'priority' );
 $SORTED     = $PRIORITIES;
 sort( $SORTED );
-check( 'sections: priorities strictly rise in screen order', $PRIORITIES === $SORTED && count( array_unique( $PRIORITIES ) ) === 11 );
+check( 'sections: priorities strictly rise in screen order', $PRIORITIES === $SORTED && count( array_unique( $PRIORITIES ) ) === 12 );
 
 $TITLE_NUMBERS = array_map( function ( $t ) { return preg_match( '/^(\d+)\. /', $t, $m ) ? (int) $m[1] : 0; }, array_column( array_values( $M->sections ), 'title' ) );
-check( 'sections: titles start 1. to 11. in order', $TITLE_NUMBERS === array( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ) );
+check( 'sections: titles start 1. to 12. in order', $TITLE_NUMBERS === array( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ) );
 check( 'sections: each title is the agreed title', array_column( array_values( $M->sections ), 'title' ) === array_values( $TITLES ) );
 check( 'sections: the number comes from the position: vance_hub_customizer_section_number() agrees with each title', array_map( 'vance_hub_customizer_section_number', array_keys( $M->sections ) ) === $TITLE_NUMBERS );
 check( 'sections: an unknown id has section number 0', vance_hub_customizer_section_number( 'vance_hub_sec_nothing' ) === 0 );
-check( 'sections: every section has a one-sentence description', count( array_filter( array_column( array_values( $M->sections ), 'description' ), function ( $d ) { return is_string( $d ) && '' !== $d; } ) ) === 11 );
+check( 'sections: every section has a one-sentence description', count( array_filter( array_column( array_values( $M->sections ), 'description' ), function ( $d ) { return is_string( $d ) && '' !== $d; } ) ) === 12 );
 
 section( '3. Controls: sections, priorities and on-screen order' );
 
 $CONTROL_SECTIONS = array_column( $M->controls, 'section' );
-check( 'controls: 90 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live)', count( $M->controls ) === 90 );
-check( 'controls: every control sits in one of the eleven sections', array_diff( $CONTROL_SECTIONS, $SECTION_IDS ) === array() );
-check( 'controls: no section is empty (all eleven sections hold controls)', count( array_count_values( $CONTROL_SECTIONS ) ) === 11 && array_diff( $SECTION_IDS, $CONTROL_SECTIONS ) === array() );
-check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 90 );
+check( 'controls: 122 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live, plus 29 look, plus 3 brand colours)', count( $M->controls ) === 122 );
+check( 'controls: every control sits in one of the twelve sections', array_diff( $CONTROL_SECTIONS, $SECTION_IDS ) === array() );
+check( 'controls: no section is empty (all twelve sections hold controls)', count( array_count_values( $CONTROL_SECTIONS ) ) === 12 && array_diff( $SECTION_IDS, $CONTROL_SECTIONS ) === array() );
+check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 122 );
 
 $DISTINCT_OK = true;
 foreach ( $SECTION_IDS as $sid ) {
@@ -402,26 +478,36 @@ foreach ( $NEW_SETTINGS as $id => $row ) {
 foreach ( $TOOL_SETTINGS as $id => $row ) {
 	check( "section: tool/go-live control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
 }
+foreach ( $LOOK_SETTINGS as $id => $row ) {
+	check( "section: look control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
+}
+foreach ( $BRAND_SETTINGS as $id => $row ) {
+	check( "section: brand control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
+}
 
 check( 'order: section 1 holds the master switch, then the go-live date (priorities 10 and 20)', suite_section_order( $M, 'vance_home_layout' ) === $ORDER['vance_home_layout'] && $M->controls['vance_home_layout']['priority'] === 10 && $M->controls['vance_hub_golive_at']['priority'] === 20 );
-check( 'order: section 2 runs the block order, then the five counts', suite_section_order( $M, 'vance_hub_sec_home' ) === $ORDER['vance_hub_sec_home'] );
+check( 'order: section 2 runs the block order, the five counts, then the hero photo', suite_section_order( $M, 'vance_hub_sec_home' ) === $ORDER['vance_hub_sec_home'] );
 check( 'order: section 3 runs hero, survey card, facts, visitor join, member join texts', suite_section_order( $M, 'vance_hub_sec_home_text' ) === $ORDER['vance_hub_sec_home_text'] );
 check( 'order: section 4 (tool cards) runs cards 1 to 4 (tool, title, text, button, link, image)', suite_section_order( $M, 'vance_hub_sec_home_tools' ) === $ORDER['vance_hub_sec_home_tools'] );
 $TOOL_PRIORITIES = array();
 foreach ( $ORDER['vance_hub_sec_home_tools'] as $id ) { $TOOL_PRIORITIES[] = $M->controls[ $id ]['priority']; }
 check( 'order: the card priorities are 10 to 15, 20 to 25, 30 to 35 and 40 to 45', $TOOL_PRIORITIES === array( 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 40, 41, 42, 43, 44, 45 ) );
 check( 'order: section 5 runs tiles 1 to 4 (badge, title, text, link)', suite_section_order( $M, 'vance_hub_sec_home_tiles' ) === $ORDER['vance_hub_sec_home_tiles'] );
-check( 'order: section 6 runs header, member total, founding deadline', suite_section_order( $M, 'vance_hub_sec_header' ) === $ORDER['vance_hub_sec_header'] );
+check( 'order: section 6 runs header, member bar switch, member total, founding deadline, header texts, header links, member bar texts', suite_section_order( $M, 'vance_hub_sec_header' ) === $ORDER['vance_hub_sec_header'] );
+$HEADER_PRIORITIES = array();
+foreach ( $ORDER['vance_hub_sec_header'] as $id ) { $HEADER_PRIORITIES[] = $M->controls[ $id ]['priority']; }
+check( 'order: the section 6 priorities are 10, 15, 20, 30, 40 to 70, 80 to 100, 110 to 150 and 160 to 180 (the three old controls keep 10, 20 and 30)', $HEADER_PRIORITIES === array( 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180 ) );
 check( 'order: section 7 runs articles, then the survey result page', suite_section_order( $M, 'vance_hub_sec_pages' ) === $ORDER['vance_hub_sec_pages'] );
 check( 'order: section 8 runs dashboard home, tab look, member number, chart', suite_section_order( $M, 'vance_hub_sec_dashboard' ) === $ORDER['vance_hub_sec_dashboard'] );
-check( 'order: section 9 is the community switch alone', suite_section_order( $M, 'vance_hub_sec_community' ) === $ORDER['vance_hub_sec_community'] );
-check( 'order: section 10 runs the check-in switch, then its five texts', suite_section_order( $M, 'vance_hub_sec_checkin' ) === $ORDER['vance_hub_sec_checkin'] );
-check( 'order: section 11 runs the flare switch, urgent text, consent, note', suite_section_order( $M, 'vance_hub_sec_flare' ) === $ORDER['vance_hub_sec_flare'] );
+check( 'order: section 9 (dashboard text) runs the greeting, welcome line, step label, then the four steps (title, text, button)', suite_section_order( $M, 'vance_hub_sec_dashboard_text' ) === $ORDER['vance_hub_sec_dashboard_text'] );
+check( 'order: section 10 is the community switch alone', suite_section_order( $M, 'vance_hub_sec_community' ) === $ORDER['vance_hub_sec_community'] );
+check( 'order: section 11 runs the check-in switch, then its five texts', suite_section_order( $M, 'vance_hub_sec_checkin' ) === $ORDER['vance_hub_sec_checkin'] );
+check( 'order: section 12 runs the flare switch, urgent text, consent, note', suite_section_order( $M, 'vance_hub_sec_flare' ) === $ORDER['vance_hub_sec_flare'] );
 
 section( '4. Switch labels and the admin screen rows' );
 
 $SWITCHES = vance_hub_customizer_switches();
-check( 'switches: ten switches are listed (promo, sections and more are retired)', count( $SWITCHES ) === 10 );
+check( 'switches: eleven switches are listed (promo, sections and more are retired)', count( $SWITCHES ) === 11 );
 check( 'switches: the three retired switches are not listed', ! isset( $SWITCHES['vance_hub_show_promo'] ) && ! isset( $SWITCHES['vance_hub_show_sections'] ) && ! isset( $SWITCHES['vance_hub_show_more'] ) );
 
 foreach ( $SWITCHES as $mod => $switch ) {
@@ -431,7 +517,7 @@ foreach ( $SWITCHES as $mod => $switch ) {
 }
 
 $ADMIN_ROWS = vance_hub_admin_switches();
-check( 'admin: the screen reads the same ten mods in the same order', array_column( $ADMIN_ROWS, 'mod' ) === array_keys( $SWITCHES ) );
+check( 'admin: the screen reads the same eleven mods in the same order',array_column( $ADMIN_ROWS, 'mod' ) === array_keys( $SWITCHES ) );
 check( 'admin: the screen reads the same labels in the same order', array_column( $ADMIN_ROWS, 'label' ) === array_column( $SWITCHES, 'label' ) );
 check( 'admin: the screen reads the same sections in the same order', array_column( $ADMIN_ROWS, 'section' ) === array_column( $SWITCHES, 'section' ) );
 
@@ -487,24 +573,24 @@ $GROUPS = vance_hub_admin_status_groups();
 check( 'groups: six groups, one per section that has a switch (the home sections have none)', array_keys( $GROUPS ) === array( 'vance_hub_sec_header', 'vance_hub_sec_pages', 'vance_hub_sec_dashboard', 'vance_hub_sec_community', 'vance_hub_sec_checkin', 'vance_hub_sec_flare' ) );
 check( 'groups: section 1 is not a group', ! isset( $GROUPS['vance_home_layout'] ) );
 check( 'groups: no home section is a group', ! isset( $GROUPS['vance_hub_sec_home'] ) && ! isset( $GROUPS['vance_hub_sec_home_text'] ) && ! isset( $GROUPS['vance_hub_sec_home_tools'] ) && ! isset( $GROUPS['vance_hub_sec_home_tiles'] ) );
-check( 'groups: header holds the header switch', array_column( $GROUPS['vance_hub_sec_header']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_header' )['label'] ) );
+check( 'groups: header holds the header switch and the member bar switch', array_column( $GROUPS['vance_hub_sec_header']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_header' )['label'], vance_hub_customizer_switch( 'vance_hub_member_bar' )['label'] ) );
 check( 'groups: pages hold articles and the survey result page', array_column( $GROUPS['vance_hub_sec_pages']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_articles' )['label'], vance_hub_customizer_switch( 'vance_hub_tool_result' )['label'] ) );
 check( 'groups: dashboard holds the four dashboard switches', array_column( $GROUPS['vance_hub_sec_dashboard']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_show_dashboard' )['label'], vance_hub_customizer_switch( 'vance_hub_dashboard_tabs' )['label'], vance_hub_customizer_switch( 'vance_hub_dash_member_no' )['label'], vance_hub_customizer_switch( 'vance_hub_dash_chart' )['label'] ) );
 check( 'groups: community holds the community switch', array_column( $GROUPS['vance_hub_sec_community']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_community' )['label'] ) );
 check( 'groups: check-in holds the check-in switch', array_column( $GROUPS['vance_hub_sec_checkin']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_dash_checkin' )['label'] ) );
 check( 'groups: flare plan holds the flare switch', array_column( $GROUPS['vance_hub_sec_flare']['rows'], 'label' ) === array( vance_hub_customizer_switch( 'vance_hub_dash_flare_plan' )['label'] ) );
 
-check( 'groups: each group title is the section title', $GROUPS['vance_hub_sec_header']['title'] === '6. Header and member bar' && $GROUPS['vance_hub_sec_pages']['title'] === '7. Articles and Self-Assessment' && $GROUPS['vance_hub_sec_dashboard']['title'] === '8. Member dashboard' && $GROUPS['vance_hub_sec_community']['title'] === '9. Community' && $GROUPS['vance_hub_sec_checkin']['title'] === '10. Daily check-in (health data)' && $GROUPS['vance_hub_sec_flare']['title'] === '11. Flare plan (health data)' );
+check( 'groups: each group title is the section title', $GROUPS['vance_hub_sec_header']['title'] === '6. Header and member bar' && $GROUPS['vance_hub_sec_pages']['title'] === '7. Articles and Self-Assessment' && $GROUPS['vance_hub_sec_dashboard']['title'] === '8. Member dashboard' && $GROUPS['vance_hub_sec_community']['title'] === '10. Community' && $GROUPS['vance_hub_sec_checkin']['title'] === '11. Daily check-in (health data)' && $GROUPS['vance_hub_sec_flare']['title'] === '12. Flare plan (health data)' );
 
 section( '8. Section numbers in descriptions, and the home page settings' );
 
 // A description that names another section must use the section's real number.
-check( 'numbers: the panel description names section 1 and sections 2 to 11', strpos( $M->panels['vance_hub_panel']['description'], 'Do section 1 first. Then set each part in sections 2 to 11.' ) !== false );
-check( 'numbers: the master switch description names sections 2 to 11 and sections 10 and 11', strpos( $M->controls['vance_home_layout']['description'], 'in sections 2 to 11.' ) !== false && strpos( $M->controls['vance_home_layout']['description'], 'in sections 10 and 11.' ) !== false );
+check( 'numbers: the panel description names section 1 and sections 2 to 12', strpos( $M->panels['vance_hub_panel']['description'], 'Do section 1 first. Then set each part in sections 2 to 12.' ) !== false );
+check( 'numbers: the master switch description names sections 2 to 12 and sections 11 and 12', strpos( $M->controls['vance_home_layout']['description'], 'in sections 2 to 12.' ) !== false && strpos( $M->controls['vance_home_layout']['description'], 'in sections 11 and 12.' ) !== false );
 check( 'numbers: the check-in description names the dashboard section by its number (8)', strpos( $M->controls['vance_hub_dash_checkin']['description'], '(section 8)' ) !== false );
 check( 'numbers: the flare plan description names the dashboard section by its number (8)', strpos( $M->controls['vance_hub_dash_flare_plan']['description'], '(section 8)' ) !== false );
 
-$HOME_SRC = file_get_contents( $THEME . '/inc/hub-layout.php' ) . file_get_contents( $THEME . '/inc/hub-dashboard-features.php' ) . file_get_contents( $THEME . '/inc/hub-flare-plan.php' ) . file_get_contents( $THEME . '/inc/hub-golive.php' ) . file_get_contents( $THEME . '/inc/hub-home-settings.php' );
+$HOME_SRC = file_get_contents( $THEME . '/inc/hub-layout.php' ) . file_get_contents( $THEME . '/inc/hub-dashboard-features.php' ) . file_get_contents( $THEME . '/inc/hub-flare-plan.php' ) . file_get_contents( $THEME . '/inc/hub-golive.php' ) . file_get_contents( $THEME . '/inc/hub-home-settings.php' ) . file_get_contents( $THEME . '/inc/hub-look-settings.php' );
 check( 'numbers: no hub description holds a literal "section N" (all use %d / %1$d)', ! preg_match( '/__\(\s*\'[^\']*\b[Ss]ections? \d/', $HOME_SRC ) );
 
 // Block registry.
@@ -646,7 +732,7 @@ check( 'pick sanitiser: surrounding spaces are trimmed, but the case is not chan
 $GO = $M->controls['vance_hub_golive_at'];
 check( 'go-live: the control is a datetime-local input labelled "Go-live date and time" in section vance_home_layout', 'datetime-local' === $GO['type'] && 'Go-live date and time' === $GO['label'] && 'vance_home_layout' === $GO['section'] );
 check( 'go-live: the description names the site time zone', false !== strpos( $GO['description'], '(Europe/London)' ) );
-check( 'go-live: the description names the check-in and flare plan sections by number (10 and 11)', false !== strpos( $GO['description'], 'sections 10 and 11' ) );
+check( 'go-live: the description names the check-in and flare plan sections by number (11 and 12)', false !== strpos( $GO['description'], 'sections 11 and 12' ) );
 check( 'go-live: the description says the field becomes empty, and that empty means no change', false !== strpos( $GO['description'], 'this field then becomes empty' ) && false !== strpos( $GO['description'], 'Leave this field empty for no planned change.' ) );
 check( 'go-live: the description names the LiteSpeed purge and the separate hosting cache, purged by hand', false !== strpos( $GO['description'], 'purges the LiteSpeed cache' ) && false !== strpos( $GO['description'], 'The hosting cache is separate.' ) && false !== strpos( $GO['description'], 'hosting panel' ) );
 check( 'go-live: the description no longer promises "a few more minutes"', false === strpos( $GO['description'], 'few more minutes' ) );

@@ -14,10 +14,19 @@
 	--vhub-teal: #008080;
 	--vhub-teal-hover: #006666;
 	--vhub-teal-ink: #004C4C;
+	--vhub-teal-rgb: 0, 128, 128;
+	--vhub-teal-heading: #0A3D3D;
+	--vhub-teal-soft: #78BFBF;
+	--vhub-teal-pale: #AEDBDB;
+	--vhub-teal-mid: #4DA6A6;
+	--vhub-teal-bg: #F3FBFB;
 	--vhub-wash: #DEF4F4;
 	--vhub-navy: #0A1929;
+	--vhub-navy-rgb: 10, 25, 41;
 	--vhub-purple: #6B489E;
 	--vhub-purple-ink: #5B3D8A;
+	--vhub-purple-tint-b: #EDE7F6;
+	--vhub-purple-line: #D9CFEA;
 	--vhub-slate: #2E5070;
 	--vhub-ink: #1F2937;
 	--vhub-muted: #4B5563;
@@ -223,7 +232,7 @@
 	font-size: 62px;
 	line-height: 1.02;
 	font-weight: 800;
-	color: #0A3D3D;
+	color: var(--vhub-teal-heading);
 }
 .vhub-hero__accent { color: var(--vhub-teal); }
 .vhub-hero__sub {
@@ -243,7 +252,7 @@
 	font-family: var(--vhub-heading);
 	font-weight: 600;
 	font-size: 15px;
-	color: #0A3D3D;
+	color: var(--vhub-teal-heading);
 }
 .vhub-ask__box {
 	display: flex;
@@ -252,7 +261,7 @@
 	background: #FFFFFF;
 	border: 2px solid var(--vhub-teal);
 	border-radius: var(--radius-field, 10px);
-	box-shadow: 0 10px 28px rgba(0, 128, 128, 0.18);
+	box-shadow: 0 10px 28px rgba(var(--vhub-teal-rgb), 0.18);
 }
 .vhub-ask__box:focus-within { border-color: var(--vhub-purple); }
 .vhub-ask__input {
@@ -292,13 +301,13 @@
 	min-height: 44px;
 	padding: 10px 14px;
 	background: #FFFFFF;
-	border: 1px solid #78BFBF;
+	border: 1px solid var(--vhub-teal-soft);
 	border-radius: var(--radius-pill, 999px);
 	font-size: 14px;
 	font-weight: 500;
 	color: var(--vhub-teal-ink);
 }
-.vhub-chip:hover { border-color: var(--vhub-teal); color: var(--vhub-teal-ink); background: #F3FBFB; }
+.vhub-chip:hover { border-color: var(--vhub-teal); color: var(--vhub-teal-ink); background: var(--vhub-teal-bg); }
 
 .vhub-hero__media {
 	flex: 1 1 460px;
@@ -322,7 +331,7 @@
 	background: #FFFFFF;
 	border-top: 6px solid var(--vhub-purple);
 	border-radius: var(--radius-surface, 14px);
-	box-shadow: 0 18px 44px rgba(10, 25, 41, 0.22);
+	box-shadow: 0 18px 44px rgba(var(--vhub-navy-rgb), 0.22);
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
@@ -364,7 +373,7 @@
 	display: flex;
 	border-radius: var(--radius-surface, 14px);
 	overflow: hidden;
-	box-shadow: 0 12px 28px rgba(10, 25, 41, 0.16);
+	box-shadow: 0 12px 28px rgba(var(--vhub-navy-rgb), 0.16);
 }
 .vhub-tool--survey    { background: var(--vhub-teal); }
 .vhub-tool--recipes   { background: var(--vhub-purple); }
@@ -410,7 +419,7 @@
 	font-weight: 600;
 	color: #FFFFFF;
 }
-.vhub-tool--nutrition .vhub-tool__cta { color: #AEDBDB; }
+.vhub-tool--nutrition .vhub-tool__cta { color: var(--vhub-teal-pale); }
 
 /* An administrator can hide a card, so the row can hold one to four cards. The
    row must fill whatever it holds. Desktop: twelve columns, and each card spans
@@ -442,7 +451,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	background: #FFFFFF;
-	border: 1px solid #AEDBDB;
+	border: 1px solid var(--vhub-teal-pale);
 	border-radius: var(--radius-surface, 14px);
 }
 .vhub-fact {
@@ -463,7 +472,7 @@
 	color: var(--vhub-teal);
 	border-radius: var(--radius-control, 6px);
 }
-.vhub-fact__icon--purple { background: #EDE7F6; color: var(--vhub-purple); }
+.vhub-fact__icon--purple { background: var(--vhub-purple-tint-b); color: var(--vhub-purple); }
 .vhub-fact__icon .vhub-icon { width: 22px; height: 22px; }
 .vhub-fact__text { display: flex; flex-direction: column; gap: 2px; }
 .vhub-fact__text strong {
@@ -486,10 +495,10 @@
 	gap: 10px;
 	padding: 22px;
 	background: #FFFFFF;
-	border: 1px solid #D9CFEA;
+	border: 1px solid var(--vhub-purple-line);
 	border-top: 6px solid var(--vhub-purple);
 	border-radius: var(--radius-surface, 14px);
-	box-shadow: 0 12px 28px rgba(10, 25, 41, 0.10);
+	box-shadow: 0 12px 28px rgba(var(--vhub-navy-rgb), 0.10);
 	color: var(--vhub-ink);
 }
 a.vhub-member-tile:hover { border-color: var(--vhub-purple); color: var(--vhub-ink); }
@@ -677,7 +686,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	padding: 60px 20px 20px;
 	/* Dark for the lower 60%: the name stays readable over a white picture,
 	   also when it wraps to two lines. */
-	background: linear-gradient(to top, rgba(10, 25, 41, 0.92), rgba(10, 25, 41, 0.8) 60%, rgba(10, 25, 41, 0));
+	background: linear-gradient(to top, rgba(var(--vhub-navy-rgb), 0.92), rgba(var(--vhub-navy-rgb), 0.8) 60%, rgba(var(--vhub-navy-rgb), 0));
 }
 .vhub-cond-tile__name {
 	font-family: var(--vhub-heading);
@@ -691,7 +700,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	font-weight: 600;
 	letter-spacing: 0.6px;
 	text-transform: uppercase;
-	color: #AEDBDB;
+	color: var(--vhub-teal-pale);
 }
 .vhub-cond-tile:hover .vhub-cond-tile__cta { text-decoration: underline; }
 
@@ -710,7 +719,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	align-items: center;
 	min-height: 44px;
 	padding: 8px 0;
-	border-bottom: 1px solid #4DA6A6;
+	border-bottom: 1px solid var(--vhub-teal-mid);
 	font-weight: 600;
 	font-size: 15px;
 	/* Keep each name on one line. The longest, "Inflammatory Bowel Disease
@@ -800,7 +809,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	flex-direction: column;
 	gap: 12px;
 	padding: 90px 28px 28px;
-	background: linear-gradient(to top, rgba(10, 25, 41, 0.95), rgba(10, 25, 41, 0));
+	background: linear-gradient(to top, rgba(var(--vhub-navy-rgb), 0.95), rgba(var(--vhub-navy-rgb), 0));
 }
 .vhub-feat__title {
 	font-size: 28px;
@@ -994,7 +1003,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 .vhub-join__founding {
 	align-self: flex-start;
 	padding: 10px 14px;
-	border: 1px solid #AEDBDB;
+	border: 1px solid var(--vhub-teal-pale);
 	border-radius: var(--radius-field, 10px);
 	font-size: 15px;
 	font-weight: 600;
@@ -1007,7 +1016,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	flex-direction: column;
 	gap: 14px;
 	padding: 28px;
-	background: #F3FBFB;
+	background: var(--vhub-teal-bg);
 	border-radius: var(--radius-surface, 14px);
 	--vhub-focus: var(--vhub-purple);
 }
@@ -1068,7 +1077,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 		padding: 48px 16px 14px;
 		background-color: var(--vhub-navy);
 		background-image:
-			linear-gradient(to top, rgba(10, 25, 41, 0.94), rgba(10, 25, 41, 0) 80%),
+			linear-gradient(to top, rgba(var(--vhub-navy-rgb), 0.94), rgba(var(--vhub-navy-rgb), 0) 80%),
 			var(--vhub-hero-photo, none);
 		background-size: cover;
 		background-position: center 25%;
@@ -1099,7 +1108,7 @@ a.vhub-member-tile:hover .vhub-member-tile__cta { text-decoration: underline; }
 	.vhub-tool__cta { display: none; }
 	.vhub-tool__body { gap: 10px; padding: 14px; min-height: 104px; }
 	.vhub-tool__body .vhub-icon { display: block; width: 28px; height: 28px; color: #FFFFFF; }
-	.vhub-tool--nutrition .vhub-tool__body .vhub-icon { color: #AEDBDB; }
+	.vhub-tool--nutrition .vhub-tool__body .vhub-icon { color: var(--vhub-teal-pale); }
 	.vhub-tool__title { font-size: 17px; line-height: 1.2; }
 
 	.vhub-facts-wrap { margin-top: 0; padding-top: 20px; }

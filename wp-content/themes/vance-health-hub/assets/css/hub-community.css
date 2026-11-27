@@ -14,10 +14,13 @@
 	--vcom-teal-dark: #006666;
 	--vcom-teal-ink: #004C4C;
 	--vcom-teal-soft: #78BFBF;
+	--vcom-teal-pale: #AEDBDB;
+	--vcom-teal-mist: #E8F3F3;
 	--vcom-wash: #DEF4F4;
 	--vcom-bg: #F3FBFB;
 	--vcom-line: #D9ECEC;
 	--vcom-navy: #0A1929;
+	--vcom-navy-rgb: 10, 25, 41;
 	--vcom-slate: #2E5070;
 	--vcom-purple: #6B489E;
 	--vcom-purple-dark: #5B3D8A;
@@ -25,7 +28,7 @@
 	--vcom-body: #374151;
 	--vcom-muted: #4B5563;
 	--vcom-heading: var(--font-heading, 'Outfit', sans-serif);
-	--vcom-shadow: 0 8px 22px rgba(10, 25, 41, 0.08);
+	--vcom-shadow: 0 8px 22px rgba(var(--vcom-navy-rgb), 0.08);
 	font-family: var(--font-main, 'Inter', system-ui, sans-serif);
 	color: var(--vcom-ink);
 	background: var(--vcom-bg);
@@ -125,7 +128,7 @@
 }
 .vcom-hero__title span { color: var(--vcom-teal-soft); }
 .vcom-hero__lead { font-size: 18px; line-height: 1.55; color: #CBD5E1; max-width: 560px; }
-.vcom-hero__note { font-size: 14px; color: #AEDBDB; }
+.vcom-hero__note { font-size: 14px; color: var(--vcom-teal-pale); }
 .vcom-hero__img {
 	flex: 1 1 420px;
 	min-width: 0;
@@ -201,7 +204,7 @@
 	align-items: center;
 	font-size: 14px;
 	font-weight: 600;
-	color: #AEDBDB;
+	color: var(--vcom-teal-pale);
 	text-decoration: underline;
 }
 .vcom-as__form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
@@ -372,7 +375,7 @@
 	display: block;
 	height: 14px;
 	border-radius: var(--radius-pill, 999px);
-	background: linear-gradient(90deg, #D9ECEC, #E8F3F3);
+	background: linear-gradient(90deg, var(--vcom-line), var(--vcom-teal-mist));
 }
 .vcom-locked__bar:nth-child(2) { width: 82%; }
 .vcom-locked__bar:nth-child(3) { width: 64%; }
