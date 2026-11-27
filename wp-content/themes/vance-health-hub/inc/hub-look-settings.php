@@ -570,7 +570,7 @@ function vance_hub_look_customize_register( $wp_customize ) {
 	) );
 	$image_args = array(
 		'label'       => __( 'Hero photo', 'vance-health-hub' ),
-		'description' => __( 'The photo next to the title at the top of the home page. Leave empty to use the standard photo. Add a description in the media library: it is the alt text of the photo.', 'vance-health-hub' ),
+		'description' => __( 'The photo next to the title at the top of the home page. Leave empty to use the standard photo. Fill the "Alternative Text" field of the photo in the media library: screen readers read it.', 'vance-health-hub' ),
 		'section'     => 'vance_hub_sec_home',
 		'priority'    => 70,
 	);
