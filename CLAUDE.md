@@ -466,7 +466,7 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
 - **`og:image` is present on every page**, falling back to
   `assets/img/og-default.jpg` where AIOSEO has none.
 - **The Customizer shows 25 theme panels.** The VanceHubClub panel comes first and
-  has eleven numbered sections, from "1. On or off" to "11. Flare plan (health data)".
+  has twelve numbered sections, from "1. On or off" to "12. Flare plan (health data)".
   The other 24 are grouped Site / Home / Content / Section / Pages / Members /
   Website Functions. No panel called "Hero
   Overlays" or "Advanced" — those are the old names; see "Customizer
@@ -477,6 +477,16 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   Community and recipes, Promo block, From the library, Latest by section, More to read, Join block.
   A block with no data prints nothing. Inside the Hub stays hidden until a member tile has a title.
   Community and recipes stays hidden until a community quote exists.
+- **The VanceHubClub look is unchanged with nothing saved.** Open the home page with
+  `?vhh_layout=hub` as an administrator, and again in a private window as a visitor. The visitor
+  header shows "Sign in" and "Join free". The member bar shows the built-in line, for example
+  "125 members", once the member total reaches the threshold in section 6. The hero shows the
+  standard photo.
+- **The Customizer shows twelve VanceHubClub sections.** Open Customize and the VanceHubClub panel.
+  Sections 1 to 12 appear in order, from "1. On or off" to "12. Flare plan (health data)". Section 9
+  is "Member dashboard: text".
+- **The member bar switch works.** In Customize, section 6 "Header and member bar", change "Show the
+  member bar". The preview shows the bar on and off. Do not publish a change unless you mean to.
 
 A quick way to run most of this: fetch every URL in the sitemap and assert on
 content, not status codes. All 217 returned 200 with zero PHP notices on
@@ -725,6 +735,8 @@ of the VanceHubClub panel. The member tiles (section 5) are in `inc/hub-layout.p
 - **Texts.** There are 22 texts, in `vance_hub_home_text_defaults()`. They cover the hero (4), the
   Self-Assessment card (4), the facts (6), the Join block for visitors (5) and the Join block for
   members (3). An empty text, or one with only spaces, shows the default.
+- **Hero photo.** Section 2 also holds the hero photo control, `vance_hub_hero_image`, at priority 70.
+  Its reader and its rules are in "VanceHubClub look settings" below.
 - **Fixed note.** The note under the Self-Assessment button, "You can change any answer later. This is
   not a diagnosis.", is fixed in `front-page-hub.php`. It is not a setting. Keep it fixed. It is a
   safety statement.
@@ -801,6 +813,149 @@ of the VanceHubClub panel. The member tiles (section 5) are in `inc/hub-layout.p
 - **Stale changeset.** A Customizer changeset that was drafted before the switch and still holds
   `vance_home_layout` set to classic puts the site back to classic if someone publishes it later.
 - **Tests.** Run `cd tests && php hub-golive.test.php`.
+
+### VanceHubClub look settings — `inc/hub-look-settings.php`
+
+The Customizer sets the hero photo, the header buttons and links, the member bar and the wording
+of the member dashboard home screen. The file holds the registries and the readers. Its controls
+sit in three sections of the VanceHubClub panel: the hero photo in section 2, the header and member
+bar in section 6, and the dashboard text in section 9. `functions.php` loads the file after
+`inc/hub-home-settings.php`.
+
+- **Hero photo.** The setting is `vance_hub_hero_image`, an attachment id. The control is in section 2,
+  "Home page: blocks and counts", at priority 70. It is a media control when WordPress provides
+  `WP_Customize_Media_Control`. Otherwise it is a number field. `vance_hub_hero_image()` returns the
+  photo that `front-page-hub.php` prints. With no id, or with an id that gives no image, the page uses
+  the theme photo `about/community-support.jpg` and its built-in alt text. A chosen photo uses the
+  `large` size of the attachment. Its alt text comes from the media library, and an empty alt text stays
+  empty. A missing width or height falls back to 800 or 650. The alt text is the attachment's
+  `_wp_attachment_image_alt` meta. The media library stores it in its "Alternative Text" field.
+- **Header buttons and search.** Section 6, priorities 40 to 70. The four texts are
+  `vance_hub_text_signin` ("Sign in"), `vance_hub_text_join` ("Join free"), `vance_hub_text_myhub`
+  ("My Hub", for members) and `vance_hub_text_search` (the search box hint). The template is
+  `template-parts/header-hub.php`.
+- **Header links.** Section 6, priorities 80 to 100. The three settings are `vance_hub_link_signin`
+  (default `/login/`), `vance_hub_link_join` (default `/login/?tab=signup`) and `vance_hub_link_myhub`
+  (default `/dashboard/`). A valid link is either an address that starts with `http://` or `https://`
+  and has a host, or a site path that starts with one `/`. A site path goes through `home_url()`, so
+  it works on a site in a sub-folder. A link with a space, a backslash, a control character or another
+  scheme (for example `javascript:`) is refused. A refused value saves as empty, so the default is used.
+  `vance_hub_link_myhub` changes the header button only. See the member bar below.
+- **Member bar switch.** `vance_hub_member_bar`, section 6, priority 15, labelled "Show the member bar".
+  It is on by default. Off hides the purple bar. It does not change the Founding Member line in the Join
+  block of the home page. The reader is `vance_hub_member_bar_mode()` in `inc/hub-layout.php`.
+- **Member bar texts.** Section 6, priorities 110 to 150. There are five texts:
+  - `vance_hub_text_bar_total`: the member total. It must contain `{count}`. The built-in line is
+    "1 member" or "N members", chosen by the number.
+  - `vance_hub_text_bar_week`: the new members. It must contain `{count}`. The built-in line is
+    "N joined this week". The line shows only when at least one member joined in the last seven days.
+  - `vance_hub_text_bar_founding`: the Founding Member line. It must contain `{date}`. The built-in line
+    is "Join by {date} and keep the Founding Member mark." The same line shows in the Join block of the
+    home page.
+  - `vance_hub_text_bar_link_visitor`: the link for visitors (default "See what members get").
+  - `vance_hub_text_bar_link_member`: the link for members (default "Go to My Hub").
+
+  The member link always goes to `/dashboard/`. The `vance_hub_link_myhub` setting does not change it.
+  For the three lines with a built-in sentence, the default is empty. An empty text, a text with only
+  spaces, or a text without its marker gives the built-in sentence. The two link texts always have a
+  default, so they never fall back to the built-in sentence.
+- **Member dashboard: text.** Section 9, "Member dashboard: text" (`vance_hub_sec_dashboard_text`,
+  priority 90). There are 15 texts, read in `inc/hub-dashboard.php`:
+  - `vance_hub_text_dash_hello`: the greeting. Use `{name}`. The built-in line is "Hello, {name}". A
+    greeting without `{name}` gives the built-in line.
+  - `vance_hub_text_dash_welcome`: the welcome line in the side menu card. `{name}` is optional. The
+    built-in line is "Welcome back" and the first name of the member. For a member with no first name,
+    `{name}` and the punctuation just before it are removed. The line still shows.
+  - `vance_hub_text_dash_step_label`: the small label above the next step (default "Your next step").
+  - Four next steps, each with a title, a text and a button: Self-Assessment (`vance_hub_text_dash_survey_*`),
+    Health Profile (`vance_hub_text_dash_profile_*`), meal plan (`vance_hub_text_dash_plan_*`) and
+    nutrition check (`vance_hub_text_dash_check_*`).
+- **Empty means default.** For every text, an empty value, a value of only spaces and a value that is
+  not a string give the default. The reader is `vance_hub_look_text()`. The member bar and the
+  greeting use the built-in sentences described above.
+- **Templates keep their literals.** Each caller checks `function_exists()` before it calls this file.
+  The header, the member bar, the dashboard and the home page hero use the wording they had before, when
+  the file is not loaded.
+- **Not editable on purpose.** These strings never get a setting:
+  - health and safety wording: consent text, disclaimers, "not a diagnosis" and the urgent help text;
+  - the fixed note under the Self-Assessment button on the home page (`front-page-hub.php`);
+  - the name "VANCE-Ai" on the header button;
+  - screen-reader labels, for example "Menu", "Open search" and "Search the Hub" in the header.
+- **Back it out.** Delete the `require_once` line for `inc/hub-look-settings.php` in `functions.php`.
+  The templates print their literals again. Saved values stay in the database and do no harm. The
+  member bar still reads its saved switch, so a saved "off" still hides the bar. `inc/hub-brand.php`
+  does not need this file.
+- **Tests.** Run `cd tests && php hub-look-settings.test.php`. It renders the header, the member bar,
+  the home page and the dashboard through the real templates, with stubs. It exits 1 when a check fails.
+- **Known limits.**
+  - A custom member bar total or week line uses one form for every number. "1 members" shows for one
+    member. The built-in lines use the singular and the plural.
+  - The member bar link always goes to `/dashboard/`. A custom member bar link text does not change
+    the address.
+  - The tests do not load `WP_Customize_Media_Control`. They test the number field fallback of the
+    hero photo control, not the media control.
+  - The tests replace `esc_url_raw()` with a stub that returns its input. The shape check of a link is
+    tested. The real `esc_url_raw()` result is not.
+
+### VanceHubClub brand colours — `inc/hub-brand.php`
+
+The Customizer sets three brand colours for the VanceHubClub pages. The colours change the seven hub
+stylesheets. The stylesheet files do not change. The file holds the colour functions, the map of
+properties, the Customizer controls and the output.
+
+- **The three settings.** Section 6, "Header and member bar", priorities 160, 170 and 180:
+  - `vance_hub_color_teal`, default `#008080`: buttons, links and tool cards.
+  - `vance_hub_color_navy`, default `#0A1929`: headings, the dark hero and the dashboard side menu.
+  - `vance_hub_color_purple`, default `#6B489E`: member and account things.
+
+  A value is `#RGB` or `#RRGGBB`. The saved value is upper case `#RRGGBB`. Any other value gives the default.
+- **Contrast guard.** White text on a brand colour must reach a contrast ratio of 4.5:1. The validator
+  `vance_hub_validate_brand_color()` refuses a pale colour when an administrator saves it. The Customizer
+  shows "This colour is too pale for white text. Choose a darker colour." The reader
+  `vance_hub_brand_color()` gives the default for a stored value that is too pale or is not a colour.
+- **How the stylesheets get the colour.** Each hub stylesheet declares its brand colours as custom
+  properties on one selector. `vance_hub_brand_map()` lists them. For each stylesheet on the page with
+  a changed colour, `vance_hub_brand_enqueue()` adds one rule with `wp_add_inline_style()` on the same
+  handle. The rule uses the same selector and the same property names. It comes later in the page, so
+  it wins.
+
+  | Stylesheet | Handle | Selector | Property prefix |
+  |---|---|---|---|
+  | `assets/css/hub-home.css` | `vance-hub-home` | `.vhub` | `--vhub-` |
+  | `assets/css/hub-article.css` | `vance-hub-article` | `body.vhub-article` | `--vhub-` |
+  | `assets/css/hub-tool-result.css` | `vance-hub-tool-result` | `.vhub-tr` | `--vhub-` |
+  | `assets/css/hub-header.css` | `vance-hub-header` | `body.vhub-header` | `--vhh-` |
+  | `assets/css/hub-dashboard.css` | `vance-hub-dashboard` | `.vhd` | `--vhd-` |
+  | `assets/css/hub-dashboard-tabs.css` | `vance-hub-dashboard-tabs` | `body.vhd-tabs` | `--vhdt-`, and `--dash-primary`, `--dash-sidebar`, `--dash-border` |
+  | `assets/css/hub-community.css` | `vance-hub-community` | `.vcom` | `--vcom-` |
+
+- **Brand shades are custom properties.** Each brand shade in those seven files is a custom property
+  in its own block. The rules read it with `var()`. Some rules keep a literal fallback inside `var()`,
+  for example `var(--vhh-teal, #008080)`. The fallback applies only when the property is not set.
+- **Adding a shade.** A new literal brand shade needs two things: a custom property in the stylesheet
+  block, and an entry in `vance_hub_brand_map()` under the right colour. Without the entry, a custom
+  colour does not reach that shade. The test does not find a missing entry. It checks only that each
+  mapped property is declared in its block.
+- **Shades.** The base colour is the saved colour. `rgb` gives its channels as `r, g, b`, for `rgba()`.
+  The other shades mix the colour with white or black at a fixed ratio. The ratios are in
+  `vance_hub_brand_recipes()`: 11 shades for teal, 1 for navy and 7 for purple.
+- **A default colour prints nothing.** A colour that equals its default, ignoring letter case, prints no
+  rule. With all three colours at their defaults, the page gets no brand CSS. The stylesheets keep their
+  own values.
+- **When the rules print.** The rules are added on `wp_enqueue_scripts` at priority 30. The hub
+  stylesheets are enqueued at priority 20, and the dashboard tabs at 21. Only handles on the page get a rule.
+- **Scope.** The colours change VanceHubClub pages only. These keep their own literals: the classic
+  layout, `assets/css/main.css`, the admin CSS and the preview bar in `inc/hub-preview.php`.
+- **Back it out.** Delete the `require_once` line for `inc/hub-brand.php` in `functions.php`. The
+  stylesheets keep their own defaults. Saved values stay in the database and do no harm.
+- **Tests.** Run `cd tests && php hub-brand.test.php`. It covers the channel, contrast and mix functions,
+  the sanitiser, the validator, the CSS rules, the map against the seven stylesheets, the enqueue hook,
+  and the Customizer totals of 149 settings, 146 controls and 12 sections.
+- **Known limits.**
+  - A custom colour's shades are calculated. They are not designed. A mix with white or black cannot
+    reproduce every stylesheet value at the default colour. For example, the stylesheet's teal heading
+    `#0A3D3D` has a red value of 10. A black mix of the teal (red value 0) cannot give that value.
+  - The tests do not load a colour picker class. The colour control is tested as a text field.
 
 ## Customizer structure: one map decides where everything sits
 
@@ -880,7 +1035,7 @@ kept in the repo.
 The VanceHubClub panel is not in the structure map. Its id is the constant
 `VANCE_HUB_CUSTOMIZER_PANEL`. It sits at priority 1, above the seven silos.
 
-The sections and the 10 switch labels are named in one place: `vance_hub_customizer_sections()`
+The sections and the 11 switch labels are named in one place: `vance_hub_customizer_sections()`
 and `vance_hub_customizer_switches()` in `inc/hub-layout.php`. The Vance Club Layout admin
 screen (`inc/hub-admin.php`) reads the same two lists, so the screen and the Customizer use the
 same words.
@@ -895,9 +1050,21 @@ same words.
 | 60 | `vance_hub_sec_header` | 6. Header and member bar |
 | 70 | `vance_hub_sec_pages` | 7. Articles and Self-Assessment |
 | 80 | `vance_hub_sec_dashboard` | 8. Member dashboard |
-| 90 | `vance_hub_sec_community` | 9. Community |
-| 100 | `vance_hub_sec_checkin` | 10. Daily check-in (health data) |
-| 110 | `vance_hub_sec_flare` | 11. Flare plan (health data) |
+| 90 | `vance_hub_sec_dashboard_text` | 9. Member dashboard: text |
+| 100 | `vance_hub_sec_community` | 10. Community |
+| 110 | `vance_hub_sec_checkin` | 11. Daily check-in (health data) |
+| 120 | `vance_hub_sec_flare` | 12. Flare plan (health data) |
+
+Section 6, "Header and member bar", holds these controls, in screen order:
+
+- the header switch (priority 10, `vance_hub_header`, registered in `inc/hub-header.php`);
+- the member bar switch (15, `vance_hub_member_bar`);
+- "Show the member total from this number" (20, `vance_hub_member_min`);
+- the Founding Member deadline (30, `vance_hub_founding_deadline`);
+- the four header texts (40 to 70);
+- the three header links (80 to 100);
+- the five member bar texts (110 to 150);
+- the three brand colours (160 to 180).
 
 The numbers in the titles come from the position in `vance_hub_customizer_sections()`. A section
 that moves gets a new number. Do not type a section number into text. Use
@@ -915,7 +1082,9 @@ Rules for this panel:
   registered in `vance_hub_flare_plan_customize()` in `inc/hub-flare-plan.php`. The home page
   block order, counts and texts (sections 2 to 4) are registered in `inc/hub-home-settings.php`.
   The member tiles (section 5) are registered in `inc/hub-layout.php`. The go-live field
-  (section 1) is registered in `inc/hub-golive.php`.
+  (section 1) is registered in `inc/hub-golive.php`. The hero photo (section 2), the member bar
+  texts and the header controls (section 6) and the dashboard text (section 9) are registered in
+  `inc/hub-look-settings.php`. The brand colours (section 6) are registered in `inc/hub-brand.php`.
 - `inc/customizer-structure.php` does not manage this panel. Its clean-up step at the end
   still runs over every `vance_` section and panel, and it removes one that has no controls
   or no sections.

@@ -22,6 +22,7 @@ body.vhub-header {
 	--vhh-teal-ink: #004C4C;
 	--vhh-wash: #DEF4F4;
 	--vhh-navy: #0A1929;
+	--vhh-navy-rgb: 10, 25, 41;
 	--vhh-purple: #6B489E;
 	--vhh-purple-ink: #5B3D8A;
 	--vhh-line: #D9ECEC;
@@ -345,7 +346,7 @@ body.vhub-header .vhub-bar a:focus-visible {
 		background: #FFFFFF;
 		border-top: 0;
 		border-bottom: 1px solid var(--vhh-line, #D9ECEC);
-		box-shadow: 0 12px 24px rgba(10, 25, 41, 0.12);
+		box-shadow: 0 12px 24px rgba(var(--vhh-navy-rgb), 0.12);
 		max-height: calc(100vh - 120px);
 		overflow-y: auto;
 	}

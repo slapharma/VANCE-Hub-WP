@@ -411,6 +411,12 @@ function vance_hub_dashboard_member_card_html( $card ) {
 		/* translators: %s: member's first name. */
 		? sprintf( __( 'Welcome back %s', 'vance-health-hub' ), $card['first'] )
 		: __( 'Welcome back', 'vance-health-hub' );
+	// A welcome line saved in the Customizer wins (inc/hub-look-settings.php).
+	// '' means "keep the built-in line above".
+	$custom = function_exists( 'vance_hub_look_welcome' ) ? vance_hub_look_welcome( isset( $card['first'] ) ? (string) $card['first'] : '' ) : '';
+	if ( '' !== $custom ) {
+		$label = $custom;
+	}
 	$html .= '<span class="vhdt-member__label">' . esc_html( $label ) . '</span>';
 	$html .= '<span class="vhdt-member__name">' . esc_html( $card['name'] ) . '</span>';
 	$line  = array();
@@ -552,29 +558,35 @@ function vance_hub_dashboard_data( $user ) {
 	foreach ( vance_hub_tools() as $tool ) {
 		$tools_by_mod[ $tool['mod'] ] = $tool;
 	}
+	// Each title, text and button can be changed in the Customizer
+	// (inc/hub-look-settings.php); the literals below are the fallback when that
+	// file is missing, and they equal the defaults of the settings.
+	$look  = function ( $mod, $fallback ) {
+		return function_exists( 'vance_hub_look_text' ) ? vance_hub_look_text( $mod ) : $fallback;
+	};
 	$steps = array(
 		'survey'  => array(
-			'title' => __( 'Do the Gastro Self-Assessment', 'vance-health-hub' ),
-			'text'  => __( 'Your answers go into your Health Profile. The Hub then shows what fits you.', 'vance-health-hub' ),
-			'cta'   => __( 'Start the survey', 'vance-health-hub' ),
+			'title' => $look( 'vance_hub_text_dash_survey_title', __( 'Do the Gastro Self-Assessment', 'vance-health-hub' ) ),
+			'text'  => $look( 'vance_hub_text_dash_survey_text', __( 'Your answers go into your Health Profile. The Hub then shows what fits you.', 'vance-health-hub' ) ),
+			'cta'   => $look( 'vance_hub_text_dash_survey_button', __( 'Start the survey', 'vance-health-hub' ) ),
 			'href'  => isset( $tools_by_mod['survey'] ) ? $tools_by_mod['survey']['href'] : '',
 		),
 		'profile' => array(
-			'title' => __( 'Complete your Health Profile', 'vance-health-hub' ),
-			'text'  => __( 'Add your condition and your care details. You can change them at any time.', 'vance-health-hub' ),
-			'cta'   => __( 'Open my Health Profile', 'vance-health-hub' ),
+			'title' => $look( 'vance_hub_text_dash_profile_title', __( 'Complete your Health Profile', 'vance-health-hub' ) ),
+			'text'  => $look( 'vance_hub_text_dash_profile_text', __( 'Add your condition and your care details. You can change them at any time.', 'vance-health-hub' ) ),
+			'cta'   => $look( 'vance_hub_text_dash_profile_button', __( 'Open my Health Profile', 'vance-health-hub' ) ),
 			'href'  => vance_hub_dashboard_tab_url( 'health-profile' ),
 		),
 		'plan'    => array(
-			'title' => __( 'Build your first meal plan', 'vance-health-hub' ),
-			'text'  => __( 'Choose recipes for the week. Your saved plans show on your dashboard.', 'vance-health-hub' ),
-			'cta'   => __( 'Open the planner', 'vance-health-hub' ),
+			'title' => $look( 'vance_hub_text_dash_plan_title', __( 'Build your first meal plan', 'vance-health-hub' ) ),
+			'text'  => $look( 'vance_hub_text_dash_plan_text', __( 'Choose recipes for the week. Your saved plans show on your dashboard.', 'vance-health-hub' ) ),
+			'cta'   => $look( 'vance_hub_text_dash_plan_button', __( 'Open the planner', 'vance-health-hub' ) ),
 			'href'  => isset( $tools_by_mod['recipes'] ) ? $tools_by_mod['recipes']['href'] : '',
 		),
 		'check'   => array(
-			'title' => __( 'Check your nutrition risk', 'vance-health-hub' ),
-			'text'  => __( 'A short check with a clear result. Your saved checks show in your Health Profile.', 'vance-health-hub' ),
-			'cta'   => __( 'Start the check', 'vance-health-hub' ),
+			'title' => $look( 'vance_hub_text_dash_check_title', __( 'Check your nutrition risk', 'vance-health-hub' ) ),
+			'text'  => $look( 'vance_hub_text_dash_check_text', __( 'A short check with a clear result. Your saved checks show in your Health Profile.', 'vance-health-hub' ) ),
+			'cta'   => $look( 'vance_hub_text_dash_check_button', __( 'Start the check', 'vance-health-hub' ) ),
 			'href'  => isset( $tools_by_mod['nutrition'] ) ? $tools_by_mod['nutrition']['href'] : '',
 		),
 	);
@@ -747,6 +759,14 @@ function vance_hub_dashboard_home_html( $d ) {
 	// -- Greeting ----------------------------------------------------------
 	/* translators: %s: member's first name. */
 	$hello = sprintf( __( 'Hello, %s', 'vance-health-hub' ), $d['name'] );
+	// A greeting saved in the Customizer wins (inc/hub-look-settings.php). '' means
+	// "keep the built-in line above". Both h1 variants below print $hello.
+	$custom_hello = function_exists( 'vance_hub_look_hello' ) ? vance_hub_look_hello( $d['name'] ) : '';
+	if ( '' !== $custom_hello ) {
+		$hello = $custom_hello;
+	}
+	// The small label above the next step.
+	$step_label = function_exists( 'vance_hub_look_text' ) ? vance_hub_look_text( 'vance_hub_text_dash_step_label' ) : __( 'Your next step', 'vance-health-hub' );
 	if ( ! empty( $d['menu_card'] ) ) {
 		// The side menu's member card already shows the name, the join month and
 		// the member number, so the page keeps only its heading, for screen readers.
@@ -771,7 +791,7 @@ function vance_hub_dashboard_home_html( $d ) {
 	if ( ! empty( $d['step'] ) ) {
 		$step = $d['step'];
 		$top .= '<section class="vhd-step" aria-labelledby="vhd-step-title"><div class="vhd-step__copy">';
-		$top .= '<p class="vhd-eyebrow vhd-eyebrow--light">' . esc_html__( 'Your next step', 'vance-health-hub' ) . '</p>';
+		$top .= '<p class="vhd-eyebrow vhd-eyebrow--light">' . esc_html( $step_label ) . '</p>';
 		$top .= '<h2 id="vhd-step-title" class="vhd-step__title">' . esc_html( $step['title'] ) . '</h2>';
 		$top .= '<p class="vhd-step__text">' . esc_html( $step['text'] ) . '</p></div>';
 		$top .= '<a class="vhd-btn vhd-btn--white" href="' . esc_url( $step['href'] ) . '">' . esc_html( $step['cta'] ) . $arrow . '</a>';

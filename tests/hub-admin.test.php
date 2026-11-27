@@ -181,8 +181,8 @@ require_once $THEME . '/inc/hub-admin.php';
 require_once $THEME . '/inc/hub-community.php';
 
 /* Row order in vance_hub_admin_status(), as the tests index it. */
-// 0 header, 1 articles, 2 survey result, 3 dashboard home, 4 tab look, 5 member no,
-// 6 chart, 7 community hub, 8 check-in, 9 flare plan.
+// 0 header, 1 member bar, 2 articles, 3 survey result, 4 dashboard home, 5 tab look, 6 member no,
+// 7 chart, 8 community hub, 9 check-in, 10 flare plan.
 // (The promo, sections and more switches were rows 0 to 2 before the block order replaced them.)
 
 /** The full status text the screen prints for one switch label ("On", "Off", "Off (master switch is off)"), or 'missing'. */
@@ -222,7 +222,7 @@ section( '1. Switch defaults against the Customizer registrations' );
 
 $ROWS = array_column( vance_hub_admin_switches(), 'default', 'mod' );
 
-check( 'switches: the screen lists exactly ten switches', count( vance_hub_admin_switches() ) === 10 );
+check( 'switches: the screen lists exactly eleven switches', count( vance_hub_admin_switches() ) === 11 );
 check( 'defaults: vance_hub_community equals its registered default', isset( $ROWS['vance_hub_community'], $WC->settings['vance_hub_community']['default'] ) && $ROWS['vance_hub_community'] === $WC->settings['vance_hub_community']['default'] );
 check( 'defaults: vance_hub_community is on by default', isset( $ROWS['vance_hub_community'] ) && true === $ROWS['vance_hub_community'] );
 check( 'registered: vance_hub_community is a checkbox in section vance_hub_sec_community', isset( $WC->settings['vance_hub_community'], $WC->controls['vance_hub_community'] ) && $WC->controls['vance_hub_community']['section'] === 'vance_hub_sec_community' && $WC->controls['vance_hub_community']['type'] === 'checkbox' );
@@ -254,19 +254,20 @@ section( '2. Status: saved values and defaults' );
 
 arrange_admin( array(), array() );
 $ST = vance_hub_admin_status();
-check( 'status: one row per switch (ten)', count( $ST ) === 10 );
-check( 'status: the tab-look switch is row 4 and is on by default', isset( $ST[4] ) && $ST[4]['label'] === 'Use the VanceHubClub look on every tab' && $ST[4]['on'] === true );
-check( 'status: the survey result switch is row 2 and is on by default', isset( $ST[2] ) && $ST[2]['label'] === 'Show the Self-Assessment result page' && $ST[2]['on'] === true );
+check( 'status: one row per switch (eleven)', count( $ST ) === 11 );
+check( 'status: the member bar switch is row 1, right after the header, and is on by default', isset( $ST[1] ) && $ST[1]['label'] === 'Show the member bar' && $ST[1]['on'] === true );
+check( 'status: the tab-look switch is row 5 and is on by default', isset( $ST[5] ) && $ST[5]['label'] === 'Use the VanceHubClub look on every tab' && $ST[5]['on'] === true );
+check( 'status: the survey result switch is row 3 and is on by default', isset( $ST[3] ) && $ST[3]['label'] === 'Show the Self-Assessment result page' && $ST[3]['on'] === true );
 check( 'status: the site header switch is row 0 and is on by default', isset( $ST[0] ) && $ST[0]['label'] === 'Use the VanceHubClub header' && $ST[0]['on'] === true );
-check( 'status: row 7 is "Turn on the Community hub" and is on by default', isset( $ST[7] ) && $ST[7]['label'] === 'Turn on the Community hub' && $ST[7]['on'] === true );
-check( 'status: with the master switch classic, a default-on row is not live', isset( $ST[7] ) && $ST[7]['live'] === false );
-check( 'status: the flare plan switch is the last row', ! isset( $ST[10] ) && 9 === max( array_keys( $ST ) ) && isset( $ST[9] ) && $ST[9]['label'] === 'Show the flare plan' );
+check( 'status: row 8 is "Turn on the Community hub" and is on by default', isset( $ST[8] ) && $ST[8]['label'] === 'Turn on the Community hub' && $ST[8]['on'] === true );
+check( 'status: with the master switch classic, a default-on row is not live', isset( $ST[8] ) && $ST[8]['live'] === false );
+check( 'status: the flare plan switch is the last row', ! isset( $ST[11] ) && 10 === max( array_keys( $ST ) ) && isset( $ST[10] ) && $ST[10]['label'] === 'Show the flare plan' );
 check( 'status: row 0 is the header switch, in display order (the home switches are gone)', isset( $ST[0] ) && $ST[0]['label'] === 'Use the VanceHubClub header' );
 check( 'status: an unsaved default-true switch reads On', isset( $ST[0] ) && $ST[0]['on'] === true );
-check( 'status: an unsaved article switch reads On (its default is on)', isset( $ST[1] ) && $ST[1]['on'] === true );
-check( 'status: an unsaved dashboard switch reads On (its default is on)', isset( $ST[3] ) && $ST[3]['on'] === true );
-check( 'status: an unsaved check-in switch reads Off (health data, default off)', isset( $ST[8] ) && $ST[8]['on'] === false );
-check( 'status: an unsaved flare plan switch (row 9) reads Off (health data, default off)', isset( $ST[9] ) && $ST[9]['label'] === 'Show the flare plan' && $ST[9]['on'] === false );
+check( 'status: an unsaved article switch reads On (its default is on)', isset( $ST[2] ) && $ST[2]['on'] === true );
+check( 'status: an unsaved dashboard switch reads On (its default is on)', isset( $ST[4] ) && $ST[4]['on'] === true );
+check( 'status: an unsaved check-in switch reads Off (health data, default off)', isset( $ST[9] ) && $ST[9]['on'] === false );
+check( 'status: an unsaved flare plan switch (row 10) reads Off (health data, default off)', isset( $ST[10] ) && $ST[10]['label'] === 'Show the flare plan' && $ST[10]['on'] === false );
 
 // The checkbox-sanitiser checks below used the promo switch (row 0) before it was retired. They now use the header switch, also a default-true checkbox in row 0.
 arrange_admin( array( 'vance_hub_header' => true ), array() );
@@ -295,11 +296,11 @@ check( 'status: header saved the integer 0 reads Off', isset( $ST[0] ) && $ST[0]
 
 arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => '1' ), array() );
 $ST = vance_hub_admin_status();
-check( 'status: articles saved "1" reads On (a default-true switch kept on)', isset( $ST[1] ) && $ST[1]['on'] === true );
+check( 'status: articles saved "1" reads On (a default-true switch kept on)', isset( $ST[2] ) && $ST[2]['on'] === true );
 
 arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_show_dashboard' => true ), array() );
 $ST = vance_hub_admin_status();
-check( 'status: dashboard saved true reads On', isset( $ST[3] ) && $ST[3]['on'] === true );
+check( 'status: dashboard saved true reads On', isset( $ST[4] ) && $ST[4]['on'] === true );
 
 arrange_admin( array( 'vance_hub_header' => array( '1' ) ), array() );
 $ST = vance_hub_admin_status();
@@ -310,7 +311,7 @@ vance_hub_admin_status();
 check( 'status: reading the switches does not change the saved mods', $GLOBALS['MODS'] === array( 'vance_hub_header' => '0' ) );
 
 arrange_admin( array( 'vance_hub_show_promo' => false, 'vance_hub_show_sections' => false, 'vance_hub_show_more' => false ), array() );
-check( 'status: the retired switches saved off do not add a row or change a row', count( vance_hub_admin_status() ) === 10 && vance_hub_admin_status()[0]['on'] === true );
+check( 'status: the retired switches saved off do not add a row or change a row', count( vance_hub_admin_status() ) === 11 && vance_hub_admin_status()[0]['on'] === true );
 
 /* ---- 3. the menu item ----------------------------------------------------- */
 section( '3. The admin menu item' );
@@ -409,12 +410,12 @@ arrange_admin( array( 'vance_hub_header' => false, 'vance_home_layout' => 'hub',
 $OUT = render_screen();
 $ST  = vance_hub_admin_status();
 check( 'render: the header row reads Off, as the status does', switch_cell( $OUT, 'Use the VanceHubClub header' ) === 'Off' && $ST[0]['on'] === false );
-check( 'render: the article row reads On, as the status does', switch_cell( $OUT, 'Use the VanceHubClub article layout' ) === 'On' && $ST[1]['on'] === true );
+check( 'render: the article row reads On, as the status does', switch_cell( $OUT, 'Use the VanceHubClub article layout' ) === 'On' && $ST[2]['on'] === true );
 check( 'render: the retired promo, sections and more rows are not on the screen', switch_cell( $OUT, 'Show the promo block' ) === 'missing' && switch_cell( $OUT, 'Show &quot;Latest by section&quot;' ) === 'missing' && switch_cell( $OUT, 'Show &quot;More to read&quot;' ) === 'missing' );
-check( 'render: the dashboard row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Use the VanceHubClub dashboard home' ) === 'On' && $ST[3]['on'] === true );
-check( 'render: the member number row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Show the member number' ) === 'On' && $ST[5]['on'] === true );
-check( 'render: the Community hub row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Turn on the Community hub' ) === 'On' && $ST[7]['on'] === true );
-check( 'render: the check-in row reads Off, its own default is off', switch_cell( $OUT, 'Show the daily check-in' ) === 'Off' && $ST[8]['on'] === false );
+check( 'render: the dashboard row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Use the VanceHubClub dashboard home' ) === 'On' && $ST[4]['on'] === true );
+check( 'render: the member number row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Show the member number' ) === 'On' && $ST[6]['on'] === true );
+check( 'render: the Community hub row reads On by default under the master switch, as the status does', switch_cell( $OUT, 'Turn on the Community hub' ) === 'On' && $ST[8]['on'] === true );
+check( 'render: the check-in row reads Off, its own default is off', switch_cell( $OUT, 'Show the daily check-in' ) === 'Off' && $ST[9]['on'] === false );
 
 // The "Home page blocks" line above the groups.
 arrange_admin( array(), array( 'manage_options' => true ) );
@@ -503,24 +504,24 @@ section( '7. Master switch: live values and row texts' );
 // Master classic: nothing is live, whatever each part says.
 arrange_admin( array(), array( 'manage_options' => true ) );
 $ST = vance_hub_admin_status();
-check( 'master classic, nothing saved: every row is not live', array_column( $ST, 'live' ) === array_fill( 0, 10, false ) );
-check( 'master classic, nothing saved: the article row is on by default but not live', $ST[1]['on'] === true && $ST[1]['live'] === false );
+check( 'master classic, nothing saved: every row is not live', array_column( $ST, 'live' ) === array_fill( 0, 11, false ) );
+check( 'master classic, nothing saved: the article row is on by default but not live', $ST[2]['on'] === true && $ST[2]['live'] === false );
 
 arrange_admin( array( 'vance_hub_articles' => true, 'vance_hub_show_dashboard' => true ), array( 'manage_options' => true ) );
 $ST = vance_hub_admin_status();
-check( 'master classic, parts saved on: the article row is on but not live', $ST[1]['on'] === true && $ST[1]['live'] === false );
-check( 'master classic, parts saved on: the dashboard row is on but not live', $ST[3]['on'] === true && $ST[3]['live'] === false );
+check( 'master classic, parts saved on: the article row is on but not live', $ST[2]['on'] === true && $ST[2]['live'] === false );
+check( 'master classic, parts saved on: the dashboard row is on but not live', $ST[4]['on'] === true && $ST[4]['live'] === false );
 
 // Master hub: a part is live when its own switch is on.
 arrange_admin( array( 'vance_home_layout' => 'hub' ), array( 'manage_options' => true ) );
 $ST = vance_hub_admin_status();
-check( 'master hub, nothing saved: default-on rows are live', $ST[0]['live'] === true && $ST[1]['live'] === true && $ST[7]['live'] === true );
-check( 'master hub, nothing saved: the check-in row is not live (its default is off)', $ST[8]['live'] === false );
+check( 'master hub, nothing saved: default-on rows are live', $ST[0]['live'] === true && $ST[1]['live'] === true && $ST[2]['live'] === true && $ST[8]['live'] === true );
+check( 'master hub, nothing saved: the check-in row is not live (its default is off)', $ST[9]['live'] === false );
 
 arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_articles' => false ), array( 'manage_options' => true ) );
 $ST = vance_hub_admin_status();
-check( 'master hub, article saved off: the article row is not live', $ST[1]['on'] === false && $ST[1]['live'] === false );
-check( 'master hub, article saved off: the dashboard row stays live', $ST[3]['live'] === true );
+check( 'master hub, article saved off: the article row is not live', $ST[2]['on'] === false && $ST[2]['live'] === false );
+check( 'master hub, article saved off: the dashboard row stays live', $ST[4]['live'] === true );
 
 // Live is always on AND master on. A part that is on has live equal to the master.
 arrange_admin( array( 'vance_home_layout' => 'hub', 'vance_hub_header' => '0' ), array( 'manage_options' => true ) );

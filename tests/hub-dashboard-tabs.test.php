@@ -494,7 +494,7 @@ check( 'css: the file has rules', count( $SEL[1] ) > 20 );
 check( 'css: every selector starts with body.vhd-tabs' . ( $UNSCOPED ? ' (loose: ' . implode( ' | ', array_slice( $UNSCOPED, 0, 3 ) ) . ')' : '' ), $UNSCOPED === array() );
 check( 'css: no hard-coded radius, only the token scale or a round shape', preg_match_all( '/border-radius:\s*([^;]+);/', $CSS, $RAD ) > 0 && count( array_filter( $RAD[1], function ( $v ) { return strpos( $v, 'var(--radius-' ) !== 0; } ) ) === 0 );
 check( 'css: the navy side menu and the teal active item are set', strpos( $CSS, '--vhdt-navy: #0A1929' ) !== false && strpos( $CSS, '--vhdt-teal: #008080' ) !== false && preg_match( '/\.nav-item\.active[^{]*\{[^}]*background:\s*var\(--vhdt-teal\)/', $CSS ) === 1 );
-check( 'css: the card has the 6px teal top border and the soft shadow', strpos( $CSS, 'border-top: 6px solid var(--vhdt-teal)' ) !== false && strpos( $CSS, '0 8px 22px rgba(10, 25, 41, 0.08)' ) !== false );
+check( 'css: the card has the 6px teal top border and the soft shadow', strpos( $CSS, 'border-top: 6px solid var(--vhdt-teal)' ) !== false && strpos( $CSS, '--vhdt-shadow: 0 8px 22px rgba(var(--vhdt-navy-rgb), 0.08);' ) !== false && strpos( $CSS, '--vhdt-navy-rgb: 10, 25, 41;' ) !== false );
 check( 'css: the purple Ask block uses the purple token', preg_match( '/\.vhdt-ask\s*\{[^}]*background:\s*var\(--vhdt-purple\)/', $CSS ) === 1 );
 check( 'css: nav items and buttons have a 44px target', substr_count( $CSS, 'min-height: 44px' ) >= 2 );
 check( 'css: no Dashicons dependency (not loaded for visitors)', stripos( $CSS, 'dashicons' ) === false );
