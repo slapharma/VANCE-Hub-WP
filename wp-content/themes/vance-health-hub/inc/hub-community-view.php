@@ -502,7 +502,8 @@ function vance_community_public_html() {
 	$html .= '<section class="vcom-hero" aria-labelledby="vcom-title"><div class="vcom-wrap vcom-hero__in"><div class="vcom-hero__copy">';
 	$html .= '<p class="vcom-pill">' . esc_html__( 'THE COMMUNITY', 'vance-health-hub' ) . '</p>';
 	$html .= '<h1 class="vcom-hero__title" id="vcom-title">' . esc_html__( 'Some things are easier to talk about with people who', 'vance-health-hub' ) . ' <span>' . esc_html__( 'get it', 'vance-health-hub' ) . '</span></h1>';
-	$html .= '<p class="vcom-hero__lead">' . esc_html__( 'A private, moderated space for people living with digestive conditions to share experiences and connect. Free membership. Join at your own pace.', 'vance-health-hub' ) . '</p>';
+	$lead  = vance_community_custom_text( 'vance_hub_text_com_visitor_intro' );
+	$html .= '<p class="vcom-hero__lead">' . ( '' !== $lead ? esc_html( $lead ) : esc_html__( 'A private, moderated space for people living with digestive conditions to share experiences and connect. Free membership. Join at your own pace.', 'vance-health-hub' ) ) . '</p>';
 	$html .= '<p class="vcom-ask__signin"><a class="vcom-btn vcom-btn--purple" href="' . esc_url( vance_community_join_url() ) . '">' . esc_html__( 'Join free', 'vance-health-hub' ) . $arrow . '</a> ' . esc_html__( 'Already a member?', 'vance-health-hub' ) . ' <a href="' . esc_url( vance_community_signin_url() ) . '">' . esc_html__( 'Sign in', 'vance-health-hub' ) . '</a></p>';
 	$html .= '</div></div></section>';
 
@@ -519,8 +520,9 @@ function vance_community_public_html() {
 	$html .= '<p>' . esc_html__( 'Discussions and member profiles are only for signed-in members. Search engines do not list this page.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p>' . esc_html__( 'A moderator reads every post before it shows.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p>' . esc_html__( 'You can post with your first name or a nickname. A nickname is not always anonymity: other members may still recognise you from what you write. Share only what you are happy for others to read.', 'vance-health-hub' ) . '</p>';
+	$html .= vance_community_note_html();
 	if ( '' !== $rules ) {
-		$html .= '<a class="vcom-link" href="' . esc_url( $rules ) . '">' . esc_html__( 'Read the community rules', 'vance-health-hub' ) . $arrow . '</a>';
+		$html .= vance_community_rules_link_html( $rules, $arrow );
 	}
 	$html .= '</section>';
 
@@ -539,6 +541,11 @@ function vance_community_public_html() {
  * @return string
  */
 function vance_community_rules_url() {
+	// A valid saved link (Customizer, inc/hub-community-settings.php) wins.
+	$custom = function_exists( 'vance_hub_community_rules_custom_url' ) ? vance_hub_community_rules_custom_url() : '';
+	if ( '' !== $custom ) {
+		return $custom;
+	}
 	$rules = get_page_by_path( 'community-rules' );
 	if ( $rules && 'publish' === $rules->post_status ) {
 		$url = get_permalink( $rules );
@@ -547,6 +554,49 @@ function vance_community_rules_url() {
 		}
 	}
 	return '';
+}
+
+/**
+ * A text that an administrator changed in the Customizer, or '' to say "print the
+ * built-in wording". '' too when inc/hub-community-settings.php is not loaded.
+ *
+ * @param string $mod Theme mod name (a key of vance_hub_community_text_defaults()).
+ * @return string Plain text, not yet escaped.
+ */
+function vance_community_custom_text( $mod ) {
+	return function_exists( 'vance_hub_community_text_custom' ) ? vance_hub_community_text_custom( $mod ) : '';
+}
+
+/**
+ * The extra line of the information boxes: one paragraph, or '' when no line is
+ * saved (or when inc/hub-community-settings.php is not loaded). It uses the
+ * same bare <p> as the lines above it in both boxes.
+ *
+ * @return string
+ */
+function vance_community_note_html() {
+	$note = vance_community_custom_text( 'vance_hub_text_com_note' );
+	return '' === $note ? '' : '<p>' . esc_html( $note ) . '</p>';
+}
+
+/**
+ * The words of the community rules link.
+ *
+ * @return string Plain text, not yet escaped.
+ */
+function vance_community_rules_label() {
+	return function_exists( 'vance_hub_community_text' ) ? vance_hub_community_text( 'vance_hub_text_com_rules_label' ) : __( 'Read the community rules', 'vance-health-hub' );
+}
+
+/**
+ * The community rules link, for the visitor page and the member box.
+ *
+ * @param string $href  Address of the rules.
+ * @param string $arrow Arrow markup (vance_community_arrow()).
+ * @return string
+ */
+function vance_community_rules_link_html( $href, $arrow ) {
+	return '<a class="vcom-link" href="' . esc_url( $href ) . '">' . esc_html( vance_community_rules_label() ) . $arrow . '</a>';
 }
 
 /**
@@ -584,7 +634,9 @@ function vance_community_render_page() {
 	$html .= '<section class="vcom-hero" aria-labelledby="vcom-title"><div class="vcom-wrap vcom-hero__in"><div class="vcom-hero__copy">';
 	$html .= '<p class="vcom-pill">' . esc_html__( 'THE COMMUNITY', 'vance-health-hub' ) . '</p>';
 	$html .= '<h1 class="vcom-hero__title" id="vcom-title">' . esc_html__( 'You are not the only one with', 'vance-health-hub' ) . ' <span>' . esc_html__( 'this question', 'vance-health-hub' ) . '</span></h1>';
-	$html .= '<p class="vcom-hero__lead">' . esc_html__( 'Ask people who live with a gut condition. Share what works for you. A moderator reads every post.', 'vance-health-hub' ) . '</p>';
+	// A saved text is followed by the fixed sentence, so a custom text cannot remove it.
+	$lead  = vance_community_custom_text( 'vance_hub_text_com_member_intro' );
+	$html .= '<p class="vcom-hero__lead">' . ( '' !== $lead ? esc_html( $lead ) . ' ' . esc_html__( 'A moderator reads every post.', 'vance-health-hub' ) : esc_html__( 'Ask people who live with a gut condition. Share what works for you. A moderator reads every post.', 'vance-health-hub' ) ) . '</p>';
 	$html .= vance_community_ask_html( $member, $user_id, $spaces, $current );
 	$html .= '<p class="vcom-hero__note">' . esc_html__( 'Visitors read the first reply to each question. Members read every reply.', 'vance-health-hub' ) . '</p>';
 	$html .= '</div>';
@@ -658,7 +710,11 @@ function vance_community_render_page() {
 	// -- Side rail ---------------------------------------------------------------
 	$html .= '<aside class="vcom-rail" aria-label="' . esc_attr__( 'About the community', 'vance-health-hub' ) . '">';
 
-	$html .= vance_community_poll_html( vance_community_active_poll(), $user_id, $member );
+	// The poll switch (inc/hub-community-settings.php): off means no poll block,
+	// the same output as "no active poll". With the file not loaded, the poll shows.
+	if ( ! function_exists( 'vance_hub_community_poll_on' ) || vance_hub_community_poll_on() ) {
+		$html .= vance_community_poll_html( vance_community_active_poll(), $user_id, $member );
+	}
 
 	if ( $member ) {
 		$html .= vance_community_my_posts_html( $user_id );
@@ -669,9 +725,15 @@ function vance_community_render_page() {
 	$html .= '<p>' . esc_html__( 'Members share experience. They do not give medical advice.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p>' . esc_html__( 'A moderator reads every post before it shows.', 'vance-health-hub' ) . '</p>';
 	$html .= '<p>' . esc_html__( 'You can post with your first name or a nickname.', 'vance-health-hub' ) . '</p>';
-	$rules = get_page_by_path( 'community-rules' );
-	if ( $rules && 'publish' === $rules->post_status ) {
-		$html .= '<a class="vcom-link" href="' . esc_url( get_permalink( $rules ) ) . '">' . esc_html__( 'Read the community rules', 'vance-health-hub' ) . $arrow . '</a>';
+	$html .= vance_community_note_html();
+	$rules_custom = function_exists( 'vance_hub_community_rules_custom_url' ) ? vance_hub_community_rules_custom_url() : '';
+	if ( '' !== $rules_custom ) {
+		$html .= vance_community_rules_link_html( $rules_custom, $arrow );
+	} else {
+		$rules = get_page_by_path( 'community-rules' );
+		if ( $rules && 'publish' === $rules->post_status ) {
+			$html .= vance_community_rules_link_html( get_permalink( $rules ), $arrow );
+		}
 	}
 	$html .= '</section>';
 

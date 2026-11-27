@@ -487,6 +487,13 @@ First deploy only — activate over SSH: `cd ~/domains/vancehealthhub.co.uk/publ
   is "Member dashboard: text".
 - **The member bar switch works.** In Customize, section 6 "Header and member bar", change "Show the
   member bar". The preview shows the bar on and off. Do not publish a change unless you mean to.
+- **Site layout shows three choices.** In Customize, section 1 "On or off", the Site layout radio shows
+  "Classic (VanceHealthHub)", "VanceHubClub for members only" and "VanceHubClub".
+- **Reset buttons are where they should be.** Sections 2 to 10 each end with "Reset this section". Sections
+  1, 11 and 12 do not have one. Check that the button does not publish anything until you select Publish.
+- **The community page still shows its poll with nothing saved.** As a member, open `/community/` with the
+  Community switch on and an active poll. The poll shows in the side column. With no active poll, no poll
+  block shows.
 
 A quick way to run most of this: fetch every URL in the sitemap and assert on
 content, not status codes. All 217 returned 200 with zero PHP notices on
@@ -951,12 +958,115 @@ properties, the Customizer controls and the output.
   stylesheets keep their own defaults. Saved values stay in the database and do no harm.
 - **Tests.** Run `cd tests && php hub-brand.test.php`. It covers the channel, contrast and mix functions,
   the sanitiser, the validator, the CSS rules, the map against the seven stylesheets, the enqueue hook,
-  and the Customizer totals of 149 settings, 146 controls and 12 sections.
+  and the Customizer totals of 157 settings, 163 controls and 12 sections.
 - **Known limits.**
   - A custom colour's shades are calculated. They are not designed. A mix with white or black cannot
     reproduce every stylesheet value at the default colour. For example, the stylesheet's teal heading
     `#0A3D3D` has a red value of 10. A black mix of the teal (red value 0) cannot give that value.
   - The tests do not load a colour picker class. The colour control is tested as a text field.
+
+### VanceHubClub community settings — `inc/hub-community-settings.php`
+
+The Customizer sets the weekly poll switch and the wording of the Community page at `/community/`.
+The settings sit in section 10, "Community", of the VanceHubClub panel. `functions.php` loads the file
+after `inc/hub-brand.php`. With nothing saved, the page prints the same wording as before.
+
+- **The poll switch.** `vance_hub_community_poll`, labelled "Show the weekly poll", default on, priority 20.
+  It is a sub-switch. The Community switch (`vance_hub_community`) decides whether the page shows at all.
+  - Off: the page prints no poll block. The side column looks the same as a page with no active poll.
+  - Off: the vote handler refuses every vote with the message "This poll is closed." It writes nothing.
+  - Votes that members already cast stay in the database.
+- **The texts.** Each text has a built-in wording. An empty field, or a field with only spaces, uses that
+  wording.
+
+  | Setting | Priority | Where it shows | Built-in wording |
+  |---|---|---|---|
+  | `vance_hub_text_com_visitor_intro` | 30 | Under the title, for a visitor | "A private, moderated space for people living with digestive conditions to share experiences and connect. Free membership. Join at your own pace." |
+  | `vance_hub_text_com_member_intro` | 40 | Under the title, for a member | "Ask people who live with a gut condition. Share what works for you." |
+  | `vance_hub_text_com_note` | 50 | One extra line in an information box | None. Empty means no line. |
+  | `vance_hub_text_com_rules_label` | 70 | The words of the rules link | "Read the community rules" |
+
+- **The fixed sentence after a member intro.** The page adds "A moderator reads every post." after a saved
+  member intro. A saved text cannot remove that sentence. The Customizer field shows the first two sentences
+  only, because the page adds the third one.
+- **The extra line.** A saved line prints as one paragraph in two places: at the end of the box
+  "PRIVATE AND MODERATED" (visitors) and at the end of the box "HOW THIS SPACE WORKS" (members). It prints
+  after the other lines and before the rules link. It does not print in the box "IF YOU NEED HELP NOW".
+- **The rules link.** `vance_hub_link_com_rules`, priority 60, empty by default. It accepts either:
+  - an address that starts with `http://` or `https://` and has a host, or
+  - a site path that starts with one `/`, for example `/community-rules/`. The path goes through `home_url()`.
+
+  Any other value saves as empty. A value with a space, a backslash or a control character also saves as
+  empty. When the setting is empty, the link goes to the published page `/community-rules/`. When that page
+  does not exist, no link prints. The link shows in the visitor box and in the member box.
+- **Sentences that stay in the templates.** These have no setting, on purpose. They are safety and
+  moderation wording. A saved text could remove them, and the site would then make a claim that it does not
+  keep:
+  - "Members share experience. They do not give medical advice."
+  - "A moderator reads every post before it shows." (the visitor box and the member box)
+  - The nickname warning in the visitor box, which says a nickname is not always anonymity.
+  - "We never show your surname or your email address." (the post form)
+  - "The Community is not an emergency service. For urgent medical advice, call NHS 111. In an emergency,
+    call 999."
+  - The report reasons and the reject reasons. They are fixed lists in the code.
+- **Back it out.** Delete the `require_once` line for `inc/hub-community-settings.php` in `functions.php`.
+  Then remove the `vance_hub_community_poll` row from `vance_hub_customizer_switches()` in
+  `inc/hub-layout.php`. The templates print their built-in wording again, and the poll shows again.
+  Saved values stay in the database and do no harm.
+- **Tests.** Run `cd tests && php hub-community-settings.test.php`. It exits 1 when a check fails.
+
+### VanceHubClub article prompt settings — `inc/hub-article.php`
+
+The "Try this now" prompt is a tool link in the text of each article. It shows only on articles that use
+the VanceHubClub article layout (`vance_hub_articles`). Its settings sit in section 7, "Articles and
+Self-Assessment", of the VanceHubClub panel.
+
+- **The switch.** `vance_hub_article_prompt`, labelled "Show the Try this now prompt", default on, priority 12.
+  Off: no article shows the prompt. The sidebar cards and the rest of the article layout do not change.
+- **The position.** `vance_hub_article_prompt_after`, priority 14. Use a number from 1 to 10. The default is 2.
+  A value that is not a number gives 2. A number outside 1 to 10 gives the nearest value in that range.
+  - The prompt goes after the saved paragraph number, when the article has at least that number plus 2
+    top-level paragraphs. With the default, an article with four or more paragraphs gets the prompt after
+    paragraph 2.
+  - An article with fewer paragraphs gets the prompt at the end of the text.
+  - A top-level paragraph is a `<p>` that is a direct child of the text. A paragraph inside a list, a quote,
+    a figure or a block does not count.
+- **The tool for each section.** The Customizer shows one "Prompt tool" select for each top-level category
+  that has at least one post in it or in one of its sub-categories. A category with no post at any level
+  has no select (`vance_hub_article_keep_top_category()`). The selects
+  sit at priorities 30, 32, 34 and so on, in name order. Each select
+  is saved in `vance_hub_aprompt_tool_<slug>`, where `<slug>` is the category slug after `sanitize_key()`.
+
+  | Value | Label | Tool |
+  |---|---|---|
+  | `auto` | Automatic (default) | The built-in rule. See below. |
+  | `survey` | Self-Assessment | The Gastro Health Survey |
+  | `recipes` | Meal planner | The recipe planner |
+  | `nutrition` | Nutrition check | The malnutrition check |
+  | `discounts` | Discounts | The discounts page |
+  | `none` | No prompt | No prompt for these articles |
+
+  - A choice applies to the articles in its section and in that section's sub-categories. A sub-category
+    has no select of its own.
+  - An article in two sections uses the first section, in name order, that has a choice other than
+    Automatic.
+  - Automatic keeps the built-in rule. Articles in `food-nutrition`, `nutrition-diet` or `gastro-recipes`,
+    and their sub-categories, get the meal planner. Every other article gets Self-Assessment. The rule is
+    `vance_hub_article_tool_map()`.
+- **What the prompt prints.** Each prompt has a picture, a title, a text and a button. The button links to
+  the tool.
+  - Self-Assessment and meal planner: fixed wording in `vance_hub_article_prompt_copy()`.
+  - Nutrition check and Discounts: the title and the description of the tool in `vance_hub_tools()`
+    (`inc/hub-layout.php`). The button text and the picture are the tool's own.
+- **The sidebar does not follow the choice.** The tools card in the article sidebar uses the built-in rule.
+  It does not follow the per-section choice.
+- **Where the prompt does not appear.** The filter adds the prompt to the article page only. It does not
+  add it to feeds, the REST API, excerpts, the VANCE-Ai sources, the citation checker, the schema, a
+  password-protected article or a Patient Downloads handout. The stored text of an article does not change.
+- **Back it out.** To hide the prompt on every article, turn off the switch. To remove the whole article
+  layout, delete the `require_once` line for `inc/hub-article.php` in `functions.php`.
+- **Tests.** Run `cd tests && php hub-article-prompt.test.php`. It exits 2 when it cannot find the stub
+  block in `tests/hub-layout.test.php`. It exits 1 when a check fails.
 
 ## Customizer structure: one map decides where everything sits
 
@@ -1036,7 +1146,7 @@ kept in the repo.
 The VanceHubClub panel is not in the structure map. Its id is the constant
 `VANCE_HUB_CUSTOMIZER_PANEL`. It sits at priority 1, above the seven silos.
 
-The sections and the 11 switch labels are named in one place: `vance_hub_customizer_sections()`
+The sections and the 13 switch labels are named in one place: `vance_hub_customizer_sections()`
 and `vance_hub_customizer_switches()` in `inc/hub-layout.php`. The Vance Club Layout admin
 screen (`inc/hub-admin.php`) reads the same two lists, so the screen and the Customizer use the
 same words.
@@ -1072,7 +1182,19 @@ that moves gets a new number. Do not type a section number into text. Use
 `vance_hub_customizer_section_number( 'vance_hub_sec_flare' )` and put the result in a `%d`
 placeholder, as the go-live field and the flare plan description do.
 
-Section 1 keeps the id `vance_home_layout`, which is also the id of the master setting.
+Section 1 keeps the id `vance_home_layout`, which is also the id of the master setting. Its section
+description is "The master switch for all of VanceHubClub." Its main control is "Site layout", a radio
+with three choices:
+
+- "Classic (VanceHealthHub)" (`classic`, the default): every VanceHubClub part is off.
+- "VanceHubClub for members only" (`members`): logged-in members see VanceHubClub and visitors see the
+  classic layout.
+- "VanceHubClub" (`hub`): every part is on for everyone, unless you turn that part off in its own switch.
+
+Section 1 also holds the go-live date field. See "Scheduled go-live" above and "Staged rollout" below.
+
+The section counts in the panel are 157 settings, 163 controls and 12 sections. Of the 163 controls, nine
+are "Reset this section" buttons. There are 13 switches. The totals come from `tests/hub-customizer.test.php`.
 
 Rules for this panel:
 
@@ -1096,6 +1218,71 @@ Rules for this panel:
 
 **Tests:** `php tests/hub-customizer.test.php`. It needs no WordPress. It exits 1 when any
 check fails.
+
+### Staged rollout: VanceHubClub for members only — `inc/hub-layout.php`
+
+The Site layout value `members` shows VanceHubClub to logged-in members. It shows the classic layout to
+visitors. Use it to test VanceHubClub on real members before everyone sees it. This state has not been
+used on the live site yet.
+
+- **The three saved values.** The Site layout (`vance_home_layout`) is `classic`, `members` or `hub`.
+  Any other stored value reads as `classic`.
+- **Two readers, two jobs.**
+  - `vance_hub_saved_layout()` returns the saved value. The admin screen "Vance Club Layout"
+    (`inc/hub-admin.php`) and the go-live run (`inc/hub-golive.php`) read it. The go-live run treats
+    `members` as classic, so at the go-live time the site changes to `hub` for everyone.
+  - `vance_hub_effective_layout()` returns `hub` or `classic` for the current viewer. The master switch
+    (`vance_hub_master_on()`), each part's gate (`vance_hub_switch_on()`) and the home page test
+    (`vance_hub_layout_active()`) read it.
+  - Rule: a new part must go through `vance_hub_switch_on()` or `vance_hub_layout_active()`. Never read
+    `vance_home_layout` directly. A direct read ignores the logged-in rule and the preview.
+- **The preview address.** `?vhh_layout=` accepts `hub` and `classic` only. Only a user with
+  `edit_theme_options` can use it. A visitor's value is ignored, and `members` in an address is ignored.
+  To see the visitor view as an administrator, add `?vhh_layout=classic` to a page address.
+- **Go-live with `members`.** Set the Site layout to "VanceHubClub for members only" and set a go-live
+  time. At that time the layout becomes `hub` for everyone. See "Scheduled go-live" above.
+- **What a visitor sees at `/community/`.** A visitor gets "page not found" (HTTP 404), because a visitor
+  gets the classic layout. A logged-in member gets the Community page. The Community switch
+  (`vance_hub_community`) must also be on.
+- **Staff.** Staff accounts are logged in, so staff see VanceHubClub in this state.
+- **The health-data switches.** The daily check-in and the flare plan keep their own saved values when the
+  Site layout changes. They also follow the layout. A member sees either one only when the layout is on for
+  that member and its own switch is on. Both switches default to off.
+- **Cache.** A visitor gets the classic home page, as before. A logged-in member can get a cached copy of a
+  page from before a change. The theme does not purge the cache when the Site layout changes. After each
+  change, purge the LiteSpeed Cache plugin cache and the Hostinger cache by hand. The theme sets no cache
+  time for this, so this document does not give one.
+
+### Reset this section — `inc/hub-reset.php`
+
+Nine sections have a "Reset this section" button as their last control. The button sets every setting of
+its section back to the default. It changes only the Customizer state. Nothing changes on the site until
+you select Publish. To drop the change, select Close.
+
+- **Which sections have a button.** Sections 2 to 10 have one. Sections 1, 11 and 12 do not. The reasons:
+  - Section 1, "On or off": a reset would set the Site layout to classic and remove the go-live time. That
+    turns VanceHubClub off for every visitor and member.
+  - Section 11, "Daily check-in (health data)": the settings hold the consent text and the three questions.
+    A reset would change the agreement text, so each member would have to agree again.
+  - Section 12, "Flare plan (health data)": the settings hold the consent text and the urgent help text. A
+    reset would change the agreement text. It would also clear the urgent help text, so the flare card
+    would not show. A clinician must write that text.
+- **Where the defaults come from.** When the Customizer loads, the code reads the live manager. For each
+  reset section, it takes every control that has a setting, and it takes each setting's default. No list of
+  setting ids is kept by hand. So a new control in a section is reset with no change to the code.
+- **A new section.** A new section gets a button, unless its id is in `vance_hub_reset_excluded()` in
+  `inc/hub-reset.php`. A new health-data section must go in that list. A bulk reset must never reach
+  health data.
+- **A setting with no control is not reset.** The three retired home page switches have no control. The
+  administrator cannot see them, so the button does not change them.
+- **The drag list and the colour field.** Section 2 has a drag list of home page blocks. After a reset, the
+  list follows the default value: the ticked blocks move to the front in the order of the value
+  (`assets/js/customizer-sortable.js`). The hex field of a colour control is also written again from the
+  value (`assets/js/hub-customizer-reset.js`).
+- **Not verified.** The core media control of the hero photo (section 2) and the notice that shows after a
+  reset need a check in the live Customizer. The tests do not load either one.
+- **Tests.** The section B tests are in `tests/hub-rollout-reset.test.php`. Run
+  `cd tests && php hub-rollout-reset.test.php`. It exits 1 when a check fails.
 
 ## Local-only helpers (in `LOCAL/`, gitignored)
 - `vance_rebrand.py` — text rebrand transformer (round 1)

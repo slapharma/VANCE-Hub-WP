@@ -148,6 +148,10 @@ require_once get_template_directory() . '/inc/hub-home-settings.php';
 require_once get_template_directory() . '/inc/hub-look-settings.php';
 // VanceHubClub brand colours: teal, navy and purple pickers and the CSS they print. Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-brand.php';
+// VanceHubClub community settings: weekly poll switch, intro texts, extra line, rules link. Needs hub-layout.php and hub-look-settings.php.
+require_once get_template_directory() . '/inc/hub-community-settings.php';
+// VanceHubClub "Reset this section" buttons in the Customizer. Needs hub-layout.php.
+require_once get_template_directory() . '/inc/hub-reset.php';
 // VanceHubClub scheduled go-live: switches the layout at a saved time. Needs hub-layout.php.
 require_once get_template_directory() . '/inc/hub-golive.php';
 // VanceHubClub article layout: opt-in (Customizer, default off). Needs hub-layout.php.

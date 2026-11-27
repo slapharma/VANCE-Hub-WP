@@ -5,7 +5,8 @@
  * The classic home page (front-page.php) stays the default. This file adds:
  *
  *   - a Customizer switch, "Home layout" (Home · Hero & Layout panel), with
- *     the values 'classic' (default) and 'hub';
+ *     the values 'classic' (default), 'members' (VanceHubClub for logged-in
+ *     members, classic for visitors) and 'hub';
  *   - an admin-only preview: ?vhh_layout=hub or ?vhh_layout=classic on the home
  *     page, honoured only for users who can edit_theme_options;
  *   - a template_include filter that swaps front-page.php for
@@ -37,11 +38,24 @@ require_once __DIR__ . '/hub-preview.php';
  * ====================================================================== */
 
 /**
- * The two home layouts. The first one is the default.
+ * The three values that the saved "Site layout" can have. The first one is the
+ * default. 'members' shows VanceHubClub to logged-in members and the classic
+ * layout to visitors (see vance_hub_layout_for()).
  *
  * @return string[]
  */
 function vance_hub_layout_choices() {
+	return array( 'classic', 'members', 'hub' );
+}
+
+/**
+ * The layouts that a preview query (?vhh_layout=) can pick. Only these two.
+ * 'members' is a saved state and never a layout that one page can be forced
+ * into, so it is not in this list.
+ *
+ * @return string[]
+ */
+function vance_hub_query_layouts() {
 	return array( 'classic', 'hub' );
 }
 
@@ -49,7 +63,7 @@ function vance_hub_layout_choices() {
  * Sanitize a stored layout value. Anything unknown becomes 'classic'.
  *
  * @param mixed $value Raw value.
- * @return string 'classic' or 'hub'.
+ * @return string 'classic', 'members' or 'hub'.
  */
 function vance_hub_sanitize_layout( $value ) {
 	$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
@@ -57,12 +71,35 @@ function vance_hub_sanitize_layout( $value ) {
 }
 
 /**
+ * The layout that one viewer gets from a saved layout.
+ *
+ * 'hub' gives 'hub' to everyone. 'members' gives 'hub' to a logged-in viewer and
+ * 'classic' to a visitor. Anything else gives 'classic'.
+ *
+ * @param mixed $saved     Saved layout.
+ * @param bool  $logged_in True when the viewer is logged in.
+ * @return string 'classic' or 'hub'.
+ */
+function vance_hub_layout_for( $saved, $logged_in ) {
+	if ( 'hub' === $saved ) {
+		return 'hub';
+	}
+	if ( 'members' === $saved && true === $logged_in ) {
+		return 'hub';
+	}
+	return 'classic';
+}
+
+/**
  * Decide the layout from the saved mod, the preview query value and whether
  * the viewer may preview.
  *
  * A preview value is honoured only when $can_preview is true, and only when it
- * is one of the two known layouts. Any other query value is ignored, so the
- * saved mod decides.
+ * is one of the two layouts in vance_hub_query_layouts(). Any other query value
+ * (also 'members') is ignored, so the saved mod decides. A saved 'members' that
+ * reaches this function as the mod value is read as a visitor would read it
+ * ('classic'). Callers pass the effective layout, see
+ * vance_hub_effective_layout().
  *
  * @param mixed $mod_value   Saved theme mod value.
  * @param mixed $query_value Value of ?vhh_layout= ('' when absent).
@@ -72,11 +109,11 @@ function vance_hub_sanitize_layout( $value ) {
 function vance_hub_resolve_layout( $mod_value, $query_value, $can_preview ) {
 	if ( $can_preview && is_string( $query_value ) ) {
 		$query_value = strtolower( trim( $query_value ) );
-		if ( in_array( $query_value, vance_hub_layout_choices(), true ) ) {
+		if ( in_array( $query_value, vance_hub_query_layouts(), true ) ) {
 			return $query_value;
 		}
 	}
-	return vance_hub_sanitize_layout( $mod_value );
+	return vance_hub_layout_for( vance_hub_sanitize_layout( $mod_value ), false );
 }
 
 /**
@@ -325,27 +362,42 @@ function vance_hub_section_slugs() {
  * ====================================================================== */
 
 /**
- * The saved layout mod, read through the theme's helper.
+ * The saved layout mod, read through the theme's helper. This is the state an
+ * administrator chose, the same for every viewer.
  *
- * @return string 'classic' or 'hub'.
+ * @return string 'classic', 'members' or 'hub'.
  */
 function vance_hub_saved_layout() {
 	return vance_hub_sanitize_layout( vance_get_theme_mod( 'vance_home_layout', 'classic' ) );
 }
 
 /**
- * The master switch: true when the saved Home layout is VanceHubClub.
+ * The layout that the current viewer gets from the saved layout: 'hub' or
+ * 'classic'. With the saved layout 'members', a logged-in viewer gets 'hub' and
+ * a visitor gets 'classic'.
+ *
+ * @return string 'classic' or 'hub'.
+ */
+function vance_hub_effective_layout() {
+	$logged_in = function_exists( 'is_user_logged_in' ) && is_user_logged_in();
+	return vance_hub_layout_for( vance_hub_saved_layout(), $logged_in );
+}
+
+/**
+ * The master switch: true when VanceHubClub is on for the current viewer.
  *
  * "Home layout" turns every VanceHubClub part on and off together. With it on,
  * each part follows its own switch, so an administrator can turn single parts
  * off. With it off, every part is off, whatever its own switch says.
+ * The saved layout 'members' is on for a logged-in viewer and off for a visitor
+ * (vance_hub_effective_layout()).
  * An administrator's preview (?vhh_layout=, preview mode, share link) is
  * applied by each part's resolver and is not changed by this.
  *
  * @return bool
  */
 function vance_hub_master_on() {
-	return 'hub' === vance_hub_saved_layout();
+	return 'hub' === vance_hub_effective_layout();
 }
 
 /**
@@ -386,7 +438,7 @@ function vance_hub_layout_active() {
 	// vance_hub_preview_query() reads ?vhh_layout= only for users who may
 	// preview (and only as a string), then falls back to preview mode.
 	$query = vance_hub_preview_query();
-	return 'hub' === vance_hub_resolve_layout( vance_get_theme_mod( 'vance_home_layout', 'classic' ), $query, '' !== $query );
+	return 'hub' === vance_hub_resolve_layout( vance_hub_effective_layout(), $query, '' !== $query );
 }
 
 /**
@@ -586,12 +638,14 @@ function vance_hub_customizer_switches() {
 		'vance_hub_header'         => array( 'section' => 'vance_hub_sec_header', 'label' => __( 'Use the VanceHubClub header', 'vance-health-hub' ) ),
 		'vance_hub_member_bar'     => array( 'section' => 'vance_hub_sec_header', 'label' => __( 'Show the member bar', 'vance-health-hub' ) ),
 		'vance_hub_articles'        => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Use the VanceHubClub article layout', 'vance-health-hub' ) ),
+		'vance_hub_article_prompt'  => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Show the Try this now prompt', 'vance-health-hub' ) ),
 		'vance_hub_tool_result'     => array( 'section' => 'vance_hub_sec_pages', 'label' => __( 'Show the Self-Assessment result page', 'vance-health-hub' ) ),
 		'vance_hub_show_dashboard'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Use the VanceHubClub dashboard home', 'vance-health-hub' ) ),
 		'vance_hub_dashboard_tabs'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Use the VanceHubClub look on every tab', 'vance-health-hub' ) ),
 		'vance_hub_dash_member_no'  => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Show the member number', 'vance-health-hub' ) ),
 		'vance_hub_dash_chart'      => array( 'section' => 'vance_hub_sec_dashboard', 'label' => __( 'Show the results chart', 'vance-health-hub' ) ),
 		'vance_hub_community'       => array( 'section' => 'vance_hub_sec_community', 'label' => __( 'Turn on the Community hub', 'vance-health-hub' ) ),
+		'vance_hub_community_poll'  => array( 'section' => 'vance_hub_sec_community', 'label' => __( 'Show the weekly poll', 'vance-health-hub' ) ),
 		'vance_hub_dash_checkin'    => array( 'section' => 'vance_hub_sec_checkin', 'label' => __( 'Show the daily check-in', 'vance-health-hub' ) ),
 		'vance_hub_dash_flare_plan' => array( 'section' => 'vance_hub_sec_flare', 'label' => __( 'Show the flare plan', 'vance-health-hub' ) ),
 	);
@@ -655,12 +709,13 @@ function vance_hub_customize_register( $wp_customize ) {
 	$wp_customize->add_control( 'vance_home_layout', array(
 		'label'       => __( 'Site layout', 'vance-health-hub' ),
 		/* translators: 1: number of the first part section, 2: number of the last section, 3: number of the check-in section, 4: number of the flare plan section. */
-		'description' => sprintf( __( 'Classic: every VanceHubClub part is off. VanceHubClub: every part is on, unless you turn that part off in sections %1$d to %2$d. The daily check-in and the flare plan are different: they start off, and you turn them on in sections %3$d and %4$d. To change to VanceHubClub at a set time, use the go-live field below. To see one page in a layout with no change to the site, add ?vhh_layout=hub or ?vhh_layout=classic to its address.', 'vance-health-hub' ), vance_hub_customizer_section_number( 'vance_hub_sec_home' ), vance_hub_customizer_section_number( 'vance_hub_sec_flare' ), vance_hub_customizer_section_number( 'vance_hub_sec_checkin' ), vance_hub_customizer_section_number( 'vance_hub_sec_flare' ) ),
+		'description' => sprintf( __( 'Classic: every VanceHubClub part is off. VanceHubClub: every part is on, unless you turn that part off in sections %1$d to %2$d. VanceHubClub for members only: a logged-in member sees VanceHubClub and a visitor sees the classic layout. Staff are logged in, so staff see VanceHubClub. Add ?vhh_layout=classic to an address to see the visitor view. In this state, the Community page shows "page not found" to a visitor. The daily check-in and the flare plan are different: they start off, and you turn them on in sections %3$d and %4$d. In every state, they keep their own switches. To change to VanceHubClub at a set time, use the go-live field below. To see one page in a layout with no change to the site, add ?vhh_layout=hub or ?vhh_layout=classic to its address.', 'vance-health-hub' ), vance_hub_customizer_section_number( 'vance_hub_sec_home' ), vance_hub_customizer_section_number( 'vance_hub_sec_flare' ), vance_hub_customizer_section_number( 'vance_hub_sec_checkin' ), vance_hub_customizer_section_number( 'vance_hub_sec_flare' ) ),
 		'section'     => 'vance_home_layout',
 		'type'        => 'radio',
 		'priority'    => 10,
 		'choices'     => array(
 			'classic' => __( 'Classic (VanceHealthHub)', 'vance-health-hub' ),
+			'members' => __( 'VanceHubClub for members only', 'vance-health-hub' ),
 			'hub'     => __( 'VanceHubClub', 'vance-health-hub' ),
 		),
 	) );

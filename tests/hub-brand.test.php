@@ -5,7 +5,7 @@
  *
  * Same shape as hub-customizer.test.php, and on purpose its stub manager: this
  * suite runs every Customizer register function against a fake manager, so the
- * totals (149 settings, 146 controls, 12 sections) and the default of every
+ * totals (157 settings, 163 controls, 12 sections) and the default of every
  * setting that existed before the look and brand work are checked for real.
  * The stub block cannot be shared with hub-layout.test.php, because the two
  * blocks define the same functions. This suite does not render any template.
@@ -25,7 +25,7 @@
  *   6  vance_hub_brand_enqueue(): inline CSS only for enqueued handles, nothing
  *      at the defaults, and the hook at priority 30
  *   7  the Customizer guard: the settings that existed before this work keep
- *      their default, and the totals are 149, 146 and 12
+ *      their default, and the totals are 157, 163 and 12
  *
  * A check whose label says what should happen and which fails on the current
  * code is a finding, not a broken check. The runner lists every failure.
@@ -154,6 +154,8 @@ require_once $THEME . '/inc/hub-layout.php';
 require_once $THEME . '/inc/hub-home-settings.php';
 require_once $THEME . '/inc/hub-look-settings.php';
 require_once $THEME . '/inc/hub-brand.php';
+require_once $THEME . '/inc/hub-community-settings.php';
+require_once $THEME . '/inc/hub-reset.php';
 require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
@@ -506,7 +508,9 @@ vance_hub_dash_features_customize( $M );
 vance_hub_tool_result_customize_register( $M );
 vance_hub_header_customize_register( $M );
 vance_hub_community_customize_register( $M );
+vance_hub_community_settings_customize_register( $M );
 vance_hub_flare_plan_customize( $M );
+vance_hub_reset_customize_register( $M );
 
 // The settings that existed before the look and brand work: id => default. That is
 // the 40 original rows, the 28 new rows, and the 25 tool card and go-live rows.
@@ -611,9 +615,9 @@ foreach ( $PRE_WORK as $id => $default ) {
 }
 check( 'guard: the pre-work table has the 93 settings that existed before this work', count( $PRE_WORK ) === 93 );
 
-// 125 and 122 from the look and brand work, plus the 24 flare plan section settings and controls.
-check( 'guard: 149 settings are registered in total', count( $M->settings ) === 149 );
-check( 'guard: 146 controls are registered in total', count( $M->controls ) === 146 );
+// The 24 flare plan section settings and controls are in both totals.
+check( 'guard: 157 settings are registered in total', count( $M->settings ) === 157 );
+check( 'guard: 163 controls are registered in total (154 plus 9 reset buttons)', count( $M->controls ) === 163 );
 check( 'guard: 12 sections are registered in total', count( $M->sections ) === 12 );
 check( 'guard: exactly one panel is registered', count( $M->panels ) === 1 );
 
