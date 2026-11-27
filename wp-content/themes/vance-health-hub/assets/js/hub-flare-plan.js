@@ -19,6 +19,8 @@
 	'use strict';
 
 	var printTarget = '';
+	// The groups this script opened so the plan prints in full. They are closed again after the print.
+	var openedForPrint = [];
 
 	function el( tag, className, text ) {
 		var node = document.createElement( tag );
@@ -41,6 +43,24 @@
 		return document.querySelector( '.vhd-flare' );
 	}
 
+	// Open every group of the card, so the now and plan groups print in full. The CSS
+	// hides the appointment group in the plan print.
+	function openGroupsForPrint( part ) {
+		Array.prototype.forEach.call( part.querySelectorAll( 'details.vhd-flare__group' ), function ( group ) {
+			if ( ! group.open ) {
+				group.open = true;
+				openedForPrint.push( group );
+			}
+		} );
+	}
+
+	function closeGroupsAfterPrint() {
+		openedForPrint.forEach( function ( group ) {
+			group.open = false;
+		} );
+		openedForPrint = [];
+	}
+
 	function markPrint() {
 		// Print from the browser menu: the sheet when it is open, else the plan.
 		var which = printTarget || ( document.querySelector( '.vhd-flare__sheetbox[open]' ) ? 'sheet' : 'plan' );
@@ -49,6 +69,9 @@
 		// member prints the page they see.
 		if ( ! part || part.closest( '[hidden]' ) ) {
 			return;
+		}
+		if ( 'plan' === which ) {
+			openGroupsForPrint( part );
 		}
 		document.documentElement.classList.add( 'vhd-printing' );
 		part.classList.add( 'vhd-print-target' );
@@ -59,6 +82,7 @@
 
 	function unmarkPrint() {
 		printTarget = '';
+		closeGroupsAfterPrint();
 		document.documentElement.classList.remove( 'vhd-printing' );
 		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-print-path, .vhd-print-target' ), function ( node ) {
 			node.classList.remove( 'vhd-print-path' );
@@ -129,7 +153,37 @@
 		show( false );
 	}
 
-	/* ---- How am I today? ------------------------------------------------ */
+	/* ---- Optional sections in the edit form ---------------------------------- */
+
+	// True when a field has text, a date or a number in it. Checkboxes do not count.
+	function fieldHasValue( field ) {
+		var inputs = field.querySelectorAll( 'input, textarea, select' );
+		return Array.prototype.some.call( inputs, function ( input ) {
+			if ( 'checkbox' === input.type || 'radio' === input.type || 'hidden' === input.type ) {
+				return false;
+			}
+			return '' !== String( input.value ).trim();
+		} );
+	}
+
+	// An optional section is hidden while its "More sections" box is not ticked and it is empty.
+	// A field with a value is never hidden. With no script every field shows.
+	function initOptional( root ) {
+		Array.prototype.forEach.call( root.querySelectorAll( '[data-vhd-sec-toggle]' ), function ( toggle ) {
+			var id    = toggle.getAttribute( 'data-vhd-sec-toggle' );
+			var field = root.querySelector( '.vhd-flare__field--opt[data-vhd-sec="' + id + '"]' );
+			if ( ! field ) {
+				return;
+			}
+			function sync() {
+				field.hidden = ! toggle.checked && ! fieldHasValue( field );
+			}
+			toggle.addEventListener( 'change', sync );
+			sync();
+		} );
+	}
+
+	/* ---- How am I today?------------------------------------------------ */
 
 	function initQuick( box ) {
 		var config;
@@ -209,7 +263,8 @@
 			result.appendChild( el( 'p', 'vhd-flare__quick-follow', config.follow || '' ) );
 
 			// Point to the member's own plan. No verdict: the member decides.
-			var plan = document.querySelector( '.vhd-flare__plan' );
+			// The early signs and first steps are in the same group as the quick check.
+			var plan = document.querySelector( '.vhd-flare__plan--core' ) || document.querySelector( '.vhd-flare__plan' );
 			if ( plan ) {
 				plan.classList.add( 'is-highlight' );
 				var calm = window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
@@ -265,6 +320,10 @@
 
 	function init() {
 		initPrint();
+		var card = document.querySelector( '.vhd-flare' );
+		if ( card ) {
+			initOptional( card );
+		}
 		Array.prototype.forEach.call( document.querySelectorAll( 'form[data-vhd-wizard]' ), initWizard );
 		Array.prototype.forEach.call( document.querySelectorAll( '[data-vhd-flare-quick]' ), initQuick );
 		Array.prototype.forEach.call( document.querySelectorAll( '.vhd-flare__count[data-count-for]' ), initCount );

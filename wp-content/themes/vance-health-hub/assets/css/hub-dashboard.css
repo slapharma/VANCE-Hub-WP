@@ -733,6 +733,77 @@ html.vhd-modal-open { overflow: hidden; }
 .vhd .vhd-sheet__table th,
 .vhd .vhd-sheet__table td { padding: 6px 8px; border: 1px solid var(--vhd-line); text-align: left; }
 
+/* Flare plan card: the three groups (now, plan, appointment), the contact rows, and
+   the "More sections" box in the edit form. Radius from the tokens only. */
+.vhd .vhd-flare__group {
+	margin: 12px 0 0;
+	padding: 0 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+	background: #FFFFFF;
+}
+.vhd .vhd-flare__group[open] { padding-bottom: 16px; }
+.vhd .vhd-flare__group-sum {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 44px;
+	cursor: pointer;
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--vhd-navy);
+	list-style: none;
+}
+.vhd .vhd-flare__group-sum::-webkit-details-marker { display: none; }
+.vhd .vhd-flare__group-sum::after { content: "+"; font-size: 22px; font-weight: 400; line-height: 1; color: var(--vhd-teal-ink); }
+.vhd .vhd-flare__group[open] > .vhd-flare__group-sum { margin-bottom: 12px; }
+.vhd .vhd-flare__group[open] > .vhd-flare__group-sum::after { content: "\2212"; }
+.vhd .vhd-flare__group-sum:focus-visible { outline: 3px solid var(--vhd-purple); outline-offset: 3px; }
+.vhd .vhd-flare__team {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.vhd .vhd-flare__team legend { padding: 0; margin-bottom: 6px; }
+.vhd .vhd-flare__team-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 10px;
+	padding: 12px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-field, 10px);
+}
+@media (min-width: 600px) {
+	.vhd .vhd-flare__team-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.vhd .vhd-flare__team-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vhd .vhd-flare__team-field label { font-size: 14px; font-weight: 700; color: var(--vhd-ink); }
+.vhd .vhd-flare input.vhd-flare__input { min-height: 44px; }
+.vhd .vhd-flare input.vhd-flare__date { min-height: 44px; font-size: 16px; }
+.vhd .vhd-flare__more {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--vhd-line);
+	border-radius: var(--radius-surface, 14px);
+}
+.vhd .vhd-flare__more legend { padding: 0 4px; font-size: 15px; font-weight: 700; color: var(--vhd-navy); }
+.vhd .vhd-flare__more-item { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--vhd-ink); }
+.vhd .vhd-flare__more-item input[type="checkbox"] { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; }
+.vhd .vhd-flare__team-list { margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.6; color: var(--vhd-ink); overflow-wrap: anywhere; }
+.vhd .vhd-flare__team-role,
+.vhd .vhd-flare__team-hours { color: var(--vhd-muted); }
+
 /* Print: only the part the member prints, the plan card or the appointment sheet.
    hub-flare-plan.js marks that part with .vhd-print-target and its ancestors with
    .vhd-print-path, so the rest of the page takes no space and no blank pages print.
@@ -753,6 +824,8 @@ html.vhd-modal-open { overflow: hidden; }
 	html.vhd-printing .vhd .vhd-flare.vhd-print-target .vhd-flare__sheetbox,
 	html.vhd-printing .vhd .vhd-flash,
 	html.vhd-printing .vhd .vhd-flare-sheet .vhd-flare__actions { display: none; }
+	html.vhd-printing .vhd .vhd-flare__group { margin: 0; padding: 0; border: 0; }
+	html.vhd-printing .vhd .vhd-flare__group-sum { display: none; }
 	html.vhd-printing .vhd .vhd-flare__urgent { border: 1px solid #000000; background: #FFFFFF; }
 	html.vhd-printing .vhd .vhd-flare__urgent p { color: #000000; }
 	html.vhd-printing .vhd .vhd-flare-sheet { margin: 0; border: 0; padding: 0; color: #000000; }

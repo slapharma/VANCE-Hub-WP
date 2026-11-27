@@ -20,7 +20,10 @@
  * What this file WRITES:
  *   transient vance_flare_draft_<uid>      what the member typed, 10 minutes, after a refused request
  *   _sla_flare_log                         [{id, start, end, helped}]
- *   _sla_flare_plan                        {updated, signs, actions, contacts}
+ *   _sla_flare_plan                        v2: {v, updated, signs, actions, contacts (notes), team[{name, role, tel, hours}],
+ *                                          medicines, told, triggers, helps, questions, review_on, sections_on[]}.
+ *                                          A v1 value {updated, signs, actions, contacts} still reads (see
+ *                                          vance_hub_flare_plan_normalise()) and becomes v2 on the next save.
  *   _sla_consent_flare_plan                '1' while the member agrees
  *   _sla_consent_flare_plan_at             when the member agreed
  *   _sla_consent_flare_plan_text           the wording the member agreed to
@@ -51,7 +54,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ====================================================================== */
 
 /**
- * The answer keys of the plan.
+ * The three core answer keys of the plan: the sections that are always on.
+ * The registry (vance_hub_flare_plan_sections()) holds every section.
  *
  * @return string[]
  */
@@ -66,6 +70,267 @@ function vance_hub_flare_plan_keys() {
  */
 function vance_hub_flare_plan_max_chars() {
 	return 1000;
+}
+
+/**
+ * The most contact rows a plan holds. The form has exactly this many rows.
+ *
+ * @return int
+ */
+function vance_hub_flare_plan_team_max_rows() {
+	return 6;
+}
+
+/**
+ * The fields of one contact row, with the most characters of each.
+ *
+ * @return int[] field => limit, in form order.
+ */
+function vance_hub_flare_plan_team_fields() {
+	return array(
+		'name'  => 80,
+		'role'  => 80,
+		'tel'   => 40,
+		'hours' => 80,
+	);
+}
+
+/**
+ * The sections of the plan, with the default label and help text of each.
+ * Pure data. Use vance_hub_flare_plan_sections() for the live values.
+ *
+ * type: 'text' (one text box), 'contacts' (contact rows and a notes box) or
+ * 'date' (a calendar date). core: always on. sheet: shown on the appointment sheet.
+ *
+ * @return array[] id => {type, core, sheet, label, hint}, in display order.
+ */
+function vance_hub_flare_plan_section_defaults() {
+	return array(
+		'signs'     => array(
+			'type'  => 'text',
+			'core'  => true,
+			'sheet' => true,
+			'label' => __( 'My early signs', 'vance-health-hub' ),
+			'hint'  => __( 'How do you notice a flare is starting?', 'vance-health-hub' ),
+		),
+		'actions'   => array(
+			'type'  => 'text',
+			'core'  => true,
+			'sheet' => true,
+			'label' => __( 'What I do first', 'vance-health-hub' ),
+			'hint'  => __( 'What do you do in the first days of a flare?', 'vance-health-hub' ),
+		),
+		'contacts'  => array(
+			'type'  => 'contacts',
+			'core'  => true,
+			'sheet' => true,
+			'label' => __( 'Who I contact', 'vance-health-hub' ),
+			'hint'  => __( 'The people you call. Add a name and a phone number for each one.', 'vance-health-hub' ),
+		),
+		'medicines' => array(
+			'type'  => 'text',
+			'core'  => false,
+			'sheet' => true,
+			'label' => __( 'My medicines', 'vance-health-hub' ),
+			'hint'  => __( 'Write the medicines you take, in your own words.', 'vance-health-hub' ),
+		),
+		'told'      => array(
+			'type'  => 'text',
+			'core'  => false,
+			'sheet' => true,
+			'label' => __( 'What my care team told me to do in a flare', 'vance-health-hub' ),
+			'hint'  => __( 'Write what your doctor or nurse told you.', 'vance-health-hub' ),
+		),
+		'triggers'  => array(
+			'type'  => 'text',
+			'core'  => false,
+			'sheet' => false,
+			'label' => __( 'My triggers', 'vance-health-hub' ),
+			'hint'  => __( 'What do you think starts a flare for you?', 'vance-health-hub' ),
+		),
+		'helps'     => array(
+			'type'  => 'text',
+			'core'  => false,
+			'sheet' => false,
+			'label' => __( 'What helps me', 'vance-health-hub' ),
+			'hint'  => __( 'What makes a flare easier for you?', 'vance-health-hub' ),
+		),
+		'questions' => array(
+			'type'  => 'text',
+			'core'  => false,
+			'sheet' => true,
+			'label' => __( 'Questions for my next appointment', 'vance-health-hub' ),
+			'hint'  => __( 'What do you want to ask?', 'vance-health-hub' ),
+		),
+		'review_on' => array(
+			'type'  => 'date',
+			'core'  => false,
+			'sheet' => false,
+			'label' => __( 'I will review this plan on', 'vance-health-hub' ),
+			'hint'  => __( 'Choose a date to read your plan again.', 'vance-health-hub' ),
+		),
+	);
+}
+
+/**
+ * The sections of the plan as they are now: the defaults, with the label and
+ * help text an administrator set in Customize (theme mods
+ * vance_hub_flare_sec_<id>_label and _hint, empty = default), and whether the
+ * section is on (core sections always; the others by the theme mod
+ * vance_hub_flare_sec_<id>_on, default on).
+ *
+ * "Off" only means the section is not offered to a member who has nothing in it.
+ * Stored content is never hidden or erased by it.
+ *
+ * @return array[] id => {type, core, sheet, label, hint, on}, in display order.
+ */
+function vance_hub_flare_plan_sections() {
+	$out = array();
+	foreach ( vance_hub_flare_plan_section_defaults() as $id => $def ) {
+		$on = $def['core'] ? true : (bool) vance_hub_sanitize_checkbox( vance_get_theme_mod( 'vance_hub_flare_sec_' . $id . '_on', true ) );
+		$out[ $id ] = array(
+			'type'  => $def['type'],
+			'core'  => $def['core'],
+			'sheet' => $def['sheet'],
+			'label' => vance_hub_dash_text( 'vance_hub_flare_sec_' . $id . '_label', $def['label'] ),
+			'hint'  => vance_hub_dash_text( 'vance_hub_flare_sec_' . $id . '_hint', $def['hint'] ),
+			'on'    => $on,
+		);
+	}
+	return $out;
+}
+
+/**
+ * The ids of the sections, in display order.
+ *
+ * @param string|null $type 'text', 'contacts' or 'date' to list one type only.
+ * @return string[]
+ */
+function vance_hub_flare_plan_section_ids( $type = null ) {
+	$ids = array();
+	foreach ( vance_hub_flare_plan_section_defaults() as $id => $def ) {
+		if ( null === $type || $type === $def['type'] ) {
+			$ids[] = $id;
+		}
+	}
+	return $ids;
+}
+
+/**
+ * The ids of the sections that are not core: the member can choose them.
+ *
+ * @return string[]
+ */
+function vance_hub_flare_plan_optional_ids() {
+	$ids = array();
+	foreach ( vance_hub_flare_plan_section_defaults() as $id => $def ) {
+		if ( ! $def['core'] ) {
+			$ids[] = $id;
+		}
+	}
+	return $ids;
+}
+
+/**
+ * The ids whose stored value is one text: every section but the date. For the
+ * contacts section this is the notes text; the rows are in 'team'.
+ *
+ * @return string[]
+ */
+function vance_hub_flare_plan_string_keys() {
+	$ids = array();
+	foreach ( vance_hub_flare_plan_section_defaults() as $id => $def ) {
+		if ( 'date' !== $def['type'] ) {
+			$ids[] = $id;
+		}
+	}
+	return $ids;
+}
+
+/**
+ * True when a review date is empty or a real date written Y-m-d.
+ *
+ * @param mixed $date Value.
+ * @return bool
+ */
+function vance_hub_flare_plan_review_ok( $date ) {
+	return '' === $date || vance_hub_flare_log_date_ok( $date );
+}
+
+/**
+ * The contact rows of a value, checked: at most vance_hub_flare_plan_team_max_rows()
+ * rows, each with the four fields as text. A row that is not an array, or has four
+ * empty values, is dropped.
+ *
+ * @param mixed $rows  Stored or posted rows.
+ * @param bool  $clean True to clean each value as a member text (a typed row). Line breaks become a space.
+ * @return array[] {name, role, tel, hours} rows.
+ */
+function vance_hub_flare_plan_team_rows( $rows, $clean = false ) {
+	$out = array();
+	if ( ! is_array( $rows ) ) {
+		return $out;
+	}
+	foreach ( array_slice( array_values( $rows ), 0, vance_hub_flare_plan_team_max_rows() ) as $row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+		$item = array();
+		$any  = false;
+		foreach ( array_keys( vance_hub_flare_plan_team_fields() ) as $field ) {
+			$value = isset( $row[ $field ] ) && is_string( $row[ $field ] ) ? $row[ $field ] : '';
+			if ( $clean ) {
+				$value = trim( str_replace( "\n", ' ', vance_hub_flare_plan_clean_text( $value ) ) );
+			}
+			$any            = $any || '' !== trim( $value );
+			$item[ $field ] = $value;
+		}
+		if ( $any ) {
+			$out[] = $item;
+		}
+	}
+	return $out;
+}
+
+/**
+ * True when a section of a plan has something written in it. Works on a stored
+ * plan, a normalised plan and a posted set of values.
+ *
+ * @param array  $plan Plan or values.
+ * @param string $id   Section id.
+ * @return bool
+ */
+function vance_hub_flare_plan_has_content( $plan, $id ) {
+	if ( ! is_array( $plan ) ) {
+		return false;
+	}
+	if ( 'contacts' === $id && ! empty( vance_hub_flare_plan_team_rows( isset( $plan['team'] ) ? $plan['team'] : array() ) ) ) {
+		return true;
+	}
+	return isset( $plan[ $id ] ) && is_string( $plan[ $id ] ) && '' !== trim( $plan[ $id ] );
+}
+
+/**
+ * A plan with nothing in it, in the v2 shape.
+ *
+ * @param int $updated Time of the last change.
+ * @return array
+ */
+function vance_hub_flare_plan_blank( $updated = 0 ) {
+	$plan = array(
+		'v'       => 2,
+		'updated' => (int) $updated,
+	);
+	foreach ( vance_hub_flare_plan_keys() as $key ) {
+		$plan[ $key ] = '';
+	}
+	$plan['team'] = array();
+	foreach ( array_diff( vance_hub_flare_plan_string_keys(), vance_hub_flare_plan_keys() ) as $key ) {
+		$plan[ $key ] = '';
+	}
+	$plan['review_on']   = '';
+	$plan['sections_on'] = array();
+	return $plan;
 }
 
 /**
@@ -144,9 +409,53 @@ function vance_hub_flare_plan_char_count( $text ) {
 }
 
 /**
- * True when any answer is longer than vance_hub_flare_plan_max_chars().
+ * Clean a whole posted or stored plan: every text, the contact rows, the review
+ * date and the ticked sections. Answers are already unslashed. Safe to run twice.
  *
- * @param mixed $answers key => cleaned text.
+ * Nothing is cut: a text past its limit is kept whole, and
+ * vance_hub_flare_plan_too_long() reports it. The review date is cleaned as
+ * text only. vance_hub_flare_plan_review_ok() judges it.
+ *
+ * @param mixed $fields key => value for the texts, 'team' (rows), 'review_on' and 'sections_on' (ids).
+ * @return array|null The full set of fields (no 'v' or 'updated'), or null when
+ *                    no text section and no contact row has anything written.
+ */
+function vance_hub_flare_plan_sanitise_plan( $fields ) {
+	if ( ! is_array( $fields ) ) {
+		return null;
+	}
+	$clean = array();
+	$any   = false;
+	foreach ( vance_hub_flare_plan_string_keys() as $key ) {
+		$text = isset( $fields[ $key ] ) && is_string( $fields[ $key ] ) ? vance_hub_flare_plan_clean_text( $fields[ $key ] ) : '';
+		$any  = $any || '' !== $text;
+		$clean[ $key ] = $text;
+	}
+	$team = vance_hub_flare_plan_team_rows( isset( $fields['team'] ) ? $fields['team'] : array(), true );
+	if ( ! $any && empty( $team ) ) {
+		return null;
+	}
+	$clean['team']      = $team;
+	$clean['review_on'] = isset( $fields['review_on'] ) && is_string( $fields['review_on'] ) ? vance_hub_flare_plan_clean_text( $fields['review_on'] ) : '';
+	// The ticked sections: only an optional section that an administrator has on.
+	// A section with content is added later, by vance_hub_flare_plan_normalise().
+	$sections = vance_hub_flare_plan_sections();
+	$ticked   = isset( $fields['sections_on'] ) && is_array( $fields['sections_on'] ) ? $fields['sections_on'] : array();
+	$on       = array();
+	foreach ( vance_hub_flare_plan_optional_ids() as $id ) {
+		if ( $sections[ $id ]['on'] && in_array( $id, $ticked, true ) ) {
+			$on[] = $id;
+		}
+	}
+	$clean['sections_on'] = $on;
+	return $clean;
+}
+
+/**
+ * True when any answer is longer than its limit: a text section longer than
+ * vance_hub_flare_plan_max_chars(), or a contact field longer than its own limit.
+ *
+ * @param mixed $answers Cleaned values: key => text, and 'team' rows.
  * @return bool
  */
 function vance_hub_flare_plan_too_long( $answers ) {
@@ -154,9 +463,21 @@ function vance_hub_flare_plan_too_long( $answers ) {
 		return false;
 	}
 	$limit = vance_hub_flare_plan_max_chars();
-	foreach ( vance_hub_flare_plan_keys() as $key ) {
+	foreach ( vance_hub_flare_plan_string_keys() as $key ) {
 		if ( isset( $answers[ $key ] ) && is_string( $answers[ $key ] ) && vance_hub_flare_plan_char_count( $answers[ $key ] ) > $limit ) {
 			return true;
+		}
+	}
+	if ( isset( $answers['team'] ) && is_array( $answers['team'] ) ) {
+		foreach ( $answers['team'] as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			foreach ( vance_hub_flare_plan_team_fields() as $field => $max ) {
+				if ( isset( $row[ $field ] ) && is_string( $row[ $field ] ) && vance_hub_flare_plan_char_count( $row[ $field ] ) > $max ) {
+					return true;
+				}
+			}
 		}
 	}
 	return false;
@@ -182,18 +503,33 @@ function vance_hub_flare_plan_limit_text( $text, $limit ) {
 }
 
 /**
- * A stored plan, checked. A damaged value gives null.
+ * A stored plan, checked. Reads a v1 value (no 'v': updated, signs, actions,
+ * contacts) and a v2 value, and always gives the full v2 shape. A damaged field
+ * gives its empty default and a damaged contact row is dropped. A v1 plan is not
+ * migrated in bulk: it becomes v2 on the next save.
+ *
+ * A section with content is always on, so 'sections_on' holds every ticked
+ * optional section and every optional section that has content.
  *
  * @param mixed $stored The value of _sla_flare_plan.
- * @return array|null {updated:int, signs:string, actions:string, contacts:string}
+ * @return array|null {v:int, updated:int, signs, actions, contacts, team, medicines, told,
+ *                    triggers, helps, questions, review_on, sections_on}, or null when the value is damaged.
  */
 function vance_hub_flare_plan_normalise( $stored ) {
 	if ( ! is_array( $stored ) || ! isset( $stored['updated'] ) || ! is_numeric( $stored['updated'] ) || (int) $stored['updated'] <= 0 ) {
 		return null;
 	}
-	$plan = array( 'updated' => (int) $stored['updated'] );
-	foreach ( vance_hub_flare_plan_keys() as $key ) {
+	$plan = vance_hub_flare_plan_blank( (int) $stored['updated'] );
+	foreach ( vance_hub_flare_plan_string_keys() as $key ) {
 		$plan[ $key ] = isset( $stored[ $key ] ) && is_string( $stored[ $key ] ) ? $stored[ $key ] : '';
+	}
+	$plan['team']      = vance_hub_flare_plan_team_rows( isset( $stored['team'] ) ? $stored['team'] : array() );
+	$plan['review_on'] = isset( $stored['review_on'] ) && vance_hub_flare_log_date_ok( $stored['review_on'] ) ? $stored['review_on'] : '';
+	$ticked            = isset( $stored['sections_on'] ) && is_array( $stored['sections_on'] ) ? $stored['sections_on'] : array();
+	foreach ( vance_hub_flare_plan_optional_ids() as $id ) {
+		if ( in_array( $id, $ticked, true ) || vance_hub_flare_plan_has_content( $plan, $id ) ) {
+			$plan['sections_on'][] = $id;
+		}
 	}
 	return $plan;
 }
@@ -419,6 +755,53 @@ function vance_hub_flare_plan_customize( $wp_customize ) {
 			'priority'    => $priority,
 		) );
 	}
+
+	// One label and one help text for each section. The optional sections also get an on/off box.
+	// An empty label or help text means the default.
+	$section_priority = 50;
+	foreach ( vance_hub_flare_plan_section_defaults() as $id => $def ) {
+		$section_priority += 10;
+		$wp_customize->add_setting( 'vance_hub_flare_sec_' . $id . '_label', array(
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_text_field',
+		) );
+		$wp_customize->add_control( 'vance_hub_flare_sec_' . $id . '_label', array(
+			/* translators: %s: the default name of the section, for example "My triggers". */
+			'label'       => sprintf( __( '%s: name', 'vance-health-hub' ), $def['label'] ),
+			'description' => __( 'Leave empty to use the default.', 'vance-health-hub' ),
+			'section'     => $section,
+			'type'        => 'text',
+			'priority'    => $section_priority,
+		) );
+		$section_priority += 10;
+		$wp_customize->add_setting( 'vance_hub_flare_sec_' . $id . '_hint', array(
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_text_field',
+		) );
+		$wp_customize->add_control( 'vance_hub_flare_sec_' . $id . '_hint', array(
+			/* translators: %s: the default name of the section, for example "My triggers". */
+			'label'       => sprintf( __( '%s: help text', 'vance-health-hub' ), $def['label'] ),
+			'description' => __( 'Leave empty to use the default.', 'vance-health-hub' ),
+			'section'     => $section,
+			'type'        => 'text',
+			'priority'    => $section_priority,
+		) );
+		if ( ! $def['core'] ) {
+			$section_priority += 10;
+			$wp_customize->add_setting( 'vance_hub_flare_sec_' . $id . '_on', array(
+				'default'           => true,
+				'sanitize_callback' => 'vance_hub_sanitize_checkbox',
+			) );
+			$wp_customize->add_control( 'vance_hub_flare_sec_' . $id . '_on', array(
+				/* translators: %s: the default name of the section, for example "My triggers". */
+				'label'       => sprintf( __( 'Offer the section: %s', 'vance-health-hub' ), $def['label'] ),
+				'description' => __( 'When this is off, a member who has nothing in the section does not see it. A member who has written in it still sees it.', 'vance-health-hub' ),
+				'section'     => $section,
+				'type'        => 'checkbox',
+				'priority'    => $section_priority,
+			) );
+		}
+	}
 }
 add_action( 'customize_register', 'vance_hub_flare_plan_customize', 30 );
 
@@ -451,8 +834,12 @@ function vance_hub_flare_plan_get( $user_id ) {
  * The return value comes from the read-back, not from update_user_meta(): that
  * function also returns false when the stored value does not change.
  *
+ * The plan is stored in the v2 shape. A field that $answers does not hold is
+ * stored empty: the merge with the old plan (a field the form did not send keeps
+ * its stored value) happens in vance_hub_flare_plan_handle_post(), before this.
+ *
  * @param int   $user_id Member.
- * @param array $answers vance_hub_flare_plan_clean() result. Validated again here.
+ * @param array $answers Texts (key => text), 'team' rows, 'review_on' and 'sections_on'. Validated again here.
  * @param int   $now     Current time.
  * @return bool True when the stored plan equals what was sent.
  */
@@ -460,12 +847,16 @@ function vance_hub_flare_plan_write( $user_id, $answers, $now ) {
 	$user_id = (int) $user_id;
 	// sanitise, not clean: the answers are already unslashed. A second unslash
 	// would remove every backslash a member typed.
-	$clean = vance_hub_flare_plan_sanitise( $answers );
-	// An over-length answer is refused, never cut.
-	if ( $user_id <= 0 || null === $clean || vance_hub_flare_plan_too_long( $clean ) ) {
+	$clean = vance_hub_flare_plan_sanitise_plan( $answers );
+	// An over-length answer or a bad date is refused, never cut.
+	if ( $user_id <= 0 || null === $clean || vance_hub_flare_plan_too_long( $clean ) || ! vance_hub_flare_plan_review_ok( $clean['review_on'] ) ) {
 		return false;
 	}
-	$plan = array( 'updated' => (int) $now ) + $clean;
+	// Through normalise(): the stored value and the read-back have one shape.
+	$plan = vance_hub_flare_plan_normalise( array( 'updated' => (int) $now ) + $clean );
+	if ( null === $plan ) {
+		return false;
+	}
 	// wp_slash: update_user_meta() removes one level of slashes, so text that
 	// holds a backslash is stored changed with no slash added here.
 	update_user_meta( $user_id, vance_hub_flare_plan_meta_key(), wp_slash( $plan ) );
@@ -514,7 +905,27 @@ function vance_hub_flare_plan_draft_key( $user_id ) {
 }
 
 /**
- * A draft, cleaned: the shape array( 'do', 'answers', 'helped' ) or null.
+ * The most characters of one contact value in a draft. A size cap for the
+ * transient, not the member's limit (see vance_hub_flare_plan_team_fields()).
+ *
+ * @return int
+ */
+function vance_hub_flare_plan_draft_team_cap() {
+	return 200;
+}
+
+/**
+ * A draft, cleaned: the shape array( 'do', 'answers', 'team', 'on', 'helped' ) or null.
+ *
+ * 'answers' holds only the texts (and 'review_on') that the request sent, so a
+ * form that was open before a section existed does not blank that section: the
+ * form falls back to the saved plan for a key the draft does not hold. 'team' is
+ * null when the request sent no contact rows. 'on' is null when it sent no list
+ * of ticked sections, else a list of optional section ids.
+ *
+ * Each text is cut to vance_hub_flare_plan_draft_cap() characters, each contact
+ * value to vance_hub_flare_plan_draft_team_cap(). That keeps the transient small:
+ * 8 texts of 4000 characters, 6 contact rows of 4 values of 200 characters.
  *
  * @param mixed $draft Draft.
  * @return array|null null when the shape is wrong or every text is empty.
@@ -527,16 +938,38 @@ function vance_hub_flare_plan_draft_normalise( $draft ) {
 	$source  = isset( $draft['answers'] ) && is_array( $draft['answers'] ) ? $draft['answers'] : array();
 	$answers = array();
 	$any     = false;
-	foreach ( vance_hub_flare_plan_keys() as $key ) {
-		$text = isset( $source[ $key ] ) && is_string( $source[ $key ] ) ? vance_hub_flare_plan_limit_text( vance_hub_flare_plan_clean_text( $source[ $key ] ), $cap ) : '';
+	foreach ( array_merge( vance_hub_flare_plan_string_keys(), array( 'review_on' ) ) as $key ) {
+		if ( ! isset( $source[ $key ] ) || ! is_string( $source[ $key ] ) ) {
+			continue;
+		}
+		$text = vance_hub_flare_plan_limit_text( vance_hub_flare_plan_clean_text( $source[ $key ] ), 'review_on' === $key ? 40 : $cap );
 		$any  = $any || '' !== $text;
 		$answers[ $key ] = $text;
+	}
+	$team = null;
+	if ( isset( $draft['team'] ) && is_array( $draft['team'] ) ) {
+		$team = vance_hub_flare_plan_team_rows( $draft['team'], true );
+		foreach ( $team as $n => $row ) {
+			foreach ( $row as $field => $value ) {
+				$team[ $n ][ $field ] = vance_hub_flare_plan_limit_text( $value, vance_hub_flare_plan_draft_team_cap() );
+			}
+		}
+		$any = $any || ! empty( $team );
+	}
+	$on = null;
+	if ( isset( $draft['on'] ) && is_array( $draft['on'] ) ) {
+		$on = array();
+		foreach ( vance_hub_flare_plan_optional_ids() as $id ) {
+			if ( in_array( $id, $draft['on'], true ) ) {
+				$on[] = $id;
+			}
+		}
 	}
 	$helped = isset( $draft['helped'] ) && is_string( $draft['helped'] ) ? vance_hub_flare_plan_limit_text( vance_hub_flare_plan_clean_text( $draft['helped'] ), $cap ) : '';
 	if ( ! $any && '' === $helped ) {
 		return null;
 	}
-	return array( 'do' => $draft['do'], 'answers' => $answers, 'helped' => $helped );
+	return array( 'do' => $draft['do'], 'answers' => $answers, 'team' => $team, 'on' => $on, 'helped' => $helped );
 }
 
 /**
@@ -618,24 +1051,68 @@ function vance_hub_flare_plan_draft_clear( $user_id ) {
 }
 
 /**
+ * What a plan save request sent, unslashed and not cleaned. Only the fields the
+ * request holds are in the result: the merge rule (a field the request does not
+ * send keeps its stored value; a field it sends empty clears it) needs to tell
+ * the two apart.
+ *
+ * Fields: vhd_flare[<section id>] and vhd_flare[review_on] (text),
+ * vhd_flare_team[0..5][name|role|tel|hours] (rows) and vhd_flare_on[] (ticked
+ * optional sections), the last one read only when vhd_flare_on_sent is set.
+ * A value that is not a string counts as not sent.
+ *
+ * @return array {answers: key => text (sent keys only), team: array[]|null, on: string[]|null}
+ */
+function vance_hub_flare_plan_post_fields() {
+	$out = array( 'answers' => array(), 'team' => null, 'on' => null );
+	// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- unslashed here, cleaned by vance_hub_flare_plan_sanitise_plan(); the caller checked the nonce.
+	$posted = isset( $_POST['vhd_flare'] ) && is_array( $_POST['vhd_flare'] ) ? $_POST['vhd_flare'] : array();
+	foreach ( array_merge( vance_hub_flare_plan_string_keys(), array( 'review_on' ) ) as $key ) {
+		if ( isset( $posted[ $key ] ) && is_string( $posted[ $key ] ) ) {
+			$out['answers'][ $key ] = wp_unslash( $posted[ $key ] );
+		}
+	}
+	if ( isset( $_POST['vhd_flare_team'] ) && is_array( $_POST['vhd_flare_team'] ) ) {
+		// Rows 0 to 5 only: the form has exactly that many.
+		$out['team'] = array();
+		for ( $n = 0; $n < vance_hub_flare_plan_team_max_rows(); $n++ ) {
+			$row  = isset( $_POST['vhd_flare_team'][ $n ] ) && is_array( $_POST['vhd_flare_team'][ $n ] ) ? $_POST['vhd_flare_team'][ $n ] : array();
+			$item = array();
+			foreach ( array_keys( vance_hub_flare_plan_team_fields() ) as $field ) {
+				$item[ $field ] = isset( $row[ $field ] ) && is_string( $row[ $field ] ) ? wp_unslash( $row[ $field ] ) : '';
+			}
+			$out['team'][] = $item;
+		}
+	}
+	if ( ! empty( $_POST['vhd_flare_on_sent'] ) ) {
+		$out['on'] = array();
+		if ( isset( $_POST['vhd_flare_on'] ) && is_array( $_POST['vhd_flare_on'] ) ) {
+			foreach ( $_POST['vhd_flare_on'] as $id ) {
+				if ( is_string( $id ) ) {
+					$out['on'][] = wp_unslash( $id );
+				}
+			}
+		}
+	}
+	// phpcs:enable
+	return $out;
+}
+
+/**
  * The draft of the current POST request: what the member typed, unslashed.
  *
  * @param string $do 'save' or 'flare_end'. Any other value gives null.
- * @return array|null array( 'do', 'answers', 'helped' ) before cleaning.
+ * @return array|null array( 'do', 'answers', 'team', 'on', 'helped' ) before cleaning.
  */
 function vance_hub_flare_plan_draft_from_post( $do ) {
 	if ( ! in_array( $do, array( 'save', 'flare_end' ), true ) ) {
 		return null;
 	}
-	$answers = array();
+	$fields = vance_hub_flare_plan_post_fields();
 	// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here, cleaned by vance_hub_flare_plan_draft_set().
-	$posted = isset( $_POST['vhd_flare'] ) && is_array( $_POST['vhd_flare'] ) ? $_POST['vhd_flare'] : array();
-	foreach ( vance_hub_flare_plan_keys() as $key ) {
-		$answers[ $key ] = isset( $posted[ $key ] ) && is_string( $posted[ $key ] ) ? wp_unslash( $posted[ $key ] ) : '';
-	}
 	$helped = isset( $_POST['vhd_flare_helped'] ) && is_string( $_POST['vhd_flare_helped'] ) ? wp_unslash( $_POST['vhd_flare_helped'] ) : '';
 	// phpcs:enable
-	return array( 'do' => $do, 'answers' => $answers, 'helped' => $helped );
+	return array( 'do' => $do, 'answers' => $fields['answers'], 'team' => $fields['team'], 'on' => $fields['on'], 'helped' => $helped );
 }
 
 /**
@@ -645,7 +1122,7 @@ function vance_hub_flare_plan_draft_from_post( $do ) {
  * @return string[]
  */
 function vance_hub_flare_plan_error_codes() {
-	return array( 'consent', 'invalid', 'toolong', 'expired', 'failed', 'changed', 'kept', 'partial', 'noplan', 'flare_open', 'flare_none' );
+	return array( 'consent', 'invalid', 'toolong', 'baddate', 'expired', 'failed', 'changed', 'kept', 'partial', 'noplan', 'flare_open', 'flare_none' );
 }
 
 /**
@@ -1114,8 +1591,23 @@ function vance_hub_flare_plan_handle_post() {
 			$result = 'kept';
 		}
 	} elseif ( 'save' === $do ) {
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- vance_hub_flare_plan_clean() unslashes and cleans every field.
-		$answers = vance_hub_flare_plan_clean( isset( $_POST['vhd_flare'] ) ? $_POST['vhd_flare'] : null );
+		// The merge rule: a field the form did not send keeps its stored value, and a
+		// field the form sent empty clears it. A form that was open before a section
+		// existed (three fields only) so does not erase that section.
+		$posted = vance_hub_flare_plan_post_fields();
+		$stored = vance_hub_flare_plan_get( $uid );
+		$merged = null !== $stored ? $stored : vance_hub_flare_plan_blank();
+		foreach ( $posted['answers'] as $key => $text ) {
+			$merged[ $key ] = $text;
+		}
+		if ( null !== $posted['team'] ) {
+			$merged['team'] = $posted['team'];
+		}
+		if ( null !== $posted['on'] ) {
+			$merged['sections_on'] = $posted['on'];
+		}
+		// A request with no vhd_flare array at all is not from the form: nothing to save.
+		$answers = isset( $_POST['vhd_flare'] ) && is_array( $_POST['vhd_flare'] ) ? vance_hub_flare_plan_sanitise_plan( $merged ) : null; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the nonce was checked above.
 		$wording = vance_hub_flare_plan_consent_text();
 		$keys    = vance_hub_checkin_consent_keys( 'flare_plan' );
 		$consent = vance_hub_checkin_consent_ok( get_user_meta( $uid, $keys[0], true ), get_user_meta( $uid, $keys[2], true ), $wording );
@@ -1125,6 +1617,9 @@ function vance_hub_flare_plan_handle_post() {
 		} elseif ( vance_hub_flare_plan_too_long( $answers ) ) {
 			// Refused, never cut. Nothing is written, not even the agreement.
 			$result = 'toolong';
+		} elseif ( ! vance_hub_flare_plan_review_ok( $answers['review_on'] ) ) {
+			// A review date that is not a real year-month-day date. Refused, never guessed.
+			$result = 'baddate';
 		} elseif ( ! $consent && empty( $_POST['vhd_consent'] ) ) {
 			$result = 'consent';
 		} elseif ( ! $consent && ! vance_hub_checkin_consent_ref_ok( $wording, isset( $_POST['vhd_consent_ref'] ) ? wp_unslash( $_POST['vhd_consent_ref'] ) : null ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- compared with hash_equals() only, never stored or output.
@@ -1249,10 +1744,29 @@ function vance_hub_flare_plan_export( $email, $page = 1 ) {
 	$data = array();
 	$plan = vance_hub_flare_plan_get( $uid );
 	if ( null !== $plan ) {
+		// Names come from the registry defaults, not from what an administrator
+		// typed in Customize: an export names a field the same way for every site.
+		$names  = vance_hub_flare_plan_section_defaults();
 		$data[] = array( 'name' => __( 'Last changed', 'vance-health-hub' ), 'value' => (string) wp_date( 'j M Y H:i', $plan['updated'] ) );
-		$data[] = array( 'name' => __( 'My early signs', 'vance-health-hub' ), 'value' => $plan['signs'] );
-		$data[] = array( 'name' => __( 'What I do first', 'vance-health-hub' ), 'value' => $plan['actions'] );
-		$data[] = array( 'name' => __( 'Who I contact', 'vance-health-hub' ), 'value' => $plan['contacts'] );
+		$data[] = array( 'name' => $names['signs']['label'], 'value' => $plan['signs'] );
+		$data[] = array( 'name' => $names['actions']['label'], 'value' => $plan['actions'] );
+		foreach ( $plan['team'] as $n => $row ) {
+			$parts = array();
+			foreach ( array_keys( vance_hub_flare_plan_team_fields() ) as $field ) {
+				if ( '' !== trim( $row[ $field ] ) ) {
+					$parts[] = $row[ $field ];
+				}
+			}
+			/* translators: 1: the name of the contacts section, 2: the number of the contact row. */
+			$data[] = array( 'name' => sprintf( __( '%1$s (contact %2$d)', 'vance-health-hub' ), $names['contacts']['label'], $n + 1 ), 'value' => implode( ' / ', $parts ) );
+		}
+		$data[] = array( 'name' => $names['contacts']['label'], 'value' => $plan['contacts'] );
+		// The other sections: only the ones with something written in them.
+		foreach ( vance_hub_flare_plan_optional_ids() as $id ) {
+			if ( vance_hub_flare_plan_has_content( $plan, $id ) ) {
+				$data[] = array( 'name' => $names[ $id ]['label'], 'value' => $plan[ $id ] );
+			}
+		}
 	}
 	foreach ( vance_hub_flare_log_get( $uid ) as $row ) {
 		$span   = '' === $row['end'] ? $row['start'] . ' / ' . __( 'not ended', 'vance-health-hub' ) : $row['start'] . ' / ' . $row['end'];
@@ -1335,35 +1849,54 @@ function vance_hub_flare_plan_erase( $email, $page = 1 ) {
  * ====================================================================== */
 
 /**
- * How complete the plan is: the three answers, and a review in the last 6 months.
+ * How complete the plan is: the three core sections and the optional sections
+ * the member chose (not the review date), and whether the plan is due a review.
  * It measures the plan, never the member's health.
  *
- * @param array $plan A normalised plan.
+ * Review: when the member chose a review date, the plan is stale when that date
+ * is before today ('by_date' is true). Without a chosen date, the plan is stale
+ * when it was last changed 183 days ago or more.
+ *
+ * @param array $plan A plan: normalised, or an array of the same keys.
  * @param int   $now  Current time.
- * @return array {done:int, total:int, pct:int, missing:string[], stale:bool, months:int}
+ * @return array {done:int, total:int, pct:int, missing:string[], stale:bool, months:int, by_date:bool}
  */
 function vance_hub_flare_plan_progress( $plan, $now ) {
-	$done    = 0;
-	$missing = array();
-	foreach ( vance_hub_flare_plan_keys() as $key ) {
-		if ( '' !== trim( (string) $plan[ $key ] ) ) {
-			$done++;
-		} else {
-			$missing[] = $key;
+	$ids    = vance_hub_flare_plan_keys();
+	$chosen = isset( $plan['sections_on'] ) && is_array( $plan['sections_on'] ) ? $plan['sections_on'] : array();
+	// The optional text sections the member chose. The review date is not counted.
+	// A chosen section that an administrator turned off counts only while it has content.
+	$sections = vance_hub_flare_plan_sections();
+	foreach ( vance_hub_flare_plan_section_ids( 'text' ) as $id ) {
+		if ( in_array( $id, $ids, true ) || ! in_array( $id, $chosen, true ) ) {
+			continue;
+		}
+		if ( ! empty( $sections[ $id ]['on'] ) || vance_hub_flare_plan_has_content( $plan, $id ) ) {
+			$ids[] = $id;
 		}
 	}
-	$age   = max( 0, (int) $now - (int) $plan['updated'] );
-	$fresh = $age < 183 * 86400;
-	if ( $fresh ) {
-		$done++;
+	$done    = 0;
+	$missing = array();
+	foreach ( $ids as $id ) {
+		if ( vance_hub_flare_plan_has_content( $plan, $id ) ) {
+			$done++;
+		} else {
+			$missing[] = $id;
+		}
 	}
+	$total   = count( $ids );
+	$age     = max( 0, (int) $now - ( isset( $plan['updated'] ) ? (int) $plan['updated'] : 0 ) );
+	$review  = isset( $plan['review_on'] ) && vance_hub_flare_log_date_ok( $plan['review_on'] ) ? $plan['review_on'] : '';
+	$by_date = '' !== $review;
+	$stale   = $by_date ? $review < (string) wp_date( 'Y-m-d', (int) $now ) : $age >= 183 * 86400;
 	return array(
 		'done'    => $done,
-		'total'   => 4,
-		'pct'     => (int) round( 100 * $done / 4 ),
+		'total'   => $total,
+		'pct'     => (int) round( 100 * $done / $total ),
 		'missing' => $missing,
-		'stale'   => ! $fresh,
+		'stale'   => $stale,
 		'months'  => (int) floor( $age / ( 30 * 86400 ) ),
+		'by_date' => $by_date,
 	);
 }
 
@@ -1626,36 +2159,142 @@ function vance_hub_flare_plan_draft_line_html() {
 }
 
 /**
- * The three text boxes, filled with the saved plan when there is one.
+ * One text box of the plan form: label, help text, text area and character counter.
  *
- * When a draft of a plan save is passed, the boxes hold what the member typed
- * and the saved plan is not used.
+ * @param string $key   Section id (the name of the form field).
+ * @param array  $def   Registry entry of the section (label, hint).
+ * @param string $fid   Id of the text area.
+ * @param string $value What the box holds.
+ * @return string The label, the hint, the text area and the counter, with no wrapper.
+ */
+function vance_hub_flare_plan_textarea_html( $key, $def, $fid, $value ) {
+	$html  = '<label for="' . esc_attr( $fid ) . '" class="vhd-flare__label">' . esc_html( $def['label'] ) . '</label>';
+	$html .= '<p class="vhd-flare__hint" id="' . esc_attr( $fid ) . '-hint">' . esc_html( $def['hint'] ) . '</p>';
+	$html .= '<textarea class="vhd-flare__input" id="' . esc_attr( $fid ) . '" name="vhd_flare[' . esc_attr( $key ) . ']" rows="4" maxlength="' . (int) vance_hub_flare_plan_max_chars() . '" aria-describedby="' . esc_attr( $fid ) . '-hint">' . esc_textarea( $value ) . '</textarea>';
+	$html .= '<p class="vhd-flare__count" hidden data-count-for="' . esc_attr( $fid ) . '" data-count-max="' . (int) vance_hub_flare_plan_max_chars() . '" data-count-text="' . esc_attr__( '%d of %d characters', 'vance-health-hub' ) . '"></p>';
+	return $html;
+}
+
+/**
+ * The contacts section of the plan form: a fieldset with one row for each of the
+ * contacts (name, role, phone number, when to call), then a box for other notes.
+ * The rows are the part of the field the script must not take for a step, so
+ * their classes are not vhd-flare__field.
  *
- * @param array|null $plan  The saved plan.
- * @param string     $id    Prefix for the field ids.
- * @param array|null $draft 'draft' from vance_hub_flare_plan_data(), or null.
+ * @param array  $def   Registry entry of the section (label, hint).
+ * @param string $fid   Id of the notes text area. The rows build their ids from it.
+ * @param array  $team  The rows to show: {name, role, tel, hours}.
+ * @param string $notes The notes text.
+ * @return string The content of the field, with no wrapper.
+ */
+function vance_hub_flare_plan_contacts_fields_html( $def, $fid, $team, $notes ) {
+	$labels = array(
+		'name'  => __( 'Name', 'vance-health-hub' ),
+		'role'  => __( 'Role', 'vance-health-hub' ),
+		'tel'   => __( 'Phone number', 'vance-health-hub' ),
+		'hours' => __( 'When to call', 'vance-health-hub' ),
+	);
+	$team = array_values( (array) $team );
+	$html = '<fieldset class="vhd-flare__team"><legend class="vhd-flare__label">' . esc_html( $def['label'] ) . '</legend>';
+	$html .= '<p class="vhd-flare__hint" id="' . esc_attr( $fid ) . '-hint">' . esc_html( $def['hint'] ) . '</p>';
+	for ( $n = 0; $n < vance_hub_flare_plan_team_max_rows(); $n++ ) {
+		/* translators: %d: the number of the contact row, from 1 to 6. */
+		$html .= '<div class="vhd-flare__team-row" role="group" aria-label="' . esc_attr( sprintf( __( 'Contact %d', 'vance-health-hub' ), $n + 1 ) ) . '">';
+		foreach ( vance_hub_flare_plan_team_fields() as $field => $max ) {
+			$iid   = $fid . '-team-' . $n . '-' . $field;
+			$value = isset( $team[ $n ][ $field ] ) && is_string( $team[ $n ][ $field ] ) ? $team[ $n ][ $field ] : '';
+			$html .= '<div class="vhd-flare__team-field"><label for="' . esc_attr( $iid ) . '">' . esc_html( $labels[ $field ] ) . '</label>';
+			$html .= '<input class="vhd-flare__input" type="' . ( 'tel' === $field ? 'tel' : 'text' ) . '"' . ( 'tel' === $field ? ' inputmode="tel"' : '' ) . ' id="' . esc_attr( $iid ) . '" name="vhd_flare_team[' . (int) $n . '][' . esc_attr( $field ) . ']" maxlength="' . (int) $max . '" autocomplete="off" value="' . esc_attr( $value ) . '"></div>';
+		}
+		$html .= '</div>';
+	}
+	$html .= '</fieldset>';
+	$html .= '<label for="' . esc_attr( $fid ) . '" class="vhd-flare__label">' . esc_html__( 'Other notes', 'vance-health-hub' ) . '</label>';
+	$html .= '<textarea class="vhd-flare__input" id="' . esc_attr( $fid ) . '" name="vhd_flare[contacts]" rows="4" maxlength="' . (int) vance_hub_flare_plan_max_chars() . '" aria-describedby="' . esc_attr( $fid ) . '-hint">' . esc_textarea( $notes ) . '</textarea>';
+	$html .= '<p class="vhd-flare__count" hidden data-count-for="' . esc_attr( $fid ) . '" data-count-max="' . (int) vance_hub_flare_plan_max_chars() . '" data-count-text="' . esc_attr__( '%d of %d characters', 'vance-health-hub' ) . '"></p>';
+	return $html;
+}
+
+/**
+ * The boxes of the plan form, filled with the saved plan when there is one.
+ *
+ * A new plan ($wizard true) gets the three core sections only, one
+ * .vhd-flare__field each: the script makes one step for each one. The edit form
+ * gets the core sections, then a "More sections" fieldset with one tick box for
+ * each optional section that is on or has content, then one field for each of
+ * those sections (.vhd-flare__field--opt). With no script every field shows.
+ *
+ * When a draft of a plan save is passed, a box holds what the member typed. A
+ * value the draft does not hold (the request did not send it) falls back to the
+ * saved plan.
+ *
+ * @param array|null $plan   The saved plan.
+ * @param string     $id     Prefix for the field ids.
+ * @param array|null $draft  'draft' from vance_hub_flare_plan_data(), or null.
+ * @param bool       $wizard True for the step-by-step builder: the core sections only.
  * @return string
  */
-function vance_hub_flare_plan_fields_html( $plan, $id, $draft = null ) {
+function vance_hub_flare_plan_fields_html( $plan, $id, $draft = null, $wizard = false ) {
 	if ( ! vance_hub_flare_plan_draft_is( $draft, 'save' ) ) {
 		$draft = null;
 	}
-	$fields = array(
-		'signs'    => array( __( 'My early signs', 'vance-health-hub' ), __( 'How do you notice a flare is starting?', 'vance-health-hub' ) ),
-		'actions'  => array( __( 'What I do first', 'vance-health-hub' ), __( 'What do you do in the first days of a flare?', 'vance-health-hub' ) ),
-		'contacts' => array( __( 'Who I contact', 'vance-health-hub' ), __( 'Names and phone numbers of the people you call.', 'vance-health-hub' ) ),
-	);
-	$html = '';
-	foreach ( $fields as $key => $text ) {
-		$value = null !== $plan && isset( $plan[ $key ] ) ? $plan[ $key ] : '';
-		if ( null !== $draft ) {
-			$value = isset( $draft['answers'][ $key ] ) ? $draft['answers'][ $key ] : '';
+	$sections = vance_hub_flare_plan_sections();
+	// What a box holds: the draft's value, else the saved plan's, else nothing.
+	$value = function ( $key ) use ( $plan, $draft ) {
+		if ( null !== $draft && isset( $draft['answers'][ $key ] ) && is_string( $draft['answers'][ $key ] ) ) {
+			return $draft['answers'][ $key ];
 		}
+		return null !== $plan && isset( $plan[ $key ] ) && is_string( $plan[ $key ] ) ? $plan[ $key ] : '';
+	};
+	$team = null !== $draft && isset( $draft['team'] ) && is_array( $draft['team'] ) ? $draft['team'] : ( null !== $plan && isset( $plan['team'] ) && is_array( $plan['team'] ) ? $plan['team'] : array() );
+	$on   = null !== $draft && isset( $draft['on'] ) && is_array( $draft['on'] ) ? $draft['on'] : ( null !== $plan && isset( $plan['sections_on'] ) && is_array( $plan['sections_on'] ) ? $plan['sections_on'] : array() );
+
+	// One field of the form. $extra is a class and an attribute for an optional section.
+	$field = function ( $key, $extra ) use ( $sections, $id, $value, $team ) {
+		$def = $sections[ $key ];
 		$fid = $id . '-' . $key;
-		$html .= '<div class="vhd-flare__field"><label for="' . esc_attr( $fid ) . '" class="vhd-flare__label">' . esc_html( $text[0] ) . '</label>';
-		$html .= '<p class="vhd-flare__hint" id="' . esc_attr( $fid ) . '-hint">' . esc_html( $text[1] ) . '</p>';
-		$html .= '<textarea class="vhd-flare__input" id="' . esc_attr( $fid ) . '" name="vhd_flare[' . esc_attr( $key ) . ']" rows="4" maxlength="' . (int) vance_hub_flare_plan_max_chars() . '" aria-describedby="' . esc_attr( $fid ) . '-hint">' . esc_textarea( $value ) . '</textarea>';
-		$html .= '<p class="vhd-flare__count" hidden data-count-for="' . esc_attr( $fid ) . '" data-count-max="' . (int) vance_hub_flare_plan_max_chars() . '" data-count-text="' . esc_attr__( '%d of %d characters', 'vance-health-hub' ) . '"></p></div>';
+		$out = '<div class="vhd-flare__field' . ( '' !== $extra ? ' vhd-flare__field--opt" data-vhd-sec="' . esc_attr( $key ) : '' ) . '">';
+		if ( 'contacts' === $def['type'] ) {
+			$out .= vance_hub_flare_plan_contacts_fields_html( $def, $fid, $team, $value( $key ) );
+		} elseif ( 'date' === $def['type'] ) {
+			$out .= '<label for="' . esc_attr( $fid ) . '" class="vhd-flare__label">' . esc_html( $def['label'] ) . '</label>';
+			$out .= '<p class="vhd-flare__hint" id="' . esc_attr( $fid ) . '-hint">' . esc_html( $def['hint'] ) . '</p>';
+			$out .= '<input class="vhd-flare__input vhd-flare__date" type="date" id="' . esc_attr( $fid ) . '" name="vhd_flare[' . esc_attr( $key ) . ']" value="' . esc_attr( $value( $key ) ) . '" aria-describedby="' . esc_attr( $fid ) . '-hint">';
+		} else {
+			$out .= vance_hub_flare_plan_textarea_html( $key, $def, $fid, $value( $key ) );
+		}
+		return $out . '</div>';
+	};
+
+	$html = '';
+	foreach ( $sections as $key => $def ) {
+		if ( $def['core'] ) {
+			$html .= $field( $key, '' );
+		}
+	}
+	if ( $wizard ) {
+		return $html;
+	}
+
+	// The optional sections that are on, and the ones that hold something.
+	$offered = array();
+	foreach ( $sections as $key => $def ) {
+		if ( ! $def['core'] && ( $def['on'] || '' !== trim( $value( $key ) ) ) ) {
+			$offered[ $key ] = $def;
+		}
+	}
+	if ( empty( $offered ) ) {
+		return $html;
+	}
+	$html .= '<fieldset class="vhd-flare__more"><legend>' . esc_html__( 'More sections', 'vance-health-hub' ) . '</legend>';
+	$html .= '<input type="hidden" name="vhd_flare_on_sent" value="1">';
+	foreach ( $offered as $key => $def ) {
+		$checked = in_array( $key, $on, true ) || '' !== trim( $value( $key ) );
+		$html   .= '<label class="vhd-flare__more-item"><input type="checkbox" name="vhd_flare_on[]" value="' . esc_attr( $key ) . '" data-vhd-sec-toggle="' . esc_attr( $key ) . '"' . ( $checked ? ' checked' : '' ) . '> <span>' . esc_html( $def['label'] ) . '</span></label>';
+	}
+	$html .= '</fieldset>';
+	foreach ( $offered as $key => $def ) {
+		$html .= $field( $key, 'opt' );
 	}
 	return $html;
 }
@@ -1685,7 +2324,7 @@ function vance_hub_flare_plan_form_html( $f, $plan, $nonce, $wizard ) {
 		}
 		$form .= '</p>';
 	}
-	$form .= vance_hub_flare_plan_fields_html( $plan, $wizard ? 'vhd-flare' : 'vhd-flare-edit', $draft );
+	$form .= vance_hub_flare_plan_fields_html( $plan, $wizard ? 'vhd-flare' : 'vhd-flare-edit', $draft, $wizard );
 	$form .= '<div class="vhd-flare__final">';
 	if ( ! empty( $f['need_consent'] ) ) {
 		$form .= '<input type="hidden" name="vhd_consent_ref" value="' . esc_attr( vance_hub_checkin_consent_ref( $f['consent'] ) ) . '">';
@@ -1705,20 +2344,22 @@ function vance_hub_flare_plan_progress_html( $pr ) {
 	if ( empty( $pr ) ) {
 		return '';
 	}
-	$names = array(
-		'signs'    => __( 'My early signs', 'vance-health-hub' ),
-		'actions'  => __( 'What I do first', 'vance-health-hub' ),
-		'contacts' => __( 'Who I contact', 'vance-health-hub' ),
-	);
-	// The three answers only. The review is its own paragraph below the list.
-	$written = 3 - count( (array) $pr['missing'] );
-	/* translators: %d: number of plan sections written, out of 3. */
-	$text  = sprintf( __( '%1$d of 3 sections written', 'vance-health-hub' ), $written );
+	$names = array();
+	foreach ( vance_hub_flare_plan_sections() as $id => $def ) {
+		$names[ $id ] = $def['label'];
+	}
+	// The sections the plan counts: the core ones and the optional ones the member
+	// chose. The review is its own paragraph below the list.
+	$missing = isset( $pr['missing'] ) ? (array) $pr['missing'] : array();
+	$total   = isset( $pr['total'] ) ? max( 1, (int) $pr['total'] ) : 3;
+	$written = isset( $pr['done'] ) ? max( 0, min( $total, (int) $pr['done'] ) ) : $total - count( $missing );
+	/* translators: 1: number of plan sections written, 2: number of plan sections counted. */
+	$text  = sprintf( __( '%1$d of %2$d sections written', 'vance-health-hub' ), $written, $total );
 	$html  = '<div class="vhd-flare__progress"><p class="vhd-flare__progress-text" id="vhd-flare-progress-text">' . esc_html( $text ) . '</p>';
-	$html .= '<div class="vhd-flare__bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="' . (int) $written . '" aria-labelledby="vhd-flare-progress-text"><span style="width:' . (int) round( 100 * $written / 3 ) . '%"></span></div>';
+	$html .= '<div class="vhd-flare__bar" role="progressbar" aria-valuemin="0" aria-valuemax="' . (int) $total . '" aria-valuenow="' . (int) $written . '" aria-labelledby="vhd-flare-progress-text"><span style="width:' . (int) round( 100 * $written / $total ) . '%"></span></div>';
 	$hints = '';
-	foreach ( (array) $pr['missing'] as $key ) {
-		if ( isset( $names[ $key ] ) ) {
+	foreach ( $missing as $key ) {
+		if ( is_string( $key ) && isset( $names[ $key ] ) ) {
 			/* translators: %s: the name of a plan section. */
 			$hints .= '<li>' . esc_html( sprintf( __( 'Add: %s', 'vance-health-hub' ), $names[ $key ] ) ) . '</li>';
 		}
@@ -1727,7 +2368,11 @@ function vance_hub_flare_plan_progress_html( $pr ) {
 		$html .= '<ul class="vhd-flare__hints">' . $hints . '</ul>';
 	}
 	if ( ! empty( $pr['stale'] ) ) {
-		$html .= '<p class="vhd-flare__review">' . esc_html__( 'You last changed this plan more than 6 months ago. Check that it is still correct.', 'vance-health-hub' ) . '</p>';
+		if ( ! empty( $pr['by_date'] ) ) {
+			$html .= '<p class="vhd-flare__review">' . esc_html__( 'The review date you chose has passed.', 'vance-health-hub' ) . '</p>';
+		} else {
+			$html .= '<p class="vhd-flare__review">' . esc_html__( 'You last changed this plan more than 6 months ago. Check that it is still correct.', 'vance-health-hub' ) . '</p>';
+		}
 	}
 	return $html . '</div>';
 }
@@ -1846,6 +2491,84 @@ function vance_hub_flare_plan_log_html( $log, $nonce, $readonly = false, $draft 
 }
 
 /**
+ * The contact rows of a plan as a list: name, role, telephone link and when to
+ * call. A telephone number links through the same helpers as the free text.
+ *
+ * @param array[] $team Rows {name, role, tel, hours}.
+ * @return string HTML, or '' when there is no row.
+ */
+function vance_hub_flare_plan_team_list_html( $team ) {
+	$items = '';
+	foreach ( vance_hub_flare_plan_team_rows( $team ) as $row ) {
+		$parts = array();
+		if ( '' !== trim( $row['name'] ) ) {
+			$parts[] = '<strong class="vhd-flare__team-name">' . esc_html( $row['name'] ) . '</strong>';
+		}
+		if ( '' !== trim( $row['role'] ) ) {
+			$parts[] = '<span class="vhd-flare__team-role">' . esc_html( $row['role'] ) . '</span>';
+		}
+		if ( '' !== trim( $row['tel'] ) ) {
+			$parts[] = '<span class="vhd-flare__team-tel">' . vance_hub_flare_plan_text_html( $row['tel'], true ) . '</span>';
+		}
+		if ( '' !== trim( $row['hours'] ) ) {
+			$parts[] = '<span class="vhd-flare__team-hours">' . esc_html( $row['hours'] ) . '</span>';
+		}
+		$items .= '<li>' . implode( ', ', $parts ) . '</li>';
+	}
+	return '' === $items ? '' : '<ul class="vhd-flare__team-list">' . $items . '</ul>';
+}
+
+/**
+ * What one section of a plan says, with no heading and no wrapper.
+ *
+ * Text: one paragraph. Contacts: the rows as a list, then the notes. Date: the
+ * date, written as the card writes a date.
+ *
+ * @param string $id   Section id.
+ * @param array  $plan A plan.
+ * @return string HTML, or '' when nothing is written in the section.
+ */
+function vance_hub_flare_plan_section_body_html( $id, $plan ) {
+	$defaults = vance_hub_flare_plan_section_defaults();
+	if ( ! isset( $defaults[ $id ] ) || ! vance_hub_flare_plan_has_content( $plan, $id ) ) {
+		return '';
+	}
+	$type = $defaults[ $id ]['type'];
+	if ( 'date' === $type ) {
+		return '<p>' . esc_html( vance_hub_flare_log_label( $plan[ $id ] ) ) . '</p>';
+	}
+	if ( 'contacts' === $type ) {
+		$notes = isset( $plan['contacts'] ) && is_string( $plan['contacts'] ) && '' !== trim( $plan['contacts'] ) ? '<p>' . vance_hub_flare_plan_text_html( $plan['contacts'], true ) . '</p>' : '';
+		return vance_hub_flare_plan_team_list_html( isset( $plan['team'] ) ? $plan['team'] : array() ) . $notes;
+	}
+	return '<p>' . vance_hub_flare_plan_text_html( $plan[ $id ] ) . '</p>';
+}
+
+/**
+ * One section of a saved plan as the card shows it: a heading and its content.
+ * A core section with nothing written says so. An optional section with nothing
+ * written gives ''.
+ *
+ * @param string $id   Section id.
+ * @param array  $plan A plan.
+ * @return string HTML.
+ */
+function vance_hub_flare_plan_section_view_html( $id, $plan ) {
+	$sections = vance_hub_flare_plan_sections();
+	if ( ! isset( $sections[ $id ] ) ) {
+		return '';
+	}
+	$body = vance_hub_flare_plan_section_body_html( $id, $plan );
+	if ( '' === $body ) {
+		if ( ! $sections[ $id ]['core'] ) {
+			return '';
+		}
+		$body = '<p><em>' . esc_html__( 'Nothing written.', 'vance-health-hub' ) . '</em></p>';
+	}
+	return '<div class="vhd-flare__sec"><h3 class="vhd-flare__h">' . esc_html( $sections[ $id ]['label'] ) . '</h3>' . $body . '</div>';
+}
+
+/**
  * The appointment sheet: one page to bring to a doctor or nurse. Data the
  * member already saved, written by the member. It is not medical advice.
  *
@@ -1869,14 +2592,11 @@ function vance_hub_flare_plan_sheet_html( $s, $plan ) {
 	if ( '' !== $s['questions'] ) {
 		$html .= $sec( __( 'Questions to ask', 'vance-health-hub' ), '<p>' . vance_hub_flare_plan_text_html( $s['questions'] ) . '</p>' );
 	}
-	$names = array(
-		'signs'    => __( 'My early signs', 'vance-health-hub' ),
-		'actions'  => __( 'What I do first', 'vance-health-hub' ),
-		'contacts' => __( 'Who I contact', 'vance-health-hub' ),
-	);
-	foreach ( $names as $key => $title ) {
-		if ( '' !== $plan[ $key ] ) {
-			$html .= $sec( $title, '<p>' . vance_hub_flare_plan_text_html( $plan[ $key ], 'contacts' === $key ) . '</p>' );
+	// Every section of the plan that is marked for the sheet and has something written in it.
+	foreach ( vance_hub_flare_plan_sections() as $key => $def ) {
+		$body = $def['sheet'] ? vance_hub_flare_plan_section_body_html( $key, $plan ) : '';
+		if ( '' !== $body ) {
+			$html .= $sec( $def['label'], $body );
 		}
 	}
 	if ( '' !== $s['medication'] ) {
@@ -1941,6 +2661,7 @@ function vance_hub_flare_plan_html( $f ) {
 		'flare_started_trimmed' => sprintf( __( 'Your flare is recorded. The log keeps %d entries, so the oldest entry was removed.', 'vance-health-hub' ), vance_hub_flare_log_max_rows() ),
 		'flare_removed' => __( 'The entry is removed.', 'vance-health-hub' ),
 		'consent'       => __( 'Not saved. Tick the box to agree, then send the form again.', 'vance-health-hub' ),
+		'baddate'       => __( 'Not saved. Write the review date as year-month-day, for example 2027-03-31.', 'vance-health-hub' ),
 		'invalid'       => __( 'Not saved. Write at least one answer, then send the form again.', 'vance-health-hub' ),
 		'expired'       => __( 'Not saved. This page was open for too long. Send the form again.', 'vance-health-hub' ),
 		'failed'        => __( 'Not saved. The Hub could not store your data. Try again later.', 'vance-health-hub' ),
@@ -1952,13 +2673,14 @@ function vance_hub_flare_plan_html( $f ) {
 		'flare_open'    => __( 'A flare is already open. End it first.', 'vance-health-hub' ),
 		'flare_none'    => __( 'There is no open flare to end.', 'vance-health-hub' ),
 	);
-	$plan  = isset( $f['plan'] ) && is_array( $f['plan'] ) ? $f['plan'] : null;
+	// A v1 plan, or a plan with a damaged field, is brought to the v2 shape first.
+	$plan  = isset( $f['plan'] ) && is_array( $f['plan'] ) ? vance_hub_flare_plan_normalise( $f['plan'] ) : null;
 	$flash = isset( $f['flash'] ) ? $f['flash'] : '';
 	$nonce = '<input type="hidden" name="vance_hub_flare_nonce" value="' . esc_attr( $f['nonce'] ) . '">';
 
 	// id="vhd-flare": the redirect after every request ends in #vhd-flare.
 	$html  = '<section id="vhd-flare" class="vhd-card vhd-flare" aria-labelledby="vhd-flare-title"><div class="vhd-card__head">';
-	$html .= '<h2 id="vhd-flare-title" class="vhd-h3">' . esc_html__( 'My flare plan', 'vance-health-hub' ) . '</h2></div>';
+	$html .= '<h2 id="vhd-flare-title" class="vhd-h3">' . esc_html__( 'My Flare Management Plan', 'vance-health-hub' ) . '</h2></div>';
 	if ( null === $plan ) {
 		$html .= '<p class="vhd-flare__intro">' . esc_html__( 'A flare plan is your own note of what a flare looks like for you, what you do first, and who you contact. You can print it and take it to an appointment.', 'vance-health-hub' ) . '</p>';
 	}
@@ -1986,27 +2708,58 @@ function vance_hub_flare_plan_html( $f ) {
 			$html .= vance_hub_flare_plan_form_html( $f, null, $nonce, true );
 		}
 	} else {
-		$sections = array(
-			'signs'   => __( 'My early signs', 'vance-health-hub' ),
-			'actions' => __( 'What I do first', 'vance-health-hub' ),
-		);
-		// Urgent help and contacts come first: before the progress bar and the quick check.
-		$contacts_text = '' !== $plan['contacts'] ? vance_hub_flare_plan_text_html( $plan['contacts'], true ) : '<em>' . esc_html__( 'Nothing written.', 'vance-health-hub' ) . '</em>';
-		$html .= '<div class="vhd-flare__now"><h3 class="vhd-flare__h">' . esc_html__( 'Urgent help and my contacts', 'vance-health-hub' ) . '</h3>' . $urgent_html . '<div class="vhd-flare__sec"><h3 class="vhd-flare__h">' . esc_html__( 'Who I contact', 'vance-health-hub' ) . '</h3><p>' . $contacts_text . '</p></div></div>';
-		if ( ! $readonly ) {
-			$html .= vance_hub_flare_plan_progress_html( isset( $f['progress'] ) ? $f['progress'] : null );
-			$html .= vance_hub_flare_plan_quick_html( isset( $f['quick'] ) ? $f['quick'] : null );
+		// Urgent help and contacts come first, always shown, before any group.
+		$html .= '<div class="vhd-flare__now"><h3 class="vhd-flare__h">' . esc_html__( 'Urgent help and my contacts', 'vance-health-hub' ) . '</h3>' . $urgent_html . vance_hub_flare_plan_section_view_html( 'contacts', $plan ) . '</div>';
+		$draft = isset( $f['draft'] ) ? $f['draft'] : null;
+
+		// The flare log block. With the agreement missing or changed, the log buttons would only fail.
+		if ( ! $readonly && ! empty( $f['need_consent'] ) ) {
+			$log_html = '<section class="vhd-flare__log" aria-labelledby="vhd-flare-log-title"><h3 id="vhd-flare-log-title" class="vhd-flare__h">' . esc_html__( 'My flare log', 'vance-health-hub' ) . '</h3><p>' . esc_html__( 'To use the flare log, read the agreement again and save your plan. Open "Edit my plan" below.', 'vance-health-hub' ) . '</p></section>';
+		} else {
+			$log_html = vance_hub_flare_plan_log_html( isset( $f['log'] ) ? $f['log'] : array(), $nonce, $readonly, $draft );
 		}
-		$html .= '<div class="vhd-flare__plan">';
-		foreach ( $sections as $key => $title ) {
-			$text  = '' !== $plan[ $key ] ? vance_hub_flare_plan_text_html( $plan[ $key ], 'contacts' === $key ) : '<em>' . esc_html__( 'Nothing written.', 'vance-health-hub' ) . '</em>';
-			$html .= '<div class="vhd-flare__sec"><h3 class="vhd-flare__h">' . esc_html( $title ) . '</h3><p>' . $text . '</p></div>';
+
+		// The two core text sections (signs, first actions), then each optional section that has something in it.
+		$signs_html = '';
+		foreach ( array( 'signs', 'actions' ) as $key ) {
+			$signs_html .= vance_hub_flare_plan_section_view_html( $key, $plan );
 		}
+		$optional_html = '';
+		foreach ( vance_hub_flare_plan_optional_ids() as $key ) {
+			$optional_html .= vance_hub_flare_plan_section_view_html( $key, $plan );
+		}
+		$updated_html = '';
 		if ( '' !== $f['updated'] ) {
 			/* translators: %s: date of the last change. */
-			$html .= '<p class="vhd-small vhd-flare__date">' . esc_html( sprintf( __( 'Last changed on %s.', 'vance-health-hub' ), $f['updated'] ) ) . '</p>';
+			$updated_html = '<p class="vhd-small vhd-flare__date">' . esc_html( sprintf( __( 'Last changed on %s.', 'vance-health-hub' ), $f['updated'] ) ) . '</p>';
 		}
-		$html .= '</div>';
+
+		if ( $readonly ) {
+			// The read-only card keeps its layout: no groups, no progress bar, no edit box.
+			$html .= '<div class="vhd-flare__plan">' . $signs_html . $optional_html . $updated_html . '</div>';
+		} else {
+			$print_html = '<div class="vhd-flare__actions">'
+				// Hidden until hub-flare-plan.js shows it: with no script it does nothing.
+				. '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button></div>';
+			// After a flare ends, or when a kept draft fills the form, the edit box and the plan group open.
+			$edit_open = 'flare_ended' === $flash || ! empty( $f['need_consent'] ) || vance_hub_flare_plan_draft_is( $draft, 'save' );
+			// The plan group also opens after a save, or a refused save, so the member sees the result.
+			$plan_open = $edit_open || in_array( $flash, array( 'saved', 'toolong', 'invalid', 'consent', 'changed', 'expired', 'baddate', 'failed' ), true );
+
+			// vhd-flare__plan--core: the quick check in hub-flare-plan.js points to this block.
+			$now_inner   = $log_html . vance_hub_flare_plan_quick_html( isset( $f['quick'] ) ? $f['quick'] : null ) . '<div class="vhd-flare__plan vhd-flare__plan--core">' . $signs_html . '</div>';
+			$plan_inner  = vance_hub_flare_plan_progress_html( isset( $f['progress'] ) ? $f['progress'] : null );
+			$plan_inner .= '<div class="vhd-flare__plan">' . $optional_html . $updated_html . '</div>';
+			$plan_inner .= $print_html;
+			$plan_inner .= '<details class="vhd-flare__edit"' . ( $edit_open ? ' open' : '' ) . '><summary>' . esc_html__( 'Edit my plan', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_form_html( $f, $plan, $nonce, false ) . '</details>';
+
+			$html .= '<details class="vhd-flare__group" data-vhd-group="now"' . ( $plan_open ? '' : ' open' ) . '><summary class="vhd-flare__group-sum">' . esc_html__( 'In a flare now', 'vance-health-hub' ) . '</summary>' . $now_inner . '</details>';
+			$html .= '<details class="vhd-flare__group" data-vhd-group="plan"' . ( $plan_open ? ' open' : '' ) . '><summary class="vhd-flare__group-sum">' . esc_html__( 'My plan', 'vance-health-hub' ) . '</summary>' . $plan_inner . '</details>';
+			// No sheet group while the sheet is empty (it is null while the agreement is missing).
+			if ( ! empty( $f['sheet'] ) ) {
+				$html .= '<details class="vhd-flare__group vhd-flare__sheetbox" data-vhd-group="appointment"><summary class="vhd-flare__group-sum">' . esc_html__( 'For my appointment', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_sheet_html( $f['sheet'], $plan ) . '</details>';
+			}
+		}
 	}
 
 	// Fixed text: shown to every member, with or without a plan. The read-only
@@ -2021,25 +2774,13 @@ function vance_hub_flare_plan_html( $f ) {
 	}
 
 	if ( null !== $plan ) {
-		$draft = isset( $f['draft'] ) ? $f['draft'] : null;
-		if ( ! $readonly && ! empty( $f['need_consent'] ) ) {
-			// The agreement is missing or its wording changed: the log buttons would
-			// only fail. Point the member to the plan form, which asks again.
-			$html .= '<section class="vhd-flare__log" aria-labelledby="vhd-flare-log-title"><h3 id="vhd-flare-log-title" class="vhd-flare__h">' . esc_html__( 'My flare log', 'vance-health-hub' ) . '</h3><p>' . esc_html__( 'To use the flare log, read the agreement again and save your plan. Open "Edit my plan" below.', 'vance-health-hub' ) . '</p></section>';
-		} else {
+		// The read-only card: the log, then the print button. The groups above are not drawn.
+		if ( $readonly ) {
+			$draft = isset( $f['draft'] ) ? $f['draft'] : null;
 			$html .= vance_hub_flare_plan_log_html( isset( $f['log'] ) ? $f['log'] : array(), $nonce, $readonly, $draft );
-		}
-		$html .= '<div class="vhd-flare__actions">';
-		// Hidden until hub-flare-plan.js shows it: with no script it does nothing.
-		$html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button></div>';
-		if ( ! $readonly ) {
-			// No sheet block while the sheet is empty (it is null while the agreement is missing).
-			if ( ! empty( $f['sheet'] ) ) {
-				$html .= '<details class="vhd-flare__sheetbox"><summary>' . esc_html__( 'Appointment sheet', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_sheet_html( $f['sheet'], $plan ) . '</details>';
-			}
-			// After a flare ends, or when a kept draft fills the form, the edit box opens.
-			$edit_open = 'flare_ended' === $flash || ! empty( $f['need_consent'] ) || vance_hub_flare_plan_draft_is( $draft, 'save' );
-			$html     .= '<details class="vhd-flare__edit"' . ( $edit_open ? ' open' : '' ) . '><summary>' . esc_html__( 'Edit my plan', 'vance-health-hub' ) . '</summary>' . vance_hub_flare_plan_form_html( $f, $plan, $nonce, false ) . '</details>';
+			$html .= '<div class="vhd-flare__actions">';
+			// Hidden until hub-flare-plan.js shows it: with no script it does nothing.
+			$html .= '<button type="button" class="vhd-btn vhd-btn--outline vhd-flare__print" data-vhd-flare-print="plan" hidden>' . esc_html__( 'Print my plan', 'vance-health-hub' ) . '</button></div>';
 		}
 		$html .= '<details class="vhd-flare__manage"><summary>' . esc_html__( 'Manage my flare plan data', 'vance-health-hub' ) . '</summary>';
 		$html .= '<p>' . esc_html__( 'You cannot get your plan and your flare log back after you delete them.', 'vance-health-hub' ) . '</p>';

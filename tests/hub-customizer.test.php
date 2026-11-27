@@ -183,6 +183,31 @@ $SETTINGS = array(
 	'vance_hub_flare_plan_urgent'       => array( '', 'sanitize_textarea_field', 'vance_hub_sec_flare' ),
 	'vance_hub_flare_plan_consent'      => array( 'I agree that the Hub stores my flare plan and my flare dates in my account. I can delete them at any time.', 'sanitize_text_field', 'vance_hub_sec_flare' ),
 	'vance_hub_flare_plan_note'         => array( 'This plan is your own record. It is not medical advice. Share it with your health team.', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	// Phase 2: a name and a help text for each flare plan section; an on/off box for each optional section.
+	'vance_hub_flare_sec_signs_label'       => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_signs_hint'        => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_actions_label'     => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_actions_hint'      => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_contacts_label'    => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_contacts_hint'     => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_medicines_label'   => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_medicines_hint'    => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_medicines_on'      => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_told_label'        => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_told_hint'         => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_told_on'           => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_triggers_label'    => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_triggers_hint'     => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_triggers_on'       => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_helps_label'       => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_helps_hint'        => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_helps_on'          => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_questions_label'   => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_questions_hint'    => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_questions_on'      => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_review_on_label'   => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_review_on_hint'    => array( '', 'sanitize_text_field', 'vance_hub_sec_flare' ),
+	'vance_hub_flare_sec_review_on_on'      => array( true, 'vance_hub_sanitize_checkbox', 'vance_hub_sec_flare' ),
 );
 
 $SECTION_IDS = array(
@@ -211,7 +236,18 @@ $ORDER = array(
 	'vance_hub_sec_dashboard' => array( 'vance_hub_show_dashboard', 'vance_hub_dashboard_tabs', 'vance_hub_dash_member_no', 'vance_hub_dash_chart' ),
 	'vance_hub_sec_community' => array( 'vance_hub_community' ),
 	'vance_hub_sec_checkin'   => array( 'vance_hub_dash_checkin', 'vance_hub_checkin_q_pain', 'vance_hub_checkin_q_bowel', 'vance_hub_checkin_q_tired', 'vance_hub_checkin_consent', 'vance_hub_checkin_note' ),
-	'vance_hub_sec_flare'     => array( 'vance_hub_dash_flare_plan', 'vance_hub_flare_plan_urgent', 'vance_hub_flare_plan_consent', 'vance_hub_flare_plan_note' ),
+	'vance_hub_sec_flare'     => array(
+		'vance_hub_dash_flare_plan', 'vance_hub_flare_plan_urgent', 'vance_hub_flare_plan_consent', 'vance_hub_flare_plan_note',
+		'vance_hub_flare_sec_signs_label', 'vance_hub_flare_sec_signs_hint',
+		'vance_hub_flare_sec_actions_label', 'vance_hub_flare_sec_actions_hint',
+		'vance_hub_flare_sec_contacts_label', 'vance_hub_flare_sec_contacts_hint',
+		'vance_hub_flare_sec_medicines_label', 'vance_hub_flare_sec_medicines_hint', 'vance_hub_flare_sec_medicines_on',
+		'vance_hub_flare_sec_told_label', 'vance_hub_flare_sec_told_hint', 'vance_hub_flare_sec_told_on',
+		'vance_hub_flare_sec_triggers_label', 'vance_hub_flare_sec_triggers_hint', 'vance_hub_flare_sec_triggers_on',
+		'vance_hub_flare_sec_helps_label', 'vance_hub_flare_sec_helps_hint', 'vance_hub_flare_sec_helps_on',
+		'vance_hub_flare_sec_questions_label', 'vance_hub_flare_sec_questions_hint', 'vance_hub_flare_sec_questions_on',
+		'vance_hub_flare_sec_review_on_label', 'vance_hub_flare_sec_review_on_hint', 'vance_hub_flare_sec_review_on_on',
+	),
 );
 
 // Section id => the titles the screen shows, as the register code builds them.
@@ -244,8 +280,8 @@ $IDS = array_keys( $M->settings );
 $EXP = array_keys( $SETTINGS );
 sort( $IDS );
 sort( $EXP );
-check( 'settings: exactly forty setting ids are registered', count( $M->settings ) === 40 );
-check( 'settings: the registered ids are exactly the agreed forty', $IDS === $EXP );
+check( 'settings: exactly sixty-four setting ids are registered', count( $M->settings ) === 64 );
+check( 'settings: the registered ids are exactly the agreed sixty-four', $IDS === $EXP );
 
 foreach ( $SETTINGS as $id => $row ) {
 	check( "setting $id: default equals the agreed default", isset( $M->settings[ $id ] ) && $M->settings[ $id ]['default'] === $row[0] );
@@ -281,12 +317,12 @@ check( 'sections: each title is the agreed title', array_column( array_values( $
 section( '3. Controls: sections, priorities and on-screen order' );
 
 $CONTROL_SECTIONS = array_column( $M->controls, 'section' );
-check( 'controls: forty controls are registered', count( $M->controls ) === 40 );
+check( 'controls: sixty-four controls are registered', count( $M->controls ) === 64 );
 check( 'controls: every control sits in one of the eight sections', array_diff( $CONTROL_SECTIONS, $SECTION_IDS ) === array() );
 check( 'controls: no section is empty (eight distinct sections are used)', count( array_count_values( $CONTROL_SECTIONS ) ) === 8 );
-check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 40 );
+check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 64 );
 
-check( 'controls: no two controls in one section share a priority', count( suite_section_order( $M, 'vance_home_layout' ) ) + count( suite_section_order( $M, 'vance_hub_sec_home' ) ) + count( suite_section_order( $M, 'vance_hub_sec_header' ) ) + count( suite_section_order( $M, 'vance_hub_sec_pages' ) ) + count( suite_section_order( $M, 'vance_hub_sec_dashboard' ) ) + count( suite_section_order( $M, 'vance_hub_sec_community' ) ) + count( suite_section_order( $M, 'vance_hub_sec_checkin' ) ) + count( suite_section_order( $M, 'vance_hub_sec_flare' ) ) === 40 );
+check( 'controls: no two controls in one section share a priority', count( suite_section_order( $M, 'vance_home_layout' ) ) + count( suite_section_order( $M, 'vance_hub_sec_home' ) ) + count( suite_section_order( $M, 'vance_hub_sec_header' ) ) + count( suite_section_order( $M, 'vance_hub_sec_pages' ) ) + count( suite_section_order( $M, 'vance_hub_sec_dashboard' ) ) + count( suite_section_order( $M, 'vance_hub_sec_community' ) ) + count( suite_section_order( $M, 'vance_hub_sec_checkin' ) ) + count( suite_section_order( $M, 'vance_hub_sec_flare' ) ) === 64 );
 
 foreach ( $SETTINGS as $id => $row ) {
 	check( "section: control $id is in {$row[2]}", isset( $M->controls[ $id ] ) && $M->controls[ $id ]['section'] === $row[2] );
@@ -299,7 +335,7 @@ check( 'order: section 4 runs articles, then the survey result page', suite_sect
 check( 'order: section 5 runs dashboard home, tab look, member number, chart', suite_section_order( $M, 'vance_hub_sec_dashboard' ) === $ORDER['vance_hub_sec_dashboard'] );
 check( 'order: section 6 is the community switch alone', suite_section_order( $M, 'vance_hub_sec_community' ) === $ORDER['vance_hub_sec_community'] );
 check( 'order: section 7 runs the check-in switch, then its five texts', suite_section_order( $M, 'vance_hub_sec_checkin' ) === $ORDER['vance_hub_sec_checkin'] );
-check( 'order: section 8 runs the flare switch, urgent text, consent, note', suite_section_order( $M, 'vance_hub_sec_flare' ) === $ORDER['vance_hub_sec_flare'] );
+check( 'order: section 8 runs the flare switch, urgent text, consent, note, then each section name, help text and optional switch',suite_section_order( $M, 'vance_hub_sec_flare' ) === $ORDER['vance_hub_sec_flare'] );
 
 section( '4. Switch labels and the admin screen rows' );
 
