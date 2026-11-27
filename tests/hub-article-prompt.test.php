@@ -88,7 +88,22 @@ function get_term( $id, $taxonomy = '' ) {
 function esc_attr__( $text, $domain = '' ) { return esc_attr( $text ); }
 function esc_html__( $text, $domain = '' ) { return esc_html( $text ); }
 /** The category list that the Customizer registration reads. */
-function get_categories( $args = array() ) { return $GLOBALS['CATS_REG']; }
+function get_categories( $args = array() ) {
+	$GLOBALS['CATS_ARGS'][] = $args;
+	if ( isset( $args['child_of'] ) ) {
+		// The non-empty descendants (ids) of one category, from CATS_KIDS[ id ].
+		return isset( $GLOBALS['CATS_KIDS'][ $args['child_of'] ] ) ? $GLOBALS['CATS_KIDS'][ $args['child_of'] ] : array();
+	}
+	// A top-level query: empty categories come back only when hide_empty is false.
+	$out = array();
+	foreach ( $GLOBALS['CATS_REG'] as $term ) {
+		if ( ! empty( $args['hide_empty'] ) && empty( $term->count ) ) {
+			continue;
+		}
+		$out[] = $term;
+	}
+	return $out;
+}
 
 /** A category term as get_the_category() returns it. */
 function a_cat( $id, $slug, $name = '', $parent = 0 ) {
@@ -343,10 +358,10 @@ class ArticlePromptFake {
 }
 
 $GLOBALS['CATS_REG'] = array(
-	(object) array( 'slug' => 'beta', 'name' => 'Beta' ),
-	(object) array( 'slug' => 'alpha', 'name' => 'Alpha' ),
-	(object) array( 'slug' => '', 'name' => 'No slug' ),
-	(object) array( 'slug' => '!!!', 'name' => 'Only symbols' ),
+	(object) array( 'term_id' => 2, 'slug' => 'beta', 'name' => 'Beta', 'count' => 4 ),
+	(object) array( 'term_id' => 1, 'slug' => 'alpha', 'name' => 'Alpha', 'count' => 3 ),
+	(object) array( 'term_id' => 3, 'slug' => '', 'name' => 'No slug', 'count' => 2 ),
+	(object) array( 'term_id' => 4, 'slug' => '!!!', 'name' => 'Only symbols', 'count' => 2 ),
 );
 $REG = new ArticlePromptFake();
 vance_hub_article_customize_register( $REG );
@@ -371,6 +386,34 @@ check( 'register: Beta is the second select at priority 32', 32 === $REG->contro
 check( 'register: only the first select carries the description', '' !== $REG->controls['vance_hub_aprompt_tool_alpha']['description'] && '' === $REG->controls['vance_hub_aprompt_tool_beta']['description'] );
 check( 'register: the select offers the six choices', array( 'auto', 'survey', 'recipes', 'nutrition', 'discounts', 'none' ) === array_keys( $REG->controls['vance_hub_aprompt_tool_alpha']['choices'] ) );
 check( 'register: the select label names the category', 'Prompt tool: Alpha' === $REG->controls['vance_hub_aprompt_tool_alpha']['label'] );
+
+// Counts: a top-level category whose articles sit only in sub-categories has its own count at 0.
+$GLOBALS['CATS_ARGS'] = array();
+$GLOBALS['CATS_KIDS'] = array( 12 => array( 121 ), 13 => array(), 15 => array( 151, 152 ) );
+$GLOBALS['CATS_REG']  = array(
+	(object) array( 'term_id' => 11, 'slug' => 'normal', 'name' => 'Normal', 'count' => 5 ),
+	(object) array( 'term_id' => 12, 'slug' => 'kids-only', 'name' => 'Kids only', 'count' => 0 ),
+	(object) array( 'term_id' => 13, 'slug' => 'empty', 'name' => 'Empty', 'count' => 0 ),
+	(object) array( 'term_id' => 14, 'slug' => 'no-count-field', 'name' => 'No count field' ),
+	(object) array( 'term_id' => 15, 'slug' => 'a-first', 'name' => 'A first', 'count' => 0 ),
+);
+$PAD = new ArticlePromptFake();
+vance_hub_article_customize_register( $PAD );
+
+check( 'counts: a normal top-level category (own count above 0) gets a select', isset( $PAD->controls['vance_hub_aprompt_tool_normal'] ) );
+check( 'counts: a top-level category with count 0 and a non-empty child gets a select', isset( $PAD->controls['vance_hub_aprompt_tool_kids-only'] ) );
+check( 'counts: a top-level category with count 0 and no non-empty descendant gets no select', ! isset( $PAD->controls['vance_hub_aprompt_tool_empty'], $PAD->settings['vance_hub_aprompt_tool_empty'] ) );
+check( 'counts: a category with no count field and no descendant gets no select', ! isset( $PAD->controls['vance_hub_aprompt_tool_no-count-field'] ) );
+$PAD_PRIO = array();
+foreach ( array( 'a-first', 'kids-only', 'normal' ) as $PAD_SLUG ) {
+	$PAD_PRIO[ $PAD_SLUG ] = isset( $PAD->controls[ 'vance_hub_aprompt_tool_' . $PAD_SLUG ] ) ? $PAD->controls[ 'vance_hub_aprompt_tool_' . $PAD_SLUG ]['priority'] : -1;
+}
+check( 'counts: the three kept categories are in name order at priorities 30, 32 and 34', array( 'a-first' => 30, 'kids-only' => 32, 'normal' => 34 ) === $PAD_PRIO );
+check( 'counts: the top-level query asks for empty categories too (hide_empty false, parent 0)', array( 'parent' => 0, 'hide_empty' => false ) === $GLOBALS['CATS_ARGS'][0] );
+$ASKED = array_column( array_filter( $GLOBALS['CATS_ARGS'], function ( $a ) { return isset( $a['child_of'] ); } ), 'child_of' );
+sort( $ASKED );
+check( 'counts: the descendant query is asked only for the four categories whose own count is 0, never for the normal one', array( 12, 13, 14, 15 ) === $ASKED && ! in_array( 11, $ASKED, true ) );
+check( 'keep: pure function keeps an own count or a busy descendant, skips neither', true === vance_hub_article_keep_top_category( 2, 0 ) && true === vance_hub_article_keep_top_category( 0, 1 ) && false === vance_hub_article_keep_top_category( 0, 0 ) && false === vance_hub_article_keep_top_category( null, 'x' ) );
 
 $GLOBALS['CATS_REG'] = array();
 $NONE = new ArticlePromptFake();

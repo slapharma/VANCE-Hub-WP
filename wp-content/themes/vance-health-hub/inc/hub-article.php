@@ -587,6 +587,19 @@ function vance_hub_article_sanitize_tool_choice( $value ) {
 }
 
 /**
+ * Keep or skip a top-level category in the per-category select list. Pure.
+ *
+ * Kept when it has an article itself or any non-empty descendant.
+ *
+ * @param mixed $own_count        The category's own article count.
+ * @param mixed $busy_descendants Number of descendants that have an article.
+ * @return bool
+ */
+function vance_hub_article_keep_top_category( $own_count, $busy_descendants ) {
+	return (int) $own_count > 0 || (int) $busy_descendants > 0;
+}
+
+/**
  * Setting id of the tool choice for one top-level category, or '' when the slug
  * has nothing left after sanitize_key().
  *
@@ -913,12 +926,25 @@ function vance_hub_article_customize_register( $wp_customize ) {
 	if ( ! function_exists( 'get_categories' ) ) {
 		return;
 	}
-	$terms = get_categories( array( 'parent' => 0, 'hide_empty' => true ) );
+	// All top-level categories, empty ones too: a top-level category whose articles
+	// all sit in its sub-categories has its own count at 0, and hide_empty would drop
+	// it. WordPress does not pad counts for a parent => 0 query, so each one is kept
+	// when its own count is above 0 or when a non-empty descendant exists.
+	$terms = get_categories( array( 'parent' => 0, 'hide_empty' => false ) );
 	if ( ! is_array( $terms ) ) {
 		return;
 	}
 	$terms = array_values( array_filter( $terms, function ( $term ) {
-		return is_object( $term ) && ! empty( $term->slug ) && '' !== vance_hub_article_tool_setting_id( $term->slug );
+		if ( ! is_object( $term ) || empty( $term->slug ) || '' === vance_hub_article_tool_setting_id( $term->slug ) ) {
+			return false;
+		}
+		$own   = isset( $term->count ) ? (int) $term->count : 0;
+		$below = 0;
+		if ( $own < 1 && ! empty( $term->term_id ) ) {
+			$busy  = get_categories( array( 'child_of' => (int) $term->term_id, 'hide_empty' => true, 'fields' => 'ids' ) );
+			$below = is_array( $busy ) ? count( $busy ) : 0;
+		}
+		return vance_hub_article_keep_top_category( $own, $below );
 	} ) );
 	usort( $terms, function ( $a, $b ) {
 		$by_name = strnatcasecmp( isset( $a->name ) ? (string) $a->name : (string) $a->slug, isset( $b->name ) ? (string) $b->name : (string) $b->slug );
