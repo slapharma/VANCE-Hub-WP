@@ -188,8 +188,8 @@ function vance_hub_checkin_modal_html( $c ) {
 }
 
 /**
- * The "Daily check-ins" section of My Health Profile: the last 14 days as a
- * table of faces, one chart for each question, and the delete control.
+ * The "Daily check-ins" section of My Health Profile: one chart for each
+ * question, then the last 14 days as a table of faces.
  *
  * @param array|null $c 'checkin' data.
  * @return string '' when the feature is off.
@@ -209,6 +209,20 @@ function vance_hub_checkin_tab_html( $c ) {
 	}
 	$html .= '</div>';
 	$html .= vance_hub_checkin_flash_html( $c );
+
+	// One small chart for each question, above the table. Higher is worse.
+	$charts = '';
+	foreach ( $c['questions'] as $key => $question ) {
+		$chart = isset( $c['series'][ $key ] ) ? vance_hub_dashboard_chart_html( $c['series'][ $key ], $question ) : '';
+		if ( '' !== $chart ) {
+			$icon    = isset( $icons[ $key ] ) ? $icons[ $key ][0] . ' ' . $icons[ $key ][1] : $question;
+			$charts .= '<div class="vhd-checkin__trend"><p class="vhd-checkin__trend-q">' . esc_html( $icon ) . '</p>' . $chart . '</div>';
+		}
+	}
+	if ( '' !== $charts ) {
+		$html .= '<div class="vhd-checkin__trends">' . $charts . '</div>';
+		$html .= '<p class="vhd-small">' . esc_html__( 'Lower on the chart is better.', 'vance-health-hub' ) . '</p>';
+	}
 
 	if ( empty( $c['days'] ) ) {
 		$html .= '<p class="vhd-checkin__done"><span aria-hidden="true">&#128203;</span> ' . esc_html__( 'No check-ins yet. Your first one shows here.', 'vance-health-hub' ) . '</p>';
@@ -236,19 +250,6 @@ function vance_hub_checkin_tab_html( $c ) {
 		}, array_keys( $faces ) ) ) ) . '</p>';
 	}
 
-	// One small chart for each question. Higher is worse.
-	$charts = '';
-	foreach ( $c['questions'] as $key => $question ) {
-		$chart = isset( $c['series'][ $key ] ) ? vance_hub_dashboard_chart_html( $c['series'][ $key ], $question ) : '';
-		if ( '' !== $chart ) {
-			$icon    = isset( $icons[ $key ] ) ? $icons[ $key ][0] . ' ' . $icons[ $key ][1] : $question;
-			$charts .= '<div class="vhd-checkin__trend"><p class="vhd-checkin__trend-q">' . esc_html( $icon ) . '</p>' . $chart . '</div>';
-		}
-	}
-	if ( '' !== $charts ) {
-		$html .= '<div class="vhd-checkin__trends">' . $charts . '</div>';
-		$html .= '<p class="vhd-small">' . esc_html__( 'Lower on the chart is better.', 'vance-health-hub' ) . '</p>';
-	}
 	if ( '' !== $c['note'] ) {
 		$html .= '<p class="vhd-small">' . esc_html( $c['note'] ) . '</p>';
 	}
