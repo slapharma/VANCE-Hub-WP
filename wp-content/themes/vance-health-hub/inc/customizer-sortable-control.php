@@ -142,19 +142,24 @@ if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'Vance_Customize_
 		public $available = array();
 
 		public function enqueue() {
-			$ver = wp_get_theme()->get( 'Version' );
+			// The version is the file time, not the theme version: the theme version
+			// does not change with each deploy, and a browser then keeps the old file.
+			$ver    = wp_get_theme()->get( 'Version' );
+			$js     = get_template_directory() . '/assets/js/customizer-sortable.js';
+			$css    = get_template_directory() . '/assets/css/customizer-sortable.css';
+			$js_ver = file_exists( $js ) ? (string) filemtime( $js ) : $ver;
 			wp_enqueue_script(
 				'vance-customizer-sortable',
 				get_template_directory_uri() . '/assets/js/customizer-sortable.js',
 				array( 'jquery', 'jquery-ui-sortable', 'customize-controls' ),
-				$ver,
+				$js_ver,
 				true
 			);
 			wp_enqueue_style(
 				'vance-customizer-sortable',
 				get_template_directory_uri() . '/assets/css/customizer-sortable.css',
 				array(),
-				$ver
+				file_exists( $css ) ? (string) filemtime( $css ) : $ver
 			);
 		}
 
