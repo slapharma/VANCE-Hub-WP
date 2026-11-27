@@ -114,6 +114,7 @@ require_once $THEME . '/inc/hub-home-settings.php';
 require_once $THEME . '/inc/hub-look-settings.php';
 require_once $THEME . '/inc/hub-brand.php';
 require_once $THEME . '/inc/hub-community-settings.php';
+require_once $THEME . '/inc/hub-reset.php';
 require_once $THEME . '/inc/hub-golive.php';
 require_once $THEME . '/inc/hub-article.php';
 require_once $THEME . '/inc/hub-dashboard-features.php';
@@ -150,6 +151,7 @@ vance_hub_header_customize_register( $M );
 vance_hub_community_customize_register( $M );
 vance_hub_community_settings_customize_register( $M );
 vance_hub_flare_plan_customize( $M );
+vance_hub_reset_customize_register( $M );
 
 /* ---- hard-coded expectations ---------------------------------------------- */
 
@@ -327,7 +329,7 @@ $ORDER = array(
 	'vance_home_layout'       => array( 'vance_home_layout', 'vance_hub_golive_at' ),
 	'vance_hub_sec_home'      => array(
 		'vance_hub_block_order', 'vance_hub_count_sections', 'vance_hub_count_more', 'vance_hub_count_library', 'vance_hub_count_recipes', 'vance_hub_count_quotes',
-		'vance_hub_hero_image',
+		'vance_hub_hero_image', 'vance_hub_reset_vance_hub_sec_home',
 	),
 	'vance_hub_sec_home_text' => array(
 		'vance_hub_text_hero_pill', 'vance_hub_text_hero_title', 'vance_hub_text_hero_accent', 'vance_hub_text_hero_sub',
@@ -335,6 +337,7 @@ $ORDER = array(
 		'vance_hub_text_fact_1_title', 'vance_hub_text_fact_1_text', 'vance_hub_text_fact_2_title', 'vance_hub_text_fact_2_text', 'vance_hub_text_fact_3_title', 'vance_hub_text_fact_3_text',
 		'vance_hub_text_join_pill', 'vance_hub_text_join_title', 'vance_hub_text_join_text', 'vance_hub_text_join_card', 'vance_hub_text_join_button',
 		'vance_hub_text_member_title', 'vance_hub_text_member_text', 'vance_hub_text_member_button',
+		'vance_hub_reset_vance_hub_sec_home_text',
 	),
 	// Four cards, six controls each: tool, title, text, button, link, image.
 	'vance_hub_sec_home_tools' => array(
@@ -342,12 +345,14 @@ $ORDER = array(
 		'vance_hub_tool_2_pick', 'vance_hub_tool_2_title', 'vance_hub_tool_2_text', 'vance_hub_tool_2_button', 'vance_hub_tool_2_link', 'vance_hub_tool_2_image',
 		'vance_hub_tool_3_pick', 'vance_hub_tool_3_title', 'vance_hub_tool_3_text', 'vance_hub_tool_3_button', 'vance_hub_tool_3_link', 'vance_hub_tool_3_image',
 		'vance_hub_tool_4_pick', 'vance_hub_tool_4_title', 'vance_hub_tool_4_text', 'vance_hub_tool_4_button', 'vance_hub_tool_4_link', 'vance_hub_tool_4_image',
+		'vance_hub_reset_vance_hub_sec_home_tools',
 	),
 	'vance_hub_sec_home_tiles' => array(
 		'vance_hub_tile_1_badge', 'vance_hub_tile_1_title', 'vance_hub_tile_1_text', 'vance_hub_tile_1_link',
 		'vance_hub_tile_2_badge', 'vance_hub_tile_2_title', 'vance_hub_tile_2_text', 'vance_hub_tile_2_link',
 		'vance_hub_tile_3_badge', 'vance_hub_tile_3_title', 'vance_hub_tile_3_text', 'vance_hub_tile_3_link',
 		'vance_hub_tile_4_badge', 'vance_hub_tile_4_title', 'vance_hub_tile_4_text', 'vance_hub_tile_4_link',
+		'vance_hub_reset_vance_hub_sec_home_tiles',
 	),
 	// Priorities: 10 header switch, 15 member bar switch, 20 member total, 30 deadline, 40 to 70 header texts,
 	// 80 to 100 header links, 110 to 150 member bar texts.
@@ -357,19 +362,21 @@ $ORDER = array(
 		'vance_hub_link_signin', 'vance_hub_link_join', 'vance_hub_link_myhub',
 		'vance_hub_text_bar_total', 'vance_hub_text_bar_week', 'vance_hub_text_bar_founding', 'vance_hub_text_bar_link_visitor', 'vance_hub_text_bar_link_member',
 		'vance_hub_color_teal', 'vance_hub_color_navy', 'vance_hub_color_purple',
+		'vance_hub_reset_vance_hub_sec_header',
 	),
 	// Priorities: 10 article layout switch, 12 prompt switch, 14 prompt position, 20 result page switch.
-	'vance_hub_sec_pages'     => array( 'vance_hub_articles', 'vance_hub_article_prompt', 'vance_hub_article_prompt_after', 'vance_hub_tool_result' ),
-	'vance_hub_sec_dashboard' => array( 'vance_hub_show_dashboard', 'vance_hub_dashboard_tabs', 'vance_hub_dash_member_no', 'vance_hub_dash_chart' ),
+	'vance_hub_sec_pages'     => array( 'vance_hub_articles', 'vance_hub_article_prompt', 'vance_hub_article_prompt_after', 'vance_hub_tool_result', 'vance_hub_reset_vance_hub_sec_pages' ),
+	'vance_hub_sec_dashboard' => array( 'vance_hub_show_dashboard', 'vance_hub_dashboard_tabs', 'vance_hub_dash_member_no', 'vance_hub_dash_chart', 'vance_hub_reset_vance_hub_sec_dashboard' ),
 	'vance_hub_sec_dashboard_text' => array(
 		'vance_hub_text_dash_hello', 'vance_hub_text_dash_welcome', 'vance_hub_text_dash_step_label',
 		'vance_hub_text_dash_survey_title', 'vance_hub_text_dash_survey_text', 'vance_hub_text_dash_survey_button',
 		'vance_hub_text_dash_profile_title', 'vance_hub_text_dash_profile_text', 'vance_hub_text_dash_profile_button',
 		'vance_hub_text_dash_plan_title', 'vance_hub_text_dash_plan_text', 'vance_hub_text_dash_plan_button',
 		'vance_hub_text_dash_check_title', 'vance_hub_text_dash_check_text', 'vance_hub_text_dash_check_button',
+		'vance_hub_reset_vance_hub_sec_dashboard_text',
 	),
 	// Priorities: 10 community switch, 20 poll switch, 30 and 40 intros, 50 extra line, 60 rules link, 70 rules words.
-	'vance_hub_sec_community' => array( 'vance_hub_community', 'vance_hub_community_poll', 'vance_hub_text_com_visitor_intro', 'vance_hub_text_com_member_intro', 'vance_hub_text_com_note', 'vance_hub_link_com_rules', 'vance_hub_text_com_rules_label' ),
+	'vance_hub_sec_community' => array( 'vance_hub_community', 'vance_hub_community_poll', 'vance_hub_text_com_visitor_intro', 'vance_hub_text_com_member_intro', 'vance_hub_text_com_note', 'vance_hub_link_com_rules', 'vance_hub_text_com_rules_label', 'vance_hub_reset_vance_hub_sec_community' ),
 	'vance_hub_sec_checkin'   => array( 'vance_hub_dash_checkin', 'vance_hub_checkin_q_pain', 'vance_hub_checkin_q_bowel', 'vance_hub_checkin_q_tired', 'vance_hub_checkin_consent', 'vance_hub_checkin_note' ),
 	'vance_hub_sec_flare'     => array( 'vance_hub_dash_flare_plan', 'vance_hub_flare_plan_urgent', 'vance_hub_flare_plan_consent', 'vance_hub_flare_plan_note' ),
 );
@@ -483,10 +490,10 @@ check( 'sections: every section has a one-sentence description', count( array_fi
 section( '3. Controls: sections, priorities and on-screen order' );
 
 $CONTROL_SECTIONS = array_column( $M->controls, 'section' );
-check( 'controls: 130 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live, plus 29 look, plus 3 brand colours, plus 6 community, plus 2 article prompt)', count( $M->controls ) === 130 );
+check( 'controls: 139 controls are registered (the original 40, minus the three retired switches, plus 28 new, plus 25 tool card and go-live, plus 29 look, plus 3 brand colours, plus 6 community, plus 2 article prompt, plus 9 reset buttons)', count( $M->controls ) === 139 );
 check( 'controls: every control sits in one of the twelve sections', array_diff( $CONTROL_SECTIONS, $SECTION_IDS ) === array() );
 check( 'controls: no section is empty (all twelve sections hold controls)', count( array_count_values( $CONTROL_SECTIONS ) ) === 12 && array_diff( $SECTION_IDS, $CONTROL_SECTIONS ) === array() );
-check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 130 );
+check( 'controls: every control has an integer priority', count( array_filter( array_column( $M->controls, 'priority' ), 'is_int' ) ) === 139 );
 
 $DISTINCT_OK = true;
 foreach ( $SECTION_IDS as $sid ) {
@@ -530,12 +537,12 @@ check( 'order: section 3 runs hero, survey card, facts, visitor join, member joi
 check( 'order: section 4 (tool cards) runs cards 1 to 4 (tool, title, text, button, link, image)', suite_section_order( $M, 'vance_hub_sec_home_tools' ) === $ORDER['vance_hub_sec_home_tools'] );
 $TOOL_PRIORITIES = array();
 foreach ( $ORDER['vance_hub_sec_home_tools'] as $id ) { $TOOL_PRIORITIES[] = $M->controls[ $id ]['priority']; }
-check( 'order: the card priorities are 10 to 15, 20 to 25, 30 to 35 and 40 to 45', $TOOL_PRIORITIES === array( 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 40, 41, 42, 43, 44, 45 ) );
+check( 'order: the card priorities are 10 to 15, 20 to 25, 30 to 35 and 40 to 45, then 9999 for the reset button', $TOOL_PRIORITIES === array( 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 40, 41, 42, 43, 44, 45, 9999 ) );
 check( 'order: section 5 runs tiles 1 to 4 (badge, title, text, link)', suite_section_order( $M, 'vance_hub_sec_home_tiles' ) === $ORDER['vance_hub_sec_home_tiles'] );
 check( 'order: section 6 runs header, member bar switch, member total, founding deadline, header texts, header links, member bar texts', suite_section_order( $M, 'vance_hub_sec_header' ) === $ORDER['vance_hub_sec_header'] );
 $HEADER_PRIORITIES = array();
 foreach ( $ORDER['vance_hub_sec_header'] as $id ) { $HEADER_PRIORITIES[] = $M->controls[ $id ]['priority']; }
-check( 'order: the section 6 priorities are 10, 15, 20, 30, 40 to 70, 80 to 100, 110 to 150 and 160 to 180 (the three old controls keep 10, 20 and 30)', $HEADER_PRIORITIES === array( 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180 ) );
+check( 'order: the section 6 priorities are 10, 15, 20, 30, 40 to 70, 80 to 100, 110 to 150 and 160 to 180, then 9999 for the reset button (the three old controls keep 10, 20 and 30)', $HEADER_PRIORITIES === array( 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 9999 ) );
 check( 'order: section 7 runs articles, the prompt switch, the prompt position, then the survey result page', suite_section_order( $M, 'vance_hub_sec_pages' ) === $ORDER['vance_hub_sec_pages'] );
 check( 'order: section 8 runs dashboard home, tab look, member number, chart', suite_section_order( $M, 'vance_hub_sec_dashboard' ) === $ORDER['vance_hub_sec_dashboard'] );
 check( 'order: section 9 (dashboard text) runs the greeting, welcome line, step label, then the four steps (title, text, button)', suite_section_order( $M, 'vance_hub_sec_dashboard_text' ) === $ORDER['vance_hub_sec_dashboard_text'] );
